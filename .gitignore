@@ -1,0 +1,5 @@
+bin/
+*.pcap
+*.pcapng
+vendor/
+.omc/
