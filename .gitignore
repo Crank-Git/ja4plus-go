@@ -1,5 +1,32 @@
+# Build output
 bin/
+dist/
+
+# Captures
 *.pcap
 *.pcapng
+
+# Dependencies
 vendor/
+
+# Claude Code / OMC
 .omc/
+.claude/
+CLAUDE.md
+AGENTS.md
+
+# Superpowers artifacts
+docs/superpowers/
+
+# Dev notes (not part of the library)
+PYTHON_ISSUES.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
