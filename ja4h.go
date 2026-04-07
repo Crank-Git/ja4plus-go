@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
 )
 
@@ -21,16 +22,16 @@ func NewJA4H() *JA4HFingerprinter {
 // ProcessPacket processes a packet and returns JA4H fingerprints if the packet
 // contains an HTTP request.
 func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	payload := GetTCPPayload(packet)
+	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
 		return nil, nil
 	}
 
-	if !IsHTTPRequest(payload) {
+	if !parser.IsHTTPRequest(payload) {
 		return nil, nil
 	}
 
-	req := ParseHTTPRequest(payload)
+	req := parser.ParseHTTPRequest(payload)
 	if req == nil {
 		return nil, nil
 	}
@@ -40,15 +41,15 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 
-	srcIP, dstIP, _ := GetIPInfo(packet)
-	tcp := GetTCPLayer(packet)
+	srcIP, dstIP, _ := parser.GetIPInfo(packet)
+	tcp := parser.GetTCPLayer(packet)
 
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
 		Type:        "ja4h",
 		SrcIP:       srcIP,
 		DstIP:       dstIP,
-		Timestamp:   GetPacketTimestamp(packet),
+		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 	if tcp != nil {
 		result.SrcPort = uint16(tcp.SrcPort)
@@ -68,11 +69,11 @@ func (f *JA4HFingerprinter) Reset() {
 // request, and returns the JA4H fingerprint string. Returns "" if the packet
 // does not contain an HTTP request.
 func ComputeJA4H(packet gopacket.Packet) string {
-	payload := GetTCPPayload(packet)
+	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
 		return ""
 	}
-	req := ParseHTTPRequest(payload)
+	req := parser.ParseHTTPRequest(payload)
 	if req == nil {
 		return ""
 	}
@@ -82,7 +83,7 @@ func ComputeJA4H(packet gopacket.Packet) string {
 // computeJA4HFromRequest builds the JA4H fingerprint from a parsed HTTP request.
 //
 // Format: {method}{ver}{cookie}{referer}{count}{lang}_{header_hash}_{cookie_name_hash}_{cookie_value_hash}
-func computeJA4HFromRequest(req *HTTPRequest) string {
+func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 	// Part A components.
 
 	// method: first 2 chars, lowercase.
@@ -154,14 +155,14 @@ func computeJA4HFromRequest(req *HTTPRequest) string {
 		filteredHeaders = append(filteredHeaders, h)
 	}
 	headersStr := strings.Join(filteredHeaders, ",")
-	partB := TruncatedHash(headersStr)
+	partB := parser.TruncatedHash(headersStr)
 
 	// Part C: sorted cookie field names.
 	sortedNames := make([]string, len(req.CookieNames))
 	copy(sortedNames, req.CookieNames)
 	sort.Strings(sortedNames)
 	cookieNamesStr := strings.Join(sortedNames, ",")
-	partC := TruncatedHash(cookieNamesStr)
+	partC := parser.TruncatedHash(cookieNamesStr)
 
 	// Part D: sorted cookie name=value pairs.
 	type cookiePair struct {
@@ -180,7 +181,7 @@ func computeJA4HFromRequest(req *HTTPRequest) string {
 		pairStrs[i] = p.name + "=" + p.value
 	}
 	cookieValuesStr := strings.Join(pairStrs, ",")
-	partD := TruncatedHash(cookieValuesStr)
+	partD := parser.TruncatedHash(cookieValuesStr)
 
 	return fmt.Sprintf("%s_%s_%s_%s", partA, partB, partC, partD)
 }

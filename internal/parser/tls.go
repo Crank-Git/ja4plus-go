@@ -1,4 +1,4 @@
-package ja4plus
+package parser
 
 import (
 	"errors"
@@ -7,17 +7,17 @@ import (
 
 // TLS handshake types.
 const (
-	tlsRecordTypeHandshake  = 0x16
-	tlsHandshakeClientHello = 0x01
-	tlsHandshakeServerHello = 0x02
+	TLSRecordTypeHandshake  = 0x16
+	TLSHandshakeClientHello = 0x01
+	TLSHandshakeServerHello = 0x02
 )
 
 // TLS extension type IDs.
 const (
-	extSNI                 = 0x0000
-	extALPN                = 0x0010
-	extSignatureAlgorithms = 0x000d
-	extSupportedVersions   = 0x002b
+	ExtSNI                 = 0x0000
+	ExtALPN                = 0x0010
+	ExtSignatureAlgorithms = 0x000d
+	ExtSupportedVersions   = 0x002b
 )
 
 // ClientHello holds parsed fields from a TLS ClientHello message.
@@ -48,11 +48,11 @@ func IsTLSHandshake(payload []byte) bool {
 	if len(payload) < 6 {
 		return false
 	}
-	if payload[0] != tlsRecordTypeHandshake {
+	if payload[0] != TLSRecordTypeHandshake {
 		return false
 	}
 	ht := payload[5]
-	return ht == tlsHandshakeClientHello || ht == tlsHandshakeServerHello
+	return ht == TLSHandshakeClientHello || ht == TLSHandshakeServerHello
 }
 
 // ParseClientHello parses a TLS ClientHello from raw TCP payload bytes.
@@ -62,7 +62,7 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 	if len(payload) < 5 {
 		return nil, nil
 	}
-	if payload[0] != tlsRecordTypeHandshake {
+	if payload[0] != TLSRecordTypeHandshake {
 		return nil, nil
 	}
 
@@ -73,7 +73,7 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 	if len(payload) < 6 {
 		return nil, nil
 	}
-	if payload[5] != tlsHandshakeClientHello {
+	if payload[5] != TLSHandshakeClientHello {
 		return nil, nil
 	}
 	if len(payload) < 11 {
@@ -143,14 +143,14 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 		extData := payload[extDataStart:extDataEnd]
 
 		switch extType {
-		case extSNI:
+		case ExtSNI:
 			ch.HasSNI = true
 			ch.SNI = parseSNI(extData)
-		case extSupportedVersions:
+		case ExtSupportedVersions:
 			ch.SupportedVersions = parseSupportedVersionsClient(extData)
-		case extALPN:
+		case ExtALPN:
 			ch.ALPNProtocols = parseALPN(extData)
-		case extSignatureAlgorithms:
+		case ExtSignatureAlgorithms:
 			ch.SignatureAlgorithms = parseSignatureAlgorithms(extData)
 		}
 
@@ -166,7 +166,7 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 	if len(payload) < 5 {
 		return nil, nil
 	}
-	if payload[0] != tlsRecordTypeHandshake {
+	if payload[0] != TLSRecordTypeHandshake {
 		return nil, nil
 	}
 
@@ -177,7 +177,7 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 	if len(payload) < 6 {
 		return nil, nil
 	}
-	if payload[5] != tlsHandshakeServerHello {
+	if payload[5] != TLSHandshakeServerHello {
 		return nil, nil
 	}
 	if len(payload) < 11 {
@@ -235,13 +235,13 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 		extData := payload[extDataStart:extDataEnd]
 
 		switch extType {
-		case extALPN:
+		case ExtALPN:
 			protocols := parseALPN(extData)
 			if len(protocols) > 0 {
 				sh.ALPNProtocol = protocols[0]
 			}
-		case extSupportedVersions:
-			// Server selects ONE version — 2 bytes directly, no list length byte
+		case ExtSupportedVersions:
+			// Server selects ONE version -- 2 bytes directly, no list length byte
 			if extLen >= 2 {
 				sv := uint16(extData[0])<<8 | uint16(extData[1])
 				sh.SupportedVersions = []uint16{sv}
@@ -262,6 +262,50 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 	}
 
 	return sh, nil
+}
+
+// TLSVersionString maps a TLS version number to the JA4 version string.
+func TLSVersionString(version uint16) string {
+	switch version {
+	case 0x0304:
+		return "13"
+	case 0x0303:
+		return "12"
+	case 0x0302:
+		return "11"
+	case 0x0301:
+		return "10"
+	case 0x0300:
+		return "s3"
+	case 0x0200:
+		return "s2"
+	case 0xfeff:
+		return "d1"
+	case 0xfefd:
+		return "d2"
+	case 0xfefc:
+		return "d3"
+	default:
+		return "00"
+	}
+}
+
+// ALPNValue computes the 2-char ALPN field for JA4 from ALPN protocols.
+func ALPNValue(protocols []string) string {
+	if len(protocols) == 0 {
+		return "00"
+	}
+	first := protocols[0]
+	if first == "" {
+		return "00"
+	}
+	if first[0] > 127 {
+		return "99"
+	}
+	if len(first) == 1 {
+		return fmt.Sprintf("%c%c", first[0], first[0])
+	}
+	return fmt.Sprintf("%c%c", first[0], first[len(first)-1])
 }
 
 // parseSNI extracts the hostname from SNI extension data.
@@ -356,49 +400,4 @@ func parseSignatureAlgorithms(data []byte) []uint16 {
 		pos += 2
 	}
 	return algs
-}
-
-// tlsVersionString maps a TLS version number to the JA4 version string.
-// Exported for use by JA4 fingerprinter; not part of the public API contract.
-func tlsVersionString(version uint16) string {
-	switch version {
-	case 0x0304:
-		return "13"
-	case 0x0303:
-		return "12"
-	case 0x0302:
-		return "11"
-	case 0x0301:
-		return "10"
-	case 0x0300:
-		return "s3"
-	case 0x0200:
-		return "s2"
-	case 0xfeff:
-		return "d1"
-	case 0xfefd:
-		return "d2"
-	case 0xfefc:
-		return "d3"
-	default:
-		return "00"
-	}
-}
-
-// alpnValue computes the 2-char ALPN field for JA4 from ALPN protocols.
-func alpnValue(protocols []string) string {
-	if len(protocols) == 0 {
-		return "00"
-	}
-	first := protocols[0]
-	if first == "" {
-		return "00"
-	}
-	if first[0] > 127 {
-		return "99"
-	}
-	if len(first) == 1 {
-		return fmt.Sprintf("%c%c", first[0], first[0])
-	}
-	return fmt.Sprintf("%c%c", first[0], first[len(first)-1])
 }

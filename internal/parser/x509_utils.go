@@ -1,4 +1,4 @@
-package ja4plus
+package parser
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 // The first two components are combined per ASN.1 rules: first*40 + second.
 // Subsequent components use Variable-Length Quantity (VLQ) encoding.
 //
-// Example: "2.5.4.3" → "550403" (0x55 = 2*40+5, 0x04 = 4, 0x03 = 3)
+// Example: "2.5.4.3" -> "550403" (0x55 = 2*40+5, 0x04 = 4, 0x03 = 3)
 func OIDToHex(oidString string) string {
 	parts := strings.Split(oidString, ".")
 	nums := make([]int, len(parts))

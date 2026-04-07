@@ -10,17 +10,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
 )
 
 // Stream tracking constants.
 const (
-	ja4xMaxStreamBytes  = 1048576 // 1MB per stream
-	ja4xMaxSearchBytes  = 200000  // 200KB search limit
-	ja4xMaxStreams       = 50
+	ja4xMaxStreamBytes    = 1048576 // 1MB per stream
+	ja4xMaxSearchBytes    = 200000  // 200KB search limit
+	ja4xMaxStreams        = 50
 	ja4xMaxProcessedCerts = 1000
-	ja4xPrunedCerts     = 500
-	ja4xCleanupInterval = 30 * time.Second
+	ja4xPrunedCerts       = 500
+	ja4xCleanupInterval   = 30 * time.Second
 )
 
 // TLS handshake type for Certificate message.
@@ -48,17 +49,17 @@ func NewJA4X() *JA4XFingerprinter {
 
 // ProcessPacket processes a packet and returns JA4X fingerprint results.
 func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	payload := GetTCPPayload(packet)
+	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
 		return nil, nil
 	}
 
-	srcIP, dstIP, ok := GetIPInfo(packet)
+	srcIP, dstIP, ok := parser.GetIPInfo(packet)
 	if !ok {
 		return nil, nil
 	}
 
-	tcp := GetTCPLayer(packet)
+	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
 	}
@@ -144,7 +145,7 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 	i := 0
 	for i < maxSearch-10 {
 		// Look for TLS Handshake record type.
-		if data[i] != tlsRecordTypeHandshake {
+		if data[i] != parser.TLSRecordTypeHandshake {
 			i++
 			continue
 		}
@@ -188,7 +189,7 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 						DstIP:       dstIP,
 						SrcPort:     srcPort,
 						DstPort:     dstPort,
-						Timestamp:   GetPacketTimestamp(packet),
+						Timestamp:   parser.GetPacketTimestamp(packet),
 					}
 					results = append(results, result)
 					f.results = append(f.results, result)
@@ -267,24 +268,24 @@ func ComputeJA4XFromDER(certDER []byte) string {
 	// Extract issuer RDN OIDs.
 	var issuerOIDs []string
 	for _, attr := range cert.Issuer.Names {
-		issuerOIDs = append(issuerOIDs, OIDToHex(attr.Type.String()))
+		issuerOIDs = append(issuerOIDs, parser.OIDToHex(attr.Type.String()))
 	}
 
 	// Extract subject RDN OIDs.
 	var subjectOIDs []string
 	for _, attr := range cert.Subject.Names {
-		subjectOIDs = append(subjectOIDs, OIDToHex(attr.Type.String()))
+		subjectOIDs = append(subjectOIDs, parser.OIDToHex(attr.Type.String()))
 	}
 
 	// Extract extension OIDs.
 	var extOIDs []string
 	for _, ext := range cert.Extensions {
-		extOIDs = append(extOIDs, OIDToHex(ext.Id.String()))
+		extOIDs = append(extOIDs, parser.OIDToHex(ext.Id.String()))
 	}
 
-	issuerHash := TruncatedHash(strings.Join(issuerOIDs, ","))
-	subjectHash := TruncatedHash(strings.Join(subjectOIDs, ","))
-	extHash := TruncatedHash(strings.Join(extOIDs, ","))
+	issuerHash := parser.TruncatedHash(strings.Join(issuerOIDs, ","))
+	subjectHash := parser.TruncatedHash(strings.Join(subjectOIDs, ","))
+	extHash := parser.TruncatedHash(strings.Join(extOIDs, ","))
 
 	return fmt.Sprintf("%s_%s_%s", issuerHash, subjectHash, extHash)
 }
@@ -303,14 +304,14 @@ func ComputeJA4XFromPEM(pemData []byte) string {
 // from a single packet. It creates a temporary fingerprinter, so it does not
 // support stream reassembly. For multi-packet streams, use JA4XFingerprinter.
 func ComputeJA4XFromPacket(packet gopacket.Packet) string {
-	payload := GetTCPPayload(packet)
+	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
 		return ""
 	}
 
 	// Look for a TLS Certificate message directly in this packet.
 	for i := 0; i < len(payload)-10; i++ {
-		if payload[i] != tlsRecordTypeHandshake {
+		if payload[i] != parser.TLSRecordTypeHandshake {
 			continue
 		}
 		if i+5 >= len(payload) {

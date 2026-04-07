@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
@@ -31,7 +32,7 @@ func NewJA4L() *JA4LFingerprinter {
 // ProcessPacket processes a packet and returns JA4L fingerprints if a handshake
 // timing measurement can be computed.
 func (f *JA4LFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	tcp := GetTCPLayer(packet)
+	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
 	}
@@ -74,7 +75,7 @@ func (f *JA4LFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		f.connections[connKey] = conn
 	}
 
-	ts := GetPacketTimestamp(packet)
+	ts := parser.GetPacketTimestamp(packet)
 
 	// SYN packet (not SYN-ACK).
 	if tcp.SYN && !tcp.ACK {

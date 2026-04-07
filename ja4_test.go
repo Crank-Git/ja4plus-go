@@ -3,18 +3,20 @@ package ja4plus
 import (
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 )
 
 func TestComputeJA4FromClientHello_TLS13(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{0x1301, 0x1302, 0x1303, 0xc02c},
 		Extensions: []uint16{
-			extSNI,                // 0x0000
-			extALPN,               // 0x0010
-			extSupportedVersions,  // 0x002b
-			extSignatureAlgorithms, // 0x000d
-			0x0017,                // extended_master_secret
+			parser.ExtSNI,                // 0x0000
+			parser.ExtALPN,               // 0x0010
+			parser.ExtSupportedVersions,  // 0x002b
+			parser.ExtSignatureAlgorithms, // 0x000d
+			0x0017,                        // extended_master_secret
 		},
 		SNI:                 "example.com",
 		HasSNI:              true,
@@ -47,14 +49,14 @@ func TestComputeJA4FromClientHello_TLS13(t *testing.T) {
 }
 
 func TestComputeJA4_GREASEFiltering(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{0x0A0A, 0x1301, 0x2A2A, 0x1302},
 		Extensions: []uint16{
-			0x3A3A,               // GREASE
-			extSNI,               // 0x0000
-			0x4A4A,               // GREASE
-			extSupportedVersions, // 0x002b
+			0x3A3A,                      // GREASE
+			parser.ExtSNI,               // 0x0000
+			0x4A4A,                      // GREASE
+			parser.ExtSupportedVersions, // 0x002b
 		},
 		HasSNI:            true,
 		SNI:               "test.com",
@@ -75,10 +77,10 @@ func TestComputeJA4_GREASEFiltering(t *testing.T) {
 }
 
 func TestJA4_EmptyCiphers(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{},
-		Extensions:   []uint16{extSNI},
+		Extensions:   []uint16{parser.ExtSNI},
 		HasSNI:       true,
 		SNI:          "x.com",
 	}
@@ -91,7 +93,7 @@ func TestJA4_EmptyCiphers(t *testing.T) {
 }
 
 func TestJA4_NoALPN(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{0x002f},
 		HasSNI:       true,
@@ -107,7 +109,7 @@ func TestJA4_NoALPN(t *testing.T) {
 }
 
 func TestJA4_ALPNSingleChar(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:       0x0303,
 		CipherSuites:  []uint16{0x002f},
 		ALPNProtocols: []string{"x"},
@@ -125,14 +127,14 @@ func TestJA4_ALPNSingleChar(t *testing.T) {
 
 func TestJA4_ExtensionHash_SNIAndALPNExcluded(t *testing.T) {
 	// With sig algs, the ext hash string is: sorted_exts_sigalgs
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{0x002f},
 		Extensions: []uint16{
-			extSNI,                // should be excluded from hash
-			extALPN,               // should be excluded from hash
-			0x0017,                // should be included
-			extSignatureAlgorithms, // should be included
+			parser.ExtSNI,                // should be excluded from hash
+			parser.ExtALPN,               // should be excluded from hash
+			0x0017,                        // should be included
+			parser.ExtSignatureAlgorithms, // should be included
 		},
 		HasSNI:              true,
 		SNI:                 "x.com",
@@ -147,7 +149,7 @@ func TestJA4_ExtensionHash_SNIAndALPNExcluded(t *testing.T) {
 	// Sig algs in original order: "0804,0403"
 	// Combined: "000d,0017_0804,0403"
 	expectedInput := "000d,0017_0804,0403"
-	expectedHash := TruncatedHash(expectedInput)
+	expectedHash := parser.TruncatedHash(expectedInput)
 
 	fp := computeJA4FromClientHello(ch)
 	parts := strings.Split(fp, "_")
@@ -157,7 +159,7 @@ func TestJA4_ExtensionHash_SNIAndALPNExcluded(t *testing.T) {
 }
 
 func TestJA4_VersionFromSupportedVersions(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:           0x0301, // TLS 1.0 in handshake
 		CipherSuites:      []uint16{0x002f},
 		SupportedVersions: []uint16{0x0303, 0x0304}, // TLS 1.2, TLS 1.3
@@ -172,14 +174,14 @@ func TestJA4_VersionFromSupportedVersions(t *testing.T) {
 }
 
 func TestJA4_RawFingerprint(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{0x1302, 0x1301},
 		Extensions: []uint16{
-			extSNI,
-			extALPN,
+			parser.ExtSNI,
+			parser.ExtALPN,
 			0x0017,
-			extSignatureAlgorithms,
+			parser.ExtSignatureAlgorithms,
 		},
 		HasSNI:              true,
 		SNI:                 "test.com",
@@ -224,9 +226,9 @@ func TestAlpnValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := alpnValue(tt.protocols)
+			got := parser.ALPNValue(tt.protocols)
 			if got != tt.want {
-				t.Errorf("alpnValue(%v) = %q, want %q", tt.protocols, got, tt.want)
+				t.Errorf("ALPNValue(%v) = %q, want %q", tt.protocols, got, tt.want)
 			}
 		})
 	}
@@ -250,9 +252,9 @@ func TestTLSVersionString(t *testing.T) {
 		{0x1234, "00"},
 	}
 	for _, tt := range tests {
-		got := tlsVersionString(tt.version)
+		got := parser.TLSVersionString(tt.version)
 		if got != tt.want {
-			t.Errorf("tlsVersionString(0x%04x) = %q, want %q", tt.version, got, tt.want)
+			t.Errorf("TLSVersionString(0x%04x) = %q, want %q", tt.version, got, tt.want)
 		}
 	}
 }
@@ -260,15 +262,15 @@ func TestTLSVersionString(t *testing.T) {
 func TestJA4_FullIntegration(t *testing.T) {
 	// Build a real ClientHello packet as bytes and verify end-to-end
 	ciphers := []uint16{0x1301, 0x1302, 0x1303}
-	exts := []tlsExtension{
-		makeSNIExtension("example.com"),
-		makeALPNExtension("h2", "http/1.1"),
-		makeSupportedVersionsClientExtension(0x0304, 0x0303),
-		makeSignatureAlgorithmsExtension(0x0403, 0x0804, 0x0401),
+	exts := []parser.TLSExtension{
+		parser.MakeSNIExtension("example.com"),
+		parser.MakeALPNExtension("h2", "http/1.1"),
+		parser.MakeSupportedVersionsClientExtension(0x0304, 0x0303),
+		parser.MakeSignatureAlgorithmsExtension(0x0403, 0x0804, 0x0401),
 	}
-	payload := buildClientHello(0x0303, ciphers, exts)
+	payload := parser.BuildClientHello(0x0303, ciphers, exts)
 
-	ch, err := ParseClientHello(payload)
+	ch, err := parser.ParseClientHello(payload)
 	if err != nil {
 		t.Fatalf("parse error: %v", err)
 	}
@@ -292,7 +294,7 @@ func TestJA4_FullIntegration(t *testing.T) {
 }
 
 func TestJA4_NoSNI(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{0x002f},
 	}
@@ -306,7 +308,7 @@ func TestJA4_NoSNI(t *testing.T) {
 }
 
 func TestJA4_HasSNIMalformed(t *testing.T) {
-	ch := &ClientHello{
+	ch := &parser.ClientHello{
 		Version:      0x0303,
 		CipherSuites: []uint16{0x002f},
 		HasSNI:       true,

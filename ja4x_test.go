@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 )
 
 // generateSelfSignedCertDER creates a self-signed certificate in DER format
@@ -86,14 +88,14 @@ func TestComputeJA4XFromDER_NonEmptyHashes(t *testing.T) {
 	}
 
 	// A self-signed cert with subject/issuer fields should not have empty hashes.
-	if parts[0] == emptyHash {
+	if parts[0] == parser.EmptyHash {
 		t.Error("issuer hash should not be empty for a cert with issuer fields")
 	}
-	if parts[1] == emptyHash {
+	if parts[1] == parser.EmptyHash {
 		t.Error("subject hash should not be empty for a cert with subject fields")
 	}
 	// Extensions should also be present (BasicConstraints, KeyUsage, etc.).
-	if parts[2] == emptyHash {
+	if parts[2] == parser.EmptyHash {
 		t.Error("extension hash should not be empty for a cert with extensions")
 	}
 }

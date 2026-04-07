@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
@@ -21,17 +22,17 @@ func NewJA4() *JA4Fingerprinter {
 
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
 func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	var ch *ClientHello
+	var ch *parser.ClientHello
 	var srcPort, dstPort uint16
 
 	// Try TCP/TLS first
-	if payload := GetTCPPayload(packet); payload != nil {
+	if payload := parser.GetTCPPayload(packet); payload != nil {
 		var err error
-		ch, err = ParseClientHello(payload)
+		ch, err = parser.ParseClientHello(payload)
 		if err != nil {
 			return nil, err
 		}
-		if tcp := GetTCPLayer(packet); tcp != nil {
+		if tcp := parser.GetTCPLayer(packet); tcp != nil {
 			srcPort = uint16(tcp.SrcPort)
 			dstPort = uint16(tcp.DstPort)
 		}
@@ -43,7 +44,7 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 			udp := udpLayer.(*layers.UDP)
 			if len(udp.Payload) > 0 {
 				var err error
-				ch, err = ParseQUICInitial(udp.Payload)
+				ch, err = parser.ParseQUICInitial(udp.Payload)
 				if err != nil {
 					return nil, err
 				}
@@ -64,7 +65,7 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 
 	raw := computeJA4RawFromClientHello(ch)
 
-	srcIP, dstIP, _ := GetIPInfo(packet)
+	srcIP, dstIP, _ := parser.GetIPInfo(packet)
 
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
@@ -74,7 +75,7 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		DstIP:       dstIP,
 		SrcPort:     srcPort,
 		DstPort:     dstPort,
-		Timestamp:   GetPacketTimestamp(packet),
+		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 
 	f.results = append(f.results, result)
@@ -89,11 +90,11 @@ func (f *JA4Fingerprinter) Reset() {
 // ComputeJA4 is a convenience function that extracts a JA4 fingerprint from a packet.
 // Returns an empty string if the packet is not a TLS ClientHello.
 func ComputeJA4(packet gopacket.Packet) string {
-	payload := GetTCPPayload(packet)
+	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
 		return ""
 	}
-	ch, err := ParseClientHello(payload)
+	ch, err := parser.ParseClientHello(payload)
 	if err != nil || ch == nil {
 		return ""
 	}
@@ -101,7 +102,7 @@ func ComputeJA4(packet gopacket.Packet) string {
 }
 
 // computeJA4FromClientHello generates a JA4 fingerprint string from a parsed ClientHello.
-func computeJA4FromClientHello(ch *ClientHello) string {
+func computeJA4FromClientHello(ch *parser.ClientHello) string {
 	partA := ja4PartA(ch)
 	cipherHash := ja4CipherHash(ch)
 	extHash := ja4ExtensionHash(ch)
@@ -109,21 +110,21 @@ func computeJA4FromClientHello(ch *ClientHello) string {
 }
 
 // computeJA4RawFromClientHello generates the raw (unhashed) JA4 fingerprint.
-func computeJA4RawFromClientHello(ch *ClientHello) string {
+func computeJA4RawFromClientHello(ch *parser.ClientHello) string {
 	partA := ja4PartA(ch)
 
 	// Cipher list: sorted, GREASE filtered
-	ciphers := FilterGreaseValues(ch.CipherSuites)
+	ciphers := parser.FilterGreaseValues(ch.CipherSuites)
 	sortedCiphers := make([]uint16, len(ciphers))
 	copy(sortedCiphers, ciphers)
 	sort.Slice(sortedCiphers, func(i, j int) bool { return sortedCiphers[i] < sortedCiphers[j] })
 	cipherList := formatHexList(sortedCiphers)
 
 	// Extension list: GREASE filtered, SNI/ALPN removed, sorted
-	extensions := FilterGreaseValues(ch.Extensions)
+	extensions := parser.FilterGreaseValues(ch.Extensions)
 	var filtered []uint16
 	for _, e := range extensions {
-		if e != extSNI && e != extALPN {
+		if e != parser.ExtSNI && e != parser.ExtALPN {
 			filtered = append(filtered, e)
 		}
 	}
@@ -141,7 +142,7 @@ func computeJA4RawFromClientHello(ch *ClientHello) string {
 }
 
 // ja4PartA builds the first section of the JA4 fingerprint.
-func ja4PartA(ch *ClientHello) string {
+func ja4PartA(ch *parser.ClientHello) string {
 	// Protocol
 	proto := "t"
 	if ch.IsQUIC {
@@ -152,7 +153,7 @@ func ja4PartA(ch *ClientHello) string {
 
 	// Version: prefer max non-GREASE supported_version
 	version := ch.Version
-	sv := FilterGreaseValues(ch.SupportedVersions)
+	sv := parser.FilterGreaseValues(ch.SupportedVersions)
 	if len(sv) > 0 {
 		maxV := sv[0]
 		for _, v := range sv[1:] {
@@ -162,7 +163,7 @@ func ja4PartA(ch *ClientHello) string {
 		}
 		version = maxV
 	}
-	verStr := tlsVersionString(version)
+	verStr := parser.TLSVersionString(version)
 
 	// SNI
 	sniChar := "i"
@@ -171,43 +172,43 @@ func ja4PartA(ch *ClientHello) string {
 	}
 
 	// Cipher count (excluding GREASE, capped at 99)
-	cipherCount := len(FilterGreaseValues(ch.CipherSuites))
+	cipherCount := len(parser.FilterGreaseValues(ch.CipherSuites))
 	if cipherCount > 99 {
 		cipherCount = 99
 	}
 
 	// Extension count (excluding GREASE, capped at 99)
-	extCount := len(FilterGreaseValues(ch.Extensions))
+	extCount := len(parser.FilterGreaseValues(ch.Extensions))
 	if extCount > 99 {
 		extCount = 99
 	}
 
 	// ALPN
-	alpn := alpnValue(ch.ALPNProtocols)
+	alpn := parser.ALPNValue(ch.ALPNProtocols)
 
 	return fmt.Sprintf("%s%s%s%02d%02d%s", proto, verStr, sniChar, cipherCount, extCount, alpn)
 }
 
 // ja4CipherHash generates the cipher hash section.
-func ja4CipherHash(ch *ClientHello) string {
-	ciphers := FilterGreaseValues(ch.CipherSuites)
+func ja4CipherHash(ch *parser.ClientHello) string {
+	ciphers := parser.FilterGreaseValues(ch.CipherSuites)
 	if len(ciphers) == 0 {
-		return emptyHash
+		return parser.EmptyHash
 	}
 	sorted := make([]uint16, len(ciphers))
 	copy(sorted, ciphers)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
-	return TruncatedHash(formatHexList(sorted))
+	return parser.TruncatedHash(formatHexList(sorted))
 }
 
 // ja4ExtensionHash generates the extension hash section.
-func ja4ExtensionHash(ch *ClientHello) string {
-	extensions := FilterGreaseValues(ch.Extensions)
+func ja4ExtensionHash(ch *parser.ClientHello) string {
+	extensions := parser.FilterGreaseValues(ch.Extensions)
 
 	// Remove SNI and ALPN
 	var filtered []uint16
 	for _, e := range extensions {
-		if e != extSNI && e != extALPN {
+		if e != parser.ExtSNI && e != parser.ExtALPN {
 			filtered = append(filtered, e)
 		}
 	}
@@ -223,7 +224,7 @@ func ja4ExtensionHash(ch *ClientHello) string {
 		extStr = extStr + "_" + sigAlgStr
 	}
 
-	return TruncatedHash(extStr)
+	return parser.TruncatedHash(extStr)
 }
 
 // formatHexList formats a slice of uint16 as comma-separated 4-char lowercase hex.

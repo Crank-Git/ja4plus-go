@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
@@ -21,7 +22,7 @@ func NewJA4T() *JA4TFingerprinter {
 
 // ProcessPacket processes a packet and returns JA4T fingerprint results for SYN packets.
 func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	tcp := GetTCPLayer(packet)
+	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
 	}
@@ -80,7 +81,7 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	}
 
 	fingerprint := fmt.Sprintf("%d_%s_%s_%s", windowSize, optionsStr, mss, wscale)
-	srcIP, dstIP, _ := GetIPInfo(packet)
+	srcIP, dstIP, _ := parser.GetIPInfo(packet)
 
 	return &FingerprintResult{
 		Fingerprint: fingerprint,
@@ -89,7 +90,7 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 		DstIP:       dstIP,
 		SrcPort:     uint16(tcp.SrcPort),
 		DstPort:     uint16(tcp.DstPort),
-		Timestamp:   GetPacketTimestamp(packet),
+		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 }
 

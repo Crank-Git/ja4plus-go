@@ -1,4 +1,4 @@
-package ja4plus
+package parser
 
 // IsGreaseValue checks if a TLS value is a GREASE value.
 // GREASE values match the pattern 0x?A?A where the high byte equals the low byte.

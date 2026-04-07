@@ -3,6 +3,7 @@ package ja4plus
 import (
 	"fmt"
 
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
 )
 
@@ -41,13 +42,13 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 
 // ProcessPacket processes a packet and returns JA4SSH fingerprints when a window fills.
 func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	tcp := GetTCPLayer(packet)
+	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
 	}
 
 	// Need IP layer for connection tracking
-	srcIP, dstIP, ok := GetIPInfo(packet)
+	srcIP, dstIP, ok := parser.GetIPInfo(packet)
 	if !ok {
 		return nil, nil
 	}
@@ -58,7 +59,7 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	payload := tcp.Payload
 
 	// Check if this is an SSH data packet
-	hasSSHData := len(payload) > 0 && IsSSHPacket(payload)
+	hasSSHData := len(payload) > 0 && parser.IsSSHPacket(payload)
 
 	// Determine client/server direction
 	var clientIP, serverIP string
@@ -162,7 +163,7 @@ func (f *JA4SSHFingerprinter) checkWindow(connKey string, conn *sshConnState, pa
 		DstIP:       dstIP,
 		SrcPort:     srcPort,
 		DstPort:     dstPort,
-		Timestamp:   GetPacketTimestamp(packet),
+		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 
 	f.results = append(f.results, result)

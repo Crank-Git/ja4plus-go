@@ -1,4 +1,4 @@
-package ja4plus
+package parser
 
 import "testing"
 
@@ -28,8 +28,8 @@ func TestOIDToHex_KnownOIDs(t *testing.T) {
 func TestOIDToHex_VLQEncoding(t *testing.T) {
 	// RSA encryption OID: 1.2.840.113549.1.1.1
 	// First two: 1*40+2 = 42 = 0x2a
-	// 840: VLQ → 0x86, 0x48
-	// 113549: VLQ → 0x86, 0xf7, 0x0d
+	// 840: VLQ -> 0x86, 0x48
+	// 113549: VLQ -> 0x86, 0xf7, 0x0d
 	// 1, 1, 1: single bytes
 	got := OIDToHex("1.2.840.113549.1.1.1")
 	want := "2a864886f70d010101"

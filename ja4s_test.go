@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
@@ -43,7 +44,7 @@ func buildServerHelloPayload(cipherSuite uint16, extensions []uint16, alpn strin
 	var extBytes []byte
 	for _, ext := range extensions {
 		var extData []byte
-		if ext == extALPN && alpn != "" {
+		if ext == parser.ExtALPN && alpn != "" {
 			// ALPN extension data: list_len(2) + proto_len(1) + proto
 			protoBytes := []byte(alpn)
 			alpnList := []byte{byte(len(protoBytes))}
@@ -51,7 +52,7 @@ func buildServerHelloPayload(cipherSuite uint16, extensions []uint16, alpn strin
 			listLen := len(alpnList)
 			extData = append(extData, byte(listLen>>8), byte(listLen))
 			extData = append(extData, alpnList...)
-		} else if ext == extSupportedVersions {
+		} else if ext == parser.ExtSupportedVersions {
 			// Server supported_versions: 2 bytes (the selected version)
 			extData = []byte{0x03, 0x04} // TLS 1.3
 		}
@@ -96,7 +97,7 @@ func buildServerHelloPayload(cipherSuite uint16, extensions []uint16, alpn strin
 }
 
 func TestComputeJA4SFromServerHello_Basic(t *testing.T) {
-	sh := &ServerHello{
+	sh := &parser.ServerHello{
 		Version:           0x0304, // already resolved from supported_versions
 		CipherSuite:       0xc02c,
 		Extensions:        []uint16{0x002b, 0x0033, 0x0010},
@@ -126,7 +127,7 @@ func TestComputeJA4SFromServerHello_Basic(t *testing.T) {
 	}
 
 	// Sorted extensions: 0010,002b,0033
-	expectedHash := TruncatedHash("0010,002b,0033")
+	expectedHash := parser.TruncatedHash("0010,002b,0033")
 	if parts[2] != expectedHash {
 		t.Errorf("ext_hash = %q, want %q", parts[2], expectedHash)
 	}
@@ -134,7 +135,7 @@ func TestComputeJA4SFromServerHello_Basic(t *testing.T) {
 
 func TestComputeJA4S_GREASEIncluded(t *testing.T) {
 	// CRITICAL: JA4S INCLUDES GREASE in extension count and hash (unlike JA4)
-	sh := &ServerHello{
+	sh := &parser.ServerHello{
 		Version:           0x0304,
 		CipherSuite:       0x1301,
 		Extensions:        []uint16{0x0A0A, 0x002b, 0x3A3A, 0x0033},
@@ -154,14 +155,14 @@ func TestComputeJA4S_GREASEIncluded(t *testing.T) {
 	}
 
 	// Sorted: 002b,0033,0a0a,3a3a
-	expectedHash := TruncatedHash("002b,0033,0a0a,3a3a")
+	expectedHash := parser.TruncatedHash("002b,0033,0a0a,3a3a")
 	if parts[2] != expectedHash {
 		t.Errorf("ext_hash = %q, want %q (GREASE must be included)", parts[2], expectedHash)
 	}
 }
 
 func TestComputeJA4S_NoExtensions(t *testing.T) {
-	sh := &ServerHello{
+	sh := &parser.ServerHello{
 		Version:     0x0303,
 		CipherSuite: 0x002f,
 		Extensions:  nil,
@@ -179,8 +180,8 @@ func TestComputeJA4S_NoExtensions(t *testing.T) {
 		t.Errorf("part_a = %q, want %q", parts[0], wantPartA)
 	}
 
-	if parts[2] != emptyHash {
-		t.Errorf("ext_hash = %q, want %q", parts[2], emptyHash)
+	if parts[2] != parser.EmptyHash {
+		t.Errorf("ext_hash = %q, want %q", parts[2], parser.EmptyHash)
 	}
 }
 
@@ -197,7 +198,7 @@ func TestComputeJA4S_CipherHexFormat(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		sh := &ServerHello{
+		sh := &parser.ServerHello{
 			Version:     0x0303,
 			CipherSuite: tc.cipher,
 		}
@@ -226,7 +227,7 @@ func TestJA4SFingerprinter_NonServerHello(t *testing.T) {
 }
 
 func TestJA4SFingerprinter_ValidServerHello(t *testing.T) {
-	extensions := []uint16{extSupportedVersions, 0x0033, extALPN}
+	extensions := []uint16{parser.ExtSupportedVersions, 0x0033, parser.ExtALPN}
 	payload := buildServerHelloPayload(0xc02c, extensions, "h2")
 	packet := buildTCPPayloadPacket(t, payload)
 
@@ -259,7 +260,7 @@ func TestJA4SFingerprinter_ValidServerHello(t *testing.T) {
 }
 
 func TestJA4SFingerprinter_GREASEInPacket(t *testing.T) {
-	extensions := []uint16{0x0A0A, extSupportedVersions, 0x3A3A}
+	extensions := []uint16{0x0A0A, parser.ExtSupportedVersions, 0x3A3A}
 	payload := buildServerHelloPayload(0x1301, extensions, "")
 	packet := buildTCPPayloadPacket(t, payload)
 
@@ -280,7 +281,7 @@ func TestJA4SFingerprinter_GREASEInPacket(t *testing.T) {
 	}
 
 	// Sorted: 002b,0a0a,3a3a
-	expectedHash := TruncatedHash("002b,0a0a,3a3a")
+	expectedHash := parser.TruncatedHash("002b,0a0a,3a3a")
 	if parts[2] != expectedHash {
 		t.Errorf("ext_hash = %q, want %q", parts[2], expectedHash)
 	}
@@ -296,7 +297,7 @@ func TestJA4S_Reset(t *testing.T) {
 }
 
 func TestComputeJA4S_Convenience(t *testing.T) {
-	extensions := []uint16{extSupportedVersions, 0x0033}
+	extensions := []uint16{parser.ExtSupportedVersions, 0x0033}
 	payload := buildServerHelloPayload(0x1301, extensions, "")
 	packet := buildTCPPayloadPacket(t, payload)
 

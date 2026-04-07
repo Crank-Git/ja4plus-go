@@ -1,6 +1,9 @@
 package ja4plus
 
-import "github.com/google/gopacket"
+import (
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
+	"github.com/google/gopacket"
+)
 
 // JA4TSFingerprinter fingerprints TCP SYN-ACK packets (server-side).
 type JA4TSFingerprinter struct {
@@ -14,7 +17,7 @@ func NewJA4TS() *JA4TSFingerprinter {
 
 // ProcessPacket processes a packet and returns JA4TS fingerprint results for SYN-ACK packets.
 func (f *JA4TSFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	tcp := GetTCPLayer(packet)
+	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
 	}

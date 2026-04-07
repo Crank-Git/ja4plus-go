@@ -1,4 +1,4 @@
-package ja4plus
+package parser
 
 import (
 	"crypto/aes"
@@ -38,9 +38,9 @@ const (
 	quicFrameCrypto  = 0x06
 )
 
-// decodeVarint decodes a QUIC variable-length integer from data at position pos.
+// DecodeVarint decodes a QUIC variable-length integer from data at position pos.
 // Returns the decoded value and the new position after the varint, or an error.
-func decodeVarint(data []byte, pos int) (uint64, int, error) {
+func DecodeVarint(data []byte, pos int) (uint64, int, error) {
 	if pos >= len(data) {
 		return 0, pos, errors.New("varint: no data")
 	}
@@ -97,9 +97,9 @@ func hkdfExpandLabel(secret []byte, label string, context []byte, length int) ([
 	return out, nil
 }
 
-// deriveInitialKeys derives the client key, IV, and header protection key
+// DeriveInitialKeys derives the client key, IV, and header protection key
 // from the Destination Connection ID for a QUIC Initial packet.
-func deriveInitialKeys(dcid []byte, version uint32) (key, iv, hpKey []byte, err error) {
+func DeriveInitialKeys(dcid []byte, version uint32) (key, iv, hpKey []byte, err error) {
 	var salt []byte
 	switch version {
 	case quicV1:
@@ -218,7 +218,7 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	pos += scidLen
 
 	// Token length (varint) + token
-	tokenLen, newPos, err := decodeVarint(payload, pos)
+	tokenLen, newPos, err := DecodeVarint(payload, pos)
 	if err != nil {
 		return nil, nil
 	}
@@ -229,7 +229,7 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	pos += int(tokenLen)
 
 	// Payload length (varint)
-	payloadLen, newPos, err := decodeVarint(payload, pos)
+	payloadLen, newPos, err := DecodeVarint(payload, pos)
 	if err != nil {
 		return nil, nil
 	}
@@ -247,7 +247,7 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	}
 
 	// Derive Initial keys
-	key, iv, hpKey, err := deriveInitialKeys(dcid, version)
+	key, iv, hpKey, err := DeriveInitialKeys(dcid, version)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	}
 
 	// Use original payload bytes for ciphertext (pn bytes already XORed in headerBuf, not in payload)
-	// But we need to XOR the pn bytes in the ciphertext source too — actually the ciphertext
+	// But we need to XOR the pn bytes in the ciphertext source too -- actually the ciphertext
 	// is after the pn bytes so we use original payload bytes for the ciphertext portion
 	ciphertext := make([]byte, encLen)
 	copy(ciphertext, payload[encStart:encStart+encLen])
@@ -327,7 +327,7 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	}
 
 	// Parse CRYPTO frames from plaintext
-	fragments, err := parseCryptoFrames(plaintext)
+	fragments, err := ParseCryptoFrames(plaintext)
 	if err != nil {
 		return nil, err
 	}
@@ -336,21 +336,21 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	}
 
 	// Reassemble CRYPTO frame data
-	assembled := reassembleCryptoFrames(fragments)
+	assembled := ReassembleCryptoFrames(fragments)
 	if len(assembled) == 0 {
 		return nil, nil
 	}
 
 	// The reassembled data should be a TLS Handshake message.
 	// Check for ClientHello (type 0x01)
-	if assembled[0] != tlsHandshakeClientHello {
+	if assembled[0] != TLSHandshakeClientHello {
 		return nil, nil
 	}
 
 	// Wrap in a fake TLS record header so ParseClientHello can process it.
 	// TLS record: content_type(1) + version(2) + length(2) + handshake data
 	tlsRecord := make([]byte, 5+len(assembled))
-	tlsRecord[0] = tlsRecordTypeHandshake // 0x16
+	tlsRecord[0] = TLSRecordTypeHandshake // 0x16
 	tlsRecord[1] = 0x03
 	tlsRecord[2] = 0x01
 	tlsRecord[3] = byte(len(assembled) >> 8)
@@ -367,8 +367,8 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	return ch, nil
 }
 
-// parseCryptoFrames extracts CRYPTO frame fragments from decrypted QUIC payload.
-func parseCryptoFrames(data []byte) ([]cryptoFragment, error) {
+// ParseCryptoFrames extracts CRYPTO frame fragments from decrypted QUIC payload.
+func ParseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 	var fragments []cryptoFragment
 	pos := 0
 
@@ -384,14 +384,14 @@ func parseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 			pos++ // skip frame type
 
 			// Offset (varint)
-			offset, newPos, err := decodeVarint(data, pos)
+			offset, newPos, err := DecodeVarint(data, pos)
 			if err != nil {
 				return fragments, err
 			}
 			pos = newPos
 
 			// Length (varint)
-			length, newPos, err := decodeVarint(data, pos)
+			length, newPos, err := DecodeVarint(data, pos)
 			if err != nil {
 				return fragments, err
 			}
@@ -411,29 +411,29 @@ func parseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 			continue
 		}
 
-		// ACK frame (0x02, 0x03) — skip by parsing its structure
+		// ACK frame (0x02, 0x03) -- skip by parsing its structure
 		if frameType == 0x02 || frameType == 0x03 {
 			pos++
 			// Largest Acknowledged (varint)
-			_, newPos, err := decodeVarint(data, pos)
+			_, newPos, err := DecodeVarint(data, pos)
 			if err != nil {
 				return fragments, nil
 			}
 			pos = newPos
 			// ACK Delay (varint)
-			_, newPos, err = decodeVarint(data, pos)
+			_, newPos, err = DecodeVarint(data, pos)
 			if err != nil {
 				return fragments, nil
 			}
 			pos = newPos
 			// ACK Range Count (varint)
-			rangeCount, newPos, err := decodeVarint(data, pos)
+			rangeCount, newPos, err := DecodeVarint(data, pos)
 			if err != nil {
 				return fragments, nil
 			}
 			pos = newPos
 			// First ACK Range (varint)
-			_, newPos, err = decodeVarint(data, pos)
+			_, newPos, err = DecodeVarint(data, pos)
 			if err != nil {
 				return fragments, nil
 			}
@@ -441,13 +441,13 @@ func parseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 			// Additional ACK Ranges
 			for i := uint64(0); i < rangeCount; i++ {
 				// Gap (varint)
-				_, newPos, err = decodeVarint(data, pos)
+				_, newPos, err = DecodeVarint(data, pos)
 				if err != nil {
 					return fragments, nil
 				}
 				pos = newPos
 				// ACK Range (varint)
-				_, newPos, err = decodeVarint(data, pos)
+				_, newPos, err = DecodeVarint(data, pos)
 				if err != nil {
 					return fragments, nil
 				}
@@ -456,7 +456,7 @@ func parseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 			// ECN counts for type 0x03
 			if frameType == 0x03 {
 				for i := 0; i < 3; i++ {
-					_, newPos, err = decodeVarint(data, pos)
+					_, newPos, err = DecodeVarint(data, pos)
 					if err != nil {
 						return fragments, nil
 					}
@@ -466,16 +466,16 @@ func parseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 			continue
 		}
 
-		// Unknown frame type — we can't safely skip it, so stop parsing
+		// Unknown frame type -- we can't safely skip it, so stop parsing
 		break
 	}
 
 	return fragments, nil
 }
 
-// reassembleCryptoFrames reassembles potentially fragmented CRYPTO frame data
+// ReassembleCryptoFrames reassembles potentially fragmented CRYPTO frame data
 // into a contiguous byte slice ordered by offset.
-func reassembleCryptoFrames(fragments []cryptoFragment) []byte {
+func ReassembleCryptoFrames(fragments []cryptoFragment) []byte {
 	if len(fragments) == 0 {
 		return nil
 	}
