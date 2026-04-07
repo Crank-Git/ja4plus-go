@@ -1,0 +1,64 @@
+package ja4plus
+
+import (
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+)
+
+// Fingerprinter is the interface that all JA4+ fingerprinters implement.
+type Fingerprinter interface {
+	ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error)
+	Reset()
+}
+
+// FingerprintResult holds a single fingerprint and its metadata.
+type FingerprintResult struct {
+	Fingerprint string
+	Raw         string
+	Type        string
+	SrcIP       string
+	DstIP       string
+	SrcPort     uint16
+	DstPort     uint16
+	Timestamp   time.Time
+}
+
+// GetTCPLayer extracts the TCP layer from a packet, or nil if not present.
+func GetTCPLayer(packet gopacket.Packet) *layers.TCP {
+	if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer != nil {
+		return tcpLayer.(*layers.TCP)
+	}
+	return nil
+}
+
+// GetTCPPayload extracts the TCP payload bytes from a packet.
+func GetTCPPayload(packet gopacket.Packet) []byte {
+	tcp := GetTCPLayer(packet)
+	if tcp == nil {
+		return nil
+	}
+	payload := tcp.Payload
+	if len(payload) == 0 {
+		return nil
+	}
+	return payload
+}
+
+// GetIPInfo extracts source/destination IP addresses from a packet (IPv4 only).
+func GetIPInfo(packet gopacket.Packet) (srcIP, dstIP string, ok bool) {
+	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
+		ip := ipLayer.(*layers.IPv4)
+		return ip.SrcIP.String(), ip.DstIP.String(), true
+	}
+	return "", "", false
+}
+
+// GetPacketTimestamp returns the packet's capture timestamp.
+func GetPacketTimestamp(packet gopacket.Packet) time.Time {
+	if md := packet.Metadata(); md != nil {
+		return md.Timestamp
+	}
+	return time.Time{}
+}
