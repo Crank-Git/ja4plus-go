@@ -30,7 +30,7 @@ func buildTCPPacket(t *testing.T, srcPort, dstPort uint16, syn, ack bool, window
 		Window:  window,
 		Options: options,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	_ = tcp.SetNetworkLayerForChecksum(ip)
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
 	if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp); err != nil {

@@ -23,7 +23,7 @@ func buildSYNPacket(srcIP, dstIP string, srcPort, dstPort uint16) gopacket.Packe
 		SYN:     true,
 		Window:  65535,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	_ = tcp.SetNetworkLayerForChecksum(ip)
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
@@ -72,7 +72,7 @@ func TestProcessor_NonApplicablePacket(t *testing.T) {
 		DstPort: layers.TCPPort(80),
 		ACK:     true,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	_ = tcp.SetNetworkLayerForChecksum(ip)
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}

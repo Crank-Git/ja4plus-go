@@ -23,10 +23,7 @@ func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte
 		DstPort: layers.TCPPort(dstPort),
 		ACK:     true,
 	}
-	if ack && len(payload) == 0 {
-		// Pure ACK - no payload
-	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	_ = tcp.SetNetworkLayerForChecksum(ip)
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
@@ -92,7 +89,7 @@ func TestJA4SSH_DirectionPort22(t *testing.T) {
 
 	// 5 client packets (size 36 each)
 	for i := 0; i < 5; i++ {
-		fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, clientPayload, false))
+		_, _ = fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, clientPayload, false))
 	}
 
 	// 5 server packets (size 100 each) — should trigger

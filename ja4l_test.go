@@ -192,11 +192,11 @@ func TestJA4L_Reset(t *testing.T) {
 
 	synPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, true, false)
 	synPkt.Metadata().Timestamp = baseTime
-	fp.ProcessPacket(synPkt)
+	_, _ = fp.ProcessPacket(synPkt)
 
 	synAckPkt := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 12345, true, true)
 	synAckPkt.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
-	fp.ProcessPacket(synAckPkt)
+	_, _ = fp.ProcessPacket(synAckPkt)
 
 	if len(fp.results) != 1 {
 		t.Fatalf("expected 1 result before reset, got %d", len(fp.results))
