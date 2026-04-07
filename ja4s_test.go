@@ -126,8 +126,8 @@ func TestComputeJA4SFromServerHello_Basic(t *testing.T) {
 		t.Errorf("ext_hash length = %d, want 12", len(parts[2]))
 	}
 
-	// Sorted extensions: 0010,002b,0033
-	expectedHash := parser.TruncatedHash("0010,002b,0033")
+	// Original wire order: 002b,0033,0010 (JA4S does NOT sort extensions)
+	expectedHash := parser.TruncatedHash("002b,0033,0010")
 	if parts[2] != expectedHash {
 		t.Errorf("ext_hash = %q, want %q", parts[2], expectedHash)
 	}
@@ -154,8 +154,8 @@ func TestComputeJA4S_GREASEIncluded(t *testing.T) {
 		t.Errorf("part_a = %q, want %q", parts[0], wantPartA)
 	}
 
-	// Sorted: 002b,0033,0a0a,3a3a
-	expectedHash := parser.TruncatedHash("002b,0033,0a0a,3a3a")
+	// Original wire order: 0a0a,002b,3a3a,0033 (JA4S does NOT sort extensions)
+	expectedHash := parser.TruncatedHash("0a0a,002b,3a3a,0033")
 	if parts[2] != expectedHash {
 		t.Errorf("ext_hash = %q, want %q (GREASE must be included)", parts[2], expectedHash)
 	}
@@ -280,8 +280,8 @@ func TestJA4SFingerprinter_GREASEInPacket(t *testing.T) {
 		t.Errorf("part_a = %q, want %q", parts[0], "t130300")
 	}
 
-	// Sorted: 002b,0a0a,3a3a
-	expectedHash := parser.TruncatedHash("002b,0a0a,3a3a")
+	// Original wire order: 0a0a,002b,3a3a (JA4S does NOT sort extensions)
+	expectedHash := parser.TruncatedHash("0a0a,002b,3a3a")
 	if parts[2] != expectedHash {
 		t.Errorf("ext_hash = %q, want %q", parts[2], expectedHash)
 	}

@@ -2,7 +2,6 @@ package ja4plus
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
@@ -117,15 +116,13 @@ func computeJA4SFromServerHello(sh *parser.ServerHello) string {
 	// Cipher: 4-char lowercase hex
 	cipherStr := fmt.Sprintf("%04x", sh.CipherSuite)
 
-	// Extension hash: sorted numerically, INCLUDING GREASE, no SNI/ALPN removal
+	// Extension hash: ORIGINAL WIRE ORDER, INCLUDING GREASE, no SNI/ALPN removal
+	// Per FoxIO spec, JA4S extensions are NOT sorted — they preserve original order.
 	var extHash string
 	if len(sh.Extensions) == 0 {
 		extHash = parser.EmptyHash
 	} else {
-		sorted := make([]uint16, len(sh.Extensions))
-		copy(sorted, sh.Extensions)
-		sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
-		extHash = parser.TruncatedHash(formatHexList(sorted))
+		extHash = parser.TruncatedHash(formatHexList(sh.Extensions))
 	}
 
 	return fmt.Sprintf("%s_%s_%s", partA, cipherStr, extHash)
