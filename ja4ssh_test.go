@@ -142,7 +142,7 @@ func TestJA4SSH_Reset(t *testing.T) {
 
 	// Send some packets
 	for i := 0; i < 5; i++ {
-		fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+		_, _ = fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
 	}
 
 	fp.Reset()
@@ -185,12 +185,12 @@ func TestJA4SSH_ACKCounting(t *testing.T) {
 
 	// 5 SSH data packets from client
 	for i := 0; i < 5; i++ {
-		fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+		_, _ = fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
 	}
 
 	// 3 pure ACKs from server
 	for i := 0; i < 3; i++ {
-		fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, 22, 54321, nil, true))
+		_, _ = fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, 22, 54321, nil, true))
 	}
 
 	// 2 more SSH data from server — should hit 10 total
