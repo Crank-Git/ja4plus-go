@@ -107,7 +107,7 @@ func TestJA4T_MSSOnly(t *testing.T) {
 func TestJA4T_Reset(t *testing.T) {
 	fp := NewJA4T()
 	pkt := buildTCPPacket(t, 12345, 80, true, false, 65535, nil)
-	fp.ProcessPacket(pkt)
+	_, _ = fp.ProcessPacket(pkt)
 	if len(fp.results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(fp.results))
 	}

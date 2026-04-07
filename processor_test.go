@@ -95,7 +95,7 @@ func TestProcessor_Reset(t *testing.T) {
 
 	// Process a SYN so state accumulates
 	pkt := buildSYNPacket("192.168.1.1", "10.0.0.1", 54321, 443)
-	proc.ProcessPacket(pkt)
+	_, _ = proc.ProcessPacket(pkt)
 
 	// Reset should not panic
 	proc.Reset()

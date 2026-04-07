@@ -47,7 +47,7 @@ func TestJA4TS_ACKOnly(t *testing.T) {
 func TestJA4TS_Reset(t *testing.T) {
 	fp := NewJA4TS()
 	pkt := buildTCPPacket(t, 443, 12345, true, true, 29200, nil)
-	fp.ProcessPacket(pkt)
+	_, _ = fp.ProcessPacket(pkt)
 	if len(fp.results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(fp.results))
 	}
