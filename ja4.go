@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 // JA4Fingerprinter computes JA4 TLS Client Hello fingerprints.
@@ -20,15 +21,38 @@ func NewJA4() *JA4Fingerprinter {
 
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
 func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	payload := GetTCPPayload(packet)
-	if payload == nil {
-		return nil, nil
+	var ch *ClientHello
+	var srcPort, dstPort uint16
+
+	// Try TCP/TLS first
+	if payload := GetTCPPayload(packet); payload != nil {
+		var err error
+		ch, err = ParseClientHello(payload)
+		if err != nil {
+			return nil, err
+		}
+		if tcp := GetTCPLayer(packet); tcp != nil {
+			srcPort = uint16(tcp.SrcPort)
+			dstPort = uint16(tcp.DstPort)
+		}
 	}
 
-	ch, err := ParseClientHello(payload)
-	if err != nil {
-		return nil, err
+	// Try QUIC in UDP packets
+	if ch == nil {
+		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
+			udp := udpLayer.(*layers.UDP)
+			if len(udp.Payload) > 0 {
+				var err error
+				ch, err = ParseQUICInitial(udp.Payload)
+				if err != nil {
+					return nil, err
+				}
+				srcPort = uint16(udp.SrcPort)
+				dstPort = uint16(udp.DstPort)
+			}
+		}
 	}
+
 	if ch == nil {
 		return nil, nil
 	}
@@ -41,12 +65,6 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	raw := computeJA4RawFromClientHello(ch)
 
 	srcIP, dstIP, _ := GetIPInfo(packet)
-	tcp := GetTCPLayer(packet)
-	var srcPort, dstPort uint16
-	if tcp != nil {
-		srcPort = uint16(tcp.SrcPort)
-		dstPort = uint16(tcp.DstPort)
-	}
 
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
