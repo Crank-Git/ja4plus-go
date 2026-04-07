@@ -19,11 +19,6 @@ type HTTPRequest struct {
 	Referer     string            // Referer value
 }
 
-var httpMethods = map[string]bool{
-	"GET": true, "POST": true, "PUT": true, "DELETE": true,
-	"HEAD": true, "OPTIONS": true, "PATCH": true, "CONNECT": true, "TRACE": true,
-}
-
 var requestLineRe = regexp.MustCompile(`^(GET|POST|PUT|DELETE|HEAD|OPTIONS|CONNECT|TRACE|PATCH)\s+(\S+)\s+(HTTP/\d+\.\d+)`)
 var headerLineRe = regexp.MustCompile(`^([^:]+):\s*(.*)$`)
 

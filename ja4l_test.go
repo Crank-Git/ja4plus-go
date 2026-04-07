@@ -32,7 +32,7 @@ func buildTCPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort
 		ACK:     ack,
 		Window:  65535,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	_ = tcp.SetNetworkLayerForChecksum(ip)
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
 	if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp); err != nil {
@@ -135,7 +135,7 @@ func TestJA4L_MinimumLatency(t *testing.T) {
 	// SYN at t=0
 	synPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, true, false)
 	synPkt.Metadata().Timestamp = baseTime
-	fp.ProcessPacket(synPkt)
+	_, _ = fp.ProcessPacket(synPkt)
 
 	// SYN-ACK at same time (zero diff) -> should clamp to 1
 	synAckPkt := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 12345, true, true)
@@ -161,11 +161,11 @@ func TestJA4L_DuplicateACK(t *testing.T) {
 
 	synPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, true, false)
 	synPkt.Metadata().Timestamp = baseTime
-	fp.ProcessPacket(synPkt)
+	_, _ = fp.ProcessPacket(synPkt)
 
 	synAckPkt := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 12345, true, true)
 	synAckPkt.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
-	fp.ProcessPacket(synAckPkt)
+	_, _ = fp.ProcessPacket(synAckPkt)
 
 	// First ACK — should produce JA4L-C
 	ackPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, false, true)

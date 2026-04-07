@@ -29,7 +29,7 @@ func buildTCPPayloadPacket(t *testing.T, payload []byte) gopacket.Packet {
 		DstPort: 12345,
 		ACK:     true,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	_ = tcp.SetNetworkLayerForChecksum(ip)
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
 	if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload(payload)); err != nil {

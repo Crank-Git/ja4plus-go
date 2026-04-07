@@ -27,7 +27,7 @@ func buildSYNPacket(srcIP, dstIP string, srcPort, dstPort uint16) gopacket.Packe
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	gopacket.SerializeLayers(buf, opts, ip, tcp)
+	_ = gopacket.SerializeLayers(buf, opts, ip, tcp)
 
 	pkt := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeIPv4, gopacket.Default)
 	pkt.Metadata().Timestamp = time.Now()
@@ -76,7 +76,7 @@ func TestProcessor_NonApplicablePacket(t *testing.T) {
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	gopacket.SerializeLayers(buf, opts, ip, tcp)
+	_ = gopacket.SerializeLayers(buf, opts, ip, tcp)
 
 	pkt := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeIPv4, gopacket.Default)
 	pkt.Metadata().Timestamp = time.Now()

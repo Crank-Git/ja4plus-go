@@ -33,7 +33,7 @@ func buildTCPPacketWithPayload(t *testing.T, payload []byte) gopacket.Packet {
 		ACK:     true,
 		Window:  65535,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	_ = tcp.SetNetworkLayerForChecksum(ip)
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
@@ -258,7 +258,7 @@ func TestJA4H_Reset(t *testing.T) {
 	pkt := buildTCPPacketWithPayload(t, []byte(raw))
 
 	fp := NewJA4H()
-	fp.ProcessPacket(pkt)
+	_, _ = fp.ProcessPacket(pkt)
 	if len(fp.results) != 1 {
 		t.Fatalf("expected 1 result before reset, got %d", len(fp.results))
 	}

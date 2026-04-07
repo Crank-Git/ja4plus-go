@@ -32,9 +32,9 @@ func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
 
 	if len(payload) > 0 {
-		gopacket.SerializeLayers(buf, opts, ip, tcp, gopacket.Payload(payload))
+		_ = gopacket.SerializeLayers(buf, opts, ip, tcp, gopacket.Payload(payload))
 	} else {
-		gopacket.SerializeLayers(buf, opts, ip, tcp)
+		_ = gopacket.SerializeLayers(buf, opts, ip, tcp)
 	}
 
 	pkt := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeIPv4, gopacket.Default)
