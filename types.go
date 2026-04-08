@@ -10,6 +10,12 @@ import (
 type Fingerprinter interface {
 	ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error)
 	Reset()
+	// CleanupConnection removes internal state associated with a connection
+	// identified by the given 5-tuple. Each fingerprinter normalizes the tuple
+	// to its own internal key format. This prevents state leaks in long-running
+	// monitors. For QUIC-keyed fingerprinters (JA4, JA4S), this also cleans up
+	// any DCID-to-tuple mappings.
+	CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string)
 }
 
 // FingerprintResult holds a single fingerprint and its metadata.

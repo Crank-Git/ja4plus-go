@@ -14,12 +14,14 @@ import (
 type JA4Fingerprinter struct {
 	results       []FingerprintResult
 	quicFragments map[string][]parser.CryptoFragment // DCID hex -> accumulated fragments
+	dcidToTuple   map[string]string                  // DCID hex -> 5-tuple key for cleanup
 }
 
 // NewJA4 creates a new JA4Fingerprinter.
 func NewJA4() *JA4Fingerprinter {
 	return &JA4Fingerprinter{
 		quicFragments: make(map[string][]parser.CryptoFragment),
+		dcidToTuple:   make(map[string]string),
 	}
 }
 
@@ -54,6 +56,11 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 					dcidKey := fmt.Sprintf("%x", dcid)
 					f.quicFragments[dcidKey] = append(f.quicFragments[dcidKey], frags...)
 
+					// Record DCID-to-tuple mapping for cleanup and shard routing
+					srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
+					tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, uint16(udp.SrcPort), dstIP, uint16(udp.DstPort))
+					f.dcidToTuple[dcidKey] = tupleKey
+
 					// Try to parse ClientHello from accumulated fragments
 					ch, err = parser.ClientHelloFromCryptoFragments(f.quicFragments[dcidKey])
 					if err != nil {
@@ -61,6 +68,7 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 					}
 					if ch != nil {
 						delete(f.quicFragments, dcidKey)
+						delete(f.dcidToTuple, dcidKey)
 					}
 				}
 				srcPort = uint16(udp.SrcPort)
@@ -103,6 +111,20 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 func (f *JA4Fingerprinter) Reset() {
 	f.results = nil
 	f.quicFragments = make(map[string][]parser.CryptoFragment)
+	f.dcidToTuple = make(map[string]string)
+}
+
+// CleanupConnection removes internal state for the given connection.
+// JA4 QUIC state is keyed by DCID hex. This method looks up the DCID
+// via the dcidToTuple reverse map and cleans the corresponding fragments.
+func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	for dcid, tuple := range f.dcidToTuple {
+		if tuple == tupleKey {
+			delete(f.quicFragments, dcid)
+			delete(f.dcidToTuple, dcid)
+		}
+	}
 }
 
 // ComputeJA4 is a convenience function that extracts a JA4 fingerprint from a packet.

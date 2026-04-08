@@ -42,6 +42,10 @@ func (f *JA4TFingerprinter) Reset() {
 	f.results = nil
 }
 
+// CleanupConnection is a no-op for JA4T (stateless per-packet fingerprinter).
+func (f *JA4TFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+}
+
 // generateTCPFingerprint builds the fingerprint string from TCP header fields.
 // Shared between JA4T (SYN) and JA4TS (SYN-ACK).
 // Format: {window_size}_{options}_{mss}_{wscale}

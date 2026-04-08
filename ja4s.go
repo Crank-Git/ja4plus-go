@@ -112,6 +112,15 @@ func (f *JA4SFingerprinter) Reset() {
 	f.quicDCIDs = make(map[string][]byte)
 }
 
+// CleanupConnection removes internal state for the given connection.
+// JA4S QUIC state is keyed by directional tuple: srcIP:srcPort-dstIP:dstPort.
+func (f *JA4SFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	fwd := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+	delete(f.quicDCIDs, fwd)
+	delete(f.quicDCIDs, rev)
+}
+
 // ComputeJA4S is a convenience function that extracts a JA4S fingerprint from a packet.
 // Returns an empty string if the packet is not a TLS ServerHello.
 func ComputeJA4S(packet gopacket.Packet) string {
