@@ -37,6 +37,10 @@ func (f *JA4TSFingerprinter) Reset() {
 	f.results = nil
 }
 
+// CleanupConnection is a no-op for JA4TS (stateless per-packet fingerprinter).
+func (f *JA4TSFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+}
+
 // ComputeJA4TS is a convenience function that computes the JA4TS fingerprint for a single packet.
 func ComputeJA4TS(packet gopacket.Packet) string {
 	fp := NewJA4TS()

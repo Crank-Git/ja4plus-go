@@ -107,6 +107,21 @@ func (f *JA4XFingerprinter) Reset() {
 	f.lastCleanup = time.Now()
 }
 
+// CleanupConnection removes internal state for the given connection.
+// JA4X uses directional keys: srcIP:srcPort-dstIP:dstPort.
+// Both directions are cleaned since the certificate may arrive from either side.
+func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	fwd := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+	delete(f.streams, fwd)
+	delete(f.streams, rev)
+	// Note: processedCerts is keyed by cert hash (content-addressed), not connection.
+	// It cannot be cleaned per-connection without a reverse lookup. It is bounded by
+	// the cleanup() method's ja4xMaxCerts limit and will not grow unbounded.
+}
+
 // cleanup prunes streams and processed certs to prevent unbounded growth.
 // Must be called with f.mu held.
 func (f *JA4XFingerprinter) cleanup() {
@@ -184,7 +199,7 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 				if fp != "" {
 					result := FingerprintResult{
 						Fingerprint: fp,
-						Type:        "JA4X",
+						Type:        "ja4x",
 						SrcIP:       srcIP,
 						DstIP:       dstIP,
 						SrcPort:     srcPort,

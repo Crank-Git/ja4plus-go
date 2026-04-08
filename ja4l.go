@@ -259,6 +259,13 @@ func (f *JA4LFingerprinter) Reset() {
 	f.results = nil
 }
 
+// CleanupConnection removes internal state for the given connection.
+// JA4L normalizes keys lexicographically by IP then port.
+func (f *JA4LFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	connKey, _ := f.normalizeKey(proto, srcIP, srcPort, dstIP, dstPort)
+	delete(f.connections, connKey)
+}
+
 // CalculateDistance estimates physical distance in miles from one-way latency.
 // Uses speed of light in fiber optic cable (0.128 miles/us).
 // propagationFactor accounts for non-direct routing (default 1.6).

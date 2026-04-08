@@ -105,6 +105,15 @@ func (f *JA4HFingerprinter) Reset() {
 	f.reassembler = parser.NewTCPStreamReassembler(100, 1048576)
 }
 
+// CleanupConnection removes internal state for the given connection.
+// JA4H uses directional arrow keys: srcIP:srcPort->dstIP:dstPort.
+func (f *JA4HFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	fwd := fmt.Sprintf("%s:%d->%s:%d", srcIP, srcPort, dstIP, dstPort)
+	rev := fmt.Sprintf("%s:%d->%s:%d", dstIP, dstPort, srcIP, srcPort)
+	f.reassembler.RemoveStream(fwd)
+	f.reassembler.RemoveStream(rev)
+}
+
 // ComputeJA4H extracts the TCP payload from a packet, parses it as an HTTP
 // request, and returns the JA4H fingerprint string. Returns "" if the packet
 // does not contain an HTTP request.

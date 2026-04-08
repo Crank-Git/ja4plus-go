@@ -248,6 +248,31 @@ func (f *JA4SSHFingerprinter) Reset() {
 	f.results = nil
 }
 
+// CleanupConnection removes internal state for the given connection.
+// JA4SSH normalizes keys by port 22 or higher-port direction.
+func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	// Try both directions since we normalize by port 22 or higher port
+	var clientIP, serverIP string
+	var clientPort, serverPort uint16
+
+	if dstPort == 22 {
+		clientIP, serverIP = srcIP, dstIP
+		clientPort, serverPort = srcPort, dstPort
+	} else if srcPort == 22 {
+		clientIP, serverIP = dstIP, srcIP
+		clientPort, serverPort = dstPort, srcPort
+	} else if srcPort > dstPort {
+		clientIP, serverIP = srcIP, dstIP
+		clientPort, serverPort = srcPort, dstPort
+	} else {
+		clientIP, serverIP = dstIP, srcIP
+		clientPort, serverPort = dstPort, srcPort
+	}
+
+	connKey := fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
+	delete(f.connections, connKey)
+}
+
 // mode returns the most common value in a slice. Returns 0 if the slice is empty.
 // On ties, the first-encountered value wins (matching Python's Counter.most_common behavior).
 func mode(values []int) int {
