@@ -19,6 +19,7 @@ type Processor struct {
 	ja4l   *JA4LFingerprinter
 	ja4x   *JA4XFingerprinter
 	ja4ssh *JA4SSHFingerprinter
+	ja4d   *JA4DFingerprinter
 }
 
 // NewProcessor creates a Processor with all fingerprinters initialized.
@@ -32,6 +33,7 @@ func NewProcessor() *Processor {
 		ja4l:   NewJA4L(),
 		ja4x:   NewJA4X(),
 		ja4ssh: NewJA4SSH(0),
+		ja4d:   NewJA4D(),
 	}
 }
 
@@ -50,6 +52,7 @@ func (p *Processor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, 
 		p.ja4l,
 		p.ja4x,
 		p.ja4ssh,
+		p.ja4d,
 	}
 
 	for _, fp := range fingerprinters {
@@ -76,6 +79,7 @@ func (p *Processor) Reset() {
 	p.ja4l.Reset()
 	p.ja4x.Reset()
 	p.ja4ssh.Reset()
+	p.ja4d.Reset()
 }
 
 // CleanupConnection removes internal state for the given connection across all
@@ -91,6 +95,7 @@ func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string
 	p.ja4l.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 	p.ja4x.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 	p.ja4ssh.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
+	p.ja4d.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 }
 
 // GetShardKey returns a stable key for routing packets to processor shards.
