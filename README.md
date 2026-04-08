@@ -167,6 +167,10 @@ results, errs := proc.ProcessPacket(packet)
 | JA4X | `{issuer}_{subject}_{extensions}` | `a37f49ba31e2_a37f49ba31e2_dd4f1a0ef8b2` |
 | JA4SSH | `c{mode}s{mode}_c{pkts}s{pkts}_c{acks}s{acks}` | `c36s36_c51s80_c69s0` |
 
+## Known Limitations
+
+**QUIC multi-packet ClientHello reassembly:** When a QUIC ClientHello is large enough to span multiple QUIC Initial packets (e.g., with many extensions or a pre_shared_key extension), the CRYPTO frame reassembly may not recover the complete handshake message. This can result in a slightly different extension count and hash compared to the Python reference implementation. In practice this affects a small number of QUIC connections with unusually large ClientHellos. TCP/TLS fingerprinting is unaffected.
+
 ## Dependencies
 
 - [gopacket](https://github.com/google/gopacket) for packet capture and dissection
