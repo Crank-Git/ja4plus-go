@@ -41,6 +41,8 @@ type ServerHello struct {
 	Extensions        []uint16
 	ALPNProtocol      string
 	SupportedVersions []uint16
+	IsQUIC            bool
+	IsDTLS            bool
 }
 
 // IsTLSHandshake returns true if the payload begins with a TLS Handshake record header.

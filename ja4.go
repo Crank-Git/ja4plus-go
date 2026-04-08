@@ -64,18 +64,20 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	}
 
 	raw := computeJA4RawFromClientHello(ch)
+	rawOO := computeJA4RawOriginalOrder(ch)
 
-	srcIP, dstIP, _ := parser.GetIPInfo(packet)
+	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
 	result := FingerprintResult{
-		Fingerprint: fingerprint,
-		Raw:         raw,
-		Type:        "JA4",
-		SrcIP:       srcIP,
-		DstIP:       dstIP,
-		SrcPort:     srcPort,
-		DstPort:     dstPort,
-		Timestamp:   parser.GetPacketTimestamp(packet),
+		Fingerprint:      fingerprint,
+		Raw:              raw,
+		RawOriginalOrder: rawOO,
+		Type:             "JA4",
+		SrcIP:            srcIP,
+		DstIP:            dstIP,
+		SrcPort:          srcPort,
+		DstPort:          dstPort,
+		Timestamp:        parser.GetPacketTimestamp(packet),
 	}
 
 	f.results = append(f.results, result)
@@ -225,6 +227,27 @@ func ja4ExtensionHash(ch *parser.ClientHello) string {
 	}
 
 	return parser.TruncatedHash(extStr)
+}
+
+// computeJA4RawOriginalOrder generates the original wire-order raw JA4 fingerprint.
+// Unlike the sorted raw variant, this preserves wire order and keeps SNI/ALPN in extensions.
+func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
+	partA := ja4PartA(ch)
+
+	// Cipher list: GREASE filtered, original wire order (no sorting)
+	ciphers := parser.FilterGreaseValues(ch.CipherSuites)
+	cipherList := formatHexList(ciphers)
+
+	// Extension list: GREASE filtered, original wire order, SNI/ALPN PRESERVED
+	extensions := parser.FilterGreaseValues(ch.Extensions)
+	extList := formatHexList(extensions)
+
+	// Signature algorithms in original order
+	if len(ch.SignatureAlgorithms) > 0 {
+		sigAlgList := formatHexList(ch.SignatureAlgorithms)
+		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
+	}
+	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
 }
 
 // formatHexList formats a slice of uint16 as comma-separated 4-char lowercase hex.

@@ -312,6 +312,49 @@ func TestComputeJA4S_Convenience(t *testing.T) {
 	}
 }
 
+func TestJA4S_ProtocolDetection(t *testing.T) {
+	// Test that computeJA4SFromServerHello uses IsQUIC/IsDTLS correctly
+	sh := &parser.ServerHello{
+		Version:     0x0303,
+		CipherSuite: 0x1301,
+		Extensions:  []uint16{0x002b},
+	}
+
+	// TCP (default)
+	fp := computeJA4SFromServerHello(sh)
+	if !strings.HasPrefix(fp, "t") {
+		t.Errorf("expected TCP prefix 't', got %q", fp)
+	}
+
+	// QUIC
+	sh.IsQUIC = true
+	fp = computeJA4SFromServerHello(sh)
+	if !strings.HasPrefix(fp, "q") {
+		t.Errorf("expected QUIC prefix 'q', got %q", fp)
+	}
+	sh.IsQUIC = false
+
+	// DTLS
+	sh.IsDTLS = true
+	fp = computeJA4SFromServerHello(sh)
+	if !strings.HasPrefix(fp, "d") {
+		t.Errorf("expected DTLS prefix 'd', got %q", fp)
+	}
+}
+
+func TestJA4S_QUICDCIDTracking(t *testing.T) {
+	// Test that the fingerprinter tracks QUIC DCIDs
+	fp := NewJA4S()
+	if len(fp.quicDCIDs) != 0 {
+		t.Error("expected empty DCID map on creation")
+	}
+
+	fp.Reset()
+	if fp.quicDCIDs == nil {
+		t.Error("expected non-nil DCID map after reset")
+	}
+}
+
 func TestComputeJA4S_NilPacket(t *testing.T) {
 	// Non-TCP packet should return empty
 	buf := gopacket.NewSerializeBuffer()

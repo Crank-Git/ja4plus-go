@@ -278,6 +278,74 @@ func TestJA4H_HTTP10(t *testing.T) {
 	}
 }
 
+func TestJA4H_StreamReassembly(t *testing.T) {
+	// Test that multi-segment HTTP requests are reassembled correctly.
+	fp := NewJA4H()
+
+	// Split an HTTP request across two TCP segments.
+	// Split mid-request-line so the first segment alone is not parseable.
+	fullRequest := "GET /path HTTP/1.1\r\nHost: example.com\r\nAccept: text/html\r\n\r\n"
+	part1 := fullRequest[:10] // "GET /path " — incomplete request line
+	part2 := fullRequest[10:] // "HTTP/1.1\r\nHost: ..."
+
+	srcIP := net.IP{192, 168, 1, 1}
+	dstIP := net.IP{10, 0, 0, 1}
+
+	// Build first segment with seq=1000
+	pkt1 := buildTCPPacketWithSeq(t, srcIP, dstIP, 54321, 80, 1000, []byte(part1))
+	results, err := fp.ProcessPacket(pkt1)
+	if err != nil {
+		t.Fatalf("seg1: unexpected error: %v", err)
+	}
+	// First segment alone is not a valid HTTP request (no headers complete)
+	// so it may or may not trigger depending on parser leniency
+
+	// Build second segment with seq = 1000 + len(part1)
+	pkt2 := buildTCPPacketWithSeq(t, srcIP, dstIP, 54321, 80, uint32(1000+len(part1)), []byte(part2))
+	results, err = fp.ProcessPacket(pkt2)
+	if err != nil {
+		t.Fatalf("seg2: unexpected error: %v", err)
+	}
+
+	if len(results) == 0 {
+		t.Fatal("expected fingerprint after reassembly of 2 segments")
+	}
+	if results[0].Type != "ja4h" {
+		t.Errorf("expected type ja4h, got %s", results[0].Type)
+	}
+}
+
+// buildTCPPacketWithSeq creates a TCP packet with a specific sequence number.
+func buildTCPPacketWithSeq(t *testing.T, srcIP, dstIP net.IP, srcPort, dstPort uint16, seq uint32, payload []byte) gopacket.Packet {
+	t.Helper()
+	eth := &layers.Ethernet{
+		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+		DstMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	ip := &layers.IPv4{
+		SrcIP:    srcIP,
+		DstIP:    dstIP,
+		Protocol: layers.IPProtocolTCP,
+		Version:  4,
+		TTL:      64,
+	}
+	tcp := &layers.TCP{
+		SrcPort: layers.TCPPort(srcPort),
+		DstPort: layers.TCPPort(dstPort),
+		Seq:     seq,
+		ACK:     true,
+		Window:  65535,
+	}
+	_ = tcp.SetNetworkLayerForChecksum(ip)
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+	if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload(payload)); err != nil {
+		t.Fatalf("failed to serialize packet: %v", err)
+	}
+	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
 func TestJA4H_PseudoHeadersExcluded(t *testing.T) {
 	raw := "GET / HTTP/1.1\r\n:authority: example.com\r\nHost: example.com\r\nAccept: */*\r\n\r\n"
 	pkt := buildTCPPacketWithPayload(t, []byte(raw))

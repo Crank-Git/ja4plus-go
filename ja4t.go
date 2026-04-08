@@ -81,7 +81,7 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	}
 
 	fingerprint := fmt.Sprintf("%d_%s_%s_%s", windowSize, optionsStr, mss, wscale)
-	srcIP, dstIP, _ := parser.GetIPInfo(packet)
+	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
 	return &FingerprintResult{
 		Fingerprint: fingerprint,

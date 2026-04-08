@@ -10,28 +10,72 @@ import (
 )
 
 // JA4HFingerprinter generates JA4H fingerprints from HTTP request packets.
+// It uses TCP stream reassembly to handle multi-segment HTTP requests.
 type JA4HFingerprinter struct {
-	results []FingerprintResult
+	results     []FingerprintResult
+	reassembler *parser.TCPStreamReassembler
 }
 
 // NewJA4H creates a new JA4H HTTP fingerprinter.
 func NewJA4H() *JA4HFingerprinter {
-	return &JA4HFingerprinter{}
+	return &JA4HFingerprinter{
+		reassembler: parser.NewTCPStreamReassembler(100, 1048576),
+	}
 }
 
 // ProcessPacket processes a packet and returns JA4H fingerprints if the packet
-// contains an HTTP request.
+// contains an HTTP request (possibly reassembled from multiple segments).
 func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	payload := parser.GetTCPPayload(packet)
-	if payload == nil {
+	tcp := parser.GetTCPLayer(packet)
+	if tcp == nil {
 		return nil, nil
 	}
 
-	if !parser.IsHTTPRequest(payload) {
+	payload := tcp.Payload
+	if len(payload) == 0 {
 		return nil, nil
 	}
 
-	req := parser.ParseHTTPRequest(payload)
+	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
+	srcPort := uint16(tcp.SrcPort)
+	dstPort := uint16(tcp.DstPort)
+
+	// Build stream key from connection tuple (forward direction)
+	streamKey := fmt.Sprintf("%s:%d->%s:%d", srcIP, srcPort, dstIP, dstPort)
+
+	// Try single-packet parse first (fast path)
+	if parser.IsHTTPRequest(payload) {
+		req := parser.ParseHTTPRequest(payload)
+		if req != nil {
+			fingerprint := computeJA4HFromRequest(req)
+			if fingerprint != "" {
+				result := FingerprintResult{
+					Fingerprint: fingerprint,
+					Type:        "ja4h",
+					SrcIP:       srcIP,
+					DstIP:       dstIP,
+					SrcPort:     srcPort,
+					DstPort:     dstPort,
+					Timestamp:   parser.GetPacketTimestamp(packet),
+				}
+				f.results = append(f.results, result)
+				f.reassembler.RemoveStream(streamKey)
+				return []FingerprintResult{result}, nil
+			}
+		}
+	}
+
+	// Add to reassembler for multi-segment reassembly
+	seq := tcp.Seq
+	f.reassembler.AddSegment(streamKey, seq, payload)
+
+	// Try to parse reassembled stream
+	assembled := f.reassembler.GetStream(streamKey)
+	if assembled == nil || !parser.IsHTTPRequest(assembled) {
+		return nil, nil
+	}
+
+	req := parser.ParseHTTPRequest(assembled)
 	if req == nil {
 		return nil, nil
 	}
@@ -41,28 +85,24 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 
-	srcIP, dstIP, _ := parser.GetIPInfo(packet)
-	tcp := parser.GetTCPLayer(packet)
-
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
 		Type:        "ja4h",
 		SrcIP:       srcIP,
 		DstIP:       dstIP,
+		SrcPort:     srcPort,
+		DstPort:     dstPort,
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
-	if tcp != nil {
-		result.SrcPort = uint16(tcp.SrcPort)
-		result.DstPort = uint16(tcp.DstPort)
-	}
-
 	f.results = append(f.results, result)
+	f.reassembler.RemoveStream(streamKey)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears all accumulated results.
+// Reset clears all accumulated results and stream state.
 func (f *JA4HFingerprinter) Reset() {
 	f.results = nil
+	f.reassembler = parser.NewTCPStreamReassembler(100, 1048576)
 }
 
 // ComputeJA4H extracts the TCP payload from a packet, parses it as an HTTP

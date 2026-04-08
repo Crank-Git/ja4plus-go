@@ -5,33 +5,82 @@ import (
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 // JA4SFingerprinter computes JA4S TLS Server Hello fingerprints.
 type JA4SFingerprinter struct {
-	results []FingerprintResult
+	results   []FingerprintResult
+	quicDCIDs map[string][]byte // tracks client DCIDs for QUIC server decryption
 }
 
 // NewJA4S creates a new JA4SFingerprinter.
 func NewJA4S() *JA4SFingerprinter {
-	return &JA4SFingerprinter{}
+	return &JA4SFingerprinter{
+		quicDCIDs: make(map[string][]byte),
+	}
 }
 
 // ProcessPacket processes a packet and returns JA4S fingerprint results.
 func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
-	payload := parser.GetTCPPayload(packet)
-	if payload == nil {
-		return nil, nil
+	var sh *parser.ServerHello
+	var srcPort, dstPort uint16
+
+	// Try TCP/TLS first
+	if payload := parser.GetTCPPayload(packet); payload != nil {
+		if parser.IsTLSHandshake(payload) && payload[5] == parser.TLSHandshakeServerHello {
+			var err error
+			sh, err = parser.ParseServerHello(payload)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if tcp := parser.GetTCPLayer(packet); tcp != nil {
+			srcPort = uint16(tcp.SrcPort)
+			dstPort = uint16(tcp.DstPort)
+		}
 	}
 
-	if !parser.IsTLSHandshake(payload) || payload[5] != parser.TLSHandshakeServerHello {
-		return nil, nil
+	// Try QUIC in UDP packets
+	if sh == nil {
+		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
+			udp := udpLayer.(*layers.UDP)
+			if len(udp.Payload) > 0 {
+				srcPort = uint16(udp.SrcPort)
+				dstPort = uint16(udp.DstPort)
+
+				// Build connection key for DCID tracking
+				srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
+				connKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+				reverseKey := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+
+				// Check if this is a client Initial (to capture DCID)
+				ch, _ := parser.ParseQUICInitial(udp.Payload)
+				if ch != nil {
+					// Extract DCID from the packet for later server decryption
+					if len(udp.Payload) > 5 {
+						dcidLen := int(udp.Payload[5])
+						if 6+dcidLen <= len(udp.Payload) {
+							dcid := make([]byte, dcidLen)
+							copy(dcid, udp.Payload[6:6+dcidLen])
+							f.quicDCIDs[connKey] = dcid
+						}
+					}
+					return nil, nil
+				}
+
+				// Try as server Initial using stored DCID
+				if dcid, ok := f.quicDCIDs[reverseKey]; ok {
+					var err error
+					sh, err = parser.ParseQUICServerInitial(udp.Payload, dcid)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+		}
 	}
 
-	sh, err := parser.ParseServerHello(payload)
-	if err != nil {
-		return nil, err
-	}
 	if sh == nil {
 		return nil, nil
 	}
@@ -41,13 +90,7 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 
-	srcIP, dstIP, _ := parser.GetIPInfo(packet)
-	tcp := parser.GetTCPLayer(packet)
-	var srcPort, dstPort uint16
-	if tcp != nil {
-		srcPort = uint16(tcp.SrcPort)
-		dstPort = uint16(tcp.DstPort)
-	}
+	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
@@ -66,6 +109,7 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // Reset clears all stored results.
 func (f *JA4SFingerprinter) Reset() {
 	f.results = nil
+	f.quicDCIDs = make(map[string][]byte)
 }
 
 // ComputeJA4S is a convenience function that extracts a JA4S fingerprint from a packet.
@@ -87,14 +131,14 @@ func ComputeJA4S(packet gopacket.Packet) string {
 
 // computeJA4SFromServerHello generates a JA4S fingerprint from a parsed ServerHello.
 func computeJA4SFromServerHello(sh *parser.ServerHello) string {
-	// Protocol: always TCP for now (QUIC/DTLS not tracked in ServerHello struct)
 	proto := "t"
+	if sh.IsQUIC {
+		proto = "q"
+	} else if sh.IsDTLS {
+		proto = "d"
+	}
 
-	// Version: use supported_versions (non-GREASE) if present, else handshake version.
-	// ParseServerHello already updates sh.Version from supported_versions,
-	// but we replicate the logic here for clarity.
 	version := sh.Version
-
 	verStr := parser.TLSVersionString(version)
 
 	// Extension count: INCLUDES GREASE (unlike JA4), capped at 99
@@ -117,7 +161,6 @@ func computeJA4SFromServerHello(sh *parser.ServerHello) string {
 	cipherStr := fmt.Sprintf("%04x", sh.CipherSuite)
 
 	// Extension hash: ORIGINAL WIRE ORDER, INCLUDING GREASE, no SNI/ALPN removal
-	// Per FoxIO spec, JA4S extensions are NOT sorted — they preserve original order.
 	var extHash string
 	if len(sh.Extensions) == 0 {
 		extHash = parser.EmptyHash
