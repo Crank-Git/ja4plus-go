@@ -238,18 +238,18 @@ func TestParseCryptoFrames_SingleCrypto(t *testing.T) {
 	if len(frags) != 1 {
 		t.Fatalf("expected 1 fragment, got %d", len(frags))
 	}
-	if frags[0].offset != 0 {
-		t.Errorf("offset = %d, want 0", frags[0].offset)
+	if frags[0].Offset != 0 {
+		t.Errorf("offset = %d, want 0", frags[0].Offset)
 	}
-	if string(frags[0].data) != "abc" {
-		t.Errorf("data = %q, want %q", frags[0].data, "abc")
+	if string(frags[0].Data) != "abc" {
+		t.Errorf("data = %q, want %q", frags[0].Data, "abc")
 	}
 }
 
 func TestReassembleCryptoFrames(t *testing.T) {
-	frags := []cryptoFragment{
-		{offset: 3, data: []byte("def")},
-		{offset: 0, data: []byte("abc")},
+	frags := []CryptoFragment{
+		{Offset: 3, Data: []byte("def")},
+		{Offset: 0, Data: []byte("abc")},
 	}
 	result := ReassembleCryptoFrames(frags)
 	if string(result) != "abcdef" {

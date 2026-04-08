@@ -12,12 +12,15 @@ import (
 
 // JA4Fingerprinter computes JA4 TLS Client Hello fingerprints.
 type JA4Fingerprinter struct {
-	results []FingerprintResult
+	results       []FingerprintResult
+	quicFragments map[string][]parser.CryptoFragment // DCID hex -> accumulated fragments
 }
 
 // NewJA4 creates a new JA4Fingerprinter.
 func NewJA4() *JA4Fingerprinter {
-	return &JA4Fingerprinter{}
+	return &JA4Fingerprinter{
+		quicFragments: make(map[string][]parser.CryptoFragment),
+	}
 }
 
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
@@ -38,15 +41,27 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		}
 	}
 
-	// Try QUIC in UDP packets
+	// Try QUIC in UDP packets with multi-packet CRYPTO frame accumulation
 	if ch == nil {
 		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
 			udp := udpLayer.(*layers.UDP)
 			if len(udp.Payload) > 0 {
-				var err error
-				ch, err = parser.ParseQUICInitial(udp.Payload)
+				frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
 				if err != nil {
 					return nil, err
+				}
+				if len(frags) > 0 && len(dcid) > 0 {
+					dcidKey := fmt.Sprintf("%x", dcid)
+					f.quicFragments[dcidKey] = append(f.quicFragments[dcidKey], frags...)
+
+					// Try to parse ClientHello from accumulated fragments
+					ch, err = parser.ClientHelloFromCryptoFragments(f.quicFragments[dcidKey])
+					if err != nil {
+						return nil, err
+					}
+					if ch != nil {
+						delete(f.quicFragments, dcidKey)
+					}
 				}
 				srcPort = uint16(udp.SrcPort)
 				dstPort = uint16(udp.DstPort)
@@ -87,6 +102,7 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 // Reset clears all stored results.
 func (f *JA4Fingerprinter) Reset() {
 	f.results = nil
+	f.quicFragments = make(map[string][]parser.CryptoFragment)
 }
 
 // ComputeJA4 is a convenience function that extracts a JA4 fingerprint from a packet.

@@ -111,7 +111,7 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 			return nil, nil
 		}
 		conn, exists := f.connections[connKey]
-		if !exists || !conn.hasSSH {
+		if !exists || (!conn.hasSSH && conn.clientBanner == "" && conn.serverBanner == "") {
 			return nil, nil
 		}
 		// Count ACK for this direction
@@ -172,13 +172,15 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 func (f *JA4SSHFingerprinter) checkWindow(connKey string, conn *sshConnState, packet gopacket.Packet, srcIP, dstIP string, srcPort, dstPort uint16) ([]FingerprintResult, error) {
 	totalPackets := len(conn.clientSizes) + len(conn.serverSizes) + conn.clientACKs + conn.serverACKs
 
-	// Early trigger at min(packetCount, 10)
+	// Early trigger at min(packetCount, 10), OR when both HASSH are available
+	// and there's at least 1 packet (matching Python behavior).
 	threshold := f.packetCount
 	if threshold > 10 {
 		threshold = 10
 	}
 
-	if totalPackets < threshold {
+	hasshReady := totalPackets > 0 && conn.hassh != "" && conn.hasshServer != ""
+	if totalPackets < threshold && !hasshReady {
 		return nil, nil
 	}
 
