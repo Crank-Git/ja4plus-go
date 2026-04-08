@@ -241,8 +241,8 @@ func TestJA4SFingerprinter_ValidServerHello(t *testing.T) {
 	}
 
 	r := results[0]
-	if r.Type != "JA4S" {
-		t.Errorf("type = %q, want %q", r.Type, "JA4S")
+	if r.Type != "ja4s" {
+		t.Errorf("type = %q, want %q", r.Type, "ja4s")
 	}
 
 	parts := strings.Split(r.Fingerprint, "_")
@@ -289,7 +289,7 @@ func TestJA4SFingerprinter_GREASEInPacket(t *testing.T) {
 
 func TestJA4S_Reset(t *testing.T) {
 	f := NewJA4S()
-	f.results = []FingerprintResult{{Type: "JA4S"}}
+	f.results = []FingerprintResult{{Type: "ja4s"}}
 	f.Reset()
 	if f.results != nil {
 		t.Errorf("expected nil results after reset, got %v", f.results)

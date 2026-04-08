@@ -94,7 +94,7 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
-		Type:        "JA4S",
+		Type:        "ja4s",
 		SrcIP:       srcIP,
 		DstIP:       dstIP,
 		SrcPort:     srcPort,

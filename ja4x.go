@@ -184,7 +184,7 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 				if fp != "" {
 					result := FingerprintResult{
 						Fingerprint: fp,
-						Type:        "JA4X",
+						Type:        "ja4x",
 						SrcIP:       srcIP,
 						DstIP:       dstIP,
 						SrcPort:     srcPort,

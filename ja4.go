@@ -87,7 +87,7 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		Fingerprint:      fingerprint,
 		Raw:              raw,
 		RawOriginalOrder: rawOO,
-		Type:             "JA4",
+		Type:             "ja4",
 		SrcIP:            srcIP,
 		DstIP:            dstIP,
 		SrcPort:          srcPort,
