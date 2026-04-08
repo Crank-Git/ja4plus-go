@@ -293,16 +293,15 @@ func TestJA4H_StreamReassembly(t *testing.T) {
 
 	// Build first segment with seq=1000
 	pkt1 := buildTCPPacketWithSeq(t, srcIP, dstIP, 54321, 80, 1000, []byte(part1))
-	results, err := fp.ProcessPacket(pkt1)
+	_, err := fp.ProcessPacket(pkt1)
 	if err != nil {
 		t.Fatalf("seg1: unexpected error: %v", err)
 	}
 	// First segment alone is not a valid HTTP request (no headers complete)
-	// so it may or may not trigger depending on parser leniency
 
 	// Build second segment with seq = 1000 + len(part1)
 	pkt2 := buildTCPPacketWithSeq(t, srcIP, dstIP, 54321, 80, uint32(1000+len(part1)), []byte(part2))
-	results, err = fp.ProcessPacket(pkt2)
+	results, err := fp.ProcessPacket(pkt2)
 	if err != nil {
 		t.Fatalf("seg2: unexpected error: %v", err)
 	}
