@@ -14,12 +14,13 @@ type Fingerprinter interface {
 
 // FingerprintResult holds a single fingerprint and its metadata.
 type FingerprintResult struct {
-	Fingerprint string
-	Raw         string
-	Type        string
-	SrcIP       string
-	DstIP       string
-	SrcPort     uint16
-	DstPort     uint16
-	Timestamp   time.Time
+	Fingerprint      string
+	Raw              string
+	RawOriginalOrder string // JA4_ro: wire-order, no sorting, SNI/ALPN preserved
+	Type             string
+	SrcIP            string
+	DstIP            string
+	SrcPort          uint16
+	DstPort          uint16
+	Timestamp        time.Time
 }

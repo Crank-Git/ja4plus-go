@@ -97,9 +97,9 @@ func hkdfExpandLabel(secret []byte, label string, context []byte, length int) ([
 	return out, nil
 }
 
-// DeriveInitialKeys derives the client key, IV, and header protection key
-// from the Destination Connection ID for a QUIC Initial packet.
-func DeriveInitialKeys(dcid []byte, version uint32) (key, iv, hpKey []byte, err error) {
+// deriveInitialKeysForRole derives key, IV, and header protection key
+// for either client or server role from the Destination Connection ID.
+func deriveInitialKeysForRole(dcid []byte, version uint32, role string) (key, iv, hpKey []byte, err error) {
 	var salt []byte
 	switch version {
 	case quicV1:
@@ -113,31 +113,37 @@ func DeriveInitialKeys(dcid []byte, version uint32) (key, iv, hpKey []byte, err 
 	// initial_secret = HKDF-Extract(salt, DCID)
 	initialSecret := hkdf.Extract(sha256.New, dcid, salt)
 
-	// client_secret = HKDF-Expand-Label(initial_secret, "client in", "", 32)
-	clientSecret, err := hkdfExpandLabel(initialSecret, "client in", nil, 32)
+	// role_secret = HKDF-Expand-Label(initial_secret, "<role> in", "", 32)
+	roleSecret, err := hkdfExpandLabel(initialSecret, role+" in", nil, 32)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	// key = HKDF-Expand-Label(client_secret, "quic key", "", 16)
-	key, err = hkdfExpandLabel(clientSecret, "quic key", nil, 16)
+	key, err = hkdfExpandLabel(roleSecret, "quic key", nil, 16)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
-	// iv = HKDF-Expand-Label(client_secret, "quic iv", "", 12)
-	iv, err = hkdfExpandLabel(clientSecret, "quic iv", nil, 12)
+	iv, err = hkdfExpandLabel(roleSecret, "quic iv", nil, 12)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
-	// hp_key = HKDF-Expand-Label(client_secret, "quic hp", "", 16)
-	hpKey, err = hkdfExpandLabel(clientSecret, "quic hp", nil, 16)
+	hpKey, err = hkdfExpandLabel(roleSecret, "quic hp", nil, 16)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
 	return key, iv, hpKey, nil
+}
+
+// DeriveInitialKeys derives the client key, IV, and header protection key
+// from the Destination Connection ID for a QUIC Initial packet.
+func DeriveInitialKeys(dcid []byte, version uint32) (key, iv, hpKey []byte, err error) {
+	return deriveInitialKeysForRole(dcid, version, "client")
+}
+
+// DeriveServerInitialKeys derives the server key, IV, and header protection key
+// from the Destination Connection ID of the client's Initial packet.
+func DeriveServerInitialKeys(dcid []byte, version uint32) (key, iv, hpKey []byte, err error) {
+	return deriveInitialKeysForRole(dcid, version, "server")
 }
 
 // aesECBEncryptBlock encrypts a single AES block using ECB mode (raw AES).
@@ -151,10 +157,10 @@ func aesECBEncryptBlock(key, block []byte) ([]byte, error) {
 	return out, nil
 }
 
-// cryptoFragment represents a CRYPTO frame fragment with offset and data.
-type cryptoFragment struct {
-	offset uint64
-	data   []byte
+// CryptoFragment represents a CRYPTO frame fragment with offset and data.
+type CryptoFragment struct {
+	Offset uint64
+	Data   []byte
 }
 
 // ParseQUICInitial parses a QUIC Initial packet and extracts the TLS ClientHello.
@@ -367,9 +373,156 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	return ch, nil
 }
 
+// DecryptQUICInitialCrypto decrypts a QUIC Initial packet and returns the raw
+// CRYPTO frame fragments without attempting to parse a ClientHello.
+// Returns the DCID for key correlation across packets.
+// Returns nil, nil, nil if the payload is not a QUIC Initial.
+func DecryptQUICInitialCrypto(payload []byte) (fragments []CryptoFragment, dcid []byte, err error) {
+	if len(payload) < 5 {
+		return nil, nil, nil
+	}
+	firstByte := payload[0]
+	if firstByte&0x80 == 0 {
+		return nil, nil, nil
+	}
+	version := binary.BigEndian.Uint32(payload[1:5])
+	if version == 0 {
+		return nil, nil, nil
+	}
+	var isInitial bool
+	switch version {
+	case quicV1:
+		isInitial = (firstByte & 0x30) == 0x00
+	case quicV2:
+		isInitial = (firstByte & 0x30) == 0x10
+	default:
+		return nil, nil, nil
+	}
+	if !isInitial {
+		return nil, nil, nil
+	}
+	pos := 5
+	if pos >= len(payload) {
+		return nil, nil, nil
+	}
+	dcidLen := int(payload[pos])
+	pos++
+	if pos+dcidLen > len(payload) {
+		return nil, nil, nil
+	}
+	dcid = make([]byte, dcidLen)
+	copy(dcid, payload[pos:pos+dcidLen])
+	pos += dcidLen
+	if pos >= len(payload) {
+		return nil, nil, nil
+	}
+	scidLen := int(payload[pos])
+	pos++
+	if pos+scidLen > len(payload) {
+		return nil, nil, nil
+	}
+	pos += scidLen
+	tokenLen, newPos, e := DecodeVarint(payload, pos)
+	if e != nil {
+		return nil, nil, nil
+	}
+	pos = newPos
+	if pos+int(tokenLen) > len(payload) {
+		return nil, nil, nil
+	}
+	pos += int(tokenLen)
+	payloadLen, newPos, e := DecodeVarint(payload, pos)
+	if e != nil {
+		return nil, nil, nil
+	}
+	pos = newPos
+	pnOffset := pos
+	if pnOffset+int(payloadLen) > len(payload) {
+		return nil, nil, nil
+	}
+	key, iv, hpKey, e := DeriveInitialKeys(dcid, version)
+	if e != nil {
+		return nil, dcid, e
+	}
+	sampleOffset := pnOffset + 4
+	if sampleOffset+16 > len(payload) {
+		return nil, dcid, nil
+	}
+	sample := payload[sampleOffset : sampleOffset+16]
+	mask, e := aesECBEncryptBlock(hpKey, sample)
+	if e != nil {
+		return nil, dcid, e
+	}
+	headerBuf := make([]byte, len(payload))
+	copy(headerBuf, payload)
+	headerBuf[0] ^= mask[0] & 0x0f
+	pnLength := int(headerBuf[0]&0x03) + 1
+	for i := 0; i < pnLength; i++ {
+		headerBuf[pnOffset+i] ^= mask[1+i]
+	}
+	var pn uint64
+	for i := 0; i < pnLength; i++ {
+		pn = pn<<8 | uint64(headerBuf[pnOffset+i])
+	}
+	nonce := make([]byte, len(iv))
+	copy(nonce, iv)
+	for i := 0; i < 8; i++ {
+		nonce[len(nonce)-1-i] ^= byte(pn >> (8 * i))
+	}
+	ad := headerBuf[:pnOffset+pnLength]
+	encStart := pnOffset + pnLength
+	encLen := int(payloadLen) - pnLength
+	if encLen <= 0 || encStart+encLen > len(payload) {
+		return nil, dcid, nil
+	}
+	ciphertext := make([]byte, encLen)
+	copy(ciphertext, payload[encStart:encStart+encLen])
+	block, e := aes.NewCipher(key)
+	if e != nil {
+		return nil, dcid, e
+	}
+	aead, e := cipher.NewGCM(block)
+	if e != nil {
+		return nil, dcid, e
+	}
+	plaintext, e := aead.Open(nil, nonce, ciphertext, ad)
+	if e != nil {
+		return nil, dcid, e
+	}
+	fragments, e = ParseCryptoFrames(plaintext)
+	return fragments, dcid, e
+}
+
+// ClientHelloFromCryptoFragments reassembles CRYPTO fragments and parses a ClientHello.
+// Returns nil, nil if the data is not a ClientHello.
+func ClientHelloFromCryptoFragments(fragments []CryptoFragment) (*ClientHello, error) {
+	assembled := ReassembleCryptoFrames(fragments)
+	if len(assembled) == 0 {
+		return nil, nil
+	}
+	if assembled[0] != TLSHandshakeClientHello {
+		return nil, nil
+	}
+	tlsRecord := make([]byte, 5+len(assembled))
+	tlsRecord[0] = TLSRecordTypeHandshake
+	tlsRecord[1] = 0x03
+	tlsRecord[2] = 0x01
+	tlsRecord[3] = byte(len(assembled) >> 8)
+	tlsRecord[4] = byte(len(assembled))
+	copy(tlsRecord[5:], assembled)
+	ch, err := ParseClientHello(tlsRecord)
+	if err != nil {
+		return nil, err
+	}
+	if ch != nil {
+		ch.IsQUIC = true
+	}
+	return ch, nil
+}
+
 // ParseCryptoFrames extracts CRYPTO frame fragments from decrypted QUIC payload.
-func ParseCryptoFrames(data []byte) ([]cryptoFragment, error) {
-	var fragments []cryptoFragment
+func ParseCryptoFrames(data []byte) ([]CryptoFragment, error) {
+	var fragments []CryptoFragment
 	pos := 0
 
 	for pos < len(data) {
@@ -401,11 +554,11 @@ func ParseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 				return fragments, errors.New("CRYPTO frame truncated")
 			}
 
-			frag := cryptoFragment{
-				offset: offset,
-				data:   make([]byte, length),
+			frag := CryptoFragment{
+				Offset: offset,
+				Data:   make([]byte, length),
 			}
-			copy(frag.data, data[pos:pos+int(length)])
+			copy(frag.Data, data[pos:pos+int(length)])
 			fragments = append(fragments, frag)
 			pos += int(length)
 			continue
@@ -475,20 +628,20 @@ func ParseCryptoFrames(data []byte) ([]cryptoFragment, error) {
 
 // ReassembleCryptoFrames reassembles potentially fragmented CRYPTO frame data
 // into a contiguous byte slice ordered by offset.
-func ReassembleCryptoFrames(fragments []cryptoFragment) []byte {
+func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 	if len(fragments) == 0 {
 		return nil
 	}
 
 	// Sort by offset
 	sort.Slice(fragments, func(i, j int) bool {
-		return fragments[i].offset < fragments[j].offset
+		return fragments[i].Offset < fragments[j].Offset
 	})
 
 	// Calculate total size
 	var totalLen uint64
 	for _, f := range fragments {
-		end := f.offset + uint64(len(f.data))
+		end := f.Offset + uint64(len(f.Data))
 		if end > totalLen {
 			totalLen = end
 		}
@@ -500,7 +653,186 @@ func ReassembleCryptoFrames(fragments []cryptoFragment) []byte {
 
 	result := make([]byte, totalLen)
 	for _, f := range fragments {
-		copy(result[f.offset:], f.data)
+		copy(result[f.Offset:], f.Data)
 	}
 	return result
+}
+
+// ParseQUICServerInitial parses a QUIC server Initial packet and extracts the TLS ServerHello.
+// The clientDCID is the Destination Connection ID from the client's Initial packet,
+// needed to derive the server's decryption keys.
+// Returns nil, nil if the payload is not a QUIC Initial packet.
+func ParseQUICServerInitial(payload []byte, clientDCID []byte) (*ServerHello, error) {
+	if len(payload) < 5 || len(clientDCID) == 0 {
+		return nil, nil
+	}
+
+	firstByte := payload[0]
+	if firstByte&0x80 == 0 {
+		return nil, nil
+	}
+
+	version := binary.BigEndian.Uint32(payload[1:5])
+	if version == 0 {
+		return nil, nil
+	}
+
+	var isInitial bool
+	switch version {
+	case quicV1:
+		isInitial = (firstByte & 0x30) == 0x00
+	case quicV2:
+		isInitial = (firstByte & 0x30) == 0x10
+	default:
+		return nil, nil
+	}
+	if !isInitial {
+		return nil, nil
+	}
+
+	pos := 5
+
+	// DCID length + DCID
+	if pos >= len(payload) {
+		return nil, nil
+	}
+	dcidLen := int(payload[pos])
+	pos++
+	if pos+dcidLen > len(payload) {
+		return nil, nil
+	}
+	pos += dcidLen
+
+	// SCID length + SCID
+	if pos >= len(payload) {
+		return nil, nil
+	}
+	scidLen := int(payload[pos])
+	pos++
+	if pos+scidLen > len(payload) {
+		return nil, nil
+	}
+	pos += scidLen
+
+	// Token length (varint) + token — server Initials have zero-length token
+	tokenLen, newPos, err := DecodeVarint(payload, pos)
+	if err != nil {
+		return nil, nil
+	}
+	pos = newPos
+	if pos+int(tokenLen) > len(payload) {
+		return nil, nil
+	}
+	pos += int(tokenLen)
+
+	// Payload length (varint)
+	payloadLen, newPos, err := DecodeVarint(payload, pos)
+	if err != nil {
+		return nil, nil
+	}
+	pos = newPos
+	pnOffset := pos
+
+	if pnOffset+int(payloadLen) > len(payload) {
+		return nil, nil
+	}
+
+	// Derive server keys using the CLIENT's original DCID
+	key, iv, hpKey, err := DeriveServerInitialKeys(clientDCID, version)
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove header protection
+	sampleOffset := pnOffset + 4
+	if sampleOffset+16 > len(payload) {
+		return nil, nil
+	}
+	sample := payload[sampleOffset : sampleOffset+16]
+
+	mask, err := aesECBEncryptBlock(hpKey, sample)
+	if err != nil {
+		return nil, err
+	}
+
+	headerBuf := make([]byte, len(payload))
+	copy(headerBuf, payload)
+	headerBuf[0] ^= mask[0] & 0x0f
+	pnLength := int(headerBuf[0]&0x03) + 1
+
+	for i := 0; i < pnLength; i++ {
+		headerBuf[pnOffset+i] ^= mask[1+i]
+	}
+
+	var pn uint64
+	for i := 0; i < pnLength; i++ {
+		pn = pn<<8 | uint64(headerBuf[pnOffset+i])
+	}
+
+	nonce := make([]byte, len(iv))
+	copy(nonce, iv)
+	for i := 0; i < 8; i++ {
+		nonce[len(nonce)-1-i] ^= byte(pn >> (8 * i))
+	}
+
+	ad := headerBuf[:pnOffset+pnLength]
+
+	encStart := pnOffset + pnLength
+	encLen := int(payloadLen) - pnLength
+	if encLen <= 0 || encStart+encLen > len(payload) {
+		return nil, nil
+	}
+
+	ciphertext := make([]byte, encLen)
+	copy(ciphertext, payload[encStart:encStart+encLen])
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	plaintext, err := aead.Open(nil, nonce, ciphertext, ad)
+	if err != nil {
+		return nil, err
+	}
+
+	fragments, err := ParseCryptoFrames(plaintext)
+	if err != nil {
+		return nil, err
+	}
+	if len(fragments) == 0 {
+		return nil, nil
+	}
+
+	assembled := ReassembleCryptoFrames(fragments)
+	if len(assembled) == 0 {
+		return nil, nil
+	}
+
+	// Check for ServerHello (type 0x02)
+	if assembled[0] != TLSHandshakeServerHello {
+		return nil, nil
+	}
+
+	// Wrap in fake TLS record for ParseServerHello
+	tlsRecord := make([]byte, 5+len(assembled))
+	tlsRecord[0] = TLSRecordTypeHandshake
+	tlsRecord[1] = 0x03
+	tlsRecord[2] = 0x01
+	tlsRecord[3] = byte(len(assembled) >> 8)
+	tlsRecord[4] = byte(len(assembled))
+	copy(tlsRecord[5:], assembled)
+
+	sh, err := ParseServerHello(tlsRecord)
+	if err != nil {
+		return nil, err
+	}
+	if sh != nil {
+		sh.IsQUIC = true
+	}
+	return sh, nil
 }

@@ -54,7 +54,7 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 
-	srcIP, dstIP, ok := parser.GetIPInfo(packet)
+	srcIP, dstIP, _, ok := parser.GetIPInfo(packet)
 	if !ok {
 		return nil, nil
 	}

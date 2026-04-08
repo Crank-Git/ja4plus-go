@@ -1,10 +1,13 @@
 package ja4plus
 
 import (
+	"net"
 	"strings"
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 func TestComputeJA4FromClientHello_TLS13(t *testing.T) {
@@ -320,5 +323,85 @@ func TestJA4_HasSNIMalformed(t *testing.T) {
 	// SNI char should be 'd' because HasSNI is true
 	if partA[3] != 'd' {
 		t.Errorf("SNI char = %c, want 'd' for HasSNI=true", partA[3])
+	}
+}
+
+func TestJA4_RawOriginalOrder(t *testing.T) {
+	// Build a TLS ClientHello with extensions in a specific wire order.
+	// The ciphers are intentionally unsorted so Raw (sorted) differs from RawOriginalOrder.
+	ciphers := []uint16{0x1303, 0x1301, 0x1302}
+	exts := []parser.TLSExtension{
+		parser.MakeSNIExtension("example.com"),               // 0x0000
+		parser.MakeALPNExtension("h2", "http/1.1"),           // 0x0010
+		parser.MakeSupportedVersionsClientExtension(0x0304, 0x0303), // 0x002b
+		parser.MakeSignatureAlgorithmsExtension(0x0403, 0x0804),     // 0x000d
+		{Typ: 0x0017, Data: []byte{}},                                // extended_master_secret
+	}
+	tlsPayload := parser.BuildClientHello(0x0303, ciphers, exts)
+
+	// Build a gopacket with IPv4+TCP carrying the ClientHello payload.
+	ip := &layers.IPv4{
+		SrcIP:    net.IP{192, 168, 1, 1},
+		DstIP:    net.IP{10, 0, 0, 1},
+		Protocol: layers.IPProtocolTCP,
+		Version:  4,
+		TTL:      64,
+	}
+	tcp := &layers.TCP{
+		SrcPort: 54321,
+		DstPort: 443,
+		SYN:     false,
+		ACK:     true,
+	}
+	_ = tcp.SetNetworkLayerForChecksum(ip)
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+	if err := gopacket.SerializeLayers(buf, opts, ip, tcp, gopacket.Payload(tlsPayload)); err != nil {
+		t.Fatalf("failed to serialize packet: %v", err)
+	}
+	pkt := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeIPv4, gopacket.Default)
+
+	fp := NewJA4()
+	results, err := fp.ProcessPacket(pkt)
+	if err != nil {
+		t.Fatalf("ProcessPacket error: %v", err)
+	}
+	if len(results) == 0 {
+		t.Fatal("expected at least one result from ProcessPacket")
+	}
+
+	result := results[0]
+
+	if result.RawOriginalOrder == "" {
+		t.Fatal("RawOriginalOrder is empty")
+	}
+	if result.Raw == "" {
+		t.Fatal("Raw is empty")
+	}
+	if result.RawOriginalOrder == result.Raw {
+		t.Errorf("RawOriginalOrder should differ from Raw (sorted vs wire order)\nRaw:              %s\nRawOriginalOrder: %s", result.Raw, result.RawOriginalOrder)
+	}
+
+	// RawOriginalOrder preserves SNI (0000) and ALPN (0010) in extension list
+	if !strings.Contains(result.RawOriginalOrder, "0000") {
+		t.Errorf("RawOriginalOrder should contain SNI extension code 0000: %s", result.RawOriginalOrder)
+	}
+	if !strings.Contains(result.RawOriginalOrder, "0010") {
+		t.Errorf("RawOriginalOrder should contain ALPN extension code 0010: %s", result.RawOriginalOrder)
+	}
+
+	// Raw (sorted variant) excludes SNI and ALPN from extension hash section.
+	// Raw format: partA_sortedCiphers_sortedExts[_sigAlgs]
+	// The extension part (parts[2]) should NOT contain 0000 or 0010.
+	rawParts := strings.Split(result.Raw, "_")
+	if len(rawParts) < 3 {
+		t.Fatalf("Raw has fewer than 3 parts: %s", result.Raw)
+	}
+	rawExtSection := rawParts[2]
+	if strings.Contains(rawExtSection, "0000") {
+		t.Errorf("Raw extension section should not contain SNI (0000): %s", rawExtSection)
+	}
+	if strings.Contains(rawExtSection, "0010") {
+		t.Errorf("Raw extension section should not contain ALPN (0010): %s", rawExtSection)
 	}
 }
