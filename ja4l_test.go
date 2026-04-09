@@ -327,3 +327,78 @@ func TestJA4L_DistanceUtils(t *testing.T) {
 		}
 	}
 }
+
+// TestJA4L_ServerAndClientAreDistinct is the canonical verification
+// that JA4L emits BOTH a server-side latency fingerprint (JA4L-S) and a
+// client-side latency fingerprint (JA4L-C) as distinct, distinguishable
+// values. This covers what some documentation calls "JA4LS"... there is
+// no separate JA4LS fingerprint type in the FoxIO spec; the server
+// variant is already emitted by NewJA4L() as JA4L-S.
+//
+// Added in v0.3 as part of the ja4monitor forensic workbench work. If
+// JA4L ever stops emitting the -S variant, the downstream detail view's
+// server-latency display will silently break, so this test exists as a
+// regression gate.
+func TestJA4L_ServerAndClientAreDistinct(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	// Full three-way handshake.
+	synPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, true, false)
+	synPkt.Metadata().Timestamp = baseTime
+	if _, err := fp.ProcessPacket(synPkt); err != nil {
+		t.Fatalf("SYN: %v", err)
+	}
+
+	synAckPkt := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 12345, true, true)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	synAckResults, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: %v", err)
+	}
+
+	ackPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, false, true)
+	ackPkt.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
+	ackResults, err := fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("ACK: %v", err)
+	}
+
+	// 1. Both results should be emitted.
+	if len(synAckResults) != 1 {
+		t.Fatalf("SYN-ACK should emit 1 result, got %d", len(synAckResults))
+	}
+	if len(ackResults) != 1 {
+		t.Fatalf("ACK should emit 1 result, got %d", len(ackResults))
+	}
+
+	// 2. The server-side result must be JA4L-S.
+	if !strings.HasPrefix(synAckResults[0].Fingerprint, "JA4L-S=") {
+		t.Errorf("server fingerprint = %q, want JA4L-S= prefix",
+			synAckResults[0].Fingerprint)
+	}
+
+	// 3. The client-side result must be JA4L-C.
+	if !strings.HasPrefix(ackResults[0].Fingerprint, "JA4L-C=") {
+		t.Errorf("client fingerprint = %q, want JA4L-C= prefix",
+			ackResults[0].Fingerprint)
+	}
+
+	// 4. Both results carry the same Type ("ja4l"). Consumers distinguish
+	// them by the value prefix, not by Type. This matters for the
+	// detail view, which displays all JA4L events on one timeline row.
+	if synAckResults[0].Type != "ja4l" {
+		t.Errorf("server Type = %q, want ja4l", synAckResults[0].Type)
+	}
+	if ackResults[0].Type != "ja4l" {
+		t.Errorf("client Type = %q, want ja4l", ackResults[0].Type)
+	}
+
+	// 5. Server and client values must be textually different.
+	if synAckResults[0].Fingerprint == ackResults[0].Fingerprint {
+		t.Errorf("server and client fingerprints should differ, got %q for both",
+			synAckResults[0].Fingerprint)
+	}
+}
