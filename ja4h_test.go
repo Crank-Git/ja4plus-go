@@ -4,11 +4,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
 )
 
 // buildTCPPacketWithPayload creates a gopacket.Packet containing Ethernet +
@@ -215,6 +217,66 @@ func TestJA4H_CookieValuesSorted(t *testing.T) {
 	expectedD := truncHash("alpha=a,middle=m,zebra=z")
 	if parts[3] != expectedD {
 		t.Errorf("Part D: got %q, want %q", parts[3], expectedD)
+	}
+}
+
+// TestJA4H_FoxIOHTTP1Vector runs JA4H against testdata/foxio/pcap/http1.pcapng
+// and asserts the first request's Part A matches the FoxIO expected vector.
+// Skipped when the fixture is not present.
+func TestJA4H_FoxIOHTTP1Vector(t *testing.T) {
+	pcapPath := "testdata/foxio/pcap/http1.pcapng"
+	if _, err := os.Stat(pcapPath); os.IsNotExist(err) {
+		t.Skipf("fixture %s not present; skipping FoxIO vector test", pcapPath)
+	}
+
+	handle, err := pcap.OpenOffline(pcapPath)
+	if err != nil {
+		t.Fatalf("open pcap: %v", err)
+	}
+	defer handle.Close()
+
+	fp := NewJA4H()
+	src := gopacket.NewPacketSource(handle, layers.LayerTypeEthernet)
+	got := ""
+	for pkt := range src.Packets() {
+		results, _ := fp.ProcessPacket(pkt)
+		if len(results) > 0 {
+			got = results[0].Fingerprint
+			break
+		}
+	}
+	if got == "" {
+		t.Fatal("no JA4H result extracted from http1.pcapng")
+	}
+	const want = "po11nn050000_530ceba2075f_000000000000_000000000000"
+	if got != want {
+		t.Errorf("http1.pcapng JA4H: got %q, want %q", got, want)
+	}
+}
+
+// TestJA4H_NormalizeVersion verifies the FoxIO PR #288 HTTP version mapping:
+// HTTP/1.0 -> "10", HTTP/1.1 -> "11", HTTP/2 -> "20", HTTP/3 -> "30".
+func TestJA4H_NormalizeVersion(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"HTTP/1.0", "10"},
+		{"HTTP/1.1", "11"},
+		{"HTTP/2", "20"},
+		{"HTTP/3", "30"},
+		{"HTTP/2.0", "20"},
+		{"HTTP/3.0", "30"},
+		{"", "00"},
+		{"HTTP/", "00"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			got := ja4hNormalizeVersion(tt.in)
+			if got != tt.want {
+				t.Errorf("ja4hNormalizeVersion(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
 	}
 }
 
