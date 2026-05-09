@@ -293,6 +293,12 @@ func TLSVersionString(version uint16) string {
 }
 
 // ALPNValue computes the 2-char ALPN field for JA4 from ALPN protocols.
+//
+// Per FoxIO PR #277: if the first OR last byte of the first ALPN value is not
+// ASCII alphanumeric (0x30-0x39, 0x41-0x5A, 0x61-0x7A), the result is the
+// first and last character of the lowercase hex representation of the entire
+// first ALPN string. Otherwise it is the first byte followed by the last byte
+// of the ALPN string (or that byte twice for single-byte ALPNs).
 func ALPNValue(protocols []string) string {
 	if len(protocols) == 0 {
 		return "00"
@@ -301,13 +307,30 @@ func ALPNValue(protocols []string) string {
 	if first == "" {
 		return "00"
 	}
-	if first[0] > 127 {
-		return "99"
+
+	firstByte := first[0]
+	lastByte := first[len(first)-1]
+
+	if alpnIsAlnum(firstByte) && alpnIsAlnum(lastByte) {
+		if len(first) == 1 {
+			return fmt.Sprintf("%c%c", firstByte, firstByte)
+		}
+		return fmt.Sprintf("%c%c", firstByte, lastByte)
 	}
-	if len(first) == 1 {
-		return fmt.Sprintf("%c%c", first[0], first[0])
+
+	// Non-alphanumeric path: hex-encode the entire first ALPN string and
+	// take its first and last characters.
+	hexStr := fmt.Sprintf("%x", []byte(first))
+	if hexStr == "" {
+		return "00"
 	}
-	return fmt.Sprintf("%c%c", first[0], first[len(first)-1])
+	return fmt.Sprintf("%c%c", hexStr[0], hexStr[len(hexStr)-1])
+}
+
+// alpnIsAlnum reports whether b is an ASCII alphanumeric byte:
+// 0x30-0x39 ('0'-'9'), 0x41-0x5A ('A'-'Z'), or 0x61-0x7A ('a'-'z').
+func alpnIsAlnum(b byte) bool {
+	return (b >= '0' && b <= '9') || (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
 }
 
 // parseSNI extracts the hostname from SNI extension data.
