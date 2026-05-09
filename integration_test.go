@@ -1,10 +1,11 @@
 package ja4plus
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/google/gopacket"
@@ -26,22 +27,30 @@ type packetReader interface {
 
 func loadPCAP(t *testing.T, path string) []gopacket.Packet {
 	t.Helper()
-	f, err := os.Open(path)
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Skipf("PCAP not found: %s", path)
 		return nil
 	}
-	defer f.Close()
+	if len(raw) < 4 {
+		t.Fatalf("file too short: %s", path)
+	}
 
+	// Detect format by magic bytes (extensions in the FoxIO corpus are
+	// inconsistent — http1.pcapng is actually pcap-format).
+	//   pcap:   d4c3b2a1 (LE) or a1b2c3d4 (BE)
+	//   pcapng: 0a0d0d0a (Section Header Block)
+	var src io.Reader = bytes.NewReader(raw)
 	var reader packetReader
-	if strings.HasSuffix(path, ".pcapng") {
-		r, err := pcapgo.NewNgReader(f, pcapgo.DefaultNgReaderOptions)
+	switch {
+	case raw[0] == 0x0a && raw[1] == 0x0d && raw[2] == 0x0d && raw[3] == 0x0a:
+		r, err := pcapgo.NewNgReader(src, pcapgo.DefaultNgReaderOptions)
 		if err != nil {
 			t.Fatalf("failed to create pcapng reader: %v", err)
 		}
 		reader = r
-	} else {
-		r, err := pcapgo.NewReader(f)
+	default:
+		r, err := pcapgo.NewReader(src)
 		if err != nil {
 			t.Fatalf("failed to create pcap reader: %v", err)
 		}

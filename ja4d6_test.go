@@ -3,10 +3,6 @@ package ja4plus
 import (
 	"os"
 	"testing"
-
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 )
 
 func TestJA4D6_MessageTypeMapping(t *testing.T) {
@@ -78,11 +74,7 @@ func TestJA4D6_FoxIODHCPv6Vectors(t *testing.T) {
 		t.Skipf("fixture %s not present; skipping FoxIO vector test", pcapPath)
 	}
 
-	handle, err := pcap.OpenOffline(pcapPath)
-	if err != nil {
-		t.Fatalf("open pcap: %v", err)
-	}
-	defer handle.Close()
+	packets := loadPCAP(t, pcapPath)
 
 	expected := map[int]string{
 		2:  "solct0014nn_1-6-8-25_23-24",
@@ -94,10 +86,9 @@ func TestJA4D6_FoxIODHCPv6Vectors(t *testing.T) {
 	}
 
 	fp := NewJA4D6()
-	src := gopacket.NewPacketSource(handle, layers.LayerTypeEthernet)
 	frame := 0
 	matched := 0
-	for pkt := range src.Packets() {
+	for _, pkt := range packets {
 		frame++
 		results, err := fp.ProcessPacket(pkt)
 		if err != nil {

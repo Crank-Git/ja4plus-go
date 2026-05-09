@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 )
 
 // buildTCPPacketWithPayload creates a gopacket.Packet containing Ethernet +
@@ -229,16 +228,11 @@ func TestJA4H_FoxIOHTTP1Vector(t *testing.T) {
 		t.Skipf("fixture %s not present; skipping FoxIO vector test", pcapPath)
 	}
 
-	handle, err := pcap.OpenOffline(pcapPath)
-	if err != nil {
-		t.Fatalf("open pcap: %v", err)
-	}
-	defer handle.Close()
+	packets := loadPCAP(t, pcapPath)
 
 	fp := NewJA4H()
-	src := gopacket.NewPacketSource(handle, layers.LayerTypeEthernet)
 	got := ""
-	for pkt := range src.Packets() {
+	for _, pkt := range packets {
 		results, _ := fp.ProcessPacket(pkt)
 		if len(results) > 0 {
 			got = results[0].Fingerprint
