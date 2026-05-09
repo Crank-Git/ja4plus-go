@@ -402,3 +402,109 @@ func TestJA4L_ServerAndClientAreDistinct(t *testing.T) {
 			synAckResults[0].Fingerprint)
 	}
 }
+
+// buildUDPPacketWithIPs builds a UDP packet with specified IPs/TTL/ports.
+func buildUDPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort, dstPort uint16) gopacket.Packet {
+	t.Helper()
+	eth := &layers.Ethernet{
+		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+		DstMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	ip := &layers.IPv4{
+		SrcIP:    srcIP,
+		DstIP:    dstIP,
+		Protocol: layers.IPProtocolUDP,
+		Version:  4,
+		TTL:      ttl,
+	}
+	udp := &layers.UDP{
+		SrcPort: layers.UDPPort(srcPort),
+		DstPort: layers.UDPPort(dstPort),
+	}
+	_ = udp.SetNetworkLayerForChecksum(ip)
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+	if err := gopacket.SerializeLayers(buf, opts, eth, ip, udp); err != nil {
+		t.Fatalf("failed to serialize udp packet: %v", err)
+	}
+	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
+// TestJA4L_UDPServerFirstObservation regresses the bug where processUDP only
+// started the QUIC 4-point timing when the FIRST observed packet arrived in
+// the lexicographic "forward" direction. After the fix, the client side is
+// anchored on whichever side sent the first observed packet (regardless of
+// direction), so server-first captures or reverse-direction handshakes still
+// produce JA4L-S and JA4L-C fingerprints.
+func TestJA4L_UDPServerFirstObservation(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Pick IPs/ports so that "client" IP would be the lexicographic LARGER
+	// one — i.e., reverse direction in normalizeKey terms — to exercise the
+	// bug case.
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	// Packet 1 (A): client -> server at t=0
+	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443)
+	a.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(a); len(results) != 0 {
+		t.Fatalf("A: expected no results, got %d (%q)", len(results), results[0].Fingerprint)
+	}
+
+	// Packet 2 (B): server -> client at t=50ms — should emit JA4L-S
+	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000)
+	b.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	bResults, err := fp.ProcessPacket(b)
+	if err != nil {
+		t.Fatalf("B: %v", err)
+	}
+	if len(bResults) != 1 || !strings.HasPrefix(bResults[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("B: expected one JA4L-S result, got %v", bResults)
+	}
+
+	// Packet 3 (C): client -> server at t=100ms (no result yet)
+	c := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443)
+	c.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(c); len(results) != 0 {
+		t.Fatalf("C: expected no results, got %d", len(results))
+	}
+
+	// Packet 4 (D): server -> client at t=150ms — should emit JA4L-C
+	d := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000)
+	d.Metadata().Timestamp = baseTime.Add(150 * time.Millisecond)
+	dResults, err := fp.ProcessPacket(d)
+	if err != nil {
+		t.Fatalf("D: %v", err)
+	}
+	if len(dResults) != 1 || !strings.HasPrefix(dResults[0].Fingerprint, "JA4L-C=") {
+		t.Fatalf("D: expected one JA4L-C result, got %v", dResults)
+	}
+}
+
+// TestJA4L_UDPServerFirstWhenServerSendsFirst regresses the same bug from the
+// opposite angle: a connection where the server's IP happens to be the FIRST
+// observed (e.g., we tap mid-stream). Anchoring on the first packet labels
+// that side as the "client" anchor so the 4-point exchange still produces
+// fingerprints rather than silently dropping all packets.
+func TestJA4L_UDPServerFirstWhenServerSendsFirst(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	a := net.IP{10, 0, 0, 1}
+	b := net.IP{192, 168, 1, 1}
+
+	// First observed packet is from `a` -> `b`, so `a` becomes the anchor.
+	p1 := buildUDPPacketWithIPs(t, a, b, 64, 443, 50000)
+	p1.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(p1); len(results) != 0 {
+		t.Fatalf("p1: unexpected results %v", results)
+	}
+
+	p2 := buildUDPPacketWithIPs(t, b, a, 64, 50000, 443)
+	p2.Metadata().Timestamp = baseTime.Add(20 * time.Millisecond)
+	r2, _ := fp.ProcessPacket(p2)
+	if len(r2) != 1 || !strings.HasPrefix(r2[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("p2: expected JA4L-S, got %v", r2)
+	}
+}

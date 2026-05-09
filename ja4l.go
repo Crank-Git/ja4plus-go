@@ -10,10 +10,11 @@ import (
 
 type connState struct {
 	timestamps map[string]time.Time // "A", "B", "C", "D" (for QUIC 4-point)
-	ttls       map[string]uint8    // "client", "server"
-	direction  string              // "forward" or "reverse"
+	ttls       map[string]uint8     // "client", "server"
+	direction  string               // "forward" or "reverse"
 	connKey    string
 	proto      string // "tcp" or "udp"
+	clientIP   string // for UDP/QUIC: the IP that sent the first observed packet
 }
 
 // JA4LFingerprinter generates JA4L latency fingerprints from TCP handshake
@@ -116,7 +117,14 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	conn := f.getOrCreateConn(connKey, direction, "udp")
 	ts := parser.GetPacketTimestamp(packet)
 
-	isClient := f.srcIsClient(srcIP, conn)
+	// Anchor the client side on the FIRST observed packet of this connection,
+	// regardless of direction (forward or reverse). This fixes the prior bug
+	// where server-first observations silently failed to start the QUIC 4-point
+	// timing because srcIsClient required direction == "forward".
+	if conn.clientIP == "" {
+		conn.clientIP = srcIP
+	}
+	isClient := srcIP == conn.clientIP
 
 	// 4-point QUIC timing: A (client) -> B (server) -> C (client) -> D (server)
 	if _, ok := conn.timestamps["A"]; !ok && isClient {
