@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/logo.png" width="300"></p>
 
-A Go library and CLI for JA4+ network fingerprinting. Implements all eight JA4+ methods for identifying and classifying network traffic based on TLS, TCP, HTTP, SSH, and X.509 characteristics. Supports QUIC Initial packet parsing.
+A Go library and CLI for JA4+ network fingerprinting. Implements ten JA4+ methods for identifying and classifying network traffic based on TLS, TCP, HTTP, SSH, X.509, and DHCP characteristics. Supports QUIC Initial packet parsing.
 
 JA4+ is a set of network fingerprinting standards created by [FoxIO](https://foxio.io). This library is an independent Go implementation of the published specification. For the original spec, see the [FoxIO JA4+ repository](https://github.com/FoxIO-LLC/ja4).
 
@@ -20,6 +20,8 @@ JA4+ is a set of network fingerprinting standards created by [FoxIO](https://fox
 | JA4L | TCP/QUIC | Light distance and latency estimation |
 | JA4X | X.509 | Certificate structure fingerprint from OID sequences |
 | JA4SSH | SSH | Session type classification from traffic patterns |
+| JA4D | DHCPv4 | Per-packet DHCPv4 fingerprint (FoxIO PR #267/#270) |
+| JA4D6 | DHCPv6 | Per-packet DHCPv6 fingerprint |
 
 QUIC Initial packets (RFC 9001/9369) are automatically decrypted to extract TLS ClientHellos.
 
@@ -56,6 +58,10 @@ ja4plus analyze capture.pcap --lookup
 # Fingerprint a certificate
 ja4plus cert server.der
 ja4plus cert server.pem
+
+# Update / inspect the local lookup database
+ja4plus db update
+ja4plus db info
 ```
 
 ## Go API
@@ -109,6 +115,8 @@ ja4ts := ja4plus.NewJA4TS()
 ja4l := ja4plus.NewJA4L()
 ja4x := ja4plus.NewJA4X()
 ja4ssh := ja4plus.NewJA4SSH(0) // 0 = default 200-packet window
+ja4d := ja4plus.NewJA4D()
+ja4d6 := ja4plus.NewJA4D6()
 ```
 
 All fingerprinters share a common interface:
@@ -147,7 +155,7 @@ if result != nil {
 
 ### All-In-One Processor
 
-Runs all 8 fingerprinters on each packet:
+Runs all 10 fingerprinters on each packet:
 
 ```go
 proc := ja4plus.NewProcessor()
@@ -166,6 +174,8 @@ results, errs := proc.ProcessPacket(packet)
 | JA4L | `JA4L-{C\|S}={latency_us}_{ttl}` | `JA4L-S=2500_56` |
 | JA4X | `{issuer}_{subject}_{extensions}` | `a37f49ba31e2_a37f49ba31e2_dd4f1a0ef8b2` |
 | JA4SSH | `c{mode}s{mode}_c{pkts}s{pkts}_c{acks}s{acks}` | `c36s36_c51s80_c69s0` |
+| JA4D | `{type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}` | `disco0000in_61-55_1-3-6-42` |
+| JA4D6 | `{type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}` | `solct0014nn_1-6-8-25_23-24` |
 
 ## Known Limitations
 
