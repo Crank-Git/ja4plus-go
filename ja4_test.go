@@ -95,6 +95,69 @@ func TestJA4_EmptyCiphers(t *testing.T) {
 	}
 }
 
+// TestJA4_ALPNNonAlphanumeric verifies FoxIO PR #277 spec: when the first or
+// last byte of the first ALPN value is not ASCII alphanumeric, the ALPN field
+// is the first and last character of the lowercase hex representation of the
+// entire first ALPN string.
+func TestJA4_ALPNNonAlphanumeric(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []string
+		want string
+	}{
+		// Empty / single-alnum baselines.
+		{"empty", []string{}, "00"},
+		{"empty-string", []string{""}, "00"},
+		{"single-alnum-byte", []string{"h"}, "hh"},
+		{"two-alnum-bytes", []string{"h2"}, "h2"},
+		{"http/1.1-alnum-ends", []string{"http/1.1"}, "h1"},
+
+		// Non-alphanumeric: byte sequences from FoxIO PR #277 examples.
+		{"0xAB", []string{"\xab"}, "ab"},
+		{"0x20", []string{"\x20"}, "20"},
+		{"0xAB 0xCD", []string{"\xab\xcd"}, "ad"},
+		{"0x20 0x61", []string{"\x20\x61"}, "21"},
+		{"0x30 0xAB", []string{"\x30\xab"}, "3b"},
+		{"0x61 0x20", []string{"\x61\x20"}, "60"},
+		{"0x30 0x31 0xAB 0xCD", []string{"\x30\x31\xab\xcd"}, "3d"},
+		{"0x30 0xAB 0xCD 0x31", []string{"\x30\xab\xcd\x31"}, "01"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parser.ALPNValue(tt.in)
+			if got != tt.want {
+				t.Errorf("ALPNValue(%v) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+// TestJA4_EmptyExtensionHash verifies FoxIO PR #288 spec: when the post-GREASE
+// extension list is empty (and there are no signature algorithms either), the
+// extension-hash component is the literal "000000000000", not sha256("")[:12].
+func TestJA4_EmptyExtensionHash(t *testing.T) {
+	// All extensions are GREASE -> filtered list is empty.
+	// SNI/ALPN exclusion would also remove them, but here we confirm the
+	// empty-after-filter case.
+	ch := &parser.ClientHello{
+		Version:      0x0303,
+		CipherSuites: []uint16{0x1301},
+		Extensions: []uint16{
+			0x0A0A, // GREASE
+			0x1A1A, // GREASE
+		},
+	}
+
+	fp := computeJA4FromClientHello(ch)
+	parts := strings.Split(fp, "_")
+	if len(parts) != 3 {
+		t.Fatalf("expected 3 parts, got %d: %s", len(parts), fp)
+	}
+	if parts[2] != "000000000000" {
+		t.Errorf("extension hash = %q, want %q (empty list -> literal zeros)", parts[2], "000000000000")
+	}
+}
+
 func TestJA4_NoALPN(t *testing.T) {
 	ch := &parser.ClientHello{
 		Version:      0x0303,

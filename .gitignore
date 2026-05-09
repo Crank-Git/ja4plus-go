@@ -20,6 +20,7 @@ docs/superpowers/
 
 # Dev notes (not part of the library)
 PYTHON_ISSUES.md
+TODOS.md
 
 # OS
 .DS_Store
@@ -30,3 +31,4 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+testdata/foxio/

@@ -10,10 +10,11 @@ import (
 
 type connState struct {
 	timestamps map[string]time.Time // "A", "B", "C", "D" (for QUIC 4-point)
-	ttls       map[string]uint8    // "client", "server"
-	direction  string              // "forward" or "reverse"
+	ttls       map[string]uint8     // "client", "server"
+	direction  string               // "forward" or "reverse"
 	connKey    string
 	proto      string // "tcp" or "udp"
+	clientIP   string // for UDP/QUIC: the IP that sent the first observed packet
 }
 
 // JA4LFingerprinter generates JA4L latency fingerprints from TCP handshake
@@ -116,7 +117,12 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	conn := f.getOrCreateConn(connKey, direction, "udp")
 	ts := parser.GetPacketTimestamp(packet)
 
-	isClient := f.srcIsClient(srcIP, conn)
+	// Anchor the client on the first observed packet of this connection so
+	// server-first observations still produce a valid 4-point QUIC timing.
+	if conn.clientIP == "" {
+		conn.clientIP = srcIP
+	}
+	isClient := srcIP == conn.clientIP
 
 	// 4-point QUIC timing: A (client) -> B (server) -> C (client) -> D (server)
 	if _, ok := conn.timestamps["A"]; !ok && isClient {
@@ -180,59 +186,6 @@ func (f *JA4LFingerprinter) getOrCreateConn(connKey, direction, proto string) *c
 	return conn
 }
 
-// srcIsClient determines if the source IP is the client side of this connection.
-func (f *JA4LFingerprinter) srcIsClient(srcIP string, conn *connState) bool {
-	if conn.direction == "forward" {
-		// In a "forward" connection, the first IP in the key is the client
-		// Parse client IP from connKey: "proto_ip1:port1_ip2:port2"
-		parts := splitConnKey(conn.connKey)
-		if len(parts) >= 2 {
-			return srcIP == parts[0]
-		}
-	}
-	return false
-}
-
-// splitConnKey extracts IPs from a connection key like "udp_1.2.3.4:5_6.7.8.9:10"
-func splitConnKey(key string) []string {
-	// Skip protocol prefix
-	for i, c := range key {
-		if c == '_' {
-			key = key[i+1:]
-			break
-		}
-	}
-	// Split on underscore to get "ip:port" parts
-	var ips []string
-	for _, part := range splitOn(key, '_') {
-		if idx := lastIndexByte(part, ':'); idx >= 0 {
-			ips = append(ips, part[:idx])
-		}
-	}
-	return ips
-}
-
-func splitOn(s string, sep byte) []string {
-	var parts []string
-	start := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == sep {
-			parts = append(parts, s[start:i])
-			start = i + 1
-		}
-	}
-	parts = append(parts, s[start:])
-	return parts
-}
-
-func lastIndexByte(s string, c byte) int {
-	for i := len(s) - 1; i >= 0; i-- {
-		if s[i] == c {
-			return i
-		}
-	}
-	return -1
-}
 
 func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uint8, srcIP, dstIP string, srcPort, dstPort uint16, ts time.Time) []FingerprintResult {
 	latencyUS := int(diff.Microseconds())

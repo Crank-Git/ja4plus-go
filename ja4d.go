@@ -9,7 +9,7 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-// DHCP message type to JA4D abbreviation mapping.
+// DHCP message type to JA4D abbreviation mapping (DHCPv4).
 var dhcpMessageMap = map[byte]string{
 	1:  "disco", // DHCPDISCOVER
 	2:  "offer", // DHCPOFFER
@@ -31,21 +31,27 @@ var dhcpMessageMap = map[byte]string{
 	18: "dhtls", // DHCPTLS
 }
 
-// DHCP options to skip in the option list section.
-var dhcpSkipOptions = map[byte]bool{
-	53:  true, // Message Type (already in section a)
-	255: true, // End
-	50:  true, // Requested IP Address (indicated by i/n flag)
-	81:  true, // Client FQDN (indicated by d/n flag)
+// dhcpExcludedOptions are the option codes excluded from the option list section
+// (FoxIO PR #267/#270): Pad (0), MessageType (53), Requested IP (50), FQDN (81).
+var dhcpExcludedOptions = map[byte]bool{
+	0:  true,
+	53: true,
+	50: true,
+	81: true,
 }
 
-// JA4DFingerprinter generates JA4D DHCP fingerprints.
+// JA4DFingerprinter generates JA4D DHCP fingerprints (FoxIO PR #267/#270).
 //
-// Format: {msg_type}{max_msg_size}{request_ip}{fqdn}_{option_list}_{param_list}
+// Format: {type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}
 //
-// Section a: 5-char message type + 4-digit max message size + request IP flag + FQDN flag
-// Section b: DHCP options present (hyphen-separated decimal, skipping 53/255/50/81)
-// Section c: Parameter Request List contents (option 55, hyphen-separated decimal)
+//   - type: 5-char DHCP message type abbreviation (from option 53)
+//   - size: 4-digit Maximum DHCP Message Size (option 57), capped 9999, default "0000"
+//   - ip:   'i' if Requested IP Address (option 50) is present, else 'n'
+//   - fqdn: 'd' if Client FQDN (option 81) is present, else 'n'
+//   - options: dash-joined option type codes in PRESENCE ORDER, excluding
+//     Pad (0), MessageType (53), Requested IP (50), FQDN (81). Default "00".
+//   - request_list: dash-joined items of the Parameter Request List (option 55)
+//     in original order. Default "00".
 type JA4DFingerprinter struct {
 	results []FingerprintResult
 }
@@ -76,23 +82,31 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	dhcp := dhcpLayer.(*layers.DHCPv4)
 
 	var msgType byte
+	var msgTypeSet bool
 	var maxMsgSize uint16
+	var maxMsgSizeSet bool
 	var hasRequestIP bool
 	var hasFQDN bool
-	var optionCodes []byte
+	var optionsInOrder []byte
 	var paramList []byte
 
 	for _, opt := range dhcp.Options {
-		optionCodes = append(optionCodes, byte(opt.Type))
+		code := byte(opt.Type)
+		// Track presence-order options (excluding 0/53/50/81 per spec).
+		if !dhcpExcludedOptions[code] {
+			optionsInOrder = append(optionsInOrder, code)
+		}
 
 		switch opt.Type {
 		case layers.DHCPOptMessageType: // 53
 			if len(opt.Data) > 0 {
 				msgType = opt.Data[0]
+				msgTypeSet = true
 			}
 		case layers.DHCPOptMaxMessageSize: // 57
 			if len(opt.Data) >= 2 {
 				maxMsgSize = uint16(opt.Data[0])<<8 | uint16(opt.Data[1])
+				maxMsgSizeSet = true
 			}
 		case layers.DHCPOptRequestIP: // 50
 			hasRequestIP = true
@@ -103,24 +117,29 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		}
 	}
 
-	if msgType == 0 {
+	if !msgTypeSet {
 		return nil, nil
 	}
 
-	// Section a: msg_type + max_msg_size + request_ip_flag + fqdn_flag
+	// type: 5-char abbreviation, or "%05u" for unknown codes.
 	msgTypeStr, ok := dhcpMessageMap[msgType]
 	if !ok {
 		msgTypeStr = fmt.Sprintf("%05d", msgType)
 	}
 
-	maxMsgSizeVal := maxMsgSize
-	if maxMsgSizeVal > 9999 {
-		maxMsgSizeVal = 9999
+	// size: 4-digit max msg size, capped at 9999, default "0000".
+	sizeStr := "0000"
+	if maxMsgSizeSet {
+		sz := maxMsgSize
+		if sz > 9999 {
+			sz = 9999
+		}
+		sizeStr = fmt.Sprintf("%04d", sz)
 	}
 
-	requestIPFlag := "n"
+	ipFlag := "n"
 	if hasRequestIP {
-		requestIPFlag = "i"
+		ipFlag = "i"
 	}
 
 	fqdnFlag := "n"
@@ -128,13 +147,9 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		fqdnFlag = "d"
 	}
 
-	sectionA := fmt.Sprintf("%s%04d%s%s", msgTypeStr, maxMsgSizeVal, requestIPFlag, fqdnFlag)
-
-	// Section b: option list (hyphen-separated, skip 53/255/50/81)
-	sectionB := ja4dBuildOptionList(optionCodes, dhcpSkipOptions)
-
-	// Section c: parameter request list (hyphen-separated)
-	sectionC := ja4dBuildParamList(paramList)
+	sectionA := fmt.Sprintf("%s%s%s%s", msgTypeStr, sizeStr, ipFlag, fqdnFlag)
+	sectionB := ja4dFormatList(optionsInOrder)
+	sectionC := ja4dFormatList(paramList)
 
 	fingerprint := fmt.Sprintf("%s_%s_%s", sectionA, sectionB, sectionC)
 
@@ -163,36 +178,15 @@ func (f *JA4DFingerprinter) Reset() {
 func (f *JA4DFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 }
 
-// ja4dBuildOptionList formats DHCP option codes as hyphen-separated decimals,
-// skipping options in the skip set.
-func ja4dBuildOptionList(options []byte, skip map[byte]bool) string {
-	if len(options) == 0 {
+// ja4dFormatList formats a slice of byte values as dash-joined decimals.
+// Returns "00" for an empty slice.
+func ja4dFormatList(values []byte) string {
+	if len(values) == 0 {
 		return "00"
 	}
-
-	var parts []string
-	for _, opt := range options {
-		if skip[opt] {
-			continue
-		}
-		parts = append(parts, fmt.Sprintf("%d", opt))
-	}
-
-	if len(parts) == 0 {
-		return "00"
-	}
-	return strings.Join(parts, "-")
-}
-
-// ja4dBuildParamList formats the Parameter Request List (option 55) as hyphen-separated decimals.
-func ja4dBuildParamList(params []byte) string {
-	if len(params) == 0 {
-		return "00"
-	}
-
-	parts := make([]string, len(params))
-	for i, p := range params {
-		parts[i] = fmt.Sprintf("%d", p)
+	parts := make([]string, len(values))
+	for i, v := range values {
+		parts[i] = fmt.Sprintf("%d", v)
 	}
 	return strings.Join(parts, "-")
 }

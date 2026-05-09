@@ -1,6 +1,7 @@
 package ja4plus
 
 import (
+	"os"
 	"testing"
 )
 
@@ -36,41 +37,20 @@ func TestJA4D_MessageTypeMapping(t *testing.T) {
 	}
 }
 
-func TestJA4D_BuildOptionList(t *testing.T) {
-	tests := []struct {
-		name    string
-		options []byte
-		want    string
-	}{
-		{"empty", nil, "00"},
-		{"all skipped", []byte{53, 255, 50, 81}, "00"},
-		{"single", []byte{53, 61, 255}, "61"},
-		{"multiple", []byte{53, 61, 57, 60, 12, 55, 255}, "61-57-60-12-55"},
-		{"with skipped mixed", []byte{53, 50, 61, 81, 57, 255}, "61-57"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := ja4dBuildOptionList(tt.options, dhcpSkipOptions)
-			if got != tt.want {
-				t.Errorf("got %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestJA4D_BuildParamList(t *testing.T) {
+func TestJA4D_FormatList(t *testing.T) {
 	tests := []struct {
 		name   string
-		params []byte
+		values []byte
 		want   string
 	}{
 		{"empty", nil, "00"},
-		{"single", []byte{1}, "1"},
-		{"multiple", []byte{1, 3, 6, 15, 26, 28, 51, 58, 59}, "1-3-6-15-26-28-51-58-59"},
+		{"single", []byte{61}, "61"},
+		{"multiple presence-order", []byte{61, 55}, "61-55"},
+		{"params", []byte{1, 3, 6, 42}, "1-3-6-42"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ja4dBuildParamList(tt.params)
+			got := ja4dFormatList(tt.values)
 			if got != tt.want {
 				t.Errorf("got %q, want %q", got, tt.want)
 			}
@@ -89,4 +69,52 @@ func TestJA4D_Reset(t *testing.T) {
 
 func TestJA4D_ImplementsFingerprinter(t *testing.T) {
 	var _ Fingerprinter = NewJA4D()
+}
+
+// TestJA4D_FoxIODHCPVectors runs JA4D against testdata/foxio/pcap/dhcp.pcapng
+// and asserts the per-packet fingerprints match the FoxIO Wireshark vectors.
+// Skipped when the fixture is not present.
+func TestJA4D_FoxIODHCPVectors(t *testing.T) {
+	pcapPath := "testdata/foxio/pcap/dhcp.pcapng"
+	if _, err := os.Stat(pcapPath); os.IsNotExist(err) {
+		t.Skipf("fixture %s not present; skipping FoxIO vector test", pcapPath)
+	}
+
+	packets := loadPCAP(t, pcapPath)
+
+	// Expected fingerprints by frame number (1-indexed).
+	expected := map[int]string{
+		1: "disco0000in_61-55_1-3-6-42",
+		2: "offer0000nn_1-58-59-51-54_00",
+		3: "reqst0000in_61-54-55_1-3-6-42",
+		4: "dpack0000nn_58-59-51-54-1_00",
+	}
+
+	fp := NewJA4D()
+	frame := 0
+	matched := 0
+	for _, pkt := range packets {
+		frame++
+		results, err := fp.ProcessPacket(pkt)
+		if err != nil {
+			t.Errorf("frame %d: ProcessPacket error: %v", frame, err)
+			continue
+		}
+		if len(results) == 0 {
+			continue
+		}
+		got := results[0].Fingerprint
+		want, ok := expected[frame]
+		if !ok {
+			continue
+		}
+		if got != want {
+			t.Errorf("frame %d: got %q, want %q", frame, got, want)
+		} else {
+			matched++
+		}
+	}
+	if matched != len(expected) {
+		t.Errorf("matched %d of %d expected vectors", matched, len(expected))
+	}
 }

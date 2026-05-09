@@ -129,6 +129,38 @@ func ComputeJA4H(packet gopacket.Packet) string {
 	return computeJA4HFromRequest(req)
 }
 
+// ja4hNormalizeVersion converts an HTTP version like "HTTP/1.1", "HTTP/1.0",
+// "HTTP/2", or "HTTP/3" into the JA4H 2-char version code ("11", "10", "20", "30").
+// Mirrors the FoxIO Wireshark dissector behavior (PR #288): take the part after
+// the first "/", lowercase any letters, drop dots, and pad with "0" if the
+// resulting string is <= 1 character.
+func ja4hNormalizeVersion(v string) string {
+	idx := strings.Index(v, "/")
+	if idx < 0 || idx == len(v)-1 {
+		return "00"
+	}
+	tail := v[idx+1:]
+	var b strings.Builder
+	for i := 0; i < len(tail); i++ {
+		c := tail[i]
+		if c == '.' {
+			continue
+		}
+		if c >= 'A' && c <= 'Z' {
+			c = c + 32
+		}
+		b.WriteByte(c)
+	}
+	out := b.String()
+	if len(out) <= 1 {
+		out += "0"
+	}
+	if len(out) > 2 {
+		out = out[:2]
+	}
+	return out
+}
+
 // computeJA4HFromRequest builds the JA4H fingerprint from a parsed HTTP request.
 //
 // Format: {method}{ver}{cookie}{referer}{count}{lang}_{header_hash}_{cookie_name_hash}_{cookie_value_hash}
@@ -141,9 +173,10 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 		method = method[:2]
 	}
 
-	// version: strip "HTTP/" and dots -> "10", "11", "20", "30".
-	ver := strings.Replace(req.Version, "HTTP/", "", 1)
-	ver = strings.Replace(ver, ".", "", 1)
+	// version: strip "HTTP/" and dots -> "10", "11", "20", "30" (FoxIO PR #288).
+	// Wireshark dissector behavior: lowercase any letters, drop dots; if the
+	// resulting string is <= 1 character, append "0" (HTTP/2 -> "20", HTTP/3 -> "30").
+	ver := ja4hNormalizeVersion(req.Version)
 
 	// cookie flag.
 	cookieFlag := "n"

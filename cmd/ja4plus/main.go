@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +18,8 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 )
+
+const ja4PlusMappingURL = "https://github.com/FoxIO-LLC/ja4/raw/main/ja4plus-mapping.csv"
 
 // Version is set via -ldflags at build time.
 var Version = "dev"
@@ -40,6 +45,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
+	case "db":
+		if err := runDB(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n", os.Args[1])
 		printUsage()
@@ -53,6 +63,8 @@ func printUsage() {
 Usage:
   ja4plus analyze <pcap-file> [options]
   ja4plus cert <cert-file>
+  ja4plus db update
+  ja4plus db info
   ja4plus --version
 
 Analyze options:
@@ -60,6 +72,10 @@ Analyze options:
   --csv           Output as CSV
   --types <list>  Comma-separated fingerprint types (e.g. ja4,ja4t)
   --lookup        Include application lookup for each fingerprint
+
+Database commands:
+  db update       Download the latest ja4plus-mapping.csv from FoxIO
+  db info         Print info about the active database (embedded vs cached)
 `)
 }
 
@@ -291,5 +307,84 @@ func runCert(args []string) error {
 func isPEM(data []byte) bool {
 	// Check for PEM header or common PEM file marker.
 	return len(data) > 10 && strings.HasPrefix(string(data), "-----BEGIN")
+}
+
+func runDB(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("missing subcommand\nUsage: ja4plus db {update|info}")
+	}
+	switch args[0] {
+	case "update":
+		return runDBUpdate()
+	case "info":
+		return runDBInfo()
+	default:
+		return fmt.Errorf("unknown db subcommand: %s\nUsage: ja4plus db {update|info}", args[0])
+	}
+}
+
+func runDBUpdate() error {
+	cachePath, err := ja4plus.CachedDatabasePath()
+	if err != nil {
+		return fmt.Errorf("resolve cache path: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ja4PlusMappingURL, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("download: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download: HTTP %d", resp.StatusCode)
+	}
+
+	tmp := cachePath + ".tmp"
+	out, err := os.Create(tmp)
+	if err != nil {
+		return fmt.Errorf("create %s: %w", tmp, err)
+	}
+	n, err := io.Copy(out, resp.Body)
+	if cerr := out.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("write: %w", err)
+	}
+	if err := os.Rename(tmp, cachePath); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("install: %w", err)
+	}
+
+	fmt.Printf("downloaded %d bytes to %s\n", n, cachePath)
+	fmt.Println("note: existing processes must be restarted to pick up the new database")
+	return nil
+}
+
+func runDBInfo() error {
+	info := ja4plus.GetDatabaseInfo()
+	fmt.Printf("Source:  %s\n", info.Source)
+	if info.Path != "" {
+		fmt.Printf("Path:    %s\n", info.Path)
+	}
+	fmt.Printf("Entries: %d\n", info.Entries)
+	if !info.ModTime.IsZero() {
+		fmt.Printf("ModTime: %s\n", info.ModTime.Format(time.RFC3339))
+	}
+	cp, err := ja4plus.CachedDatabasePath()
+	if err == nil && info.Source != "cache" {
+		if _, statErr := os.Stat(cp); os.IsNotExist(statErr) {
+			fmt.Printf("\nNo cache file at %s\n", cp)
+			fmt.Println("Run `ja4plus db update` to download the latest from FoxIO.")
+		}
+	}
+	return nil
 }
 

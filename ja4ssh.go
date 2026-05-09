@@ -103,11 +103,12 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	connKey := fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
 
-	// If no SSH data detected, check if this is an ACK for an existing SSH connection
+	// If no SSH data detected, check if this is a bare ACK for an existing SSH connection.
 	if !hasSSHData {
-		// Pure ACK: ACK flag set, no payload
-		isACK := tcp.ACK && len(payload) == 0
-		if !isACK {
+		// Bare ACK per FoxIO PR #281: flags == 0x0010 exactly (only ACK set,
+		// no SYN/FIN/RST/PSH/URG) and zero payload.
+		isBareACK := tcp.ACK && !tcp.SYN && !tcp.FIN && !tcp.RST && !tcp.PSH && !tcp.URG && len(payload) == 0
+		if !isBareACK {
 			return nil, nil
 		}
 		conn, exists := f.connections[connKey]
@@ -274,30 +275,47 @@ func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, ds
 }
 
 // mode returns the most common value in a slice. Returns 0 if the slice is empty.
-// On ties, the first-encountered value wins (matching Python's Counter.most_common behavior).
+// On ties, the LOWEST value wins (FoxIO PR #281 deterministic tiebreak).
 func mode(values []int) int {
 	if len(values) == 0 {
 		return 0
 	}
 	freq := make(map[int]int)
-	var order []int
-	seen := make(map[int]bool)
 	for _, v := range values {
 		freq[v]++
-		if !seen[v] {
-			order = append(order, v)
-			seen[v] = true
-		}
 	}
-	bestVal := order[0]
-	bestCount := freq[bestVal]
-	for _, v := range order[1:] {
-		if freq[v] > bestCount {
+	var bestVal int
+	var bestCount int
+	first := true
+	for v, c := range freq {
+		if first || c > bestCount || (c == bestCount && v < bestVal) {
 			bestVal = v
-			bestCount = freq[v]
+			bestCount = c
+			first = false
 		}
 	}
 	return bestVal
+}
+
+// hasshKnownNames is a built-in lookup table of common HASSH fingerprints.
+// Ported verbatim from the Python ja4plus reference implementation.
+var hasshKnownNames = map[string]string{
+	"8a8ae540028bf433cd68356c1b9e8d5b": "CyberDuck Version 6.7.1",
+	"b5752e36ba6c5979a575e43178908adf": "Paramiko 2.4.1 (Metasploit)",
+	"16f898dd8ed8279e1055350b4e20666c": "Dropbear 2012.55 (IoT)",
+	"06046964c022c6407d15a27b12a6a4fb": "OpenSSH 7.6",
+	"de30354b88bae4c2810426614e1b6976": "Renci.SshNet.SshClient (PowerShell/Empire)",
+	"fafc45381bfde997b6305c4e1600f1bf": "Ruby/Net::SSH 5.0.2 (Metasploit)",
+	"c1c596caaeb93c566b8ecf3cae9b5a9e": "Dropbear 2016.74 (Server)",
+	"d93f46d063c4382b6232a4d77db532b2": "Dropbear 2016.72 (Server)",
+	"2dd9a9b3dbebfaeec8b8aabd689e75d2": "AWSCodeCommit (Server)",
+	"696e7f84ac571fdf8fa5073e64ee2dc8": "SSH-2.0-FTP (Server)",
+}
+
+// LookupHASSH returns a human-readable name for a known HASSH fingerprint,
+// or "" if the fingerprint is not in the built-in lookup table.
+func LookupHASSH(hassh string) string {
+	return hasshKnownNames[hassh]
 }
 
 // SSHSessionInfo holds the interpretation of a JA4SSH fingerprint.
