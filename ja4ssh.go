@@ -103,11 +103,12 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	connKey := fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
 
-	// If no SSH data detected, check if this is an ACK for an existing SSH connection
+	// If no SSH data detected, check if this is a bare ACK for an existing SSH connection.
 	if !hasSSHData {
-		// Pure ACK: ACK flag set, no payload
-		isACK := tcp.ACK && len(payload) == 0
-		if !isACK {
+		// Bare ACK per FoxIO PR #281: flags == 0x0010 exactly (only ACK set,
+		// no SYN/FIN/RST/PSH/URG) and zero payload.
+		isBareACK := tcp.ACK && !tcp.SYN && !tcp.FIN && !tcp.RST && !tcp.PSH && !tcp.URG && len(payload) == 0
+		if !isBareACK {
 			return nil, nil
 		}
 		conn, exists := f.connections[connKey]
@@ -274,27 +275,23 @@ func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, ds
 }
 
 // mode returns the most common value in a slice. Returns 0 if the slice is empty.
-// On ties, the first-encountered value wins (matching Python's Counter.most_common behavior).
+// On ties, the LOWEST value wins (FoxIO PR #281 deterministic tiebreak).
 func mode(values []int) int {
 	if len(values) == 0 {
 		return 0
 	}
 	freq := make(map[int]int)
-	var order []int
-	seen := make(map[int]bool)
 	for _, v := range values {
 		freq[v]++
-		if !seen[v] {
-			order = append(order, v)
-			seen[v] = true
-		}
 	}
-	bestVal := order[0]
-	bestCount := freq[bestVal]
-	for _, v := range order[1:] {
-		if freq[v] > bestCount {
+	var bestVal int
+	var bestCount int
+	first := true
+	for v, c := range freq {
+		if first || c > bestCount || (c == bestCount && v < bestVal) {
 			bestVal = v
-			bestCount = freq[v]
+			bestCount = c
+			first = false
 		}
 	}
 	return bestVal
