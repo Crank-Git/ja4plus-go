@@ -30,3 +30,4 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+testdata/foxio/
