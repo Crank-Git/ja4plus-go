@@ -95,6 +95,32 @@ func TestJA4_EmptyCiphers(t *testing.T) {
 	}
 }
 
+// TestJA4_EmptyExtensionHash verifies FoxIO PR #288 spec: when the post-GREASE
+// extension list is empty (and there are no signature algorithms either), the
+// extension-hash component is the literal "000000000000", not sha256("")[:12].
+func TestJA4_EmptyExtensionHash(t *testing.T) {
+	// All extensions are GREASE -> filtered list is empty.
+	// SNI/ALPN exclusion would also remove them, but here we confirm the
+	// empty-after-filter case.
+	ch := &parser.ClientHello{
+		Version:      0x0303,
+		CipherSuites: []uint16{0x1301},
+		Extensions: []uint16{
+			0x0A0A, // GREASE
+			0x1A1A, // GREASE
+		},
+	}
+
+	fp := computeJA4FromClientHello(ch)
+	parts := strings.Split(fp, "_")
+	if len(parts) != 3 {
+		t.Fatalf("expected 3 parts, got %d: %s", len(parts), fp)
+	}
+	if parts[2] != "000000000000" {
+		t.Errorf("extension hash = %q, want %q (empty list -> literal zeros)", parts[2], "000000000000")
+	}
+}
+
 func TestJA4_NoALPN(t *testing.T) {
 	ch := &parser.ClientHello{
 		Version:      0x0303,
