@@ -255,6 +255,32 @@ func TestJA4SSH_ModeTieBreaking(t *testing.T) {
 	}
 }
 
+func TestLookupHASSH(t *testing.T) {
+	tests := []struct {
+		hassh string
+		want  string
+	}{
+		{"8a8ae540028bf433cd68356c1b9e8d5b", "CyberDuck Version 6.7.1"},
+		{"06046964c022c6407d15a27b12a6a4fb", "OpenSSH 7.6"},
+		{"d93f46d063c4382b6232a4d77db532b2", "Dropbear 2016.72 (Server)"},
+		{"unknown_fingerprint", ""},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.hassh, func(t *testing.T) {
+			got := LookupHASSH(tt.hassh)
+			if got != tt.want {
+				t.Errorf("LookupHASSH(%q) = %q, want %q", tt.hassh, got, tt.want)
+			}
+		})
+	}
+
+	// Also assert the table contains all 10 known entries.
+	if len(hasshKnownNames) != 10 {
+		t.Errorf("expected 10 known HASSH entries, got %d", len(hasshKnownNames))
+	}
+}
+
 func TestJA4SSH_InterpretFingerprint(t *testing.T) {
 	tests := []struct {
 		fingerprint string

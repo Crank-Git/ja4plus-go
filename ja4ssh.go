@@ -297,6 +297,27 @@ func mode(values []int) int {
 	return bestVal
 }
 
+// hasshKnownNames is a built-in lookup table of common HASSH fingerprints.
+// Ported verbatim from the Python ja4plus reference implementation.
+var hasshKnownNames = map[string]string{
+	"8a8ae540028bf433cd68356c1b9e8d5b": "CyberDuck Version 6.7.1",
+	"b5752e36ba6c5979a575e43178908adf": "Paramiko 2.4.1 (Metasploit)",
+	"16f898dd8ed8279e1055350b4e20666c": "Dropbear 2012.55 (IoT)",
+	"06046964c022c6407d15a27b12a6a4fb": "OpenSSH 7.6",
+	"de30354b88bae4c2810426614e1b6976": "Renci.SshNet.SshClient (PowerShell/Empire)",
+	"fafc45381bfde997b6305c4e1600f1bf": "Ruby/Net::SSH 5.0.2 (Metasploit)",
+	"c1c596caaeb93c566b8ecf3cae9b5a9e": "Dropbear 2016.74 (Server)",
+	"d93f46d063c4382b6232a4d77db532b2": "Dropbear 2016.72 (Server)",
+	"2dd9a9b3dbebfaeec8b8aabd689e75d2": "AWSCodeCommit (Server)",
+	"696e7f84ac571fdf8fa5073e64ee2dc8": "SSH-2.0-FTP (Server)",
+}
+
+// LookupHASSH returns a human-readable name for a known HASSH fingerprint,
+// or "" if the fingerprint is not in the built-in lookup table.
+func LookupHASSH(hassh string) string {
+	return hasshKnownNames[hassh]
+}
+
 // SSHSessionInfo holds the interpretation of a JA4SSH fingerprint.
 type SSHSessionInfo struct {
 	SessionType string
