@@ -9,11 +9,17 @@ dist/
 # Dependencies
 vendor/
 
-# Claude Code / OMC
+# Claude Code
+# CLAUDE.md and .claude/ are tracked: issue-flow workers run in git worktrees, which
+# contain tracked files only, so ignored project rules are invisible to them.
 .omc/
-.claude/
-CLAUDE.md
 AGENTS.md
+.claude/settings.local.json
+.claude/worktrees/
+.claude/agent-memory-local/
+CLAUDE.local.md
+.claude.local.md
+.issue-flow.local.json
 
 # Superpowers artifacts
 docs/superpowers/

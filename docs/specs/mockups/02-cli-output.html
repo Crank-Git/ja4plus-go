@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command-line output — ja4plus-go</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --ink: #16181d; --muted: #5b6270; --line: #e3e5ea;
+    --term-bg: #15181e; --term-ink: #d8dce4; --term-dim: #7e8899;
+    --term-prompt: #6fc396; --term-key: #7fb3e8; --term-val: #e4c07a; --term-bad: #ef8a96;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #101216; --ink: #e6e8ec; --muted: #99a1b0; --line: #262b34; --term-bg: #0b0d11; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px 20px 64px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+  h2 { font-size: 14px; margin: 30px 0 4px; letter-spacing: -0.005em; }
+  .cap { color: var(--muted); font-size: 12.5px; margin: 0 0 10px; }
+  .term {
+    background: var(--term-bg); color: var(--term-ink); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0; overflow: hidden;
+  }
+  .bar { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #3a4150; }
+  .body { padding: 14px 16px; overflow-x: auto; }
+  pre { margin: 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; white-space: pre; }
+  .p { color: var(--term-prompt); }
+  .d { color: var(--term-dim); }
+  .k { color: var(--term-key); }
+  .v { color: var(--term-val); }
+  .e { color: var(--term-bad); }
+  .note { border: 1px solid var(--line); border-left: 3px solid var(--muted); border-radius: 8px;
+          padding: 12px 16px; font-size: 13px; color: var(--muted); margin-top: 30px; }
+  code { font-family: var(--mono); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>ja4plus command-line output</h1>
+  <p class="sub">The four states the README documents. Values are real fingerprint shapes, not placeholders.</p>
+
+  <h2>Read a capture</h2>
+  <p class="cap">The default output prints one line per fingerprint, in capture order.</p>
+  <div class="term">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="body"><pre><span class="p">$</span> ja4plus testdata/foxio/pcap/tls12.pcap
+
+<span class="d">#   type    src                  dst                      fingerprint</span>
+1   <span class="k">ja4t</span>    192.168.133.129      34.117.237.239:443       <span class="v">65535_2-1-3-1-1-8-4-0_16344_6</span>
+2   <span class="k">ja4ts</span>   34.117.237.239       192.168.133.129:36372    <span class="v">65535_2-1-3-1-1-8-4-0_16344_6</span>
+4   <span class="k">ja4</span>     192.168.133.129      34.117.237.239:443       <span class="v">t13d1715h2_5b57614c22b0_3d5424432f57</span>
+6   <span class="k">ja4s</span>    34.117.237.239       192.168.133.129:36372    <span class="v">t130200_1301_a56c5b993250</span>
+8   <span class="k">ja4x</span>    34.117.237.239       192.168.133.129:36372    <span class="v">2bab15409345_af684594efb4_000000000000</span>
+9   <span class="k">ja4l</span>    192.168.133.129      34.117.237.239:443       <span class="v">21_64</span>
+
+<span class="d">6 fingerprints from 12 packets, 1 connection</span></pre></div>
+  </div>
+
+  <h2>Read a capture as JSON</h2>
+  <p class="cap">The <code>--json</code> flag emits one object per fingerprint, including the raw forms.</p>
+  <div class="term">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="body"><pre><span class="p">$</span> ja4plus --json testdata/foxio/pcap/tls12.pcap | jq -c '.[3]'
+
+{<span class="k">"type"</span>:<span class="v">"ja4"</span>,<span class="k">"fingerprint"</span>:<span class="v">"t13d1715h2_5b57614c22b0_3d5424432f57"</span>,
+ <span class="k">"raw"</span>:<span class="v">"t13d1715h2_002f,0035,009c,009d,1301,1302,1303,c009,..."</span>,
+ <span class="k">"raw_original_order"</span>:<span class="v">"t13d1715h2_1301,1303,1302,c02b,c02f,cca9,..."</span>,
+ <span class="k">"src_ip"</span>:<span class="v">"192.168.133.129"</span>,<span class="k">"src_port"</span>:36372,
+ <span class="k">"dst_ip"</span>:<span class="v">"34.117.237.239"</span>,<span class="k">"dst_port"</span>:443,
+ <span class="k">"timestamp"</span>:<span class="v">"2024-03-11T14:22:07.118431Z"</span>}</pre></div>
+  </div>
+
+  <h2>Inspect the database</h2>
+  <p class="cap">Two states: the embedded copy, and a downloaded cache.</p>
+  <div class="term">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="body"><pre><span class="p">$</span> ja4plus db info
+
+source     <span class="v">embedded</span>
+records    <span class="v">108</span>
+path       <span class="d">(none — using the copy compiled into the binary)</span>
+
+<span class="d">Run `ja4plus db update` to download the current database.</span>
+
+<span class="p">$</span> ja4plus db update
+<span class="d">downloading… 4.6 KB  validating… 112 records  writing cache</span>
+updated: <span class="v">108 → 112 records</span>
+
+<span class="p">$</span> ja4plus db info
+
+source     <span class="v">cache</span>
+records    <span class="v">112</span>
+path       <span class="v">~/.cache/ja4plus/ja4plus-mapping.csv</span>
+updated    <span class="v">2026-08-06 14:31:02 UTC</span></pre></div>
+  </div>
+
+  <h2>Failures</h2>
+  <p class="cap">Every failure names the cause and exits with a non-zero status.</p>
+  <div class="term">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="body"><pre><span class="p">$</span> ja4plus missing.pcap
+<span class="e">error: cannot open missing.pcap: no such file or directory</span>
+<span class="d">exit status 1</span>
+
+<span class="p">$</span> ja4plus corrupt.pcap
+<span class="e">error: corrupt.pcap is not a pcap or pcapng file</span>
+<span class="d">exit status 1</span>
+
+<span class="p">$</span> ja4plus db update
+<span class="e">error: cannot reach https://ja4db.com/api/read/: timeout after 10s</span>
+<span class="d">the existing database is unchanged</span>
+<span class="d">exit status 1</span>
+
+<span class="p">$</span> ja4plus --version
+ja4plus <span class="v">v1.0.0</span></pre></div>
+  </div>
+
+  <div class="note">
+    Mockups convey intent, not a contract. The implementer may change the column layout,
+    the flag names or the exact wording, as long as the requirements and the acceptance
+    criteria in <code>features/09-database-lookup.md</code> and
+    <code>features/10-release.md</code> are met. The rule these screens do fix is that
+    every failure names its cause and exits non-zero, and that the library itself writes
+    nothing — all output belongs to the command-line program.
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ja4plus-go v1.0.0 — spec</title>
+<style>
+  :root {
+    --bg:#fbfbfa; --panel:#fff; --ink:#16181d; --muted:#5b6270; --line:#e3e5ea;
+    --accent:#2f6f4f; --warn:#9a4a1c; --bad:#a02334; --link:#2a5db0;
+    --warn-bg:#fdf4ec; --bad-bg:#fbe9eb; --ok-bg:#e8f3ec;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#101216; --panel:#171a20; --ink:#e6e8ec; --muted:#99a1b0; --line:#262b34;
+      --accent:#6fc396; --warn:#e0a06a; --bad:#ef8a96; --link:#7fb3e8;
+      --warn-bg:#241c14; --bad-bg:#2a171b; --ok-bg:#16261d;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15.5px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:940px;margin:0 auto;padding:40px 20px 100px}
+  a{color:var(--link)}
+  code{font-family:var(--mono);font-size:.87em;background:rgba(128,138,157,.14);
+       padding:1px 5px;border-radius:4px}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:8px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .tag{font-family:var(--mono);font-size:11.5px;padding:3px 9px;border-radius:20px;
+       background:rgba(128,138,157,.16);color:var(--muted)}
+  .tag.draft{background:var(--warn-bg);color:var(--warn);font-weight:600}
+  .tag.ok{background:var(--ok-bg);color:var(--accent);font-weight:600}
+  h2{font-size:20px;margin:44px 0 10px;letter-spacing:-.015em;padding-top:8px}
+  h3{font-size:15.5px;margin:26px 0 6px;letter-spacing:-.005em}
+  h4{font-size:13.5px;margin:18px 0 4px;color:var(--muted);text-transform:uppercase;
+     letter-spacing:.06em}
+  p{margin:0 0 12px}
+  ul,ol{margin:0 0 12px;padding-left:22px}
+  li{margin:3px 0}
+  .lead{font-size:16.5px;color:var(--muted)}
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;
+          background:var(--panel);margin:0 0 14px}
+  table{border-collapse:collapse;width:100%;min-width:520px;font-size:13.5px}
+  th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:16px 18px;margin:0 0 16px}
+  .box.risk{border-left:3px solid var(--bad);background:var(--bad-bg)}
+  .box.q{border-left:3px solid var(--warn);background:var(--warn-bg)}
+  .box.ok{border-left:3px solid var(--accent);background:var(--ok-bg)}
+  .box h3{margin-top:0}
+  .epic{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:16px 18px;margin:0 0 12px}
+  .epic .hd{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:6px}
+  .epic .num{font-family:var(--mono);font-size:11.5px;color:var(--muted);
+             background:rgba(128,138,157,.16);padding:2px 8px;border-radius:20px}
+  .epic h3{margin:0;font-size:16px}
+  .epic .dep{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .frs{font-size:13.5px;color:var(--muted)}
+  .mock{margin:0 0 28px}
+  .mock .hd{display:flex;justify-content:space-between;align-items:baseline;
+            flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  iframe{width:100%;height:520px;border:1px solid var(--line);border-radius:10px;
+         background:var(--panel);display:block}
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:14px 18px;margin:24px 0 8px;font-size:13.5px}
+  .toc ol{columns:2;column-gap:28px;margin:0;padding-left:20px}
+  @media (max-width:600px){.toc ol{columns:1}}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>ja4plus-go v1.0.0</h1>
+  <p class="lead">Make the Go JA4+ library provably correct against the FoxIO reference,
+  safe to use concurrently, and legal to distribute — then freeze the API and release.</p>
+  <div class="meta">
+    <span class="tag ok">status: approved 2026-08-06</span>
+    <span class="tag">created 2026-08-06</span>
+    <span class="tag">branch model: dev-and-live</span>
+    <span class="tag">from v0.3.0 → v1.0.0</span>
+    <span class="tag">11 epics</span>
+    <span class="tag">reference: FoxIO 27f0cbf</span>
+  </div>
+</header>
+
+<div class="toc">
+  <ol>
+    <li><a href="#summary">Executive summary</a></li>
+    <li><a href="#goals">Goals and non-goals</a></li>
+    <li><a href="#users">Users</a></li>
+    <li><a href="#arch">Architecture and stack</a></li>
+    <li><a href="#data">Data model</a></li>
+    <li><a href="#cross">Cross-cutting concerns</a></li>
+    <li><a href="#testing">Testing strategy</a></li>
+    <li><a href="#epics">Epics and feature sets</a></li>
+    <li><a href="#mockups">Mockups</a></li>
+    <li><a href="#milestones">Milestones</a></li>
+    <li><a href="#assumptions">Assumptions</a></li>
+    <li><a href="#risks">Risks and open questions</a></li>
+  </ol>
+</div>
+
+<h2 id="summary">Executive summary</h2>
+
+<p><code>ja4plus-go</code> is a Go library and command-line program for JA4+ network
+fingerprinting. It implements ten JA4+ methods and is at version <code>v0.3.0</code>.
+This spec takes it to <code>v1.0.0</code>, which is an API freeze.</p>
+
+<p>A freeze is only safe when three things are true, and none of the three is true today.</p>
+
+<div class="box risk">
+  <h3>The three blockers</h3>
+  <ul>
+    <li><strong>Conformance is untested.</strong> The library claims to implement the
+    FoxIO specification. One expected-output file covers two methods on one capture.
+    FoxIO publishes 38 captures and two vector sets, and nothing in this repository reads
+    them.</li>
+    <li><strong>The concurrency contract does not exist.</strong> Nine of the ten
+    fingerprinters hold unguarded maps and slices. <code>JA4XFingerprinter</code> alone
+    holds a mutex. <code>GetShardKey</code> implies a shard-per-goroutine design that no
+    exported document states, so a caller who shares one <code>Processor</code> writes a
+    data race and gets no warning.</li>
+    <li><strong>The license is wrong.</strong> The README claims BSD 3-Clause and links to
+    a <code>LICENSE</code> file that does not exist. FoxIO licenses nine of the ten
+    methods under FoxIO License 1.1, which permits non-commercial use only.</li>
+  </ul>
+</div>
+
+<p>This spec closes all three, adds the gates that keep them closed — conformance,
+fuzzing, race detection, vulnerability scanning and a coverage floor — and then releases
+<code>v1.0.0</code>. The full text is in
+<a href="spec.md"><code>spec.md</code></a>.</p>
+
+<h2 id="goals">Goals and non-goals</h2>
+
+<h4>Goals</h4>
+<ol>
+  <li>Every method produces the exact fingerprint the FoxIO reference produces, for every
+  capture in the corpus.</li>
+  <li>The concurrency contract is documented on every exported type, and a race test
+  proves it.</li>
+  <li>The license files state the FoxIO terms for the nine FoxIO-licensed methods.</li>
+  <li>CI gates conformance, race detection, fuzz testing, vulnerability scanning, lint
+  and coverage on every pull request.</li>
+  <li>The library releases as <code>v1.0.0</code> with a frozen exported API.</li>
+  <li>The README, the package documentation and the CHANGELOG describe the released
+  behaviour and nothing else.</li>
+</ol>
+
+<h4>Non-goals</h4>
+<ul>
+  <li>No eleventh method. JA4E, JA4LS, JA4SScan and JA4TScan stay out of scope.</li>
+  <li>No live network capture. The caller supplies packets.</li>
+  <li>The library does not become a network monitor.</li>
+  <li>No change to the Python port. A parity gap found here becomes an issue in
+  <code>Crank-Git/ja4plus</code>, not code here.</li>
+  <li>No commercial license is sought from FoxIO as part of this work.</li>
+</ul>
+
+<h2 id="users">Users</h2>
+<div class="scroll"><table>
+  <thead><tr><th>Persona</th><th>Who</th><th>What they need</th></tr></thead>
+  <tbody>
+    <tr><td>Library author</td><td>A Go developer embedding the library in a monitor.</td>
+    <td>A stable API, a documented concurrency contract, fingerprints that match every other JA4+ tool.</td></tr>
+    <tr><td>Analyst</td><td>A network analyst running <code>ja4plus</code> on a capture.</td>
+    <td>Correct output, and a fingerprint searchable in other tools.</td></tr>
+    <tr><td>Maintainer</td><td>The repository owner.</td>
+    <td>CI that fails on a conformance break, and a release that needs no manual step.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="arch">Architecture and stack</h2>
+
+<div class="scroll"><table>
+  <thead><tr><th>Component</th><th>Path</th><th>Responsibility</th></tr></thead>
+  <tbody>
+    <tr><td>Public library</td><td><code>*.go</code>, package <code>ja4plus</code></td>
+    <td>One fingerprinter per method, plus <code>Processor</code> and the database lookup.</td></tr>
+    <tr><td>Parser</td><td><code>internal/parser/</code></td>
+    <td>TLS, QUIC, HTTP, SSH, TCP streams, X.509 and GREASE decoding.</td></tr>
+    <tr><td>Command-line program</td><td><code>cmd/ja4plus/</code></td>
+    <td>Reads a capture and prints fingerprints.</td></tr>
+    <tr><td>Embedded database</td><td><code>data/ja4plus-mapping.csv</code></td>
+    <td>The FoxIO fingerprint-to-application mapping.</td></tr>
+    <tr><td>Corpus</td><td><code>testdata/foxio/</code></td>
+    <td>Fetched FoxIO captures and vectors. Not tracked in git.</td></tr>
+  </tbody>
+</table></div>
+
+<h4>Key choices and why each beat the alternative</h4>
+<div class="scroll"><table>
+  <thead><tr><th>Choice</th><th>Alternative</th><th>Why it wins</th></tr></thead>
+  <tbody>
+    <tr><td>Go 1.24 module floor</td><td>Go 1.22 or 1.23</td>
+    <td>Go 1.22 has left upstream security support. A security-adjacent <code>v1.0.0</code> needs a supported floor.</td></tr>
+    <tr><td>Fetch the corpus at a pinned commit</td><td>Commit the corpus</td>
+    <td>The corpus is FoxIO-licensed material. A fetch avoids redistribution; the pin keeps it reproducible.</td></tr>
+    <tr><td>A <code>SyncProcessor</code> wrapper</td><td>Lock every fingerprinter</td>
+    <td>The lock-free core keeps the per-packet path fast for the sharded design. The wrapper serves callers who want safety instead of throughput.</td></tr>
+    <tr><td>Pure-Go capture reading via <code>pcapgo</code></td><td><code>libpcap</code> via cgo</td>
+    <td>Already done in <code>e32e49e</code>. A pure-Go build cross-compiles to five platforms.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="data">Data model</h2>
+
+<p>The library holds no database. It holds in-memory state per connection and one
+embedded lookup table. <code>FingerprintResult</code> carries the fingerprint, the two raw
+forms, the method name, the addresses, the ports and the timestamp.</p>
+
+<div class="box risk">
+  <h3>State that has no removal path</h3>
+  <p>Every fingerprinter appends to a <code>results</code> slice and never truncates it.
+  <code>CleanupConnection</code> does not touch it. That method exists, in its own
+  documentation, "to prevent state leaks in long-running processes" — so a slice that
+  grows for the life of the process defeats its purpose. Recorded as suspected finding
+  <strong>S1</strong> in
+  <a href="features/02-correctness-audit.md">the correctness audit</a>.</p>
+</div>
+
+<h2 id="cross">Cross-cutting concerns</h2>
+<ul>
+  <li><strong>Concurrency.</strong> One <code>Processor</code> serves one goroutine.
+  Callers route packets with <code>GetShardKey</code>, or share one
+  <code>SyncProcessor</code>.</li>
+  <li><strong>Error handling.</strong> A fingerprinter returns a non-fatal error, never a
+  panic. A malformed packet never terminates the caller.</li>
+  <li><strong>Input validation.</strong> Every packet is untrusted. Every parser
+  bounds-checks every length field before it slices. Fuzz targets enforce this.</li>
+  <li><strong>Logging.</strong> The library writes nothing to standard output or standard
+  error. The command-line program owns all output.</li>
+  <li><strong>Security.</strong> No network input or output, except the opt-in database
+  update. <code>govulncheck</code> gates every pull request.</li>
+  <li><strong>Performance.</strong> No additional per-packet allocation.
+  <code>SyncProcessor</code> adds one mutex acquisition per packet.</li>
+</ul>
+
+<h2 id="testing">Testing strategy</h2>
+<div class="scroll"><table>
+  <thead><tr><th>Layer</th><th>Covers</th><th>Command</th></tr></thead>
+  <tbody>
+    <tr><td>Unit</td><td>One function or fingerprinter, hand-built packet.</td><td><code>go test ./...</code></td></tr>
+    <tr><td>Race</td><td>The concurrency contract.</td><td><code>go test -race ./...</code></td></tr>
+    <tr><td>Conformance</td><td>Every method against every FoxIO vector.</td><td><code>go test -tags conformance ./...</code></td></tr>
+    <tr><td>Fuzz</td><td>Every parser entry point against generated input.</td><td><code>go test -fuzz=Fuzz ./internal/parser</code></td></tr>
+    <tr><td>Benchmark</td><td>The per-packet path, time and allocations.</td><td><code>go test -bench=. -benchmem ./...</code></td></tr>
+  </tbody>
+</table></div>
+
+<p>A change is done when the build succeeds on the module floor, <code>-race</code>
+passes, the linter reports nothing, conformance reports no new deviation, and coverage
+does not fall below the recorded floor.</p>
+
+<h2 id="epics">Epics and feature sets</h2>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 0</span><h3>Foundation</h3></div>
+  <p>Make the repository able to run every gate the later epics add. CI, the release
+  workflow and the test suite already exist; this adds what is missing.</p>
+  <p class="frs"><strong>22 requirements.</strong> Go 1.24 floor. A pinned
+  <code>.golangci.yml</code>. Benchmarks for <code>Processor</code> and all ten methods. A
+  coverage floor file. <code>make corpus</code>, <code>conformance</code>,
+  <code>cover</code> and <code>fuzz</code> targets. The <code>dev</code> branch. Tracked
+  <code>CLAUDE.md</code> and <code>.claude/</code>. A CHANGELOG with the existing three
+  releases.</p>
+  <p class="frs"><strong>Done when</strong> a fresh clone runs all five make targets and a
+  pull request targeting <code>dev</code> starts CI.</p>
+  <p class="dep">Depends on: nothing · <a href="features/00-foundation.md">features/00-foundation.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 1</span><h3>License compliance</h3><span class="num">release blocker</span></div>
+  <p>State the correct license terms for every part of the repository, using the model
+  FoxIO's own FAQ recommends: original Go code stays BSD 3-Clause, and a
+  <code>NOTICE</code> file carries the FoxIO terms.</p>
+  <p class="frs"><strong>15 requirements.</strong> A <code>LICENSE</code> file that
+  actually exists. A <code>NOTICE</code> reproducing FoxIO License 1.1 verbatim, naming
+  the nine covered methods and <code>data/ja4plus-mapping.csv</code>, and stating the
+  non-commercial restriction. A README license section. A <code>doc.go</code> statement. A
+  recorded maintainer decision.</p>
+  <p class="frs"><strong>Done when</strong> no file in the repository claims the JA4+
+  methods are BSD 3-Clause, and the badge links to a file that exists.</p>
+  <p class="dep">Depends on: nothing · <a href="features/01-licensing.md">features/01-licensing.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 2</span><h3>Correctness audit</h3></div>
+  <p>Read every file looking for a defect rather than a feature, then close what is found.
+  The audit is read-only and produces a findings report; closure is a separate step with a
+  regression test per finding.</p>
+  <p class="frs"><strong>28 requirements.</strong> Fourteen named checks: bounds checks on
+  every length field, integer truncation, state removal paths, <code>CleanupConnection</code>
+  completeness, empty-hash literals, sort stability, GREASE filtering against RFC 8701,
+  swallowed errors. Three severities. Three suspected findings already recorded — the
+  unbounded <code>results</code> slice, the <code>sync.Once</code> that blocks a database
+  reload, and unguarded package-level lookup state.</p>
+  <p class="frs"><strong>Done when</strong> every file has an audit record, every
+  confirmed finding names the commit that closed it, and every closure has a test that
+  fails when reverted.</p>
+  <p class="dep">Depends on: Epic 0 · <a href="features/02-correctness-audit.md">features/02-correctness-audit.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 3</span><h3>Concurrency contract</h3></div>
+  <p>Make the contract explicit, correct and tested. The core stays lock-free; a new
+  <code>SyncProcessor</code> serves callers who share one instance.</p>
+  <p class="frs"><strong>24 requirements.</strong> A documented contract on
+  <code>Processor</code>, all ten fingerprinters, <code>doc.go</code> and the README.
+  <code>SyncProcessor</code> with four methods, one mutex, and no way to reach the inner
+  <code>Processor</code>. Four race tests, including one that shares a bare
+  <code>Processor</code> and is expected to fail under <code>-race</code>. A side-by-side
+  benchmark.</p>
+  <p class="frs"><strong>Done when</strong> eight goroutines drive one
+  <code>SyncProcessor</code> under <code>-race</code> and pass, and four sharded
+  <code>Processor</code> values do the same.</p>
+  <p class="dep">Depends on: Epic 0 · <a href="features/03-concurrency.md">features/03-concurrency.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 4</span><h3>Conformance harness</h3></div>
+  <p>Test every method against the FoxIO reference vectors, and produce the deviation list
+  that Epic 5 closes.</p>
+  <p class="frs"><strong>37 requirements.</strong> A pinned-commit fetch script. Two
+  adapters: the per-stream Python vectors (JA4/JA4_r/JA4_o/JA4_ro, JA4S, JA4H, JA4X,
+  JA4SSH) and the per-packet Wireshark vectors, which are authoritative for JA4D and JA4D6
+  because the Python vector for <code>dhcpv6.pcap</code> is an empty list. Exact string
+  matching — an extra fingerprint is as wrong as a missing one. A generated report. A CI
+  gate that fails on any deviation and on a skip.</p>
+  <p class="frs"><strong>Done when</strong> <code>make corpus</code> fetches 38 captures
+  and 74 vector files, and a one-character change to a fingerprint is caught.</p>
+  <p class="dep">Depends on: Epic 0 · <a href="features/04-conformance-harness.md">features/04-conformance-harness.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 5</span><h3>Conformance gap closure</h3><span class="num">size unknown until Epic 4 runs</span></div>
+  <p>Close every deviation. The bar is byte-identical, with no exception: a deviation is
+  closed, or a named requirement records why it cannot be and the maintainer accepts that
+  record before release.</p>
+  <p class="frs"><strong>23 requirements.</strong> GRE, ERSPAN, VXLAN and Geneve
+  decapsulation with a four-layer depth limit as a security control. Reading pcapng
+  Decryption Secrets Blocks, plus a caller-supplied key log. QUIC reassembly across
+  multiple CRYPTO frames and multiple Initial packets, with a bounded fragment buffer.
+  <code>dtls-udp.notest.cap</code> is recorded, not silently excluded.</p>
+  <p class="frs"><strong>Done when</strong> the suite reports zero deviations and every
+  exception carries the maintainer's name and date.</p>
+  <p class="dep">Depends on: Epic 4 · <a href="features/05-conformance-gaps.md">features/05-conformance-gaps.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 6</span><h3>Fuzz testing</h3></div>
+  <p>Prove that no packet input can panic the library. Every packet is attacker-chosen
+  input, and a panic in a monitor is a denial of service.</p>
+  <p class="frs"><strong>30 requirements.</strong> Twelve fuzz targets covering every
+  parser entry point plus <code>Processor.ProcessPacket</code>. Each asserts no panic, no
+  read past the input, a one-second bound for a 64 KB input, a 64 MB allocation bound, and
+  determinism. Seed corpora tracked in git. A 30-second run on every pull request; a
+  10-minute nightly run that opens an issue with the crashing input attached.</p>
+  <p class="frs"><strong>Done when</strong> a deliberately removed bounds check is caught
+  within 30 seconds.</p>
+  <p class="dep">Depends on: Epic 0 · <a href="features/06-fuzz-testing.md">features/06-fuzz-testing.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 7</span><h3>Supply chain and CI gates</h3></div>
+  <p>Make the build reproducible and the dependencies watched, and settle the
+  <code>gopacket</code> question before the freeze.</p>
+  <p class="frs"><strong>29 requirements.</strong> <code>govulncheck</code> on every pull
+  request. Dependabot for Go modules and Actions, targeting <code>dev</code>. Every
+  <code>uses:</code> pinned to a 40-character commit hash with a version comment — a tag
+  is not a pin. Least-privilege <code>permissions</code> blocks. An enforced coverage
+  floor that never falls. Benchmarks that warn and do not block.</p>
+  <p class="frs"><strong>Done when</strong> deleting a test file fails the build, and the
+  <code>gopacket</code> decision is recorded with both release dates and a reason.</p>
+  <p class="dep">Depends on: Epic 0 · <a href="features/07-supply-chain.md">features/07-supply-chain.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 8</span><h3>Python parity</h3></div>
+  <p>Record every difference against <code>Crank-Git/ja4plus</code> v0.6.0 and close the
+  ones that apply to Go. Parity means the same capability, not the same spelling.</p>
+  <p class="frs"><strong>24 requirements.</strong> A parity table with one row per exported
+  Python name, each marked <em>applicable</em> or <em>not applicable</em> with a reason. An
+  output-parity test behind a build tag that never gates a pull request. Known gaps: JA4X
+  from DER and from PEM, a <code>generate</code> helper per method, a decision on the
+  Python <code>Collector</code>, an <code>examples/</code> directory, and two doc pages.</p>
+  <p class="frs"><strong>Done when</strong> the FoxIO reference resolves every difference,
+  and each remaining one carries a written reason.</p>
+  <p class="dep">Depends on: Epic 4 · <a href="features/08-python-parity.md">features/08-python-parity.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 9</span><h3>Database lookup</h3></div>
+  <p>Settle where the network boundary belongs, fix the client, and make the reload work.</p>
+  <p class="frs"><strong>27 requirements.</strong> A recorded decision: keep the remote
+  lookup, move it behind a build tag, or move it to a separate package. No
+  <code>http.DefaultClient</code> — it has no timeout at all. A 10-second default, a 1 MB
+  body bound, certificate verification, no downgrade redirect, an escaped URL. A reload
+  that replaces <code>sync.Once</code>, validates before it replaces, and writes the cache
+  atomically.</p>
+  <p class="frs"><strong>Done when</strong> a process updates the database and finds a new
+  record without restarting, and update-plus-lookup passes under <code>-race</code>.</p>
+  <p class="dep">Depends on: Epic 2 · <a href="features/09-database-lookup.md">features/09-database-lookup.md</a></p>
+</div>
+
+<div class="epic">
+  <div class="hd"><span class="num">Epic 10</span><h3>API freeze and release</h3></div>
+  <p>Record what the library became, freeze the exported API, and release. A
+  <code>v1</code> release in Go is a promise: breaking it means <code>v2</code> and a
+  changed import path.</p>
+  <p class="frs"><strong>46 requirements.</strong> An API record at
+  <code>docs/api/v1.md</code> with a test that fails when the two drift. A rewritten
+  <code>doc.go</code> and README — methods, Go floor, concurrency patterns, license split,
+  the FoxIO commit tested against, which functions reach the network. Runnable examples
+  checked by <code>go test</code>. Five release gates that stop the release, including the
+  recorded license decision and zero deviations.</p>
+  <p class="frs"><strong>Done when</strong> <code>v1.0.0</code> resolves via
+  <code>go get</code> and <code>pkg.go.dev</code> serves the documentation.</p>
+  <p class="dep">Depends on: every other epic · <a href="features/10-release.md">features/10-release.md</a></p>
+</div>
+
+<h2 id="mockups">Mockups</h2>
+
+<div class="box">
+  <p style="margin:0"><strong>Mockups convey intent, not a contract.</strong> They show
+  roughly what a reader will see. An implementer may diverge — Go conventions,
+  accessibility, or a better idea all outrank the mockup — as long as the requirements and
+  acceptance criteria in the feature file are met. Nothing downstream compares the built
+  output against them, and "does not match the mockup" is not by itself a defect.</p>
+</div>
+
+<div class="mock">
+  <div class="hd">
+    <h3 style="margin:0">Conformance report</h3>
+    <a href="mockups/01-conformance-report.html" target="_blank" rel="noopener">Open in new tab →</a>
+  </div>
+  <p class="frs">The output of <code>make conformance</code>, rendered. Owned by
+  <a href="features/04-conformance-harness.md">Epic 4</a>. Shows the summary counts, the
+  deviation table with expected and produced values, and how <em>not applicable</em> is
+  distinguished from a failure.</p>
+  <iframe src="mockups/01-conformance-report.html" title="Conformance report mockup"></iframe>
+</div>
+
+<div class="mock">
+  <div class="hd">
+    <h3 style="margin:0">Command-line output</h3>
+    <a href="mockups/02-cli-output.html" target="_blank" rel="noopener">Open in new tab →</a>
+  </div>
+  <p class="frs">The four states the README documents. Owned by
+  <a href="features/10-release.md">Epic 10</a>, with the database screens specified in
+  <a href="features/09-database-lookup.md">Epic 9</a>. The rule these screens do fix:
+  every failure names its cause and exits non-zero, and the library itself writes
+  nothing — all output belongs to the command-line program.</p>
+  <iframe src="mockups/02-cli-output.html" title="Command-line output mockup"></iframe>
+</div>
+
+<h2 id="milestones">Milestones</h2>
+<div class="scroll"><table>
+  <thead><tr><th>Milestone</th><th>Epics</th><th>What "shippable" means</th></tr></thead>
+  <tbody>
+    <tr><td>M1 — Ready to work</td><td>0, 1</td><td>Every gate runs, and the license is correct. The library is safe to distribute.</td></tr>
+    <tr><td>M2 — Known-correct</td><td>2, 3, 4</td><td>Audit findings closed, the concurrency contract holds, the deviation list is known.</td></tr>
+    <tr><td>M3 — Conformant</td><td>5, 6</td><td>Every FoxIO vector matches, and no generated input panics the library.</td></tr>
+    <tr><td>M4 — Hardened</td><td>7, 8, 9</td><td>Supply chain watched, parity recorded, network boundary explicit.</td></tr>
+    <tr><td>M5 — Released</td><td>10</td><td><code>v1.0.0</code> tagged, published and documented.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="assumptions">Assumptions</h2>
+<ol>
+  <li>The maintainer accepts a Go 1.24 floor, and accepts that consumers on Go 1.22 and
+  1.23 stay on <code>v0.3.0</code>.</li>
+  <li>FoxIO keeps publishing the corpus at <code>FoxIO-LLC/ja4</code>. A pinned commit
+  protects the project from a move for the life of the pin.</li>
+  <li>The FoxIO Wireshark vectors are authoritative for JA4D and JA4D6, because the Python
+  vector for <code>dhcpv6.pcap</code> is an empty list.</li>
+  <li><code>dev</code> is the integration branch and <code>master</code> is the live
+  branch. <code>master</code> stays releasable at all times.</li>
+  <li>The maintainer files parity issues in <code>Crank-Git/ja4plus</code> personally.
+  This project only records them.</li>
+  <li>A conformance failure blocks a merge. A benchmark regression warns and does not
+  block.</li>
+</ol>
+
+<h2 id="risks">Risks and open questions</h2>
+
+<div class="box ok">
+  <h3>R1 — The license split <em>(resolved 2026-08-06)</em></h3>
+  <p>FoxIO License 1.1 covers JA4S, JA4H, JA4L, JA4LS, JA4X, JA4T, JA4TS, JA4TScan, JA4D,
+  JA4D6, JA4SScan, JA4E and JA4SSH, and permits non-commercial use only.
+  <code>LICENSE-JA4</code> covers JA4 alone under BSD 3-Clause. This repository's README
+  claims BSD 3-Clause for the whole library and links to a <code>LICENSE</code> file that
+  does not exist. It also vendors FoxIO's <code>ja4plus-mapping.csv</code>.</p>
+  <p>Epic 1 implements the model the FoxIO FAQ recommends and names
+  <code>driftnet-io/go-ja4x</code> as a good example of.
+  <strong>This spec is not legal advice.</strong></p>
+  <p><strong>Resolved 2026-08-06.</strong> The maintainer accepts the dual BSD 3-Clause
+  plus FoxIO <code>NOTICE</code> model as sufficient for <code>v1.0.0</code>. The project
+  does not contact FoxIO before the release. The Epic 10 release gate is satisfied when
+  <code>docs/audit/license-decision.md</code> records this.</p>
+  <p class="frs">Sources read 2026-08-06 at FoxIO commit <code>27f0cbf</code>:
+  <a href="https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>,
+  <a href="https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE-JA4" target="_blank" rel="noopener">LICENSE-JA4</a>,
+  <a href="https://github.com/FoxIO-LLC/ja4/blob/main/License%20FAQ.md" target="_blank" rel="noopener">License FAQ</a>.</p>
+</div>
+
+<div class="box q">
+  <h3>R2 — Two vectors may be unreachable <em>(open)</em></h3>
+  <p><code>chrome-cloudflare-quic-with-secrets.pcapng</code> carries TLS secrets in pcapng
+  Decryption Secrets Blocks, which <code>gopacket</code> does not read.
+  <code>dtls-udp.notest.cap</code> carries a <code>notest</code> marker, meaning FoxIO
+  excludes it from their own suite. Epic 5 treats both as named requirements with their
+  own issues, not as silent exclusions.</p>
+</div>
+
+<div class="box q">
+  <h3>R3 — Epic 5 cannot be sized until Epic 4 runs <em>(open)</em></h3>
+  <p>The corpus holds three encapsulated captures that <code>tshark</code> decapsulates and
+  this library appears not to. The full deviation list does not exist until the harness
+  runs, so Epic 5 is sized after Epic 4 finishes, not before.</p>
+</div>
+
+<div class="box q">
+  <h3>R5 — <code>gopacket</code> upstream is unmaintained <em>(open)</em></h3>
+  <p><code>github.com/google/gopacket</code> has published no release since v1.1.19 in
+  2022. The community fork is <code>github.com/gopacket/gopacket</code>. A dependency
+  change after an API freeze is harder than one before it, so Epic 7 settles it first.</p>
+</div>
+
+<div class="box ok">
+  <h3>R4 — The Python port carries the same license gap <em>(recorded, out of scope)</em></h3>
+  <p><code>Crank-Git/ja4plus</code> ships a plain BSD 3-Clause <code>LICENSE</code> with no
+  FoxIO notice. The same correction applies there. This project records the finding and
+  does not act on it.</p>
+</div>
+
+<div class="box q">
+  <h3>Open questions inside feature sets</h3>
+  <ul>
+    <li><strong>Epic 5, Q1</strong> — Can <code>gopacket</code> v1.1.19 read a pcapng
+    Decryption Secrets Block, or must the project read the block itself?</li>
+    <li><strong>Epic 8, Q1</strong> — Does the Python <code>Collector</code> belong in a
+    Go library, or does a Go caller build it from <code>Processor</code> and
+    <code>GetShardKey</code>?</li>
+    <li><strong>Epic 9, Q1</strong> — Which of the three network-boundary options does the
+    maintainer want?</li>
+    <li><strong>Epic 9, R6</strong> — The <code>ja4db.com</code> response shape is
+    unconfirmed; the service publishes no versioned API documentation. The current parser
+    stays until an engineer confirms the shape against a live call.</li>
+  </ul>
+</div>
+
+<hr>
+<p class="frs" style="margin-top:20px">Full text:
+<a href="spec.md">spec.md</a> ·
+feature files under <a href="features/00-foundation.md"><code>features/</code></a> ·
+mockups under <a href="mockups/01-conformance-report.html"><code>mockups/</code></a></p>
+
+</div>
+</body>
+</html>
