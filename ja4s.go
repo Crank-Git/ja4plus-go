@@ -9,6 +9,9 @@ import (
 )
 
 // JA4SFingerprinter computes JA4S TLS Server Hello fingerprints.
+//
+// One JA4SFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4SFingerprinter struct {
 	results   []FingerprintResult
 	quicDCIDs map[string][]byte // tracks client DCIDs for QUIC server decryption

@@ -1,6 +1,24 @@
 // Package ja4plus computes JA4+ network fingerprints from the packets that gopacket
 // decodes.
 //
+// # Concurrency
+//
+// One Processor serves one goroutine, and one fingerprinter serves one goroutine. Every
+// fingerprinter holds state that no lock guards. Two goroutines that share one instance
+// write a data race. The race detector reports the race. The library does not detect it
+// at run time.
+//
+// A caller who wants more than one goroutine takes one of two patterns.
+//
+//   - Route each packet with [Processor.GetShardKey], and give each goroutine its own
+//     Processor. The key holds the sorted five-tuple, so a packet and its reply reach
+//     one Processor.
+//   - Share one [SyncProcessor], which serializes every call with one mutex.
+//
+// The first pattern gives higher throughput, because the per-packet path acquires no
+// lock. The second pattern costs one mutex acquisition for each packet. The README shows
+// both patterns as code.
+//
 // # License
 //
 // This repository holds material under two licenses, and NOTICE at the repository root

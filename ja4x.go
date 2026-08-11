@@ -29,6 +29,9 @@ const tlsHandshakeCertificate = 0x0b
 // JA4XFingerprinter computes JA4X X.509 certificate fingerprints.
 // It is stateful: it tracks TCP streams to reassemble TLS Certificate
 // messages that may span multiple TCP segments.
+//
+// One JA4XFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4XFingerprinter struct {
 	streams        map[string][]byte
 	processedCerts map[string]struct{}

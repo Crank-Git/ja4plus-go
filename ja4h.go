@@ -11,6 +11,9 @@ import (
 
 // JA4HFingerprinter generates JA4H fingerprints from HTTP request packets.
 // It uses TCP stream reassembly to handle multi-segment HTTP requests.
+//
+// One JA4HFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4HFingerprinter struct {
 	results     []FingerprintResult
 	reassembler *parser.TCPStreamReassembler
