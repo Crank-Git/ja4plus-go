@@ -13,7 +13,10 @@ import (
 // the gate, so that a later edit cannot drop it without a failure.
 //
 // Every test here runs the script against a local archive. The corpus is FoxIO-licensed
-// material, so no test commits a fetched file, and no test reaches the network.
+// material, so no test commits a fetched file.
+//
+// One test resolves the name `corpus.invalid`. RFC 2606 reserves the `.invalid` top-level
+// domain, so that name cannot exist and the lookup fails. No test reaches a real host.
 
 // requireCorpusFetchTools skips the test when a program the script needs is absent.
 func requireCorpusFetchTools(t *testing.T) {
