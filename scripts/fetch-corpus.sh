@@ -44,6 +44,10 @@ url="${JA4PLUS_CORPUS_URL:-https://codeload.github.com/FoxIO-LLC/ja4/tar.gz/$com
 
 mkdir -p "$corpus_dir"
 
+# A run that a `SIGKILL` stops never reaches the trap, so it leaves a staging directory.
+# This sweep removes the leftovers of such a run.
+rm -rf "${corpus_dir:?}"/.stage.* "${corpus_dir:?}"/*.previous
+
 # The staging directory sits below the ignored corpus directory, so an interrupted run
 # leaves nothing that git reports.
 stage="$(mktemp -d "$corpus_dir/.stage.XXXXXX")"
@@ -57,14 +61,17 @@ cleanup() {
 trap cleanup EXIT
 
 # curl writes the archive to a file, so a failed transfer never reaches tar.
+# `--max-filesize` bounds the body, as `.claude/rules/external-apis.md` requires. The FoxIO
+# repository is 16 MB at the pinned commit, so 512 MB leaves room for growth.
 if ! curl --fail --location --silent --show-error \
-	--connect-timeout 30 --max-time 900 \
+	--connect-timeout 30 --max-time 900 --max-filesize 536870912 \
 	--output "$stage/corpus.tar.gz" "$url"; then
 	fail "the network did not deliver $url. The script leaves the corpus in place."
 fi
 
+# `--no-same-owner` stops the archive from naming the owner of an extracted file.
 mkdir -p "$stage/src"
-if ! tar -xzf "$stage/corpus.tar.gz" -C "$stage/src" --strip-components=1; then
+if ! tar -xzf "$stage/corpus.tar.gz" -C "$stage/src" --strip-components=1 --no-same-owner; then
 	fail "the archive at $commit does not extract. The script leaves the corpus in place."
 fi
 
@@ -79,11 +86,26 @@ for index in "${!sources[@]}"; do
 	fi
 done
 
+# The fetched file goes first, because an interrupted replace must not leave a file that
+# names the previous commit beside a corpus that holds two commits.
+rm -f "$fetched_file"
+
 # The script replaces the corpus only after every source directory arrives, so a failed run
-# keeps the previous corpus complete.
+# keeps the previous corpus complete. Each directory moves aside before the new one
+# arrives, so a failed move restores the previous directory rather than losing it.
 for index in "${!sources[@]}"; do
-	rm -rf "${corpus_dir:?}/${targets[$index]}"
-	mv "$stage/src/${sources[$index]}" "$corpus_dir/${targets[$index]}"
+	target="${corpus_dir:?}/${targets[$index]}"
+
+	if [ -d "$target" ] && ! mv "$target" "$target.previous"; then
+		fail "the script cannot move $target aside. The corpus is unchanged."
+	fi
+
+	if ! mv "$stage/src/${sources[$index]}" "$target"; then
+		mv "$target.previous" "$target" 2>/dev/null || true
+		fail "the script cannot write $target. The corpus holds the previous ${targets[$index]}."
+	fi
+
+	rm -rf "$target.previous"
 done
 
 # The fetched file is the last write, so it names a complete corpus and never a partial one.

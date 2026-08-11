@@ -33,21 +33,21 @@ func newCorpusFetchRoot(t *testing.T) string {
 	t.Helper()
 
 	root := t.TempDir()
-	for source, target := range map[string]string{
-		"scripts/fetch-corpus.sh": "scripts/fetch-corpus.sh",
-		"testdata/foxio.pin":      "testdata/foxio.pin",
+	for path, mode := range map[string]os.FileMode{
+		"scripts/fetch-corpus.sh": 0o755,
+		"testdata/foxio.pin":      0o644,
 	} {
-		content, err := os.ReadFile(source)
+		content, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("read %s: %v", source, err)
+			t.Fatalf("read %s: %v", path, err)
 		}
 
-		if err := os.MkdirAll(filepath.Join(root, filepath.Dir(target)), 0o755); err != nil {
-			t.Fatalf("create the directory for %s: %v", target, err)
+		if err := os.MkdirAll(filepath.Join(root, filepath.Dir(path)), 0o755); err != nil {
+			t.Fatalf("create the directory for %s: %v", path, err)
 		}
 
-		if err := os.WriteFile(filepath.Join(root, target), content, 0o755); err != nil {
-			t.Fatalf("write %s: %v", target, err)
+		if err := os.WriteFile(filepath.Join(root, path), content, mode); err != nil {
+			t.Fatalf("write %s: %v", path, err)
 		}
 	}
 
@@ -90,11 +90,22 @@ func newCorpusArchive(t *testing.T) string {
 }
 
 // runFetchCorpus runs the script below the root and returns the combined output.
+//
+// The environment of the test process can already hold `JA4PLUS_CORPUS_URL`. A C library
+// reads the first entry that matches, so the function removes that entry before it appends
+// the URL of the test. An inherited entry would send the script to the network.
 func runFetchCorpus(t *testing.T, root string, url string) (string, error) {
 	t.Helper()
 
+	environment := []string{}
+	for _, entry := range os.Environ() {
+		if !strings.HasPrefix(entry, "JA4PLUS_CORPUS_URL=") {
+			environment = append(environment, entry)
+		}
+	}
+
 	command := exec.Command("bash", filepath.Join(root, "scripts", "fetch-corpus.sh"))
-	command.Env = append(os.Environ(), "JA4PLUS_CORPUS_URL="+url)
+	command.Env = append(environment, "JA4PLUS_CORPUS_URL="+url)
 	output, err := command.CombinedOutput()
 
 	return string(output), err
@@ -182,6 +193,10 @@ func TestFetchCorpusDownloadsNothingWhenTheFetchedCommitMatchesThePin(t *testing
 // FR-conformance-9 names the network in the failure message. The host `corpus.invalid`
 // never resolves, because RFC 2606 reserves the `.invalid` name. The test moves the pin
 // after the first run, because a moved pin is the case that starts a second download.
+//
+// A runner that drops a name request instead of a refusal makes this test wait for the
+// connect timeout of the script, which is 30 seconds. The test still reports the same
+// result.
 func TestFetchCorpusNamesTheNetworkWhenItCannotReachTheReference(t *testing.T) {
 	requireCorpusFetchTools(t)
 
@@ -207,6 +222,34 @@ func TestFetchCorpusNamesTheNetworkWhenItCannotReachTheReference(t *testing.T) {
 	// The failed run must leave the corpus of the first run in place.
 	if _, statErr := os.Stat(filepath.Join(root, "testdata", "foxio", "pcap", "tls12.pcap")); statErr != nil {
 		t.Errorf("the failed run removed the corpus: %v", statErr)
+	}
+}
+
+// A moved pin is the case that starts a second download. The fetched file must then name
+// the new commit, so that a later run does not read a corpus of two commits.
+func TestFetchCorpusUpdatesTheFetchedFileWhenThePinMoves(t *testing.T) {
+	requireCorpusFetchTools(t)
+
+	root := newCorpusFetchRoot(t)
+	archive := fileURL(newCorpusArchive(t))
+	if output, err := runFetchCorpus(t, root, archive); err != nil {
+		t.Fatalf("the first run failed: %v\n%s", err, output)
+	}
+
+	movedPin := "0123456789abcdef0123456789abcdef01234567"
+	pinPath := filepath.Join(root, "testdata", "foxio.pin")
+	if err := os.WriteFile(pinPath, []byte(movedPin+"\n"), 0o644); err != nil {
+		t.Fatalf("move the pin: %v", err)
+	}
+
+	output, err := runFetchCorpus(t, root, archive)
+	if err != nil {
+		t.Fatalf("the run after the moved pin failed: %v\n%s", err, output)
+	}
+
+	fetched := readTrimmedFile(t, filepath.Join(root, "testdata", "foxio", ".fetched"))
+	if fetched != movedPin {
+		t.Errorf("testdata/foxio/.fetched holds %q, and the moved pin holds %q", fetched, movedPin)
 	}
 }
 
