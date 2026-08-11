@@ -1,8 +1,8 @@
 # FoxIO source material
 
 Every ruling in this project cites a FoxIO source. This directory holds the readings and
-the transcriptions of that source material, so that a reader checks a citation without a
-clone of the FoxIO repository.
+the transcriptions of that source material. A reader checks a citation here, with no clone
+of the FoxIO repository.
 
 This page is the inventory. It records where the material comes from, which commit the
 project reads, and what each file measures. **The pages in this directory record what a
@@ -55,7 +55,12 @@ reports.
 
 `scripts/fetch-corpus.sh` fetches `pcap/`, `python/test/testdata` and
 `wireshark/test/testdata`. It fetches no part of `technical_details/`, so it reproduces
-nothing on this page. Run this command instead, from an empty directory.
+nothing on this page.
+
+**The command below clones FoxIO-licensed material into the working directory.** This
+repository commits no part of that material. `NOTICE` holds the FoxIO terms.
+
+Run this command instead, from an empty directory.
 
 ```sh
 git clone https://github.com/FoxIO-LLC/ja4.git &&
@@ -68,9 +73,6 @@ The command writes the byte count of each file, and then the SHA-256 hash of eac
 `wc` adds one total line, and the table holds no row for it. Compare each file line
 against the table above. If one line differs, stop and tell the maintainer. A changed hash
 means the material behind a citation changed.
-
-**The command clones FoxIO-licensed material into the working directory.** This repository
-commits no part of that material. `NOTICE` holds the FoxIO terms.
 
 ## What the material specifies
 
