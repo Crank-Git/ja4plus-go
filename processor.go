@@ -183,8 +183,11 @@ func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string
 // The caller decides what to do with an empty key.
 // GetShardKey acquires no lock and holds no state.
 func (p *Processor) GetShardKey(packet gopacket.Packet) string {
-	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
-	if srcIP == "" {
+	// The shard key follows the grouping pair, so every packet of one connection reaches
+	// one shard. A mirror sends both directions of one session from one outer address
+	// pair, and the outer pair would route two connections to one shard.
+	srcIP, dstIP, ok := parser.GetGroupingIPInfo(packet)
+	if !ok || srcIP == "" {
 		return ""
 	}
 

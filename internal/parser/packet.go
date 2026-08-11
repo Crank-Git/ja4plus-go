@@ -93,19 +93,32 @@ func CheckTunnel(packet gopacket.Packet) error {
 	return ErrTunnelPayloadUnread
 }
 
-// GetUDPLayer extracts the UDP layer from a packet, or nil if not present.
+// GetUDPLayer extracts the UDP layer of the innermost packet, or nil if not present.
+//
+// A tunnel carries its own transport layer, and that layer names the tunnel and not the
+// connection. The search therefore starts after the innermost tunnel layer. A VXLAN
+// packet on UDP port 4789 that carries TCP inside returns nil.
 func GetUDPLayer(packet gopacket.Packet) *layers.UDP {
-	if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
-		return udpLayer.(*layers.UDP)
+	for _, layer := range innerLayers(packet) {
+		if udp, held := layer.(*layers.UDP); held {
+			return udp
+		}
 	}
+
 	return nil
 }
 
-// GetTCPLayer extracts the TCP layer from a packet, or nil if not present.
+// GetTCPLayer extracts the TCP layer of the innermost packet, or nil if not present.
+//
+// A tunnel carries its own transport layer, and that layer names the tunnel and not the
+// connection. The search therefore starts after the innermost tunnel layer.
 func GetTCPLayer(packet gopacket.Packet) *layers.TCP {
-	if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer != nil {
-		return tcpLayer.(*layers.TCP)
+	for _, layer := range innerLayers(packet) {
+		if tcp, held := layer.(*layers.TCP); held {
+			return tcp
+		}
 	}
+
 	return nil
 }
 
@@ -124,6 +137,11 @@ func GetTCPPayload(packet gopacket.Packet) []byte {
 
 // GetIPInfo extracts source/destination IP addresses and TTL from a packet.
 // Supports both IPv4 and IPv6. For IPv6, ttl is the HopLimit field.
+//
+// It reads the outermost address layer, which is the layer a `FingerprintResult` reports
+// and the layer the time-to-live comes from. Use GetGroupingIPInfo for the address pair
+// that collects packets into one connection. `docs/specs/spec.md` `## Changelog` records
+// the ruling of 2026-08-11 that separates the two.
 func GetIPInfo(packet gopacket.Packet) (srcIP, dstIP string, ttl uint8, ok bool) {
 	// A caller that supplies a custom decoder can register another concrete type under an
 	// IP layer type. The caller reads `ok` as false for such a packet, and no assertion
@@ -139,6 +157,29 @@ func GetIPInfo(packet gopacket.Packet) (srcIP, dstIP string, ttl uint8, ok bool)
 		}
 	}
 	return "", "", 0, false
+}
+
+// GetGroupingIPInfo returns the address pair that collects packets into one connection.
+// It reads the innermost address layer. It reports false when the packet carries no
+// address layer the parser reads.
+//
+// The grouping pair reads the inner layer, because a mirror sends both directions of one
+// session from one outer address pair. The outer pair separates no direction there, and
+// one connection then holds two measurement points that belong to two endpoints.
+//
+// It returns no time-to-live, because the time-to-live reads the outer layer that
+// GetIPInfo returns.
+func GetGroupingIPInfo(packet gopacket.Packet) (srcIP, dstIP string, ok bool) {
+	for _, layer := range innerLayers(packet) {
+		switch ip := layer.(type) {
+		case *layers.IPv4:
+			return ip.SrcIP.String(), ip.DstIP.String(), true
+		case *layers.IPv6:
+			return ip.SrcIP.String(), ip.DstIP.String(), true
+		}
+	}
+
+	return "", "", false
 }
 
 // GetPacketTimestamp returns the packet's capture timestamp.
