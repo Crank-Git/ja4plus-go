@@ -32,7 +32,7 @@ func (p *SyncProcessor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResu
 }
 
 // Reset clears the state of every fingerprinter.
-// The mutex serializes it against a ProcessPacket call, so it runs before that call or
+// The mutex serializes it against a ProcessPacket call. It runs before that call or
 // after it, and never during it.
 func (p *SyncProcessor) Reset() {
 	p.mu.Lock()
@@ -51,9 +51,9 @@ func (p *SyncProcessor) CleanupConnection(srcIP string, srcPort uint16, dstIP st
 
 // GetShardKey returns one routing key for both directions of the connection.
 // It returns an empty string for a packet that carries neither a TCP layer nor a UDP
-// layer, and the caller decides what to do with that key.
+// layer. The caller decides what to do with an empty key.
 // It takes the mutex like every other exported method, because FR-concurrency-13 states
-// that one rule for the whole type.
+// one rule for the whole type.
 func (p *SyncProcessor) GetShardKey(packet gopacket.Packet) string {
 	p.mu.Lock()
 	defer p.mu.Unlock()
