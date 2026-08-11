@@ -329,35 +329,45 @@ func TestF22_9_ParseCryptoFramesReturnsTheFragmentsItHoldsWithTheTruncationError
 	}
 }
 
-func TestF22_11_TheRawJA4KeepsAGreaseSignatureAlgorithm(t *testing.T) {
-	// `docs/specs/foxio/JA4.md` R31 states that the signature algorithm list skips a GREASE
-	// value. `ja4.go:181` writes the list with no filter, so the raw JA4 holds it.
+func TestF22_11_TheRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-11 is closed. `docs/specs/foxio/JA4.md` R31 states that the signature algorithm
+	// list skips a GREASE value, and `computeJA4RawFromClientHello` wrote the list with no
+	// filter. No FoxIO vector reaches this input, so this test is the separating packet
+	// that `.claude/rules/rulings.md` asks for.
 	hello := auditParserGreaseClientHello(t)
 
 	raw := computeJA4RawFromClientHello(hello)
-	if !strings.Contains(raw, "0a0a") {
-		t.Errorf("the raw JA4 %q holds no GREASE signature algorithm, and the finding F-22-11 records one",
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it", raw)
+	}
+
+	// The two remaining values stay, and they keep the wire order.
+	if !strings.Contains(raw, "0403,0804") {
+		t.Errorf("the raw JA4 %q holds no signature algorithm list, and the ClientHello carries two",
 			raw)
 	}
 }
 
-func TestF22_12_TheJA4ExtensionHashKeepsAGreaseSignatureAlgorithm(t *testing.T) {
-	// `ja4.go:266` writes the same unfiltered list into the hashed string, so the third
-	// part of the JA4 differs from the FoxIO value that R31 states.
+func TestF22_12_TheJA4ExtensionHashSkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-12 is closed. `ja4ExtensionHash` wrote the same unfiltered list into the hashed
+	// string, so the third part of the JA4 differed from the value that R31 states. A
+	// ClientHello that carries one GREASE value now hashes to the value of the same
+	// ClientHello with no GREASE value.
 	withGrease := ja4ExtensionHash(auditParserGreaseClientHello(t))
 	withoutGrease := ja4ExtensionHash(auditParserPlainClientHello(t))
 
-	if withGrease == withoutGrease {
-		t.Errorf("the two hashes both read %q, and the finding F-22-12 records a difference",
-			withGrease)
+	if withGrease != withoutGrease {
+		t.Errorf("the hash with the GREASE value is %q, and the hash without it is %q",
+			withGrease, withoutGrease)
 	}
 }
 
-func TestF22_13_TheWireOrderRawJA4KeepsAGreaseSignatureAlgorithm(t *testing.T) {
-	// `ja4.go:288` writes the same unfiltered list into the wire-order raw JA4.
+func TestF22_13_TheWireOrderRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-13 is closed. `computeJA4RawOriginalOrder` wrote the same unfiltered list into
+	// the wire-order raw JA4.
 	raw := computeJA4RawOriginalOrder(auditParserGreaseClientHello(t))
-	if !strings.Contains(raw, "0a0a") {
-		t.Errorf("the wire-order raw JA4 %q holds no GREASE signature algorithm, and the finding F-22-13 records one",
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the wire-order raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it",
 			raw)
 	}
 }

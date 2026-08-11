@@ -199,9 +199,11 @@ func computeJA4RawFromClientHello(ch *parser.ClientHello) string {
 	sort.Slice(sortedExts, func(i, j int) bool { return sortedExts[i] < sortedExts[j] })
 	extList := formatHexList(sortedExts)
 
-	// Signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgList := formatHexList(ch.SignatureAlgorithms)
+	// Signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgList := formatHexList(sigAlgs)
 		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
 	}
 	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
@@ -284,9 +286,11 @@ func ja4ExtensionHash(ch *parser.ClientHello) string {
 
 	extStr := formatHexList(filtered)
 
-	// Append signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgStr := formatHexList(ch.SignatureAlgorithms)
+	// Append signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgStr := formatHexList(sigAlgs)
 		extStr = extStr + "_" + sigAlgStr
 	}
 
@@ -306,9 +310,11 @@ func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
 	extensions := parser.FilterGreaseValues(ch.Extensions)
 	extList := formatHexList(extensions)
 
-	// Signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgList := formatHexList(ch.SignatureAlgorithms)
+	// Signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgList := formatHexList(sigAlgs)
 		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
 	}
 	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
