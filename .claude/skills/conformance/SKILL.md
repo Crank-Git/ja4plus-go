@@ -61,6 +61,40 @@ Some methods appear in one set only.
 - **The per-packet set decides JA4D and JA4D6.** The per-stream vector for `dhcpv6.pcap`
   is an empty list, so the Python reference does not cover those methods.
 
+## To close a deviation
+
+`docs/specs/features/05-conformance-gaps.md` FR-gaps-1, FR-gaps-2 and FR-gaps-3 state the
+rule. Every closure follows all three.
+
+1. **Read the deviation row in `docs/audit/conformance.md`.** The row names the capture,
+   the vector set, the method and the two values.
+2. **Read the FoxIO reference for that method and that capture.** Cite a file and a line
+   at the pinned commit. `.claude/rules/rulings.md` states what counts as evidence.
+3. **Write the failing test first.** FR-gaps-2 requires a test that names the capture and
+   the method. Write both names in the test name or in a comment above it.
+4. **Change the library, and never the vector.** FR-gaps-4 gives the reference the
+   decision.
+5. **Record a changed fingerprint in `CHANGELOG.md`.** FR-gaps-3 requires one entry for
+   each changed fingerprint. A fingerprint that a released version produced is a breaking
+   behaviour change under `v1.0.0`.
+6. **Run the whole suite.** The deviation count falls, and no new deviation appears.
+7. **State the measurement in the pull request.** `.claude/rules/parity.md` names four
+   numbers: how many values moved, on which captures, the conformance count before and
+   after, and the register key count before and after.
+
+**Every deviation reaches one of three ends.** FR-gaps-1 allows no fourth.
+
+| End | Where it lands |
+|---|---|
+| The closure | The code, plus the test of step 3. |
+| A new requirement | `docs/specs/features/05-conformance-gaps.md`. |
+| An accepted exception | `docs/audit/conformance-exceptions.md`, with the maintainer's name and the date. |
+
+**A closure that no test holds is not a closure.** A later change reverses it in silence.
+
+**Stop before you invent a rule.** `.claude/rules/rulings.md` `## Stop conditions` names
+every case where the maintainer decides. A reference split is one of them.
+
 ## Rules
 
 - **The FoxIO reference decides every disputed result.** When a library test disagrees
