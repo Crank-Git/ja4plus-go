@@ -44,8 +44,15 @@ model that FoxIO recommends.
   holder for the original Go code.
 - **FR-licensing-3** — The repository holds a `NOTICE` file at the root.
 - **FR-licensing-4** — `NOTICE` reproduces the full text of FoxIO License 1.1.
-- **FR-licensing-5** — `NOTICE` names the nine methods in this library that FoxIO License
-  1.1 covers: JA4S, JA4H, JA4T, JA4TS, JA4L, JA4X, JA4SSH, JA4D and JA4D6.
+- **FR-licensing-5** — `NOTICE` names the ten methods in this library that FoxIO License
+  1.1 covers: JA4S, JA4H, JA4T, JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6.
+  **JA4LS joins the list when `features/12-ja4ls.md` lands**, and Epic 12 makes that edit.
+  Until then `NOTICE` names nine, and it names no method the library does not implement.
+- **FR-licensing-5a** — `NOTICE` states that this list is the set of methods this library
+  implements under the license. **It asserts no equality with FoxIO's own list.** Three
+  FoxIO records at the pinned commit name three different sets: `License FAQ.md:5` names
+  twelve methods, the FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and
+  spells the scanner `JA4SScan`.
 - **FR-licensing-6** — `NOTICE` states that JA4 is covered by BSD 3-Clause under
   `LICENSE-JA4` at FoxIO.
 - **FR-licensing-7** — `NOTICE` states that `data/ja4plus-mapping.csv` comes from FoxIO
