@@ -92,10 +92,10 @@ func runAnalyze(args []string) error {
 
 	pcapFile := args[0]
 	var (
-		outputJSON bool
-		outputCSV  bool
+		outputJSON  bool
+		outputCSV   bool
 		typesFilter map[string]bool
-		doLookup   bool
+		doLookup    bool
 	)
 
 	// Parse flags manually after the pcap file argument.
@@ -129,7 +129,7 @@ func runAnalyze(args []string) error {
 	if err != nil {
 		return fmt.Errorf("cannot open file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var reader packetReader
 	ext := strings.ToLower(filepath.Ext(pcapFile))
@@ -255,9 +255,9 @@ func writeTable(results []ja4plus.FingerprintResult, doLookup bool) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
 
 	if doLookup {
-		fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint\tApplication")
+		_, _ = fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint\tApplication")
 	} else {
-		fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint")
+		_, _ = fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint")
 	}
 
 	for _, r := range results {
@@ -268,9 +268,9 @@ func writeTable(results []ja4plus.FingerprintResult, doLookup bool) error {
 			if lr := ja4plus.LookupFingerprint(r.Fingerprint); lr != nil {
 				app = lr.Application
 			}
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint, app)
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint, app)
 		} else {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint)
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint)
 		}
 	}
 	return w.Flush()
@@ -340,7 +340,7 @@ func runDBUpdate() error {
 	if err != nil {
 		return fmt.Errorf("download: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download: HTTP %d", resp.StatusCode)
 	}
@@ -387,4 +387,3 @@ func runDBInfo() error {
 	}
 	return nil
 }
-

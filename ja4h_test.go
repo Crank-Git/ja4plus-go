@@ -416,4 +416,3 @@ func TestJA4H_PseudoHeadersExcluded(t *testing.T) {
 		t.Errorf("Part B: got %q, want %q", parts[1], expectedB)
 	}
 }
-

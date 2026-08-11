@@ -15,9 +15,9 @@ func TestComputeJA4FromClientHello_TLS13(t *testing.T) {
 		Version:      0x0303,
 		CipherSuites: []uint16{0x1301, 0x1302, 0x1303, 0xc02c},
 		Extensions: []uint16{
-			parser.ExtSNI,                // 0x0000
-			parser.ExtALPN,               // 0x0010
-			parser.ExtSupportedVersions,  // 0x002b
+			parser.ExtSNI,                 // 0x0000
+			parser.ExtALPN,                // 0x0010
+			parser.ExtSupportedVersions,   // 0x002b
 			parser.ExtSignatureAlgorithms, // 0x000d
 			0x0017,                        // extended_master_secret
 		},
@@ -197,8 +197,8 @@ func TestJA4_ExtensionHash_SNIAndALPNExcluded(t *testing.T) {
 		Version:      0x0303,
 		CipherSuites: []uint16{0x002f},
 		Extensions: []uint16{
-			parser.ExtSNI,                // should be excluded from hash
-			parser.ExtALPN,               // should be excluded from hash
+			parser.ExtSNI,                 // should be excluded from hash
+			parser.ExtALPN,                // should be excluded from hash
 			0x0017,                        // should be included
 			parser.ExtSignatureAlgorithms, // should be included
 		},
@@ -394,11 +394,11 @@ func TestJA4_RawOriginalOrder(t *testing.T) {
 	// The ciphers are intentionally unsorted so Raw (sorted) differs from RawOriginalOrder.
 	ciphers := []uint16{0x1303, 0x1301, 0x1302}
 	exts := []parser.TLSExtension{
-		parser.MakeSNIExtension("example.com"),               // 0x0000
-		parser.MakeALPNExtension("h2", "http/1.1"),           // 0x0010
+		parser.MakeSNIExtension("example.com"),                      // 0x0000
+		parser.MakeALPNExtension("h2", "http/1.1"),                  // 0x0010
 		parser.MakeSupportedVersionsClientExtension(0x0304, 0x0303), // 0x002b
 		parser.MakeSignatureAlgorithmsExtension(0x0403, 0x0804),     // 0x000d
-		{Typ: 0x0017, Data: []byte{}},                                // extended_master_secret
+		{Typ: 0x0017, Data: []byte{}},                               // extended_master_secret
 	}
 	tlsPayload := parser.BuildClientHello(0x0303, ciphers, exts)
 
