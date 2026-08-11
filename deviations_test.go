@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -92,10 +93,21 @@ func readDeviationEntry(fields map[string]json.RawMessage) (deviationEntry, erro
 		}
 	}
 
+	// An entry that holds an undefined field is a defect the reader must report. A JSON
+	// decoder drops such a field in silence, so a misspelled `capability` would read as a
+	// value decline.
+	undefined := make([]string, 0, len(fields))
+
 	for name := range fields {
 		if !containsDeviationField(name) {
-			return entry, fmt.Errorf("the field %q is not a register field", name)
+			undefined = append(undefined, name)
 		}
+	}
+
+	if len(undefined) > 0 {
+		slices.Sort(undefined)
+
+		return entry, fmt.Errorf("the entry holds the field %q, and this project defines no such register field", undefined[0])
 	}
 
 	if err := json.Unmarshal(fields["capability"], &entry.Capability); err != nil {
@@ -104,15 +116,21 @@ func readDeviationEntry(fields map[string]json.RawMessage) (deviationEntry, erro
 
 	// The `ours` value and the `theirs` value carry no form rule. A capability decline
 	// produces no value on one side, so an empty string is a true record of the state.
-	for name, target := range map[string]*string{
-		"key":    &entry.Key,
-		"ours":   &entry.Ours,
-		"theirs": &entry.Theirs,
-		"ruling": &entry.Ruling,
-		"reason": &entry.Reason,
+	//
+	// The list keeps the order fixed. A range over a map reports a different field first
+	// on each run, and an entry with two defects would then produce two error messages.
+	for _, field := range []struct {
+		name   string
+		target *string
+	}{
+		{"key", &entry.Key},
+		{"ours", &entry.Ours},
+		{"theirs", &entry.Theirs},
+		{"ruling", &entry.Ruling},
+		{"reason", &entry.Reason},
 	} {
-		if err := json.Unmarshal(fields[name], target); err != nil {
-			return entry, fmt.Errorf("the field %q is not a string: %w", name, err)
+		if err := json.Unmarshal(fields[field.name], field.target); err != nil {
+			return entry, fmt.Errorf("the field %q is not a string: %w", field.name, err)
 		}
 	}
 
@@ -129,13 +147,7 @@ func readDeviationEntry(fields map[string]json.RawMessage) (deviationEntry, erro
 
 // containsDeviationField reports whether the name is a register field.
 func containsDeviationField(name string) bool {
-	for _, field := range deviationFieldNames {
-		if field == name {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(deviationFieldNames, name)
 }
 
 // checkDeviationKey returns an error when the key does not name the capture, the stream
@@ -231,6 +243,12 @@ func TestTheRegisterFileExists(t *testing.T) {
 }
 
 func TestGitTracksTheRegisterFile(t *testing.T) {
+	// A build environment that holds no git cannot answer the question, and a failure
+	// there would report a defect the repository does not hold.
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not on the path, so this test cannot read the index")
+	}
+
 	command := exec.Command("git", "ls-files", "--error-unmatch", deviationRegisterFile)
 
 	if output, err := command.CombinedOutput(); err != nil {
