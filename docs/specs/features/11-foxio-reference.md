@@ -33,8 +33,10 @@ four facts. This project adopts the measurement and re-runs it against its own p
 1. The directory holds twelve files: three text files and nine images.
 2. **One method of twelve holds a complete text specification, and that method is JA4.**
    `JA4H.md` is 278 bytes and builds no fingerprint.
-3. **Three methods hold no image: JA4LS, JA4TS and JA4TScan.** `JA4T.png` titles itself
-   `JA4T/S: TCP Fingerprint`, so it specifies JA4TS. `JA4L.png` titles itself
+3. **Three methods reach no image of their own name: JA4LS, JA4TS and JA4TScan.**
+   `JA4T.png` titles itself `JA4T/S: TCP Fingerprint`, so it specifies the schema of
+   JA4TS. The image states no separate server rule, so it specifies no rule for the packet
+   that JA4TS reads. `JA4L.png` titles itself
    `JA4L: Light Distance/Location Fingerprint` and states no server rule, so **no image
    specifies JA4LS**.
 4. **FoxIO published a text specification for seven methods, and commit `b6f3ff4` deleted
