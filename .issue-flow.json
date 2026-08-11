@@ -1,0 +1,39 @@
+{
+  "forge": {
+    "type": "github",
+    "host": "github.com",
+    "owner": "Crank-Git",
+    "repo": "ja4plus-go",
+    "remote": "origin"
+  },
+  "branchModel": "dev-and-live",
+  "devBranch": "dev",
+  "liveBranch": "master",
+  "devIsDefault": false,
+  "concurrency": 2,
+  "batchSize": 4,
+  "runLength": "epic-0-then-stop",
+  "prGranularity": "batch",
+  "prAuthority": "autonomous",
+  "deployTarget": null,
+  "docsMcp": "none-webfetch-fallback",
+  "review": {
+    "when": "never"
+  },
+  "practices": {
+    "tdd": true,
+    "coverageFloor": true,
+    "fullGate": [
+      "go build ./...",
+      "go test -race ./...",
+      "golangci-lint run",
+      "make conformance",
+      "coverage >= .coverage-floor",
+      "make docs (when a page changed)"
+    ],
+    "commitStyle": "conventional: type(scope): summary",
+    "commitIdentity": "Crank-Git <info@nocturnaltendenciesllc.com>",
+    "steRule": ".claude/rules/ste.md",
+    "rulingsAreMaintainerOnly": true
+  }
+}
