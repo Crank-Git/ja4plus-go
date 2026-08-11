@@ -217,6 +217,31 @@ This table belongs to issue #23.
 <!-- files:23:begin -->
 | File | Audit date |
 |---|---|
+| `doc.go` | 2026-08-11 |
+| `ja4.go` | 2026-08-11 |
+| `ja4d.go` | 2026-08-11 |
+| `ja4d6.go` | 2026-08-11 |
+| `ja4h.go` | 2026-08-11 |
+| `ja4l.go` | 2026-08-11 |
+| `ja4s.go` | 2026-08-11 |
+| `ja4ssh.go` | 2026-08-11 |
+| `ja4t.go` | 2026-08-11 |
+| `ja4ts.go` | 2026-08-11 |
+| `ja4x.go` | 2026-08-11 |
+| `lookup.go` | 2026-08-11 |
+| `processor.go` | 2026-08-11 |
+| `sync_processor.go` | 2026-08-11 |
+| `types.go` | 2026-08-11 |
+| `internal/parser/grease.go` | 2026-08-11 |
+| `internal/parser/hash.go` | 2026-08-11 |
+| `internal/parser/http.go` | 2026-08-11 |
+| `internal/parser/packet.go` | 2026-08-11 |
+| `internal/parser/quic.go` | 2026-08-11 |
+| `internal/parser/ssh.go` | 2026-08-11 |
+| `internal/parser/tcp_stream.go` | 2026-08-11 |
+| `internal/parser/testhelpers.go` | 2026-08-11 |
+| `internal/parser/tls.go` | 2026-08-11 |
+| `internal/parser/x509_utils.go` | 2026-08-11 |
 <!-- files:23:end -->
 
 ### The files of issue #24
@@ -260,7 +285,37 @@ state table, the `results` slice, `CleanupConnection` or `Reset`.
 <!-- findings:23:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
 |---|---|---|---|---|---|---|---|
+| F-23-1 | `ja4.go` | 18 | critical | open | A capture that holds 100000 TLS client hello packets leaves 100000 results in the JA4 results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-2 | `ja4s.go` | 16 | critical | open | A capture that holds 100000 TLS server hello packets leaves 100000 results in the JA4S results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-3 | `ja4h.go` | 18 | critical | open | A capture that holds 100000 HTTP request packets leaves 100000 results in the JA4H results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-4 | `ja4t.go` | 18 | critical | open | A capture that holds 100000 TCP SYN packets leaves 100000 results in the JA4T results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-5 | `ja4ts.go` | 13 | critical | open | A capture that holds 100000 TCP SYN-ACK packets leaves 100000 results in the JA4TS results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-6 | `ja4l.go` | 27 | critical | open | A capture that holds 100000 TCP handshakes leaves 100000 results in the JA4L results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-7 | `ja4x.go` | 38 | critical | open | A capture that holds 100000 distinct certificates leaves 100000 results in the JA4X results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-8 | `ja4ssh.go` | 44 | critical | open | A capture that fills 100000 JA4SSH windows leaves 100000 results in the JA4SSH results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-9 | `ja4d.go` | 59 | critical | open | A capture that holds 100000 DHCP messages leaves 100000 results in the JA4D results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-10 | `ja4d6.go` | 71 | critical | open | A capture that holds 100000 DHCPv6 messages leaves 100000 results in the JA4D6 results slice, and CleanupConnection removes none of them. |  |  |
+| F-23-11 | `ja4.go` | 123 | critical | open | A caller that names the server endpoint first leaves one entry in the JA4 QUIC fragment table for every QUIC connection whose client hello spans two datagrams. |  |  |
+| F-23-12 | `ja4x.go` | 109 | major | open | A capture where two connections carry one certificate, with a CleanupConnection call between them, produces one JA4X result and not two. |  |  |
+| F-23-13 | `ja4l.go` | 219 | critical | open | A caller that passes the protocol as TCP leaves one entry in the JA4L connections table for every connection it closes. |  |  |
+| F-23-14 | `lookup.go` | 37 | major | open | A program that calls LookupFingerprint before a new mapping file reaches the cache path reads the embedded table for the life of the process, and a lookup of a fingerprint that only the new file holds returns nil. |  |  |
 <!-- findings:23:end -->
+
+`audit_state_test.go` holds the measurement of each finding above. Read it before you
+close one, because a test there states the behaviour the audit read.
+
+Three readings support the rows.
+
+- **No exported method reads a results slice.** Every fingerprinter appends each result to
+  it, `ProcessPacket` returns the same result to the caller, and only `Reset` clears the
+  slice. The slice therefore holds one copy of every fingerprint for the life of the
+  process.
+- **Three fingerprinters key their state by a tuple that the caller supplies in one
+  order.** `ja4s.go`, `ja4h.go` and `ja4x.go` remove both directions of the tuple.
+  `ja4.go` removes one, which F-23-11 records.
+- **`Reset` clears every field that holds state, in every fingerprinter.** FR-audit-18
+  reaches no finding. `TestReset_ClearsEveryStateFieldOfEveryFingerprinter` walks the field
+  graph of the ten fingerprinters and holds that result.
 
 ### The findings of issue #24
 
@@ -306,9 +361,9 @@ before the owner reaches the candidate, and issue #25 leaves none.
 <!-- suspected:begin -->
 | ID | Files | Owner | Status | Findings | Reason |
 |---|---|---|---|---|---|
-| S1 | the ten fingerprinter files | #23 | open |  |  |
-| S2 | `lookup.go` | #23 | open |  |  |
-| S3 | `lookup.go` | #23 | open |  |  |
+| S1 | the ten fingerprinter files | #23 | confirmed | F-23-1 through F-23-10 | Every fingerprinter appends each result to its results slice, no exported method reads that slice, and only Reset clears it. |
+| S2 | `lookup.go` | #23 | confirmed | F-23-14 | The `sync.Once` at `lookup.go:37` loads the mapping table once for the life of the process, and the doc comment of `LookupFingerprint` states that the cache file decides the table. |
+| S3 | `lookup.go` | #23 | unconfirmed |  | No code writes `lookupDB`, `dbSource` or `dbCachePath` outside `lookupOnce.Do`, so `sync.Once` orders that write before every read that `loadDB` returns to. |
 <!-- suspected:end -->
 
 Issue #23 owns all three, because each candidate names state that a long-running process
