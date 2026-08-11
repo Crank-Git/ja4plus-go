@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"testing"
@@ -248,7 +249,7 @@ func FuzzNoExportedFunctionPanicsOnAnyFrame(f *testing.F) {
 }
 
 // auditDecoyLayer is a gopacket layer whose concrete type is not the type the layer type
-// names. A caller that builds a packet from a custom decoder reaches this shape, and every
+// names. A caller that builds a packet from a custom decoder reaches this shape. Every
 // exported method of this package takes a `gopacket.Packet` that a caller builds.
 type auditDecoyLayer struct {
 	named gopacket.LayerType
@@ -303,14 +304,27 @@ func auditDecoyDHCPPacket() gopacket.Packet {
 }
 
 // auditRecoverPanic returns the value that the call panics with, and nil when it returns.
-func auditRecoverPanic(call func()) (recovered any) {
+func auditRecoverPanic(call func()) any {
+	recovered, _ := auditRecoverPanicAt(call)
+
+	return recovered
+}
+
+// auditRecoverPanicAt returns the value the call panics with and the stack of the panic.
+//
+// A finding names one line, and a reader who trusts the line rather than the stack records
+// the wrong site when two lines of the same file panic on two different inputs.
+func auditRecoverPanicAt(call func()) (recovered any, stack string) {
 	defer func() {
-		recovered = recover()
+		if raised := recover(); raised != nil {
+			recovered = raised
+			stack = string(debug.Stack())
+		}
 	}()
 
 	call()
 
-	return nil
+	return nil, ""
 }
 
 func TestAUDPLayerOfAnotherConcreteTypeMakesJA4Panic(t *testing.T) {
@@ -394,7 +408,7 @@ func TestAZeroValueFingerprinterPanicsOnItsFirstCall(t *testing.T) {
 		site    string
 		call    func()
 	}{
-		{"F-24-4", "ja4h.go:73", func() {
+		{"F-24-4", "ja4h.go:65", func() {
 			var f JA4HFingerprinter
 			f.ProcessPacket(web) //nolint:errcheck // The panic is the result under test.
 		}},
@@ -422,9 +436,24 @@ func TestAZeroValueFingerprinterPanicsOnItsFirstCall(t *testing.T) {
 
 	for _, testCase := range cases {
 		t.Run(testCase.finding, func(t *testing.T) {
-			if recovered := auditRecoverPanic(testCase.call); recovered == nil {
-				t.Errorf("%s no longer reproduces at %s, and `docs/audit/findings.md` still records it as open",
+			recovered, stack := auditRecoverPanicAt(testCase.call)
+
+			if recovered == nil {
+				t.Fatalf("%s no longer reproduces at %s, and `docs/audit/findings.md` still records it as open",
 					testCase.finding, testCase.site)
+			}
+
+			// The stack holds the absolute path of the worktree, so the test reads the
+			// suffix. Two lines of one file panic on two different inputs, and the row of
+			// the report names one of them.
+			//
+			// A frame that the compiler inlines carries no instruction offset, so the site
+			// ends the line. A frame that it does not inline carries the offset after one
+			// space.
+			site := "/" + testCase.site
+			if !strings.Contains(stack, site+"\n") && !strings.Contains(stack, site+" ") {
+				t.Errorf("%s panics away from %s, and the stack reads\n%s",
+					testCase.finding, testCase.site, stack)
 			}
 		})
 	}
@@ -726,7 +755,7 @@ func TestTheCryptoFragmentSortReordersTwoFragmentsThatShareAnOffset(t *testing.T
 }
 
 // ---------------------------------------------------------------------------
-// FR-audit-20 — every error return is checked for a swallowed error
+// FR-audit-20 — the audit checks every error return for a swallowed error
 // ---------------------------------------------------------------------------
 
 func TestTheProcessorReturnsAnErrorRatherThanDiscardingIt(t *testing.T) {

@@ -302,7 +302,7 @@ result carries a `TODO(#25)` comment, because the closure reverses the assertion
 | F-24-1 | `ja4.go` | 52 | critical | open | A packet whose UDP layer type carries another concrete type makes `NewJA4().ProcessPacket` panic with an interface conversion. |  |  |
 | F-24-2 | `ja4d.go` | 74 | critical | open | A packet whose UDP layer type carries another concrete type makes `NewJA4D().ProcessPacket` panic with an interface conversion. |  |  |
 | F-24-3 | `ja4d.go` | 85 | critical | open | A packet that holds a UDP header on port 68 and a DHCPv4 layer of another concrete type makes `NewJA4D().ProcessPacket` panic. |  |  |
-| F-24-4 | `ja4h.go` | 73 | critical | open | An HTTP request packet makes a zero-value `JA4HFingerprinter` panic with a nil pointer dereference of the reassembler field. |  |  |
+| F-24-4 | `ja4h.go` | 65 | critical | open | An HTTP request packet makes a zero-value `JA4HFingerprinter` panic with a nil pointer dereference of the reassembler field. |  |  |
 | F-24-5 | `ja4l.go` | 187 | critical | open | A TCP packet makes a zero-value `JA4LFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
 | F-24-6 | `ja4x.go` | 80 | critical | open | A TCP packet that holds a payload makes a zero-value `JA4XFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
 | F-24-7 | `ja4ssh.go` | 134 | critical | open | A TCP payload that opens with `SSH-` makes a zero-value `JA4SSHFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
