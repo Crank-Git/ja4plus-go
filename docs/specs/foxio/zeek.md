@@ -53,7 +53,7 @@ characters, at `zeek/utils/common.zeek:69`.
 
 | Method | Evidence |
 |---|---|
-| JA4X | `zeek/ja4x/__load__.zeek:1` holds one line, `# empty`. `zeek/config.zeek:24` sets `option JA4X_enabled: bool = F;`. `zeek/README.md:16` states `(awaiting Zeek object support)`. |
+| JA4X | `zeek/ja4x/__load__.zeek:1` holds one line, `# empty`. `zeek/config.zeek:24` sets `option JA4X_enabled:   bool = F;`. `zeek/README.md:16` states `(awaiting Zeek object support)`. |
 | JA4D6 | The package holds no module for it. `zeek/README.md:15` states `(awaiting Zeek DHCPv6 suppport)`. |
 | JA4TScan | The package holds no module for it, and FoxIO publishes no material for it. |
 
@@ -134,8 +134,11 @@ Each reading below records what the Zeek package holds. None of them decides a v
 - `zeek/ja4/main.zeek:90` and `zeek/ja4/main.zeek:97` cap each count at `99`.
 - `zeek/ja4/main.zeek:86` builds the ALPN characters from the first ALPN value.
 - `zeek/ja4/main.zeek:104` sets the version to `00` when the version map holds no entry.
-  `zeek/ja4/main.zeek:103` states `# TODO - Investigate zeek bug returning invalid
-  versions (testing\tls-bad-version.pcapng)`.
+  `zeek/ja4/main.zeek:103` holds this comment:
+
+```
+# TODO - Investigate zeek bug returning invalid versions (testing\tls-bad-version.pcapng)
+```
 
 ### JA4S
 
