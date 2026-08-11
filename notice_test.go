@@ -12,8 +12,8 @@ import (
 // NOTICE holds two parts. The prose part states which license covers which material. The
 // verbatim part reproduces FoxIO License 1.1. The two markers below separate them,
 // because FR-licensing-4 and FR-licensing-5 apply to different parts. FR-licensing-4
-// requires the full FoxIO text, and that text names thirteen methods. FR-licensing-5
-// bars a method the library does not implement from this project's own list.
+// requires the full FoxIO text. That text names thirteen methods. FR-licensing-5 bars a
+// method the library does not implement from this project's own list.
 
 const (
 	// noticeLicenseBeginMarker opens the verbatim FoxIO text in NOTICE.
@@ -89,8 +89,13 @@ func TestNoticeExistsAtTheRepositoryRoot(t *testing.T) {
 }
 
 // FR-licensing-4. The FoxIO text is verbatim evidence, and `.claude/rules/ste.md` bars a
-// rewording of it. `testdata/foxio-license-1.1.txt` holds the reference copy, read from
+// change to it. `testdata/foxio-license-1.1.txt` holds the reference copy, read from
 // `LICENSE` at the pinned FoxIO commit. This test compares byte for byte.
+//
+// No test reaches the network, so the reference copy is the fixed point of the
+// comparison. Issue #11 read it at the pinned commit, and its SHA-256 digest is
+// 7781abaf8b8f1cd550de05de5cba4387886dabd493e618b630b359c450f4d8f0. Re-verify the copy
+// against FoxIO before you change it.
 func TestNoticeHoldsTheFoxIOLicenseTextWithoutAChange(t *testing.T) {
 	notice := readRepoFile(t, "NOTICE")
 	reference := readRepoFile(t, "testdata/foxio-license-1.1.txt")
@@ -122,7 +127,7 @@ func TestNoticeNamesTheNineMethodsThisLibraryImplements(t *testing.T) {
 // FR-licensing-5 bars a method the library does not implement from this project's list.
 // JA4LS joins the list when Epic 12 lands, and the FoxIO records name four more methods
 // that this library does not implement.
-func TestNoticeNamesNoMethodThisLibraryDoesNotImplement(t *testing.T) {
+func TestNoticeMethodListExcludesEveryUnimplementedMethod(t *testing.T) {
 	names := noticeMethodList(t)
 
 	absent := []string{"JA4LS", "JA4TScan", "JA4SScan", "JA4Scan", "JA4E"}
@@ -149,6 +154,9 @@ func TestNoticeAssertsNoEqualityWithTheFoxIOList(t *testing.T) {
 		"LICENSE:3",
 		"thirteen",
 		"JA4SScan",
+		// The FoxIO README names nine methods, and this library also names nine. The two
+		// sets are different, and a reader must not read the two counts as one set.
+		"The two sets are different.",
 		foxioPinnedCommit,
 	} {
 		if !strings.Contains(prose, want) {
@@ -221,10 +229,11 @@ func TestNoticeRecordsTheCommitAtWhichThisProjectReadTheLicense(t *testing.T) {
 	}
 }
 
-// The § License section of `CLAUDE.md` bars an unqualified BSD 3-Clause claim. NOTICE
-// covers the JA4+ methods with FoxIO License 1.1, so it must never state that the BSD
-// 3-Clause license covers them.
-func TestNoticeCoversTheJA4PlusMethodsWithTheFoxIOLicense(t *testing.T) {
+// The § License section of `CLAUDE.md` bars an unqualified BSD 3-Clause claim. This test
+// holds the negative half: the method-list section names no BSD 3-Clause license.
+// `noticeMethodListHeading` holds the positive half, because the heading itself reads
+// `under FoxIO License 1.1`, and every helper above fails when that heading is absent.
+func TestNoticeMethodListNamesNoBSD3ClauseLicense(t *testing.T) {
 	_, rest, found := strings.Cut(noticeProse(t), noticeMethodListHeading)
 	if !found {
 		t.Fatalf("NOTICE holds no %q heading", noticeMethodListHeading)
