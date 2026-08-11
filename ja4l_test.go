@@ -198,18 +198,14 @@ func TestJA4L_Reset(t *testing.T) {
 	synAckPkt.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
 	_, _ = fp.ProcessPacket(synAckPkt)
 
-	if len(fp.results) != 1 {
-		t.Fatalf("expected 1 result before reset, got %d", len(fp.results))
-	}
+	// Issue #25 removed the results slice, so the connection table is the only state that
+	// Reset clears.
 	if len(fp.connections) != 1 {
 		t.Fatalf("expected 1 connection before reset, got %d", len(fp.connections))
 	}
 
 	fp.Reset()
 
-	if len(fp.results) != 0 {
-		t.Errorf("expected 0 results after reset, got %d", len(fp.results))
-	}
 	if len(fp.connections) != 0 {
 		t.Errorf("expected 0 connections after reset, got %d", len(fp.connections))
 	}

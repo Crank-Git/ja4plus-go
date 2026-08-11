@@ -633,8 +633,11 @@ func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 		return nil
 	}
 
-	// Sort by offset
-	sort.Slice(fragments, func(i, j int) bool {
+	// Sort by offset.
+	// The sort is stable, because the offset alone is the key and two fragments can share
+	// one offset. An unstable sort left such a pair in an order that the wire does not
+	// state. The copy loop below then wrote the bytes of either fragment.
+	sort.SliceStable(fragments, func(i, j int) bool {
 		return fragments[i].Offset < fragments[j].Offset
 	})
 

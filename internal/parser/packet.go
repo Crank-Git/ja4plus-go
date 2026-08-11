@@ -39,13 +39,18 @@ func GetTCPPayload(packet gopacket.Packet) []byte {
 // GetIPInfo extracts source/destination IP addresses and TTL from a packet.
 // Supports both IPv4 and IPv6. For IPv6, ttl is the HopLimit field.
 func GetIPInfo(packet gopacket.Packet) (srcIP, dstIP string, ttl uint8, ok bool) {
+	// A caller that supplies a custom decoder can register another concrete type under an
+	// IP layer type. The caller reads `ok` as false for such a packet, and no assertion
+	// panics.
 	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
-		ip := ipLayer.(*layers.IPv4)
-		return ip.SrcIP.String(), ip.DstIP.String(), ip.TTL, true
+		if ip, held := ipLayer.(*layers.IPv4); held {
+			return ip.SrcIP.String(), ip.DstIP.String(), ip.TTL, true
+		}
 	}
 	if ipLayer := packet.Layer(layers.LayerTypeIPv6); ipLayer != nil {
-		ip := ipLayer.(*layers.IPv6)
-		return ip.SrcIP.String(), ip.DstIP.String(), ip.HopLimit, true
+		if ip, held := ipLayer.(*layers.IPv6); held {
+			return ip.SrcIP.String(), ip.DstIP.String(), ip.HopLimit, true
+		}
 	}
 	return "", "", 0, false
 }

@@ -59,11 +59,27 @@ func TestJA4D_FormatList(t *testing.T) {
 }
 
 func TestJA4D_Reset(t *testing.T) {
+	// JA4D holds no state, so Reset changes no result. Issue #25 removed the results
+	// slice, which grew without a bound and which no exported method read.
 	f := NewJA4D()
-	f.results = []FingerprintResult{{Type: "ja4d"}}
+	pkt := buildDHCPDiscoverPacket(t)
+
+	before, err := f.ProcessPacket(pkt)
+	if err != nil {
+		t.Fatalf("ProcessPacket returned the error %v", err)
+	}
+	if len(before) != 1 {
+		t.Fatalf("the DHCP message produced %d results, want 1", len(before))
+	}
+
 	f.Reset()
-	if f.results != nil {
-		t.Errorf("expected nil results after reset, got %v", f.results)
+
+	after, err := f.ProcessPacket(pkt)
+	if err != nil {
+		t.Fatalf("ProcessPacket returned the error %v", err)
+	}
+	if len(after) != 1 || after[0].Fingerprint != before[0].Fingerprint {
+		t.Errorf("the read after Reset produces %v, and the read before it produces %v", after, before)
 	}
 }
 

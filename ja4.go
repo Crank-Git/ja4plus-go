@@ -15,7 +15,6 @@ import (
 // One JA4Fingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4Fingerprinter struct {
-	results       []FingerprintResult
 	quicFragments map[string][]parser.CryptoFragment // DCID hex -> accumulated fragments
 	dcidToTuple   map[string]string                  // DCID hex -> 5-tuple key for cleanup
 }
@@ -28,8 +27,23 @@ func NewJA4() *JA4Fingerprinter {
 	}
 }
 
+// ensure fills the state maps that the constructor fills.
+// A caller who writes `var f JA4Fingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4Fingerprinter) ensure() {
+	if f.quicFragments == nil {
+		f.quicFragments = make(map[string][]parser.CryptoFragment)
+	}
+
+	if f.dcidToTuple == nil {
+		f.dcidToTuple = make(map[string]string)
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
 func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	var ch *parser.ClientHello
 	var srcPort, dstPort uint16
 
@@ -49,7 +63,12 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	// Try QUIC in UDP packets with multi-packet CRYPTO frame accumulation
 	if ch == nil {
 		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
-			udp := udpLayer.(*layers.UDP)
+			// A caller that supplies a custom decoder can register another concrete type
+			// under the UDP layer type. A fingerprinter returns a non-fatal error for it.
+			udp, ok := udpLayer.(*layers.UDP)
+			if !ok {
+				return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+			}
 			if len(udp.Payload) > 0 {
 				frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
 				if err != nil {
@@ -106,13 +125,13 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		Timestamp:        parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears all stored results.
+// Reset clears the QUIC fragment table and the connection identifier table.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4Fingerprinter) Reset() {
-	f.results = nil
 	f.quicFragments = make(map[string][]parser.CryptoFragment)
 	f.dcidToTuple = make(map[string]string)
 }
@@ -120,10 +139,14 @@ func (f *JA4Fingerprinter) Reset() {
 // CleanupConnection removes internal state for the given connection.
 // JA4 QUIC state is keyed by DCID hex. This method looks up the DCID
 // via the dcidToTuple reverse map and cleans the corresponding fragments.
+// The caller names the two endpoints in either order, because the reverse map holds the
+// order of the datagram that carried the client hello.
 func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
-	tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	forward := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	reverse := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+
 	for dcid, tuple := range f.dcidToTuple {
-		if tuple == tupleKey {
+		if tuple == forward || tuple == reverse {
 			delete(f.quicFragments, dcid)
 			delete(f.dcidToTuple, dcid)
 		}
@@ -176,9 +199,11 @@ func computeJA4RawFromClientHello(ch *parser.ClientHello) string {
 	sort.Slice(sortedExts, func(i, j int) bool { return sortedExts[i] < sortedExts[j] })
 	extList := formatHexList(sortedExts)
 
-	// Signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgList := formatHexList(ch.SignatureAlgorithms)
+	// Signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgList := formatHexList(sigAlgs)
 		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
 	}
 	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
@@ -261,9 +286,11 @@ func ja4ExtensionHash(ch *parser.ClientHello) string {
 
 	extStr := formatHexList(filtered)
 
-	// Append signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgStr := formatHexList(ch.SignatureAlgorithms)
+	// Append signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgStr := formatHexList(sigAlgs)
 		extStr = extStr + "_" + sigAlgStr
 	}
 
@@ -283,9 +310,11 @@ func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
 	extensions := parser.FilterGreaseValues(ch.Extensions)
 	extList := formatHexList(extensions)
 
-	// Signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgList := formatHexList(ch.SignatureAlgorithms)
+	// Signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgList := formatHexList(sigAlgs)
 		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
 	}
 	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)

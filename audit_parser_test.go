@@ -67,10 +67,11 @@ func TestF22_1_ALPNValueHexEncodesTheWholeValueAndDisagreesWithTheFoxioVector(t 
 	}
 }
 
-func TestF22_2_ParseClientHelloReadsPastTheRecordLengthIntoTheNextRecord(t *testing.T) {
-	// `ParseClientHello` reads the record length at `internal/parser/tls.go:71` and then
-	// bounds every later slice by the payload length. A payload that holds two TLS records
-	// therefore lets the first record's extensions length reach into the second record.
+func TestF22_2_ParseClientHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-2 is closed. `ParseClientHello` read the record length and then bounded every
+	// later slice by the payload length. A payload that holds two TLS records therefore
+	// let the first record's extensions length reach into the second record. The parser
+	// then read `0x1603` as an extension type. The bound is now the end of the record.
 	hello := auditParserClientHello(t, []parser.TLSExtension{parser.MakeSNIExtension("a.example")})
 	second := parser.BuildServerHello(0x0303, 0x1302, []parser.TLSExtension{parser.MakeALPNExtension("h2")})
 
@@ -106,22 +107,24 @@ func TestF22_2_ParseClientHelloReadsPastTheRecordLengthIntoTheNextRecord(t *test
 		t.Fatalf("the crafted payload: %v", err)
 	}
 
-	if len(got.Extensions) <= len(honest.Extensions) {
-		t.Errorf("the crafted payload produces the extensions %v, and the finding F-22-2 records a longer list",
-			got.Extensions)
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
 	}
 
 	// 0x1603 is the content type and the first version byte of the second record. The
-	// parser reads the two bytes as an extension type.
-	if got.Extensions[len(got.Extensions)-1] != 0x1603 {
-		t.Errorf("the crafted payload ends with the extension %#04x, and the finding F-22-2 records 0x1603",
-			got.Extensions[len(got.Extensions)-1])
+	// parser read the two bytes as an extension type, and it now stops before them.
+	for _, extension := range got.Extensions {
+		if extension == 0x1603 {
+			t.Errorf("the crafted payload produces the extension 0x1603, which is the header of the second record")
+		}
 	}
 }
 
-func TestF22_3_ParseServerHelloReadsPastTheRecordLengthIntoTheNextRecord(t *testing.T) {
-	// `ParseServerHello` holds the same shape at `internal/parser/tls.go:175` and
-	// `internal/parser/tls.go:223`.
+func TestF22_3_ParseServerHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-3 is closed. `ParseServerHello` held the same shape, so a ServerHello whose
+	// extensions length reached past its own record read the next record as extension
+	// bytes. The bound is now the end of the record.
 	hello := parser.BuildServerHello(0x0303, 0x1301, []parser.TLSExtension{
 		parser.MakeSupportedVersionsServerExtension(0x0304),
 	})
@@ -153,45 +156,52 @@ func TestF22_3_ParseServerHelloReadsPastTheRecordLengthIntoTheNextRecord(t *test
 		t.Fatalf("the crafted payload: %v", err)
 	}
 
-	if len(got.Extensions) <= len(honest.Extensions) {
-		t.Errorf("the crafted payload produces the extensions %v, and the finding F-22-3 records a longer list",
-			got.Extensions)
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
 	}
 }
 
-func TestF22_4_IsSSHPacketDeclinesAPacketWhoseLengthLowByteIsBelowThePaddingLength(t *testing.T) {
-	// `internal/parser/ssh.go:40` compares the padding length against `byte(packetLength)`.
-	// The conversion keeps the low 8 bits of a 32-bit length, so every packet length whose
-	// low byte is at or below the padding length fails the comparison.
-	declined := []uint32{256, 260, 264, 512, 1024}
-	accepted := []uint32{300, 1035}
-
-	for _, length := range declined {
-		if parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
-			t.Errorf("IsSSHPacket accepts the packet length %d, and the finding F-22-4 records a decline",
-				length)
-		}
-	}
+func TestF22_4_IsSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-4 is closed. `IsSSHPacket` compared the padding length against
+	// `byte(packetLength)`, and that conversion kept the low 8 bits of a 32-bit length. A
+	// packet whose length was 1024 and whose padding length was 8 therefore failed the
+	// comparison, because the low byte of 1024 is 0.
+	//
+	// The comparison now reads the whole 32-bit length, so the guard declines only the
+	// packet whose padding length reaches its packet length.
+	accepted := []uint32{256, 260, 264, 300, 512, 1024, 1035}
 
 	for _, length := range accepted {
 		if !parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
-			t.Errorf("IsSSHPacket declines the packet length %d, and the low byte is above the padding length",
+			t.Errorf("IsSSHPacket declines the packet length %d, and the padding length 8 is below it",
+				length)
+		}
+	}
+
+	// A padding length at or above the packet length is still malformed.
+	for _, length := range []uint32{2, 8} {
+		if parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
+			t.Errorf("IsSSHPacket accepts the packet length %d, and the padding length 8 is not below it",
 				length)
 		}
 	}
 }
 
-func TestF22_5_ParseSSHPacketDeclinesAPacketWhoseLengthLowByteIsBelowThePaddingLength(t *testing.T) {
-	// `internal/parser/ssh.go:79` holds the same comparison, so the KEXINIT of a connection
-	// whose packet length ends in a low byte at or below the padding length reaches no
-	// fingerprinter.
-	if parser.ParseSSHPacket(auditParserSSHPacket(1024, 8, 20)) != nil {
-		t.Errorf("ParseSSHPacket accepts the packet length 1024, and the finding F-22-5 records a decline")
+func TestF22_5_ParseSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-5 is closed. `ParseSSHPacket` held the same comparison, so the KEXINIT of a
+	// connection whose packet length ended in a low byte at or below the padding length
+	// reached no fingerprinter.
+	for _, length := range []uint32{1024, 1035} {
+		info := parser.ParseSSHPacket(auditParserSSHPacket(length, 8, 20))
+		if info == nil || info.Type != "kexinit" {
+			t.Errorf("ParseSSHPacket declines the packet length %d, and the padding length 8 is below it",
+				length)
+		}
 	}
 
-	info := parser.ParseSSHPacket(auditParserSSHPacket(1035, 8, 20))
-	if info == nil || info.Type != "kexinit" {
-		t.Errorf("ParseSSHPacket declines the packet length 1035, and the low byte is above the padding length")
+	if parser.ParseSSHPacket(auditParserSSHPacket(8, 8, 20)) != nil {
+		t.Error("ParseSSHPacket accepts the packet length 8, and the padding length 8 is not below it")
 	}
 }
 
@@ -206,101 +216,88 @@ func auditParserSSHPacket(length uint32, padding byte, messageType byte) []byte 
 	return packet
 }
 
-func TestF22_6_OIDToHexTruncatesTheFirstTwoArcsIntoOneByte(t *testing.T) {
-	// `internal/parser/x509_utils.go:36` writes `byte(nums[0]*40 + nums[1])`. X.690 encodes
-	// that sum as a variable-length quantity, so a sum at or above 128 needs more than one
-	// byte. `encoding/asn1` of the standard library is the reference here, because it
+func TestF22_6_OIDToHexEncodesTheFirstTwoArcsAsAVariableLengthQuantity(t *testing.T) {
+	// F-22-6 is closed. `OIDToHex` wrote `byte(nums[0]*40 + nums[1])`, and X.690 encodes
+	// that sum as a variable-length quantity. A sum at or above 128 therefore lost its
+	// high bits. `encoding/asn1` of the standard library is the reference here, because it
 	// encodes the same identifier.
-	cases := []struct {
-		text    string
-		oid     asn1.ObjectIdentifier
-		library string
-	}{
-		{"2.5.4.3", asn1.ObjectIdentifier{2, 5, 4, 3}, "550403"},
-		{"2.100.3", asn1.ObjectIdentifier{2, 100, 3}, "b403"},
-		{"2.999.1", asn1.ObjectIdentifier{2, 999, 1}, "3701"},
+	cases := []asn1.ObjectIdentifier{
+		{2, 5, 4, 3},
+		{2, 100, 3},
+		{2, 999, 1},
+		{1, 2, 840, 113549, 1, 1, 11},
 	}
 
-	for _, testCase := range cases {
-		der, err := asn1.Marshal(testCase.oid)
+	for _, oid := range cases {
+		text := oid.String()
+
+		der, err := asn1.Marshal(oid)
 		if err != nil {
-			t.Fatalf("asn1.Marshal(%v): %v", testCase.oid, err)
+			t.Fatalf("asn1.Marshal(%v): %v", oid, err)
 		}
 
 		// The first two bytes hold the tag and the length of these short identifiers.
 		wanted := hex.EncodeToString(der[2:])
-		got := parser.OIDToHex(testCase.text)
 
-		if got != testCase.library {
-			t.Errorf("OIDToHex(%q) = %q, and the finding F-22-6 records %q",
-				testCase.text, got, testCase.library)
-		}
-
-		if testCase.text == "2.5.4.3" && got != wanted {
-			t.Errorf("OIDToHex(%q) = %q, and X.690 encodes it as %q", testCase.text, got, wanted)
+		if got := parser.OIDToHex(text); got != wanted {
+			t.Errorf("OIDToHex(%q) = %q, and X.690 encodes it as %q", text, got, wanted)
 		}
 	}
 
-	// The truncation makes two identifiers collide, so one certificate reaches the JA4X
-	// value of another. X.690 encodes `2.999.1` as `883701` and `0.55.1` as `370101`.
-	if parser.OIDToHex("2.999.1") != parser.OIDToHex("0.55")+"01" {
-		t.Errorf("OIDToHex(%q) = %q and OIDToHex(%q) = %q, and the finding F-22-6 records a collision",
+	// The truncation made two identifiers collide, so one certificate reached the JA4X
+	// value of another. The two now differ.
+	if parser.OIDToHex("2.999.1") == parser.OIDToHex("0.55")+"01" {
+		t.Errorf("OIDToHex(%q) = %q and OIDToHex(%q) = %q, and the closure of F-22-6 separates them",
 			"2.999.1", parser.OIDToHex("2.999.1"), "0.55", parser.OIDToHex("0.55"))
 	}
 }
 
-func TestF22_7_AddSegmentPanicsWhenTheStreamLimitIsZero(t *testing.T) {
-	// `internal/parser/tcp_stream.go:42` indexes `r.order[0]` after a comparison that a
-	// limit of zero makes true on the first segment, and `r.order` holds nothing yet.
-	defer func() {
-		recovered := recover()
-		if recovered == nil {
-			t.Errorf("AddSegment reaches no panic, and the finding F-22-7 records one")
-			return
-		}
+func TestF22_7_AddSegmentEvictsNoStreamWhenTheOrderSliceIsEmpty(t *testing.T) {
+	// F-22-7 is closed. The eviction indexed `r.order[0]` after a comparison that a stream
+	// limit of 0 makes true on the first segment, and `r.order` held nothing yet. The
+	// eviction now reads the order slice only when it holds a key.
+	var recovered any
 
-		if !strings.Contains(strings.ToLower(auditParserText(recovered)), "index out of range") {
-			t.Errorf("AddSegment panics with %v, and the finding F-22-7 records an index out of range",
-				recovered)
-		}
-	}()
+	func() {
+		defer func() { recovered = recover() }()
 
-	reassembler := parser.NewTCPStreamReassembler(0, 4096)
-	reassembler.AddSegment("one", 1, []byte("hello"))
-}
+		reassembler := parser.NewTCPStreamReassembler(0, 4096)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+		reassembler.AddSegment("two", 1, []byte("world"))
 
-func TestF22_8_GetStreamPanicsWhenTheByteLimitIsBelowZero(t *testing.T) {
-	// `internal/parser/tcp_stream.go:93` slices `result[:r.MaxBytes]` after a comparison
-	// that a limit below zero makes true for every non-empty result.
-	defer func() {
-		recovered := recover()
-		if recovered == nil {
-			t.Errorf("GetStream reaches no panic, and the finding F-22-8 records one")
-			return
-		}
-
-		if !strings.Contains(strings.ToLower(auditParserText(recovered)), "slice bounds out of range") {
-			t.Errorf("GetStream panics with %v, and the finding F-22-8 records a slice bound out of range",
-				recovered)
+		if stream := reassembler.GetStream("two"); string(stream) != "world" {
+			t.Errorf("GetStream returns %q for the second key, and AddSegment stored %q",
+				stream, "world")
 		}
 	}()
 
-	reassembler := parser.NewTCPStreamReassembler(10, -1)
-	reassembler.AddSegment("one", 1, []byte("hello"))
-	reassembler.GetStream("one")
+	if recovered != nil {
+		t.Errorf("AddSegment panics with %v, and the closure of F-22-7 stores the segment",
+			recovered)
+	}
 }
 
-// auditParserText returns the text of a recovered panic value.
-func auditParserText(recovered any) string {
-	if err, ok := recovered.(error); ok {
-		return err.Error()
-	}
+func TestF22_8_GetStreamReturnsNoByteWhenTheByteLimitIsBelowZero(t *testing.T) {
+	// F-22-8 is closed. The slice expression `result[:r.MaxBytes]` panicked for every
+	// non-empty result when the byte limit was below 0. A negative maximum holds no byte,
+	// so the bound is now 0 and `GetStream` returns nil.
+	var recovered any
 
-	if text, ok := recovered.(string); ok {
-		return text
-	}
+	func() {
+		defer func() { recovered = recover() }()
 
-	return ""
+		reassembler := parser.NewTCPStreamReassembler(10, -1)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+
+		if stream := reassembler.GetStream("one"); stream != nil {
+			t.Errorf("GetStream returns %q, and a byte limit below 0 holds no byte", stream)
+		}
+	}()
+
+	if recovered != nil {
+		t.Errorf("GetStream panics with %v, and the closure of F-22-8 returns no byte",
+			recovered)
+	}
 }
 
 func TestF22_9_ParseCryptoFramesReturnsTheFragmentsItHoldsWithTheTruncationError(t *testing.T) {
@@ -332,35 +329,45 @@ func TestF22_9_ParseCryptoFramesReturnsTheFragmentsItHoldsWithTheTruncationError
 	}
 }
 
-func TestF22_11_TheRawJA4KeepsAGreaseSignatureAlgorithm(t *testing.T) {
-	// `docs/specs/foxio/JA4.md` R31 states that the signature algorithm list skips a GREASE
-	// value. `ja4.go:181` writes the list with no filter, so the raw JA4 holds it.
+func TestF22_11_TheRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-11 is closed. `docs/specs/foxio/JA4.md` R31 states that the signature algorithm
+	// list skips a GREASE value, and `computeJA4RawFromClientHello` wrote the list with no
+	// filter. No FoxIO vector reaches this input, so this test is the separating packet
+	// that `.claude/rules/rulings.md` asks for.
 	hello := auditParserGreaseClientHello(t)
 
 	raw := computeJA4RawFromClientHello(hello)
-	if !strings.Contains(raw, "0a0a") {
-		t.Errorf("the raw JA4 %q holds no GREASE signature algorithm, and the finding F-22-11 records one",
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it", raw)
+	}
+
+	// The two remaining values stay, and they keep the wire order.
+	if !strings.Contains(raw, "0403,0804") {
+		t.Errorf("the raw JA4 %q holds no signature algorithm list, and the ClientHello carries two",
 			raw)
 	}
 }
 
-func TestF22_12_TheJA4ExtensionHashKeepsAGreaseSignatureAlgorithm(t *testing.T) {
-	// `ja4.go:266` writes the same unfiltered list into the hashed string, so the third
-	// part of the JA4 differs from the FoxIO value that R31 states.
+func TestF22_12_TheJA4ExtensionHashSkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-12 is closed. `ja4ExtensionHash` wrote the same unfiltered list into the hashed
+	// string, so the third part of the JA4 differed from the value that R31 states. A
+	// ClientHello that carries one GREASE value now hashes to the value of the same
+	// ClientHello with no GREASE value.
 	withGrease := ja4ExtensionHash(auditParserGreaseClientHello(t))
 	withoutGrease := ja4ExtensionHash(auditParserPlainClientHello(t))
 
-	if withGrease == withoutGrease {
-		t.Errorf("the two hashes both read %q, and the finding F-22-12 records a difference",
-			withGrease)
+	if withGrease != withoutGrease {
+		t.Errorf("the hash with the GREASE value is %q, and the hash without it is %q",
+			withGrease, withoutGrease)
 	}
 }
 
-func TestF22_13_TheWireOrderRawJA4KeepsAGreaseSignatureAlgorithm(t *testing.T) {
-	// `ja4.go:288` writes the same unfiltered list into the wire-order raw JA4.
+func TestF22_13_TheWireOrderRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-13 is closed. `computeJA4RawOriginalOrder` wrote the same unfiltered list into
+	// the wire-order raw JA4.
 	raw := computeJA4RawOriginalOrder(auditParserGreaseClientHello(t))
-	if !strings.Contains(raw, "0a0a") {
-		t.Errorf("the wire-order raw JA4 %q holds no GREASE signature algorithm, and the finding F-22-13 records one",
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the wire-order raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it",
 			raw)
 	}
 }

@@ -21,9 +21,10 @@ import (
 // FR-audit-14, FR-audit-19, FR-audit-20, FR-audit-21 and FR-audit-22.
 //
 // The audit changes no code, so a test here records a defect rather than a repair.
-// A test that asserts the defective result carries a `TODO(#25)` comment, because the
-// closure reverses the assertion. `.claude/rules/rulings.md` asks for a test that builds
-// the separating input where no vector separates the two readings.
+// Issue #25 closed every finding of this file. It reversed each assertion in the commit
+// that closed the finding, so no `TODO(#25)` comment remains.
+// `.claude/rules/rulings.md` asks for a test that builds the separating input where no
+// vector separates the two readings.
 //
 // `docs/audit/findings.md` holds the row of each finding these tests reach.
 
@@ -327,70 +328,104 @@ func auditRecoverPanicAt(call func()) (recovered any, stack string) {
 	return nil, ""
 }
 
-func TestAUDPLayerOfAnotherConcreteTypeMakesJA4Panic(t *testing.T) {
-	// F-24-1. `ja4.go:52` asserts the UDP layer type without the second result.
-	//
-	// TODO(#25): The closure adds the second assertion result, and then this call returns
-	// instead of panicking. Replace the wanted panic with a wanted nil result.
+// auditDecoyOutcome runs the call and returns the panic, the results and the error.
+//
+// Issue #25 closed F-24-1, F-24-2 and F-24-3. Each site now takes the second assertion
+// result and returns a non-fatal error, so each call returns rather than panics.
+func auditDecoyOutcome(call func() ([]FingerprintResult, error)) (any, []FingerprintResult, error) {
+	var (
+		results []FingerprintResult
+		err     error
+	)
+
 	recovered := auditRecoverPanic(func() {
-		NewJA4().ProcessPacket(auditDecoyUDPPacket()) //nolint:errcheck // The panic is the result under test.
+		results, err = call()
 	})
 
-	if recovered == nil {
-		t.Fatalf("F-24-1 no longer reproduces, and `docs/audit/findings.md` still records it as open")
+	return recovered, results, err
+}
+
+func TestAUDPLayerOfAnotherConcreteTypeMakesJA4ReturnAnError(t *testing.T) {
+	// F-24-1 is closed. `ja4.go` takes the second result of the UDP type assertion, so the
+	// decoy packet reaches a non-fatal error rather than a panic. `CLAUDE.md` states that
+	// a fingerprinter returns a non-fatal error and never a panic.
+	fingerprinter := NewJA4()
+
+	recovered, results, err := auditDecoyOutcome(func() ([]FingerprintResult, error) {
+		return fingerprinter.ProcessPacket(auditDecoyUDPPacket())
+	})
+
+	if recovered != nil {
+		t.Fatalf("the packet panics with %v, and the closure of F-24-1 returns an error", recovered)
 	}
 
-	if !strings.Contains(fmt.Sprint(recovered), "layers.UDP") {
-		t.Errorf("the packet panics with %v, and F-24-1 names the UDP type assertion", recovered)
+	if err == nil {
+		t.Fatal("the packet reaches no error, and the closure of F-24-1 returns one")
+	}
+
+	if !strings.Contains(err.Error(), "UDP") {
+		t.Errorf("the packet returns the error %v, and F-24-1 names the UDP type assertion", err)
+	}
+
+	if len(results) != 0 {
+		t.Errorf("the packet produces %d results, and it carries no ClientHello", len(results))
 	}
 }
 
-func TestAUDPLayerOfAnotherConcreteTypeMakesJA4DPanic(t *testing.T) {
-	// F-24-2. `ja4d.go:74` asserts the UDP layer type without the second result.
-	//
-	// TODO(#25): The closure adds the second assertion result, and then this call returns
-	// instead of panicking. Replace the wanted panic with a wanted nil result.
-	recovered := auditRecoverPanic(func() {
-		NewJA4D().ProcessPacket(auditDecoyUDPPacket()) //nolint:errcheck // The panic is the result under test.
+func TestAUDPLayerOfAnotherConcreteTypeMakesJA4DReturnAnError(t *testing.T) {
+	// F-24-2 is closed. `ja4d.go` takes the second result of the UDP type assertion.
+	fingerprinter := NewJA4D()
+
+	recovered, results, err := auditDecoyOutcome(func() ([]FingerprintResult, error) {
+		return fingerprinter.ProcessPacket(auditDecoyUDPPacket())
 	})
 
-	if recovered == nil {
-		t.Fatalf("F-24-2 no longer reproduces, and `docs/audit/findings.md` still records it as open")
+	if recovered != nil {
+		t.Fatalf("the packet panics with %v, and the closure of F-24-2 returns an error", recovered)
 	}
 
-	if !strings.Contains(fmt.Sprint(recovered), "layers.UDP") {
-		t.Errorf("the packet panics with %v, and F-24-2 names the UDP type assertion", recovered)
+	if err == nil {
+		t.Fatal("the packet reaches no error, and the closure of F-24-2 returns one")
+	}
+
+	if !strings.Contains(err.Error(), "UDP") {
+		t.Errorf("the packet returns the error %v, and F-24-2 names the UDP type assertion", err)
+	}
+
+	if len(results) != 0 {
+		t.Errorf("the packet produces %d results, and it carries no DHCP message", len(results))
 	}
 }
 
-func TestADHCPv4LayerOfAnotherConcreteTypeMakesJA4DPanic(t *testing.T) {
-	// F-24-3. `ja4d.go:85` asserts the DHCPv4 layer type without the second result.
-	//
-	// TODO(#25): The closure adds the second assertion result, and then this call returns
-	// instead of panicking. Replace the wanted panic with a wanted nil result.
-	recovered := auditRecoverPanic(func() {
-		NewJA4D().ProcessPacket(auditDecoyDHCPPacket()) //nolint:errcheck // The panic is the result under test.
+func TestADHCPv4LayerOfAnotherConcreteTypeMakesJA4DReturnAnError(t *testing.T) {
+	// F-24-3 is closed. `ja4d.go` takes the second result of the DHCPv4 type assertion.
+	fingerprinter := NewJA4D()
+
+	recovered, results, err := auditDecoyOutcome(func() ([]FingerprintResult, error) {
+		return fingerprinter.ProcessPacket(auditDecoyDHCPPacket())
 	})
 
-	if recovered == nil {
-		t.Fatalf("F-24-3 no longer reproduces, and `docs/audit/findings.md` still records it as open")
+	if recovered != nil {
+		t.Fatalf("the packet panics with %v, and the closure of F-24-3 returns an error", recovered)
 	}
 
-	if !strings.Contains(fmt.Sprint(recovered), "layers.DHCPv4") {
-		t.Errorf("the packet panics with %v, and F-24-3 names the DHCPv4 type assertion", recovered)
+	if err == nil {
+		t.Fatal("the packet reaches no error, and the closure of F-24-3 returns one")
+	}
+
+	if !strings.Contains(err.Error(), "DHCPv4") {
+		t.Errorf("the packet returns the error %v, and F-24-3 names the DHCPv4 type assertion", err)
+	}
+
+	if len(results) != 0 {
+		t.Errorf("the packet produces %d results, and it carries no DHCP message", len(results))
 	}
 }
 
-func TestAZeroValueFingerprinterPanicsOnItsFirstCall(t *testing.T) {
-	// F-24-4 through F-24-9. Every exported fingerprinter holds a map or a pointer that
-	// only its constructor fills. A caller who writes `var f ja4plus.JA4LFingerprinter`
-	// reaches a nil map write or a nil pointer dereference on the first call.
-	//
-	// The doc comment of each type names the concurrency contract and names no
-	// constructor, so nothing tells the caller that the zero value is unusable.
-	//
-	// TODO(#25): The closure fills the state on first use, or the doc comment states that
-	// the constructor is required. Replace the wanted panic with a wanted nil result.
+func TestAZeroValueFingerprinterReadsItsFirstPacketWithNoPanic(t *testing.T) {
+	// F-24-4 through F-24-9 are closed. Every type below holds a map or a pointer that
+	// only its constructor filled, and an `ensure` method now fills it on the first call.
+	// A caller who writes `var f ja4plus.JA4LFingerprinter` reaches a usable value.
 	ssh := gopacket.NewPacket(
 		panicAuditFrame(t, "tcp", 12345, 22, []byte("SSH-2.0-OpenSSH_9.0\r\n")),
 		layers.LayerTypeEthernet, gopacket.Default)
@@ -436,24 +471,13 @@ func TestAZeroValueFingerprinterPanicsOnItsFirstCall(t *testing.T) {
 
 	for _, testCase := range cases {
 		t.Run(testCase.finding, func(t *testing.T) {
+			// Each closure builds a new zero value, so the call under test is the first
+			// call that value ever receives.
 			recovered, stack := auditRecoverPanicAt(testCase.call)
 
-			if recovered == nil {
-				t.Fatalf("%s no longer reproduces at %s, and `docs/audit/findings.md` still records it as open",
-					testCase.finding, testCase.site)
-			}
-
-			// The stack holds the absolute path of the worktree, so the test reads the
-			// suffix. Two lines of one file panic on two different inputs, and the row of
-			// the report names one of them.
-			//
-			// A frame that the compiler inlines carries no instruction offset, so the site
-			// ends the line. A frame that it does not inline carries the offset after one
-			// space.
-			site := "/" + testCase.site
-			if !strings.Contains(stack, site+"\n") && !strings.Contains(stack, site+" ") {
-				t.Errorf("%s panics away from %s, and the stack reads\n%s",
-					testCase.finding, testCase.site, stack)
+			if recovered != nil {
+				t.Fatalf("%s panics at %s with %v, and the closure fills the state on first use\n%s",
+					testCase.finding, testCase.site, recovered, stack)
 			}
 		})
 	}
@@ -704,17 +728,15 @@ func TestTheSortKeyOfEveryFingerprintSectionIsUniquePerElement(t *testing.T) {
 	}
 }
 
-func TestTheCryptoFragmentSortReordersTwoFragmentsThatShareAnOffset(t *testing.T) {
-	// F-24-16. `internal/parser/quic.go:637` sorts the CRYPTO fragments with `sort.Slice`,
-	// which is not stable, and the key is the offset alone. Two fragments that share an
-	// offset carry different bytes, and the copy loop at `:655` writes them in the order
-	// the sort leaves. The order the sort leaves is not the wire order.
+func TestTheCryptoFragmentSortKeepsTheWireOrderOfTwoFragmentsThatShareAnOffset(t *testing.T) {
+	// F-24-16 is closed. `ReassembleCryptoFrames` sorted the CRYPTO fragments with
+	// `sort.Slice`, which is not stable, and the key is the offset alone. Two fragments
+	// that share an offset carry different bytes, and the copy loop writes them in the
+	// order the sort leaves.
 	//
-	// A stable sort keeps the wire order, so the fragment that arrives second wins. The
-	// unstable sort reverses the pair below, so the fragment that arrives first wins.
-	//
-	// TODO(#25): The closure reads the FoxIO reference and picks one of the two rules.
-	// Replace the wanted byte with the byte that rule names.
+	// FR-audit-22 asks for a stable sort. The sort is now stable, so the wire order
+	// decides and the fragment that arrives second wins. No FoxIO source states a rule for
+	// a duplicate offset, so the requirement decides and this test holds the result.
 	const count = 13
 
 	fragments := make([]parser.CryptoFragment, count)
@@ -737,20 +759,37 @@ func TestTheCryptoFragmentSortReordersTwoFragmentsThatShareAnOffset(t *testing.T
 	sort.Slice(unstable, func(i, j int) bool { return unstable[i].Offset < unstable[j].Offset })
 
 	if fmt.Sprint(stable) == fmt.Sprint(unstable) {
-		t.Fatalf("F-24-16 no longer reproduces, and the two sorts both produce %v", stable)
+		t.Fatalf("the two sorts both produce %v, so this input separates them no longer", stable)
 	}
 
-	// `ReassembleCryptoFrames` sorts the slice it receives, so it reaches the same order.
+	// `ReassembleCryptoFrames` sorts the slice it receives, so it reaches the stable order.
 	assembled := parser.ReassembleCryptoFrames(fragments)
 	if len(assembled) < 12 {
 		t.Fatalf("the reassembled buffer holds %d bytes, and the offsets reach 12", len(assembled))
 	}
 
-	// Offset 11 holds the byte of the fragment the sort left last. The unstable sort leaves
-	// index 1 last, so the buffer holds 1 rather than the 2 that the wire order names.
-	if assembled[11] != 1 {
-		t.Errorf("the byte at offset 11 is %d, and the unstable sort leaves the fragment 1 last",
+	// Offset 11 holds the byte of the fragment the sort leaves last. The stable sort keeps
+	// the wire order, so the fragment at index 2 lands last and the buffer holds 2.
+	if assembled[11] != 2 {
+		t.Errorf("the byte at offset 11 is %d, and the stable sort leaves the fragment 2 last",
 			assembled[11])
+	}
+
+	// The reassembly is deterministic. A repeated run over one input produces one buffer.
+	for run := 0; run < 8; run++ {
+		repeat := make([]parser.CryptoFragment, count)
+		for index := range repeat {
+			repeat[index] = parser.CryptoFragment{
+				Offset: uint64(count - index),
+				Data:   []byte{byte(index)},
+			}
+		}
+
+		repeat[1].Offset = repeat[2].Offset
+
+		if produced := parser.ReassembleCryptoFrames(repeat); !bytes.Equal(produced, assembled) {
+			t.Fatalf("run %d produces %v, and run 0 produces %v", run, produced, assembled)
+		}
 	}
 }
 
@@ -782,16 +821,22 @@ func TestTheProcessorReturnsAnErrorRatherThanDiscardingIt(t *testing.T) {
 	}
 }
 
-func TestComputeJA4XFromDERDiscardsTheCertificateParseError(t *testing.T) {
-	// F-24-12. `ja4x.go:271` returns the empty string when `x509.ParseCertificate` fails.
-	// A caller cannot separate "the bytes hold no certificate" from "the bytes hold a
-	// certificate the parser cannot read".
+func TestComputeJA4XFromDERReturnsTheEmptyStringForACertificateItCannotRead(t *testing.T) {
+	// F-24-12 closes as `no change needed`. `ja4x.go:271` returns the empty string when
+	// `x509.ParseCertificate` fails, so a caller separates "the bytes hold no certificate"
+	// from "the bytes hold a certificate the parser cannot read" no more.
 	//
-	// TODO(#25): A repair changes an exported signature, so `docs/api/v1.md` records it.
+	// The maintainer ruled on 2026-08-11 that this shape is correct. The port states the
+	// invariant at commit `21299645366591331eb93155355b65a76a3729f3`: a fingerprinter that
+	// cannot parse a packet returns nothing, and it does not raise. `ComputeJA4XFromDER` is
+	// the convenience layer, and `Processor.ProcessPacket` is the API that carries the
+	// error. The signature therefore stays as it is, and Epic 10 freezes it.
+	//
+	// This test holds the ruling. A later change that returns an error fails here.
 	malformed := []byte{0x30, 0x03, 0x02, 0x01, 0x00}
 
 	if produced := ComputeJA4XFromDER(malformed); produced != "" {
-		t.Fatalf("F-24-12 no longer reproduces, and the malformed certificate produces %q", produced)
+		t.Fatalf("the malformed certificate produces %q, and the ruling names the empty string", produced)
 	}
 
 	if produced := ComputeJA4XFromDER(nil); produced != "" {
@@ -804,7 +849,11 @@ func TestJA4SDiscardsTheQUICInitialParseError(t *testing.T) {
 	// `ja4.go:56` propagates the error of the same shape of failure, so the two paths
 	// disagree on the same datagram.
 	//
-	// TODO(#25): The closure propagates the error, or it states why JA4S declines to.
+	// F-24-11 stays `unconfirmed`, and issue #24 owns that row. The ruling of 2026-08-11 on
+	// F-24-10 and F-24-12 states why JA4S declines to propagate: the port invariant at
+	// commit `21299645366591331eb93155355b65a76a3729f3` reads that a fingerprinter which
+	// cannot parse a packet returns nothing. The skip below still holds, because no crafted
+	// datagram of this test separates the two paths.
 	payloads := [][]byte{
 		{0xc0, 0x00, 0x00, 0x00, 0x01, 0xff, 0x01, 0x02},
 		{0xc0, 0x00, 0x00, 0x00, 0x01, 0x08, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x00, 0xbf},
@@ -838,8 +887,13 @@ func TestComputeJA4DiscardsTheClientHelloParseError(t *testing.T) {
 	// separate "the packet holds no handshake" from "the packet holds a handshake the
 	// parser cannot read". Both produce the empty string.
 	//
-	// TODO(#25): A repair changes an exported signature, so `docs/api/v1.md` records it and
-	// the table under `## The exported signatures a closure changed` holds a row.
+	// The maintainer ruled on 2026-08-11 that this shape is correct. The port states the
+	// invariant at commit `21299645366591331eb93155355b65a76a3729f3`: a fingerprinter that
+	// cannot parse a packet returns nothing, and it does not raise. The same invariant
+	// closed F-22-14 through F-22-26. `Processor` is the API that carries the error, and
+	// the assertion at the end of this test holds that separation.
+	//
+	// This test holds the ruling. A later change that returns an error fails here.
 	empty := panicAuditFrame(t, "tcp", 12345, 443, nil)
 
 	truncated := panicAuditFrame(t, "tcp", 12345, 443, []byte{
@@ -877,34 +931,62 @@ func panicAuditReadSource(t *testing.T, path string) string {
 	return string(source)
 }
 
-func TestTheTypeAssertionsThatFindingsNameStillCarryOneResult(t *testing.T) {
-	// The three findings F-24-1, F-24-2 and F-24-3 name a line number, and a later change
-	// moves a line. This test states the line the finding names, so the report and the
-	// source stay in step.
+// panicAuditOneResultAssertion matches a type assertion on a gopacket layer that takes
+// one result. `x := y.(*layers.Z)` panics when the layer type carries another concrete
+// type, and F-24-1, F-24-2 and F-24-3 each recorded one such site.
+var panicAuditOneResultAssertion = regexp.MustCompile(
+	`^[A-Za-z_][A-Za-z0-9_]* :?= [A-Za-z_][A-Za-z0-9_]*\.\(\*layers\.[A-Za-z0-9]+\)$`)
+
+func TestNoLibraryFileAssertsAGopacketLayerTypeWithOneResult(t *testing.T) {
+	// The closure of F-24-1, F-24-2 and F-24-3 replaced each one-result assertion with the
+	// two-result form. A later change that writes the one-result form again reaches the
+	// same panic, so this test scans the shipped source rather than three fixed lines.
+	for _, directory := range panicAuditLibraryDirectories {
+		entries, err := os.ReadDir(directory)
+		if err != nil {
+			t.Fatalf("read %s: %v", directory, err)
+		}
+
+		for _, entry := range entries {
+			name := entry.Name()
+
+			if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+				continue
+			}
+
+			path := directory + "/" + name
+
+			for number, line := range strings.Split(panicAuditReadSource(t, path), "\n") {
+				if panicAuditOneResultAssertion.MatchString(strings.TrimSpace(line)) {
+					t.Errorf("%s:%d asserts a layer type with one result: %s",
+						path, number+1, strings.TrimSpace(line))
+				}
+			}
+		}
+	}
+}
+
+func TestTheThreeTypeAssertionsThatFindingsNameNowTakeTwoResults(t *testing.T) {
+	// The three findings name a site by its line number at the audit date, and the closure
+	// moved each line. This test names the repaired form instead, so a reader who reverses
+	// the closure sees one failure for each finding.
 	cases := []struct {
 		finding string
 		path    string
-		line    int
 		wanted  string
 	}{
-		{"F-24-1", "ja4.go", 52, "udp := udpLayer.(*layers.UDP)"},
-		{"F-24-2", "ja4d.go", 74, "udp := udpLayer.(*layers.UDP)"},
-		{"F-24-3", "ja4d.go", 85, "dhcp := dhcpLayer.(*layers.DHCPv4)"},
+		{"F-24-1", "ja4.go", "udp, ok := udpLayer.(*layers.UDP)"},
+		{"F-24-2", "ja4d.go", "udp, ok := udpLayer.(*layers.UDP)"},
+		{"F-24-3", "ja4d.go", "dhcp, ok := dhcpLayer.(*layers.DHCPv4)"},
 	}
 
 	for _, testCase := range cases {
 		t.Run(testCase.finding, func(t *testing.T) {
-			lines := strings.Split(panicAuditReadSource(t, testCase.path), "\n")
+			source := panicAuditReadSource(t, testCase.path)
 
-			if testCase.line > len(lines) {
-				t.Fatalf("%s holds %d lines, and %s names line %d",
-					testCase.path, len(lines), testCase.finding, testCase.line)
-			}
-
-			produced := strings.TrimSpace(lines[testCase.line-1])
-			if produced != testCase.wanted {
-				t.Errorf("%s:%d holds %q, and %s names %q",
-					testCase.path, testCase.line, produced, testCase.finding, testCase.wanted)
+			if !strings.Contains(source, testCase.wanted) {
+				t.Errorf("%s holds no line %q, and %s names that repair",
+					testCase.path, testCase.wanted, testCase.finding)
 			}
 		})
 	}

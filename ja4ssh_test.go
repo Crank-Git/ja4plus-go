@@ -147,11 +147,10 @@ func TestJA4SSH_Reset(t *testing.T) {
 
 	fp.Reset()
 
+	// Issue #25 removed the results slice, so the connection table is the only state that
+	// Reset clears.
 	if len(fp.connections) != 0 {
 		t.Error("expected connections to be cleared after reset")
-	}
-	if len(fp.results) != 0 {
-		t.Error("expected results to be cleared after reset")
 	}
 }
 

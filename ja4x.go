@@ -35,8 +35,11 @@ const tlsHandshakeCertificate = 0x0b
 type JA4XFingerprinter struct {
 	streams        map[string][]byte
 	processedCerts map[string]struct{}
-	results        []FingerprintResult
-	lastCleanup    time.Time
+	// certsByStream names the certificate hashes that each stream produced. It is the
+	// removal path of processedCerts, whose key is the certificate hash alone. Without
+	// this index CleanupConnection leaves every hash for the life of the process.
+	certsByStream map[string]map[string]struct{}
+	lastCleanup   time.Time
 }
 
 // NewJA4X creates a new JA4XFingerprinter.
@@ -44,12 +47,36 @@ func NewJA4X() *JA4XFingerprinter {
 	return &JA4XFingerprinter{
 		streams:        make(map[string][]byte),
 		processedCerts: make(map[string]struct{}),
+		certsByStream:  make(map[string]map[string]struct{}),
 		lastCleanup:    time.Now(),
+	}
+}
+
+// ensure fills the state maps that the constructor fills.
+// A caller who writes `var f JA4XFingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4XFingerprinter) ensure() {
+	if f.streams == nil {
+		f.streams = make(map[string][]byte)
+	}
+
+	if f.processedCerts == nil {
+		f.processedCerts = make(map[string]struct{})
+	}
+
+	if f.certsByStream == nil {
+		f.certsByStream = make(map[string]map[string]struct{})
+	}
+
+	if f.lastCleanup.IsZero() {
+		f.lastCleanup = time.Now()
 	}
 }
 
 // ProcessPacket processes a packet and returns JA4X fingerprint results.
 func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
 		return nil, nil
@@ -95,11 +122,13 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	return results, nil
 }
 
-// Reset clears all stored state.
+// Reset clears the stream table and the certificate set.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4XFingerprinter) Reset() {
 	f.streams = make(map[string][]byte)
 	f.processedCerts = make(map[string]struct{})
-	f.results = nil
+	f.certsByStream = make(map[string]map[string]struct{})
 	f.lastCleanup = time.Now()
 }
 
@@ -111,9 +140,16 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
 	delete(f.streams, fwd)
 	delete(f.streams, rev)
-	// Note: processedCerts is keyed by cert hash (content-addressed), not connection.
-	// It cannot be cleaned per-connection without a reverse lookup. It is bounded by
-	// the cleanup() method's ja4xMaxCerts limit and will not grow unbounded.
+
+	// certsByStream is the reverse lookup that processedCerts needs. The key of
+	// processedCerts is the certificate hash, so that set names no connection.
+	for _, stream := range []string{fwd, rev} {
+		for certHash := range f.certsByStream[stream] {
+			delete(f.processedCerts, certHash)
+		}
+
+		delete(f.certsByStream, stream)
+	}
 }
 
 // cleanup prunes streams and processed certs to prevent unbounded growth.
@@ -125,8 +161,11 @@ func (f *JA4XFingerprinter) cleanup() {
 	}
 
 	// Prune processed certs.
+	// certsByStream indexes the processedCerts set, so the reset of one resets the other.
+	// A stale index grows without a bound. It also removes a hash the set no longer holds.
 	if len(f.processedCerts) > ja4xMaxProcessedCerts {
 		f.processedCerts = make(map[string]struct{}, ja4xPrunedCerts)
+		f.certsByStream = make(map[string]map[string]struct{})
 	}
 }
 
@@ -199,8 +238,12 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 						Timestamp:   parser.GetPacketTimestamp(packet),
 					}
 					results = append(results, result)
-					f.results = append(f.results, result)
 					f.processedCerts[certHash] = struct{}{}
+
+					if f.certsByStream[streamID] == nil {
+						f.certsByStream[streamID] = make(map[string]struct{})
+					}
+					f.certsByStream[streamID][certHash] = struct{}{}
 				}
 			}
 		}

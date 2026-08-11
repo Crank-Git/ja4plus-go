@@ -52,9 +52,56 @@ func NewProcessor() *Processor {
 	}
 }
 
+// ensure fills each fingerprinter that the constructor fills.
+// A caller who writes `var p Processor` reaches a nil pointer, and a method call on it
+// dereferences that pointer. Every entry point calls this method first.
+func (p *Processor) ensure() {
+	if p.ja4 == nil {
+		p.ja4 = NewJA4()
+	}
+
+	if p.ja4s == nil {
+		p.ja4s = NewJA4S()
+	}
+
+	if p.ja4h == nil {
+		p.ja4h = NewJA4H()
+	}
+
+	if p.ja4t == nil {
+		p.ja4t = NewJA4T()
+	}
+
+	if p.ja4ts == nil {
+		p.ja4ts = NewJA4TS()
+	}
+
+	if p.ja4l == nil {
+		p.ja4l = NewJA4L()
+	}
+
+	if p.ja4x == nil {
+		p.ja4x = NewJA4X()
+	}
+
+	if p.ja4ssh == nil {
+		p.ja4ssh = NewJA4SSH(0)
+	}
+
+	if p.ja4d == nil {
+		p.ja4d = NewJA4D()
+	}
+
+	if p.ja4d6 == nil {
+		p.ja4d6 = NewJA4D6()
+	}
+}
+
 // ProcessPacket runs all fingerprinters on the given packet.
 // It returns all fingerprint results and any non-fatal errors encountered.
 func (p *Processor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, []error) {
+	p.ensure()
+
 	var allResults []FingerprintResult
 	var allErrors []error
 
@@ -87,6 +134,8 @@ func (p *Processor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, 
 
 // Reset clears all fingerprinter state.
 func (p *Processor) Reset() {
+	p.ensure()
+
 	p.ja4.Reset()
 	p.ja4s.Reset()
 	p.ja4h.Reset()
@@ -104,6 +153,8 @@ func (p *Processor) Reset() {
 // key format. Call this when a connection is evicted from the monitor's tracker
 // to prevent state leaks in long-running processes.
 func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	p.ensure()
+
 	p.ja4.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 	p.ja4s.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 	p.ja4h.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)

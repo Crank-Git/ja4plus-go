@@ -56,7 +56,6 @@ var dhcpExcludedOptions = map[byte]bool{
 // One JA4DFingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4DFingerprinter struct {
-	results []FingerprintResult
 }
 
 // NewJA4D creates a new JA4D fingerprinter.
@@ -71,7 +70,12 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	if udpLayer == nil {
 		return nil, nil
 	}
-	udp := udpLayer.(*layers.UDP)
+	// A caller that supplies a custom decoder can register another concrete type under
+	// the UDP layer type. A fingerprinter returns a non-fatal error for it.
+	udp, ok := udpLayer.(*layers.UDP)
+	if !ok {
+		return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+	}
 
 	if udp.SrcPort != 67 && udp.SrcPort != 68 && udp.DstPort != 67 && udp.DstPort != 68 {
 		return nil, nil
@@ -82,7 +86,11 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	if dhcpLayer == nil {
 		return nil, nil
 	}
-	dhcp := dhcpLayer.(*layers.DHCPv4)
+	// The DHCPv4 layer type carries the same risk as the UDP layer type above.
+	dhcp, ok := dhcpLayer.(*layers.DHCPv4)
+	if !ok {
+		return nil, fmt.Errorf("the DHCPv4 layer carries the type %T", dhcpLayer)
+	}
 
 	var msgType byte
 	var msgTypeSet bool
@@ -168,13 +176,13 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears accumulated results.
+// Reset clears the state of the fingerprinter.
+// JA4D holds no state, so this method changes nothing. It keeps the Fingerprinter
+// interface whole. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4DFingerprinter) Reset() {
-	f.results = nil
 }
 
 // CleanupConnection is a no-op for JA4D (stateless per-packet fingerprinter).
