@@ -28,6 +28,5 @@ covers the original Go code in this repository.
 
 The first line of `data/ja4plus-mapping.csv` is the column header, and the loader at
 `lookup.go:53` reads it as one. **Never add a comment line above the header.** The loader
-reads the first line as the header without a test for a comment marker, so a comment line
-becomes the header and every lookup then fails. This file carries the attribution for that
-reason.
+tests no line for a comment marker. A comment line therefore becomes the header, and every
+lookup then fails. This file carries the attribution for that reason.

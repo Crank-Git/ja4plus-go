@@ -13,8 +13,8 @@ A ruling is the maintainer's alone. `.claude/rules/rulings.md` holds that rule.
 
 > | 2 | 2026-08-06 | The maintainer approved the spec and the scaffold. R1 resolved: the dual BSD 3-Clause and FoxIO `NOTICE` model is sufficient for `v1.0.0`. |
 
-`docs/specs/features/01-licensing.md` § Open questions repeats the same resolution: the
-dual model is sufficient for `v1.0.0`, and the project does not contact FoxIO before the
+`docs/specs/features/01-licensing.md` § Open questions repeats the same resolution. The
+dual model is sufficient for `v1.0.0`. The project does not contact FoxIO before the
 release.
 
 ## The follow-up
