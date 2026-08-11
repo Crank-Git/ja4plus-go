@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,6 +21,15 @@ import (
 )
 
 const ja4PlusMappingURL = "https://github.com/FoxIO-LLC/ja4/raw/main/ja4plus-mapping.csv"
+
+// ja4PlusMappingMaxBytes bounds the mapping download.
+// An unbounded copy writes whatever the server sends, and the mapping file is far below
+// this size. `.claude/rules/external-apis.md` states the rule.
+const ja4PlusMappingMaxBytes = 64 << 20
+
+// ja4PlusDownloadTimeout bounds the whole mapping download.
+// The default client of net/http carries no timeout, so this program never uses it.
+const ja4PlusDownloadTimeout = 60 * time.Second
 
 // Version is set via -ldflags at build time.
 var Version = "dev"
@@ -148,25 +158,46 @@ func runAnalyze(args []string) error {
 	}
 
 	proc := ja4plus.NewProcessor()
-	var results []ja4plus.FingerprintResult
+
+	var (
+		results     []ja4plus.FingerprintResult
+		packetFails int
+	)
 
 	for {
 		data, ci, err := reader.ReadPacketData()
-		if err != nil {
+
+		// The reader reports the end of the capture with io.EOF. Every other error names a
+		// truncated or corrupt file, and the program must not report success for it.
+		if errors.Is(err, io.EOF) {
 			break
 		}
+
+		if err != nil {
+			return fmt.Errorf("read %s: %w", pcapFile, err)
+		}
+
 		pkt := gopacket.NewPacket(data, reader.LinkType(), gopacket.Default)
 		pkt.Metadata().Timestamp = ci.Timestamp
 		pkt.Metadata().CaptureLength = ci.CaptureLength
 		pkt.Metadata().Length = ci.Length
 
-		fpResults, _ := proc.ProcessPacket(pkt)
+		fpResults, errs := proc.ProcessPacket(pkt)
+		packetFails += len(errs)
+
 		for _, r := range fpResults {
 			if typesFilter != nil && !typesFilter[strings.ToLower(r.Type)] {
 				continue
 			}
 			results = append(results, r)
 		}
+	}
+
+	// A fingerprinter returns a non-fatal error for a record it cannot read. One line for
+	// the whole capture reaches standard error, so standard output holds the results
+	// alone. The exit code stays 0, because the capture itself is sound.
+	if packetFails > 0 {
+		fmt.Fprintf(os.Stderr, "note: %d packets carried a record that no fingerprinter read\n", packetFails)
 	}
 
 	// Output results.
@@ -217,7 +248,6 @@ func writeJSON(results []ja4plus.FingerprintResult, doLookup bool) error {
 
 func writeCSV(results []ja4plus.FingerprintResult, doLookup bool) error {
 	w := csv.NewWriter(os.Stdout)
-	defer w.Flush()
 
 	header := []string{"type", "src_ip", "src_port", "dst_ip", "dst_port", "fingerprint", "timestamp"}
 	if doLookup {
@@ -248,7 +278,12 @@ func writeCSV(results []ja4plus.FingerprintResult, doLookup bool) error {
 			return err
 		}
 	}
-	return nil
+
+	// Flush reports a write failure through Error. A discarded failure makes the program
+	// exit 0 after standard output took no row.
+	w.Flush()
+
+	return w.Error()
 }
 
 func writeTable(results []ja4plus.FingerprintResult, doLookup bool) error {
@@ -336,7 +371,10 @@ func runDBUpdate() error {
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	// The default client of net/http carries no timeout, so this program holds its own.
+	client := &http.Client{Timeout: ja4PlusDownloadTimeout}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("download: %w", err)
 	}
@@ -350,13 +388,19 @@ func runDBUpdate() error {
 	if err != nil {
 		return fmt.Errorf("create %s: %w", tmp, err)
 	}
-	n, err := io.Copy(out, resp.Body)
+	// The copy reads one byte more than the limit, so a body that reaches the limit is a
+	// body the program declines rather than a file it truncates.
+	n, err := io.Copy(out, io.LimitReader(resp.Body, ja4PlusMappingMaxBytes+1))
 	if cerr := out.Close(); err == nil {
 		err = cerr
 	}
 	if err != nil {
 		_ = os.Remove(tmp)
 		return fmt.Errorf("write: %w", err)
+	}
+	if n > ja4PlusMappingMaxBytes {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("download: the body exceeds the limit of %d bytes", ja4PlusMappingMaxBytes)
 	}
 	if err := os.Rename(tmp, cachePath); err != nil {
 		_ = os.Remove(tmp)

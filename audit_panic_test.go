@@ -727,17 +727,15 @@ func TestTheSortKeyOfEveryFingerprintSectionIsUniquePerElement(t *testing.T) {
 	}
 }
 
-func TestTheCryptoFragmentSortReordersTwoFragmentsThatShareAnOffset(t *testing.T) {
-	// F-24-16. `internal/parser/quic.go:637` sorts the CRYPTO fragments with `sort.Slice`,
-	// which is not stable, and the key is the offset alone. Two fragments that share an
-	// offset carry different bytes, and the copy loop at `:655` writes them in the order
-	// the sort leaves. The order the sort leaves is not the wire order.
+func TestTheCryptoFragmentSortKeepsTheWireOrderOfTwoFragmentsThatShareAnOffset(t *testing.T) {
+	// F-24-16 is closed. `ReassembleCryptoFrames` sorted the CRYPTO fragments with
+	// `sort.Slice`, which is not stable, and the key is the offset alone. Two fragments
+	// that share an offset carry different bytes, and the copy loop writes them in the
+	// order the sort leaves.
 	//
-	// A stable sort keeps the wire order, so the fragment that arrives second wins. The
-	// unstable sort reverses the pair below, so the fragment that arrives first wins.
-	//
-	// TODO(#25): The closure reads the FoxIO reference and picks one of the two rules.
-	// Replace the wanted byte with the byte that rule names.
+	// FR-audit-22 asks for a stable sort. The sort is now stable, so the wire order
+	// decides and the fragment that arrives second wins. No FoxIO source states a rule for
+	// a duplicate offset, so the requirement decides and this test holds the result.
 	const count = 13
 
 	fragments := make([]parser.CryptoFragment, count)
@@ -760,20 +758,37 @@ func TestTheCryptoFragmentSortReordersTwoFragmentsThatShareAnOffset(t *testing.T
 	sort.Slice(unstable, func(i, j int) bool { return unstable[i].Offset < unstable[j].Offset })
 
 	if fmt.Sprint(stable) == fmt.Sprint(unstable) {
-		t.Fatalf("F-24-16 no longer reproduces, and the two sorts both produce %v", stable)
+		t.Fatalf("the two sorts both produce %v, so this input separates them no longer", stable)
 	}
 
-	// `ReassembleCryptoFrames` sorts the slice it receives, so it reaches the same order.
+	// `ReassembleCryptoFrames` sorts the slice it receives, so it reaches the stable order.
 	assembled := parser.ReassembleCryptoFrames(fragments)
 	if len(assembled) < 12 {
 		t.Fatalf("the reassembled buffer holds %d bytes, and the offsets reach 12", len(assembled))
 	}
 
-	// Offset 11 holds the byte of the fragment the sort left last. The unstable sort leaves
-	// index 1 last, so the buffer holds 1 rather than the 2 that the wire order names.
-	if assembled[11] != 1 {
-		t.Errorf("the byte at offset 11 is %d, and the unstable sort leaves the fragment 1 last",
+	// Offset 11 holds the byte of the fragment the sort leaves last. The stable sort keeps
+	// the wire order, so the fragment at index 2 lands last and the buffer holds 2.
+	if assembled[11] != 2 {
+		t.Errorf("the byte at offset 11 is %d, and the stable sort leaves the fragment 2 last",
 			assembled[11])
+	}
+
+	// The reassembly is deterministic. A repeated run over one input produces one buffer.
+	for run := 0; run < 8; run++ {
+		repeat := make([]parser.CryptoFragment, count)
+		for index := range repeat {
+			repeat[index] = parser.CryptoFragment{
+				Offset: uint64(count - index),
+				Data:   []byte{byte(index)},
+			}
+		}
+
+		repeat[1].Offset = repeat[2].Offset
+
+		if produced := parser.ReassembleCryptoFrames(repeat); !bytes.Equal(produced, assembled) {
+			t.Fatalf("run %d produces %v, and run 0 produces %v", run, produced, assembled)
+		}
 	}
 }
 
