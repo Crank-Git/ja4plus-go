@@ -8,7 +8,7 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-func buildTCPPacket(t *testing.T, srcPort, dstPort uint16, syn, ack bool, window uint16, options []layers.TCPOption) gopacket.Packet {
+func buildTCPPacket(t testing.TB, srcPort, dstPort uint16, syn, ack bool, window uint16, options []layers.TCPOption) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},

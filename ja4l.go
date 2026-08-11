@@ -186,7 +186,6 @@ func (f *JA4LFingerprinter) getOrCreateConn(connKey, direction, proto string) *c
 	return conn
 }
 
-
 func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uint8, srcIP, dstIP string, srcPort, dstPort uint16, ts time.Time) []FingerprintResult {
 	latencyUS := int(diff.Microseconds())
 	if latencyUS < 1 {

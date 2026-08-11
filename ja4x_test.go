@@ -17,7 +17,7 @@ import (
 
 // generateSelfSignedCertDER creates a self-signed certificate in DER format
 // for testing purposes.
-func generateSelfSignedCertDER(t *testing.T) []byte {
+func generateSelfSignedCertDER(t testing.TB) []byte {
 	t.Helper()
 
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

@@ -11,7 +11,7 @@ import (
 )
 
 // buildTCPPacketWithIPs builds a TCP packet with specified IPs and TTL.
-func buildTCPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort, dstPort uint16, syn, ack bool) gopacket.Packet {
+func buildTCPPacketWithIPs(t testing.TB, srcIP, dstIP net.IP, ttl uint8, srcPort, dstPort uint16, syn, ack bool) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
