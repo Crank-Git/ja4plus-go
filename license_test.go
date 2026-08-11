@@ -69,7 +69,7 @@ func TestLicenseHoldsTheGrantAndTheWarrantyDisclaimer(t *testing.T) {
 	}
 }
 
-// The BSD 3-Clause text carries no "All rights reserved." line, and this project adds none.
+// The BSD 3-Clause text carries no "All rights reserved." line. This project adds none.
 func TestLicenseAddsNoAllRightsReservedLine(t *testing.T) {
 	license := readRepoFile(t, "LICENSE")
 
@@ -78,8 +78,8 @@ func TestLicenseAddsNoAllRightsReservedLine(t *testing.T) {
 	}
 }
 
-// LICENSE states no claim about the JA4+ methods. NOTICE holds the FoxIO terms, and
-// issue #11 writes it.
+// LICENSE states no claim about the JA4+ methods. NOTICE holds the FoxIO terms.
+// Issue #11 writes NOTICE.
 func TestLicenseNamesNoJA4PlusMethod(t *testing.T) {
 	license := readRepoFile(t, "LICENSE")
 
