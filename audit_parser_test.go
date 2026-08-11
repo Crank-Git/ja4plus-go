@@ -159,39 +159,46 @@ func TestF22_3_ParseServerHelloReadsPastTheRecordLengthIntoTheNextRecord(t *test
 	}
 }
 
-func TestF22_4_IsSSHPacketDeclinesAPacketWhoseLengthLowByteIsBelowThePaddingLength(t *testing.T) {
-	// `internal/parser/ssh.go:40` compares the padding length against `byte(packetLength)`.
-	// The conversion keeps the low 8 bits of a 32-bit length, so every packet length whose
-	// low byte is at or below the padding length fails the comparison.
-	declined := []uint32{256, 260, 264, 512, 1024}
-	accepted := []uint32{300, 1035}
+func TestF22_4_IsSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-4 is closed. `IsSSHPacket` compared the padding length against
+	// `byte(packetLength)`, and that conversion kept the low 8 bits of a 32-bit length. A
+	// packet whose length was 1024 and whose padding length was 8 therefore failed the
+	// comparison, because the low byte of 1024 is 0.
+	//
+	// The comparison now reads the whole 32-bit length, so the guard declines only the
+	// packet whose padding length reaches its packet length.
+	accepted := []uint32{256, 260, 264, 300, 512, 1024, 1035}
 
-	for _, length := range declined {
-		if parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
-			t.Errorf("IsSSHPacket accepts the packet length %d, and the finding F-22-4 records a decline",
+	for _, length := range accepted {
+		if !parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
+			t.Errorf("IsSSHPacket declines the packet length %d, and the padding length 8 is below it",
 				length)
 		}
 	}
 
-	for _, length := range accepted {
-		if !parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
-			t.Errorf("IsSSHPacket declines the packet length %d, and the low byte is above the padding length",
+	// A padding length at or above the packet length is still malformed.
+	for _, length := range []uint32{2, 8} {
+		if parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
+			t.Errorf("IsSSHPacket accepts the packet length %d, and the padding length 8 is not below it",
 				length)
 		}
 	}
 }
 
-func TestF22_5_ParseSSHPacketDeclinesAPacketWhoseLengthLowByteIsBelowThePaddingLength(t *testing.T) {
-	// `internal/parser/ssh.go:79` holds the same comparison, so the KEXINIT of a connection
-	// whose packet length ends in a low byte at or below the padding length reaches no
-	// fingerprinter.
-	if parser.ParseSSHPacket(auditParserSSHPacket(1024, 8, 20)) != nil {
-		t.Errorf("ParseSSHPacket accepts the packet length 1024, and the finding F-22-5 records a decline")
+func TestF22_5_ParseSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-5 is closed. `ParseSSHPacket` held the same comparison, so the KEXINIT of a
+	// connection whose packet length ended in a low byte at or below the padding length
+	// reached no fingerprinter.
+	for _, length := range []uint32{1024, 1035} {
+		info := parser.ParseSSHPacket(auditParserSSHPacket(length, 8, 20))
+		if info == nil || info.Type != "kexinit" {
+			t.Errorf("ParseSSHPacket declines the packet length %d, and the padding length 8 is below it",
+				length)
+		}
 	}
 
-	info := parser.ParseSSHPacket(auditParserSSHPacket(1035, 8, 20))
-	if info == nil || info.Type != "kexinit" {
-		t.Errorf("ParseSSHPacket declines the packet length 1035, and the low byte is above the padding length")
+	if parser.ParseSSHPacket(auditParserSSHPacket(8, 8, 20)) != nil {
+		t.Error("ParseSSHPacket accepts the packet length 8, and the padding length 8 is not below it")
 	}
 }
 
@@ -206,45 +213,38 @@ func auditParserSSHPacket(length uint32, padding byte, messageType byte) []byte 
 	return packet
 }
 
-func TestF22_6_OIDToHexTruncatesTheFirstTwoArcsIntoOneByte(t *testing.T) {
-	// `internal/parser/x509_utils.go:36` writes `byte(nums[0]*40 + nums[1])`. X.690 encodes
-	// that sum as a variable-length quantity, so a sum at or above 128 needs more than one
-	// byte. `encoding/asn1` of the standard library is the reference here, because it
+func TestF22_6_OIDToHexEncodesTheFirstTwoArcsAsAVariableLengthQuantity(t *testing.T) {
+	// F-22-6 is closed. `OIDToHex` wrote `byte(nums[0]*40 + nums[1])`, and X.690 encodes
+	// that sum as a variable-length quantity. A sum at or above 128 therefore lost its
+	// high bits. `encoding/asn1` of the standard library is the reference here, because it
 	// encodes the same identifier.
-	cases := []struct {
-		text    string
-		oid     asn1.ObjectIdentifier
-		library string
-	}{
-		{"2.5.4.3", asn1.ObjectIdentifier{2, 5, 4, 3}, "550403"},
-		{"2.100.3", asn1.ObjectIdentifier{2, 100, 3}, "b403"},
-		{"2.999.1", asn1.ObjectIdentifier{2, 999, 1}, "3701"},
+	cases := []asn1.ObjectIdentifier{
+		{2, 5, 4, 3},
+		{2, 100, 3},
+		{2, 999, 1},
+		{1, 2, 840, 113549, 1, 1, 11},
 	}
 
-	for _, testCase := range cases {
-		der, err := asn1.Marshal(testCase.oid)
+	for _, oid := range cases {
+		text := oid.String()
+
+		der, err := asn1.Marshal(oid)
 		if err != nil {
-			t.Fatalf("asn1.Marshal(%v): %v", testCase.oid, err)
+			t.Fatalf("asn1.Marshal(%v): %v", oid, err)
 		}
 
 		// The first two bytes hold the tag and the length of these short identifiers.
 		wanted := hex.EncodeToString(der[2:])
-		got := parser.OIDToHex(testCase.text)
 
-		if got != testCase.library {
-			t.Errorf("OIDToHex(%q) = %q, and the finding F-22-6 records %q",
-				testCase.text, got, testCase.library)
-		}
-
-		if testCase.text == "2.5.4.3" && got != wanted {
-			t.Errorf("OIDToHex(%q) = %q, and X.690 encodes it as %q", testCase.text, got, wanted)
+		if got := parser.OIDToHex(text); got != wanted {
+			t.Errorf("OIDToHex(%q) = %q, and X.690 encodes it as %q", text, got, wanted)
 		}
 	}
 
-	// The truncation makes two identifiers collide, so one certificate reaches the JA4X
-	// value of another. X.690 encodes `2.999.1` as `883701` and `0.55.1` as `370101`.
-	if parser.OIDToHex("2.999.1") != parser.OIDToHex("0.55")+"01" {
-		t.Errorf("OIDToHex(%q) = %q and OIDToHex(%q) = %q, and the finding F-22-6 records a collision",
+	// The truncation made two identifiers collide, so one certificate reached the JA4X
+	// value of another. The two now differ.
+	if parser.OIDToHex("2.999.1") == parser.OIDToHex("0.55")+"01" {
+		t.Errorf("OIDToHex(%q) = %q and OIDToHex(%q) = %q, and the closure of F-22-6 separates them",
 			"2.999.1", parser.OIDToHex("2.999.1"), "0.55", parser.OIDToHex("0.55"))
 	}
 }
