@@ -42,6 +42,10 @@ records at commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` name three differen
 
 ## A later decision
 
-**Only the maintainer adds a decision to this file.** Each entry states the decision, the
-date, and the source that records it. A grant of a commercial exception from FoxIO is one
-such entry, and `NOTICE` then gains a paragraph.
+**Only the maintainer adds a decision to this file.** `.claude/rules/rulings.md` holds that
+rule. Each entry states the decision, the date, and the source that records it.
+
+A grant of a commercial exception from FoxIO is one such entry.
+`docs/specs/features/01-licensing.md:140` states the action for that case:
+
+> | FoxIO grants a commercial exception to this project. | The maintainer records it in `docs/audit/license-decision.md` and `NOTICE` gains a paragraph. |
