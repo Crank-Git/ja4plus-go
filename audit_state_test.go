@@ -328,12 +328,12 @@ func TestTheAuditRecordsThatJA4XCleanupConnectionKeepsTheCertificateHash(t *test
 	}
 }
 
-// The audit records F-23-13. JA4L builds its state table key from the protocol token that
-// the caller passes, and no doc comment states the two tokens the fingerprinter writes.
-// A caller that passes another spelling removes no entry.
+// The audit records F-23-13. JA4L builds its state table key from the `proto` argument
+// that the caller passes. No doc comment states the two values the fingerprinter writes,
+// so a caller that passes another spelling removes no entry.
 //
 // Issue #25 closes the finding and inverts the first assertion.
-func TestTheAuditRecordsThatJA4LCleanupConnectionMatchesTheProtocolToken(t *testing.T) {
+func TestTheAuditRecordsThatJA4LCleanupConnectionMatchesTheProtocolArgument(t *testing.T) {
 	client := net.IP{192, 168, 1, 10}
 	server := net.IP{10, 0, 0, 5}
 
