@@ -4,9 +4,9 @@ This project settles disputed fingerprint values from evidence. **This file stat
 counts as evidence, who decides, and where the decision is recorded.** Read it before you
 write a sentence that begins "FoxIO says".
 
-`.claude/rules/parity.md` holds the rules that govern the Python port.
-`.claude/rules/conformance.md` holds the two shapes of reference defect this project
-declines.
+`.claude/rules/parity.md` holds the rules that govern the Python port. Its
+`## Where a difference comes from` section states the two shapes of reference defect this
+project declines.
 
 ## The two words
 
