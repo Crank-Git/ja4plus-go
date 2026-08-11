@@ -6,6 +6,9 @@ import (
 )
 
 // JA4TSFingerprinter fingerprints TCP SYN-ACK packets (server-side).
+//
+// One JA4TSFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4TSFingerprinter struct {
 	results []FingerprintResult
 }

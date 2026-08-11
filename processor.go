@@ -10,6 +10,19 @@ import (
 // Processor runs all JA4+ fingerprinters on each packet and aggregates results.
 // Errors from individual fingerprinters are non-fatal; they are collected and
 // returned alongside any successful results.
+//
+// One Processor serves one goroutine. Every fingerprinter holds state that no lock
+// guards, so two goroutines that share one Processor write a data race. The race
+// detector reports that race, and the library detects it at no point.
+//
+// A caller who wants more than one goroutine takes one of two patterns.
+//
+//   - Route each packet with GetShardKey, and give each goroutine its own Processor.
+//     GetShardKey returns one key for both directions of one connection.
+//   - Share one SyncProcessor, which serializes every call with one mutex.
+//
+// The first pattern gives higher throughput, because the per-packet path acquires no
+// lock. The second pattern costs one mutex acquisition for each packet.
 type Processor struct {
 	ja4    *JA4Fingerprinter
 	ja4s   *JA4SFingerprinter

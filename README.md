@@ -164,6 +164,137 @@ proc := ja4plus.NewProcessor()
 results, errs := proc.ProcessPacket(packet)
 ```
 
+## Concurrency
+
+One `Processor` serves one goroutine, and one fingerprinter serves one goroutine. Every
+fingerprinter holds state that no lock guards, so two goroutines that share one instance
+write a data race. The race detector reports that race, and the library detects it at no
+point.
+
+A caller who wants more than one goroutine takes one of two patterns.
+
+### The sharded pattern
+
+`GetShardKey` returns one key for both directions of one connection, so a packet and its
+reply reach one `Processor`. This pattern gives higher throughput, because the per-packet
+path acquires no lock.
+
+```go
+// processSharded runs one Processor for each shard and returns every result.
+// Each goroutine owns its Processor, so no lock guards the per-packet path.
+func processSharded(packets []gopacket.Packet, shards int) []ja4plus.FingerprintResult {
+	inputs := make([]chan gopacket.Packet, shards)
+	outputs := make(chan []ja4plus.FingerprintResult, shards)
+
+	var wg sync.WaitGroup
+	for i := range inputs {
+		inputs[i] = make(chan gopacket.Packet, 16)
+
+		wg.Add(1)
+		go func(in <-chan gopacket.Packet) {
+			defer wg.Done()
+
+			proc := ja4plus.NewProcessor()
+
+			var results []ja4plus.FingerprintResult
+			for packet := range in {
+				got, _ := proc.ProcessPacket(packet)
+				results = append(results, got...)
+			}
+
+			outputs <- results
+		}(inputs[i])
+	}
+
+	// GetShardKey holds no state, so the router calls it on its own Processor.
+	router := ja4plus.NewProcessor()
+	for _, packet := range packets {
+		key := router.GetShardKey(packet)
+		if key == "" {
+			// The packet carries neither a TCP layer nor a UDP layer.
+			continue
+		}
+
+		inputs[shardIndex(key, shards)] <- packet
+	}
+
+	for _, in := range inputs {
+		close(in)
+	}
+	wg.Wait()
+	close(outputs)
+
+	var all []ja4plus.FingerprintResult
+	for results := range outputs {
+		all = append(all, results...)
+	}
+
+	return all
+}
+
+// shardIndex returns the shard that owns the key. The key holds the sorted five-tuple,
+// so a packet and its reply reach one shard and one Processor.
+func shardIndex(key string, shards int) int {
+	digest := fnv.New32a()
+	_, _ = digest.Write([]byte(key))
+
+	return int(digest.Sum32() % uint32(shards))
+}
+```
+
+### The shared pattern
+
+`SyncProcessor` wraps a `Processor` and serializes every call with one mutex. It costs one
+mutex acquisition for each packet. `SyncProcessor` exports `ProcessPacket`, `Reset`,
+`CleanupConnection` and `GetShardKey`, and it exposes no way to reach the inner
+`Processor`.
+
+```go
+// processShared shares one SyncProcessor between the workers and returns every result.
+// The mutex serializes every call, so this pattern gives lower throughput than a shard
+// for each goroutine.
+func processShared(packets []gopacket.Packet, workers int) []ja4plus.FingerprintResult {
+	proc := ja4plus.NewSyncProcessor()
+
+	input := make(chan gopacket.Packet, 16)
+	outputs := make(chan []ja4plus.FingerprintResult, workers)
+
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			var results []ja4plus.FingerprintResult
+			for packet := range input {
+				got, _ := proc.ProcessPacket(packet)
+				results = append(results, got...)
+			}
+
+			outputs <- results
+		}()
+	}
+
+	for _, packet := range packets {
+		input <- packet
+	}
+	close(input)
+
+	wg.Wait()
+	close(outputs)
+
+	var all []ja4plus.FingerprintResult
+	for results := range outputs {
+		all = append(all, results...)
+	}
+
+	return all
+}
+```
+
+The test file `concurrency_doc_test.go` holds both functions above and runs them, so the
+code that this section shows compiles.
+
 ## Fingerprint Formats
 
 | Type | Format | Example |

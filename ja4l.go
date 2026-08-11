@@ -19,6 +19,9 @@ type connState struct {
 
 // JA4LFingerprinter generates JA4L latency fingerprints from TCP handshake
 // timing or QUIC/UDP exchange timing.
+//
+// One JA4LFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4LFingerprinter struct {
 	connections map[string]*connState
 	results     []FingerprintResult

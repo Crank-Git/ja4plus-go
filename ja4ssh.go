@@ -35,6 +35,9 @@ type HASSHResult struct {
 // It tracks per-connection packet sizes and ACK counts in a rolling window.
 //
 // Format: c{client_mode}s{server_mode}_c{client_pkts}s{server_pkts}_c{client_acks}s{server_acks}
+//
+// One JA4SSHFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4SSHFingerprinter struct {
 	connections map[string]*sshConnState
 	packetCount int
