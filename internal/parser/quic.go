@@ -1011,7 +1011,7 @@ func quicProtectedRange(payload []byte, connectionIDLength int) (pnOffset, end i
 		return 0, 0, 0, fmt.Errorf("parser: the packet states the QUIC version %#08x", version)
 	}
 
-	if version == quicV1 && payload[0]&0x30 == quicPacketTypeRetry {
+	if quicIsRetry(payload[0], version) {
 		return 0, 0, 0, errors.New("parser: a Retry packet carries no protected frame")
 	}
 
@@ -1059,6 +1059,17 @@ func quicProtectedRange(payload []byte, connectionIDLength int) (pnOffset, end i
 	}
 
 	return pos, pos + int(length), 0x0f, nil
+}
+
+// quicIsRetry reports whether the first byte names a Retry packet.
+// RFC 9369 Section 3.2 states the type `0b00` for QUIC version 2, and RFC 9000
+// Section 17.2 states the type `0b11` for QUIC version 1.
+func quicIsRetry(firstByte byte, version uint32) bool {
+	if version == quicV2 {
+		return firstByte&0x30 == 0x00
+	}
+
+	return firstByte&0x30 == quicPacketTypeRetry
 }
 
 // quicIsInitial reports whether the first byte names an Initial packet.

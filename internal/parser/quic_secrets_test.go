@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -145,6 +146,24 @@ func TestDecryptQUICPacketWithSecretRejectsACraftedPacket(t *testing.T) {
 
 			if plaintext != nil {
 				t.Errorf("DecryptQUICPacketWithSecret returned %x for a crafted packet", plaintext)
+			}
+		})
+	}
+}
+
+func TestDecryptQUICPacketWithSecretRejectsARetryPacket(t *testing.T) {
+	// RFC 9369 Section 3.2 gives QUIC version 2 the Retry type `0b00`, and RFC 9000
+	// Section 17.2 gives QUIC version 1 the Retry type `0b11`.
+	packets := map[string][]byte{
+		"version 1": {0xF0, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00},
+		"version 2": {0xC0, 0x6b, 0x33, 0x43, 0xcf, 0x00, 0x00},
+	}
+
+	for name, packet := range packets {
+		t.Run(name, func(t *testing.T) {
+			_, err := DecryptQUICPacketWithSecret(packet, bytes.Repeat([]byte{0x2b}, 32), 0)
+			if err == nil || !strings.Contains(err.Error(), "Retry") {
+				t.Errorf("DecryptQUICPacketWithSecret returned %v for a Retry packet", err)
 			}
 		})
 	}
