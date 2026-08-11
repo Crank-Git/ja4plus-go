@@ -46,10 +46,13 @@ var auditSeverities = []string{"critical", "major", "minor"}
 //   - `declined` — the maintainer decided not to close it. FR-audit-28 requires the reason.
 var auditStatuses = []string{"open", "confirmed", "no change needed", "unconfirmed", "declined"}
 
-// auditVerdicts holds every verdict that a suspected finding carries. The feature file's
-// acceptance criteria name the last three, and `open` holds the state before the audit
-// reaches S1, S2 or S3.
-var auditVerdicts = []string{"open", "confirmed", "no change needed", "unconfirmed"}
+// auditSuspectedStatuses holds every status that a suspected finding carries. The feature
+// file's acceptance criteria name the last three, and `open` holds the state before the
+// audit reaches S1, S2 or S3.
+//
+// The `## Terms` table of `docs/specs/spec.md` bars the word `verdict`, which it reserves
+// as a barred synonym of `ruling`. The report writes `Status` for that reason.
+var auditSuspectedStatuses = []string{"open", "confirmed", "no change needed", "unconfirmed"}
 
 // auditReasonStatuses names each status whose row states a reason.
 var auditReasonStatuses = []string{"no change needed", "unconfirmed", "declined"}
@@ -67,7 +70,7 @@ var auditFileColumns = []string{"File", "Audit date"}
 var auditSetColumns = []string{"File", "Read by"}
 
 // auditSuspectedColumns names every column of the suspected findings table.
-var auditSuspectedColumns = []string{"ID", "Files", "Owner", "Verdict", "Findings", "Reason"}
+var auditSuspectedColumns = []string{"ID", "Files", "Owner", "Status", "Findings", "Reason"}
 
 // auditSignatureColumns names every column of the exported signature table. The last
 // acceptance criterion of the feature file requires the table.
@@ -127,9 +130,11 @@ type auditFinding struct {
 
 // auditGoFiles returns the path of every file the audit reads.
 //
-// It reads each directory of auditRoots and no subdirectory of them. It drops a file
-// whose name ends in `_test.go`, because a test file ships nothing, and the feature
-// file's `Purpose` counts nine parser files, which is the count without the test files.
+// It reads each directory of auditRoots and no subdirectory of them.
+//
+// It drops a file whose name ends in `_test.go`, because a test file ships nothing. The
+// `Purpose` section of the feature file counts nine parser files, and that count holds
+// only without the test files.
 func auditGoFiles(t *testing.T) []string {
 	t.Helper()
 
@@ -201,7 +206,13 @@ func auditTableRows(block string, columns []string) ([][]string, error) {
 		return nil, fmt.Errorf("the header names %v, and the record names %v", header, columns)
 	}
 
-	for _, cell := range auditTableCells(lines[1]) {
+	separator := auditTableCells(lines[1])
+	if len(separator) != len(columns) {
+		return nil, fmt.Errorf("the separator line holds %d cells, and the header holds %d",
+			len(separator), len(columns))
+	}
+
+	for _, cell := range separator {
 		if !auditSeparatorPattern.MatchString(cell) {
 			return nil, fmt.Errorf("the second line is no separator line: %q", lines[1])
 		}
@@ -329,6 +340,12 @@ func readAuditClosure(finding auditFinding) error {
 
 	if slices.Contains(auditReasonStatuses, finding.Status) && !strings.HasSuffix(finding.Reason, ".") {
 		return fmt.Errorf("the finding %s is %s and states the reason %q", finding.ID, finding.Status, finding.Reason)
+	}
+
+	// An open finding reached no outcome, so a reason for it states nothing a reader can
+	// act on. A confirmed finding may state why the closure took the shape it took.
+	if finding.Status == "open" && finding.Reason != "" {
+		return fmt.Errorf("the finding %s is open and states the reason %q", finding.ID, finding.Reason)
 	}
 
 	return nil
@@ -490,7 +507,7 @@ func TestEveryAuditedFileRowNamesAFileThatTheIssueReads(t *testing.T) {
 	}
 }
 
-func TestTheSuspectedFindingsTableHoldsAVerdictForS1AndS2AndS3(t *testing.T) {
+func TestTheSuspectedFindingsTableHoldsAStatusForS1AndS2AndS3(t *testing.T) {
 	page := readRepoFile(t, auditReportFile)
 
 	rows, err := auditTableRows(auditMarkedBlock(t, page, "suspected"), auditSuspectedColumns)
@@ -508,13 +525,13 @@ func TestTheSuspectedFindingsTableHoldsAVerdictForS1AndS2AndS3(t *testing.T) {
 			t.Errorf("the suspected finding %s names the owner %q, which owns no section", cells[0], cells[2])
 		}
 
-		if !slices.Contains(auditVerdicts, cells[3]) {
-			t.Errorf("the suspected finding %s holds the verdict %q, which is none of %v",
-				cells[0], cells[3], auditVerdicts)
+		if !slices.Contains(auditSuspectedStatuses, cells[3]) {
+			t.Errorf("the suspected finding %s holds the status %q, which is none of %v",
+				cells[0], cells[3], auditSuspectedStatuses)
 		}
 
 		if cells[3] != "open" && !strings.HasSuffix(cells[5], ".") {
-			t.Errorf("the suspected finding %s holds the verdict %q and states the reason %q",
+			t.Errorf("the suspected finding %s holds the status %q and states the reason %q",
 				cells[0], cells[3], cells[5])
 		}
 	}
@@ -589,7 +606,7 @@ func TestACompleteReportLeavesNoOpenFindingAndNoUnauditedFile(t *testing.T) {
 
 	for _, cells := range suspected {
 		if cells[3] == "open" {
-			t.Errorf("the report is complete, and the suspected finding %s holds no verdict", cells[0])
+			t.Errorf("the report is complete, and the suspected finding %s stays open", cells[0])
 		}
 	}
 }
@@ -725,6 +742,8 @@ func TestTheFindingReaderHoldsTheClosureRulesOfEachStatus(t *testing.T) {
 		{"an unconfirmed finding states no reason", row("unconfirmed", "", ""), false},
 		{"a finding that needs no change states the reason", row("no change needed", "", reason), true},
 		{"a finding that needs no change states no reason", row("no change needed", "", ""), false},
+		{"an open finding states a reason", row("open", "", reason), false},
+		{"a confirmed finding states why the closure took its shape", row("confirmed", "`a1b2c3d`", reason), true},
 	}
 
 	for _, testCase := range cases {
@@ -751,6 +770,7 @@ func TestTheTableReaderRejectsADefectiveTable(t *testing.T) {
 		{"the header names another column", "| File | Date |\n|---|---|\n"},
 		{"the header omits a column", "| File |\n|---|\n"},
 		{"the separator line is absent", "| File | Audit date |\n| `ja4.go` | 2026-08-11 |\n"},
+		{"the separator line omits a cell", "| File | Audit date |\n|---|\n| `ja4.go` | 2026-08-11 |\n"},
 		{"a row omits a cell", "| File | Audit date |\n|---|---|\n| `ja4.go` |\n"},
 	}
 

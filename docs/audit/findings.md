@@ -17,7 +17,7 @@ a failure scenario is a style opinion, and this report records no style opinion.
 The status line at the top of this file holds one of two values.
 
 - `in progress` — one issue of the audit still runs.
-- `complete` — every file carries an audit date, and every finding carries a verdict.
+- `complete` — every file carries an audit date, and no finding stays `open`.
 
 **Issue #25 sets the status to `complete`.** The test applies the closing rules once it
 reads that value. An earlier change fails the suite.
@@ -30,16 +30,16 @@ FR-audit-1 states the set:
 > `cmd/ja4plus/`.
 
 **A file whose name ends in `_test.go` is outside the set.** The `## Purpose` section of
-the feature file counts "Ten fingerprinters, nine parser files and a command-line program",
-and those counts hold only when the test files stay out. `internal/parser/` holds ten files
-that ship, and nine of them decode a protocol. The audit reads a file that ships, because
-every check in FR-audit-11 through FR-audit-24 names shipped behaviour.
+the feature file counts "Ten fingerprinters, nine parser files and a command-line program".
+Those counts hold only without the test files. `internal/parser/` holds ten files that
+ship, and nine of them decode a protocol. The audit reads a file that ships, because every
+check in FR-audit-11 through FR-audit-24 names shipped behaviour.
 
 `internal/capture/` is outside the set, because FR-audit-1 names three directories and that
 directory is none of them.
 
 The `Read by` column names each issue that reads the file. The three audit issues run at
-the same time, so each one records its own audit date in its own table under
+the same time. Each one records its own audit date in its own table, under
 `## The files each issue audited`.
 
 <!-- audit-set:begin -->
@@ -96,7 +96,11 @@ Each findings table holds these eight columns, in this order.
 | `Status` | One of the five values under `### The five statuses`. |
 | `Failure scenario` | One sentence that names the input and the wrong result. |
 | `Closing commit` | The abbreviated commit hash, in a code span. Empty until the closure. |
-| `Reason` | One sentence. Empty for an `open` finding and for a `confirmed` finding. |
+| `Reason` | One sentence. Empty for an `open` finding. |
+
+An `open` finding reached no outcome, so the reader declines a reason on it. A `confirmed`
+finding may state why the closure took the shape it took. The other three statuses require
+the reason.
 
 **A cell holds no vertical bar character.** The reader splits a row on that character, so
 a cell that holds one breaks the row.
@@ -180,8 +184,10 @@ name the owner.
 | `files:24` and `findings:24` | issue #24 | FR-audit-14, FR-audit-19, FR-audit-20, FR-audit-21 and FR-audit-22. |
 | `files:25` and `findings:25` | issue #25 | FR-audit-24. |
 
-Issue #25 also closes each finding that the other three record. It writes the closing
-commit and the reason into the row that already holds the finding.
+**Issue #25 also closes each finding that the other three record.** The plan on issue #20
+assigns that work to it, together with FR-audit-27 and FR-audit-28. It writes the closing
+commit and the reason into the row that already holds the finding, and it owns the table
+under `## The exported signatures a closure changed`.
 
 ## The files each issue audited
 
@@ -283,16 +289,22 @@ The survey that produced the feature file names three candidates. Each one needs
 confirmation. The `## Suspected findings` section of
 `docs/specs/features/02-correctness-audit.md` holds the failure scenario of each one.
 
-**A suspected finding is a candidate, and not a finding.** The owner confirms it, records
-one row for each defect it reaches in its own findings table, and then writes the verdict
-here. The `Findings` column names those rows.
+**A suspected finding is a candidate, and not a finding.** The owner confirms it and
+records one row for each defect it reaches, in its own findings table. It then writes the
+status here, and the `Findings` column names those rows.
 
-The three verdicts that the feature file allows are `confirmed`, `no change needed` and
-`unconfirmed`. The value `open` holds the state before the owner reaches the candidate,
-and issue #25 leaves none.
+The last acceptance criterion set of the feature file states the outcome:
+
+> S1, S2 and S3 each hold a verdict of `confirmed`, `no change needed` or
+      `unconfirmed`.
+
+The `Status` column holds one of those three values. The `## Terms` table of
+`docs/specs/spec.md` bars the word `verdict`, which it reserves as a barred synonym of
+`ruling`, so this report writes `Status` for the column. The value `open` holds the state
+before the owner reaches the candidate, and issue #25 leaves none.
 
 <!-- suspected:begin -->
-| ID | Files | Owner | Verdict | Findings | Reason |
+| ID | Files | Owner | Status | Findings | Reason |
 |---|---|---|---|---|---|
 | S1 | the ten fingerprinter files | #23 | open |  |  |
 | S2 | `lookup.go` | #23 | open |  |  |
@@ -300,7 +312,7 @@ and issue #25 leaves none.
 <!-- suspected:end -->
 
 Issue #23 owns all three, because each candidate names state that a long-running process
-keeps. S2 and S3 hand over to Epic 9, which owns the network boundary. A verdict of
+keeps. S2 and S3 hand over to Epic 9, which owns the network boundary. A status of
 `unconfirmed` or `no change needed` here states which part Epic 9 takes.
 
 ## The exported signatures a closure changed
