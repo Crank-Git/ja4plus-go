@@ -303,6 +303,23 @@ func BenchmarkProcessorProcessesOneSYNPacket(b *testing.B) {
 	}
 }
 
+// BenchmarkSyncProcessorProcessesOneSYNPacket measures SyncProcessor.ProcessPacket.
+// FR-concurrency-24 asks for the per-packet cost of both types side by side, so this
+// benchmark reads the packet that BenchmarkProcessorProcessesOneSYNPacket reads and runs
+// the same loop. The difference between the two times is the cost of the mutex.
+// One goroutine drives this loop, so it reports the cost with no contention.
+func BenchmarkSyncProcessorProcessesOneSYNPacket(b *testing.B) {
+	sp := NewSyncProcessor()
+	pkt := buildSYNPacket("192.168.1.1", "10.0.0.1", 54321, 443)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sp.Reset()
+		_, _ = sp.ProcessPacket(pkt)
+	}
+}
+
 // BenchmarkJA4FingerprintsOneClientHello measures JA4 against one TLS ClientHello.
 func BenchmarkJA4FingerprintsOneClientHello(b *testing.B) {
 	fp := NewJA4()
