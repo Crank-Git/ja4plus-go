@@ -55,7 +55,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The JA4S fingerprinter, for a TLS ServerHello.
 - The JA4H fingerprinter, for an HTTP request.
 - The JA4X fingerprinter, for an X.509 certificate.
-- The JA4SSH fingerprinter, which reads a window of SSH packets.
+- The JA4SSH fingerprinter, which produces one fingerprint for each window of SSH
+  packets.
 - The JA4T fingerprinter and the JA4TS fingerprinter, for a TCP SYN and for a TCP
   SYN-ACK.
 - The JA4L fingerprinter, which measures the latency of a connection.
