@@ -1,6 +1,8 @@
 package ja4plus
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -351,6 +353,17 @@ func TestTheReaderRejectsAMalformedRegister(t *testing.T) {
 	}
 }
 
+func TestTheSchemaDocumentNamesEveryRegisterField(t *testing.T) {
+	// A JSON file carries no comment, so the schema lives beside the register.
+	document := readRepoFile(t, "testdata/README.md")
+
+	for _, field := range deviationFieldNames {
+		if !strings.Contains(document, "`"+field+"`") {
+			t.Errorf("testdata/README.md does not name the field %q", field)
+		}
+	}
+}
+
 func TestThePortRegisterPageNamesThePortCommitAndTheRetrievalDate(t *testing.T) {
 	page := readRepoFile(t, portRegisterFile)
 
@@ -393,5 +406,16 @@ func TestThePortRegisterPageHoldsThePortSection(t *testing.T) {
 		if !strings.Contains(copied, wanted) {
 			t.Errorf("the copy in %s does not hold %q", portRegisterFile, wanted)
 		}
+	}
+
+	// The hash is the whole gate on FR-reference-18. An anchor test passes over an edit
+	// between the anchors, and this test does not. The page states the command that
+	// reproduces the value.
+	const wantedDigest = "f5ec7502b46cea632ac8d291f32acf3b97fcf3471a5ee8a4a8ea0ac6aba45f4b"
+
+	digest := sha256.Sum256([]byte(strings.Trim(copied, "\n") + "\n"))
+	if hex.EncodeToString(digest[:]) != wantedDigest {
+		t.Errorf("the copy in %s hashes to %s, and the port section at commit 21299645366591331eb93155355b65a76a3729f3 hashes to %s",
+			portRegisterFile, hex.EncodeToString(digest[:]), wantedDigest)
 	}
 }
