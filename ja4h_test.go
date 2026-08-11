@@ -14,7 +14,7 @@ import (
 
 // buildTCPPacketWithPayload creates a gopacket.Packet containing Ethernet +
 // IPv4 + TCP layers with the given payload bytes as TCP application data.
-func buildTCPPacketWithPayload(t *testing.T, payload []byte) gopacket.Packet {
+func buildTCPPacketWithPayload(t testing.TB, payload []byte) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
