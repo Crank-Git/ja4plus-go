@@ -7,8 +7,12 @@ This directory holds the register, the corpus pin and the fixtures the tests rea
 | `deviations.json` | The register. One entry for each accepted difference from a FoxIO value. | Yes |
 | `foxio.pin` | The FoxIO commit that `make corpus` fetches. | Yes |
 | `foxio-license-1.1.txt` | The FoxIO License 1.1 text that the license tests read. | Yes |
-| `http1-with-cookies.expected.json` | One expected-output fixture. | Yes |
 | `foxio/` | The fetched FoxIO corpus. It is FoxIO-licensed material. | No |
+
+**This directory holds no expected-output fixture.**
+`docs/specs/features/04-conformance-harness.md` passes that role to the corpus, and the
+conformance suite compares every value against the FoxIO vector. Never add a second source
+for an expected value.
 
 ## The register
 
