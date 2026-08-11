@@ -40,7 +40,7 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   capture merged both directions of one session into one connection and a VXLAN packet
   reported the tunnel port 4789. The three tunneled captures of the FoxIO corpus move:
   `gre-sample.pcap`, `gre-erspan-vxlan.pcap` and `tcpdump-geneve.pcap`. The maintainer
-  ruled this on 2026-08-11, and `docs/specs/spec.md` `## Changelog` row 10 records it.
+  ruled this on 2026-08-11, and `docs/specs/spec.md` `## Changelog` row 12 records it.
 - The parser reads no fingerprint from a packet that nests more than four tunnel layers,
   and it returns a non-fatal error that names the limit. It returns the same result for a
   tunnel whose inner packet it does not read, such as a GRE header that names an unknown
