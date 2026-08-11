@@ -352,17 +352,29 @@ func readAuditClosure(finding auditFinding) error {
 	return nil
 }
 
-// auditGitReadsThisCheckout reports whether a git command reads this checkout.
+// auditGitReadsTheHistory reports whether a git command reads the history of this
+// checkout. It returns false on three conditions.
 //
-// It returns false when the machine holds no `git` program, and false when the directory
-// is no git working tree. A consumer that builds this module from a module cache holds
-// neither, and the closing commit rule cannot apply there.
-func auditGitReadsThisCheckout() bool {
+//  1. The machine holds no `git` program.
+//  2. The directory is no git working tree. A consumer that builds this module from a
+//     module cache reads one of these, and the closing commit rule cannot apply there.
+//  3. The clone is shallow. `actions/checkout` fetches one commit by default, and a clone
+//     that holds one commit answers no question about an earlier one.
+//
+// A shallow clone must skip and never fail. It holds too little history to tell an
+// unreachable commit from a commit it did not fetch.
+func auditGitReadsTheHistory() bool {
 	if _, err := exec.LookPath("git"); err != nil {
 		return false
 	}
 
-	return exec.Command("git", "rev-parse", "--git-dir").Run() == nil
+	if exec.Command("git", "rev-parse", "--git-dir").Run() != nil {
+		return false
+	}
+
+	shallow, err := exec.Command("git", "rev-parse", "--is-shallow-repository").Output()
+
+	return err == nil && strings.TrimSpace(string(shallow)) == "false"
 }
 
 // readAuditCommitReachable returns an error when HEAD does not reach the commit the hash
@@ -510,8 +522,8 @@ func TestEveryRecordedFindingHoldsEveryFieldOfTheRecord(t *testing.T) {
 }
 
 func TestEveryConfirmedFindingNamesAClosingCommitThatHeadReaches(t *testing.T) {
-	if !auditGitReadsThisCheckout() {
-		t.Skip("git reads no commit here, because the machine holds no git program or the directory is no git working tree")
+	if !auditGitReadsTheHistory() {
+		t.Skip("git reads no history here: the machine holds no git program, or the directory is no git working tree, or the clone is shallow")
 	}
 
 	page := readRepoFile(t, auditReportFile)
@@ -539,8 +551,8 @@ func TestEveryConfirmedFindingNamesAClosingCommitThatHeadReaches(t *testing.T) {
 }
 
 func TestTheCommitReaderRejectsAHashThatHeadDoesNotReach(t *testing.T) {
-	if !auditGitReadsThisCheckout() {
-		t.Skip("git reads no commit here, because the machine holds no git program or the directory is no git working tree")
+	if !auditGitReadsTheHistory() {
+		t.Skip("git reads no history here: the machine holds no git program, or the directory is no git working tree, or the clone is shallow")
 	}
 
 	if err := readAuditCommitReachable("HEAD"); err != nil {
