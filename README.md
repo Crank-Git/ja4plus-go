@@ -6,7 +6,7 @@ JA4+ is a set of network fingerprinting standards created by [FoxIO](https://fox
 
 [![CI](https://github.com/Crank-Git/ja4plus-go/actions/workflows/ci.yml/badge.svg)](https://github.com/Crank-Git/ja4plus-go/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/Crank-Git/ja4plus-go.svg)](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go)
-[![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-BSD--3--Clause%20and%20FoxIO%201.1-blue.svg)](LICENSE)
 
 ## Supported Fingerprint Types
 
@@ -199,11 +199,9 @@ go test -v -race ./...
 
 ## License
 
-This library is released under the **BSD 3-Clause License**.
-
-The JA4+ fingerprinting specifications were created by [FoxIO](https://foxio.io). JA4 (TLS Client) is open source under BSD-3-Clause per FoxIO. Other JA4+ methods (JA4S, JA4H, JA4T, JA4TS, JA4L, JA4X, JA4SSH) implement FoxIO's specifications under the [FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE), which is permissive for academic, internal business, and security research use.
-
-See [LICENSE](LICENSE) for full details.
+The BSD 3-Clause license in [LICENSE](LICENSE) covers the original Go code, and FoxIO licenses the JA4 method under [LICENSE-JA4](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE-JA4).
+[FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE) covers JA4S, JA4H, JA4T, JA4TS, JA4L, JA4X, JA4SSH, JA4D and JA4D6, and it permits non-commercial use only.
+A commercial user contacts [FoxIO](https://foxio.io) for those methods, and [NOTICE](NOTICE) holds the FoxIO terms.
 
 ## Acknowledgments
 

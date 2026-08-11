@@ -14,9 +14,20 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   fetches the corpus at that commit. The corpus is FoxIO-licensed material, so the
   repository holds no fetched file.
 - A benchmark for the processor, and one benchmark for each method.
+- `data/README.md`, which names FoxIO as the source of `data/ja4plus-mapping.csv` and
+  states that FoxIO License 1.1 covers that file.
+- `docs/audit/license-decision.md`, which transcribes the maintainer's license decision
+  and the date of each part of it.
 
 ### Changed
 
+- The license correction. The repository states two licenses, and it names which material
+  each one covers. The original Go code carries the BSD 3-Clause license.
+  FoxIO License 1.1 covers nine of the methods that this project implements, and that
+  license permits non-commercial use only. `NOTICE` names those nine methods, and it holds
+  the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
+  user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
+  records the decision behind the correction.
 - The module needs Go 1.24 or later. It needed Go 1.22 before this change, so a consumer
   on Go 1.22 or Go 1.23 must move to Go 1.24.
 

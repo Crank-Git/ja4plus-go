@@ -2,7 +2,7 @@
 id: licensing
 feature: License compliance
 epic: "Epic 1: License compliance"
-status: issued
+status: built
 issues: [9, 10, 11, 12, 13]
 mockups: []
 ---
