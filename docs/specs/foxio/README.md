@@ -71,7 +71,7 @@ git clone https://github.com/FoxIO-LLC/ja4.git &&
 
 The command writes the byte count of each file, and then the SHA-256 hash of each file.
 `wc` adds one total line, and the table holds no row for it. Compare each file line
-against the table above. If one line differs, stop and tell the maintainer. A changed hash
+against the table above. If one line differs, stop. Tell the maintainer. A changed hash
 means the material behind a citation changed.
 
 ## What the material specifies
@@ -80,7 +80,7 @@ means the material behind a citation changed.
 |---|---|
 | One method holds a complete text specification, and that method is JA4. | `JA4.md` holds 9153 bytes. |
 | `JA4H.md` builds no fingerprint. | `JA4H.md` holds 278 bytes. |
-| Nine images specify a method or two. | The table holds nine `.png` rows. |
+| Nine images carry the method specifications. | The table holds nine `.png` rows. |
 
 `docs/specs/features/11-foxio-reference.md` states which method each image specifies, and
 names the three methods that no image specifies.

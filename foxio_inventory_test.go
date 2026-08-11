@@ -62,7 +62,7 @@ func TestFoxioInventoryPageNamesTheCommitThatTheFoxioPinHolds(t *testing.T) {
 
 	commits := foxioInventoryFullCommitPattern.FindAllString(page, -1)
 	if len(commits) == 0 {
-		t.Fatalf("%s names no full commit hash, and FR-reference-4 names one", foxioInventoryPagePath)
+		t.Fatalf("%s names no full commit hash, and FR-reference-1 records one", foxioInventoryPagePath)
 	}
 
 	for _, commit := range commits {
@@ -73,15 +73,24 @@ func TestFoxioInventoryPageNamesTheCommitThatTheFoxioPinHolds(t *testing.T) {
 }
 
 // FR-reference-1 — a reader who cannot reach the source URL cannot check a citation.
+//
+// Each check anchors on the label of its row. The page carries a commit date as well as a
+// retrieval date, so a pattern that matched any date would still pass after somebody
+// removed the retrieval date.
 func TestFoxioInventoryPageRecordsTheSourceURLAndTheRetrievalDate(t *testing.T) {
 	page := readFoxioInventoryPage(t)
+	pin := readFoxioInventoryPin(t)
 
 	if !strings.Contains(page, "https://github.com/FoxIO-LLC/ja4") {
 		t.Errorf("%s records no source URL, and FR-reference-1 names one", foxioInventoryPagePath)
 	}
 
-	if !regexp.MustCompile(`\b\d{4}-\d{2}-\d{2}\b`).MatchString(page) {
-		t.Errorf("%s records no retrieval date, and FR-reference-1 names one", foxioInventoryPagePath)
+	if !regexp.MustCompile(`Retrieval date\s*\|\s*\d{4}-\d{2}-\d{2}\b`).MatchString(page) {
+		t.Errorf("%s records no retrieval date row, and FR-reference-1 names one", foxioInventoryPagePath)
+	}
+
+	if !regexp.MustCompile(`Pinned commit\s*\|\s*` + "`" + pin + "`").MatchString(page) {
+		t.Errorf("%s records no pinned commit row that holds %q, and FR-reference-1 names one", foxioInventoryPagePath, pin)
 	}
 }
 
