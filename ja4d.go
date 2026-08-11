@@ -71,7 +71,12 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	if udpLayer == nil {
 		return nil, nil
 	}
-	udp := udpLayer.(*layers.UDP)
+	// A caller that supplies a custom decoder can register another concrete type under
+	// the UDP layer type. A fingerprinter returns a non-fatal error for it.
+	udp, ok := udpLayer.(*layers.UDP)
+	if !ok {
+		return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+	}
 
 	if udp.SrcPort != 67 && udp.SrcPort != 68 && udp.DstPort != 67 && udp.DstPort != 68 {
 		return nil, nil
@@ -82,7 +87,11 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	if dhcpLayer == nil {
 		return nil, nil
 	}
-	dhcp := dhcpLayer.(*layers.DHCPv4)
+	// The DHCPv4 layer type carries the same risk as the UDP layer type above.
+	dhcp, ok := dhcpLayer.(*layers.DHCPv4)
+	if !ok {
+		return nil, fmt.Errorf("the DHCPv4 layer carries the type %T", dhcpLayer)
+	}
 
 	var msgType byte
 	var msgTypeSet bool

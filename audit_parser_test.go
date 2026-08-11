@@ -249,58 +249,52 @@ func TestF22_6_OIDToHexTruncatesTheFirstTwoArcsIntoOneByte(t *testing.T) {
 	}
 }
 
-func TestF22_7_AddSegmentPanicsWhenTheStreamLimitIsZero(t *testing.T) {
-	// `internal/parser/tcp_stream.go:42` indexes `r.order[0]` after a comparison that a
-	// limit of zero makes true on the first segment, and `r.order` holds nothing yet.
-	defer func() {
-		recovered := recover()
-		if recovered == nil {
-			t.Errorf("AddSegment reaches no panic, and the finding F-22-7 records one")
-			return
-		}
+func TestF22_7_AddSegmentEvictsNoStreamWhenTheOrderSliceIsEmpty(t *testing.T) {
+	// F-22-7 is closed. The eviction indexed `r.order[0]` after a comparison that a stream
+	// limit of 0 makes true on the first segment, and `r.order` held nothing yet. The
+	// eviction now reads the order slice only when it holds a key.
+	var recovered any
 
-		if !strings.Contains(strings.ToLower(auditParserText(recovered)), "index out of range") {
-			t.Errorf("AddSegment panics with %v, and the finding F-22-7 records an index out of range",
-				recovered)
-		}
-	}()
+	func() {
+		defer func() { recovered = recover() }()
 
-	reassembler := parser.NewTCPStreamReassembler(0, 4096)
-	reassembler.AddSegment("one", 1, []byte("hello"))
-}
+		reassembler := parser.NewTCPStreamReassembler(0, 4096)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+		reassembler.AddSegment("two", 1, []byte("world"))
 
-func TestF22_8_GetStreamPanicsWhenTheByteLimitIsBelowZero(t *testing.T) {
-	// `internal/parser/tcp_stream.go:93` slices `result[:r.MaxBytes]` after a comparison
-	// that a limit below zero makes true for every non-empty result.
-	defer func() {
-		recovered := recover()
-		if recovered == nil {
-			t.Errorf("GetStream reaches no panic, and the finding F-22-8 records one")
-			return
-		}
-
-		if !strings.Contains(strings.ToLower(auditParserText(recovered)), "slice bounds out of range") {
-			t.Errorf("GetStream panics with %v, and the finding F-22-8 records a slice bound out of range",
-				recovered)
+		if stream := reassembler.GetStream("two"); string(stream) != "world" {
+			t.Errorf("GetStream returns %q for the second key, and AddSegment stored %q",
+				stream, "world")
 		}
 	}()
 
-	reassembler := parser.NewTCPStreamReassembler(10, -1)
-	reassembler.AddSegment("one", 1, []byte("hello"))
-	reassembler.GetStream("one")
+	if recovered != nil {
+		t.Errorf("AddSegment panics with %v, and the closure of F-22-7 stores the segment",
+			recovered)
+	}
 }
 
-// auditParserText returns the text of a recovered panic value.
-func auditParserText(recovered any) string {
-	if err, ok := recovered.(error); ok {
-		return err.Error()
-	}
+func TestF22_8_GetStreamReturnsNoByteWhenTheByteLimitIsBelowZero(t *testing.T) {
+	// F-22-8 is closed. The slice expression `result[:r.MaxBytes]` panicked for every
+	// non-empty result when the byte limit was below 0. A negative maximum holds no byte,
+	// so the bound is now 0 and `GetStream` returns nil.
+	var recovered any
 
-	if text, ok := recovered.(string); ok {
-		return text
-	}
+	func() {
+		defer func() { recovered = recover() }()
 
-	return ""
+		reassembler := parser.NewTCPStreamReassembler(10, -1)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+
+		if stream := reassembler.GetStream("one"); stream != nil {
+			t.Errorf("GetStream returns %q, and a byte limit below 0 holds no byte", stream)
+		}
+	}()
+
+	if recovered != nil {
+		t.Errorf("GetStream panics with %v, and the closure of F-22-8 returns no byte",
+			recovered)
+	}
 }
 
 func TestF22_9_ParseCryptoFramesReturnsTheFragmentsItHoldsWithTheTruncationError(t *testing.T) {

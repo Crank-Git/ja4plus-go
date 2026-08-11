@@ -34,9 +34,20 @@ func NewJA4L() *JA4LFingerprinter {
 	}
 }
 
+// ensure fills the state map that the constructor fills.
+// A caller who writes `var f JA4LFingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4LFingerprinter) ensure() {
+	if f.connections == nil {
+		f.connections = make(map[string]*connState)
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4L fingerprints if a handshake
 // timing measurement can be computed. Supports both TCP and UDP/QUIC.
 func (f *JA4LFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	// Try TCP first
 	if parser.GetTCPLayer(packet) != nil {
 		return f.processTCP(packet)

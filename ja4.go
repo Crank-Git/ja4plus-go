@@ -28,8 +28,23 @@ func NewJA4() *JA4Fingerprinter {
 	}
 }
 
+// ensure fills the state maps that the constructor fills.
+// A caller who writes `var f JA4Fingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4Fingerprinter) ensure() {
+	if f.quicFragments == nil {
+		f.quicFragments = make(map[string][]parser.CryptoFragment)
+	}
+
+	if f.dcidToTuple == nil {
+		f.dcidToTuple = make(map[string]string)
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
 func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	var ch *parser.ClientHello
 	var srcPort, dstPort uint16
 
@@ -49,7 +64,12 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	// Try QUIC in UDP packets with multi-packet CRYPTO frame accumulation
 	if ch == nil {
 		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
-			udp := udpLayer.(*layers.UDP)
+			// A caller that supplies a custom decoder can register another concrete type
+			// under the UDP layer type. A fingerprinter returns a non-fatal error for it.
+			udp, ok := udpLayer.(*layers.UDP)
+			if !ok {
+				return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+			}
 			if len(udp.Payload) > 0 {
 				frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
 				if err != nil {

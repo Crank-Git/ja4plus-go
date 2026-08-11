@@ -22,12 +22,23 @@ func NewSyncProcessor() *SyncProcessor {
 	return &SyncProcessor{proc: NewProcessor()}
 }
 
+// ensure fills the Processor that the constructor fills.
+// A caller who writes `var p SyncProcessor` reaches a nil pointer, and a method call on
+// it dereferences that pointer. Every exported method calls this method under the mutex.
+func (p *SyncProcessor) ensure() {
+	if p.proc == nil {
+		p.proc = NewProcessor()
+	}
+}
+
 // ProcessPacket runs every fingerprinter on the packet and returns the results with any
 // non-fatal errors. It holds the mutex for the whole call, so a result never escapes
 // while another goroutine changes the fingerprinter state.
 func (p *SyncProcessor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, []error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	p.ensure()
+
 	return p.proc.ProcessPacket(packet)
 }
 
@@ -37,6 +48,8 @@ func (p *SyncProcessor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResu
 func (p *SyncProcessor) Reset() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	p.ensure()
+
 	p.proc.Reset()
 }
 
@@ -46,6 +59,8 @@ func (p *SyncProcessor) Reset() {
 func (p *SyncProcessor) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	p.ensure()
+
 	p.proc.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 }
 
@@ -57,5 +72,7 @@ func (p *SyncProcessor) CleanupConnection(srcIP string, srcPort uint16, dstIP st
 func (p *SyncProcessor) GetShardKey(packet gopacket.Packet) string {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	p.ensure()
+
 	return p.proc.GetShardKey(packet)
 }

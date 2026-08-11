@@ -37,8 +37,10 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 
 	stream, exists := r.streams[key]
 	if !exists {
-		// Evict oldest if at capacity
-		if len(r.streams) >= r.MaxStreams {
+		// Evict oldest if at capacity.
+		// A stream limit of 0 makes the comparison true before the order slice holds a
+		// key, so the eviction needs the second condition.
+		if len(r.streams) >= r.MaxStreams && len(r.order) > 0 {
 			oldest := r.order[0]
 			delete(r.streams, oldest)
 			r.order = r.order[1:]
@@ -76,6 +78,13 @@ func (r *TCPStreamReassembler) GetStream(key string) []byte {
 	copy(sorted, stream.segments)
 	sortSegments(sorted)
 
+	// A byte limit below 0 holds no byte, so the bound is 0 and not the negative value.
+	// A negative bound makes the slice expression below panic.
+	maxBytes := r.MaxBytes
+	if maxBytes < 0 {
+		maxBytes = 0
+	}
+
 	result := make([]byte, 0, 4096)
 	nextSeq := sorted[0].seq
 
@@ -89,8 +98,8 @@ func (r *TCPStreamReassembler) GetStream(key string) []byte {
 		} else {
 			break // gap
 		}
-		if len(result) > r.MaxBytes {
-			result = result[:r.MaxBytes]
+		if len(result) > maxBytes {
+			result = result[:maxBytes]
 			break
 		}
 	}

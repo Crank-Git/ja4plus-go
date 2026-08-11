@@ -82,7 +82,12 @@ func (f *JA4D6Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprin
 	if udpLayer == nil {
 		return nil, nil
 	}
-	udp := udpLayer.(*layers.UDP)
+	// A caller that supplies a custom decoder can register another concrete type under
+	// the UDP layer type. A fingerprinter returns a non-fatal error for it.
+	udp, ok := udpLayer.(*layers.UDP)
+	if !ok {
+		return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+	}
 
 	// DHCPv6 ports: 546 (client) and 547 (server)
 	if udp.SrcPort != 546 && udp.SrcPort != 547 && udp.DstPort != 546 && udp.DstPort != 547 {
@@ -93,7 +98,11 @@ func (f *JA4D6Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprin
 	if dhcpLayer == nil {
 		return nil, nil
 	}
-	dhcp := dhcpLayer.(*layers.DHCPv6)
+	// The DHCPv6 layer type carries the same risk as the UDP layer type above.
+	dhcp, ok := dhcpLayer.(*layers.DHCPv6)
+	if !ok {
+		return nil, fmt.Errorf("the DHCPv6 layer carries the type %T", dhcpLayer)
+	}
 
 	// Walk options recursively to collect type codes in presence order.
 	optionsInOrder := walkDHCPv6Options(dhcp.Options)

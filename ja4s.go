@@ -24,8 +24,19 @@ func NewJA4S() *JA4SFingerprinter {
 	}
 }
 
+// ensure fills the state map that the constructor fills.
+// A caller who writes `var f JA4SFingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4SFingerprinter) ensure() {
+	if f.quicDCIDs == nil {
+		f.quicDCIDs = make(map[string][]byte)
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4S fingerprint results.
 func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	var sh *parser.ServerHello
 	var srcPort, dstPort uint16
 
@@ -47,7 +58,12 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	// Try QUIC in UDP packets
 	if sh == nil {
 		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
-			udp := udpLayer.(*layers.UDP)
+			// A caller that supplies a custom decoder can register another concrete type
+			// under the UDP layer type. A fingerprinter returns a non-fatal error for it.
+			udp, ok := udpLayer.(*layers.UDP)
+			if !ok {
+				return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+			}
 			if len(udp.Payload) > 0 {
 				srcPort = uint16(udp.SrcPort)
 				dstPort = uint16(udp.DstPort)

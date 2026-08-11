@@ -56,8 +56,23 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 	}
 }
 
+// ensure fills the state map and the window size that the constructor fills.
+// A caller who writes `var f JA4SSHFingerprinter` reaches a nil map and a window of 0.
+// A write to a nil map panics, and a window of 0 fills on every packet.
+func (f *JA4SSHFingerprinter) ensure() {
+	if f.connections == nil {
+		f.connections = make(map[string]*sshConnState)
+	}
+
+	if f.packetCount <= 0 {
+		f.packetCount = defaultSSHWindow
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4SSH fingerprints when a window fills.
 func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil

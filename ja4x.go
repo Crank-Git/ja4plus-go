@@ -48,8 +48,27 @@ func NewJA4X() *JA4XFingerprinter {
 	}
 }
 
+// ensure fills the state maps that the constructor fills.
+// A caller who writes `var f JA4XFingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4XFingerprinter) ensure() {
+	if f.streams == nil {
+		f.streams = make(map[string][]byte)
+	}
+
+	if f.processedCerts == nil {
+		f.processedCerts = make(map[string]struct{})
+	}
+
+	if f.lastCleanup.IsZero() {
+		f.lastCleanup = time.Now()
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4X fingerprint results.
 func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
 		return nil, nil
