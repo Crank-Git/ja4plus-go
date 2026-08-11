@@ -12,8 +12,8 @@ import (
 // returned alongside any successful results.
 //
 // One Processor serves one goroutine. Every fingerprinter holds state that no lock
-// guards, so two goroutines that share one Processor write a data race. The race
-// detector reports that race, and the library detects it at no point.
+// guards. Two goroutines that share one Processor write a data race. The race detector
+// reports the race. The library does not detect it at run time.
 //
 // A caller who wants more than one goroutine takes one of two patterns.
 //
