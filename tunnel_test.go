@@ -140,11 +140,17 @@ func TestTheProcessorReadsAPacketThatNestsFourTunnelLayers(t *testing.T) {
 		t.Fatalf("the builder nests %d tunnel layers, and the test needs 4", depth)
 	}
 
-	_, errs := NewProcessor().ProcessPacket(packet)
+	results, errs := NewProcessor().ProcessPacket(packet)
+
+	// The innermost packet carries one TCP SYN, so JA4T produces one fingerprint from it.
+	// A count of zero states that the processor read no inner packet at the depth limit.
+	if len(results) == 0 {
+		t.Errorf("the processor produces no fingerprint at a depth of four, and FR-gaps-11 allows the depth")
+	}
 
 	for _, err := range errs {
-		if errors.Is(err, parser.ErrTunnelDepthExceeded) {
-			t.Errorf("the processor rejects a depth of four, and FR-gaps-11 allows it")
+		if errors.Is(err, parser.ErrTunnelDepthExceeded) || errors.Is(err, parser.ErrTunnelPayloadUnread) {
+			t.Errorf("the processor returns %v at a depth of four, and FR-gaps-11 allows the depth", err)
 		}
 	}
 }
