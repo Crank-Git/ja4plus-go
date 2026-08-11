@@ -38,8 +38,9 @@ var tlsTranscriptionImplementationRoots = []string{
 }
 
 // tlsTranscriptionCitationPattern matches one `file:line` citation. FR-reference-10 names
-// the implementation, the file and the line, in the form `python/ja4/ja4.py:120`.
-var tlsTranscriptionCitationPattern = regexp.MustCompile(`[A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+\.[A-Za-z]+:[0-9]+`)
+// the implementation, the file and the line, in the form `python/ja4/ja4.py:120`. The
+// first group holds the path, so a caller reads which implementation the citation reaches.
+var tlsTranscriptionCitationPattern = regexp.MustCompile(`([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+\.[A-Za-z]+):[0-9]+`)
 
 // readTLSTranscriptionPage returns the content of one transcription page.
 func readTLSTranscriptionPage(t *testing.T, path string) string {
@@ -114,26 +115,30 @@ func TestTLSTranscriptionPagesNumberTheRulesFromR1WithNoGap(t *testing.T) {
 }
 
 // FR-reference-10 — a claim about a source without a location is worthless. A rule that
-// names a reference implementation carries the file and the line.
+// names a reference implementation carries the file and the line of that same
+// implementation.
+//
+// The test matches each named implementation against its own citation. A rule that named
+// the Zeek package and cited only a Python line would otherwise pass, and its Zeek claim
+// would still carry no location.
 func TestTLSTranscriptionRulesThatNameAnImplementationCarryAFileAndALine(t *testing.T) {
 	for _, path := range tlsTranscriptionPagePaths {
 		page := readTLSTranscriptionPage(t, path)
 
 		for i, rule := range splitTLSTranscriptionRules(page) {
-			named := ""
-			for _, root := range tlsTranscriptionImplementationRoots {
-				if strings.Contains(rule, root) {
-					named = root
-					break
+			cited := map[string]bool{}
+			for _, match := range tlsTranscriptionCitationPattern.FindAllStringSubmatch(rule, -1) {
+				for _, root := range tlsTranscriptionImplementationRoots {
+					if strings.HasPrefix(match[1], root) {
+						cited[root] = true
+					}
 				}
 			}
 
-			if named == "" {
-				continue
-			}
-
-			if !tlsTranscriptionCitationPattern.MatchString(rule) {
-				t.Errorf("%s R%d names %s and carries no file:line citation, and FR-reference-10 names one", path, i+1, named)
+			for _, root := range tlsTranscriptionImplementationRoots {
+				if strings.Contains(rule, root) && !cited[root] {
+					t.Errorf("%s R%d names %s and carries no %s file:line citation, and FR-reference-10 names one", path, i+1, root, root)
+				}
 			}
 		}
 	}
