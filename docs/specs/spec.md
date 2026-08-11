@@ -406,7 +406,7 @@ requirement and holds the acceptance criteria.
 | Mapping file refresh | `db update` and `db info`. | No change. Already at parity. Keep a test that proves it. | 2 | — |
 | Remote lookup | One opt-in covers the local lookup and the remote call. | **Separate the local lookup from the remote lookup**, so the remote call needs its own opt-in. The port fixed the same shape in its Epic 7. `features/09-database-lookup.md` holds the work. | 2 | — |
 | `CloseOpenWindows` | No equivalent method. | Add it. The port shipped `close_open_windows` first, so rule 2 names the port's word and this project writes the Go form of it. | 2 | #214 |
-| The key-log interface | `types.go` exports `ErrNoSecret`, `KeyLog`, `ParseKeyLog`, `ReadKeyLogFromCapture`, `KeyLog.Secret`, `KeyLog.ClientRandoms`, `KeyLog.Len` and `DecryptQUICPacket`. | No change here. **This project shipped the interface first**, so rule 2 runs the other way and the port adopts these eight names. The port holds no key-log interface: a code search of `Crank-Git/ja4plus` for `keylog` returns no file. This row moves no fingerprint. | 2 | `Crank-Git/ja4plus`, "Adopt the key-log interface of ja4plus-go". The issue number is pending. |
+| The key-log interface | `types.go` exports `ErrNoSecret`, `KeyLog`, `ParseKeyLog`, `ReadKeyLogFromCapture`, `KeyLog.Secret`, `KeyLog.ClientRandoms`, `KeyLog.Len` and `DecryptQUICPacket`. | No change here. **This project shipped the interface first**, so rule 2 runs the other way and the port adopts these eight names. The port holds no key-log interface: a code search of `Crank-Git/ja4plus` for `keylog` returns no file. This row moves no fingerprint. | 2 | `Crank-Git/ja4plus#593` |
 
 #### License and coverage
 
