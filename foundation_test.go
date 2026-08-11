@@ -141,7 +141,7 @@ func TestMakefileConformanceTargetSelectsTheConformanceBuildTag(t *testing.T) {
 
 	// FR-conformance-11 skips with a message that names `make corpus`, and `go test`
 	// prints a skip message only with `-v`.
-	if !strings.Contains(recipe, "-v") {
+	if !strings.Contains(recipe, " -v ") {
 		t.Errorf("the conformance recipe does not print the skip message:\n%s", recipe)
 	}
 }
