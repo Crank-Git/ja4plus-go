@@ -175,7 +175,7 @@ No entity changes. The following files change.
 | `.github/workflows/ci.yml` | Gains the conformance job. |
 | `scripts/gen_expected.py` | Removed. Its role passes to the corpus. |
 | `testdata/http1-with-cookies.expected.json` | Removed. The corpus replaces it. |
-| `integration_test.go` | Changed to read the corpus, or removed. |
+| `integration_test.go` | Changed to read the corpus. Never removed: `loadPCAP` reads the two capture formats, and the conformance suite calls it. |
 
 ## Interfaces
 

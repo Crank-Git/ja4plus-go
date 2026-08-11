@@ -10,9 +10,9 @@
   "devBranch": "dev",
   "liveBranch": "master",
   "devIsDefault": false,
-  "concurrency": 2,
+  "concurrency": 3,
   "batchSize": 4,
-  "runLength": "epic-0-then-stop",
+  "runLength": "4-batches",
   "prGranularity": "batch",
   "prAuthority": "autonomous",
   "deployTarget": null,
@@ -35,5 +35,11 @@
     "commitIdentity": "Crank-Git <info@nocturnaltendenciesllc.com>",
     "steRule": ".claude/rules/ste.md",
     "rulingsAreMaintainerOnly": true
-  }
+  },
+  "epicOrder": [
+    11,
+    4,
+    3,
+    2
+  ]
 }

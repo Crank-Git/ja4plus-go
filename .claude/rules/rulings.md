@@ -47,9 +47,12 @@ Reproduce it exactly, in a code span or a block quote, and cite the location.
 4. **A Zeek baseline.** It is not a reference value for every method.
    `docs/specs/foxio/zeek.md` names each exception.
 
-**Three methods have no image at all: JA4LS, JA4TS and JA4TScan.** For JA4LS and JA4TS the
-implementations state every rule. For JA4TScan FoxIO publishes nothing at all, which is why
-`docs/specs/spec.md` `Non-goals` declines it.
+**Three methods reach no image of their own name: JA4LS, JA4TS and JA4TScan.** `JA4T.png`
+titles itself `JA4T/S: TCP Fingerprint`, so it specifies the schema of JA4TS. The image
+states no separate server rule, so the implementations state the packet rule for JA4TS.
+For JA4LS the implementations state every rule, because `JA4L.png` states no server rule.
+For JA4TScan FoxIO publishes nothing at all, which is why `docs/specs/spec.md` `Non-goals`
+declines it.
 
 ## Where a ruling is recorded
 
