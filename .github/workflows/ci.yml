@@ -33,6 +33,100 @@ jobs:
       - name: Verify CLI
         run: ./bin/ja4plus --version
 
+  # FR-conformance-34 runs the conformance suite on every pull request this workflow
+  # covers. The maintainer ruled on 2026-08-11 that the job reports and does not block.
+  # #33 measured 302 matches and 1858 deviations against an empty register, so a blocking
+  # job would be red on every pull request until Epic 5 closes the list. A permanently red
+  # job teaches every reader to ignore it. Epic 5 flips this job to blocking.
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      # The cache key and the job summary both name the pinned commit, so read it once.
+      - name: Read the corpus pin
+        id: pin
+        run: echo "commit=$(tr -d '[:space:]' < testdata/foxio.pin)" >> "$GITHUB_OUTPUT"
+
+      # FR-conformance-37 keys the cache by the pinned commit. A pin move misses the cache,
+      # so the next run fetches the new corpus.
+      - name: Restore the corpus
+        uses: actions/cache@v4
+        with:
+          path: testdata/foxio
+          key: foxio-corpus-${{ steps.pin.outputs.commit }}
+
+      # `make corpus` reads the FoxIO repository over the network, and it downloads nothing
+      # when the cache restored the corpus. The default job bound is 360 minutes, so this
+      # step carries its own bound and a stalled download cannot hold the runner.
+      - name: Fetch the corpus
+        timeout-minutes: 10
+        run: make corpus
+
+      # FR-conformance-36 fails the job when the corpus is absent. #33 makes the suite skip
+      # in that case, and a skipped suite that reports success hides every deviation.
+      - name: Verify the corpus is present
+        run: |
+          captures=$(find testdata/foxio/pcap -type f | wc -l | tr -d '[:space:]')
+          if [ "$captures" -eq 0 ]; then
+            echo "testdata/foxio/pcap holds no capture, so the conformance suite skips" >&2
+            exit 1
+          fi
+          echo "testdata/foxio/pcap holds $captures captures."
+
+      # The suite exits 2 on a deviation, and this job holds that status back. The status
+      # is not the gate today. The `test` job gates the unit tests, so a swallowed status
+      # here hides no unit failure.
+      - name: Run the conformance suite
+        run: |
+          set -o pipefail
+          status=0
+          make conformance 2>&1 | tee conformance.log || status=$?
+          echo "the conformance suite exited with status $status"
+
+      # The suite prints the skip message when it finds no corpus. The step above proves
+      # the corpus is present, so this check catches a skip the directory check cannot see.
+      - name: Fail when the conformance suite skips
+        run: |
+          if grep -q 'to fetch the FoxIO corpus' conformance.log; then
+            echo "the conformance suite skipped, and FR-conformance-36 fails the job" >&2
+            exit 1
+          fi
+
+      # A reader of the pull request reaches the job summary from the checks tab.
+      #
+      # A pull request from a fork controls `testdata/foxio.pin`, so the pin is untrusted
+      # input. The step reads it through an environment variable, because an expression
+      # that expands into the script would run the shell text the pin holds.
+      - name: Publish the conformance counts
+        env:
+          PIN_COMMIT: ${{ steps.pin.outputs.commit }}
+        run: |
+          {
+            echo "## Conformance"
+            echo
+            echo "The corpus is at FoxIO commit \`$PIN_COMMIT\`."
+            echo
+            grep -hE 'the run read [0-9]+ captures|the run reports [0-9]+ matches' conformance.log |
+              sed 's/^ *[^ ]*: /- /' ||
+              echo "- The suite printed no summary line."
+            echo
+            echo "This job reports the counts. It does not fail on a deviation, and Epic 5 makes it blocking."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # The log names every deviation, and Epic 5 reads it to size the work.
+      - name: Upload the conformance log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-log
+          path: conformance.log
+          if-no-files-found: error
+
   lint:
     runs-on: ubuntu-latest
     steps:
