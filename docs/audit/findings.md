@@ -226,6 +226,31 @@ This table belongs to issue #24.
 <!-- files:24:begin -->
 | File | Audit date |
 |---|---|
+| `doc.go` | 2026-08-11 |
+| `ja4.go` | 2026-08-11 |
+| `ja4d.go` | 2026-08-11 |
+| `ja4d6.go` | 2026-08-11 |
+| `ja4h.go` | 2026-08-11 |
+| `ja4l.go` | 2026-08-11 |
+| `ja4s.go` | 2026-08-11 |
+| `ja4ssh.go` | 2026-08-11 |
+| `ja4t.go` | 2026-08-11 |
+| `ja4ts.go` | 2026-08-11 |
+| `ja4x.go` | 2026-08-11 |
+| `lookup.go` | 2026-08-11 |
+| `processor.go` | 2026-08-11 |
+| `sync_processor.go` | 2026-08-11 |
+| `types.go` | 2026-08-11 |
+| `internal/parser/grease.go` | 2026-08-11 |
+| `internal/parser/hash.go` | 2026-08-11 |
+| `internal/parser/http.go` | 2026-08-11 |
+| `internal/parser/packet.go` | 2026-08-11 |
+| `internal/parser/quic.go` | 2026-08-11 |
+| `internal/parser/ssh.go` | 2026-08-11 |
+| `internal/parser/tcp_stream.go` | 2026-08-11 |
+| `internal/parser/testhelpers.go` | 2026-08-11 |
+| `internal/parser/tls.go` | 2026-08-11 |
+| `internal/parser/x509_utils.go` | 2026-08-11 |
 <!-- files:24:end -->
 
 ### The files of issue #25
@@ -268,10 +293,55 @@ This table belongs to issue #24. It holds a finding of a contract the library st
 panic, a write to standard output or to standard error, a swallowed error, an empty-input
 hash or a sort.
 
+`audit_panic_test.go` reproduces every `open` row. A test that asserts the defective
+result carries a `TODO(#25)` comment, because the closure reverses the assertion.
+
 <!-- findings:24:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
 |---|---|---|---|---|---|---|---|
+| F-24-1 | `ja4.go` | 52 | critical | open | A packet whose UDP layer type carries another concrete type makes `NewJA4().ProcessPacket` panic with an interface conversion. |  |  |
+| F-24-2 | `ja4d.go` | 74 | critical | open | A packet whose UDP layer type carries another concrete type makes `NewJA4D().ProcessPacket` panic with an interface conversion. |  |  |
+| F-24-3 | `ja4d.go` | 85 | critical | open | A packet that holds a UDP header on port 68 and a DHCPv4 layer of another concrete type makes `NewJA4D().ProcessPacket` panic. |  |  |
+| F-24-4 | `ja4h.go` | 73 | critical | open | An HTTP request packet makes a zero-value `JA4HFingerprinter` panic with a nil pointer dereference of the reassembler field. |  |  |
+| F-24-5 | `ja4l.go` | 187 | critical | open | A TCP packet makes a zero-value `JA4LFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
+| F-24-6 | `ja4x.go` | 80 | critical | open | A TCP packet that holds a payload makes a zero-value `JA4XFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
+| F-24-7 | `ja4ssh.go` | 134 | critical | open | A TCP payload that opens with `SSH-` makes a zero-value `JA4SSHFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
+| F-24-8 | `ja4.go` | 115 | critical | open | A call of `Reset` on a zero-value `Processor` panics with a nil pointer dereference of the JA4 fingerprinter field. |  |  |
+| F-24-9 | `processor.go` | 62 | critical | open | A TCP packet makes `ProcessPacket` of a zero-value `SyncProcessor` panic with a nil pointer dereference of the processor field. |  |  |
+| F-24-10 | `ja4.go` | 141 | major | open | A TLS record whose handshake length exceeds the record makes `ComputeJA4` return the empty string, which also names a packet with no ClientHello. |  |  |
+| F-24-11 | `ja4s.go` | 61 | major | unconfirmed | A QUIC Initial datagram that the parser cannot read makes JA4S return no error, and `ja4.go:56` returns an error on the same failure. |  | No crafted datagram of `audit_panic_test.go` makes `parser.ParseQUICInitial` return an error, so the test skips. |
+| F-24-12 | `ja4x.go` | 271 | major | open | The DER buffer `30 03 02 01 00` makes `ComputeJA4XFromDER` return the empty string, which also names a buffer that holds no certificate. |  |  |
+| F-24-13 | `lookup.go` | 55 | major | unconfirmed | A cache file whose first row is not valid CSV leaves the table empty, so `LookupFingerprint` returns no result for every fingerprint. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
+| F-24-14 | `lookup.go` | 72 | major | unconfirmed | A cache row that holds an unescaped double quote makes the loader skip it, so `LookupFingerprint` returns no result for that row. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
+| F-24-15 | `lookup.go` | 43 | minor | unconfirmed | A cache file that the process cannot read makes the loader use the embedded table, and `GetDatabaseInfo` reports the source as embedded. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
+| F-24-16 | `internal/parser/quic.go` | 637 | critical | open | Thirteen CRYPTO fragments of which two share the offset 11 reassemble to the bytes of the first fragment, and the wire order names the second. |  |  |
 <!-- findings:24:end -->
+
+#### What issue #24 checked and found clean
+
+**FR-audit-19 reaches no finding.** No file of the repository root and no file of
+`internal/parser/` writes to standard output or to standard error.
+`TestTheLibrarySourceHoldsNoWriteToStandardOutputOrStandardError` scans the shipped
+source, and `TestTheLibraryWritesNothingWhenItReadsACraftedFrame` reads the two file
+descriptors while the library reads every crafted frame of the table. Every write sits in
+`cmd/ja4plus/main.go`, which `CLAUDE.md` names as the owner of all output.
+
+**FR-audit-21 reaches no finding.** `internal/parser/hash.go:8` holds the literal
+`000000000000`, and every method that hashes routes through
+`internal/parser/hash.go:13`. `docs/specs/foxio/zeek.md:48` records the reading of
+`zeek/utils/common.zeek:63`, and `docs/specs/foxio/JA4.md` R24 and R30,
+`docs/specs/foxio/JA4S.md` R23 and `docs/specs/foxio/JA4H.md` R27 each name the same
+value. Issue #57 of Epic 8b holds the decision for the JA4X empty list.
+
+**FR-audit-22 reaches one finding, and F-24-16 holds it.** Five other sorts use
+`sort.Slice`, which is not stable, and each one changes no result. `ja4.go:163`, `:176`,
+`:243` and `:260` sort a `[]uint16` by the value itself, and `ja4h.go:248` sorts a
+`[]string` by the string itself. Two elements that those keys rank equal are the same
+value, so their order changes no output. `ja4h.go:261` sorts cookie pairs by the name, and
+`parser.HTTPRequest.Cookies` is a map, so the key separates every element.
+
+**The thirteen `nilerr` sites of `internal/parser/quic.go` belong to issue #22.** The
+maintainer recorded the port evidence on that issue. Issue #24 records none of them.
 
 ### The findings of issue #25
 
