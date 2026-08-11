@@ -18,8 +18,8 @@ source states, and it decides no value.** `.claude/rules/rulings.md` states who 
 **This page reproduces no image.** Follow the link above to read it.
 
 JA4 is the one method that holds a complete text specification at the pinned commit. The
-source ranking puts the image first and the text second, so a rule below cites the image
-where the image states it, and cites `technical_details/JA4.md` where the image is silent.
+source ranking puts the image first and the text second. A rule below cites the image
+where the image states it. It cites `technical_details/JA4.md` where the image is silent.
 
 ## What the image states
 
@@ -181,7 +181,7 @@ A reading is a conclusion about a source. None of these carries a rule.
 - **Reading 1** — **The example value in the image mixes two renderings.** The image
   labels part b `sorted`, and its part b is `acb858a92679`. The FoxIO vector
   `python/test/testdata/browsers-x509.pcapng.json:13` gives the sorted value
-  `t13d1516h2_8daaf6152771_e5627efa2ab1` for the same client, and
+  `t13d1516h2_8daaf6152771_e5627efa2ab1` for the same client.
   `python/test/testdata/browsers-x509.pcapng.json:15` gives `acb858a92679` as the part b
   of `JA4_o`, which is the original-order rendering. `technical_details/JA4.md:194` and
   `technical_details/JA4.md:219` state the same two values. **The rules the image states

@@ -115,7 +115,7 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
   `python/ja4.py:186` corroborates.
 
 - **R19** — The server extension list keeps the order of the packet, and no sort applies
-  to it. The image states `in the order they appear`, and `rust/ja4/src/tls.rs:461`
+  to it. The image states `in the order they appear`. `rust/ja4/src/tls.rs:461`
   corroborates with the comment `Note that we are preserving the original order of
   server's TLS extensions.`.
 
