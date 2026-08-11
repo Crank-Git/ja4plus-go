@@ -101,6 +101,9 @@ across both repositories, because a reader moves between them.
 | fingerprint | noun | The output string of one method for one connection. | hash, signature, ID |
 | processor | noun | The `Processor` type, which runs every fingerprinter over one packet. | aggregator, pipeline, dispatcher |
 | capture | noun | A packet capture file in `pcap` or `pcapng` format. | trace, dump, pcap file |
+| key log | noun | The list of TLS secrets of one or more connections, in the NSS key log format that `draft-ietf-tls-keylogfile` specifies. | keylog file, secrets file, SSLKEYLOGFILE |
+| secret | noun | One TLS traffic secret of one connection. The library derives the QUIC packet protection keys from it. | key, key material |
+| decryption secrets block | noun | The pcapng block that carries a key log inside a capture. The IETF pcapng draft states its block type. | DSB, secrets block |
 | vector | noun | One FoxIO capture plus the expected-output file that FoxIO publishes for it. | fixture, golden file, sample |
 | corpus | noun | The whole set of captures and vectors that the project tests against. | dataset, suite, test data |
 | conformance | noun | The property that the library output equals the FoxIO vector exactly. | compliance, correctness, accuracy |

@@ -9,6 +9,10 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `KeyLog`, `ParseKeyLog`, `ReadKeyLogFromCapture` and `DecryptQUICPacket`, which read a
+  pcapng Decryption Secrets Block and decrypt one QUIC packet with a TLS secret. The
+  change moves no fingerprint. `docs/specs/features/05-conformance-gaps.md` FR-gaps-15
+  through FR-gaps-18 state the requirements.
 - The `corpus`, `conformance`, `cover` and `fuzz` make targets.
 - The FoxIO corpus pin in `testdata/foxio.pin`, and `scripts/fetch-corpus.sh`, which
   fetches the corpus at that commit. The corpus is FoxIO-licensed material, so the
