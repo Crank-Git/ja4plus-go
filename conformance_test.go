@@ -179,9 +179,9 @@ func conformanceReadStreamVector(t *testing.T, path string) []conformanceStreamE
 // conformanceExpectedFromPacketVector returns the value of every method the per-packet
 // vector holds, and the count of each field the suite does not map.
 //
-// A frame carries more than one value for a method when the packet carries more than one
-// certificate, so the method name carries the occurrence number. The port writes the same
-// form, for example `gre-erspan-vxlan.pcap/0:65174/JA4T.1`.
+// A packet that carries more than one certificate produces more than one value for a
+// method. The method name therefore carries the occurrence number. The port writes the
+// same form, for example `gre-erspan-vxlan.pcap/0:65174/JA4T.1`.
 func conformanceExpectedFromPacketVector(
 	t *testing.T,
 	capture string,
@@ -298,11 +298,10 @@ type conformanceMethodValue struct {
 //
 // `ja4.go:96` and `ja4.go:97` set the two raw fields, and no other fingerprinter sets
 // either. The per-packet vector set names no field for JA4, so the two raw branches report
-// nothing at the pinned commit. They hold the comparison that the suite needs when a
-// fingerprinter starts to fill a raw field, and without them the suite would report the
-// new value as absent for ever.
+// nothing at the pinned commit. The two branches hold the comparison that a filled raw
+// field needs. Without them the suite reports every new raw value as absent for ever.
 func conformanceValuesOfResult(result FingerprintResult) []conformanceMethodValue {
-	method, held := conformanceMethodOfResultType(result)
+	method, fingerprint, held := conformanceMethodOfResultType(result)
 	if !held {
 		return nil
 	}
@@ -310,7 +309,7 @@ func conformanceValuesOfResult(result FingerprintResult) []conformanceMethodValu
 	var values []conformanceMethodValue
 
 	for _, value := range []conformanceMethodValue{
-		{Method: method, Value: result.Fingerprint},
+		{Method: method, Value: fingerprint},
 		{Method: method + "_r", Value: result.Raw},
 		{Method: method + "_ro", Value: result.RawOriginalOrder},
 	} {
@@ -322,26 +321,30 @@ func conformanceValuesOfResult(result FingerprintResult) []conformanceMethodValu
 	return values
 }
 
-// conformanceMethodOfResultType returns the method name that the result carries.
-// It reports false when the per-packet vector set names no field for the method.
+// conformanceMethodOfResultType returns the method name and the value that the result
+// carries. It reports false when the per-packet vector set names no field for the method.
 //
-// JA4L writes both JA4L and JA4LS, and it reports the same type for the two. The label of
-// the fingerprint names which one, so this function reads it. That is a read of the
-// library output form, and it changes no value.
-func conformanceMethodOfResultType(result FingerprintResult) (string, bool) {
+// JA4L writes both JA4L and JA4LS, and it reports the type `ja4l` for the two. The label
+// of the fingerprint names which one, so this function reads the label and returns the
+// value that follows it. `ja4l.go:194` writes the form `JA4L-C=<latency>_<ttl>`, and
+// `testdata/foxio/wireshark/https-connect.pcap.json` holds `"ja4.ja4l": ["45_64_66"]`,
+// which carries the value alone. A comparison that kept the label would never match.
+//
+// The split reads the library output form, and it changes no character of the value.
+func conformanceMethodOfResultType(result FingerprintResult) (string, string, bool) {
 	if result.Type == "ja4l" {
-		label, _, held := strings.Cut(result.Fingerprint, "=")
+		label, value, held := strings.Cut(result.Fingerprint, "=")
 		if !held {
-			return "", false
+			return "", "", false
 		}
 
 		switch label {
 		case "JA4L-C":
-			return "JA4L", true
+			return "JA4L", value, true
 		case "JA4L-S":
-			return "JA4LS", true
+			return "JA4LS", value, true
 		default:
-			return "", false
+			return "", "", false
 		}
 	}
 
@@ -359,7 +362,7 @@ func conformanceMethodOfResultType(result FingerprintResult) (string, bool) {
 
 	name, held := names[result.Type]
 
-	return name, held
+	return name, result.Fingerprint, held
 }
 
 // conformanceCoveredMethods returns the method name of every key the expected map holds.
