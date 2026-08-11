@@ -323,21 +323,21 @@ func TestJA4SSH_GetHASSHFingerprints(t *testing.T) {
 	// Build a synthetic KEXINIT payload as an SSH binary packet.
 	// Format: 4-byte packet_length | 1-byte padding_length | 1-byte msg_type(20) | 16-byte cookie | 10 name-lists
 	nameListValues := []string{
-		"curve25519-sha256",  // kex algorithms
-		"ssh-ed25519",        // server host key algorithms
-		"aes128-ctr",         // encryption c2s
-		"aes128-ctr",         // encryption s2c
-		"hmac-sha2-256",      // mac c2s
-		"hmac-sha2-256",      // mac s2c
-		"none",               // compression c2s
-		"none",               // compression s2c
-		"",                   // languages c2s
-		"",                   // languages s2c
+		"curve25519-sha256", // kex algorithms
+		"ssh-ed25519",       // server host key algorithms
+		"aes128-ctr",        // encryption c2s
+		"aes128-ctr",        // encryption s2c
+		"hmac-sha2-256",     // mac c2s
+		"hmac-sha2-256",     // mac s2c
+		"none",              // compression c2s
+		"none",              // compression s2c
+		"",                  // languages c2s
+		"",                  // languages s2c
 	}
 
 	// Build the KEXINIT message body: msg_type + cookie + name-lists
 	var kexBody []byte
-	kexBody = append(kexBody, 20) // msg_type = SSH_MSG_KEXINIT
+	kexBody = append(kexBody, 20)                  // msg_type = SSH_MSG_KEXINIT
 	kexBody = append(kexBody, make([]byte, 16)...) // cookie (zeros)
 	for _, nl := range nameListValues {
 		nlLen := make([]byte, 4)

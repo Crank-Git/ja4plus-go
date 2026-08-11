@@ -10,7 +10,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: ['1.22', '1.23', '1.24']
+        go-version: ['1.24']
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
@@ -42,7 +42,9 @@ jobs:
         with:
           go-version: '1.24'
 
+      # The pin holds the linter result steady. A linter release must never fail a pull
+      # request that changes no code. Move this version and `.golangci.yml` together.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: latest
+          version: v2.12.2

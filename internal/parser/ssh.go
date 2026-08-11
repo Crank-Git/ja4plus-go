@@ -101,14 +101,14 @@ func ParseSSHPacket(payload []byte) *SSHPacketInfo {
 // encryption_c2s, encryption_s2c, mac_c2s, mac_s2c,
 // compression_c2s, compression_s2c, languages_c2s, languages_s2c.
 type KEXINITInfo struct {
-	KexAlgorithms          string // index 0
+	KexAlgorithms           string // index 0
 	ServerHostKeyAlgorithms string // index 1
-	EncryptionC2S          string // index 2
-	EncryptionS2C          string // index 3
-	MACC2S                 string // index 4
-	MACS2C                 string // index 5
-	CompressionC2S         string // index 6
-	CompressionS2C         string // index 7
+	EncryptionC2S           string // index 2
+	EncryptionS2C           string // index 3
+	MACC2S                  string // index 4
+	MACS2C                  string // index 5
+	CompressionC2S          string // index 6
+	CompressionS2C          string // index 7
 }
 
 // ParseKEXINIT parses algorithm name-lists from an SSH KEXINIT message.

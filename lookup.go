@@ -2,8 +2,8 @@ package ja4plus
 
 import (
 	"context"
-	"encoding/csv"
 	_ "embed"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,7 +38,7 @@ func loadDB() map[string]*LookupResult {
 		lookupDB = make(map[string]*LookupResult)
 
 		// Prefer the cache file if it exists and is non-empty.
-		var data []byte = mappingCSV
+		data := mappingCSV
 		if cp, err := CachedDatabasePath(); err == nil {
 			if b, rerr := os.ReadFile(cp); rerr == nil && len(b) > 0 {
 				data = b
@@ -166,7 +166,7 @@ func LookupFingerprintRemote(ctx context.Context, cfg *RemoteLookupConfig, finge
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil

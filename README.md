@@ -27,6 +27,8 @@ QUIC Initial packets (RFC 9001/9369) are automatically decrypted to extract TLS 
 
 ## Installation
 
+The module requires Go 1.24 or later.
+
 ```bash
 go get github.com/Crank-Git/ja4plus-go
 ```
