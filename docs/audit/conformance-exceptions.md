@@ -11,10 +11,10 @@ or this file records why the closure is not possible.
 the maintainer alone. An engineer records the reading and the evidence, opens an issue,
 and stops. An engineer never writes an acceptance.
 
-`conformance_exceptions_test.go` holds the shape of this file. A row that omits a column
-fails that test, so read `## The fields of an entry` before you add a row.
+`conformance_exceptions_test.go` holds the shape of this file. An entry that omits a
+column fails that test, so read `## The fields of an entry` before you add an entry.
 
-**Never write a placeholder row.** An entry that names no person and no date fails the
+**Never write a placeholder entry.** An entry that names no person and no date fails the
 test, and it hides a deviation that the release gate must see. FR-release-44 of
 `docs/specs/features/10-release.md` reads this file before the release.
 
@@ -48,15 +48,15 @@ The record table holds these five columns, in this order.
 | `Accepted by` | The name of the maintainer who accepted the entry. |
 | `Date` | The acceptance date, written `YYYY-MM-DD`. |
 
-**No column is empty, and no column states nothing.** The reader declines the values
-`TBD`, `TODO`, `pending`, `unknown`, `none`, `n/a` and `the maintainer`. The role names no
-person, and a reader who cannot name the acceptor cannot reverse the ruling.
+**No column is empty, and no column states nothing.** The test declines the values `TBD`,
+`TODO`, `pending`, `unknown`, `none`, `n/a` and `the maintainer`. The role names no person.
+A later maintainer cannot reverse a ruling that names no person.
 
 **A quotation is verbatim.** `.claude/rules/ste.md` bars a reworded quotation, because a
 reworded quotation is no longer evidence. Reproduce a FoxIO value, an error message and a
 source sentence exactly, in a code span.
 
-**A cell holds no `|` character.** The reader splits a row on that character.
+**A cell holds no `|` character.** The test splits a table line on that character.
 
 ## The record
 
@@ -77,10 +77,10 @@ one.
 2. The engineer establishes that the closure is not possible, and records the evidence.
 3. The engineer opens an issue that states the question and every candidate answer.
 4. The maintainer rules on the issue.
-5. The maintainer adds the row, with their name and the date.
+5. The maintainer adds the entry, with their name and the date.
 
-**Step 5 belongs to the maintainer.** A row that an engineer writes records no acceptance,
-whatever the `Accepted by` column holds.
+**Step 5 belongs to the maintainer.** An entry that an engineer writes records no
+acceptance, whatever the `Accepted by` column holds.
 
 ## To close a deviation
 

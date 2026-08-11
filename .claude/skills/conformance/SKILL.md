@@ -79,8 +79,11 @@ rule. Every closure follows all three.
    behaviour change under `v1.0.0`.
 6. **Run the whole suite.** The deviation count falls, and no new deviation appears.
 7. **State the measurement in the pull request.** `.claude/rules/parity.md` names four
-   numbers: how many values moved, on which captures, the conformance count before and
-   after, and the register key count before and after.
+   numbers.
+   1. How many values moved.
+   2. On which captures.
+   3. The conformance count before and after.
+   4. The register key count before and after.
 
 **Every deviation reaches one of three ends.** FR-gaps-1 allows no fourth.
 

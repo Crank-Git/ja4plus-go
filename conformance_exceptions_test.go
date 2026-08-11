@@ -45,8 +45,8 @@ var exceptionCaptureSuffixes = []string{".pcap", ".pcapng", ".cap"}
 var exceptionDatePattern = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}$`)
 
 // exceptionPlaceholders names every value that states nothing. FR-gaps-6 requires the
-// maintainer's own name, and the word `maintainer` names no person. A reader who cannot
-// tell who accepted an entry cannot reverse the ruling.
+// maintainer's own name, and the word `maintainer` names no person. A later maintainer
+// cannot reverse a ruling that names no person.
 var exceptionPlaceholders = []string{
 	"the maintainer",
 	"maintainer",
@@ -101,8 +101,12 @@ func parseExceptionRecord(block string) ([]exceptionEntry, error) {
 }
 
 // readExceptionRow returns the entry that the cells describe.
-// It returns an error when a cell is empty, when a cell states nothing, when the key
-// names no capture file, or when the date is not a calendar date.
+// It returns an error in four cases.
+//
+//   - A cell is empty.
+//   - A cell holds a value that states nothing.
+//   - The key names no capture file.
+//   - The date is no calendar date.
 func readExceptionRow(cells []string) (exceptionEntry, error) {
 	entry := exceptionEntry{
 		Key:        exceptionCellValue(cells[0]),
@@ -260,14 +264,15 @@ func TestTheExceptionsRecordParsesAndEveryEntryHoldsEveryColumn(t *testing.T) {
 }
 
 func TestEveryExceptionNamesTheMaintainerAndADate(t *testing.T) {
-	// The reader already declines an entry that names no maintainer and an entry that
-	// carries no date, so this loop repeats those checks over the tracked page. The
-	// repeat is deliberate: FR-gaps-6 names a test of its own, and a reader who moves the
-	// form check out of the reader still has one.
+	// The reader already declines an entry that names no maintainer. It already declines
+	// an entry that carries no date. This loop repeats both checks over the tracked page.
+	//
+	// The repeat is deliberate. FR-gaps-6 names a test of its own, so an engineer who
+	// moves the form check out of the reader still holds one.
 	// `TestTheExceptionsReaderRejectsAMalformedEntry` holds the cases that prove the check.
 	for _, entry := range readExceptionRecord(t) {
 		if entry.AcceptedBy == "" || slices.Contains(exceptionPlaceholders, strings.ToLower(entry.AcceptedBy)) {
-			t.Errorf("entry %q names %q as the acceptor, and FR-gaps-6 requires the maintainer's name",
+			t.Errorf("entry %q holds %q under `Accepted by`, and FR-gaps-6 requires the maintainer's name",
 				entry.Key, entry.AcceptedBy)
 		}
 
@@ -308,7 +313,7 @@ func TestTheExceptionsReaderAcceptsAWellFormedEntry(t *testing.T) {
 	}
 
 	if entries[0].AcceptedBy != "Crank-Git" {
-		t.Errorf("entry 0 names %q as the acceptor, and the fixture names `Crank-Git`", entries[0].AcceptedBy)
+		t.Errorf("entry 0 holds %q under `Accepted by`, and the fixture holds `Crank-Git`", entries[0].AcceptedBy)
 	}
 }
 
@@ -339,9 +344,9 @@ func TestTheExceptionsReaderRejectsAMalformedEntry(t *testing.T) {
 		{"the header names another column", "\n| Key | Reason |\n|---|---|\n"},
 		{"the row holds too few cells", "| " + strings.Join(exceptionColumns, " | ") +
 			" |\n|---|---|---|---|---|\n| `a.pcap` | a reason |\n"},
-		{"the entry names no acceptor", withColumn("Accepted by", "")},
+		{"the entry names no maintainer", withColumn("Accepted by", "")},
 		{"the entry names the maintainer by role", withColumn("Accepted by", "the maintainer")},
-		{"the entry names the acceptor as pending", withColumn("Accepted by", "TBD")},
+		{"the entry names the maintainer as pending", withColumn("Accepted by", "TBD")},
 		{"the entry carries no date", withColumn("Date", "")},
 		{"the entry carries a date in another form", withColumn("Date", "11 August 2026")},
 		{"the entry carries no calendar date", withColumn("Date", "2026-13-40")},
