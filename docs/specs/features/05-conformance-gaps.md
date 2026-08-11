@@ -45,8 +45,8 @@ the deviation list exists, not before.
 - **FR-gaps-4** — The FoxIO reference decides every disputed result. A library test that
   disagrees with the reference is wrong.
 - **FR-gaps-5** — A deviation that cannot be closed records the reason, the evidence and
-  the maintainer's acceptance in `docs/audit/conformance-exceptions.md`.
-- **FR-gaps-6** — `docs/audit/conformance-exceptions.md` holds no entry that the
+  the maintainer's acceptance in `docs/audit/conformance-exclusions.md`.
+- **FR-gaps-6** — `docs/audit/conformance-exclusions.md` holds no entry that the
   maintainer has not accepted by name and by date.
 
 ### Tunnel decapsulation
@@ -85,7 +85,7 @@ the deviation list exists, not before.
 
 - **FR-gaps-19** — The suite records `dtls-udp.notest.cap` as `not applicable` and names
   the FoxIO `notest` marker as the reason.
-- **FR-gaps-20** — `docs/audit/conformance-exceptions.md` records that FoxIO excludes
+- **FR-gaps-20** — `docs/audit/conformance-exclusions.md` records that FoxIO excludes
   this capture from their own suite.
 
 ### QUIC reassembly
@@ -108,11 +108,11 @@ the deviation list exists, not before.
 5. The test passes.
 6. Run `make conformance`. The deviation count falls by one and no new deviation appears.
 
-### An engineer records an exception
+### An engineer records an exclusion
 
 1. Read the deviation row.
 2. Establish that the closure is not possible, and record the evidence.
-3. Add an entry to `docs/audit/conformance-exceptions.md` with the reason and the
+3. Add an entry to `docs/audit/conformance-exclusions.md` with the reason and the
    evidence.
 4. Ask the maintainer to accept the entry.
 5. The maintainer records their name and the date in the entry.
@@ -145,7 +145,7 @@ No entity changes. The following files change.
 | `internal/parser/quic.go` | Gains multi-packet reassembly and the fragment bound. |
 | `internal/parser/secrets.go` | New. Holds the key-log reader. |
 | `capture.go` | New or changed. Reads a Decryption Secrets Block. |
-| `docs/audit/conformance-exceptions.md` | New. |
+| `docs/audit/conformance-exclusions.md` | New. |
 | `CHANGELOG.md` | One entry for each changed fingerprint. |
 
 ## Interfaces
@@ -186,14 +186,14 @@ reader or reads the block directly.
 - [ ] `docs/audit/conformance.md` records `match` for `tcpdump-geneve.pcap`.
 - [ ] `docs/audit/conformance.md` records `match` for
       `chrome-cloudflare-quic-with-secrets.pcapng`, or
-      `docs/audit/conformance-exceptions.md` records an accepted exception for it.
+      `docs/audit/conformance-exclusions.md` records an accepted exclusion for it.
 - [ ] `docs/audit/conformance.md` records `match` for
       `quic-with-several-tls-frames.pcapng`.
 - [ ] `docs/audit/conformance.md` records `not applicable` for `dtls-udp.notest.cap`, and
       names the `notest` marker.
 - [ ] A test packet with five nested encapsulation layers produces a non-fatal error and
       no panic.
-- [ ] Every entry in `docs/audit/conformance-exceptions.md` holds the maintainer's name
+- [ ] Every entry in `docs/audit/conformance-exclusions.md` holds the maintainer's name
       and a date.
 - [ ] `go test -race ./...` passes.
 - [ ] `CHANGELOG.md` records every changed fingerprint.

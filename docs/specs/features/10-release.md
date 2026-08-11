@@ -126,7 +126,7 @@ file that did not exist.
 - **FR-release-43** — The release does not proceed until `make conformance` reports zero
   deviations.
 - **FR-release-44** — The release does not proceed until every entry in
-  `docs/audit/conformance-exceptions.md` holds the maintainer's acceptance.
+  `docs/audit/conformance-exclusions.md` holds the maintainer's acceptance.
 - **FR-release-45** — The release does not proceed until `go test -race ./...` passes.
 - **FR-release-46** — The release does not proceed until `govulncheck ./...` reports
   nothing.

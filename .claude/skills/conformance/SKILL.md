@@ -61,13 +61,75 @@ Some methods appear in one set only.
 - **The per-packet set decides JA4D and JA4D6.** The per-stream vector for `dhcpv6.pcap`
   is an empty list, so the Python reference does not cover those methods.
 
+## To close a deviation
+
+`docs/specs/features/05-conformance-gaps.md` FR-gaps-1, FR-gaps-2 and FR-gaps-3 state the
+rule. Every closure follows all three.
+
+1. **Read the deviation row in `docs/audit/conformance.md`.** The row names the capture,
+   the vector set, the method and the two values.
+2. **Read the FoxIO reference for that method and that capture.** Cite a file and a line
+   at the pinned commit. `.claude/rules/rulings.md` states what counts as evidence.
+3. **Write the failing test first.** FR-gaps-2 requires a test that names the capture and
+   the method. Write both names in the test name or in a comment above it.
+4. **Change the library, and never the vector.** FR-gaps-4 gives the reference the
+   decision.
+5. **Record a changed fingerprint in `CHANGELOG.md`.** FR-gaps-3 requires one entry for
+   each changed fingerprint. A fingerprint that a released version produced is a breaking
+   behaviour change under `v1.0.0`.
+6. **Run the whole suite.** The deviation count falls, and no new deviation appears.
+7. **State the measurement in the pull request.** `.claude/rules/parity.md` names four
+   numbers.
+   1. How many values moved.
+   2. On which captures.
+   3. The conformance count before and after.
+   4. The register key count before and after.
+
+**Every deviation reaches one of three ends.** FR-gaps-1 allows no fourth.
+
+| End | Where it lands |
+|---|---|
+| The closure | The code, plus the test of step 3. |
+| A new requirement | `docs/specs/features/05-conformance-gaps.md`. |
+| An accepted exclusion | `docs/audit/conformance-exclusions.md`, with the maintainer's name and the date. |
+
+**A closure that no test holds is not a closure.** A later change reverses it in silence.
+
+**Stop before you invent a rule.** `.claude/rules/rulings.md` `## Stop conditions` names
+every case where the maintainer decides. A reference split is one of them.
+
+## Which record a fact reaches
+
+**This project holds two records, and they hold two distinct classes of fact.** The
+maintainer ruled on 2026-08-11, in issue #38.
+
+| Record | What it holds |
+|---|---|
+| `testdata/deviations.json`, the register | **A decline.** This project compared its output against a FoxIO value and chose to differ. |
+| `docs/audit/conformance-exclusions.md`, the exclusions page | **An exclusion.** The suite makes no comparison at all. |
+
+**One question settles which record a fact reaches.** Does the guard "an entry whose
+comparison now matches fails the suite" make sense for this fact? **Yes, and it is a
+register entry. No, and it is an exclusion.**
+
+`.claude/rules/parity.md:71` states that guard. An exclusion reaches no comparison that
+could later match, so the guard can evaluate nothing.
+
+`dtls-udp.notest.cap` decides the boundary. FoxIO marks it `notest`, so it yields no
+stream and no method, and it reaches no `<capture>/<stream>/<method>` register key.
+FR-gaps-19 records `not applicable` for it, and FR-gaps-20 requires an exclusions entry.
+
+**Write no entry in either record yourself.** The register is empty today, and the
+exclusions page holds the one entry that FR-gaps-20 requires. Only the maintainer accepts
+an entry.
+
 ## Rules
 
 - **The FoxIO reference decides every disputed result.** When a library test disagrees
   with a vector, the library is wrong. Never change a vector.
 - **An extra fingerprint is as wrong as a missing one.** The suite reports both.
 - **The bar is byte-identical, with no exception.** A deviation is closed, or it records
-  its reason in `docs/audit/conformance-exceptions.md` and the maintainer accepts it by
+  its reason in `docs/audit/conformance-exclusions.md` and the maintainer accepts it by
   name and by date.
 - `dtls-udp.notest.cap` carries the FoxIO `notest` marker. FoxIO excludes it from their
   own suite, so the report records it as `not applicable`.
