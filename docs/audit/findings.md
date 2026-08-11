@@ -208,6 +208,31 @@ This table belongs to issue #22.
 <!-- files:22:begin -->
 | File | Audit date |
 |---|---|
+| `doc.go` | 2026-08-11 |
+| `ja4.go` | 2026-08-11 |
+| `ja4d.go` | 2026-08-11 |
+| `ja4d6.go` | 2026-08-11 |
+| `ja4h.go` | 2026-08-11 |
+| `ja4l.go` | 2026-08-11 |
+| `ja4s.go` | 2026-08-11 |
+| `ja4ssh.go` | 2026-08-11 |
+| `ja4t.go` | 2026-08-11 |
+| `ja4ts.go` | 2026-08-11 |
+| `ja4x.go` | 2026-08-11 |
+| `lookup.go` | 2026-08-11 |
+| `processor.go` | 2026-08-11 |
+| `sync_processor.go` | 2026-08-11 |
+| `types.go` | 2026-08-11 |
+| `internal/parser/grease.go` | 2026-08-11 |
+| `internal/parser/hash.go` | 2026-08-11 |
+| `internal/parser/http.go` | 2026-08-11 |
+| `internal/parser/packet.go` | 2026-08-11 |
+| `internal/parser/quic.go` | 2026-08-11 |
+| `internal/parser/ssh.go` | 2026-08-11 |
+| `internal/parser/tcp_stream.go` | 2026-08-11 |
+| `internal/parser/testhelpers.go` | 2026-08-11 |
+| `internal/parser/tls.go` | 2026-08-11 |
+| `internal/parser/x509_utils.go` | 2026-08-11 |
 <!-- files:22:end -->
 
 ### The files of issue #23
@@ -247,9 +272,55 @@ runs.
 This table belongs to issue #22. It holds a finding of a parser input: a length field, an
 integer conversion, a map read, a slice index or a GREASE filter.
 
+`audit_parser_test.go` builds the input of each finding below and asserts the value the
+library produces today. A reader who reverses a finding starts there.
+
+**Three findings hand over to another epic, and issue #25 records the deferral under
+FR-audit-28.**
+
+- **F-22-1** hands over to **#50 of Epic 8a**. `docs/specs/foxio/JA4.md` R19 records a
+  reference split of four results for a non-alphanumeric ALPN value. A FoxIO vector
+  reaches the value, so `.claude/rules/parity.md` rule 1 settles it and no ruling applies.
+- **F-22-9** and **F-22-10** hand over to **#42 of Epic 5**. FR-gaps-21 asks the library to
+  reassemble a client hello that spans more than one CRYPTO frame, and a parser that
+  discards collected fragments cannot satisfy it.
+
+**F-22-14 through F-22-26 record the thirteen `nilerr` sites of `internal/parser/quic.go`
+as correct.** Issue #4 routed them here. The port declines the same input, states the
+decline as an architecture invariant, and reached it through its own issues #319 and #382.
+Its QUIC reader returns `None, None` for a datagram that holds no QUIC and for a QUIC
+datagram it cannot read. **A change that propagates the error at any of the thirteen sites
+moves this project away from the port.**
+
 <!-- findings:22:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
 |---|---|---|---|---|---|---|---|
+| F-22-1 | `internal/parser/tls.go` | 323 | critical | open | The capture `tls-non-ascii-alpn.pcapng` stream 0 makes `ALPNValue` return `bd`, and the FoxIO vector holds `99`. |  |  |
+| F-22-2 | `internal/parser/tls.go` | 131 | major | open | A ClientHello whose extensions length field reaches past its own TLS record makes `ParseClientHello` read `0x1603` as an extension type. |  |  |
+| F-22-3 | `internal/parser/tls.go` | 223 | major | open | A ServerHello whose extensions length field reaches past its own TLS record makes `ParseServerHello` read the next record as extension bytes. |  |  |
+| F-22-4 | `internal/parser/ssh.go` | 40 | major | open | An SSH packet whose length is 1024 and whose padding length is 8 makes `IsSSHPacket` return false. |  |  |
+| F-22-5 | `internal/parser/ssh.go` | 79 | major | open | An SSH KEXINIT packet whose length is 1024 and whose padding length is 8 makes `ParseSSHPacket` return nil. |  |  |
+| F-22-6 | `internal/parser/x509_utils.go` | 36 | major | open | The identifier `2.100.3` makes `OIDToHex` return `b403`, and X.690 encodes it as `813403`. |  |  |
+| F-22-7 | `internal/parser/tcp_stream.go` | 42 | major | open | A reassembler whose stream limit is 0 makes the first `AddSegment` call panic with an index out of range. |  |  |
+| F-22-8 | `internal/parser/tcp_stream.go` | 93 | major | open | A reassembler whose byte limit is below 0 makes `GetStream` panic with a slice bound out of range. |  |  |
+| F-22-9 | `internal/parser/quic.go` | 337 | critical | open | A QUIC Initial datagram whose last CRYPTO frame is truncated makes `ParseQUICInitial` discard the earlier fragments and return no ClientHello. |  |  |
+| F-22-10 | `internal/parser/quic.go` | 803 | critical | open | A QUIC server Initial whose last CRYPTO frame is truncated makes `ParseQUICServerInitial` discard the earlier fragments and return no ServerHello. |  |  |
+| F-22-11 | `ja4.go` | 181 | critical | open | A ClientHello whose signature algorithm list opens with `0a0a` makes `computeJA4RawFromClientHello` write that GREASE value into the raw JA4. |  |  |
+| F-22-12 | `ja4.go` | 266 | critical | open | A ClientHello whose signature algorithm list opens with `0a0a` makes `ja4ExtensionHash` hash that GREASE value into part c. |  |  |
+| F-22-13 | `ja4.go` | 288 | critical | open | A ClientHello whose signature algorithm list opens with `0a0a` makes `computeJA4RawOriginalOrder` write that GREASE value into the wire-order raw JA4. |  |  |
+| F-22-14 | `internal/parser/quic.go` | 229 | minor | no change needed | A QUIC Initial datagram whose token length varint is truncated makes `ParseQUICInitial` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
+| F-22-15 | `internal/parser/quic.go` | 240 | minor | no change needed | A QUIC Initial datagram whose payload length varint is truncated makes `ParseQUICInitial` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
+| F-22-16 | `internal/parser/quic.go` | 427 | minor | no change needed | A QUIC Initial datagram whose token length varint is truncated makes `DecryptQUICInitialCrypto` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
+| F-22-17 | `internal/parser/quic.go` | 436 | minor | no change needed | A QUIC Initial datagram whose payload length varint is truncated makes `DecryptQUICInitialCrypto` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
+| F-22-18 | `internal/parser/quic.go` | 573 | minor | no change needed | A QUIC ACK frame whose largest acknowledged varint is truncated makes `ParseCryptoFrames` return no error. |  | The port breaks its ACK loop and returns the fragments it holds. |
+| F-22-19 | `internal/parser/quic.go` | 579 | minor | no change needed | A QUIC ACK frame whose ACK delay varint is truncated makes `ParseCryptoFrames` return no error. |  | The port breaks its ACK loop and returns the fragments it holds. |
+| F-22-20 | `internal/parser/quic.go` | 585 | minor | no change needed | A QUIC ACK frame whose ACK range count varint is truncated makes `ParseCryptoFrames` return no error. |  | The port breaks its ACK loop and returns the fragments it holds. |
+| F-22-21 | `internal/parser/quic.go` | 591 | minor | no change needed | A QUIC ACK frame whose first ACK range varint is truncated makes `ParseCryptoFrames` return no error. |  | The port breaks its ACK loop and returns the fragments it holds. |
+| F-22-22 | `internal/parser/quic.go` | 599 | minor | no change needed | A QUIC ACK frame whose gap varint is truncated makes `ParseCryptoFrames` return no error. |  | The port breaks its ACK loop and returns the fragments it holds. |
+| F-22-23 | `internal/parser/quic.go` | 605 | minor | no change needed | A QUIC ACK frame whose ACK range varint is truncated makes `ParseCryptoFrames` return no error. |  | The port breaks its ACK loop and returns the fragments it holds. |
+| F-22-24 | `internal/parser/quic.go` | 614 | minor | no change needed | A QUIC ACK frame whose ECN count varint is truncated makes `ParseCryptoFrames` return no error. |  | The port breaks its ACK loop and returns the fragments it holds. |
+| F-22-25 | `internal/parser/quic.go` | 720 | minor | no change needed | A QUIC server Initial whose token length varint is truncated makes `ParseQUICServerInitial` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
+| F-22-26 | `internal/parser/quic.go` | 731 | minor | no change needed | A QUIC server Initial whose payload length varint is truncated makes `ParseQUICServerInitial` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
 <!-- findings:22:end -->
 
 ### The findings of issue #23
