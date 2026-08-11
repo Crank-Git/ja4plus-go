@@ -122,12 +122,16 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4HFingerprinter) Reset() {
+	f.ensure()
+
 	f.reassembler = parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes)
 }
 
 // CleanupConnection removes internal state for the given connection.
 // JA4H uses directional arrow keys: srcIP:srcPort->dstIP:dstPort.
 func (f *JA4HFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
 	fwd := fmt.Sprintf("%s:%d->%s:%d", srcIP, srcPort, dstIP, dstPort)
 	rev := fmt.Sprintf("%s:%d->%s:%d", dstIP, dstPort, srcIP, srcPort)
 	f.reassembler.RemoveStream(fwd)

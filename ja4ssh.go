@@ -58,6 +58,7 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 // ensure fills the state map and the window size that the constructor fills.
 // A caller who writes `var f JA4SSHFingerprinter` reaches a nil map and a window of 0.
 // A write to a nil map panics, and a window of 0 fills on every packet.
+// Every entry point calls this method first.
 func (f *JA4SSHFingerprinter) ensure() {
 	if f.connections == nil {
 		f.connections = make(map[string]*sshConnState)
@@ -236,6 +237,8 @@ func (f *JA4SSHFingerprinter) checkWindow(connKey string, conn *sshConnState, pa
 
 // GetHASSHFingerprints returns all collected HASSH fingerprints across tracked connections.
 func (f *JA4SSHFingerprinter) GetHASSHFingerprints() []HASSHResult {
+	f.ensure()
+
 	var results []HASSHResult
 	for connKey, conn := range f.connections {
 		if conn.hassh != "" {
@@ -262,12 +265,16 @@ func (f *JA4SSHFingerprinter) GetHASSHFingerprints() []HASSHResult {
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4SSHFingerprinter) Reset() {
+	f.ensure()
+
 	f.connections = make(map[string]*sshConnState)
 }
 
 // CleanupConnection removes internal state for the given connection.
 // JA4SSH normalizes keys by port 22 or higher-port direction.
 func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
 	// Try both directions since we normalize by port 22 or higher port
 	var clientIP, serverIP string
 	var clientPort, serverPort uint16
