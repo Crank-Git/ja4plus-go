@@ -15,7 +15,6 @@ import (
 // One JA4Fingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4Fingerprinter struct {
-	results       []FingerprintResult
 	quicFragments map[string][]parser.CryptoFragment // DCID hex -> accumulated fragments
 	dcidToTuple   map[string]string                  // DCID hex -> 5-tuple key for cleanup
 }
@@ -126,13 +125,13 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		Timestamp:        parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears all stored results.
+// Reset clears the QUIC fragment table and the connection identifier table.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4Fingerprinter) Reset() {
-	f.results = nil
 	f.quicFragments = make(map[string][]parser.CryptoFragment)
 	f.dcidToTuple = make(map[string]string)
 }
@@ -140,10 +139,14 @@ func (f *JA4Fingerprinter) Reset() {
 // CleanupConnection removes internal state for the given connection.
 // JA4 QUIC state is keyed by DCID hex. This method looks up the DCID
 // via the dcidToTuple reverse map and cleans the corresponding fragments.
+// The caller names the two endpoints in either order, because the reverse map holds the
+// order of the datagram that carried the client hello.
 func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
-	tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	forward := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	reverse := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+
 	for dcid, tuple := range f.dcidToTuple {
-		if tuple == tupleKey {
+		if tuple == forward || tuple == reverse {
 			delete(f.quicFragments, dcid)
 			delete(f.dcidToTuple, dcid)
 		}

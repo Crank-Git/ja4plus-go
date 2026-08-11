@@ -68,7 +68,6 @@ var dhcpv6MessageMap = map[byte]string{
 // One JA4D6Fingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4D6Fingerprinter struct {
-	results []FingerprintResult
 }
 
 // NewJA4D6 creates a new JA4D6 DHCPv6 fingerprinter.
@@ -169,13 +168,13 @@ func (f *JA4D6Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprin
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears accumulated results.
+// Reset clears the state of the fingerprinter.
+// JA4D6 holds no state, so this method changes nothing. It keeps the Fingerprinter
+// interface whole. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4D6Fingerprinter) Reset() {
-	f.results = nil
 }
 
 // CleanupConnection is a no-op for JA4D6 (stateless per-packet fingerprinter).

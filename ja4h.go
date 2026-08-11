@@ -15,7 +15,6 @@ import (
 // One JA4HFingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4HFingerprinter struct {
-	results     []FingerprintResult
 	reassembler *parser.TCPStreamReassembler
 }
 
@@ -80,7 +79,6 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 					DstPort:     dstPort,
 					Timestamp:   parser.GetPacketTimestamp(packet),
 				}
-				f.results = append(f.results, result)
 				f.reassembler.RemoveStream(streamKey)
 				return []FingerprintResult{result}, nil
 			}
@@ -116,14 +114,14 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		DstPort:     dstPort,
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
-	f.results = append(f.results, result)
 	f.reassembler.RemoveStream(streamKey)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears all accumulated results and stream state.
+// Reset clears the TCP stream reassembler.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4HFingerprinter) Reset() {
-	f.results = nil
 	f.reassembler = parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes)
 }
 

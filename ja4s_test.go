@@ -288,11 +288,15 @@ func TestJA4SFingerprinter_GREASEInPacket(t *testing.T) {
 }
 
 func TestJA4S_Reset(t *testing.T) {
+	// Issue #25 removed the results slice, so the QUIC connection identifier table is the
+	// only state that Reset clears.
 	f := NewJA4S()
-	f.results = []FingerprintResult{{Type: "ja4s"}}
+	f.quicDCIDs["10.0.0.1:443-10.0.0.2:40000"] = []byte{0x01, 0x02}
+
 	f.Reset()
-	if f.results != nil {
-		t.Errorf("expected nil results after reset, got %v", f.results)
+
+	if len(f.quicDCIDs) != 0 {
+		t.Errorf("Reset leaves %d entries in the QUIC connection identifier table", len(f.quicDCIDs))
 	}
 }
 

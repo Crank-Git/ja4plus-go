@@ -13,7 +13,6 @@ import (
 // One JA4SFingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4SFingerprinter struct {
-	results   []FingerprintResult
 	quicDCIDs map[string][]byte // tracks client DCIDs for QUIC server decryption
 }
 
@@ -121,13 +120,13 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears all stored results.
+// Reset clears the QUIC connection identifier table.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4SFingerprinter) Reset() {
-	f.results = nil
 	f.quicDCIDs = make(map[string][]byte)
 }
 

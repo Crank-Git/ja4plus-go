@@ -35,8 +35,11 @@ const tlsHandshakeCertificate = 0x0b
 type JA4XFingerprinter struct {
 	streams        map[string][]byte
 	processedCerts map[string]struct{}
-	results        []FingerprintResult
-	lastCleanup    time.Time
+	// certsByStream names the certificate hashes that each stream produced. It is the
+	// removal path of processedCerts, which the certificate hash keys and no connection
+	// keys. Without it CleanupConnection leaves every hash for the life of the process.
+	certsByStream map[string]map[string]struct{}
+	lastCleanup   time.Time
 }
 
 // NewJA4X creates a new JA4XFingerprinter.
@@ -44,6 +47,7 @@ func NewJA4X() *JA4XFingerprinter {
 	return &JA4XFingerprinter{
 		streams:        make(map[string][]byte),
 		processedCerts: make(map[string]struct{}),
+		certsByStream:  make(map[string]map[string]struct{}),
 		lastCleanup:    time.Now(),
 	}
 }
@@ -58,6 +62,10 @@ func (f *JA4XFingerprinter) ensure() {
 
 	if f.processedCerts == nil {
 		f.processedCerts = make(map[string]struct{})
+	}
+
+	if f.certsByStream == nil {
+		f.certsByStream = make(map[string]map[string]struct{})
 	}
 
 	if f.lastCleanup.IsZero() {
@@ -114,11 +122,13 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	return results, nil
 }
 
-// Reset clears all stored state.
+// Reset clears the stream table and the certificate set.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4XFingerprinter) Reset() {
 	f.streams = make(map[string][]byte)
 	f.processedCerts = make(map[string]struct{})
-	f.results = nil
+	f.certsByStream = make(map[string]map[string]struct{})
 	f.lastCleanup = time.Now()
 }
 
@@ -130,9 +140,16 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
 	delete(f.streams, fwd)
 	delete(f.streams, rev)
-	// Note: processedCerts is keyed by cert hash (content-addressed), not connection.
-	// It cannot be cleaned per-connection without a reverse lookup. It is bounded by
-	// the cleanup() method's ja4xMaxCerts limit and will not grow unbounded.
+
+	// certsByStream is the reverse lookup that processedCerts needs, because the
+	// certificate hash keys that set and no connection keys it.
+	for _, stream := range []string{fwd, rev} {
+		for certHash := range f.certsByStream[stream] {
+			delete(f.processedCerts, certHash)
+		}
+
+		delete(f.certsByStream, stream)
+	}
 }
 
 // cleanup prunes streams and processed certs to prevent unbounded growth.
@@ -144,8 +161,11 @@ func (f *JA4XFingerprinter) cleanup() {
 	}
 
 	// Prune processed certs.
+	// certsByStream indexes the same set, so it drops with it. A stale index would grow
+	// without a bound and would remove a hash the set no longer holds.
 	if len(f.processedCerts) > ja4xMaxProcessedCerts {
 		f.processedCerts = make(map[string]struct{}, ja4xPrunedCerts)
+		f.certsByStream = make(map[string]map[string]struct{})
 	}
 }
 
@@ -218,8 +238,12 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 						Timestamp:   parser.GetPacketTimestamp(packet),
 					}
 					results = append(results, result)
-					f.results = append(f.results, result)
 					f.processedCerts[certHash] = struct{}{}
+
+					if f.certsByStream[streamID] == nil {
+						f.certsByStream[streamID] = make(map[string]struct{})
+					}
+					f.certsByStream[streamID][certHash] = struct{}{}
 				}
 			}
 		}

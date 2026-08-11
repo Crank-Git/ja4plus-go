@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"slices"
 	"sync"
 	"testing"
 
@@ -120,6 +121,13 @@ func auditStatePacketSet(t *testing.T) []gopacket.Packet {
 	}
 }
 
+// auditStateStatelessTypes names each fingerprinter that holds no state at all.
+// Issue #25 removed the results slice, and these four held nothing else. A field that
+// returns to one of them needs a removal path, so this list is the reader's warning.
+var auditStateStatelessTypes = []string{
+	"JA4TFingerprinter", "JA4TSFingerprinter", "JA4DFingerprinter", "JA4D6Fingerprinter",
+}
+
 // FR-audit-18. Reset clears every field that holds state.
 // A monitor that reuses one processor for a second capture reads the state of the first
 // one when Reset leaves a field.
@@ -136,15 +144,30 @@ func TestReset_ClearsEveryStateFieldOfEveryFingerprinter(t *testing.T) {
 		t.Fatalf("the test names %d fingerprinters, want 10", len(fingerprinters))
 	}
 
+	held := 0
+
 	for name, fingerprinter := range fingerprinters {
-		held := 0
-		for _, length := range auditStateFieldLengths(name, fingerprinter) {
+		fields := auditStateFieldLengths(name, fingerprinter)
+
+		for _, length := range fields {
 			held += length
 		}
 
-		if held == 0 {
-			t.Errorf("%s holds no state after the packet set, so this test proves nothing about Reset", name)
+		// A stateless type holds no map field and no slice field, so its removal path is
+		// the absence of state. Every other type carries at least one field.
+		stateless := slices.Contains(auditStateStatelessTypes, name)
+
+		if stateless && len(fields) != 0 {
+			t.Errorf("%s holds the state fields %v, and the record names it stateless", name, fields)
 		}
+
+		if !stateless && len(fields) == 0 {
+			t.Errorf("%s holds no state field, and the record names it stateful", name)
+		}
+	}
+
+	if held == 0 {
+		t.Fatal("the packet set left no state at all, so this test proves nothing about Reset")
 	}
 
 	proc.Reset()
@@ -256,45 +279,58 @@ func TestCleanupConnection_RemovesTheStateTableEntryOfTheNamedConnection(t *test
 	}
 }
 
-// The audit records F-23-11. JA4 keys its QUIC state by the tuple of the packet that
-// carried the client hello, and CleanupConnection builds one direction of the tuple.
-// A caller that names the server endpoint first removes no entry.
+// F-23-11 is closed. JA4 keys its QUIC state by the tuple of the packet that carried the
+// client hello, and CleanupConnection built one direction of that tuple. A caller that
+// named the server endpoint first removed no entry. The method now reads both
+// directions, which matches the sorted five-tuple that GetShardKey returns.
 //
-// The test seeds the two maps in the form that ja4.go:60 and ja4.go:65 write, because a
-// synthetic QUIC Initial packet reaches no decryption.
-//
-// Issue #25 closes the finding and inverts the first assertion.
-func TestTheAuditRecordsThatJA4CleanupConnectionReadsOneDirectionOfTheTuple(t *testing.T) {
+// The test seeds the two maps in the form that ProcessPacket writes, because a synthetic
+// QUIC Initial packet reaches no decryption.
+func TestJA4CleanupConnectionReadsBothDirectionsOfTheTuple(t *testing.T) {
 	const dcid = "8394c8f03e515708"
 
-	fingerprinter := NewJA4()
-	fingerprinter.quicFragments[dcid] = []parser.CryptoFragment{{Offset: 0, Data: []byte{0x01}}}
-	fingerprinter.dcidToTuple[dcid] = fmt.Sprintf("%s:%d-%s:%d",
-		auditStateClientIP, 40020, auditStateServerIP, 443)
+	seed := func() *JA4Fingerprinter {
+		fingerprinter := NewJA4()
+		fingerprinter.quicFragments[dcid] = []parser.CryptoFragment{{Offset: 0, Data: []byte{0x01}}}
+		fingerprinter.dcidToTuple[dcid] = fmt.Sprintf("%s:%d-%s:%d",
+			auditStateClientIP, 40020, auditStateServerIP, 443)
 
-	fingerprinter.CleanupConnection(auditStateServerIP, 443, auditStateClientIP, 40020, "udp")
-
-	if got := len(fingerprinter.quicFragments); got != 1 {
-		t.Errorf("CleanupConnection removed the entry for the server-first tuple, and F-23-11 records that it removes none; the map holds %d entries", got)
+		return fingerprinter
 	}
 
-	fingerprinter.CleanupConnection(auditStateClientIP, 40020, auditStateServerIP, 443, "udp")
-
-	if got := len(fingerprinter.quicFragments); got != 0 {
-		t.Errorf("CleanupConnection leaves %d entries for the client-first tuple", got)
+	cases := []struct {
+		name    string
+		cleanup func(*JA4Fingerprinter)
+	}{
+		{"the caller names the server endpoint first", func(f *JA4Fingerprinter) {
+			f.CleanupConnection(auditStateServerIP, 443, auditStateClientIP, 40020, "udp")
+		}},
+		{"the caller names the client endpoint first", func(f *JA4Fingerprinter) {
+			f.CleanupConnection(auditStateClientIP, 40020, auditStateServerIP, 443, "udp")
+		}},
 	}
 
-	if got := len(fingerprinter.dcidToTuple); got != 0 {
-		t.Errorf("CleanupConnection leaves %d entries in the reverse map", got)
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			fingerprinter := seed()
+			testCase.cleanup(fingerprinter)
+
+			if got := len(fingerprinter.quicFragments); got != 0 {
+				t.Errorf("CleanupConnection leaves %d entries in the fragment table", got)
+			}
+
+			if got := len(fingerprinter.dcidToTuple); got != 0 {
+				t.Errorf("CleanupConnection leaves %d entries in the reverse map", got)
+			}
+		})
 	}
 }
 
-// The audit records F-23-12. JA4X keys the deduplication set by the hash of the
-// certificate, and CleanupConnection removes no entry of it. A certificate that two
-// connections carry produces one fingerprint.
-//
-// Issue #25 closes the finding and inverts the second assertion.
-func TestTheAuditRecordsThatJA4XCleanupConnectionKeepsTheCertificateHash(t *testing.T) {
+// F-23-12 is closed. JA4X keys the deduplication set by the hash of the certificate, so
+// CleanupConnection reached no entry of it and a certificate that two connections carried
+// produced one fingerprint. The fingerprinter now holds a stream index of the hashes it
+// wrote, and CleanupConnection removes the hashes of the connection the caller names.
+func TestJA4XCleanupConnectionRemovesTheCertificateHashOfTheConnection(t *testing.T) {
 	client := net.IP{192, 168, 1, 10}
 	server := net.IP{10, 0, 0, 5}
 	record := buildCertificateRecordPayload(generateSelfSignedCertDER(t))
@@ -319,51 +355,62 @@ func TestTheAuditRecordsThatJA4XCleanupConnectionKeepsTheCertificateHash(t *test
 		t.Fatalf("ProcessPacket returned the error %v", err)
 	}
 
-	if len(second) != 0 {
-		t.Errorf("the second connection produced %d results, and F-23-12 records that it produces none", len(second))
+	if len(second) != 1 {
+		t.Errorf("the second connection produced %d results, and the closure of F-23-12 produces 1", len(second))
 	}
 
 	if got := len(fingerprinter.processedCerts); got != 1 {
-		t.Errorf("the deduplication set holds %d entries after CleanupConnection, want 1", got)
+		t.Errorf("the deduplication set holds %d entries, and the second connection wrote one", got)
+	}
+
+	// The same connection reads the same certificate twice, and the second read produces
+	// no result. CleanupConnection is the only removal path, and this states that the
+	// closure kept the deduplication that a live connection needs.
+	third, err := fingerprinter.ProcessPacket(
+		buildTCPPacketWithSeq(t, server, client, 443, 40032, 1, record))
+	if err != nil {
+		t.Fatalf("ProcessPacket returned the error %v", err)
+	}
+
+	if len(third) != 0 {
+		t.Errorf("a third connection with no cleanup produced %d results, want 0", len(third))
 	}
 }
 
-// The audit records F-23-13. JA4L builds its state table key from the `proto` argument
-// that the caller passes. No doc comment states the two values the fingerprinter writes,
-// so a caller that passes another spelling removes no entry.
-//
-// Issue #25 closes the finding and inverts the first assertion.
-func TestTheAuditRecordsThatJA4LCleanupConnectionMatchesTheProtocolArgument(t *testing.T) {
+// F-23-13 is closed. JA4L built its state table key from the `proto` argument that the
+// caller passes, and no doc comment stated the two tokens the fingerprinter writes. A
+// caller that passed another spelling removed no entry. `normalizeKey` now writes one
+// case for every token, so the write and the removal reach one key.
+func TestJA4LCleanupConnectionReadsTheProtocolArgumentInEitherCase(t *testing.T) {
 	client := net.IP{192, 168, 1, 10}
 	server := net.IP{10, 0, 0, 5}
 
-	fingerprinter := NewJA4L()
-	_, _ = fingerprinter.ProcessPacket(
-		buildTCPPacketWithIPs(t, client, server, 64, 40040, 443, true, false))
+	for _, proto := range []string{"TCP", "tcp", "Tcp"} {
+		t.Run(proto, func(t *testing.T) {
+			fingerprinter := NewJA4L()
+			_, _ = fingerprinter.ProcessPacket(
+				buildTCPPacketWithIPs(t, client, server, 64, 40040, 443, true, false))
 
-	if got := len(fingerprinter.connections); got != 1 {
-		t.Fatalf("the SYN packet produced %d connection entries, want 1", got)
-	}
+			if got := len(fingerprinter.connections); got != 1 {
+				t.Fatalf("the SYN packet produced %d connection entries, want 1", got)
+			}
 
-	fingerprinter.CleanupConnection(auditStateClientIP, 40040, auditStateServerIP, 443, "TCP")
+			fingerprinter.CleanupConnection(auditStateClientIP, 40040, auditStateServerIP, 443, proto)
 
-	if got := len(fingerprinter.connections); got != 1 {
-		t.Errorf("CleanupConnection removed the entry for the token TCP, and F-23-13 records that it removes none; the map holds %d entries", got)
-	}
-
-	fingerprinter.CleanupConnection(auditStateClientIP, 40040, auditStateServerIP, 443, "tcp")
-
-	if got := len(fingerprinter.connections); got != 0 {
-		t.Errorf("CleanupConnection leaves %d entries for the token tcp", got)
+			if got := len(fingerprinter.connections); got != 0 {
+				t.Errorf("CleanupConnection leaves %d entries for the token %q", got, proto)
+			}
+		})
 	}
 }
 
-// The audit records F-23-1 through F-23-10, which the suspected finding S1 names.
-// Every fingerprinter appends each result to its results slice, no exported method reads
-// that slice, and CleanupConnection removes no element of it.
+// F-23-1 through F-23-10 are closed, and the suspected finding S1 named them.
+// Every fingerprinter appended each result to a results slice, no exported method read
+// that slice, and only Reset cleared it. Issue #25 removed the slice, because
+// ProcessPacket already returns each result to the caller.
 //
-// Issue #25 closes the findings and inverts the two results assertions.
-func TestTheAuditRecordsThatCleanupConnectionKeepsEveryResult(t *testing.T) {
+// This test states that no fingerprinter holds a field that grows with the packet count.
+func TestNoFingerprinterKeepsAResultAfterProcessPacketReturnsIt(t *testing.T) {
 	const connections = 50
 
 	client := net.IP{192, 168, 1, 10}
@@ -371,31 +418,46 @@ func TestTheAuditRecordsThatCleanupConnectionKeepsEveryResult(t *testing.T) {
 
 	proc := NewProcessor()
 
+	produced := 0
+
 	for index := 0; index < connections; index++ {
 		port := uint16(41000 + index)
 
-		_, _ = proc.ProcessPacket(buildTCPPacketWithIPs(t, client, server, 64, port, 443, true, false))
-		_, _ = proc.ProcessPacket(buildTCPPacketWithIPs(t, server, client, 64, 443, port, true, true))
+		first, _ := proc.ProcessPacket(buildTCPPacketWithIPs(t, client, server, 64, port, 443, true, false))
+		second, _ := proc.ProcessPacket(buildTCPPacketWithIPs(t, server, client, 64, 443, port, true, true))
+
+		produced += len(first) + len(second)
+	}
+
+	if produced == 0 {
+		t.Fatal("the packet set produced no result, so this test proves nothing about the state")
 	}
 
 	for index := 0; index < connections; index++ {
 		proc.CleanupConnection(auditStateClientIP, uint16(41000+index), auditStateServerIP, 443, "tcp")
 	}
 
-	if got := len(proc.ja4l.connections); got != 0 {
-		t.Errorf("CleanupConnection leaves %d entries in the JA4L connections table", got)
+	// A field whose length reaches the connection count is a results slice under another
+	// name. Every remaining field is a connection table that CleanupConnection empties.
+	for name, fingerprinter := range auditStateFingerprinters(proc) {
+		for field, length := range auditStateFieldLengths(name, fingerprinter) {
+			if length != 0 {
+				t.Errorf("CleanupConnection leaves %d entries in %s, and the fingerprinter keeps no result",
+					length, field)
+			}
+		}
 	}
+}
 
-	if got := len(proc.ja4t.results); got != connections {
-		t.Errorf("the JA4T results slice holds %d results after the cleanup of every connection, and F-23-4 records that it holds %d", got, connections)
-	}
+// TestNoFingerprinterTypeHoldsAResultsField states the same rule against the type rather
+// than against one run. A later change that adds the field back fails here.
+func TestNoFingerprinterTypeHoldsAResultsField(t *testing.T) {
+	for name, fingerprinter := range auditStateFingerprinters(NewProcessor()) {
+		typ := reflect.TypeOf(fingerprinter).Elem()
 
-	if got := len(proc.ja4ts.results); got != connections {
-		t.Errorf("the JA4TS results slice holds %d results after the cleanup of every connection, and F-23-5 records that it holds %d", got, connections)
-	}
-
-	if got := len(proc.ja4l.results); got != connections {
-		t.Errorf("the JA4L results slice holds %d results after the cleanup of every connection, and F-23-6 records that it holds %d", got, connections)
+		if _, held := typ.FieldByName("results"); held {
+			t.Errorf("%s holds a results field, and issue #25 removed it under F-23-1 through F-23-10", name)
+		}
 	}
 }
 
