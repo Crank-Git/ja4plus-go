@@ -96,30 +96,37 @@ This project declines `ja4l_delta` and `ja4ls_delta` as a reference value for an
 FoxIO defines no method that emits either field. `zeek/ja4l/main.zeek:269` and
 `zeek/ja4l/main.zeek:274` write them with the format `%.1f`.
 
-## Readings that no source settles
+### The Zeek JA4TS delay
 
-**A ruling here belongs to the maintainer.** `.claude/rules/rulings.md` states the stop
-conditions, and each reading below meets one of them.
+**This project declines the Zeek JA4TS delay.** Zeek truncates each delay to a whole
+second. This project rounds each delay to the nearest whole second, half away from zero.
 
-### The JA4TS delay rounds in one implementation and truncates in the other
-
-Two FoxIO implementations produce a different JA4TS value for the same packets.
-
-- **Zeek truncates.** `zeek/ja4t/main.zeek:180` holds
-  `c$fp$ja4t$synack_delays += double_to_count(ts - c$fp$ja4t$last_ts)/1000000;`. The
-  operator `/` on two `count` values discards the remainder.
-- **Wireshark rounds to the nearest second.** `wireshark/source/packet-ja4.c:277` holds
-  `return (int64_t)(round(nstime_to_sec(&result)));`.
-- **The deleted text states rounding.** `JA4T.md:86` holds this sentence:
+1. **Zeek truncates the SYN-ACK delay.** `zeek/ja4t/main.zeek:180` holds
+   `c$fp$ja4t$synack_delays += double_to_count(ts - c$fp$ja4t$last_ts)/1000000;`. The
+   operator `/` on two `count` values of microseconds discards the remainder.
+   `zeek/ja4t/main.zeek:162` writes the 120-second timeout as `120000000`, which states the
+   unit.
+2. **Zeek truncates the reset delay.** `zeek/ja4t/main.zeek:233` holds
+   `c$conn$ja4ts += fmt("-R%d", double_to_count(c$fp$ja4t$rst_ts - c$fp$ja4t$last_ts)/1000000);`.
+3. **Wireshark rounds.** `wireshark/source/packet-ja4.c:277` holds
+   `return (int64_t)(round(nstime_to_sec(&result)));`. `wireshark/source/packet-ja4.c:694`
+   calls the same function for the reset delay.
+4. **The deleted text corroborates Wireshark.** `JA4T.md:86` holds this sentence:
 
 > To find the delay between them we start with the timestamp of the first SYNACK and subtract it from the next SYNACK, rounding the result to the nearest whole number in seconds.
 
-The same split covers the JA4TS reset delay. `zeek/ja4t/main.zeek:233` truncates
-`rst_ts - last_ts`, and `wireshark/source/packet-ja4.c:694` calls the same `timediff`
-function that rounds.
+A delay of 1.6 seconds reaches `1` in Zeek and `2` in Wireshark.
 
-A delay of 1.6 seconds reaches `1` in Zeek and `2` in Wireshark. Issue #18 records the
-reading. Epic 8b builds JA4TS, and it consumes the ruling.
+**This reading adopts the port's ruling, and it is not a ruling of this project.** The
+Python port settled the question first. `docs/specs/foxio/JA4T.md` in `Crank-Git/ja4plus`,
+at commit `21299645366591331eb93155355b65a76a3729f3`, holds R12 rule 2, and that rule
+states the same three readings. `.claude/rules/parity.md` rule 2 states that the port
+decides where FoxIO specifies nothing and where this project shipped no name. `JA4T.png`
+labels part `e` as `TCP Retransmission Timings (only on JA4TScan)` and states no rounding
+rule, so the rank-1 image is silent.
+
+**Reverse this reading in the port, and never here alone.** Epic 8b builds JA4TS part e,
+and it consumes the reading.
 
 ## Per-method readings
 

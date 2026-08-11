@@ -252,9 +252,37 @@ func TestZeekPageNamesEachValueThisProjectDeclines(t *testing.T) {
 		"## The values this project declines",
 		"JA4L",
 		"JA4LS",
+		"ja4l_delta",
+		"ja4ls_delta",
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("%s does not hold %q, and FR-reference-14 needs the declined values", foxioZeekPage, want)
+		}
+	}
+}
+
+// FR-reference-14. The Zeek JA4TS delay is a declined value.
+//
+// Zeek truncates each delay, and this project rounds each delay. The reading adopts the
+// ruling of the Python port, so the page names the port commit. A later reader reverses
+// the reading in the port, and `.claude/rules/parity.md` states why.
+func TestZeekPageDeclinesTheZeekJA4TSDelay(t *testing.T) {
+	page := readRepoFile(t, foxioZeekPage)
+
+	for _, want := range []string{
+		"### The Zeek JA4TS delay",
+		// The two lines that truncate.
+		"zeek/ja4t/main.zeek:180",
+		"zeek/ja4t/main.zeek:233",
+		// The line that rounds.
+		"wireshark/source/packet-ja4.c:277",
+		// The port commit that holds the ruling this reading adopts.
+		"21299645366591331eb93155355b65a76a3729f3",
+		"R12 rule 2",
+		".claude/rules/parity.md",
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("%s does not hold %q, and FR-reference-14 needs the JA4TS delay decline", foxioZeekPage, want)
 		}
 	}
 }
