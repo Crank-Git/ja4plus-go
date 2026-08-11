@@ -7,7 +7,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
@@ -30,8 +29,10 @@ const tlsHandshakeCertificate = 0x0b
 // JA4XFingerprinter computes JA4X X.509 certificate fingerprints.
 // It is stateful: it tracks TCP streams to reassemble TLS Certificate
 // messages that may span multiple TCP segments.
+//
+// One JA4XFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4XFingerprinter struct {
-	mu             sync.Mutex
 	streams        map[string][]byte
 	processedCerts map[string]struct{}
 	results        []FingerprintResult
@@ -68,9 +69,6 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 
 	streamID := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
 	// Append payload to stream buffer.
 	stream := f.streams[streamID]
 	stream = append(stream, payload...)
@@ -99,8 +97,6 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 
 // Reset clears all stored state.
 func (f *JA4XFingerprinter) Reset() {
-	f.mu.Lock()
-	defer f.mu.Unlock()
 	f.streams = make(map[string][]byte)
 	f.processedCerts = make(map[string]struct{})
 	f.results = nil
@@ -111,8 +107,6 @@ func (f *JA4XFingerprinter) Reset() {
 // JA4X uses directional keys: srcIP:srcPort-dstIP:dstPort.
 // Both directions are cleaned since the certificate may arrive from either side.
 func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
 	fwd := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
 	delete(f.streams, fwd)
@@ -123,7 +117,6 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 }
 
 // cleanup prunes streams and processed certs to prevent unbounded growth.
-// Must be called with f.mu held.
 func (f *JA4XFingerprinter) cleanup() {
 	// Trim to max streams (keep most recent by deleting oldest).
 	if len(f.streams) > ja4xMaxStreams {
@@ -138,7 +131,6 @@ func (f *JA4XFingerprinter) cleanup() {
 }
 
 // findCertificatesInStream scans accumulated stream data for TLS Certificate messages.
-// Must be called with f.mu held.
 func (f *JA4XFingerprinter) findCertificatesInStream(
 	streamID string,
 	data []byte,

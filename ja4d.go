@@ -52,6 +52,9 @@ var dhcpExcludedOptions = map[byte]bool{
 //     Pad (0), MessageType (53), Requested IP (50), FQDN (81). Default "00".
 //   - request_list: dash-joined items of the Parameter Request List (option 55)
 //     in original order. Default "00".
+//
+// One JA4DFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4DFingerprinter struct {
 	results []FingerprintResult
 }

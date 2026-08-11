@@ -10,6 +10,19 @@ import (
 // Processor runs all JA4+ fingerprinters on each packet and aggregates results.
 // Errors from individual fingerprinters are non-fatal; they are collected and
 // returned alongside any successful results.
+//
+// One Processor serves one goroutine. Every fingerprinter holds state that no lock
+// guards. Two goroutines that share one Processor write a data race. The race detector
+// reports the race. The library does not detect it at run time.
+//
+// A caller who wants more than one goroutine takes one of two patterns.
+//
+//   - Route each packet with GetShardKey, and give each goroutine its own Processor.
+//     GetShardKey returns one key for both directions of one connection.
+//   - Share one SyncProcessor, which serializes every call with one mutex.
+//
+// The first pattern gives higher throughput, because the per-packet path acquires no
+// lock. The second pattern costs one mutex acquisition for each packet.
 type Processor struct {
 	ja4    *JA4Fingerprinter
 	ja4s   *JA4SFingerprinter
@@ -103,10 +116,13 @@ func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string
 	p.ja4d6.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 }
 
-// GetShardKey returns a stable key for routing packets to processor shards.
-// For TCP/UDP packets, this is the sorted 5-tuple. For QUIC packets with
-// known DCID-to-tuple mappings, this returns the original connection tuple
-// to ensure all packets for the same QUIC connection go to the same shard.
+// GetShardKey returns a stable key that routes one packet to one Processor shard.
+// The key is the sorted five-tuple, so a packet and its reply return one key.
+// The key reads no QUIC connection identifier, so every packet of one QUIC
+// connection returns one key after the identifier changes.
+// It returns an empty string for a packet that carries neither TCP nor UDP.
+// The caller decides what to do with an empty key.
+// GetShardKey acquires no lock and holds no state.
 func (p *Processor) GetShardKey(packet gopacket.Packet) string {
 	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 	if srcIP == "" {

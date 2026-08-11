@@ -64,6 +64,9 @@ var dhcpv6MessageMap = map[byte]string{
 //     including nested sub-options. Default "00".
 //   - request_list: dash-joined items of the Option Request option (option 6, ORO).
 //     Default "00".
+//
+// One JA4D6Fingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4D6Fingerprinter struct {
 	results []FingerprintResult
 }

@@ -11,6 +11,9 @@ import (
 )
 
 // JA4Fingerprinter computes JA4 TLS Client Hello fingerprints.
+//
+// One JA4Fingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4Fingerprinter struct {
 	results       []FingerprintResult
 	quicFragments map[string][]parser.CryptoFragment // DCID hex -> accumulated fragments
