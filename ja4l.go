@@ -16,6 +16,14 @@ type connState struct {
 	connKey    string
 	proto      string // "tcp" or "udp"
 	clientIP   string // for UDP/QUIC: the IP that sent the first observed packet
+	// The four fields below hold the endpoints that every result of this connection
+	// reports. The first packet fixes them, because a mirror sends both directions from
+	// one outer address pair and a later packet would otherwise pair that one address with
+	// the opposite port. `docs/specs/spec.md` `## Changelog` records the ruling.
+	reportedSrcIP   string
+	reportedDstIP   string
+	reportedSrcPort uint16
+	reportedDstPort uint16
 }
 
 // JA4LFingerprinter generates JA4L latency fingerprints from TCP handshake
@@ -72,12 +80,18 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 		return nil, nil
 	}
 
+	groupSrcIP, groupDstIP, grouped := parser.GetGroupingIPInfo(packet)
+	if !grouped {
+		return nil, nil
+	}
+
 	srcPort := uint16(tcpLayer.SrcPort)
 	dstPort := uint16(tcpLayer.DstPort)
 
-	connKey, direction := f.normalizeKey("tcp", srcIP, srcPort, dstIP, dstPort)
+	connKey, direction := f.normalizeKey("tcp", groupSrcIP, srcPort, groupDstIP, dstPort)
 
 	conn := f.getOrCreateConn(connKey, direction, "tcp")
+	conn.report(srcIP, srcPort, dstIP, dstPort)
 	ts := parser.GetPacketTimestamp(packet)
 
 	// SYN packet (not SYN-ACK).
@@ -93,7 +107,7 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 		conn.ttls["server"] = ttl
 
 		if synTime, ok := conn.timestamps["A"]; ok {
-			return f.emitResult("JA4L-S", ts.Sub(synTime), ttl, srcIP, dstIP, srcPort, dstPort, ts), nil
+			return f.emitResult("JA4L-S", ts.Sub(synTime), ttl, conn, ts), nil
 		}
 		return nil, nil
 	}
@@ -105,7 +119,7 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 				return nil, nil
 			}
 			conn.timestamps["C"] = ts
-			return f.emitResult("JA4L-C", ts.Sub(synAckTime), ttl, srcIP, dstIP, srcPort, dstPort, ts), nil
+			return f.emitResult("JA4L-C", ts.Sub(synAckTime), ttl, conn, ts), nil
 		}
 	}
 
@@ -123,20 +137,28 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 		return nil, nil
 	}
 
+	groupSrcIP, groupDstIP, grouped := parser.GetGroupingIPInfo(packet)
+	if !grouped {
+		return nil, nil
+	}
+
 	srcPort := uint16(udp.SrcPort)
 	dstPort := uint16(udp.DstPort)
 
-	connKey, direction := f.normalizeKey("udp", srcIP, srcPort, dstIP, dstPort)
+	connKey, direction := f.normalizeKey("udp", groupSrcIP, srcPort, groupDstIP, dstPort)
 
 	conn := f.getOrCreateConn(connKey, direction, "udp")
+	conn.report(srcIP, srcPort, dstIP, dstPort)
 	ts := parser.GetPacketTimestamp(packet)
 
 	// Anchor the client on the first observed packet of this connection so
 	// server-first observations still produce a valid 4-point QUIC timing.
+	// The anchor reads the grouping address, because a mirror sends both directions from
+	// one outer address and that address names no direction.
 	if conn.clientIP == "" {
-		conn.clientIP = srcIP
+		conn.clientIP = groupSrcIP
 	}
-	isClient := srcIP == conn.clientIP
+	isClient := groupSrcIP == conn.clientIP
 
 	// 4-point QUIC timing: A (client) -> B (server) -> C (client) -> D (server)
 	if _, ok := conn.timestamps["A"]; !ok && isClient {
@@ -149,7 +171,7 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 		if _, ok := conn.timestamps["B"]; !ok && !isClient {
 			conn.timestamps["B"] = ts
 			conn.ttls["server"] = ttl
-			return f.emitResult("JA4L-S", ts.Sub(conn.timestamps["A"]), ttl, srcIP, dstIP, srcPort, dstPort, ts), nil
+			return f.emitResult("JA4L-S", ts.Sub(conn.timestamps["A"]), ttl, conn, ts), nil
 		}
 	}
 
@@ -164,7 +186,7 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 		if _, ok := conn.timestamps["D"]; !ok && !isClient {
 			conn.timestamps["D"] = ts
 			clientTTL := conn.ttls["client"]
-			return f.emitResult("JA4L-C", ts.Sub(conn.timestamps["C"]), clientTTL, srcIP, dstIP, srcPort, dstPort, ts), nil
+			return f.emitResult("JA4L-C", ts.Sub(conn.timestamps["C"]), clientTTL, conn, ts), nil
 		}
 	}
 
@@ -204,7 +226,20 @@ func (f *JA4LFingerprinter) getOrCreateConn(connKey, direction, proto string) *c
 	return conn
 }
 
-func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uint8, srcIP, dstIP string, srcPort, dstPort uint16, ts time.Time) []FingerprintResult {
+// report fixes the endpoints that every result of this connection carries.
+// The first packet of the connection sets them, and a later packet does not move them.
+func (c *connState) report(srcIP string, srcPort uint16, dstIP string, dstPort uint16) {
+	if c.reportedSrcIP != "" {
+		return
+	}
+
+	c.reportedSrcIP = srcIP
+	c.reportedDstIP = dstIP
+	c.reportedSrcPort = srcPort
+	c.reportedDstPort = dstPort
+}
+
+func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uint8, conn *connState, ts time.Time) []FingerprintResult {
 	latencyUS := int(diff.Microseconds())
 	if latencyUS < 1 {
 		latencyUS = 1
@@ -213,10 +248,10 @@ func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uin
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
 		Type:        "ja4l",
-		SrcIP:       srcIP,
-		DstIP:       dstIP,
-		SrcPort:     srcPort,
-		DstPort:     dstPort,
+		SrcIP:       conn.reportedSrcIP,
+		DstIP:       conn.reportedDstIP,
+		SrcPort:     conn.reportedSrcPort,
+		DstPort:     conn.reportedDstPort,
 		Timestamp:   ts,
 	}
 	return []FingerprintResult{result}

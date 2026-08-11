@@ -62,10 +62,14 @@ the deviation list exists, not before.
   layers.
 - **FR-gaps-12** — The parser stops at a depth of four and returns no fingerprint beyond
   it.
-- **FR-gaps-13** — `GetShardKey` returns the key of the inner packet for an encapsulated
-  packet.
-- **FR-gaps-14** — A `FingerprintResult` for an encapsulated packet holds the inner
-  addresses and the inner ports.
+- **FR-gaps-13** — `GetShardKey` returns the grouping key for an encapsulated packet, so
+  it reads the inner address pair and the inner port pair.
+- **FR-gaps-14** — A `FingerprintResult` for an encapsulated packet holds the reported
+  key, so it holds the outer address pair and the inner port pair.
+- **FR-gaps-14a** — The first packet of one connection fixes the reported key, and a later
+  packet does not move it.
+- **FR-gaps-14b** — A JA4L value and a JA4LS value read the time-to-live of the outer
+  address layer.
 
 ### QUIC decryption secrets
 
