@@ -103,10 +103,13 @@ func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string
 	p.ja4d6.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 }
 
-// GetShardKey returns a stable key for routing packets to processor shards.
-// For TCP/UDP packets, this is the sorted 5-tuple. For QUIC packets with
-// known DCID-to-tuple mappings, this returns the original connection tuple
-// to ensure all packets for the same QUIC connection go to the same shard.
+// GetShardKey returns a stable key that routes one packet to one Processor shard.
+// The key is the sorted five-tuple, so a packet and its reply return one key.
+// The key reads no QUIC connection identifier, so every packet of one QUIC
+// connection returns one key after the identifier changes.
+// It returns an empty string for a packet that carries neither TCP nor UDP.
+// The caller decides what to do with an empty key.
+// GetShardKey acquires no lock and holds no state.
 func (p *Processor) GetShardKey(packet gopacket.Packet) string {
 	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 	if srcIP == "" {
