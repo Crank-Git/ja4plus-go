@@ -2,8 +2,8 @@
 id: conformance-gaps
 feature: Conformance gap closure
 epic: "Epic 5: Conformance gap closure"
-status: planned
-issues: []
+status: issued
+issues: [37, 38, 39, 40, 41, 42]
 mockups: []
 ---
 

@@ -2,8 +2,8 @@
 id: live-capture
 feature: Live capture
 epic: "Epic 13: Live capture"
-status: planned
-issues: []
+status: issued
+issues: [76, 77, 78, 79, 80, 81, 82]
 mockups: [mockups/03-watch-output.html]
 ---
 

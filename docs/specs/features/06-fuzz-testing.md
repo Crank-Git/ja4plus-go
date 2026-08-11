@@ -2,8 +2,8 @@
 id: fuzz-testing
 feature: Fuzz testing
 epic: "Epic 6: Fuzz testing"
-status: planned
-issues: []
+status: issued
+issues: [43, 44, 45, 46, 47]
 mockups: []
 ---
 

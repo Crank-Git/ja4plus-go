@@ -2,8 +2,8 @@
 id: documentation
 feature: Documentation site
 epic: "Epic 14: Documentation site"
-status: planned
-issues: []
+status: issued
+issues: [83, 84, 85, 86, 87, 88]
 mockups: [mockups/04-docs-site.html]
 ---
 

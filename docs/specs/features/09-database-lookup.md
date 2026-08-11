@@ -2,8 +2,8 @@
 id: database-lookup
 feature: Database lookup
 epic: "Epic 9: Database lookup"
-status: planned
-issues: []
+status: issued
+issues: [71, 72, 73, 74, 75]
 mockups: []
 ---
 

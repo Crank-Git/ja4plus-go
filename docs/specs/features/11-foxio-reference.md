@@ -2,8 +2,8 @@
 id: foxio-reference
 feature: FoxIO reference material
 epic: "Epic 11: FoxIO reference material"
-status: planned
-issues: []
+status: issued
+issues: [14, 15, 16, 17, 18, 19]
 mockups: []
 ---
 

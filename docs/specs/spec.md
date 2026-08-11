@@ -946,6 +946,50 @@ exported interface. Adding a method to it is a breaking change that `v0.3.0` per
 that `v1.0.0` forbids for the whole `v1` series. If the ruling arrives after the freeze,
 the only remaining answer is the optional interface.
 
+## Issue map
+
+`/spec-to-issues` created these on 2026-08-11, from spec version 3. Every issue carries the
+marker `<!-- spec:ja4plus-go feature:<id> -->`, so a later planning wave reads the id and
+re-issues nothing that already exists.
+
+**Epic 8 reached the tracker as two epics.** Its 60 requirements slice along eight seams, and
+one issue-flow batch holds six sub-issues at most. Epic 8a carries the TLS and latency methods,
+and Epic 8b carries the TCP, HTTP, certificate and DHCP methods. Both point at
+`features/08-python-parity.md`.
+
+| Epic | Epic issue | Sub-issues | Feature file |
+|---|---|---|---|
+| Epic 0: Foundation | #3 | #4, #5, #6, #7, #8 | `features/00-foundation.md` |
+| Epic 1: License compliance | #9 | #10, #11, #12, #13 | `features/01-licensing.md` |
+| Epic 11: FoxIO reference material | #14 | #15, #16, #17, #18, #19 | `features/11-foxio-reference.md` |
+| Epic 2: Correctness audit | #20 | #21, #22, #23, #24, #25 | `features/02-correctness-audit.md` |
+| Epic 3: Concurrency contract | #26 | #27, #28, #29, #30 | `features/03-concurrency.md` |
+| Epic 4: Conformance harness | #31 | #32, #33, #34, #35, #36 | `features/04-conformance-harness.md` |
+| Epic 5: Conformance gap closure | #37 | #38, #39, #40, #41, #42 | `features/05-conformance-gaps.md` |
+| Epic 6: Fuzz testing | #43 | #44, #45, #46, #47 | `features/06-fuzz-testing.md` |
+| Epic 8a: Parity — the TLS and latency methods | #48 | #49, #50, #51, #52, #53 | `features/08-python-parity.md` |
+| Epic 8b: Parity — the TCP, HTTP, certificate and DHCP methods | #54 | #55, #56, #57, #58 | `features/08-python-parity.md` |
+| Epic 12: JA4LS | #59 | #60, #61, #62, #63 | `features/12-ja4ls.md` |
+| Epic 7: Supply chain and CI gates | #64 | #65, #66, #67, #68, #69, #70 | `features/07-supply-chain.md` |
+| Epic 9: Database lookup | #71 | #72, #73, #74, #75 | `features/09-database-lookup.md` |
+| Epic 13: Live capture | #76 | #77, #78, #79, #80, #81, #82 | `features/13-live-capture.md` |
+| Epic 14: Documentation site | #83 | #84, #85, #86, #87, #88 | `features/14-documentation.md` |
+| Epic 15: Mutation sweep | #89 | #90, #91, #92, #93 | `features/15-mutation-sweep.md` |
+| Epic 16: Pre-release validation | #94 | #95, #96, #97, #98, #99 | `features/16-pre-release-validation.md` |
+| Epic 10: API freeze and release | #100 | #101, #102, #103, #104, #105, #106 | `features/10-release.md` |
+
+### Issues that wait on a ruling
+
+Five issues carry `status:needs-feedback`. **No worker may guess an answer to any of them.**
+
+| Issue | Question | Recorded as |
+|---|---|---|
+| #50 | What the ALPN field writes when the first ALPN value is empty. | R9 question 1 |
+| #53 | Whether `CloseOpenWindows` sits on `Fingerprinter` or on a second optional interface. **This one expires at the API freeze.** | R9 question 2 |
+| #61 | Whether `--types ja4l` alone prints the JA4LS value. | R9 question 3 |
+| #70 | Whether the project moves to the `gopacket` fork before the freeze. | R5 |
+| #72 | Where the remote database lookup belongs. | FR-lookup-2 |
+
 ## Changelog
 
 | Round | Date | What changed |

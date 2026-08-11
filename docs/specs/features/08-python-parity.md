@@ -2,8 +2,8 @@
 id: python-parity
 feature: Parity with the port
 epic: "Epic 8: Parity with the port"
-status: planned
-issues: []
+status: issued
+issues: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58]
 mockups: []
 ---
 

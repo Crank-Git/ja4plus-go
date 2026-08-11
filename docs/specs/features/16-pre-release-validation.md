@@ -2,8 +2,8 @@
 id: pre-release-validation
 feature: Pre-release validation
 epic: "Epic 16: Pre-release validation"
-status: planned
-issues: []
+status: issued
+issues: [94, 95, 96, 97, 98, 99]
 mockups: []
 ---
 

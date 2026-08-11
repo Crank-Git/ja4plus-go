@@ -2,8 +2,8 @@
 id: release
 feature: API freeze and release
 epic: "Epic 10: API freeze and release"
-status: planned
-issues: []
+status: issued
+issues: [100, 101, 102, 103, 104, 105, 106]
 mockups: [mockups/02-cli-output.html]
 ---
 

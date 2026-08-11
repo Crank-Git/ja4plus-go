@@ -2,8 +2,8 @@
 id: conformance-harness
 feature: Conformance harness
 epic: "Epic 4: Conformance harness"
-status: planned
-issues: []
+status: issued
+issues: [31, 32, 33, 34, 35, 36]
 mockups: [mockups/01-conformance-report.html]
 ---
 

@@ -2,8 +2,8 @@
 id: concurrency
 feature: Concurrency contract
 epic: "Epic 3: Concurrency contract"
-status: planned
-issues: []
+status: issued
+issues: [26, 27, 28, 29, 30]
 mockups: []
 ---
 

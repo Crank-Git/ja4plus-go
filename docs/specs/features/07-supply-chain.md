@@ -2,8 +2,8 @@
 id: supply-chain
 feature: Supply chain and CI gates
 epic: "Epic 7: Supply chain and CI gates"
-status: planned
-issues: []
+status: issued
+issues: [64, 65, 66, 67, 68, 69, 70]
 mockups: []
 ---
 

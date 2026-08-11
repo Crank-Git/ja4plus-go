@@ -2,8 +2,8 @@
 id: ja4ls
 feature: JA4LS
 epic: "Epic 12: JA4LS"
-status: planned
-issues: []
+status: issued
+issues: [59, 60, 61, 62, 63]
 mockups: []
 ---
 

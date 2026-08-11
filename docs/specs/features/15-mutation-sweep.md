@@ -2,8 +2,8 @@
 id: mutation-sweep
 feature: Mutation sweep
 epic: "Epic 15: Mutation sweep"
-status: planned
-issues: []
+status: issued
+issues: [89, 90, 91, 92, 93]
 mockups: []
 ---
 
