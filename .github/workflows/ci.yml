@@ -35,11 +35,15 @@ jobs:
 
   # FR-conformance-34 runs the conformance suite on every pull request this workflow
   # covers. The maintainer ruled on 2026-08-11 that the job reports and does not block.
-  # #33 measured 302 matches and 1858 deviations against an empty register, so a blocking
-  # job would be red on every pull request until Epic 5 closes the list. A permanently red
-  # job teaches every reader to ignore it. Epic 5 flips this job to blocking.
+  # #33 measured 302 matches and 1858 deviations against an empty register. A job that
+  # blocks stays red on every pull request until Epic 5 closes the list, and a permanently
+  # red job teaches every reader to ignore it. Epic 5 makes the job fail on a deviation.
   conformance:
     runs-on: ubuntu-latest
+    # The job reads the repository and uploads an artifact. A pull request from a fork
+    # controls the code this job runs, so the token gets no write scope.
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -78,15 +82,40 @@ jobs:
           fi
           echo "testdata/foxio/pcap holds $captures captures."
 
-      # The suite exits 2 on a deviation, and this job holds that status back. The status
-      # is not the gate today. The `test` job gates the unit tests, so a swallowed status
-      # here hides no unit failure.
+      # The `conformance` build tag hides three test files from every other job, so no
+      # other job compiles them. `go vet` type-checks them, and a compile error fails here
+      # rather than reaching the run below, which holds the exit status back.
+      - name: Vet the conformance suite
+        run: go vet -tags conformance ./...
+
+      # The suite exits 2 on a deviation, and this job holds that status back, because the
+      # deviation count is not the gate today. The next step reads the log and fails on
+      # every other kind of failure.
       - name: Run the conformance suite
         run: |
           set -o pipefail
           status=0
           make conformance 2>&1 | tee conformance.log || status=$?
           echo "the conformance suite exited with status $status"
+
+      # `TestConformance` is the one test that fails on a deviation. Every other failure is
+      # a real defect, and the job must report it. A held-back exit status hides all of
+      # them, so the job reads the log instead.
+      - name: Fail on a failure that is not a deviation
+        run: |
+          if grep -qE '\[build failed\]|\[setup failed\]' conformance.log; then
+            echo "the conformance suite did not build" >&2
+            exit 1
+          fi
+
+          others=$(grep -E '^[[:space:]]*--- FAIL: ' conformance.log |
+            grep -vE '^[[:space:]]*--- FAIL: TestConformance[/ ]' || true)
+
+          if [ -n "$others" ]; then
+            echo "the conformance run holds a failure that is not a deviation:" >&2
+            echo "$others" >&2
+            exit 1
+          fi
 
       # The suite prints the skip message when it finds no corpus. The step above proves
       # the corpus is present, so this check catches a skip the directory check cannot see.
@@ -106,16 +135,18 @@ jobs:
         env:
           PIN_COMMIT: ${{ steps.pin.outputs.commit }}
         run: |
+          # `sed` exits 0 on an empty input, so the fallback needs the status of `grep`.
+          set -o pipefail
           {
             echo "## Conformance"
             echo
             echo "The corpus is at FoxIO commit \`$PIN_COMMIT\`."
             echo
-            grep -hE 'the run read [0-9]+ captures|the run reports [0-9]+ matches' conformance.log |
+            grep -E 'the run read [0-9]+ captures|the run reports [0-9]+ matches' conformance.log |
               sed 's/^ *[^ ]*: /- /' ||
               echo "- The suite printed no summary line."
             echo
-            echo "This job reports the counts. It does not fail on a deviation, and Epic 5 makes it blocking."
+            echo "This job reports the counts. It does not fail on a deviation, and Epic 5 makes the job fail on one."
           } >> "$GITHUB_STEP_SUMMARY"
 
       # The log names every deviation, and Epic 5 reads it to size the work.
