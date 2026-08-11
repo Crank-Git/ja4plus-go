@@ -489,15 +489,31 @@ type conformanceRunTotals struct {
 	Packet        conformanceSetTotals
 }
 
+// conformanceFetchedCommit returns the FoxIO commit that `make corpus` fetched.
+// It returns the empty string when the corpus records none.
+func conformanceFetchedCommit(t *testing.T) string {
+	t.Helper()
+
+	fetched, err := os.ReadFile(conformanceFetchedFile)
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSpace(string(fetched))
+}
+
 func TestConformance(t *testing.T) {
 	conformanceSkipWithoutCorpus(t)
 
 	register := conformanceRegisterByKey(t)
 	totals := conformanceRunTotals{}
 
-	if fetched, err := os.ReadFile(conformanceFetchedFile); err == nil {
-		t.Logf("the corpus holds the FoxIO commit %s", strings.TrimSpace(string(fetched)))
+	commit := conformanceFetchedCommit(t)
+	if commit != "" {
+		t.Logf("the corpus holds the FoxIO commit %s", commit)
 	}
+
+	report := newConformanceReport(commit)
 
 	// The subtests run one after the other. `.claude/rules/concurrency.md` gives one
 	// Processor to one goroutine, and a parallel subtest would share the corpus reader
@@ -506,11 +522,48 @@ func TestConformance(t *testing.T) {
 		totals.Captures++
 
 		t.Run(capture, func(t *testing.T) {
-			conformanceRunOneCapture(t, capture, register, &totals)
+			conformanceRunOneCapture(t, capture, register, &totals, report)
 		})
 	}
 
+	// FR-conformance-27 writes the report on every run. The write comes before the
+	// deviation check below, because that check fails the test and a failed run must still
+	// leave a current report.
+	if err := conformanceWriteReport(report); err != nil {
+		t.Fatalf("the run does not write %s: %v", conformanceReportPath, err)
+	}
+
+	conformanceCheckReportTotals(t, report, totals)
 	conformanceReportTotals(t, totals)
+}
+
+// conformanceCheckReportTotals fails the run when the report and the suite count it
+// differently.
+//
+// The report counts the run from the comparisons it recorded, and the suite counts it from
+// the comparisons it made. A renderer that drops a comparison passes one count and fails
+// the other, and one count alone would report a smaller run as a healthy one.
+func conformanceCheckReportTotals(t *testing.T, report *conformanceReport, totals conformanceRunTotals) {
+	t.Helper()
+
+	counted := report.totals()
+
+	wanted := conformanceRunTotalsAsCounts(totals)
+	if counted != wanted {
+		t.Errorf("the report counts the run as %+v, and the suite counts it as %+v", counted, wanted)
+	}
+}
+
+// conformanceRunTotalsAsCounts returns the run totals in the form the report counts them.
+func conformanceRunTotalsAsCounts(totals conformanceRunTotals) conformanceReportCounts {
+	return conformanceReportCounts{
+		Captures:      totals.Captures,
+		Compared:      totals.Captures - totals.NotApplicable,
+		NotApplicable: totals.NotApplicable,
+		Matches:       totals.Stream.Matches + totals.Packet.Matches,
+		Deviations:    totals.Stream.Deviations + totals.Packet.Deviations,
+		Accepted:      totals.Stream.AcceptedDeviants + totals.Packet.AcceptedDeviants,
+	}
 }
 
 // conformanceRunOneCapture compares one capture against the two vector sets and adds its
@@ -520,8 +573,11 @@ func conformanceRunOneCapture(
 	capture string,
 	register map[conformanceKey]deviationEntry,
 	totals *conformanceRunTotals,
+	report *conformanceReport,
 ) {
 	t.Helper()
+
+	report.readCapture(capture)
 
 	// `loadPCAP` of `integration_test.go` reads the two capture formats and keeps the
 	// capture order. It reads the magic bytes, because the corpus names one pcap file
@@ -533,6 +589,8 @@ func conformanceRunOneCapture(
 	// it, which proves that the library decodes it without a panic, and compares nothing.
 	if strings.Contains(capture, conformanceNotestMarker) {
 		totals.NotApplicable++
+
+		report.declineCapture(capture, conformanceReportNotestReason)
 
 		// The count of per-stream entries reports the size of the corpus, so it counts a
 		// capture the suite compares and a capture the suite skips alike.
@@ -548,11 +606,13 @@ func conformanceRunOneCapture(
 		return
 	}
 
-	compared := conformanceRunStreamSet(t, capture, packets, register, totals)
-	compared = conformanceRunPacketSet(t, capture, packets, register, totals) || compared
+	compared := conformanceRunStreamSet(t, capture, packets, register, totals, report)
+	compared = conformanceRunPacketSet(t, capture, packets, register, totals, report) || compared
 
 	if !compared {
 		totals.NotApplicable++
+
+		report.declineCapture(capture, conformanceReportNoVectorReason)
 
 		t.Logf("no vector of the corpus holds a value for this capture, so the suite records it as not applicable")
 	}
@@ -566,6 +626,7 @@ func conformanceRunStreamSet(
 	packets []gopacket.Packet,
 	register map[conformanceKey]deviationEntry,
 	totals *conformanceRunTotals,
+	report *conformanceReport,
 ) bool {
 	t.Helper()
 
@@ -593,7 +654,10 @@ func conformanceRunStreamSet(
 	}
 
 	produced := conformanceProducedByStream(t, capture, packets, shape)
-	conformanceRecordComparison(t, "per-stream", compareConformance(produced, shape.Expected, register), &totals.Stream)
+	comparison := compareConformance(produced, shape.Expected, register)
+
+	report.recordComparison(capture, conformanceReportStreamSet, comparison)
+	conformanceRecordComparison(t, conformanceReportStreamSet, comparison, &totals.Stream)
 
 	return true
 }
@@ -606,6 +670,7 @@ func conformanceRunPacketSet(
 	packets []gopacket.Packet,
 	register map[conformanceKey]deviationEntry,
 	totals *conformanceRunTotals,
+	report *conformanceReport,
 ) bool {
 	t.Helper()
 
@@ -625,7 +690,10 @@ func conformanceRunPacketSet(
 	}
 
 	produced := conformanceProducedByFrame(t, capture, packets, conformanceCoveredMethods(expected))
-	conformanceRecordComparison(t, "per-packet", compareConformance(produced, expected, register), &totals.Packet)
+	comparison := compareConformance(produced, expected, register)
+
+	report.recordComparison(capture, conformanceReportPacketSet, comparison)
+	conformanceRecordComparison(t, conformanceReportPacketSet, comparison, &totals.Packet)
 
 	return true
 }

@@ -68,6 +68,9 @@ type conformanceComparison struct {
 	// Matches counts the comparisons where the two values are equal and the register
 	// names neither.
 	Matches int
+	// Matched names every comparison that Matches counts, sorted by key. The report reads
+	// it, because a count alone cannot say which method of which capture matched.
+	Matched []conformanceKey
 	// Deviations holds every difference, sorted by key.
 	Deviations []conformanceDeviation
 	// Closed names every comparison that the register names and that now matches.
@@ -103,6 +106,7 @@ func compareConformance(
 			}
 
 			result.Matches++
+			result.Matched = append(result.Matched, key)
 
 			continue
 		}
