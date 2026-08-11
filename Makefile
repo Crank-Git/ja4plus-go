@@ -12,8 +12,9 @@ lint:
 bench:
 	go test -bench=. -benchmem ./...
 
-# The script fetches the corpus at the commit in `testdata/foxio.pin`. It downloads nothing
-# on a second run, and it names the network on a failure, so this target adds nothing.
+# The script fetches the corpus at the commit in `testdata/foxio.pin`.
+# The script is idempotent: it downloads nothing on a second run.
+# It names the network on a failure, so this target adds nothing of its own.
 corpus:
 	./scripts/fetch-corpus.sh
 
@@ -31,9 +32,11 @@ cover:
 # `go test` fuzzes one target for each run, so this target runs each one in turn.
 # Epic 6 adds the fuzz targets, and this target finds them without a change.
 # `-run '^$$'` holds the unit tests back, so each run fuzzes and does nothing else.
+# A package that does not compile fails the list, and `grep` alone would hide that.
 fuzz:
 	@for package in $$(go list ./...); do \
-		for target in $$(go test -list '^Fuzz' $$package | grep '^Fuzz' || true); do \
+		targets=$$(go test -list '^Fuzz' $$package) || exit 1; \
+		for target in $$(echo "$$targets" | grep '^Fuzz' || true); do \
 			echo "fuzz: $$target in $$package"; \
 			go test -run '^$$' -fuzz "^$$target$$" -fuzztime 30s $$package || exit 1; \
 		done; \

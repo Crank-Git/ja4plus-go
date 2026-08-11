@@ -176,6 +176,12 @@ func TestMakefileFuzzTargetRunsEachTargetFor30Seconds(t *testing.T) {
 	if !strings.Contains(recipe, "30s") {
 		t.Errorf("the fuzz recipe does not run a target for 30 seconds:\n%s", recipe)
 	}
+
+	// FR-fuzz-26 fails the run when a target finds a crash. The recipe runs the targets
+	// in a loop, and a loop without this exit reports success after a crash.
+	if !strings.Contains(recipe, "|| exit 1") {
+		t.Errorf("the fuzz recipe does not stop on a failed run:\n%s", recipe)
+	}
 }
 
 // FR-foundation-3 requires the name of every enabled linter. `default: none` disables the
