@@ -82,7 +82,7 @@ of them produces the value.
 - **R12** — Wireshark reads the client DUID only when the message carries DHCPv6 option 1.
   Wireshark sets `dhcpv6_option_type_1_exists` at
   `wireshark/source/packet-ja4.c:1569` and tests it at
-  `wireshark/source/packet-ja4.c:1549`. DHCPv6 option 1 is the client identifier option.
+  `wireshark/source/packet-ja4.c:1549`.
 - **R13** — Wireshark reads the first client DUID of the message and ignores a later one.
   Wireshark tests `wmem_strbuf_get_len(ja4d_data.size) == 0` at
   `wireshark/source/packet-ja4.c:1548`.
@@ -95,8 +95,7 @@ of them produces the value.
 - **R17** — The third field of part a holds `i` when the message requests one specific
   address, and `n` when it requests a new address. The image labels the field
   `Requesting specific IP (i) or New IP (n)`. Wireshark tests `dhcpv6.iata` at
-  `wireshark/source/packet-ja4.c:1560`, and that field is the identity association for
-  temporary addresses.
+  `wireshark/source/packet-ja4.c:1560`.
 - **R18** — The fourth field of part a holds `d` when the message carries a domain name,
   and `n` when it carries none. The image labels the field
   `Has a Domain name (d) or No domain (n)`. Wireshark tests `dhcpv6.client_domain` at

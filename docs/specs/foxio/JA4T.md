@@ -51,9 +51,9 @@ that method.
   `tcp.window_size_value` at `wireshark/source/packet-ja4.c:1257`. Rust reads
   `tcp.window_size_value` at `rust/ja4/src/tcp.rs:66`.
 - **R7** — Part a holds the value the packet carries, and no implementation applies the
-  window scale to it. Wireshark reads the field `tcp.window_size_value` at
-  `wireshark/source/packet-ja4.c:1257`, and that field holds the unscaled value. Rust
-  names the same field at `rust/ja4/src/tcp.rs:65`.
+  window scale to it. Rust holds the comment
+  `// Extract window size (raw, before scaling)` at `rust/ja4/src/tcp.rs:65`. Zeek writes
+  `rph$tcp$win` unchanged at `zeek/ja4t/main.zeek:196`.
 
 ### Part b — the TCP options
 

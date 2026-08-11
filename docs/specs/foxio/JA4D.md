@@ -106,7 +106,7 @@ program build none**, so no rule on this page cites either of them.
   `zeek/ja4d/main.zeek:84`. Wireshark appends `"%d-"` at
   `wireshark/source/packet-ja4.c:1527`.
 - **R19** — An empty option list reaches `00`. Zeek returns `"00"` at
-  `zeek/ja4d/main.zeek:83`. Wireshark writes `"00"` at
+  `zeek/ja4d/main.zeek:82`. Wireshark writes `"00"` at
   `wireshark/source/packet-ja4.c:709`.
 
 ### Part c — the parameter request list

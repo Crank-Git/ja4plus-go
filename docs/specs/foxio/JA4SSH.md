@@ -97,7 +97,8 @@ A citation names a file of the FoxIO repository at the pinned commit. Read
   `conn->tcp_server_acks` at `wireshark/source/packet-ja4.c:658`. Rust writes
   `nr_tcp_client_acks` and `nr_tcp_server_acks` at `rust/ja4/src/ssh.rs:288`.
 - **R16** — A bare ACK is a packet whose TCP flags equal `0x10` and whose payload is empty.
-  Zeek tests `rp$tcp$dl == 0` and `rp$tcp$flags == 0x10` at `zeek/ja4ssh/main.zeek:122`.
+  Zeek tests `rp$tcp$dl == 0` and `rp$tcp$flags == 0x10` at
+  `zeek/ja4ssh/main.zeek:122-123`.
   Wireshark tests `(tcp_flags == 0x010) && (tcp_len == 0)` at
   `wireshark/source/packet-ja4.c:1302`. Rust holds
   `const BARE_ACK_FLAG: &str = "0x0010";` at `rust/ja4/src/ssh.rs:228`. Python tests
