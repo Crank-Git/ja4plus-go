@@ -15,10 +15,9 @@ import (
 // records a deviation that no closure removes. These tests hold FR-gaps-5 and FR-gaps-6
 // of `docs/specs/features/05-conformance-gaps.md`.
 //
-// The page holds no entry today, because the maintainer has accepted none. An empty
-// record passes every content test without exercising the reader, so the reader tests
-// below run over fixture rows that this file holds. `deviations_test.go` reads the
-// register the same way, and this file follows it.
+// The page holds one entry today, and FR-gaps-20 requires it. One entry exercises no
+// malformed case, so the reader tests below run over fixture rows that this file holds.
+// `deviations_test.go` reads the register the same way, and this file follows it.
 //
 // The reader stays in the test build. `v1.0.0` freezes the exported API, and the page
 // serves the release gate and the test suite alone.
@@ -295,6 +294,47 @@ func TestTheExclusionsPageStatesThatOnlyTheMaintainerAcceptsAnEntry(t *testing.T
 		if !strings.Contains(page, wanted) {
 			t.Errorf("%s does not name %q", exclusionsPageFile, wanted)
 		}
+	}
+}
+
+// exclusionEvidencePattern is the form of an `Evidence` value that cites a source line.
+// `.claude/rules/rulings.md` requires a file and a line, because a claim about a source
+// without the location is one the next reader cannot check.
+var exclusionEvidencePattern = regexp.MustCompile(`[^ ` + "`" + `]+:[0-9]+`)
+
+// TestTheExclusionsRecordHoldsTheNotestCapture holds FR-gaps-20 of
+// `docs/specs/features/05-conformance-gaps.md`.
+//
+// FoxIO reaches no method on `dtls-udp.notest.cap`, so the entry keys the capture alone.
+// The suite records `not applicable` for every method of the capture, and
+// `TestTheReportNamesTheNotestMarkerAsTheReasonOfADeclinedCapture` of
+// `conformance_report_check_test.go` holds that behavior for JA4.
+func TestTheExclusionsRecordHoldsTheNotestCapture(t *testing.T) {
+	const capture = "dtls-udp.notest.cap"
+
+	entries := readExclusionRecord(t)
+
+	index := slices.IndexFunc(entries, func(entry exclusionEntry) bool {
+		return entry.Key == capture
+	})
+
+	if index < 0 {
+		t.Fatalf("FR-gaps-20 requires an entry keyed %q in %s, and the record holds %d entries",
+			capture, exclusionsPageFile, len(entries))
+	}
+
+	entry := entries[index]
+
+	// The reason names the party that excludes the capture. A reason that names no party
+	// leaves the next reader to guess whether this project or FoxIO made the choice.
+	if !strings.Contains(entry.Reason, "FoxIO") {
+		t.Errorf("entry %q holds the reason %q, and FR-gaps-20 requires the reason to name FoxIO",
+			capture, entry.Reason)
+	}
+
+	if !exclusionEvidencePattern.MatchString(entry.Evidence) {
+		t.Errorf("entry %q cites %q, and `.claude/rules/rulings.md` requires a file and a line",
+			capture, entry.Evidence)
 	}
 }
 

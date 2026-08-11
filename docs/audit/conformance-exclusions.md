@@ -1,7 +1,7 @@
 # The conformance exclusions
 
-**The record holds no entry.** The maintainer has accepted none, and FR-gaps-6 requires an
-acceptance on every entry.
+**The record holds one entry.** The maintainer accepted it on 2026-08-11, and FR-gaps-6
+requires an acceptance on every entry.
 
 `docs/specs/features/05-conformance-gaps.md` FR-gaps-5 names this file. The bar for
 `v1.0.0` is a byte-identical match on every capture of the corpus. A deviation is closed,
@@ -71,6 +71,7 @@ source sentence exactly, in a code span.
 
 | Key | Reason | Evidence | Accepted by | Date |
 |---|---|---|---|---|
+| `dtls-udp.notest.cap` | FoxIO excludes the capture from their own suite. Both FoxIO harnesses enumerate the glob `*.pcap*`, and this name ends `.cap`. | At `27f0cbf`: `python/test/test_ja4_output.py:15` and `wireshark/test/test_tshark_output.py:11`. FoxIO holds 38 captures, and each test data directory holds 37 vectors. | Crank-Git | 2026-08-11 |
 
 <!-- conformance-exclusions:end -->
 

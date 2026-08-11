@@ -119,8 +119,9 @@ could later match, so the guard can evaluate nothing.
 stream and no method, and it reaches no `<capture>/<stream>/<method>` register key.
 FR-gaps-19 records `not applicable` for it, and FR-gaps-20 requires an exclusions entry.
 
-**Write no entry in either record yourself.** Both records are empty today, and only the
-maintainer accepts an entry.
+**Write no entry in either record yourself.** The register is empty today, and the
+exclusions page holds the one entry that FR-gaps-20 requires. Only the maintainer accepts
+an entry.
 
 ## Rules
 
