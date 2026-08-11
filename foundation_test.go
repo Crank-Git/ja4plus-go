@@ -80,4 +80,28 @@ func TestGolangciConfigNamesEveryEnabledLinter(t *testing.T) {
 	if !strings.Contains(config, "  default: none") {
 		t.Errorf(".golangci.yml does not set `default: none`, so it names no complete linter set")
 	}
+
+	enabled := regexp.MustCompile(`(?ms)^  enable:\n((?:    - \w+\n)+)`).FindStringSubmatch(config)
+	if enabled == nil {
+		t.Fatalf(".golangci.yml names no enabled linter")
+	}
+
+	if strings.Count(enabled[1], "- ") < 5 {
+		t.Errorf(".golangci.yml enables fewer than five linters:\n%s", enabled[1])
+	}
+}
+
+// The release workflow builds every artifact, so it must hold the same Go version as the
+// module floor. A lower version fails the release and not the pull request.
+func TestReleaseWorkflowBuildsOnGo124(t *testing.T) {
+	workflow := readRepoFile(t, ".github/workflows/release.yml")
+
+	version := regexp.MustCompile(`(?m)^ *go-version: '(.*)'$`).FindStringSubmatch(workflow)
+	if version == nil {
+		t.Fatalf(".github/workflows/release.yml names no Go version")
+	}
+
+	if version[1] != "1.24" {
+		t.Errorf("the release workflow builds on Go %s, and the module floor is 1.24", version[1])
+	}
 }
