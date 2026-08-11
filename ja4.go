@@ -132,6 +132,8 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4Fingerprinter) Reset() {
+	f.ensure()
+
 	f.quicFragments = make(map[string][]parser.CryptoFragment)
 	f.dcidToTuple = make(map[string]string)
 }
@@ -142,6 +144,8 @@ func (f *JA4Fingerprinter) Reset() {
 // The caller names the two endpoints in either order, because the reverse map holds the
 // order of the datagram that carried the client hello.
 func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
 	forward := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 	reverse := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
 

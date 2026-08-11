@@ -127,12 +127,16 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4SFingerprinter) Reset() {
+	f.ensure()
+
 	f.quicDCIDs = make(map[string][]byte)
 }
 
 // CleanupConnection removes internal state for the given connection.
 // JA4S QUIC state is keyed by directional tuple: srcIP:srcPort-dstIP:dstPort.
 func (f *JA4SFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
 	fwd := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
 	delete(f.quicDCIDs, fwd)

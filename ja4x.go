@@ -126,6 +126,8 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4XFingerprinter) Reset() {
+	f.ensure()
+
 	f.streams = make(map[string][]byte)
 	f.processedCerts = make(map[string]struct{})
 	f.certsByStream = make(map[string]map[string]struct{})
@@ -136,6 +138,8 @@ func (f *JA4XFingerprinter) Reset() {
 // JA4X uses directional keys: srcIP:srcPort-dstIP:dstPort.
 // Both directions are cleaned since the certificate may arrive from either side.
 func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
 	fwd := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
 	delete(f.streams, fwd)

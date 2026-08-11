@@ -226,12 +226,16 @@ func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uin
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4LFingerprinter) Reset() {
+	f.ensure()
+
 	f.connections = make(map[string]*connState)
 }
 
 // CleanupConnection removes internal state for the given connection.
 // JA4L normalizes keys lexicographically by IP then port.
 func (f *JA4LFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
 	connKey, _ := f.normalizeKey(proto, srcIP, srcPort, dstIP, dstPort)
 	delete(f.connections, connKey)
 }
