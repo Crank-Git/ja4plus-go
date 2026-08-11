@@ -31,7 +31,8 @@ func buildClientHelloPayload() []byte {
 
 	// server_name: list_len(2) + type(1) + host_len(2) + host
 	host := []byte("example.com")
-	sni := []byte{0x00, byte(len(host) + 3), 0x00, byte(len(host) >> 8), byte(len(host))}
+	listLen := len(host) + 3
+	sni := []byte{byte(listLen >> 8), byte(listLen), 0x00, byte(len(host) >> 8), byte(len(host))}
 	sni = append(sni, host...)
 	appendExt(parser.ExtSNI, sni)
 
@@ -62,7 +63,7 @@ func buildClientHelloPayload() []byte {
 	recordLen := handshakeLen + 4
 
 	payload := []byte{0x16, 0x03, 0x01, byte(recordLen >> 8), byte(recordLen)}
-	payload = append(payload, 0x01, 0x00, byte(handshakeLen>>8), byte(handshakeLen))
+	payload = append(payload, 0x01, byte(handshakeLen>>16), byte(handshakeLen>>8), byte(handshakeLen))
 	payload = append(payload, body...)
 	return payload
 }
@@ -161,66 +162,103 @@ func buildDHCPv6SolicitPacket(tb testing.TB) gopacket.Packet {
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
 
-// TestEachBenchmarkPacketProducesOneFingerprint keeps every benchmark honest.
-// A benchmark whose packet produces no fingerprint measures an early return, and it
-// reports a time that no reader can use.
-func TestEachBenchmarkPacketProducesOneFingerprint(t *testing.T) {
-	clientIP := net.IP{192, 168, 1, 1}
-	serverIP := net.IP{10, 0, 0, 1}
-	tcpOptions := []layers.TCPOption{
+// The test and the benchmark for one method share the input below. A guard test that
+// read a different packet from the benchmark would guard nothing.
+
+// benchHTTPRequest is the HTTP request that JA4H reads.
+const benchHTTPRequest = "GET /index.html HTTP/1.1\r\n" +
+	"Host: example.com\r\n" +
+	"User-Agent: Mozilla/5.0\r\n" +
+	"Accept: text/html\r\n" +
+	"Accept-Language: en-US,en;q=0.9\r\n" +
+	"Cookie: session=abc123; theme=dark\r\n" +
+	"Referer: https://example.com/\r\n" +
+	"\r\n"
+
+// benchSSHBanner is the SSH banner that JA4SSH reads.
+const benchSSHBanner = "SSH-2.0-OpenSSH_8.9\r\n"
+
+// benchClientIP returns the client address that every benchmark uses.
+func benchClientIP() net.IP { return net.IP{192, 168, 1, 1} }
+
+// benchServerIP returns the server address that every benchmark uses.
+func benchServerIP() net.IP { return net.IP{10, 0, 0, 1} }
+
+// benchServerHelloPayload returns the TLS ServerHello record that JA4S reads.
+func benchServerHelloPayload() []byte {
+	return buildServerHelloPayload(0x1301, []uint16{parser.ExtSupportedVersions, parser.ExtALPN}, "h2")
+}
+
+// benchSYNOptions returns the TCP options that JA4T reads from a SYN packet.
+func benchSYNOptions() []layers.TCPOption {
+	return []layers.TCPOption{
+		{OptionType: layers.TCPOptionKindMSS, OptionLength: 4, OptionData: mssOptionData(1460)},
+		{OptionType: layers.TCPOptionKindSACKPermitted, OptionLength: 2},
+		{OptionType: layers.TCPOptionKindTimestamps, OptionLength: 10, OptionData: make([]byte, 8)},
+		{OptionType: layers.TCPOptionKindNop, OptionLength: 1},
+		{OptionType: layers.TCPOptionKindWindowScale, OptionLength: 3, OptionData: []byte{7}},
+	}
+}
+
+// benchSYNACKOptions returns the TCP options that JA4TS reads from a SYN-ACK packet.
+func benchSYNACKOptions() []layers.TCPOption {
+	return []layers.TCPOption{
 		{OptionType: layers.TCPOptionKindMSS, OptionLength: 4, OptionData: mssOptionData(1460)},
 		{OptionType: layers.TCPOptionKindSACKPermitted, OptionLength: 2},
 		{OptionType: layers.TCPOptionKindWindowScale, OptionLength: 3, OptionData: []byte{7}},
 	}
+}
 
+// TestEachBenchmarkPacketProducesOneFingerprint keeps every benchmark honest.
+// A benchmark whose packet produces no fingerprint measures an early return, and it
+// reports a time that no reader can use.
+func TestEachBenchmarkPacketProducesOneFingerprint(t *testing.T) {
 	cases := []struct {
 		name string
-		run  func() []FingerprintResult
+		run  func(tb testing.TB) []FingerprintResult
 	}{
-		{"ja4", func() []FingerprintResult {
-			r, _ := NewJA4().ProcessPacket(buildTCPPacketWithPayload(t, buildClientHelloPayload()))
+		{"ja4", func(tb testing.TB) []FingerprintResult {
+			r, _ := NewJA4().ProcessPacket(buildTCPPacketWithPayload(tb, buildClientHelloPayload()))
 			return r
 		}},
-		{"ja4s", func() []FingerprintResult {
-			payload := buildServerHelloPayload(0x1301, []uint16{parser.ExtSupportedVersions, parser.ExtALPN}, "h2")
-			r, _ := NewJA4S().ProcessPacket(buildTCPPayloadPacket(t, payload))
+		{"ja4s", func(tb testing.TB) []FingerprintResult {
+			r, _ := NewJA4S().ProcessPacket(buildTCPPayloadPacket(tb, benchServerHelloPayload()))
 			return r
 		}},
-		{"ja4h", func() []FingerprintResult {
-			raw := "GET / HTTP/1.1\r\nHost: example.com\r\nUser-Agent: Mozilla/5.0\r\n\r\n"
-			r, _ := NewJA4H().ProcessPacket(buildTCPPacketWithPayload(t, []byte(raw)))
+		{"ja4h", func(tb testing.TB) []FingerprintResult {
+			r, _ := NewJA4H().ProcessPacket(buildTCPPacketWithPayload(tb, []byte(benchHTTPRequest)))
 			return r
 		}},
-		{"ja4l", func() []FingerprintResult {
+		{"ja4l", func(tb testing.TB) []FingerprintResult {
 			fp := NewJA4L()
-			_, _ = fp.ProcessPacket(buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 54321, 443, true, false))
-			r, _ := fp.ProcessPacket(buildTCPPacketWithIPs(t, serverIP, clientIP, 128, 443, 54321, true, true))
+			_, _ = fp.ProcessPacket(buildTCPPacketWithIPs(tb, benchClientIP(), benchServerIP(), 64, 54321, 443, true, false))
+			r, _ := fp.ProcessPacket(buildTCPPacketWithIPs(tb, benchServerIP(), benchClientIP(), 128, 443, 54321, true, true))
 			return r
 		}},
-		{"ja4x", func() []FingerprintResult {
-			payload := buildCertificateRecordPayload(generateSelfSignedCertDER(t))
-			r, _ := NewJA4X().ProcessPacket(buildTCPPayloadPacket(t, payload))
+		{"ja4x", func(tb testing.TB) []FingerprintResult {
+			payload := buildCertificateRecordPayload(generateSelfSignedCertDER(tb))
+			r, _ := NewJA4X().ProcessPacket(buildTCPPayloadPacket(tb, payload))
 			return r
 		}},
-		{"ja4ssh", func() []FingerprintResult {
-			pkt := buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, []byte("SSH-2.0-OpenSSH_8.9\r\n"), false)
+		{"ja4ssh", func(tb testing.TB) []FingerprintResult {
+			pkt := buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, []byte(benchSSHBanner), false)
 			r, _ := NewJA4SSH(1).ProcessPacket(pkt)
 			return r
 		}},
-		{"ja4t", func() []FingerprintResult {
-			r, _ := NewJA4T().ProcessPacket(buildTCPPacket(t, 54321, 443, true, false, 65535, tcpOptions))
+		{"ja4t", func(tb testing.TB) []FingerprintResult {
+			r, _ := NewJA4T().ProcessPacket(buildTCPPacket(tb, 54321, 443, true, false, 65535, benchSYNOptions()))
 			return r
 		}},
-		{"ja4ts", func() []FingerprintResult {
-			r, _ := NewJA4TS().ProcessPacket(buildTCPPacket(t, 443, 54321, true, true, 65535, tcpOptions))
+		{"ja4ts", func(tb testing.TB) []FingerprintResult {
+			r, _ := NewJA4TS().ProcessPacket(buildTCPPacket(tb, 443, 54321, true, true, 65535, benchSYNACKOptions()))
 			return r
 		}},
-		{"ja4d", func() []FingerprintResult {
-			r, _ := NewJA4D().ProcessPacket(buildDHCPDiscoverPacket(t))
+		{"ja4d", func(tb testing.TB) []FingerprintResult {
+			r, _ := NewJA4D().ProcessPacket(buildDHCPDiscoverPacket(tb))
 			return r
 		}},
-		{"ja4d6", func() []FingerprintResult {
-			r, _ := NewJA4D6().ProcessPacket(buildDHCPv6SolicitPacket(t))
+		{"ja4d6", func(tb testing.TB) []FingerprintResult {
+			r, _ := NewJA4D6().ProcessPacket(buildDHCPv6SolicitPacket(tb))
 			return r
 		}},
 	}
@@ -231,7 +269,7 @@ func TestEachBenchmarkPacketProducesOneFingerprint(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			results := tc.run()
+			results := tc.run(t)
 			if len(results) == 0 {
 				t.Fatalf("%s: the benchmark packet produced no fingerprint", tc.name)
 			}
@@ -281,8 +319,7 @@ func BenchmarkJA4FingerprintsOneClientHello(b *testing.B) {
 // BenchmarkJA4SFingerprintsOneServerHello measures JA4S against one TLS ServerHello.
 func BenchmarkJA4SFingerprintsOneServerHello(b *testing.B) {
 	fp := NewJA4S()
-	payload := buildServerHelloPayload(0x1301, []uint16{parser.ExtSupportedVersions, parser.ExtALPN}, "h2")
-	pkt := buildTCPPayloadPacket(b, payload)
+	pkt := buildTCPPayloadPacket(b, benchServerHelloPayload())
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -295,15 +332,7 @@ func BenchmarkJA4SFingerprintsOneServerHello(b *testing.B) {
 // BenchmarkJA4HFingerprintsOneHTTPRequest measures JA4H against one HTTP request.
 func BenchmarkJA4HFingerprintsOneHTTPRequest(b *testing.B) {
 	fp := NewJA4H()
-	raw := "GET /index.html HTTP/1.1\r\n" +
-		"Host: example.com\r\n" +
-		"User-Agent: Mozilla/5.0\r\n" +
-		"Accept: text/html\r\n" +
-		"Accept-Language: en-US,en;q=0.9\r\n" +
-		"Cookie: session=abc123; theme=dark\r\n" +
-		"Referer: https://example.com/\r\n" +
-		"\r\n"
-	pkt := buildTCPPacketWithPayload(b, []byte(raw))
+	pkt := buildTCPPacketWithPayload(b, []byte(benchHTTPRequest))
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -317,10 +346,8 @@ func BenchmarkJA4HFingerprintsOneHTTPRequest(b *testing.B) {
 // SYN-ACK. JA4L reports a latency only after it reads both packets.
 func BenchmarkJA4LFingerprintsOneTCPHandshake(b *testing.B) {
 	fp := NewJA4L()
-	clientIP := net.IP{192, 168, 1, 1}
-	serverIP := net.IP{10, 0, 0, 1}
-	syn := buildTCPPacketWithIPs(b, clientIP, serverIP, 64, 54321, 443, true, false)
-	synAck := buildTCPPacketWithIPs(b, serverIP, clientIP, 128, 443, 54321, true, true)
+	syn := buildTCPPacketWithIPs(b, benchClientIP(), benchServerIP(), 64, 54321, 443, true, false)
+	synAck := buildTCPPacketWithIPs(b, benchServerIP(), benchClientIP(), 128, 443, 54321, true, true)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -349,7 +376,7 @@ func BenchmarkJA4XFingerprintsOneCertificate(b *testing.B) {
 // The window is 1 packet, so the fingerprinter reports a result for every packet.
 func BenchmarkJA4SSHFingerprintsOneSSHPacket(b *testing.B) {
 	fp := NewJA4SSH(1)
-	pkt := buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, []byte("SSH-2.0-OpenSSH_8.9\r\n"), false)
+	pkt := buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, []byte(benchSSHBanner), false)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -362,14 +389,7 @@ func BenchmarkJA4SSHFingerprintsOneSSHPacket(b *testing.B) {
 // BenchmarkJA4TFingerprintsOneSYNPacket measures JA4T against one TCP SYN packet.
 func BenchmarkJA4TFingerprintsOneSYNPacket(b *testing.B) {
 	fp := NewJA4T()
-	options := []layers.TCPOption{
-		{OptionType: layers.TCPOptionKindMSS, OptionLength: 4, OptionData: mssOptionData(1460)},
-		{OptionType: layers.TCPOptionKindSACKPermitted, OptionLength: 2},
-		{OptionType: layers.TCPOptionKindTimestamps, OptionLength: 10, OptionData: make([]byte, 8)},
-		{OptionType: layers.TCPOptionKindNop, OptionLength: 1},
-		{OptionType: layers.TCPOptionKindWindowScale, OptionLength: 3, OptionData: []byte{7}},
-	}
-	pkt := buildTCPPacket(b, 54321, 443, true, false, 65535, options)
+	pkt := buildTCPPacket(b, 54321, 443, true, false, 65535, benchSYNOptions())
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -382,12 +402,7 @@ func BenchmarkJA4TFingerprintsOneSYNPacket(b *testing.B) {
 // BenchmarkJA4TSFingerprintsOneSYNACKPacket measures JA4TS against one TCP SYN-ACK packet.
 func BenchmarkJA4TSFingerprintsOneSYNACKPacket(b *testing.B) {
 	fp := NewJA4TS()
-	options := []layers.TCPOption{
-		{OptionType: layers.TCPOptionKindMSS, OptionLength: 4, OptionData: mssOptionData(1460)},
-		{OptionType: layers.TCPOptionKindSACKPermitted, OptionLength: 2},
-		{OptionType: layers.TCPOptionKindWindowScale, OptionLength: 3, OptionData: []byte{7}},
-	}
-	pkt := buildTCPPacket(b, 443, 54321, true, true, 65535, options)
+	pkt := buildTCPPacket(b, 443, 54321, true, true, 65535, benchSYNACKOptions())
 
 	b.ReportAllocs()
 	b.ResetTimer()
