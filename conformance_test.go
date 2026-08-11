@@ -292,27 +292,31 @@ type conformanceMethodValue struct {
 
 // conformanceValuesOfResult returns every method value that the result carries.
 //
-// One result carries more than one value, because a fingerprinter reports the fingerprint,
-// the raw form and the wire-order raw form together. The suite reports no value for an
-// empty field, because an empty field states that the fingerprinter produced nothing.
+// One result carries three fields, because a fingerprinter reports the fingerprint, the
+// raw form and the wire-order raw form together. An empty field states that the
+// fingerprinter produced nothing, so this function reports no value for it.
+//
+// `ja4.go:96` and `ja4.go:97` set the two raw fields, and no other fingerprinter sets
+// either. The per-packet vector set names no field for JA4, so the two raw branches report
+// nothing at the pinned commit. They hold the comparison that the suite needs when a
+// fingerprinter starts to fill a raw field, and without them the suite would report the
+// new value as absent for ever.
 func conformanceValuesOfResult(result FingerprintResult) []conformanceMethodValue {
 	method, held := conformanceMethodOfResultType(result)
 	if !held {
 		return nil
 	}
 
-	values := []conformanceMethodValue{{Method: method, Value: result.Fingerprint}}
+	var values []conformanceMethodValue
 
-	if result.Raw != "" {
-		values = append(values, conformanceMethodValue{Method: method + "_r", Value: result.Raw})
-	}
-
-	if result.RawOriginalOrder != "" {
-		values = append(values, conformanceMethodValue{Method: method + "_ro", Value: result.RawOriginalOrder})
-	}
-
-	if result.Fingerprint == "" {
-		return values[1:]
+	for _, value := range []conformanceMethodValue{
+		{Method: method, Value: result.Fingerprint},
+		{Method: method + "_r", Value: result.Raw},
+		{Method: method + "_ro", Value: result.RawOriginalOrder},
+	} {
+		if value.Value != "" {
+			values = append(values, value)
+		}
 	}
 
 	return values
