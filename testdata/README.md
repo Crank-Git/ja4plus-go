@@ -18,7 +18,7 @@ through FR-reference-24 state the file and the schema, and `deviations_test.go` 
 
 **An entry records a ruling, and only the maintainer makes one.** Read
 `.claude/rules/rulings.md` before you add an entry. Never write an entry for a difference
-that no conformance run measured, and never write a placeholder.
+that no conformance run measured. Never write a placeholder.
 
 **An entry is an accepted difference, not a hidden failure.** The conformance suite fails
 when an entry names a comparison that now matches. #33 builds that suite, and

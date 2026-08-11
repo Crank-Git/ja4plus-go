@@ -59,9 +59,12 @@ type deviationEntry struct {
 }
 
 // parseDeviationRegister returns one entry for each element of the register content.
-// It returns an error when the content is not a JSON array of objects, when an entry
-// omits a field, when an entry holds a field this project does not define, or when a
-// field value has the wrong form.
+// It returns an error in four cases.
+//
+//   - The content is not a JSON array of objects.
+//   - An entry omits a field.
+//   - An entry holds a field this project does not define.
+//   - A field value has the wrong form.
 func parseDeviationRegister(content []byte) ([]deviationEntry, error) {
 	var raw []map[string]json.RawMessage
 	if err := json.Unmarshal(content, &raw); err != nil {
@@ -83,13 +86,24 @@ func parseDeviationRegister(content []byte) ([]deviationEntry, error) {
 }
 
 // readDeviationEntry returns the entry that the fields describe.
-// It returns an error when a field is absent, undefined or of the wrong form.
+// It returns an error in three cases.
+//
+//   - A field is absent.
+//   - The entry holds a field this project does not define.
+//   - A field value has the wrong form.
 func readDeviationEntry(fields map[string]json.RawMessage) (deviationEntry, error) {
 	var entry deviationEntry
 
+	// A JSON null decodes into the Go zero value and reports no error, so `"capability":
+	// null` would read as a value decline. The reader declines a null for that reason.
 	for _, name := range deviationFieldNames {
-		if _, held := fields[name]; !held {
+		raw, held := fields[name]
+		if !held {
 			return entry, fmt.Errorf("the field %q is absent", name)
+		}
+
+		if string(raw) == "null" {
+			return entry, fmt.Errorf("the field %q holds null, and every register field holds a value", name)
 		}
 	}
 
@@ -177,6 +191,10 @@ func checkDeviationKey(key string) error {
 // checkDeviationReason returns an error when the reason is not one sentence.
 // FR-reference-24 allows one sentence, so the value ends with a full stop and holds no
 // full stop that a space follows.
+//
+// The check reads a full stop and a space as a sentence break, so it also declines an
+// abbreviation such as `e.g. `. A register reason states one fact about one comparison,
+// and `.claude/rules/ste.md` rule 10 keeps an undefined abbreviation out of it.
 func checkDeviationReason(reason string) error {
 	if reason == "" {
 		return fmt.Errorf("the field %q is empty, and it must hold one sentence", "reason")
@@ -187,7 +205,7 @@ func checkDeviationReason(reason string) error {
 	}
 
 	if strings.Contains(reason, ". ") {
-		return fmt.Errorf("the field %q holds %q, and FR-reference-24 allows one sentence", "reason", reason)
+		return fmt.Errorf("the field %q holds %q, and a full stop that a space follows breaks the one sentence FR-reference-24 allows", "reason", reason)
 	}
 
 	return nil
@@ -266,6 +284,11 @@ func TestEveryRulingOfTheRegisterNamesAnIssue(t *testing.T) {
 	// The check reads the form of the value and reaches no network. A call to the
 	// GitHub API fails offline and fails in CI without a token, so a unit test that
 	// made one would report a defect that the register does not hold.
+	//
+	// The reader already declines a malformed ruling, so this loop repeats that check
+	// over the tracked file. The repeat is deliberate: FR-reference-27 names a test of
+	// its own, and a reader who moves the form check out of the reader still has one.
+	// `TestTheReaderRejectsAMalformedRegister` holds the cases that prove the check.
 	for _, entry := range readDeviationRegister(t) {
 		if !deviationRulingPattern.MatchString(entry.Ruling) {
 			t.Errorf("entry %q names the ruling %q, and FR-reference-23 requires an issue", entry.Key, entry.Ruling)
@@ -352,6 +375,12 @@ func TestTheReaderRejectsAMalformedRegister(t *testing.T) {
 		{"the entry omits the reason", withoutField("reason")},
 		{"the entry holds a field this project does not define", withField("note", "a note")},
 		{"the capability is a string", withField("capability", "false")},
+		{"the capability is null", withField("capability", nil)},
+		{"the key is null", withField("key", nil)},
+		{"the ours value is null", withField("ours", nil)},
+		{"the theirs value is null", withField("theirs", nil)},
+		{"the ruling is null", withField("ruling", nil)},
+		{"the reason is null", withField("reason", nil)},
 		{"the key names no stream", withField("key", "ssh2.pcapng/JA4L-S")},
 		{"the key names no method", withField("key", "ssh2.pcapng/15/")},
 		{"the key names no capture file", withField("key", "ssh2/15/JA4L-S")},
