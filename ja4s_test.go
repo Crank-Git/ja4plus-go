@@ -10,7 +10,7 @@ import (
 )
 
 // buildTCPPayloadPacket creates a gopacket with the given bytes as TCP payload.
-func buildTCPPayloadPacket(t *testing.T, payload []byte) gopacket.Packet {
+func buildTCPPayloadPacket(t testing.TB, payload []byte) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
