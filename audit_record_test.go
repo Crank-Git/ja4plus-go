@@ -3,6 +3,7 @@ package ja4plus
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -351,6 +352,39 @@ func readAuditClosure(finding auditFinding) error {
 	return nil
 }
 
+// auditGitReadsThisCheckout reports whether a git command reads this checkout.
+//
+// It returns false when the machine holds no `git` program, and false when the directory
+// is no git working tree. A consumer that builds this module from a module cache holds
+// neither, and the closing commit rule cannot apply there.
+func auditGitReadsThisCheckout() bool {
+	if _, err := exec.LookPath("git"); err != nil {
+		return false
+	}
+
+	return exec.Command("git", "rev-parse", "--git-dir").Run() == nil
+}
+
+// readAuditCommitReachable returns an error when HEAD does not reach the commit the hash
+// names. FR-audit-27 asks a closed finding to name the commit that closed it, and a
+// reader finds that commit only when the branch reaches it.
+//
+// The batch process squash-merges a sub-branch, so a hash recorded on that branch names a
+// commit the integration branch never carries. That commit stays in the clone that wrote
+// it, and it is absent from every fresh clone. Existence therefore proves nothing, and
+// reachability is the property the record needs.
+func readAuditCommitReachable(hash string) error {
+	if err := exec.Command("git", "cat-file", "-e", hash+"^{commit}").Run(); err != nil {
+		return fmt.Errorf("the closing commit %q names no commit of this repository", hash)
+	}
+
+	if err := exec.Command("git", "merge-base", "--is-ancestor", hash, "HEAD").Run(); err != nil {
+		return fmt.Errorf("the closing commit %q names a commit that HEAD does not reach", hash)
+	}
+
+	return nil
+}
+
 // auditReportStatus returns the status the report states.
 func auditReportStatus(t *testing.T, page string) string {
 	t.Helper()
@@ -472,6 +506,69 @@ func TestEveryRecordedFindingHoldsEveryFieldOfTheRecord(t *testing.T) {
 
 			identifiers[finding.ID] = issue
 		}
+	}
+}
+
+func TestEveryConfirmedFindingNamesAClosingCommitThatHeadReaches(t *testing.T) {
+	if !auditGitReadsThisCheckout() {
+		t.Skip("git reads no commit here, because the machine holds no git program or the directory is no git working tree")
+	}
+
+	page := readRepoFile(t, auditReportFile)
+	files := auditGoFiles(t)
+
+	for _, issue := range auditIssues {
+		rows, err := auditTableRows(auditMarkedBlock(t, page, "findings:"+issue), auditFindingColumns)
+		if err != nil {
+			t.Fatalf("the findings table of issue #%s: %v", issue, err)
+		}
+
+		for _, cells := range rows {
+			// TestEveryRecordedFindingHoldsEveryFieldOfTheRecord reports a defective row,
+			// so this test reads the reachability of a sound row alone.
+			finding, err := readAuditFinding(issue, files, cells)
+			if err != nil || finding.Status != "confirmed" {
+				continue
+			}
+
+			if err := readAuditCommitReachable(finding.Commit); err != nil {
+				t.Errorf("the finding %s: %v", finding.ID, err)
+			}
+		}
+	}
+}
+
+func TestTheCommitReaderRejectsAHashThatHeadDoesNotReach(t *testing.T) {
+	if !auditGitReadsThisCheckout() {
+		t.Skip("git reads no commit here, because the machine holds no git program or the directory is no git working tree")
+	}
+
+	if err := readAuditCommitReachable("HEAD"); err != nil {
+		t.Errorf("HEAD reaches itself: %v", err)
+	}
+
+	// A hash of the right shape that names no object must fail. auditCommitPattern accepts
+	// this value, which is why the shape check alone let the unreachable hashes through.
+	absent := "0123456789abcdef0123456789abcdef01234567"
+	if err := readAuditCommitReachable(absent); err == nil {
+		t.Errorf("the reader accepts the hash %q, which names no commit", absent)
+	}
+
+	// A dangling commit is the defect this reader exists to catch: it exists in this clone
+	// and no branch reaches it, which is the state a squash merge leaves behind.
+	build := exec.Command("git", "commit-tree", "HEAD^{tree}", "-m", "a commit that no branch reaches")
+	build.Env = append(os.Environ(),
+		"GIT_AUTHOR_NAME=audit", "GIT_AUTHOR_EMAIL=audit@example.com",
+		"GIT_COMMITTER_NAME=audit", "GIT_COMMITTER_EMAIL=audit@example.com")
+
+	written, err := build.Output()
+	if err != nil {
+		t.Skipf("git wrote no dangling commit, so this checkout cannot hold the case: %v", err)
+	}
+
+	dangling := strings.TrimSpace(string(written))
+	if err := readAuditCommitReachable(dangling); err == nil {
+		t.Errorf("the reader accepts the dangling commit %q, which no branch reaches", dangling)
 	}
 }
 
