@@ -442,7 +442,7 @@ func conformanceProducedByStream(
 				counter := conformanceKey{Capture: capture, Stream: stream, Method: value.Method}
 				occurrences[counter]++
 
-				method := conformanceStreamMethodKey(value.Method, occurrences[counter], shape.UsesOccurrence[value.Method])
+				method := conformanceStreamMethodKey(value.Method, occurrences[counter], shape.UsesOccurrence[counter])
 				produced[conformanceKey{Capture: capture, Stream: stream, Method: method}] = value.Value
 			}
 		}
@@ -533,6 +533,12 @@ func conformanceRunOneCapture(
 	// it, which proves that the library decodes it without a panic, and compares nothing.
 	if strings.Contains(capture, conformanceNotestMarker) {
 		totals.NotApplicable++
+
+		// The count of per-stream entries reports the size of the corpus, so it counts a
+		// capture the suite compares and a capture the suite skips alike.
+		if path := conformanceVectorPath(conformanceStreamVectorDir, capture); path != "" {
+			totals.StreamValues += len(conformanceReadStreamVector(t, path))
+		}
 
 		t.Logf("FoxIO marks this capture `%s`, so the suite records it as not applicable",
 			strings.Trim(conformanceNotestMarker, "."))

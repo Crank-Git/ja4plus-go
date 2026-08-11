@@ -4,6 +4,7 @@ package ja4plus
 
 import (
 	"encoding/json"
+	"strconv"
 	"testing"
 )
 
@@ -125,13 +126,121 @@ func TestTheStreamAdapterReadsTheKeysForJA4SAndJA4HAndJA4XAndJA4SSH(t *testing.T
 	}
 
 	// The library names a method without the occurrence number, so the adapter records
-	// which form the vector writes for each method.
-	if !shape.UsesOccurrence["JA4X"] {
+	// which form the vector writes for each method on each stream.
+	if !shape.UsesOccurrence[conformanceKey{Capture: "ssh2.pcapng", Stream: "0", Method: "JA4X"}] {
 		t.Errorf("the adapter reports that `JA4X` carries no occurrence number, and the vector writes `JA4X.1`")
 	}
 
-	if shape.UsesOccurrence["JA4S"] {
+	if shape.UsesOccurrence[conformanceKey{Capture: "ssh2.pcapng", Stream: "0", Method: "JA4S"}] {
 		t.Errorf("the adapter reports that `JA4S` carries an occurrence number, and the vector writes `JA4S`")
+	}
+}
+
+// FoxIO writes one entry for each HTTP request, so more than one entry names one stream.
+// `testdata/foxio/python/http2-with-cookies.pcapng.json` holds 16 entries for stream 0 that
+// each carry the bare key `JA4H` with a different value. The adapter numbers them in entry
+// order, because a single map write would keep the last value alone.
+func TestTheStreamAdapterNumbersRepeatedValuesOfOneStreamInEntryOrder(t *testing.T) {
+	values := []string{
+		"ge11nn07ruru_6cd0fb54989b_000000000000_000000000000",
+		"ge11nn08ruru_7cd0fb54989c_000000000000_000000000000",
+		"po11nn050000_530ceba2075f_000000000000_000000000000",
+	}
+
+	entries := make([]conformanceStreamEntry, 0, len(values))
+	for _, value := range values {
+		entries = append(entries, oneConformanceStreamEntry(map[string]string{"JA4H": value}))
+	}
+
+	shape, err := conformanceExpectedFromStreamVector("http2-with-cookies.pcapng", entries)
+	if err != nil {
+		t.Fatalf("the adapter rejects three entries that name one stream: %v", err)
+	}
+
+	if len(shape.Expected) != len(values) {
+		t.Fatalf("the adapter reads %d values, and the three entries hold %d", len(shape.Expected), len(values))
+	}
+
+	for index, value := range values {
+		key := conformanceKey{
+			Capture: "http2-with-cookies.pcapng",
+			Stream:  "0",
+			Method:  "JA4H." + strconv.Itoa(index+1),
+		}
+
+		got, held := shape.Expected[key]
+		if !held {
+			t.Errorf("the adapter writes no value under the key %q", key)
+
+			continue
+		}
+
+		if got != value {
+			t.Errorf("the adapter writes %q under the key %q, and entry %d holds %q", got, key, index, value)
+		}
+	}
+
+	// The produced key must follow the same form, so the producer reads the decision under
+	// the capture, the stream and the method.
+	if !shape.UsesOccurrence[conformanceKey{Capture: "http2-with-cookies.pcapng", Stream: "0", Method: "JA4H"}] {
+		t.Errorf("the adapter reports that `JA4H` on stream 0 carries no occurrence number, and three entries name that stream")
+	}
+}
+
+// One stream that holds one value keeps the bare key, because that is the form the vector
+// writes. The decision is per stream, so one capture can hold both forms.
+func TestTheStreamAdapterKeepsTheBareKeyForAStreamThatHoldsOneValue(t *testing.T) {
+	first := oneConformanceStreamEntry(map[string]string{"JA4H": "a"})
+	second := oneConformanceStreamEntry(map[string]string{"JA4H": "b"})
+	second["stream"] = json.RawMessage(`1`)
+	second["srcport"] = json.RawMessage(`"36373"`)
+	third := oneConformanceStreamEntry(map[string]string{"JA4H": "c"})
+	third["stream"] = json.RawMessage(`1`)
+	third["srcport"] = json.RawMessage(`"36373"`)
+
+	shape, err := conformanceExpectedFromStreamVector("http1.pcapng", []conformanceStreamEntry{first, second, third})
+	if err != nil {
+		t.Fatalf("the adapter rejects the entries: %v", err)
+	}
+
+	wanted := map[conformanceKey]string{
+		{Capture: "http1.pcapng", Stream: "0", Method: "JA4H"}:   "a",
+		{Capture: "http1.pcapng", Stream: "1", Method: "JA4H.1"}: "b",
+		{Capture: "http1.pcapng", Stream: "1", Method: "JA4H.2"}: "c",
+	}
+
+	if len(shape.Expected) != len(wanted) {
+		t.Fatalf("the adapter reads %d values, and the three entries hold %d", len(shape.Expected), len(wanted))
+	}
+
+	for key, value := range wanted {
+		if got := shape.Expected[key]; got != value {
+			t.Errorf("the adapter writes %q under the key %q, and the vector holds %q", got, key, value)
+		}
+	}
+}
+
+// The adapter keeps the occurrence number that the vector writes, and it never renumbers
+// one. `JA4X.1` and `JA4X.2` on one stream stay `JA4X.1` and `JA4X.2`.
+func TestTheStreamAdapterKeepsTheOccurrenceNumberTheVectorWrites(t *testing.T) {
+	entry := oneConformanceStreamEntry(map[string]string{
+		"JA4X.1": "a373a9f83c6b_2bab15409345_7bf9a7bf7029",
+		"JA4X.2": "7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2",
+	})
+
+	shape, err := conformanceExpectedFromStreamVector("ssh2.pcapng", []conformanceStreamEntry{entry})
+	if err != nil {
+		t.Fatalf("the adapter rejects the entry: %v", err)
+	}
+
+	for method, value := range map[string]string{
+		"JA4X.1": "a373a9f83c6b_2bab15409345_7bf9a7bf7029",
+		"JA4X.2": "7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2",
+	} {
+		got := shape.Expected[conformanceKey{Capture: "ssh2.pcapng", Stream: "0", Method: method}]
+		if got != value {
+			t.Errorf("the adapter writes %q under the method %q, and the vector holds %q", got, method, value)
+		}
 	}
 }
 

@@ -157,12 +157,26 @@ type conformanceStreamShape struct {
 	Expected map[conformanceKey]string
 	// StreamOfEndpoint maps the endpoint key of a connection to the stream that names it.
 	StreamOfEndpoint map[string]string
-	// UsesOccurrence reports whether the vector writes an occurrence number for a method.
-	// The library names a method without one, so the produced key follows the vector.
-	UsesOccurrence map[string]bool
+	// UsesOccurrence reports whether the key of a method carries an occurrence number on
+	// one stream. The library names a method without one, so the produced key follows the
+	// vector. The map is keyed by the capture, the stream and the method with no
+	// occurrence number, which is the key the producer counts on.
+	//
+	// The decision is per stream, and never per capture. FoxIO writes one entry for each
+	// HTTP request, so `http2-with-cookies.pcapng` holds 16 entries for stream 0 that each
+	// carry the bare key `JA4H`, and `tls12.pcap` holds one entry that carries `JA4.1`.
+	UsesOccurrence map[conformanceKey]bool
 	// Covered names every method the vector holds. The suite compares no method that the
 	// vector never names.
 	Covered map[string]bool
+}
+
+// conformanceStreamValue is one value that a per-stream vector entry holds for a method.
+type conformanceStreamValue struct {
+	// occurrence is the number the vector key carries, and zero when the key carries none.
+	occurrence int
+	// value is the fingerprint, exactly as the vector writes it.
+	value string
 }
 
 // conformanceExpectedFromStreamVector returns the shape of one per-stream vector.
@@ -172,6 +186,13 @@ type conformanceStreamShape struct {
 //
 // An entry names its stream by the `stream` field, so a register key reads as
 // `testdata/README.md` writes it, for example `ssh2.pcapng/15/JA4L-S`.
+//
+// More than one entry can name one stream. FoxIO writes one entry for each HTTP request,
+// so `http2-with-cookies.pcapng` holds 16 entries for stream 0 that each carry the bare key
+// `JA4H` with a different value. The adapter therefore collects the values of one stream
+// and one method in entry order, and it numbers them when there is more than one. A single
+// map write would keep the last value alone and compare the other 15 against the wrong
+// value.
 func conformanceExpectedFromStreamVector(
 	capture string,
 	entries []conformanceStreamEntry,
@@ -179,9 +200,11 @@ func conformanceExpectedFromStreamVector(
 	shape := conformanceStreamShape{
 		Expected:         make(map[conformanceKey]string),
 		StreamOfEndpoint: make(map[string]string),
-		UsesOccurrence:   make(map[string]bool),
+		UsesOccurrence:   make(map[conformanceKey]bool),
 		Covered:          make(map[string]bool),
 	}
+
+	collected := make(map[conformanceKey][]conformanceStreamValue)
 
 	for index, entry := range entries {
 		stream, endpoint, err := conformanceStreamIdentity(entry)
@@ -207,19 +230,71 @@ func conformanceExpectedFromStreamVector(
 					index, capture, key, err)
 			}
 
-			if shape.Covered[method] && shape.UsesOccurrence[method] != (occurrence > 0) {
-				return shape, fmt.Errorf(
-					"the per-stream vector for %s writes the method %q with an occurrence number and without one, and the two forms name one method",
-					capture, method)
-			}
-
 			shape.Covered[method] = true
-			shape.UsesOccurrence[method] = occurrence > 0
-			shape.Expected[conformanceKey{Capture: capture, Stream: stream, Method: key}] = value
+
+			group := conformanceKey{Capture: capture, Stream: stream, Method: method}
+			collected[group] = append(collected[group], conformanceStreamValue{occurrence: occurrence, value: value})
+		}
+	}
+
+	// A range over a map orders nothing, so the values of one stream and one method arrive
+	// in entry order and the groups arrive in no order. Each group is independent, so the
+	// result is the same on every run.
+	for group, values := range collected {
+		if err := conformanceWriteStreamGroup(shape, group, values); err != nil {
+			return shape, err
 		}
 	}
 
 	return shape, nil
+}
+
+// conformanceWriteStreamGroup writes the values of one stream and one method into the
+// expected map, and it records which key form the vector uses for them.
+//
+// The vector writes an explicit occurrence number for some methods, such as `JA4X.1`. Where
+// it writes none, the adapter numbers the values itself when the stream holds more than
+// one. A stream that holds one value keeps the bare key, which is the form the vector
+// writes.
+func conformanceWriteStreamGroup(
+	shape conformanceStreamShape,
+	group conformanceKey,
+	values []conformanceStreamValue,
+) error {
+	explicit := values[0].occurrence > 0
+
+	for _, held := range values {
+		if (held.occurrence > 0) != explicit {
+			return fmt.Errorf(
+				"the per-stream vector for %s writes the method %q on stream %s with an occurrence number and without one, and the two forms name one method",
+				group.Capture, group.Method, group.Stream)
+		}
+	}
+
+	shape.UsesOccurrence[group] = explicit || len(values) > 1
+
+	for index, held := range values {
+		occurrence := index + 1
+		if explicit {
+			occurrence = held.occurrence
+		}
+
+		key := conformanceKey{
+			Capture: group.Capture,
+			Stream:  group.Stream,
+			Method:  conformanceStreamMethodKey(group.Method, occurrence, shape.UsesOccurrence[group]),
+		}
+
+		if seen, held2 := shape.Expected[key]; held2 {
+			return fmt.Errorf(
+				"the per-stream vector for %s writes the key %q twice on stream %s, and it holds %q and %q",
+				group.Capture, key.Method, group.Stream, seen, held.value)
+		}
+
+		shape.Expected[key] = held.value
+	}
+
+	return nil
 }
 
 // conformanceStreamIdentity returns the stream number and the endpoint key of one entry.
