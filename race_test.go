@@ -13,8 +13,9 @@ import (
 // Every test in this file makes the goroutines touch one connection, so a lost lock
 // produces an unguarded map access that the detector reports.
 //
-// A packet builder calls t.Fatalf, which the test goroutine alone may call. Each test
-// below builds every packet before it starts a goroutine.
+// Each test below builds every packet on the test goroutine, before it starts a worker
+// goroutine. A worker that built its own packet could reach a packet builder that calls
+// t.Fatalf, and the test goroutine alone may call t.Fatalf.
 
 // contendedTupleSrcIP is the client address that the contended connection uses.
 const contendedTupleSrcIP = "192.168.1.1"
@@ -223,7 +224,10 @@ func TestShardedProcessors_SendEachConnectionToOneShard(t *testing.T) {
 			for _, pkt := range []gopacket.Packet{request, reply} {
 				key := router.GetShardKey(pkt)
 				if key == "" {
-					t.Fatalf("GetShardKey returned an empty key for a TCP packet")
+					// t.Fatalf would leave the shard goroutines blocked on a queue
+					// that nobody closes, so report the packet and route the rest.
+					t.Errorf("GetShardKey returned an empty key for a TCP packet")
+					continue
 				}
 				queues[shardIndex(key, shards)] <- work{key: key, packet: pkt}
 				routed++
