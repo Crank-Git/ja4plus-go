@@ -1,13 +1,18 @@
 # ja4plus-go
 
-A Go library and command-line program for JA4+ network fingerprinting. It implements ten
-JA4+ methods and reads packets through `gopacket`. JA4+ is a set of standards that FoxIO
-publishes. This library is an independent Go implementation.
+A Go library and command-line program for JA4+ network fingerprinting. It reads packets
+through `gopacket`. JA4+ is a set of standards that FoxIO publishes. This library is an
+independent Go implementation.
+
+**FoxIO names twelve methods. This project implements eleven of them.**
+**`JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters carry eleven
+methods.** Read the ten as a count of fingerprinters, and never as a count of methods. A
+document that states "ten methods" is wrong, and a test holds that count.
 
 The library is at `v0.3.0`. The current work takes it to `v1.0.0`, which freezes the
-exported API. Three things must be true before that freeze: the output must match the
-FoxIO reference, the concurrency contract must be explicit and correct, and the license
-must state the FoxIO terms.
+exported API. Four things must be true before that freeze: the output must match the FoxIO
+reference, the concurrency contract must be explicit and correct, the license must state
+the FoxIO terms, and this library and the Python port must produce the same fingerprint.
 
 ## Where the design lives
 
@@ -18,12 +23,27 @@ browser for the readable overview.
 The `## Terms` table in `docs/specs/spec.md` is this project's controlled vocabulary.
 Read it before you write a domain word in a document, an issue, or a code comment.
 
+`docs/specs/foxio/` holds the evidence. It transcribes each FoxIO image as numbered rules,
+recovers the seven text specifications that FoxIO deleted, and records the reading of each
+reference implementation. **Read the transcription before you change a fingerprint value.**
+
+The `## Parity with ja4plus` section of `docs/specs/spec.md` holds the divergence register.
+The Python port at `Crank-Git/ja4plus` shipped first and ruled first, and about twenty rows
+of that register name a change to this repository. Read
+`.claude/rules/parity.md` before you touch a fingerprint value or an exported name.
+
 ## Stack
 
 - Go 1.24 or later.
 - `github.com/google/gopacket` for packet decoding.
 - `golang.org/x/crypto` for SSH and hashing.
-- No cgo. The build cross-compiles to five platforms.
+- **The default build holds no cgo, and it cross-compiles to five platforms.** Every
+  released binary is built with `CGO_ENABLED=0`.
+- **One build path uses cgo, and the `libpcap` build tag selects it.** It exists so that
+  `ja4plus watch` reaches macOS, because `pcapgo`'s pure-Go capture handle is Linux-only.
+  Never add a cgo dependency outside that tag, and never build a release artifact with it.
+- MkDocs with the Material theme for the documentation site. It runs in one CI job and no
+  Go code depends on it.
 
 ## Layout
 
@@ -33,12 +53,17 @@ Read it before you write a domain word in a document, an issue, or a code commen
 | `internal/parser/` | Protocol decoding for TLS, QUIC, HTTP, SSH, TCP streams, X.509 and GREASE. |
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
+| `internal/capture/` | Opening a live interface. Holds the pure-Go backend and the libpcap backend. |
 | `testdata/foxio/` | The fetched FoxIO corpus. Not tracked in git. |
-| `docs/specs/` | The spec package. Tracked. |
+| `testdata/deviations.json` | The register: one entry per accepted difference from a FoxIO value. Tracked. |
+| `docs/specs/` | The spec package. Tracked. Not published to the site. |
+| `docs/specs/foxio/` | The FoxIO transcriptions and readings that every ruling cites. |
 | `docs/audit/` | Audit findings, the conformance report and the recorded decisions. |
+| `docs/` (the rest) | The pages the documentation site publishes. |
 
 A new fingerprinter file goes at the root. New protocol decoding goes in
-`internal/parser/`. Nothing that reads a packet belongs in `cmd/`.
+`internal/parser/`. Interface capture goes in `internal/capture/`. Nothing that reads a
+packet belongs in `cmd/`.
 
 ## Commands
 
@@ -53,6 +78,9 @@ A new fingerprinter file goes at the root. New protocol decoding goes in
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Run `govulncheck`. |
+| `make mutate` | Run the mutation sweep over the named package set. Slow. Gates nothing. |
+| `make prerelease` | Install the built artifact into a clean environment and run it. |
+| `make docs` | Build the documentation site with `mkdocs build --strict`. |
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
 
@@ -61,13 +89,22 @@ Run `make corpus` once before `make conformance`. The conformance suite skips wi
 1. `go build ./...` succeeds.
 2. `go test -race ./...` passes.
 3. `golangci-lint run` reports nothing.
-4. `make conformance` reports no new deviation.
+4. `make conformance` reports no deviation that `testdata/deviations.json` does not hold,
+   and the register holds no entry whose comparison now matches.
 5. Coverage does not fall below the value in `.coverage-floor`.
+6. `make docs` succeeds, when the change touches a page.
 
 ## Conventions
 
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
   the reference is wrong. Never change a FoxIO vector to make a test pass.
+- **Where the FoxIO implementations disagree, a person decides.** That is a ruling, not a
+  reading, and it is the maintainer's to make. Stop and ask. A ruling lands in this
+  repository and in the Python port together, or in neither.
+- **A ruling carries a register entry or a test.** A ruling that records neither is a
+  ruling the next reader cannot find.
+- **Never run the Python port from a test.** The shared FoxIO vector set is the parity
+  gate. See `.claude/rules/parity.md`.
 - **One `Processor` serves one goroutine.** The core is lock-free by design. Route packets
   with `GetShardKey`, or share one `SyncProcessor`. Read `.claude/rules/concurrency.md`
   before you touch fingerprinter state.
@@ -81,7 +118,12 @@ Run `make corpus` once before `make conformance`. The conformance suite skips wi
 
 ## License
 
-The original Go code is BSD 3-Clause. FoxIO licenses nine of the ten methods under FoxIO
+The original Go code is BSD 3-Clause. FoxIO licenses every method except JA4 under FoxIO
 License 1.1, which permits non-commercial use only. `NOTICE` holds the FoxIO terms. Do
 not write that this library is BSD 3-Clause without that qualification. See
 `docs/specs/features/01-licensing.md`.
+
+**Never state that this project's method list equals FoxIO's.** Three FoxIO records at the
+pinned commit name three different sets: `License FAQ.md:5` names twelve methods, the
+FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and spells the scanner
+`JA4SScan`. Name the methods this project implements, and cite the pinned commit.

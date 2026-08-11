@@ -6,6 +6,14 @@ dist/
 *.pcap
 *.pcapng
 
+# Constructed captures are tracked. Several rulings are separated by no FoxIO vector, so a
+# test builds its own packet and commits it. The rule above would swallow those files.
+# The fetched FoxIO corpus stays ignored: it is FoxIO-licensed material.
+!testdata/rulings/*.pcap
+!testdata/rulings/*.pcapng
+!testdata/prerelease/*.pcap
+!testdata/prerelease/*.pcapng
+
 # Dependencies
 vendor/
 
@@ -27,6 +35,13 @@ docs/superpowers/
 # Dev notes (not part of the library)
 PYTHON_ISSUES.md
 TODOS.md
+
+# Documentation site build output. The pages under docs/ are tracked; the built site is not.
+site/
+.venv-docs/
+
+# Mutation sweep scratch. The reports under docs/mutation_reports/ are tracked.
+.gremlins/
 
 # OS
 .DS_Store

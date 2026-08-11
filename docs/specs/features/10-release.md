@@ -92,6 +92,22 @@ file that did not exist.
 
 - **FR-release-35** — `.github/workflows/release.yml` runs the conformance suite before
   it builds.
+- **FR-release-35a** — GoReleaser builds the release. `.goreleaser.yaml` holds the
+  configuration, and the workflow holds no inline build matrix.
+- **FR-release-35b** — GoReleaser builds five artifacts: Linux amd64, Linux arm64, Darwin
+  amd64, Darwin arm64 and Windows amd64.
+- **FR-release-35c** — Every artifact is built with `CGO_ENABLED=0`.
+- **FR-release-35d** — No artifact is built with the `libpcap` build tag.
+- **FR-release-35e** — GoReleaser writes a checksum file for every artifact.
+- **FR-release-35f** — GoReleaser writes a software bill of materials for every artifact.
+- **FR-release-35g** — The build stamps the version, the commit and the build date into
+  the program.
+- **FR-release-35h** — `goreleaser check` gates every pull request that touches
+  `.goreleaser.yaml`.
+- **FR-release-35i** — `goreleaser release --snapshot --clean` runs on a pull request and
+  publishes nothing.
+- **FR-release-35j** — The GoReleaser version is pinned in the workflow.
+- **FR-release-35k** — Every action reference in the workflow is pinned to a commit hash.
 - **FR-release-36** — The release workflow fails when the conformance suite reports a
   deviation.
 - **FR-release-37** — The release workflow builds on Go 1.24.
@@ -112,6 +128,18 @@ file that did not exist.
 - **FR-release-45** — The release does not proceed until `go test -race ./...` passes.
 - **FR-release-46** — The release does not proceed until `govulncheck ./...` reports
   nothing.
+- **FR-release-47** — The release does not proceed until `make prerelease` passes.
+  `features/16-pre-release-validation.md` holds the cases.
+- **FR-release-48** — The release does not proceed until `testdata/deviations.json` holds
+  no entry whose comparison now matches.
+- **FR-release-49** — The release does not proceed until every register row of
+  `features/08-python-parity.md` is closed.
+- **FR-release-50** — The release does not proceed until `mkdocs build --strict`
+  succeeds.
+- **FR-release-51** — The CHANGELOG records `CloseOpenWindows` as a breaking change to the
+  exported `Fingerprinter` interface.
+- **FR-release-52** — The CHANGELOG records JA4LS as a new method, and states eleven
+  methods and ten fingerprinters.
 
 ## User flows
 

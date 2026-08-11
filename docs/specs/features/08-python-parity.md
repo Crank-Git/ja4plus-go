@@ -1,7 +1,7 @@
 ---
 id: python-parity
-feature: Python parity
-epic: "Epic 8: Python parity"
+feature: Parity with the port
+epic: "Epic 8: Parity with the port"
 status: planned
 issues: []
 mockups: []
@@ -9,182 +9,296 @@ mockups: []
 
 ## Purpose
 
-The maintainer owns a second implementation, `Crank-Git/ja4plus`, written in Python. It
-is at version `v0.6.0`, and it holds capability that the Go library does not. A user who
-moves between the two finds a different API and, in some places, a different result.
+The maintainer owns a second implementation, `Crank-Git/ja4plus`, written in Python. It is
+at version `v1.1.0`. A user who runs both must get one answer.
 
-This feature set records every difference and closes the ones that apply to Go. A
-difference that exists because Python and Go differ is recorded and not closed. A
-difference that exists because the Go library is behind is closed.
+**The port shipped first and it ruled first.** Between 2026-08-07 and 2026-08-11 it
+settled about thirty questions that FoxIO leaves open, and it recorded each one with a
+measurement in a closed issue. Its own spec holds the register that carries them, and
+about twenty rows end with a sentence of the form "The port must X, or the two
+implementations disagree on Y". In that sentence "the port" names this repository.
 
-The maintainer chose feature parity, "if applicable of course". That qualifier is the
-rule this feature set follows: parity where the capability belongs in a Go library, and a
-written reason where it does not.
+**This feature set closes those rows.** It re-litigates none of them. Each ruling carries
+a measurement the port already took, and this project re-measures one only when a Go fact
+contradicts it.
+
+The `Parity with ja4plus` section of `docs/specs/spec.md` holds the register. This file
+turns each row into a numbered requirement.
+
+## What round 3 deleted, and why
+
+Round 2 of this file held FR-parity-8 through FR-parity-14. Those seven requirements
+specified a test that runs the Python library over the corpus and compares the two outputs
+as strings.
+
+**The port rejected that design in its own parity rule 3**, and this project adopts the
+rejection. The rule reads: "No test in this repository builds, runs, or imports the port.
+A cross-language test rig couples two repositories that move at different speeds, and it
+fails for reasons that have nothing to do with the change under test."
+
+The shared FoxIO vector set is the gate instead. Both repositories read the same vectors
+at the same pinned commit. Two implementations that each match the reference match each
+other, and neither one needs the other installed to prove it.
 
 ## User stories
 
-- As a user who runs both libraries, I want the same input to produce the same
+- As a user who runs both libraries, I want the same packet to produce the same
   fingerprint, so that I can compare results across the two.
-- As a user who moves from Python to Go, I want a familiar API, so that I do not relearn
-  the library.
-- As a maintainer, I want a written table of the differences, so that I know which
-  library leads on which capability.
+- As a user who moves from Python to Go, I want a familiar interface, so that I do not
+  relearn the library.
+- As a maintainer, I want each ruling to carry a test, so that a later change cannot
+  reverse one without a red build.
+- As an engineer, I want a written reason beside each accepted difference, so that I do
+  not re-open a question the maintainer already settled.
 
 ## Functional requirements
 
-### The parity table
+### The general rule
 
-- **FR-parity-1** — The project records a table at `docs/parity.md`.
-- **FR-parity-2** — The table holds one row for each exported name in the Python package.
-- **FR-parity-3** — Each row records the Go equivalent, or records `none`.
-- **FR-parity-4** — Each row with `none` records `applicable` or `not applicable`.
-- **FR-parity-5** — Each `not applicable` row records the reason in one sentence.
-- **FR-parity-6** — Each `applicable` row names the issue that closes it.
-- **FR-parity-7** — The table names the Python version that it was read from.
+- **FR-parity-1** — Each requirement below names the port issue that holds its ruling.
+- **FR-parity-2** — A requirement that no FoxIO vector separates carries a test that
+  builds the separating packet.
+- **FR-parity-3** — A test that holds a ruling fails when the ruling is reversed.
+- **FR-parity-4** — No test in this repository builds, runs or imports the port.
+- **FR-parity-5** — The project records a table at `docs/parity.md` that names the port
+  version each row was read from.
+- **FR-parity-6** — `docs/parity.md` holds one row for each exported name of the port.
+- **FR-parity-7** — Each row of `docs/parity.md` records the Go equivalent, or records
+  `none` with `applicable` or `not applicable` and one sentence of reason.
 
-### The output parity test
+### JA4 and JA4S: the ALPN form
 
-- **FR-parity-8** — A test reads every capture in the corpus with the Go library and
-  writes every fingerprint to a file.
-- **FR-parity-9** — `scripts/python-parity.sh` runs the Python library over the same
-  captures and writes the same shape of file.
-- **FR-parity-10** — The test compares the two files as an exact string match.
-- **FR-parity-11** — The test reports a difference with the capture, the method and both
-  values.
-- **FR-parity-12** — The parity test runs only with the `parity` build tag.
-- **FR-parity-13** — The parity test skips with a message when the Python library is
-  absent.
-- **FR-parity-14** — The parity test does not gate a pull request, because it needs a
-  second language runtime.
-- **FR-parity-15** — A difference that the FoxIO reference resolves against Go produces a
-  Go closure.
-- **FR-parity-16** — A difference that the FoxIO reference resolves against Python
-  produces an entry in `docs/parity.md` and no change here.
+The port's issues #127, #141, #162 and #522 hold these rulings. The FoxIO references
+disagree with each other, and each one reads its own tooling rather than the packet.
 
-### The known gaps
+- **FR-parity-8** — The ALPN field writes `99` when the first byte of the first ALPN value
+  is not alphanumeric.
+- **FR-parity-9** — The ALPN field writes `99` when a byte outside `0x20-0x7E` appears in
+  a position other than the first.
+- **FR-parity-10** — The ALPN field repeats the byte and writes `hh` when the first ALPN
+  value holds one byte.
+- **FR-parity-11** — A test builds one packet for each of FR-parity-8, FR-parity-9 and
+  FR-parity-10, and asserts the value.
+- **FR-parity-12** — `docs/specs/foxio/JA4.md` records that FoxIO Python writes `U+FFFD`
+  and FoxIO Rust writes the `tshark` escape text, and that neither value reads a byte the
+  packet holds.
 
-- **FR-parity-17** — The Go library exports a function that computes a JA4X fingerprint
-  from a DER-encoded certificate, matching `compute_ja4x_from_der`.
-- **FR-parity-18** — The Go library exports a function that computes a JA4X fingerprint
-  from a PEM-encoded certificate, matching `compute_ja4x_from_pem`.
-- **FR-parity-19** — The Go library exports a `generate` helper for each of the ten
-  methods, matching the Python `generate_ja4*` functions.
-- **FR-parity-20** — The project decides whether the Python `Collector` belongs in Go,
-  and records the decision in `docs/parity.md`.
-- **FR-parity-21** — The repository holds an `examples/` directory with a runnable
-  program for each of three cases: read a capture, run a live monitor, look up a
-  fingerprint.
-- **FR-parity-22** — The repository holds `docs/usage.md`, matching the Python
-  `docs/usage.md`.
-- **FR-parity-23** — The repository holds `docs/api_reference.md`, or states that
-  `pkg.go.dev` serves that role.
-- **FR-parity-24** — The repository holds `docs/implementation_notes.md`, matching the
-  Python file.
+### JA4 and JA4S: the plausibility guard
+
+- **FR-parity-13** — The library holds no plausibility guard. A structurally valid
+  ClientHello produces a fingerprint whatever its body holds.
+- **FR-parity-14** — A test asserts that a ClientHello with no cipher suite and no
+  extension produces a well-formed fingerprint.
+- **FR-parity-15** — A test asserts that a ClientHello with the version token `00`
+  produces a well-formed fingerprint.
+
+### JA4L and JA4LS
+
+The port's issues #156, #200, #225 and #272 hold these rulings. `features/12-ja4ls.md`
+builds the method itself.
+
+- **FR-parity-16** — `JA4LFingerprinter` reports one client value for one connection.
+- **FR-parity-17** — `JA4LFingerprinter` reports one server value for one connection.
+- **FR-parity-18** — A retransmitted SYN-ACK produces no second server value.
+- **FR-parity-19** — A JA4L value on a TCP connection holds two timing parts.
+- **FR-parity-20** — A JA4L value and a JA4LS value on a QUIC connection hold `quic` as a
+  third part.
+- **FR-parity-21** — No JA4L value and no JA4LS value holds the literal `tcp`.
+- **FR-parity-22** — The register holds five value declines for the three reference files
+  that publish no JA4L key.
+- **FR-parity-23** — A test builds a connection with two SYN-ACK packets and asserts one
+  server value.
+- **FR-parity-24** — A test builds a QUIC connection and asserts the protocol marker.
+
+### JA4SSH
+
+The port's issues #28, #96, #97, #105, #199 and #214 hold these rulings.
+
+- **FR-parity-25** — `JA4SSHFingerprinter` emits at `packetCount` packets. The default is
+  200.
+- **FR-parity-26** — The threshold holds no upper cap. `ja4ssh.go:176-180` caps it at 10
+  today, and that cap goes.
+- **FR-parity-27** — The mode field reads the packet lengths of the window alone.
+- **FR-parity-28** — A window that holds no SSH packet produces no fingerprint.
+- **FR-parity-29** — `JA4SSHFingerprinter` exports `CloseOpenWindows`, which emits the
+  window each connection holds open and returns the results.
+- **FR-parity-30** — Every fingerprinter exports `CloseOpenWindows`. A stateless
+  fingerprinter returns an empty slice.
+- **FR-parity-31** — `Processor` exports `CloseOpenWindows`, which calls each
+  fingerprinter and returns the joined results.
+- **FR-parity-32** — `cmd/ja4plus` calls `Processor.CloseOpenWindows` when the capture
+  ends.
+- **FR-parity-33** — A test asserts that a connection with 15 SSH packets and a window of
+  200 produces no fingerprint before `CloseOpenWindows` and one after it.
+
+### JA4T and JA4TS
+
+The port's issues #215, #226 and #246 hold these rulings.
+
+- **FR-parity-34** — An empty TCP option list writes `00` in part b.
+- **FR-parity-35** — Part c writes two digits. An absent maximum segment size writes `00`.
+- **FR-parity-36** — Part d writes two digits. A window scale of zero writes `00`.
+- **FR-parity-37** — A JA4TS value carries part e when the server sent two SYN-ACK packets
+  or more.
+- **FR-parity-38** — Part e holds the delay of each SYN-ACK after the first, in whole
+  seconds, joined by `-`.
+- **FR-parity-39** — A connection the server answered once omits part e.
+- **FR-parity-40** — A RST on a connection that already holds a delay appends `-R` and the
+  delay of the RST to part e.
+- **FR-parity-41** — The RST value reads part a through part d from the first SYN-ACK of
+  the connection.
+- **FR-parity-42** — The RST test reads the RST bit of the flag byte, so a RST that also
+  carries ACK reaches the rule.
+- **FR-parity-43** — A RST on a connection that holds no delay produces no value.
+- **FR-parity-44** — A RST that the client sent produces no value.
+- **FR-parity-45** — `JA4TSFingerprinter` holds a state table keyed by the five-tuple, and
+  `CleanupConnection` clears one entry of it.
+- **FR-parity-46** — A test builds the capture that the deleted `technical_details/
+  JA4T.md` describes, and asserts the value `65535_2-1-3-1-1-4_65495_8_1-2-4-8-R6`.
+
+### JA4H, JA4X, JA4D and JA4D6
+
+The port's issues #138, #219, #231 and #271 hold these rulings.
+
+- **FR-parity-47** — The JA4H method code reads the first two characters of any method
+  token, in lower case.
+- **FR-parity-48** — A test asserts that `PROPFIND` writes `pr` and `MKCOL` writes `mk`.
+- **FR-parity-49** — JA4X reads the TLS record layer without regard to the tunnel protocol
+  that carries it.
+- **FR-parity-50** — A test asserts three JA4X values on the SOCKS4 tunnel of
+  `socks4-https.pcap` on port 9901, and the register holds the three as value declines.
+- **FR-parity-51** — Subfield 2 of JA4D writes the first Maximum DHCP Message Size when a
+  message repeats option 57.
+- **FR-parity-52** — Part a of a JA4D value holds eleven characters.
+- **FR-parity-53** — A BOOTP message that carries no option 53 produces no JA4D value.
+- **FR-parity-54** — Subfield 1 of JA4D6 writes the outer DHCPv6 message type alone, in
+  five characters.
+- **FR-parity-55** — Part a of a JA4D6 value holds eleven characters.
+- **FR-parity-56** — A test builds a DHCPv6 relay message and asserts FR-parity-54.
+
+### The register drift check
+
+- **FR-parity-57** — The repository holds a copy of the port's register at
+  `docs/specs/foxio/port-register.md`, with the port commit it was read from.
+- **FR-parity-58** — A test counts the rows of that copy and compares the count against a
+  recorded number.
+- **FR-parity-59** — The test performs no network call.
+- **FR-parity-60** — A count that differs fails the test with a message that asks for a
+  re-read.
 
 ## User flows
 
-### The parity table is built
+### An engineer closes a register row
 
-1. Read the Python `ja4plus/__init__.py` and record every exported name.
-2. Read each Python module and record every public function and class.
-3. For each name, find the Go equivalent.
-4. Record `none` where there is no equivalent.
-5. Decide `applicable` or `not applicable` for each `none`.
-6. Write the table to `docs/parity.md`.
+1. The engineer reads the row in `docs/specs/spec.md` and the port issue it names.
+2. The engineer reads the transcription in `docs/specs/foxio/` that the row cites.
+3. The engineer writes the test first. The test fails.
+4. The engineer changes the fingerprinter. The test passes.
+5. The engineer runs `make conformance` and records the count of moved values in the pull
+   request.
+6. The engineer updates `docs/parity.md`.
 
-### A difference is found and closed
+### An engineer finds that a Go fact contradicts a ruling
 
-1. Run `scripts/python-parity.sh` to produce the Python output.
-2. Run the parity test. It reports a difference for one capture and one method.
-3. Read the FoxIO vector for that capture and that method.
-4. The FoxIO value matches Python, so Go is wrong.
-5. Close the Go defect and add a test.
-6. Re-run. The difference is gone.
+1. The engineer records the fact, with a file and a line.
+2. The engineer opens an issue in this repository that names the port issue.
+3. The engineer opens an issue in `Crank-Git/ja4plus` that names the same fact.
+4. The engineer stops. **A ruling moves in both repositories or in neither.**
 
 ## Screens & states
 
-The project has no user interface. This section does not apply.
+This feature set changes no screen. `mockups/02-cli-output.html` holds the output shape
+that FR-parity-32 adds a line to.
 
 ## Behaviour rules
 
-- The FoxIO reference decides every difference. Neither library is authoritative over the
-  other.
-- A Go closure follows Go conventions. Parity means the same capability, not the same
-  spelling. A Python function that returns a tuple becomes a Go function that returns two
-  values.
-- A capability that Python has because Python has it is `not applicable`. An example is a
-  helper that exists to work around dynamic typing.
-- The parity test never gates a pull request. It runs by hand and before a release.
-- A Python defect that this work finds produces an issue in `Crank-Git/ja4plus`. This
-  project records it and changes nothing there.
+- **A ruling is reversible, and a reversal is a two-repository change.** A test that holds
+  a ruling names the port issue in a comment, so a reader who reverses it knows where the
+  other half lives.
+- **A measurement belongs in the pull request.** A row that moves a fingerprint states how
+  many values moved, on which captures, and what the conformance count was before and
+  after.
+- **A row that moves no fingerprint says so.** Several rows record a property rather than
+  a change, and a reader must be able to tell the two apart.
+- **The register decides an accepted difference. The conformance suite decides the rest.**
+  A deviation that the register does not hold is a failure.
 
 ## Data touched
 
-No entity changes. The following files change.
-
 | File | Change |
 |---|---|
+| `ja4.go`, `ja4s.go` | The ALPN form. |
+| `ja4l.go` | One value per connection, the part count, the protocol marker, the retransmission guard. |
+| `ja4ssh.go` | The window threshold, the mode field, the empty-window rule, `CloseOpenWindows`. |
+| `ja4t.go`, `ja4ts.go` | The two-digit form, part e, the RST value, the JA4TS state table. |
+| `ja4x.go` | A test only. The behaviour already matches. |
+| `ja4d.go`, `ja4d6.go` | The repeated option 57, the BOOTP rule, the relay message. |
+| `ja4h.go` | A test only. `ja4h.go:171-173` already matches. |
+| `types.go` | `CloseOpenWindows` joins the `Fingerprinter` interface. |
+| `processor.go` | `Processor.CloseOpenWindows`. |
+| `cmd/ja4plus/main.go` | The end-of-capture call. |
+| `testdata/deviations.json` | The value declines that FR-parity-22 and FR-parity-50 add. |
 | `docs/parity.md` | New. |
-| `docs/usage.md` | New. |
-| `docs/implementation_notes.md` | New. |
-| `examples/` | New. Holds three runnable programs. |
-| `ja4x.go` | Gains the DER and PEM helpers. |
-| `ja4.go` … `ja4d6.go` | Gain a `generate` helper where one is missing. |
-| `parity_test.go` | New. Carries the `parity` build tag. |
-| `scripts/python-parity.sh` | New. |
+| `docs/specs/foxio/port-register.md` | New. |
 
 ## Interfaces
 
 | Interface | Version | Documentation |
 |---|---|---|
-| `Crank-Git/ja4plus` | v0.6.0 | <https://github.com/Crank-Git/ja4plus> |
-| Python package API | v0.6.0 | <https://github.com/Crank-Git/ja4plus/blob/master/docs/api_reference.md> |
-| `crypto/x509` | Go 1.24 | <https://pkg.go.dev/crypto/x509> |
-| `encoding/pem` | Go 1.24 | <https://pkg.go.dev/encoding/pem> |
+| The port's register | `v1.1.0`, read 2026-08-11 | <https://github.com/Crank-Git/ja4plus/blob/dev/docs/specs/spec.md> |
+| FoxIO reference | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4> |
+| `github.com/google/gopacket` | v1.1.19 | <https://pkg.go.dev/github.com/google/gopacket> |
 
-### Python exported names, read at v0.6.0
-
-The Python package exports ten fingerprinter classes, a `Processor`, ten `generate_ja4*`
-functions, `compute_ja4x_from_der` and `compute_ja4x_from_pem`. It also holds
-`ja4plus/collector.py` and `ja4plus/ja4db.py`, which the parity table covers.
+**`CloseOpenWindows` is a breaking change to an exported interface.** `Fingerprinter` is
+an exported interface, and a new method breaks every third-party implementation of it. The
+library is at `v0.3.0`, so the break is allowed now and never after the freeze.
+`features/10-release.md` records it in the CHANGELOG as a breaking change.
 
 ## Edge cases & failures
 
-| Case | What happens |
+| Case | Expected behaviour |
 |---|---|
-| The Python library is not installed. | The parity test skips with a message that names the install command. |
-| Python and Go both differ from FoxIO. | Both are wrong. Go closes its defect here and the record names the Python issue. |
-| A Python name has two Go equivalents. | The table records both and names which one is idiomatic. |
-| The Python library changes after the table is written. | The table names the version it was read from. A later version produces a new issue. |
-| A Go closure would break an exported signature. | Epic 10 records the change. The closure lands before the freeze. |
+| A connection holds an open window and the caller never calls `CloseOpenWindows`. | The window is lost. The method is opt-in, and the library forces no flush. |
+| `CloseOpenWindows` is called twice. | The second call returns an empty slice. A window is emitted once. |
+| A RST arrives before any SYN-ACK. | No JA4TS value. FR-parity-43 covers it. |
+| The server sends three SYN-ACK packets. | Part e holds two delays, joined by `-`. |
+| A DHCPv6 message nests a relay inside a relay. | Subfield 1 writes the outermost type. FR-parity-54 says "the outer", and the test builds the two-level case. |
+| The first ALPN value is empty. | The ALPN field writes the zero form the method already writes. This row settles a one-byte value, and an empty value is a separate case that no ruling covers. Record it in `Open questions`. |
 
 ## Acceptance criteria
 
-- [ ] `docs/parity.md` holds one row for every exported Python name at v0.6.0.
-- [ ] Every row records a Go equivalent or `none`.
-- [ ] Every `none` row records `applicable` or `not applicable` with a reason.
-- [ ] `docs/parity.md` names the Python version it was read from.
-- [ ] The Go library exports a JA4X function that takes DER bytes.
-- [ ] The Go library exports a JA4X function that takes PEM bytes.
-- [ ] The Go library exports a `generate` helper for each of the ten methods.
-- [ ] `docs/parity.md` records the `Collector` decision and its reason.
-- [ ] `examples/` holds three programs, and each compiles.
-- [ ] `docs/usage.md` and `docs/implementation_notes.md` exist.
-- [ ] `go test -tags parity ./...` without Python installed skips with a clear message.
-- [ ] `go test -tags parity ./...` with Python installed reports zero differences, or
-      `docs/parity.md` records every remaining difference with a reason.
+1. Every requirement above is closed, and each one names its port issue in a test comment.
+2. `go test -race ./...` passes.
+3. `make conformance` reports no deviation that `testdata/deviations.json` does not hold.
+4. `testdata/deviations.json` holds no entry whose comparison now matches.
+5. `docs/parity.md` exists, names port version `v1.1.0`, and holds one row per exported
+   port name.
+6. `grep -r "python" --include="*_test.go" .` finds no test that runs the port.
+7. `ja4ssh.go` holds no upper cap on the window threshold.
+8. `JA4TSFingerprinter` produces `65535_2-1-3-1-1-4_65495_8_1-2-4-8-R6` for the capture
+   that FR-parity-46 builds.
+9. The drift check passes against the recorded row count.
 
 ## Out of scope
 
-- This feature set does not change `Crank-Git/ja4plus`.
-- This feature set does not make the two libraries share a test corpus format. Each reads
-  the FoxIO corpus in its own way.
-- This feature set does not add a Python binding for the Go library.
-- This feature set does not add a live capture loop. An example may show one using a
-  third-party capture package, and the library itself stays capture-free.
+- Changing the port. This project files an issue there and writes no code there.
+- JA4LS. `features/12-ja4ls.md` owns it, and it depends on this feature set.
+- The remote lookup split. `features/09-database-lookup.md` owns it.
+- Any ruling the port has not made. A question this file does not answer goes to the
+  maintainer, and it is answered in both repositories at once.
 
 ## Open questions
 
-- **Q1** — Does the Python `Collector` belong in a Go library, or does a Go caller build
-  it from `Processor` and `GetShardKey`? FR-parity-20 records the decision. The engineer
-  reads `ja4plus/collector.py` before deciding.
+1. **What does the ALPN field write when the first ALPN value is empty?** The port ruled
+   on a one-byte value and on a non-alphanumeric byte, and no ruling covers a zero-byte
+   value. This project must not invent an answer alone. The maintainer rules once, and the
+   ruling lands in both repositories.
+2. **Does `CloseOpenWindows` belong on the `Fingerprinter` interface, or on a second
+   interface that a fingerprinter may implement?** FR-parity-30 puts it on `Fingerprinter`
+   and makes every stateless fingerprinter return an empty slice, which matches the port's
+   shape. A separate optional interface is more idiomatic Go and breaks no third-party
+   implementation. **The freeze makes this the last chance to choose.**
+3. **Does the drift check belong in this repository at all?** FR-parity-57 commits a copy
+   of another repository's document, which will go stale. The alternative is a scheduled
+   workflow that reads the port and opens an issue, which is a network call in CI rather
+   than in a test.

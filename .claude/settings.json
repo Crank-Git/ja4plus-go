@@ -15,7 +15,16 @@
       "Bash(golangci-lint run:*)",
       "Bash(govulncheck:*)",
       "Bash(make:*)",
-      "Bash(./scripts/fetch-corpus.sh:*)"
+      "Bash(./scripts/fetch-corpus.sh:*)",
+      "Bash(goreleaser check)",
+      "Bash(goreleaser release --snapshot --clean)",
+      "Bash(gremlins unleash:*)",
+      "Bash(mkdocs build --strict:*)",
+      "Bash(mkdocs serve:*)",
+      "Bash(gh api repos/FoxIO-LLC/ja4:*)",
+      "Bash(gh api repos/Crank-Git/ja4plus:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)"
     ]
   },
   "hooks": {
