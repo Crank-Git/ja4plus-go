@@ -69,6 +69,11 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 	}
 
 	recordLength := int(payload[3])<<8 | int(payload[4])
+
+	// recordEnd bounds every later read. A TCP payload can carry more than one TLS
+	// record, and a length field of this record must not reach into the next one.
+	recordEnd := 5 + recordLength
+
 	if len(payload) < 5+recordLength {
 		return nil, errors.New("TLS record truncated")
 	}
@@ -128,8 +133,8 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 	extensionsLen := int(payload[pos])<<8 | int(payload[pos+1])
 	pos += 2
 	extensionsEnd := pos + extensionsLen
-	if extensionsEnd > len(payload) {
-		extensionsEnd = len(payload)
+	if extensionsEnd > recordEnd {
+		extensionsEnd = recordEnd
 	}
 
 	for pos+4 <= extensionsEnd {
@@ -137,8 +142,8 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 		extLen := int(payload[pos+2])<<8 | int(payload[pos+3])
 		extDataStart := pos + 4
 		extDataEnd := extDataStart + extLen
-		if extDataEnd > len(payload) {
-			extDataEnd = len(payload)
+		if extDataEnd > recordEnd {
+			extDataEnd = recordEnd
 		}
 
 		ch.Extensions = append(ch.Extensions, extType)
@@ -173,6 +178,11 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 	}
 
 	recordLength := int(payload[3])<<8 | int(payload[4])
+
+	// recordEnd bounds every later read. A TCP payload can carry more than one TLS
+	// record, and a length field of this record must not reach into the next one.
+	recordEnd := 5 + recordLength
+
 	if len(payload) < 5+recordLength {
 		return nil, errors.New("TLS record truncated")
 	}
@@ -220,8 +230,8 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 	extensionsLen := int(payload[pos])<<8 | int(payload[pos+1])
 	pos += 2
 	extensionsEnd := pos + extensionsLen
-	if extensionsEnd > len(payload) {
-		extensionsEnd = len(payload)
+	if extensionsEnd > recordEnd {
+		extensionsEnd = recordEnd
 	}
 
 	for pos+4 <= extensionsEnd {
@@ -229,8 +239,8 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 		extLen := int(payload[pos+2])<<8 | int(payload[pos+3])
 		extDataStart := pos + 4
 		extDataEnd := extDataStart + extLen
-		if extDataEnd > len(payload) {
-			extDataEnd = len(payload)
+		if extDataEnd > recordEnd {
+			extDataEnd = recordEnd
 		}
 
 		sh.Extensions = append(sh.Extensions, extType)

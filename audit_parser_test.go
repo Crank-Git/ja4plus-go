@@ -67,10 +67,11 @@ func TestF22_1_ALPNValueHexEncodesTheWholeValueAndDisagreesWithTheFoxioVector(t 
 	}
 }
 
-func TestF22_2_ParseClientHelloReadsPastTheRecordLengthIntoTheNextRecord(t *testing.T) {
-	// `ParseClientHello` reads the record length at `internal/parser/tls.go:71` and then
-	// bounds every later slice by the payload length. A payload that holds two TLS records
-	// therefore lets the first record's extensions length reach into the second record.
+func TestF22_2_ParseClientHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-2 is closed. `ParseClientHello` read the record length and then bounded every
+	// later slice by the payload length. A payload that holds two TLS records therefore
+	// let the first record's extensions length reach into the second record, and the
+	// parser read `0x1603` as an extension type. The bound is now the end of the record.
 	hello := auditParserClientHello(t, []parser.TLSExtension{parser.MakeSNIExtension("a.example")})
 	second := parser.BuildServerHello(0x0303, 0x1302, []parser.TLSExtension{parser.MakeALPNExtension("h2")})
 
@@ -106,22 +107,24 @@ func TestF22_2_ParseClientHelloReadsPastTheRecordLengthIntoTheNextRecord(t *test
 		t.Fatalf("the crafted payload: %v", err)
 	}
 
-	if len(got.Extensions) <= len(honest.Extensions) {
-		t.Errorf("the crafted payload produces the extensions %v, and the finding F-22-2 records a longer list",
-			got.Extensions)
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
 	}
 
 	// 0x1603 is the content type and the first version byte of the second record. The
-	// parser reads the two bytes as an extension type.
-	if got.Extensions[len(got.Extensions)-1] != 0x1603 {
-		t.Errorf("the crafted payload ends with the extension %#04x, and the finding F-22-2 records 0x1603",
-			got.Extensions[len(got.Extensions)-1])
+	// parser read the two bytes as an extension type, and it now stops before them.
+	for _, extension := range got.Extensions {
+		if extension == 0x1603 {
+			t.Errorf("the crafted payload produces the extension 0x1603, which is the header of the second record")
+		}
 	}
 }
 
-func TestF22_3_ParseServerHelloReadsPastTheRecordLengthIntoTheNextRecord(t *testing.T) {
-	// `ParseServerHello` holds the same shape at `internal/parser/tls.go:175` and
-	// `internal/parser/tls.go:223`.
+func TestF22_3_ParseServerHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-3 is closed. `ParseServerHello` held the same shape, so a ServerHello whose
+	// extensions length reached past its own record read the next record as extension
+	// bytes. The bound is now the end of the record.
 	hello := parser.BuildServerHello(0x0303, 0x1301, []parser.TLSExtension{
 		parser.MakeSupportedVersionsServerExtension(0x0304),
 	})
@@ -153,9 +156,9 @@ func TestF22_3_ParseServerHelloReadsPastTheRecordLengthIntoTheNextRecord(t *test
 		t.Fatalf("the crafted payload: %v", err)
 	}
 
-	if len(got.Extensions) <= len(honest.Extensions) {
-		t.Errorf("the crafted payload produces the extensions %v, and the finding F-22-3 records a longer list",
-			got.Extensions)
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
 	}
 }
 
