@@ -3,6 +3,7 @@ package ja4plus
 import (
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -65,6 +66,121 @@ func TestCIWorkflowRunsOnAPullRequestIntoDev(t *testing.T) {
 
 	if !strings.Contains(branches[1][1], "dev") {
 		t.Errorf("the pull request branch filter is [%s], and it does not name dev", branches[1][1])
+	}
+}
+
+// makefileRecipe returns the recipe of a target in the `Makefile`.
+// It fails the test when the `Makefile` holds no such target.
+//
+// A recipe line starts with a tab, so the first line without one ends the recipe.
+func makefileRecipe(t *testing.T, target string) string {
+	t.Helper()
+
+	recipe := []string{}
+	found := false
+
+	for _, line := range strings.Split(readRepoFile(t, "Makefile"), "\n") {
+		if !found {
+			found = strings.HasPrefix(line, target+":")
+			continue
+		}
+
+		if !strings.HasPrefix(line, "\t") {
+			break
+		}
+
+		recipe = append(recipe, line)
+	}
+
+	if !found {
+		t.Fatalf("the Makefile holds no %s target", target)
+	}
+
+	return strings.Join(recipe, "\n")
+}
+
+// A target that `.PHONY` does not name stops when a file of that name exists.
+// FR-foundation-15 through FR-foundation-18 add four such targets.
+func TestMakefileDeclaresEveryNewTargetPhony(t *testing.T) {
+	phony := regexp.MustCompile(`(?m)^\.PHONY: (.*)$`).FindStringSubmatch(readRepoFile(t, "Makefile"))
+	if phony == nil {
+		t.Fatalf("the Makefile holds no .PHONY line")
+	}
+
+	names := strings.Fields(phony[1])
+	for _, target := range []string{"corpus", "conformance", "cover", "fuzz"} {
+		if !slices.Contains(names, target) {
+			t.Errorf(".PHONY names [%s], and it does not name %s", phony[1], target)
+		}
+	}
+}
+
+// FR-foundation-15 names the corpus fetch script. The script is idempotent and it names
+// the network on a failure, so the target adds nothing of its own.
+func TestMakefileCorpusTargetRunsTheFetchScript(t *testing.T) {
+	recipe := makefileRecipe(t, "corpus")
+
+	if !strings.Contains(recipe, "scripts/fetch-corpus.sh") {
+		t.Errorf("the corpus recipe does not run scripts/fetch-corpus.sh:\n%s", recipe)
+	}
+}
+
+// FR-conformance-10 builds the suite only with the `conformance` build tag, and Epic 4
+// adds the suite. FR-foundation-16 adds the target that runs it.
+func TestMakefileConformanceTargetSelectsTheConformanceBuildTag(t *testing.T) {
+	recipe := makefileRecipe(t, "conformance")
+
+	if !strings.Contains(recipe, "-tags conformance") {
+		t.Errorf("the conformance recipe does not select the conformance build tag:\n%s", recipe)
+	}
+
+	// The suite writes `docs/audit/conformance.md`, and a cached result writes nothing.
+	if !strings.Contains(recipe, "-count=1") {
+		t.Errorf("the conformance recipe does not defeat the test cache:\n%s", recipe)
+	}
+
+	// FR-conformance-11 skips with a message that names `make corpus`, and `go test`
+	// prints a skip message only with `-v`.
+	if !strings.Contains(recipe, " -v ") {
+		t.Errorf("the conformance recipe does not print the skip message:\n%s", recipe)
+	}
+}
+
+// FR-foundation-17 reports total statement coverage. `go tool cover -func` writes the
+// total on its last line.
+func TestMakefileCoverTargetReportsTheTotalStatementCoverage(t *testing.T) {
+	recipe := makefileRecipe(t, "cover")
+
+	if !strings.Contains(recipe, "-coverprofile=") {
+		t.Errorf("the cover recipe writes no coverage profile:\n%s", recipe)
+	}
+
+	if !strings.Contains(recipe, "go tool cover -func=") {
+		t.Errorf("the cover recipe does not report the total:\n%s", recipe)
+	}
+}
+
+// FR-foundation-18 runs each fuzz target for 30 seconds. `go test` fuzzes one target for
+// each run, so the recipe lists the targets and runs each one.
+func TestMakefileFuzzTargetRunsEachTargetFor30Seconds(t *testing.T) {
+	recipe := makefileRecipe(t, "fuzz")
+
+	if !strings.Contains(recipe, "-list") {
+		t.Errorf("the fuzz recipe lists no fuzz target:\n%s", recipe)
+	}
+
+	if !strings.Contains(recipe, "-fuzztime") {
+		t.Errorf("the fuzz recipe bounds no fuzz run:\n%s", recipe)
+	}
+
+	if !strings.Contains(recipe, "30s") {
+		t.Errorf("the fuzz recipe does not run a target for 30 seconds:\n%s", recipe)
+	}
+
+	// FR-fuzz-26 fails the run when a target finds a crash. The recipe runs the targets
+	// in a loop, and a loop without this exit reports success after a crash.
+	if !strings.Contains(recipe, "|| exit 1") {
+		t.Errorf("the fuzz recipe does not stop on a failed run:\n%s", recipe)
 	}
 }
 

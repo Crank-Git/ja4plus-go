@@ -2,6 +2,9 @@
 bin/
 dist/
 
+# The coverage profile that `make cover` and the CI test job write.
+coverage.out
+
 # Captures
 *.pcap
 *.pcapng
