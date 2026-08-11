@@ -22,6 +22,10 @@ The status line at the top of this file holds one of two values.
 **Issue #25 sets the status to `complete`.** The test applies the closing rules once it
 reads that value. An earlier change fails the suite.
 
+**The status stays `in progress`, and three findings state why.** F-23-14, F-24-10 and
+F-24-12 each need a decision that only the maintainer makes.
+`## The three findings that wait for a ruling` names each one and states the question.
+
 ## The audit set
 
 FR-audit-1 states the set:
@@ -310,6 +314,7 @@ This table belongs to issue #25.
 <!-- files:25:begin -->
 | File | Audit date |
 |---|---|
+| `cmd/ja4plus/main.go` | 2026-08-11 |
 <!-- files:25:end -->
 
 ## The findings
@@ -325,8 +330,9 @@ integer conversion, a map read, a slice index or a GREASE filter.
 `audit_parser_test.go` builds the input of each finding below and asserts the value the
 library produces today. A reader who reverses a finding starts there.
 
-**Three findings hand over to another epic, and issue #25 records the deferral under
-FR-audit-28.**
+**Three findings hand over to another epic, and issue #25 recorded the deferral under
+FR-audit-28. Each one carries the status `declined` and the reason.** The maintainer named
+all three on issue #25 on 2026-08-11.
 
 - **F-22-1** hands over to **#50 of Epic 8a**. `docs/specs/foxio/JA4.md` R19 records a
   reference split of four results for a non-alphanumeric ALPN value. A FoxIO vector
@@ -345,19 +351,19 @@ moves this project away from the port.**
 <!-- findings:22:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
 |---|---|---|---|---|---|---|---|
-| F-22-1 | `internal/parser/tls.go` | 323 | critical | open | The capture `tls-non-ascii-alpn.pcapng` stream 0 makes `ALPNValue` return `bd`, and the FoxIO vector holds `99`. |  |  |
-| F-22-2 | `internal/parser/tls.go` | 131 | major | open | A ClientHello whose extensions length field reaches past its own TLS record makes `ParseClientHello` read `0x1603` as an extension type. |  |  |
-| F-22-3 | `internal/parser/tls.go` | 223 | major | open | A ServerHello whose extensions length field reaches past its own TLS record makes `ParseServerHello` read the next record as extension bytes. |  |  |
-| F-22-4 | `internal/parser/ssh.go` | 40 | major | open | An SSH packet whose length is 1024 and whose padding length is 8 makes `IsSSHPacket` return false. |  |  |
-| F-22-5 | `internal/parser/ssh.go` | 79 | major | open | An SSH KEXINIT packet whose length is 1024 and whose padding length is 8 makes `ParseSSHPacket` return nil. |  |  |
-| F-22-6 | `internal/parser/x509_utils.go` | 36 | major | open | The identifier `2.100.3` makes `OIDToHex` return `b403`, and X.690 encodes it as `813403`. |  |  |
-| F-22-7 | `internal/parser/tcp_stream.go` | 42 | major | open | A reassembler whose stream limit is 0 makes the first `AddSegment` call panic with an index out of range. |  |  |
-| F-22-8 | `internal/parser/tcp_stream.go` | 93 | major | open | A reassembler whose byte limit is below 0 makes `GetStream` panic with a slice bound out of range. |  |  |
-| F-22-9 | `internal/parser/quic.go` | 337 | critical | open | A QUIC Initial datagram whose last CRYPTO frame is truncated makes `ParseQUICInitial` discard the earlier fragments and return no ClientHello. |  |  |
-| F-22-10 | `internal/parser/quic.go` | 803 | critical | open | A QUIC server Initial whose last CRYPTO frame is truncated makes `ParseQUICServerInitial` discard the earlier fragments and return no ServerHello. |  |  |
-| F-22-11 | `ja4.go` | 181 | critical | open | A ClientHello whose signature algorithm list opens with `0a0a` makes `computeJA4RawFromClientHello` write that GREASE value into the raw JA4. |  |  |
-| F-22-12 | `ja4.go` | 266 | critical | open | A ClientHello whose signature algorithm list opens with `0a0a` makes `ja4ExtensionHash` hash that GREASE value into part c. |  |  |
-| F-22-13 | `ja4.go` | 288 | critical | open | A ClientHello whose signature algorithm list opens with `0a0a` makes `computeJA4RawOriginalOrder` write that GREASE value into the wire-order raw JA4. |  |  |
+| F-22-1 | `internal/parser/tls.go` | 323 | critical | declined | The capture `tls-non-ascii-alpn.pcapng` stream 0 makes `ALPNValue` return `bd`, and the FoxIO vector holds `99`. |  | Issue #50 of Epic 8a owns the repair, because a FoxIO vector reaches the value and the register records the split. |
+| F-22-2 | `internal/parser/tls.go` | 131 | major | confirmed | A ClientHello whose extensions length field reaches past its own TLS record makes `ParseClientHello` read `0x1603` as an extension type. | `38b55ce` |  |
+| F-22-3 | `internal/parser/tls.go` | 223 | major | confirmed | A ServerHello whose extensions length field reaches past its own TLS record makes `ParseServerHello` read the next record as extension bytes. | `38b55ce` |  |
+| F-22-4 | `internal/parser/ssh.go` | 40 | major | confirmed | An SSH packet whose length is 1024 and whose padding length is 8 makes `IsSSHPacket` return false. | `85a2baf` |  |
+| F-22-5 | `internal/parser/ssh.go` | 79 | major | confirmed | An SSH KEXINIT packet whose length is 1024 and whose padding length is 8 makes `ParseSSHPacket` return nil. | `85a2baf` |  |
+| F-22-6 | `internal/parser/x509_utils.go` | 36 | major | confirmed | The identifier `2.100.3` makes `OIDToHex` return `b403`, and X.690 encodes it as `813403`. | `85a2baf` |  |
+| F-22-7 | `internal/parser/tcp_stream.go` | 42 | major | confirmed | A reassembler whose stream limit is 0 makes the first `AddSegment` call panic with an index out of range. | `3005788` |  |
+| F-22-8 | `internal/parser/tcp_stream.go` | 93 | major | confirmed | A reassembler whose byte limit is below 0 makes `GetStream` panic with a slice bound out of range. | `3005788` |  |
+| F-22-9 | `internal/parser/quic.go` | 337 | critical | declined | A QUIC Initial datagram whose last CRYPTO frame is truncated makes `ParseQUICInitial` discard the earlier fragments and return no ClientHello. |  | Issue #42 of Epic 5 owns the repair under FR-gaps-21, which asks the library to reassemble a hello that spans more than one CRYPTO frame. |
+| F-22-10 | `internal/parser/quic.go` | 803 | critical | declined | A QUIC server Initial whose last CRYPTO frame is truncated makes `ParseQUICServerInitial` discard the earlier fragments and return no ServerHello. |  | Issue #42 of Epic 5 owns the repair under FR-gaps-21, which asks the library to reassemble a hello that spans more than one CRYPTO frame. |
+| F-22-11 | `ja4.go` | 181 | critical | confirmed | A ClientHello whose signature algorithm list opens with `0a0a` makes `computeJA4RawFromClientHello` write that GREASE value into the raw JA4. | `9626a7d` |  |
+| F-22-12 | `ja4.go` | 266 | critical | confirmed | A ClientHello whose signature algorithm list opens with `0a0a` makes `ja4ExtensionHash` hash that GREASE value into part c. | `9626a7d` |  |
+| F-22-13 | `ja4.go` | 288 | critical | confirmed | A ClientHello whose signature algorithm list opens with `0a0a` makes `computeJA4RawOriginalOrder` write that GREASE value into the wire-order raw JA4. | `9626a7d` |  |
 | F-22-14 | `internal/parser/quic.go` | 229 | minor | no change needed | A QUIC Initial datagram whose token length varint is truncated makes `ParseQUICInitial` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
 | F-22-15 | `internal/parser/quic.go` | 240 | minor | no change needed | A QUIC Initial datagram whose payload length varint is truncated makes `ParseQUICInitial` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
 | F-22-16 | `internal/parser/quic.go` | 427 | minor | no change needed | A QUIC Initial datagram whose token length varint is truncated makes `DecryptQUICInitialCrypto` return no error. |  | The port returns one value for a datagram that holds no QUIC and for a QUIC datagram it cannot read. |
@@ -381,19 +387,19 @@ state table, the `results` slice, `CleanupConnection` or `Reset`.
 <!-- findings:23:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
 |---|---|---|---|---|---|---|---|
-| F-23-1 | `ja4.go` | 18 | critical | open | A capture that holds 100000 packets with a TLS client hello leaves 100000 results in the JA4 results slice. CleanupConnection removes none of them. |  |  |
-| F-23-2 | `ja4s.go` | 16 | critical | open | A capture that holds 100000 packets with a TLS server hello leaves 100000 results in the JA4S results slice. CleanupConnection removes none of them. |  |  |
-| F-23-3 | `ja4h.go` | 18 | critical | open | A capture that holds 100000 HTTP requests leaves 100000 results in the JA4H results slice. CleanupConnection removes none of them. |  |  |
-| F-23-4 | `ja4t.go` | 18 | critical | open | A capture that holds 100000 TCP SYN packets leaves 100000 results in the JA4T results slice. CleanupConnection removes none of them. |  |  |
-| F-23-5 | `ja4ts.go` | 13 | critical | open | A capture that holds 100000 TCP SYN-ACK packets leaves 100000 results in the JA4TS results slice. CleanupConnection removes none of them. |  |  |
-| F-23-6 | `ja4l.go` | 27 | critical | open | A capture that holds 100000 TCP handshakes leaves 100000 results in the JA4L results slice. CleanupConnection removes none of them. |  |  |
-| F-23-7 | `ja4x.go` | 38 | critical | open | A capture that holds 100000 distinct certificates leaves 100000 results in the JA4X results slice. CleanupConnection removes none of them. |  |  |
-| F-23-8 | `ja4ssh.go` | 44 | critical | open | A capture that fills 100000 JA4SSH windows leaves 100000 results in the JA4SSH results slice. CleanupConnection removes none of them. |  |  |
-| F-23-9 | `ja4d.go` | 59 | critical | open | A capture that holds 100000 DHCP messages leaves 100000 results in the JA4D results slice. CleanupConnection removes none of them. |  |  |
-| F-23-10 | `ja4d6.go` | 71 | critical | open | A capture that holds 100000 DHCPv6 messages leaves 100000 results in the JA4D6 results slice. CleanupConnection removes none of them. |  |  |
-| F-23-11 | `ja4.go` | 123 | critical | open | A caller that names the server endpoint first leaves one entry in the QUIC fragment table of JA4. The entry stays for every QUIC connection whose client hello spans two datagrams. |  |  |
-| F-23-12 | `ja4x.go` | 109 | major | open | A capture where two connections carry one certificate, with a CleanupConnection call between them, produces one JA4X result and not two. |  |  |
-| F-23-13 | `ja4l.go` | 219 | critical | open | A caller that passes `TCP` as the `proto` argument leaves one entry in the JA4L connections table for every connection it closes. |  |  |
+| F-23-1 | `ja4.go` | 18 | critical | confirmed | A capture that holds 100000 packets with a TLS client hello leaves 100000 results in the JA4 results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-2 | `ja4s.go` | 16 | critical | confirmed | A capture that holds 100000 packets with a TLS server hello leaves 100000 results in the JA4S results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-3 | `ja4h.go` | 18 | critical | confirmed | A capture that holds 100000 HTTP requests leaves 100000 results in the JA4H results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-4 | `ja4t.go` | 18 | critical | confirmed | A capture that holds 100000 TCP SYN packets leaves 100000 results in the JA4T results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-5 | `ja4ts.go` | 13 | critical | confirmed | A capture that holds 100000 TCP SYN-ACK packets leaves 100000 results in the JA4TS results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-6 | `ja4l.go` | 27 | critical | confirmed | A capture that holds 100000 TCP handshakes leaves 100000 results in the JA4L results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-7 | `ja4x.go` | 38 | critical | confirmed | A capture that holds 100000 distinct certificates leaves 100000 results in the JA4X results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-8 | `ja4ssh.go` | 44 | critical | confirmed | A capture that fills 100000 JA4SSH windows leaves 100000 results in the JA4SSH results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-9 | `ja4d.go` | 59 | critical | confirmed | A capture that holds 100000 DHCP messages leaves 100000 results in the JA4D results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-10 | `ja4d6.go` | 71 | critical | confirmed | A capture that holds 100000 DHCPv6 messages leaves 100000 results in the JA4D6 results slice. CleanupConnection removes none of them. | `e720db5` | The repair removes the results slice, because ProcessPacket returns each result to the caller. |
+| F-23-11 | `ja4.go` | 123 | critical | confirmed | A caller that names the server endpoint first leaves one entry in the QUIC fragment table of JA4. The entry stays for every QUIC connection whose client hello spans two datagrams. | `e720db5` |  |
+| F-23-12 | `ja4x.go` | 109 | major | confirmed | A capture where two connections carry one certificate, with a CleanupConnection call between them, produces one JA4X result and not two. | `e720db5` | The fingerprinter holds a stream index of the hashes it wrote, so the deduplication of a live connection stays. |
+| F-23-13 | `ja4l.go` | 219 | critical | confirmed | A caller that passes `TCP` as the `proto` argument leaves one entry in the JA4L connections table for every connection it closes. | `e720db5` |  |
 | F-23-14 | `lookup.go` | 37 | major | open | A program that calls LookupFingerprint before a new mapping file reaches the cache path reads the embedded table for the life of the process. A lookup of a fingerprint that only the new file holds returns nil. |  |  |
 <!-- findings:23:end -->
 
@@ -418,28 +424,29 @@ This table belongs to issue #24. It holds a finding of a contract the library st
 panic, a write to standard output or to standard error, a swallowed error, an empty-input
 hash or a sort.
 
-`audit_panic_test.go` reproduces every `open` row. A test that asserts the defective
-result carries a `TODO(#25)` comment, because the closure reverses the assertion.
+`audit_panic_test.go` reproduced every `open` row. Issue #25 reversed each assertion in
+the commit that closed the finding, so every test of that file now states the repaired
+result. Two rows stay open, and `## The three findings that wait for a ruling` states why.
 
 <!-- findings:24:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
 |---|---|---|---|---|---|---|---|
-| F-24-1 | `ja4.go` | 52 | critical | open | A packet whose UDP layer type carries another concrete type makes `NewJA4().ProcessPacket` panic with an interface conversion. |  |  |
-| F-24-2 | `ja4d.go` | 74 | critical | open | A packet whose UDP layer type carries another concrete type makes `NewJA4D().ProcessPacket` panic with an interface conversion. |  |  |
-| F-24-3 | `ja4d.go` | 85 | critical | open | A packet that holds a UDP header on port 68 and a DHCPv4 layer of another concrete type makes `NewJA4D().ProcessPacket` panic. |  |  |
-| F-24-4 | `ja4h.go` | 65 | critical | open | An HTTP request packet makes a zero-value `JA4HFingerprinter` panic with a nil pointer dereference of the reassembler field. |  |  |
-| F-24-5 | `ja4l.go` | 187 | critical | open | A TCP packet makes a zero-value `JA4LFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
-| F-24-6 | `ja4x.go` | 80 | critical | open | A TCP packet that holds a payload makes a zero-value `JA4XFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
-| F-24-7 | `ja4ssh.go` | 134 | critical | open | A TCP payload that opens with `SSH-` makes a zero-value `JA4SSHFingerprinter` panic with an assignment to an entry in a nil map. |  |  |
-| F-24-8 | `ja4.go` | 115 | critical | open | A call of `Reset` on a zero-value `Processor` panics with a nil pointer dereference of the JA4 fingerprinter field. |  |  |
-| F-24-9 | `processor.go` | 62 | critical | open | A TCP packet makes `ProcessPacket` of a zero-value `SyncProcessor` panic with a nil pointer dereference of the processor field. |  |  |
+| F-24-1 | `ja4.go` | 52 | critical | confirmed | A packet whose UDP layer type carries another concrete type makes `NewJA4().ProcessPacket` panic with an interface conversion. | `3005788` |  |
+| F-24-2 | `ja4d.go` | 74 | critical | confirmed | A packet whose UDP layer type carries another concrete type makes `NewJA4D().ProcessPacket` panic with an interface conversion. | `3005788` |  |
+| F-24-3 | `ja4d.go` | 85 | critical | confirmed | A packet that holds a UDP header on port 68 and a DHCPv4 layer of another concrete type makes `NewJA4D().ProcessPacket` panic. | `3005788` |  |
+| F-24-4 | `ja4h.go` | 65 | critical | confirmed | An HTTP request packet makes a zero-value `JA4HFingerprinter` panic with a nil pointer dereference of the reassembler field. | `3005788` |  |
+| F-24-5 | `ja4l.go` | 187 | critical | confirmed | A TCP packet makes a zero-value `JA4LFingerprinter` panic with an assignment to an entry in a nil map. | `3005788` |  |
+| F-24-6 | `ja4x.go` | 80 | critical | confirmed | A TCP packet that holds a payload makes a zero-value `JA4XFingerprinter` panic with an assignment to an entry in a nil map. | `3005788` |  |
+| F-24-7 | `ja4ssh.go` | 134 | critical | confirmed | A TCP payload that opens with `SSH-` makes a zero-value `JA4SSHFingerprinter` panic with an assignment to an entry in a nil map. | `3005788` |  |
+| F-24-8 | `ja4.go` | 115 | critical | confirmed | A call of `Reset` on a zero-value `Processor` panics with a nil pointer dereference of the JA4 fingerprinter field. | `3005788` |  |
+| F-24-9 | `processor.go` | 62 | critical | confirmed | A TCP packet makes `ProcessPacket` of a zero-value `SyncProcessor` panic with a nil pointer dereference of the processor field. | `3005788` |  |
 | F-24-10 | `ja4.go` | 141 | major | open | A TLS record whose handshake length exceeds the record makes `ComputeJA4` return the empty string, which also names a packet with no ClientHello. |  |  |
 | F-24-11 | `ja4s.go` | 61 | major | unconfirmed | A QUIC Initial datagram that the parser cannot read makes JA4S return no error, and `ja4.go:56` returns an error on the same failure. |  | No crafted datagram of `audit_panic_test.go` makes `parser.ParseQUICInitial` return an error, so the test skips. |
 | F-24-12 | `ja4x.go` | 271 | major | open | The DER buffer `30 03 02 01 00` makes `ComputeJA4XFromDER` return the empty string, which also names a buffer that holds no certificate. |  |  |
 | F-24-13 | `lookup.go` | 55 | major | unconfirmed | A cache file whose first row is not valid CSV leaves the table empty, so `LookupFingerprint` returns no result for every fingerprint. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
 | F-24-14 | `lookup.go` | 72 | major | unconfirmed | A cache row that holds an unescaped double quote makes the loader skip it, so `LookupFingerprint` returns no result for that row. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
 | F-24-15 | `lookup.go` | 43 | minor | unconfirmed | A cache file that the process cannot read makes the loader use the embedded table, and `GetDatabaseInfo` reports the source as embedded. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
-| F-24-16 | `internal/parser/quic.go` | 637 | critical | open | Thirteen CRYPTO fragments of which two share the offset 11 reassemble to the bytes of the first fragment, and the wire order names the second. |  |  |
+| F-24-16 | `internal/parser/quic.go` | 637 | critical | confirmed | Thirteen CRYPTO fragments of which two share the offset 11 reassemble to the bytes of the first fragment, and the wire order names the second. | `d12860b` | FR-audit-22 asks for a stable sort, and no FoxIO source states a rule for a duplicate offset. |
 <!-- findings:24:end -->
 
 #### What issue #24 checked and found clean
@@ -471,11 +478,32 @@ maintainer recorded the port evidence on that issue. Issue #24 records none of t
 ### The findings of issue #25
 
 This table belongs to issue #25. It holds a finding of the command-line program: an
-unhandled error, or an exit code that does not match the outcome.
+unhandled error, or an exit code that does not match the outcome. FR-audit-24 states the
+two checks, and F-25-1, F-25-7, F-25-8 and F-25-9 hold the result.
+
+`cmd/ja4plus/audit_closure_test.go` reproduces each of those four. The file is the only
+test file of the command-line program, and issue #25 added it.
+
+**Five rows name a file that another issue read.** F-25-2 through F-25-6 hold the panic
+that F-24-1, F-24-2 and F-24-3 name, at five sites that no issue recorded. Issue #25
+reached them through
+`TestNoLibraryFileAssertsAGopacketLayerTypeWithOneResult` of `audit_panic_test.go`, which
+scans the shipped source for a type assertion that takes one result. The closure of the
+three recorded sites left the five, so the scan is the reason the report holds them. The
+rows sit here because issue #25 wrote them, and `### The record` states that rule.
 
 <!-- findings:25:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
 |---|---|---|---|---|---|---|---|
+| F-25-1 | `cmd/ja4plus/main.go` | 156 | major | confirmed | A capture whose last packet record header is truncated makes `ja4plus analyze` print the results it reached and exit 0. | `d12860b` |  |
+| F-25-2 | `ja4d6.go` | 85 | critical | confirmed | A packet whose UDP layer type carries another concrete type makes `NewJA4D6().ProcessPacket` panic with an interface conversion. | `3005788` |  |
+| F-25-3 | `ja4d6.go` | 96 | critical | confirmed | A packet that holds a UDP header on port 546 and a DHCPv6 layer of another concrete type makes `NewJA4D6().ProcessPacket` panic. | `3005788` |  |
+| F-25-4 | `ja4s.go` | 61 | critical | confirmed | A packet whose UDP layer type carries another concrete type makes `NewJA4S().ProcessPacket` panic with an interface conversion. | `3005788` |  |
+| F-25-5 | `internal/parser/packet.go` | 43 | critical | confirmed | A packet whose IPv4 layer type carries another concrete type makes `parser.GetIPInfo` panic with an interface conversion. | `3005788` |  |
+| F-25-6 | `internal/parser/packet.go` | 47 | critical | confirmed | A packet whose IPv6 layer type carries another concrete type makes `parser.GetIPInfo` panic with an interface conversion. | `3005788` |  |
+| F-25-7 | `cmd/ja4plus/main.go` | 163 | major | confirmed | A capture that holds a truncated ClientHello makes `ja4plus analyze` report no parse failure on standard error. | `d12860b` |  |
+| F-25-8 | `cmd/ja4plus/main.go` | 220 | major | confirmed | A standard output that takes no byte makes `ja4plus analyze --csv` write no row and exit 0. | `d12860b` |  |
+| F-25-9 | `cmd/ja4plus/main.go` | 339 | major | confirmed | A server that answers `ja4plus db update` with an endless body makes the program write every byte of it to the cache path. | `d12860b` |  |
 <!-- findings:25:end -->
 
 ## The suspected findings
@@ -517,6 +545,61 @@ exported API, so it reads this table to learn the final shape.
 
 **Add a row when a closure changes an exported signature.** `docs/api/v1.md` records the
 final shape of that signature.
+
+**No closure of issue #25 changed an exported signature, so the table holds no row.**
+Every repair sits behind an exported name that keeps its shape. The two findings whose
+repair needs a signature change are F-24-10 and F-24-12, and both stay open. The section
+below states the question.
+
+## The three findings that wait for a ruling
+
+Three findings stay `open`. Each one needs a decision that `.claude/rules/rulings.md`
+reserves for the maintainer, so issue #25 records the reading and stops.
+
+**A reading is a conclusion about a source. A ruling is a person's choice.** The three
+readings below carry the evidence. None of them picks an answer.
+
+### F-24-10 and F-24-12 — the convenience functions return one string
+
+`ComputeJA4` returns the empty string for a packet that holds no handshake and for a
+packet that holds a handshake the parser cannot read. `ComputeJA4XFromDER` returns the
+empty string for a buffer that holds no certificate and for a buffer that holds a
+certificate the parser cannot read. A caller separates neither pair.
+
+The reading holds four facts.
+
+- Eight `Compute*` functions carry the same shape, and each doc comment states that it
+  returns the empty string for an input it does not read.
+- `Processor.ProcessPacket` returns `[]error`, and it separates both pairs.
+  `TestTheProcessorReturnsAnErrorRatherThanDiscardingIt` holds that measurement.
+- A repair that returns an error changes an exported signature. Epic 10 freezes the
+  exported API, and `docs/api/v1.md` records the final shape.
+- `.claude/rules/parity.md` rule 2 gives the interface to the port where this project
+  shipped nothing. This project shipped these eight names first, so a change here is a
+  change the port adopts.
+
+The maintainer chooses one of three answers.
+
+1. Change the signature of the two functions, and record a row in
+   `## The exported signatures a closure changed`.
+2. Add a second exported name for each one that returns an error.
+3. Close both as `no change needed`, because the convenience function is the API that
+   carries no error and `Processor` is the API that carries one.
+
+### F-23-14 — the lookup table loads once for the life of the process
+
+`lookup.go:37` holds a `sync.Once`, so a program that calls `LookupFingerprint` before a
+new mapping file reaches the cache path reads the embedded table until it exits.
+`ja4plus db update` already prints `note: existing processes must be restarted to pick up
+the new database`, so the command-line program states the same behaviour.
+
+`.claude/rules/concurrency.md` reads that the package-level lookup state of `lookup.go` is
+a known exception **under repair**, and it names
+`docs/specs/features/09-database-lookup.md`. Issue #75 of Epic 9 carries the title
+`Reload the lookup table and hold the db subcommands`, which is this repair.
+
+The reading is that issue #75 owns the change. **Only the maintainer writes `declined`**,
+so this row stays `open` until that decision lands.
 
 <!-- signatures:begin -->
 | Finding | Symbol | Before | After | Commit |
