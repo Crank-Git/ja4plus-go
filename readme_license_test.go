@@ -239,6 +239,10 @@ func TestNoFileStatesThatTheFoxIOMethodsAreBSD3Clause(t *testing.T) {
 			return err
 		}
 
+		// The skip set holds one slash-separated path, so the walk path takes the same
+		// form on every platform.
+		path = filepath.ToSlash(path)
+
 		if entry.IsDir() {
 			if licenseClaimSkipDirs[path] || licenseClaimSkipDirs[entry.Name()] {
 				return fs.SkipDir
