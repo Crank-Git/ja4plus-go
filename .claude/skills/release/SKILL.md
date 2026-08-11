@@ -28,7 +28,7 @@ These are not covered by the commands above. Check each one by hand.
 | Blocker | How to check |
 |---|---|
 | `docs/audit/license-decision.md` records the maintainer's decision. | Read the file. |
-| Every entry in `docs/audit/conformance-exceptions.md` carries the maintainer's acceptance, by name and by date. | Read the file. |
+| Every entry in `docs/audit/conformance-exclusions.md` carries the maintainer's acceptance, by name and by date. | Read the file. |
 | `testdata/deviations.json` holds no entry whose comparison now matches. | `make conformance` fails if one does. |
 | Every register row of `features/08-python-parity.md` is closed. | Read the feature file. |
 | No tracked document states a count of ten methods. | `go test -run TestMethodCount ./...` |

@@ -91,12 +91,36 @@ rule. Every closure follows all three.
 |---|---|
 | The closure | The code, plus the test of step 3. |
 | A new requirement | `docs/specs/features/05-conformance-gaps.md`. |
-| An accepted exception | `docs/audit/conformance-exceptions.md`, with the maintainer's name and the date. |
+| An accepted exclusion | `docs/audit/conformance-exclusions.md`, with the maintainer's name and the date. |
 
 **A closure that no test holds is not a closure.** A later change reverses it in silence.
 
 **Stop before you invent a rule.** `.claude/rules/rulings.md` `## Stop conditions` names
 every case where the maintainer decides. A reference split is one of them.
+
+## Which record a fact reaches
+
+**This project holds two records, and they hold two distinct classes of fact.** The
+maintainer ruled on 2026-08-11, in issue #38.
+
+| Record | What it holds |
+|---|---|
+| `testdata/deviations.json`, the register | **A decline.** This project compared its output against a FoxIO value and chose to differ. |
+| `docs/audit/conformance-exclusions.md`, the exclusions page | **An exclusion.** The suite makes no comparison at all. |
+
+**One question settles which record a fact reaches.** Does the guard "an entry whose
+comparison now matches fails the suite" make sense for this fact? **Yes, and it is a
+register entry. No, and it is an exclusion.**
+
+`.claude/rules/parity.md:71` states that guard. An exclusion reaches no comparison that
+could later match, so the guard can evaluate nothing.
+
+`dtls-udp.notest.cap` decides the boundary. FoxIO marks it `notest`, so it yields no
+stream and no method, and it reaches no `<capture>/<stream>/<method>` register key.
+FR-gaps-19 records `not applicable` for it, and FR-gaps-20 requires an exclusions entry.
+
+**Write no entry in either record yourself.** Both records are empty today, and only the
+maintainer accepts an entry.
 
 ## Rules
 
@@ -104,7 +128,7 @@ every case where the maintainer decides. A reference split is one of them.
   with a vector, the library is wrong. Never change a vector.
 - **An extra fingerprint is as wrong as a missing one.** The suite reports both.
 - **The bar is byte-identical, with no exception.** A deviation is closed, or it records
-  its reason in `docs/audit/conformance-exceptions.md` and the maintainer accepts it by
+  its reason in `docs/audit/conformance-exclusions.md` and the maintainer accepts it by
   name and by date.
 - `dtls-udp.notest.cap` carries the FoxIO `notest` marker. FoxIO excludes it from their
   own suite, so the report records it as `not applicable`.

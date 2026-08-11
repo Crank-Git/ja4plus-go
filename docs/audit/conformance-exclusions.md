@@ -1,4 +1,4 @@
-# The conformance exceptions
+# The conformance exclusions
 
 **The record holds no entry.** The maintainer has accepted none, and FR-gaps-6 requires an
 acceptance on every entry.
@@ -11,30 +11,37 @@ or this file records why the closure is not possible.
 the maintainer alone. An engineer records the reading and the evidence, opens an issue,
 and stops. An engineer never writes an acceptance.
 
-`conformance_exceptions_test.go` holds the shape of this file. An entry that omits a
+`conformance_exclusions_test.go` holds the shape of this file. An entry that omits a
 column fails that test, so read `## The fields of an entry` before you add an entry.
 
 **Never write a placeholder entry.** An entry that names no person and no date fails the
 test, and it hides a deviation that the release gate must see. FR-release-44 of
 `docs/specs/features/10-release.md` reads this file before the release.
 
-## The relation to the register
+## The boundary against the register
 
-**This project holds two records of one class of fact, and the boundary between them is
-open.** Issue #38 states the question and the candidate answers. The maintainer decides
-it.
+**This project holds two records, and they hold two distinct classes of fact.** The
+maintainer ruled on 2026-08-11, in issue #38.
 
-| Record | Path | Read by | Holds |
-|---|---|---|---|
-| The register | `testdata/deviations.json` | The conformance suite | Six fields, and no maintainer name and no date. |
-| The exceptions | `docs/audit/conformance-exceptions.md` | A person, at the release gate | The reason, the evidence, the maintainer's name and the date. |
+| Record | What it holds |
+|---|---|
+| `testdata/deviations.json`, the register | **A decline.** This project compared its output against a FoxIO value and chose to differ. |
+| `docs/audit/conformance-exclusions.md`, this file | **An exclusion.** The suite makes no comparison at all. |
 
-The `## Terms` table of `docs/specs/spec.md` defines the word `register` as
-`testdata/deviations.json` alone. That table also bars the word `exception` as a synonym
-for `deviation`.
+**One question settles which record a fact reaches.** Does the guard "an entry whose
+comparison now matches fails the suite" make sense for this fact? **Yes, and it is a
+register entry. No, and it is an exclusion.**
 
-**Add no entry to this file until the maintainer answers #38.** An entry written before
-the answer may belong in the register instead, and a fact in two records drifts.
+`.claude/rules/parity.md:71` states that guard. An exclusion reaches no comparison that
+could later match, so the guard can evaluate nothing.
+
+`dtls-udp.notest.cap` decides the boundary. FoxIO marks the capture `notest` and excludes
+it from their own suite, so it yields no stream and no method. It reaches no
+`<capture>/<stream>/<method>` register key. FR-gaps-19 records `not applicable` for it, and
+FR-gaps-20 requires an entry here.
+
+**This ruling is reversible.** A later reader reverses it with a new fact, and not with a
+new opinion.
 
 ## The fields of an entry
 
@@ -42,8 +49,8 @@ The record table holds these five columns, in this order.
 
 | Column | What it holds |
 |---|---|
-| `Key` | The capture that carries the deviation, in a code span. Where the deviation reaches one comparison, the key names the capture, the stream and the method, as `testdata/README.md` writes a register key. |
-| `Reason` | The reason that the closure is not possible. |
+| `Key` | The capture that the suite makes no comparison for, in a code span. Where the exclusion reaches one stream, the key names the capture, the stream and the method, as `testdata/README.md` writes a register key. |
+| `Reason` | The reason that the suite makes no comparison. |
 | `Evidence` | The source that supports the reason, as a `file:line` reference or as an issue. |
 | `Accepted by` | The name of the maintainer who accepted the entry. |
 | `Date` | The acceptance date, written `YYYY-MM-DD`. |
@@ -60,26 +67,27 @@ source sentence exactly, in a code span.
 
 ## The record
 
-<!-- conformance-exceptions:begin -->
+<!-- conformance-exclusions:begin -->
 
 | Key | Reason | Evidence | Accepted by | Date |
 |---|---|---|---|---|
 
-<!-- conformance-exceptions:end -->
+<!-- conformance-exclusions:end -->
 
 ## To add an entry
 
 `docs/specs/features/05-conformance-gaps.md` states this flow under
-`### An engineer records an exception`. The steps below name the person who acts at each
+`### An engineer records an exclusion`. The steps below name the person who acts at each
 one.
 
 1. The engineer reads the deviation row in `docs/audit/conformance.md`.
-2. The engineer establishes that the closure is not possible, and records the evidence.
-3. The engineer opens an issue that states the question and every candidate answer.
-4. The maintainer rules on the issue.
-5. The maintainer adds the entry, with their name and the date.
+2. The engineer applies the one question of `## The boundary against the register`.
+3. The engineer establishes that the closure is not possible, and records the evidence.
+4. The engineer opens an issue that states the question and every candidate answer.
+5. The maintainer rules on the issue.
+6. The maintainer adds the entry, with their name and the date.
 
-**Step 5 belongs to the maintainer.** An entry that an engineer writes records no
+**Step 6 belongs to the maintainer.** An entry that an engineer writes records no
 acceptance, whatever the `Accepted by` column holds.
 
 ## To close a deviation
