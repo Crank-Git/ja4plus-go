@@ -1,6 +1,6 @@
 # The correctness audit findings report
 
-**Report status:** in progress
+**Report status:** complete
 
 This file is the record of the correctness audit. `docs/specs/features/02-correctness-audit.md`
 states every requirement, and FR-audit-9 names this path. Issue #21 defines the record.
@@ -22,9 +22,9 @@ The status line at the top of this file holds one of two values.
 **Issue #25 sets the status to `complete`.** The test applies the closing rules once it
 reads that value. An earlier change fails the suite.
 
-**The status stays `in progress`, and three findings state why.** F-23-14, F-24-10 and
-F-24-12 each need a decision that only the maintainer makes.
-`## The three findings that wait for a ruling` names each one and states the question.
+**The status reads `complete`, so the closing rules apply.** Every file of the audit set
+carries an audit date, and no finding stays `open`.
+`TestACompleteReportLeavesNoOpenFindingAndNoUnauditedFile` holds that result.
 
 ## The audit set
 
@@ -354,8 +354,8 @@ moves this project away from the port.**
 | F-22-1 | `internal/parser/tls.go` | 323 | critical | declined | The capture `tls-non-ascii-alpn.pcapng` stream 0 makes `ALPNValue` return `bd`, and the FoxIO vector holds `99`. |  | Issue #50 of Epic 8a owns the repair, because a FoxIO vector reaches the value and the register records the split. |
 | F-22-2 | `internal/parser/tls.go` | 131 | major | confirmed | A ClientHello whose extensions length field reaches past its own TLS record makes `ParseClientHello` read `0x1603` as an extension type. | `38b55ce` |  |
 | F-22-3 | `internal/parser/tls.go` | 223 | major | confirmed | A ServerHello whose extensions length field reaches past its own TLS record makes `ParseServerHello` read the next record as extension bytes. | `38b55ce` |  |
-| F-22-4 | `internal/parser/ssh.go` | 40 | major | confirmed | An SSH packet whose length is 1024 and whose padding length is 8 makes `IsSSHPacket` return false. | `85a2baf` |  |
-| F-22-5 | `internal/parser/ssh.go` | 79 | major | confirmed | An SSH KEXINIT packet whose length is 1024 and whose padding length is 8 makes `ParseSSHPacket` return nil. | `85a2baf` |  |
+| F-22-4 | `internal/parser/ssh.go` | 40 | major | confirmed | An SSH packet whose length is 1024 and whose padding length is 8 makes `IsSSHPacket` return false. | `85a2baf` | The repair moved the conformance count, and issue #53 of Epic 8a owns the JA4SSH surplus that the ten new rows add to. |
+| F-22-5 | `internal/parser/ssh.go` | 79 | major | confirmed | An SSH KEXINIT packet whose length is 1024 and whose padding length is 8 makes `ParseSSHPacket` return nil. | `85a2baf` | The repair moved the conformance count, and issue #53 of Epic 8a owns the JA4SSH surplus that the ten new rows add to. |
 | F-22-6 | `internal/parser/x509_utils.go` | 36 | major | confirmed | The identifier `2.100.3` makes `OIDToHex` return `b403`, and X.690 encodes it as `813403`. | `85a2baf` |  |
 | F-22-7 | `internal/parser/tcp_stream.go` | 42 | major | confirmed | A reassembler whose stream limit is 0 makes the first `AddSegment` call panic with an index out of range. | `3005788` |  |
 | F-22-8 | `internal/parser/tcp_stream.go` | 93 | major | confirmed | A reassembler whose byte limit is below 0 makes `GetStream` panic with a slice bound out of range. | `3005788` |  |
@@ -400,7 +400,7 @@ state table, the `results` slice, `CleanupConnection` or `Reset`.
 | F-23-11 | `ja4.go` | 123 | critical | confirmed | A caller that names the server endpoint first leaves one entry in the QUIC fragment table of JA4. The entry stays for every QUIC connection whose client hello spans two datagrams. | `e720db5` |  |
 | F-23-12 | `ja4x.go` | 109 | major | confirmed | A capture where two connections carry one certificate, with a CleanupConnection call between them, produces one JA4X result and not two. | `e720db5` | The fingerprinter holds a stream index of the hashes it wrote, so the deduplication of a live connection stays. |
 | F-23-13 | `ja4l.go` | 219 | critical | confirmed | A caller that passes `TCP` as the `proto` argument leaves one entry in the JA4L connections table for every connection it closes. | `e720db5` |  |
-| F-23-14 | `lookup.go` | 37 | major | open | A program that calls LookupFingerprint before a new mapping file reaches the cache path reads the embedded table for the life of the process. A lookup of a fingerprint that only the new file holds returns nil. |  |  |
+| F-23-14 | `lookup.go` | 37 | major | declined | A program that calls LookupFingerprint before a new mapping file reaches the cache path reads the embedded table for the life of the process. A lookup of a fingerprint that only the new file holds returns nil. |  | Issue #75 of Epic 9 owns the reload, and `.claude/rules/concurrency.md` names this state a known exception under repair. |
 <!-- findings:23:end -->
 
 `audit_state_test.go` holds the measurement of each finding above. Read it before you
@@ -426,7 +426,8 @@ hash or a sort.
 
 `audit_panic_test.go` reproduced every `open` row. Issue #25 reversed each assertion in
 the commit that closed the finding, so every test of that file now states the repaired
-result. Two rows stay open, and `## The three findings that wait for a ruling` states why.
+result. Two rows close as `no change needed`, and `## The three rulings of 2026-08-11`
+states the reason.
 
 <!-- findings:24:begin -->
 | ID | File | Line | Severity | Status | Failure scenario | Closing commit | Reason |
@@ -440,9 +441,9 @@ result. Two rows stay open, and `## The three findings that wait for a ruling` s
 | F-24-7 | `ja4ssh.go` | 134 | critical | confirmed | A TCP payload that opens with `SSH-` makes a zero-value `JA4SSHFingerprinter` panic with an assignment to an entry in a nil map. | `3005788` |  |
 | F-24-8 | `ja4.go` | 115 | critical | confirmed | A call of `Reset` on a zero-value `Processor` panics with a nil pointer dereference of the JA4 fingerprinter field. | `3005788` |  |
 | F-24-9 | `processor.go` | 62 | critical | confirmed | A TCP packet makes `ProcessPacket` of a zero-value `SyncProcessor` panic with a nil pointer dereference of the processor field. | `3005788` |  |
-| F-24-10 | `ja4.go` | 141 | major | open | A TLS record whose handshake length exceeds the record makes `ComputeJA4` return the empty string, which also names a packet with no ClientHello. |  |  |
+| F-24-10 | `ja4.go` | 141 | major | no change needed | A TLS record whose handshake length exceeds the record makes `ComputeJA4` return the empty string, which also names a packet with no ClientHello. |  | The port states that a fingerprinter which cannot parse a packet returns nothing, and `Processor.ProcessPacket` is the API that carries the error. |
 | F-24-11 | `ja4s.go` | 61 | major | unconfirmed | A QUIC Initial datagram that the parser cannot read makes JA4S return no error, and `ja4.go:56` returns an error on the same failure. |  | No crafted datagram of `audit_panic_test.go` makes `parser.ParseQUICInitial` return an error, so the test skips. |
-| F-24-12 | `ja4x.go` | 271 | major | open | The DER buffer `30 03 02 01 00` makes `ComputeJA4XFromDER` return the empty string, which also names a buffer that holds no certificate. |  |  |
+| F-24-12 | `ja4x.go` | 271 | major | no change needed | The DER buffer `30 03 02 01 00` makes `ComputeJA4XFromDER` return the empty string, which also names a buffer that holds no certificate. |  | The port states that a fingerprinter which cannot parse a packet returns nothing, and `Processor.ProcessPacket` is the API that carries the error. |
 | F-24-13 | `lookup.go` | 55 | major | unconfirmed | A cache file whose first row is not valid CSV leaves the table empty, so `LookupFingerprint` returns no result for every fingerprint. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
 | F-24-14 | `lookup.go` | 72 | major | unconfirmed | A cache row that holds an unescaped double quote makes the loader skip it, so `LookupFingerprint` returns no result for that row. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
 | F-24-15 | `lookup.go` | 43 | minor | unconfirmed | A cache file that the process cannot read makes the loader use the embedded table, and `GetDatabaseInfo` reports the source as embedded. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
@@ -547,17 +548,14 @@ exported API, so it reads this table to learn the final shape.
 final shape of that signature.
 
 **No closure of issue #25 changed an exported signature, so the table holds no row.**
-Every repair sits behind an exported name that keeps its shape. The two findings whose
-repair needs a signature change are F-24-10 and F-24-12, and both stay open. The section
-below states the question.
+Every repair sits behind an exported name that keeps its shape. F-24-10 and F-24-12 are
+the two findings whose repair would change one, and the maintainer closed both as
+`no change needed`. `## The three rulings of 2026-08-11` states the reason.
 
-## The three findings that wait for a ruling
+## The three rulings of 2026-08-11
 
-Three findings stay `open`. Each one needs a decision that `.claude/rules/rulings.md`
-reserves for the maintainer, so issue #25 records the reading and stops.
-
-**A reading is a conclusion about a source. A ruling is a person's choice.** The three
-readings below carry the evidence. None of them picks an answer.
+The maintainer ruled on three findings that no source settles. Each ruling is reversible,
+and `.claude/rules/rulings.md` states the rule that only the maintainer makes one.
 
 ### F-24-10 and F-24-12 — the convenience functions return one string
 
@@ -566,25 +564,23 @@ packet that holds a handshake the parser cannot read. `ComputeJA4XFromDER` retur
 empty string for a buffer that holds no certificate and for a buffer that holds a
 certificate the parser cannot read. A caller separates neither pair.
 
-The reading holds four facts.
+**The ruling closes both as `no change needed`.** `Processor.ProcessPacket` is the API
+that carries the error, and the eight `Compute*` functions are the convenience layer that
+carries none. Neither signature changes.
 
-- Eight `Compute*` functions carry the same shape, and each doc comment states that it
-  returns the empty string for an input it does not read.
-- `Processor.ProcessPacket` returns `[]error`, and it separates both pairs.
-  `TestTheProcessorReturnsAnErrorRatherThanDiscardingIt` holds that measurement.
-- A repair that returns an error changes an exported signature. Epic 10 freezes the
-  exported API, and `docs/api/v1.md` records the final shape.
-- `.claude/rules/parity.md` rule 2 gives the interface to the port where this project
-  shipped nothing. This project shipped these eight names first, so a change here is a
-  change the port adopts.
+The port states the architecture invariant that this project follows, at commit
+`21299645366591331eb93155355b65a76a3729f3`:
 
-The maintainer chooses one of three answers.
+> **Error handling.** A fingerprinter that cannot parse a packet returns nothing. It does
+> not raise.
 
-1. Change the signature of the two functions, and record a row in
-   `## The exported signatures a closure changed`.
-2. Add a second exported name for each one that returns an error.
-3. Close both as `no change needed`, because the convenience function is the API that
-   carries no error and `Processor` is the API that carries one.
+**That invariant already settled thirteen findings of this epic.** F-22-14 through
+F-22-26 record the thirteen `nilerr` sites of `internal/parser/quic.go` as
+`no change needed` for the same reason. A `Compute*` function that returns an empty string
+for a packet it cannot read is the same rule at the exported surface.
+
+`Processor.ProcessPacket` returns `[]error` and separates both pairs.
+`TestTheProcessorReturnsAnErrorRatherThanDiscardingIt` holds that measurement.
 
 ### F-23-14 — the lookup table loads once for the life of the process
 
@@ -598,8 +594,29 @@ a known exception **under repair**, and it names
 `docs/specs/features/09-database-lookup.md`. Issue #75 of Epic 9 carries the title
 `Reload the lookup table and hold the db subcommands`, which is this repair.
 
-The reading is that issue #75 owns the change. **Only the maintainer writes `declined`**,
-so this row stays `open` until that decision lands.
+**The ruling records F-23-14 as `declined`, and issue #75 owns the reload.** Issue #25
+repairs nothing here.
+
+## The JA4SSH surplus belongs to issue #53
+
+The closure of F-22-4 and F-22-5 moved the conformance count. `internal/parser/ssh.go`
+compared the padding length against `byte(packetLength)`, which truncated a 32-bit field
+to eight bits and declined a valid SSH packet. **The repair is correct on its own terms.**
+
+The measurement is 943 matches and 3431 deviations before the repair, and 943 matches and
+3441 deviations after it. Ten new rows name JA4SSH, on `ssh-r.pcap`, `ssh.pcapng`,
+`ssh2.pcapng`, `sshv1.pcap` and `v6.pcap`. Each one reads
+`the library produces a value the vector does not hold`. No key lost a match, and no key
+of another method moved.
+
+**The ten rows add to an over-emission that this library already carries.** The tracked
+report on `dev` records 24 surplus JA4SSH rows against 5 missing and 4 differing, and
+issue #33 measured 617 JA4SSH values for `ssh-r.pcap` where the vector holds 11.
+
+**Whether JA4SSH over-emits is a separate and larger question, and issue #53 of Epic 8a
+owns it.** That issue covers the window and `CloseOpenWindows`, and the maintainer already
+ruled its interface. **This report claims no improvement in the conformance count**, and
+the direction of the ten rows stays unproven until issue #53 measures the window.
 
 <!-- signatures:begin -->
 | Finding | Symbol | Before | After | Commit |

@@ -21,9 +21,10 @@ import (
 // FR-audit-14, FR-audit-19, FR-audit-20, FR-audit-21 and FR-audit-22.
 //
 // The audit changes no code, so a test here records a defect rather than a repair.
-// A test that asserts the defective result carries a `TODO(#25)` comment, because the
-// closure reverses the assertion. `.claude/rules/rulings.md` asks for a test that builds
-// the separating input where no vector separates the two readings.
+// Issue #25 closed every finding of this file. It reversed each assertion in the commit
+// that closed the finding, so no `TODO(#25)` comment remains.
+// `.claude/rules/rulings.md` asks for a test that builds the separating input where no
+// vector separates the two readings.
 //
 // `docs/audit/findings.md` holds the row of each finding these tests reach.
 
@@ -820,16 +821,22 @@ func TestTheProcessorReturnsAnErrorRatherThanDiscardingIt(t *testing.T) {
 	}
 }
 
-func TestComputeJA4XFromDERDiscardsTheCertificateParseError(t *testing.T) {
-	// F-24-12. `ja4x.go:271` returns the empty string when `x509.ParseCertificate` fails.
-	// A caller cannot separate "the bytes hold no certificate" from "the bytes hold a
-	// certificate the parser cannot read".
+func TestComputeJA4XFromDERReturnsTheEmptyStringForACertificateItCannotRead(t *testing.T) {
+	// F-24-12 closes as `no change needed`. `ja4x.go:271` returns the empty string when
+	// `x509.ParseCertificate` fails, so a caller separates "the bytes hold no certificate"
+	// from "the bytes hold a certificate the parser cannot read" no more.
 	//
-	// TODO(#25): A repair changes an exported signature, so `docs/api/v1.md` records it.
+	// The maintainer ruled on 2026-08-11 that this shape is correct. The port states the
+	// invariant at commit `21299645366591331eb93155355b65a76a3729f3`: a fingerprinter that
+	// cannot parse a packet returns nothing, and it does not raise. `ComputeJA4XFromDER` is
+	// the convenience layer, and `Processor.ProcessPacket` is the API that carries the
+	// error. The signature therefore stays as it is, and Epic 10 freezes it.
+	//
+	// This test holds the ruling. A later change that returns an error fails here.
 	malformed := []byte{0x30, 0x03, 0x02, 0x01, 0x00}
 
 	if produced := ComputeJA4XFromDER(malformed); produced != "" {
-		t.Fatalf("F-24-12 no longer reproduces, and the malformed certificate produces %q", produced)
+		t.Fatalf("the malformed certificate produces %q, and the ruling names the empty string", produced)
 	}
 
 	if produced := ComputeJA4XFromDER(nil); produced != "" {
@@ -842,7 +849,11 @@ func TestJA4SDiscardsTheQUICInitialParseError(t *testing.T) {
 	// `ja4.go:56` propagates the error of the same shape of failure, so the two paths
 	// disagree on the same datagram.
 	//
-	// TODO(#25): The closure propagates the error, or it states why JA4S declines to.
+	// F-24-11 stays `unconfirmed`, and issue #24 owns that row. The ruling of 2026-08-11 on
+	// F-24-10 and F-24-12 states why JA4S declines to propagate: the port invariant at
+	// commit `21299645366591331eb93155355b65a76a3729f3` reads that a fingerprinter which
+	// cannot parse a packet returns nothing. The skip below still holds, because no crafted
+	// datagram of this test separates the two paths.
 	payloads := [][]byte{
 		{0xc0, 0x00, 0x00, 0x00, 0x01, 0xff, 0x01, 0x02},
 		{0xc0, 0x00, 0x00, 0x00, 0x01, 0x08, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x00, 0xbf},
@@ -876,8 +887,13 @@ func TestComputeJA4DiscardsTheClientHelloParseError(t *testing.T) {
 	// separate "the packet holds no handshake" from "the packet holds a handshake the
 	// parser cannot read". Both produce the empty string.
 	//
-	// TODO(#25): A repair changes an exported signature, so `docs/api/v1.md` records it and
-	// the table under `## The exported signatures a closure changed` holds a row.
+	// The maintainer ruled on 2026-08-11 that this shape is correct. The port states the
+	// invariant at commit `21299645366591331eb93155355b65a76a3729f3`: a fingerprinter that
+	// cannot parse a packet returns nothing, and it does not raise. The same invariant
+	// closed F-22-14 through F-22-26. `Processor` is the API that carries the error, and
+	// the assertion at the end of this test holds that separation.
+	//
+	// This test holds the ruling. A later change that returns an error fails here.
 	empty := panicAuditFrame(t, "tcp", 12345, 443, nil)
 
 	truncated := panicAuditFrame(t, "tcp", 12345, 443, []byte{
