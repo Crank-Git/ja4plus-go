@@ -4,7 +4,6 @@ package ja4plus
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,15 +21,15 @@ import (
 // vector. `make corpus` fetches the corpus at the commit in `testdata/foxio.pin`, and
 // `.gitignore` keeps the corpus out of the repository.
 //
-// # What this slice compares
+// # What this suite compares
 //
-// The suite compares the per-packet vector set. A per-packet record names its frame, so a
-// key needs the frame number alone.
+// The suite compares the two vector sets, and it compares each one on its own. A
+// per-packet record names its frame, so a per-packet key holds the frame number. A
+// per-stream entry names a stream by the `src`, `dst`, `srcport` and `dstport` fields, so a
+// per-stream key holds the stream number that the entry carries.
 //
-// The suite reads the per-stream vector set and reports its size, and it compares no value
-// there yet. A per-stream entry names a stream by the `src`, `dst`, `srcport` and `dstport`
-// fields, and FR-conformance-22 states that match. Issue #34 owns FR-conformance-20
-// through FR-conformance-26, and the per-stream comparison lands with it.
+// `conformance_adapters_test.go` holds the two adapters and FR-conformance-20 through
+// FR-conformance-26.
 
 const (
 	// conformanceCorpusDir holds the fetched FoxIO corpus.
@@ -52,10 +51,15 @@ const conformanceNotestMarker = ".notest."
 // conformancePacketMethods maps a per-packet vector field to a JA4+ method name.
 //
 // FoxIO writes the field names in the Wireshark dissector, and this project writes the
-// method names in the `## Terms` table of `docs/specs/spec.md`. The two `_delta` fields
-// carry a number of milliseconds and not a fingerprint, so this table names neither.
-// `conformanceReportTotals` names them on every run, and #34 rules on them under
-// FR-conformance-23 and FR-conformance-26.
+// method names in the `## Terms` table of `docs/specs/spec.md`. This table holds
+// FR-conformance-23.
+//
+// FoxIO writes both JA4D and JA4D6 under the single field `ja4.ja4d`, and this library
+// writes the two types `ja4d` and `ja4d6`. FR-conformance-25 makes this adapter
+// authoritative for the two, so `conformanceMethodOfResultType` maps each type to `JA4D`.
+//
+// `conformancePacketNonMethodFields` of `conformance_adapters_test.go` names every field
+// that holds no fingerprint.
 var conformancePacketMethods = map[string]string{
 	"ja4.ja4d":    "JA4D",
 	"ja4.ja4h":    "JA4H",
@@ -177,20 +181,22 @@ func conformanceReadStreamVector(t *testing.T, path string) []conformanceStreamE
 }
 
 // conformanceExpectedFromPacketVector returns the value of every method the per-packet
-// vector holds, and the count of each field the suite does not map.
+// vector holds.
 //
 // A packet that carries more than one certificate produces more than one value for a
 // method. The method name therefore carries the occurrence number. The port writes the
 // same form, for example `gre-erspan-vxlan.pcap/0:65174/JA4T.1`.
+//
+// FR-conformance-26 fails the test on a field the adapter does not recognize, so this
+// function reads every field through `conformanceRecognizePacketField`.
 func conformanceExpectedFromPacketVector(
 	t *testing.T,
 	capture string,
 	records []conformancePacketRecord,
-) (map[conformanceKey]string, map[string]int) {
+) map[conformanceKey]string {
 	t.Helper()
 
 	expected := make(map[conformanceKey]string)
-	unmapped := make(map[string]int)
 
 	for index, record := range records {
 		frames := record.Source.Layers[conformanceFrameNumberField]
@@ -200,14 +206,12 @@ func conformanceExpectedFromPacketVector(
 		}
 
 		for field, values := range record.Source.Layers {
-			if field == conformanceFrameNumberField {
-				continue
+			method, isMethod, err := conformanceRecognizePacketField(field)
+			if err != nil {
+				t.Fatalf("record %d of the per-packet vector for %s: %v", index, capture, err)
 			}
 
-			method, mapped := conformancePacketMethods[field]
-			if !mapped {
-				unmapped[field]++
-
+			if !isMethod {
 				continue
 			}
 
@@ -222,7 +226,7 @@ func conformanceExpectedFromPacketVector(
 		}
 	}
 
-	return expected, unmapped
+	return expected
 }
 
 // conformanceMethodOccurrence returns the method name with the occurrence number.
@@ -348,10 +352,17 @@ func conformanceMethodOfResultType(result FingerprintResult) (string, string, bo
 		}
 	}
 
-	// The per-packet vector set names no field for JA4 and none for JA4D6, so the suite
-	// compares neither here. The per-stream set holds JA4, and #34 compares it.
+	// The per-packet vector set names no field for JA4, so the suite compares JA4 in the
+	// per-stream set alone.
+	//
+	// FoxIO writes both JA4D and JA4D6 under the single field `ja4.ja4d`, and
+	// FR-conformance-25 makes this adapter authoritative for the two. The per-stream vector
+	// for `dhcpv6.pcap` is an empty list, so no other vector reaches JA4D6. The two types
+	// therefore share the method name `JA4D`. One frame carries one DHCP message, so the
+	// two types never meet on one frame.
 	names := map[string]string{
 		"ja4d":   "JA4D",
+		"ja4d6":  "JA4D",
 		"ja4h":   "JA4H",
 		"ja4s":   "JA4S",
 		"ja4ssh": "JA4SSH",
@@ -383,6 +394,63 @@ func conformanceCoveredMethods(expected map[conformanceKey]string) map[string]bo
 	return covered
 }
 
+// conformanceProducedByStream runs one Processor over every packet of the capture and
+// returns the value of every method the library produces, keyed by stream.
+//
+// FR-conformance-15 runs one Processor over every packet in capture order. The concurrency
+// contract of `.claude/rules/concurrency.md` gives one Processor to one goroutine, so this
+// function creates the Processor and never shares it.
+//
+// FR-conformance-22 names the stream by the four address fields. The shape maps the
+// endpoint key of each vector entry to the stream number that the entry carries. A value
+// whose endpoint key reaches no entry keeps the endpoint key as its stream name, so the
+// deviation names the connection that produced it. The endpoint key holds no `/`, so the
+// register key form of `testdata/README.md` still reads in three parts.
+func conformanceProducedByStream(
+	t *testing.T,
+	capture string,
+	packets []gopacket.Packet,
+	shape conformanceStreamShape,
+) map[conformanceKey]string {
+	t.Helper()
+
+	produced := make(map[conformanceKey]string)
+	occurrences := make(map[conformanceKey]int)
+	processor := NewProcessor()
+
+	for index, packet := range packets {
+		results, errs := processor.ProcessPacket(packet)
+		for _, err := range errs {
+			// A fingerprinter returns a non-fatal error, so the suite records it and reads
+			// the next packet. An error is not a deviation.
+			t.Logf("%s frame %d: %v", capture, index+1, err)
+		}
+
+		for _, result := range results {
+			endpoint := conformanceEndpointKey(result.SrcIP, result.SrcPort, result.DstIP, result.DstPort)
+
+			stream, named := shape.StreamOfEndpoint[endpoint]
+			if !named {
+				stream = endpoint
+			}
+
+			for _, value := range conformanceStreamValuesOfResult(result) {
+				if !shape.Covered[value.Method] {
+					continue
+				}
+
+				counter := conformanceKey{Capture: capture, Stream: stream, Method: value.Method}
+				occurrences[counter]++
+
+				method := conformanceStreamMethodKey(value.Method, occurrences[counter], shape.UsesOccurrence[value.Method])
+				produced[conformanceKey{Capture: capture, Stream: stream, Method: method}] = value.Value
+			}
+		}
+	}
+
+	return produced
+}
+
 // conformanceRegisterByKey returns the register, keyed by the comparison each entry names.
 // FR-reference-25 reads `testdata/deviations.json`, and the suite expects the named
 // comparison to differ.
@@ -403,15 +471,22 @@ func conformanceRegisterByKey(t *testing.T) map[conformanceKey]deviationEntry {
 	return register
 }
 
-// conformanceRunTotals counts the outcome of the whole run.
-type conformanceRunTotals struct {
-	Captures         int
-	NotApplicable    int
+// conformanceSetTotals counts the outcome of one vector set.
+type conformanceSetTotals struct {
 	Matches          int
 	Deviations       int
 	AcceptedDeviants int
 	Closed           int
-	StreamValues     int
+}
+
+// conformanceRunTotals counts the outcome of the whole run.
+// The two vector sets cover different methods, so the summary reports each one on its own.
+type conformanceRunTotals struct {
+	Captures      int
+	NotApplicable int
+	StreamValues  int
+	Stream        conformanceSetTotals
+	Packet        conformanceSetTotals
 }
 
 func TestConformance(t *testing.T) {
@@ -419,7 +494,6 @@ func TestConformance(t *testing.T) {
 
 	register := conformanceRegisterByKey(t)
 	totals := conformanceRunTotals{}
-	unmapped := map[string]int{}
 
 	if fetched, err := os.ReadFile(conformanceFetchedFile); err == nil {
 		t.Logf("the corpus holds the FoxIO commit %s", strings.TrimSpace(string(fetched)))
@@ -432,20 +506,20 @@ func TestConformance(t *testing.T) {
 		totals.Captures++
 
 		t.Run(capture, func(t *testing.T) {
-			conformanceRunOneCapture(t, capture, register, &totals, unmapped)
+			conformanceRunOneCapture(t, capture, register, &totals)
 		})
 	}
 
-	conformanceReportTotals(t, totals, unmapped)
+	conformanceReportTotals(t, totals)
 }
 
-// conformanceRunOneCapture compares one capture and adds its outcome to the totals.
+// conformanceRunOneCapture compares one capture against the two vector sets and adds its
+// outcome to the totals.
 func conformanceRunOneCapture(
 	t *testing.T,
 	capture string,
 	register map[conformanceKey]deviationEntry,
 	totals *conformanceRunTotals,
-	unmapped map[string]int,
 ) {
 	t.Helper()
 
@@ -454,15 +528,6 @@ func conformanceRunOneCapture(
 	// `http1.pcapng`.
 	packets := loadPCAP(t, filepath.Join(conformanceCaptureDir, capture))
 	t.Logf("the capture holds %d packets", len(packets))
-
-	if streamPath := conformanceVectorPath(conformanceStreamVectorDir, capture); streamPath != "" {
-		entries := conformanceReadStreamVector(t, streamPath)
-		totals.StreamValues += len(entries)
-
-		t.Logf("the per-stream vector holds %d entries, and #34 compares them under FR-conformance-22", len(entries))
-	} else {
-		t.Logf("the corpus holds no per-stream vector for this capture")
-	}
 
 	// FoxIO marks this capture `notest`, so FoxIO runs no test over it. The suite reads
 	// it, which proves that the library decodes it without a panic, and compares nothing.
@@ -477,30 +542,96 @@ func conformanceRunOneCapture(
 		return
 	}
 
-	packetPath := conformanceVectorPath(conformancePacketVectorDir, capture)
-	if packetPath == "" {
+	compared := conformanceRunStreamSet(t, capture, packets, register, totals)
+	compared = conformanceRunPacketSet(t, capture, packets, register, totals) || compared
+
+	if !compared {
 		totals.NotApplicable++
 
-		t.Logf("the corpus holds no per-packet vector for this capture, so the suite records it as not applicable")
+		t.Logf("no vector of the corpus holds a value for this capture, so the suite records it as not applicable")
+	}
+}
 
-		return
+// conformanceRunStreamSet compares the capture against the per-stream vector.
+// It reports whether the suite compared a value.
+func conformanceRunStreamSet(
+	t *testing.T,
+	capture string,
+	packets []gopacket.Packet,
+	register map[conformanceKey]deviationEntry,
+	totals *conformanceRunTotals,
+) bool {
+	t.Helper()
+
+	// FR-conformance-13 reads the per-stream vector for a capture when one exists.
+	path := conformanceVectorPath(conformanceStreamVectorDir, capture)
+	if path == "" {
+		t.Logf("the corpus holds no per-stream vector for this capture")
+
+		return false
 	}
 
-	expected, captureUnmapped := conformanceExpectedFromPacketVector(t, capture, conformanceReadPacketVector(t, packetPath))
-	for field, count := range captureUnmapped {
-		unmapped[field] += count
+	entries := conformanceReadStreamVector(t, path)
+	totals.StreamValues += len(entries)
+
+	shape, err := conformanceExpectedFromStreamVector(capture, entries)
+	if err != nil {
+		t.Fatalf("the per-stream adapter fails: %v", err)
 	}
 
+	if len(shape.Expected) == 0 {
+		t.Logf("the per-stream vector holds %d entries and no value, so the suite compares nothing in the per-stream set",
+			len(entries))
+
+		return false
+	}
+
+	produced := conformanceProducedByStream(t, capture, packets, shape)
+	conformanceRecordComparison(t, "per-stream", compareConformance(produced, shape.Expected, register), &totals.Stream)
+
+	return true
+}
+
+// conformanceRunPacketSet compares the capture against the per-packet vector.
+// It reports whether the suite compared a value.
+func conformanceRunPacketSet(
+	t *testing.T,
+	capture string,
+	packets []gopacket.Packet,
+	register map[conformanceKey]deviationEntry,
+	totals *conformanceRunTotals,
+) bool {
+	t.Helper()
+
+	// FR-conformance-14 reads the per-packet vector for a capture when one exists.
+	path := conformanceVectorPath(conformancePacketVectorDir, capture)
+	if path == "" {
+		t.Logf("the corpus holds no per-packet vector for this capture")
+
+		return false
+	}
+
+	expected := conformanceExpectedFromPacketVector(t, capture, conformanceReadPacketVector(t, path))
 	if len(expected) == 0 {
-		totals.NotApplicable++
+		t.Logf("the per-packet vector holds no value, so the suite compares nothing in the per-packet set")
 
-		t.Logf("the per-packet vector holds no value, so the suite records it as not applicable")
-
-		return
+		return false
 	}
 
 	produced := conformanceProducedByFrame(t, capture, packets, conformanceCoveredMethods(expected))
-	comparison := compareConformance(produced, expected, register)
+	conformanceRecordComparison(t, "per-packet", compareConformance(produced, expected, register), &totals.Packet)
+
+	return true
+}
+
+// conformanceRecordComparison logs one comparison and adds its outcome to the set totals.
+func conformanceRecordComparison(
+	t *testing.T,
+	set string,
+	comparison conformanceComparison,
+	totals *conformanceSetTotals,
+) {
+	t.Helper()
 
 	totals.Matches += comparison.Matches
 	totals.Closed += len(comparison.Closed)
@@ -509,15 +640,15 @@ func conformanceRunOneCapture(
 		if deviation.Accepted {
 			totals.AcceptedDeviants++
 
-			t.Logf("accepted deviation %s: %s (the register names it)", deviation.Key, deviation.Kind)
+			t.Logf("accepted %s deviation %s: %s (the register names it)", set, deviation.Key, deviation.Kind)
 
 			continue
 		}
 
 		totals.Deviations++
 
-		t.Logf("deviation %s: %s\n  expected: %q\n  produced: %q",
-			deviation.Key, deviation.Kind, deviation.Expected, deviation.Produced)
+		t.Logf("%s deviation %s: %s\n  expected: %q\n  produced: %q",
+			set, deviation.Key, deviation.Kind, deviation.Expected, deviation.Produced)
 	}
 
 	// FR-reference-26 fails the suite when a comparison the register names now matches.
@@ -525,33 +656,29 @@ func conformanceRunOneCapture(
 		t.Errorf("the register names %s, and the comparison now matches, so the entry is closed and must leave the register", key)
 	}
 
-	t.Logf("the capture reports %d matches and %d deviations", comparison.Matches, len(comparison.Deviations))
+	t.Logf("the capture reports %d matches and %d deviations in the %s set",
+		comparison.Matches, len(comparison.Deviations), set)
 }
 
 // conformanceReportTotals writes the summary and fails the run when a deviation remains.
-func conformanceReportTotals(t *testing.T, totals conformanceRunTotals, unmapped map[string]int) {
+func conformanceReportTotals(t *testing.T, totals conformanceRunTotals) {
 	t.Helper()
 
 	t.Logf("the run read %d captures, %d of them not applicable, and %d per-stream entries",
 		totals.Captures, totals.NotApplicable, totals.StreamValues)
+	t.Logf("the per-stream set reports %d matches, %d deviations and %d accepted deviations",
+		totals.Stream.Matches, totals.Stream.Deviations, totals.Stream.AcceptedDeviants)
+	t.Logf("the per-packet set reports %d matches, %d deviations and %d accepted deviations",
+		totals.Packet.Matches, totals.Packet.Deviations, totals.Packet.AcceptedDeviants)
+
+	matches := totals.Stream.Matches + totals.Packet.Matches
+	deviations := totals.Stream.Deviations + totals.Packet.Deviations
+
 	t.Logf("the run reports %d matches, %d deviations and %d accepted deviations",
-		totals.Matches, totals.Deviations, totals.AcceptedDeviants)
+		matches, deviations, totals.Stream.AcceptedDeviants+totals.Packet.AcceptedDeviants)
 
-	if len(unmapped) > 0 {
-		fields := make([]string, 0, len(unmapped))
-		for field := range unmapped {
-			fields = append(fields, fmt.Sprintf("%s (%d records)", field, unmapped[field]))
-		}
-
-		sort.Strings(fields)
-
-		t.Logf("the suite maps no method to these per-packet fields, and #34 rules on them: %s",
-			strings.Join(fields, ", "))
-	}
-
-	if totals.Deviations > 0 {
-		t.Errorf("the run reports %d deviations that the register does not hold, and Epic 5 closes them",
-			totals.Deviations)
+	if deviations > 0 {
+		t.Errorf("the run reports %d deviations that the register does not hold, and Epic 5 closes them", deviations)
 	}
 }
 
