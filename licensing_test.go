@@ -58,6 +58,48 @@ func TestDataREADMENamesFoxIOAsTheMappingSource(t *testing.T) {
 	}
 }
 
+// `lookup.go:19` embeds `data/ja4plus-mapping.csv`, so every binary that links this
+// package carries FoxIO material. `NOTICE:47` states the license of that file, and
+// `doc.go` is the package documentation that `go doc` prints.
+func TestDocGoStatesThatFoxIOLicensesTheEmbeddedMappingFile(t *testing.T) {
+	docGo := readRepoFile(t, "doc.go")
+
+	for _, want := range []string{
+		"embeds",
+		"data/ja4plus-mapping.csv",
+		"FoxIO License 1.1",
+		"data/README.md",
+	} {
+		if !strings.Contains(docGo, want) {
+			t.Errorf("doc.go does not name %q, and the package embeds FoxIO material", want)
+		}
+	}
+}
+
+// theMethodCountPhrase is the form both records use for the count of FoxIO-licensed
+// methods. An earlier form stated the count as a formula, and the formula resolved to ten
+// because this project implements eleven methods.
+const theMethodCountPhrase = "nine of the methods"
+
+// theMethodCountFormula is the form that issue #121 deletes.
+const theMethodCountFormula = "except JA4"
+
+// `NOTICE`, `README.md` and `doc.go` each enumerate nine methods. These two records stated
+// the same split as a formula that resolved to a different count.
+func TestTheLicenseRecordsCountNineFoxIOLicensedMethods(t *testing.T) {
+	for _, path := range []string{"CHANGELOG.md", "docs/audit/license-decision.md"} {
+		record := readRepoFile(t, path)
+
+		if strings.Contains(record, theMethodCountFormula) {
+			t.Errorf("%s states the license split as a formula, and the formula resolves to ten methods", path)
+		}
+
+		if !strings.Contains(record, theMethodCountPhrase) {
+			t.Errorf("%s does not hold %q, and the enumerations name nine methods", path, theMethodCountPhrase)
+		}
+	}
+}
+
 func TestChangelogRecordsTheLicenseCorrectionUnderUnreleased(t *testing.T) {
 	changelog := readRepoFile(t, "CHANGELOG.md")
 

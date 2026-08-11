@@ -31,8 +31,8 @@ The license correction ships in `v1.0.0`. No `v0.4.0` release carries it first.
 The repository states two licenses, and it names which material each one covers.
 
 - The original Go code carries the BSD 3-Clause license, and `LICENSE` holds that text.
-- FoxIO licenses the JA4+ methods that this project implements, except JA4, under FoxIO
-  License 1.1. That license permits non-commercial use only.
+- FoxIO License 1.1 covers nine of the methods that this project implements, and `NOTICE`
+  names those nine. That license permits non-commercial use only.
 - `NOTICE` holds the FoxIO terms, and it names the commit at which this project read them.
 - `data/README.md` names FoxIO as the source of `data/ja4plus-mapping.csv`.
 

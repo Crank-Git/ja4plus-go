@@ -22,12 +22,12 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - The license correction. The repository states two licenses, and it names which material
-  each one covers. The original Go code carries the BSD 3-Clause license. FoxIO licenses
-  the JA4+ methods that this project implements, except JA4, under FoxIO License 1.1,
-  which permits non-commercial use only. `NOTICE` holds the FoxIO terms. Earlier releases
-  named the BSD 3-Clause license alone, so a commercial user read a permission that FoxIO
-  does not grant. `docs/audit/license-decision.md` records the decision behind the
-  correction.
+  each one covers. The original Go code carries the BSD 3-Clause license.
+  FoxIO License 1.1 covers nine of the methods that this project implements, and that
+  license permits non-commercial use only. `NOTICE` names those nine methods, and it holds
+  the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
+  user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
+  records the decision behind the correction.
 - The module needs Go 1.24 or later. It needed Go 1.22 before this change, so a consumer
   on Go 1.22 or Go 1.23 must move to Go 1.24.
 

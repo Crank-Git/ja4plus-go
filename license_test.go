@@ -78,6 +78,40 @@ func TestLicenseAddsNoAllRightsReservedLine(t *testing.T) {
 	}
 }
 
+// collapseSpaces returns the text with every run of white space replaced by one space.
+// A line wrap in a license file must not change what the file states.
+func collapseSpaces(text string) string {
+	return strings.Join(strings.Fields(text), " ")
+}
+
+// theNoticePointer is the sentence pair the maintainer dictated for issue #121.
+// A line wrap is the only change this file makes to it.
+const theNoticePointer = "This license covers the original Go code in this repository. " +
+	"Other components are licensed separately. See NOTICE."
+
+// The README license badge links to LICENSE. Without this pointer, a reader who follows
+// the badge takes an unqualified BSD 3-Clause grant over material that NOTICE licenses
+// under other terms.
+func TestLicensePointsToNoticeForTheOtherComponents(t *testing.T) {
+	license := collapseSpaces(readRepoFile(t, "LICENSE"))
+
+	pointer := strings.Index(license, theNoticePointer)
+	if pointer < 0 {
+		t.Fatalf("LICENSE does not hold the pointer to NOTICE:\n%s", theNoticePointer)
+	}
+
+	// The BSD 3-Clause text ends with the warranty disclaimer. The pointer follows it, so
+	// that no reader takes the pointer for a part of the license text.
+	disclaimer := strings.Index(license, "EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.")
+	if disclaimer < 0 {
+		t.Fatal("LICENSE truncates the warranty disclaimer")
+	}
+
+	if pointer < disclaimer {
+		t.Error("the pointer to NOTICE comes before the end of the BSD 3-Clause text, and it belongs below that text")
+	}
+}
+
 // LICENSE states no claim about the JA4+ methods. NOTICE holds the FoxIO terms.
 // Issue #11 writes NOTICE.
 func TestLicenseNamesNoJA4PlusMethod(t *testing.T) {

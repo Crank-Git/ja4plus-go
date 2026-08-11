@@ -15,6 +15,10 @@
 // non-commercial use only. A commercial user contacts FoxIO for those methods, and this
 // project gives no legal advice.
 //
+// This package embeds the file data/ja4plus-mapping.csv, and that file comes from FoxIO.
+// FoxIO License 1.1 covers it, so every program that links this package carries FoxIO
+// material. data/README.md names the source of the file.
+//
 // FoxIO publishes FoxIO License 1.1 at
 // https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE.
 package ja4plus
