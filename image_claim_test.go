@@ -2,9 +2,9 @@ package ja4plus
 
 import (
 	"io/fs"
-	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -103,24 +103,14 @@ func imageClaimPages(t *testing.T) []string {
 				return nil
 			}
 
-			for _, extension := range imageClaimExtensions {
-				if strings.EqualFold(filepath.Ext(path), extension) {
-					pages = append(pages, path)
-
-					return nil
-				}
+			if slices.Contains(imageClaimExtensions, strings.ToLower(filepath.Ext(path))) {
+				pages = append(pages, path)
 			}
 
 			return nil
 		})
 		if err != nil {
 			t.Fatalf("walk %s: %v", root, err)
-		}
-	}
-
-	for _, page := range pages {
-		if _, err := os.Stat(page); err != nil {
-			t.Fatalf("stat %s: %v", page, err)
 		}
 	}
 
