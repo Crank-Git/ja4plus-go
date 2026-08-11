@@ -184,6 +184,27 @@ func TestMakefileFuzzTargetRunsEachTargetFor30Seconds(t *testing.T) {
 	}
 }
 
+// FR-foundation-19 and FR-foundation-20 measure the benchmarks. A unit test in the same
+// package spawns `bash`, `curl` and `tar`, and one test resolves a reserved name, so a
+// recipe without a `-run` filter measures the benchmarks and runs those tests too.
+func TestMakefileBenchTargetRunsNoUnitTest(t *testing.T) {
+	recipe := makefileRecipe(t, "bench")
+
+	if !strings.Contains(recipe, "-bench=.") {
+		t.Errorf("the bench recipe runs no benchmark:\n%s", recipe)
+	}
+
+	if !strings.Contains(recipe, "-benchmem") {
+		t.Errorf("the bench recipe reports no allocation count:\n%s", recipe)
+	}
+
+	// `make` reads `$$` as one dollar sign, so the recipe passes `-run '^$'` to `go test`.
+	// That pattern matches no test name. The `fuzz` target uses the same form.
+	if !strings.Contains(recipe, `-run '^$$'`) {
+		t.Errorf("the bench recipe does not hold the unit tests back:\n%s", recipe)
+	}
+}
+
 // FR-foundation-3 requires the name of every enabled linter. `default: none` disables the
 // implicit set, so the enable list is the whole set.
 func TestGolangciConfigNamesEveryEnabledLinter(t *testing.T) {

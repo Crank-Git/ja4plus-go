@@ -9,8 +9,10 @@ test:
 lint:
 	golangci-lint run
 
+# `-run '^$$'` holds the unit tests back, so this target measures and does nothing else.
+# `corpus_fetch_test.go` spawns `bash`, `curl` and `tar`, and one test resolves a name.
 bench:
-	go test -bench=. -benchmem ./...
+	go test -run '^$$' -bench=. -benchmem ./...
 
 # The script fetches the corpus at the commit in `testdata/foxio.pin`.
 # The script is idempotent: it downloads nothing on a second run.
