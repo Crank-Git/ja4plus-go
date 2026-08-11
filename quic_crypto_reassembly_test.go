@@ -154,6 +154,31 @@ func TestClientHelloFromCryptoFragmentsReadsTheFragmentsOfTwoInitialPackets(t *t
 	}
 }
 
+// TestClientHelloFromCryptoFragmentsRefusesAFragmentSetWithAGap holds FR-gaps-22.
+//
+// ReassembleCryptoFrames writes a zero byte over a range that no fragment covers. A sender
+// that names the first offset and the last offset, and no offset between them, would reach
+// a fingerprint of bytes it never sent.
+func TestClientHelloFromCryptoFragmentsRefusesAFragmentSetWithAGap(t *testing.T) {
+	hello := quicReassemblyClientHello()
+
+	// The two fragments hold the first 8 bytes and the last byte. The message length that
+	// byte 1 to byte 3 names still reaches the end of the reassembled buffer.
+	gapped := []parser.CryptoFragment{
+		{Offset: 0, Data: hello[:8]},
+		{Offset: uint64(len(hello) - 1), Data: hello[len(hello)-1:]},
+	}
+
+	produced, err := parser.ClientHelloFromCryptoFragments(gapped)
+	if err != nil {
+		t.Fatalf("ClientHelloFromCryptoFragments returns the error %v for a fragment set with a gap", err)
+	}
+
+	if produced != nil {
+		t.Errorf("ClientHelloFromCryptoFragments returns a client hello, and no fragment covers the middle of the message")
+	}
+}
+
 // TestCollectCryptoFragmentsRefusesAFragmentBufferAboveTheBound holds FR-gaps-23.
 //
 // RFC 9000 Section 16 lets a CRYPTO frame offset reach 4611686018427387903, and the

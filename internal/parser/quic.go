@@ -531,13 +531,37 @@ func CollectCryptoFragments(collected []CryptoFragment, fragments []CryptoFragme
 	return collected, nil
 }
 
+// cryptoFragmentsReach returns the count of bytes the fragments cover from offset 0 with
+// no gap.
+// ReassembleCryptoFrames writes a zero byte over a range that no fragment covers, so a
+// reader that measures the highest offset alone reads a message the sender never sent. The
+// caller passes fragments that ReassembleCryptoFrames already sorted by offset.
+func cryptoFragmentsReach(fragments []CryptoFragment) uint64 {
+	var reach uint64
+
+	for _, fragment := range fragments {
+		if fragment.Offset > reach {
+			break
+		}
+
+		if end := fragment.Offset + uint64(len(fragment.Data)); end > reach {
+			reach = end
+		}
+	}
+
+	return reach
+}
+
 // ClientHelloFromCryptoFragments reassembles CRYPTO fragments and parses a ClientHello.
 // Returns nil, nil if the data is not a ClientHello.
 // Returns nil, nil while a fragment of the handshake message is still missing, so that the
 // caller collects the fragments of another QUIC Initial packet.
 func ClientHelloFromCryptoFragments(fragments []CryptoFragment) (*ClientHello, error) {
+	// ReassembleCryptoFrames sorts the fragments by offset, so cryptoFragmentsReach below
+	// reads them in order.
 	assembled := ReassembleCryptoFrames(fragments)
-	if len(assembled) < 4 {
+	reach := cryptoFragmentsReach(fragments)
+	if len(assembled) < 4 || reach < 4 {
 		return nil, nil
 	}
 	if assembled[0] != TLSHandshakeClientHello {
@@ -547,7 +571,7 @@ func ClientHelloFromCryptoFragments(fragments []CryptoFragment) (*ClientHello, e
 	// part of the message produces a fingerprint of a cipher list that the client never
 	// sent, so the reader waits for every byte the length names.
 	messageLength := int(assembled[1])<<16 | int(assembled[2])<<8 | int(assembled[3])
-	if 4+messageLength > len(assembled) {
+	if uint64(4+messageLength) > reach {
 		return nil, nil
 	}
 	tlsRecord := make([]byte, 5+len(assembled))
