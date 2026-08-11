@@ -9,7 +9,7 @@ import (
 // OIDToHex converts a dotted OID string to its ASN.1 DER hex encoding.
 //
 // The first two components are combined per ASN.1 rules: first*40 + second.
-// Subsequent components use Variable-Length Quantity (VLQ) encoding.
+// Every component, including that sum, uses Variable-Length Quantity (VLQ) encoding.
 //
 // Example: "2.5.4.3" -> "550403" (0x55 = 2*40+5, 0x04 = 4, 0x03 = 3)
 func OIDToHex(oidString string) string {
@@ -33,7 +33,10 @@ func OIDToHex(oidString string) string {
 	}
 
 	// First two components combined per ASN.1 rules.
-	encoded := []byte{byte(nums[0]*40 + nums[1])}
+	// X.690 encodes the sum as a variable-length quantity, and a sum at or above 128
+	// needs more than one byte. A single byte truncated `2.100.3` to `b4` and made two
+	// identifiers collide.
+	encoded := vlqEncode(nums[0]*40 + nums[1])
 
 	// Remaining components use VLQ encoding.
 	for _, val := range nums[2:] {

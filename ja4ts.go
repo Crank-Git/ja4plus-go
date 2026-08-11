@@ -10,7 +10,6 @@ import (
 // One JA4TSFingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4TSFingerprinter struct {
-	results []FingerprintResult
 }
 
 // NewJA4TS creates a new JA4TS fingerprinter.
@@ -31,13 +30,13 @@ func (f *JA4TSFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprin
 	if fp == nil {
 		return nil, nil
 	}
-	f.results = append(f.results, *fp)
 	return []FingerprintResult{*fp}, nil
 }
 
-// Reset clears accumulated results.
+// Reset clears the state of the fingerprinter.
+// JA4TS holds no state, so this method changes nothing. It keeps the Fingerprinter
+// interface whole. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4TSFingerprinter) Reset() {
-	f.results = nil
 }
 
 // CleanupConnection is a no-op for JA4TS (stateless per-packet fingerprinter).

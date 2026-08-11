@@ -313,14 +313,21 @@ func TestJA4H_Reset(t *testing.T) {
 	raw := "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
 	pkt := buildTCPPacketWithPayload(t, []byte(raw))
 
+	// Issue #25 removed the results slice, so the reassembler is the only state that Reset
+	// clears. A request that arrives in one packet leaves the reassembler empty, so this
+	// test reads the result of the second call instead.
 	fp := NewJA4H()
-	_, _ = fp.ProcessPacket(pkt)
-	if len(fp.results) != 1 {
-		t.Fatalf("expected 1 result before reset, got %d", len(fp.results))
+
+	before, _ := fp.ProcessPacket(pkt)
+	if len(before) != 1 {
+		t.Fatalf("the HTTP request produced %d results, want 1", len(before))
 	}
+
 	fp.Reset()
-	if len(fp.results) != 0 {
-		t.Errorf("expected 0 results after reset, got %d", len(fp.results))
+
+	after, _ := fp.ProcessPacket(pkt)
+	if len(after) != 1 || after[0].Fingerprint != before[0].Fingerprint {
+		t.Errorf("the read after Reset produces %v, and the read before it produces %v", after, before)
 	}
 }
 

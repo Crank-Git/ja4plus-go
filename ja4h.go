@@ -15,20 +15,38 @@ import (
 // One JA4HFingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4HFingerprinter struct {
-	results     []FingerprintResult
 	reassembler *parser.TCPStreamReassembler
 }
 
 // NewJA4H creates a new JA4H HTTP fingerprinter.
 func NewJA4H() *JA4HFingerprinter {
 	return &JA4HFingerprinter{
-		reassembler: parser.NewTCPStreamReassembler(100, 1048576),
+		reassembler: parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes),
+	}
+}
+
+// ja4hMaxStreams and ja4hMaxStreamBytes bound the reassembler of one fingerprinter.
+// A long-running monitor holds one stream for each connection it has seen, so a limit
+// keeps the memory bounded.
+const (
+	ja4hMaxStreams     = 100
+	ja4hMaxStreamBytes = 1048576
+)
+
+// ensure fills the reassembler that the constructor fills.
+// A caller who writes `var f JA4HFingerprinter` reaches a nil pointer, and a method call
+// on it panics. Every entry point calls this method first.
+func (f *JA4HFingerprinter) ensure() {
+	if f.reassembler == nil {
+		f.reassembler = parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes)
 	}
 }
 
 // ProcessPacket processes a packet and returns JA4H fingerprints if the packet
 // contains an HTTP request (possibly reassembled from multiple segments).
 func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
@@ -61,7 +79,6 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 					DstPort:     dstPort,
 					Timestamp:   parser.GetPacketTimestamp(packet),
 				}
-				f.results = append(f.results, result)
 				f.reassembler.RemoveStream(streamKey)
 				return []FingerprintResult{result}, nil
 			}
@@ -97,15 +114,15 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		DstPort:     dstPort,
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
-	f.results = append(f.results, result)
 	f.reassembler.RemoveStream(streamKey)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears all accumulated results and stream state.
+// Reset clears the TCP stream reassembler.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4HFingerprinter) Reset() {
-	f.results = nil
-	f.reassembler = parser.NewTCPStreamReassembler(100, 1048576)
+	f.reassembler = parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes)
 }
 
 // CleanupConnection removes internal state for the given connection.

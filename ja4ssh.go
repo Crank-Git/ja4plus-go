@@ -41,7 +41,6 @@ type HASSHResult struct {
 type JA4SSHFingerprinter struct {
 	connections map[string]*sshConnState
 	packetCount int
-	results     []FingerprintResult
 }
 
 // NewJA4SSH creates a new JA4SSH fingerprinter.
@@ -56,8 +55,23 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 	}
 }
 
+// ensure fills the state map and the window size that the constructor fills.
+// A caller who writes `var f JA4SSHFingerprinter` reaches a nil map and a window of 0.
+// A write to a nil map panics, and a window of 0 fills on every packet.
+func (f *JA4SSHFingerprinter) ensure() {
+	if f.connections == nil {
+		f.connections = make(map[string]*sshConnState)
+	}
+
+	if f.packetCount <= 0 {
+		f.packetCount = defaultSSHWindow
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4SSH fingerprints when a window fills.
 func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
@@ -211,8 +225,6 @@ func (f *JA4SSHFingerprinter) checkWindow(connKey string, conn *sshConnState, pa
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
-
 	// Reset counters for next window
 	conn.clientSizes = nil
 	conn.serverSizes = nil
@@ -246,10 +258,11 @@ func (f *JA4SSHFingerprinter) GetHASSHFingerprints() []HASSHResult {
 	return results
 }
 
-// Reset clears all connection state and results.
+// Reset clears the connection table.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4SSHFingerprinter) Reset() {
 	f.connections = make(map[string]*sshConnState)
-	f.results = nil
 }
 
 // CleanupConnection removes internal state for the given connection.

@@ -37,7 +37,10 @@ func IsSSHPacket(payload []byte) bool {
 
 	paddingLength := payload[4]
 	// Padding length must be less than packet length
-	if paddingLength >= byte(packetLength) {
+	// The comparison reads the whole 32-bit length. A conversion to a byte kept the low
+	// 8 bits. Every packet length whose low byte was at or below the padding length then
+	// failed this test.
+	if uint32(paddingLength) >= packetLength {
 		return false
 	}
 
@@ -76,7 +79,10 @@ func ParseSSHPacket(payload []byte) *SSHPacketInfo {
 	}
 
 	paddingLength := payload[4]
-	if paddingLength >= byte(packetLength) {
+	// The comparison reads the whole 32-bit length. A conversion to a byte kept the low
+	// 8 bits. Every packet length whose low byte was at or below the padding length then
+	// failed this test.
+	if uint32(paddingLength) >= packetLength {
 		return nil
 	}
 

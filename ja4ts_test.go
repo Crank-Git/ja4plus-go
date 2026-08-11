@@ -45,14 +45,20 @@ func TestJA4TS_ACKOnly(t *testing.T) {
 }
 
 func TestJA4TS_Reset(t *testing.T) {
+	// JA4TS holds no state, so Reset changes no result. Issue #25 removed the results
+	// slice, which grew without a bound and which no exported method read.
 	fp := NewJA4TS()
 	pkt := buildTCPPacket(t, 443, 12345, true, true, 29200, nil)
-	_, _ = fp.ProcessPacket(pkt)
-	if len(fp.results) != 1 {
-		t.Fatalf("expected 1 result, got %d", len(fp.results))
+
+	before, _ := fp.ProcessPacket(pkt)
+	if len(before) != 1 {
+		t.Fatalf("the SYN-ACK packet produced %d results, want 1", len(before))
 	}
+
 	fp.Reset()
-	if len(fp.results) != 0 {
-		t.Errorf("expected 0 results after reset, got %d", len(fp.results))
+
+	after, _ := fp.ProcessPacket(pkt)
+	if len(after) != 1 || after[0].Fingerprint != before[0].Fingerprint {
+		t.Errorf("the read after Reset produces %v, and the read before it produces %v", after, before)
 	}
 }

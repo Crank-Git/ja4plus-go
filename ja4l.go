@@ -2,6 +2,7 @@ package ja4plus
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
@@ -24,7 +25,6 @@ type connState struct {
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4LFingerprinter struct {
 	connections map[string]*connState
-	results     []FingerprintResult
 }
 
 // NewJA4L creates a new JA4L latency fingerprinter.
@@ -34,9 +34,20 @@ func NewJA4L() *JA4LFingerprinter {
 	}
 }
 
+// ensure fills the state map that the constructor fills.
+// A caller who writes `var f JA4LFingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4LFingerprinter) ensure() {
+	if f.connections == nil {
+		f.connections = make(map[string]*connState)
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4L fingerprints if a handshake
 // timing measurement can be computed. Supports both TCP and UDP/QUIC.
 func (f *JA4LFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	// Try TCP first
 	if parser.GetTCPLayer(packet) != nil {
 		return f.processTCP(packet)
@@ -161,6 +172,10 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 }
 
 func (f *JA4LFingerprinter) normalizeKey(proto, srcIP string, srcPort uint16, dstIP string, dstPort uint16) (string, string) {
+	// The key holds the protocol token, and a caller of CleanupConnection chooses the
+	// spelling of it. One case for every token keeps the write and the removal in step.
+	proto = strings.ToLower(proto)
+
 	ip1, port1, ip2, port2 := srcIP, srcPort, dstIP, dstPort
 	forward := ip1 < ip2 || (ip1 == ip2 && port1 < port2)
 	if !forward {
@@ -204,14 +219,14 @@ func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uin
 		DstPort:     dstPort,
 		Timestamp:   ts,
 	}
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}
 }
 
-// Reset clears all connection state and results.
+// Reset clears the connection table.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4LFingerprinter) Reset() {
 	f.connections = make(map[string]*connState)
-	f.results = nil
 }
 
 // CleanupConnection removes internal state for the given connection.
