@@ -261,10 +261,10 @@ func TestTheReportWritesTheExpectedValueAndTheProducedValueOfEachDeviation(t *te
 }
 
 // The report is tracked in git, so its size lands in every future diff. The corpus reports
-// 3431 deviations at the pinned commit, and the three SSH captures carry more than half of
+// 3431 deviations at the pinned commit. The three SSH captures carry more than half of
 // them. The report therefore holds at most `conformanceReportSampleLimit` deviation rows
-// for one capture, one method and one vector set, and it states the full count of the
-// group. `conformance.log` holds every deviation, and the CI job uploads it.
+// for one capture, one method and one vector set. It states the full count of the group.
+// `conformance.log` holds every deviation, and the CI job uploads it.
 func TestTheReportBoundsTheDeviationRowsOfOneGroup(t *testing.T) {
 	deviations := make([]conformanceDeviation, 0, 10)
 

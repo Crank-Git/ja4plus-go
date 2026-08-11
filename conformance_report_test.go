@@ -21,14 +21,14 @@ import (
 // # Why the report samples the deviations
 //
 // The report is tracked in git, so every row of it lands in each future diff. The corpus
-// at the pinned commit reports 3431 deviations, and the three SSH captures carry 1808 of
-// them. A table of 3431 rows costs about 420 KB, and it hides the 159 deviations where the
-// two values differ behind 2025 rows where the library produces a value the vector does not
-// hold.
+// at the pinned commit reports 3431 deviations. The three SSH captures carry 1808 of them.
+// A table of 3431 rows costs about 420 KB. It also hides the 159 deviations where the two
+// values differ. 2025 rows where the library produces a value the vector does not hold
+// stand in front of them.
 //
 // The report therefore holds the count of every group and at most
-// `conformanceReportSampleLimit` rows of it. `conformance.log` holds every deviation, the
-// `Run the conformance suite` step of `.github/workflows/ci.yml` writes it, and the
+// `conformanceReportSampleLimit` rows of it. `conformance.log` holds every deviation. The
+// `Run the conformance suite` step of `.github/workflows/ci.yml` writes that log. The
 // `Upload the conformance log` step of that file uploads it. No measurement is lost.
 //
 // The renderer stays in the test build. `v1.0.0` freezes the exported API of the library,
@@ -194,9 +194,9 @@ func (r *conformanceReport) declineCapture(capture, reason string) {
 
 // recordComparison adds one comparison of one capture and one vector set to the report.
 //
-// A method key that the report cannot place is a defect of the harness and never a
-// deviation of the library. The report holds the first such key, and `Err` returns it, so
-// that a caller fails the run rather than printing a table with a comparison missing.
+// A method key that the report cannot place is a defect of the harness. It is never a
+// deviation of the library. The report holds the first such key, and `Err` returns it. A
+// caller then fails the run, rather than write a table that drops a comparison.
 func (r *conformanceReport) recordComparison(capture, set string, comparison conformanceComparison) {
 	r.readCapture(capture)
 
@@ -549,7 +549,7 @@ func (r *conformanceReport) renderResults(out *strings.Builder) {
 //
 // An extra value holds no expected value, and an absent value holds no produced value.
 // FR-conformance-16 compares as an exact string match, so the cell reproduces the value
-// without a change and a code span keeps a reader from reading it as Markdown.
+// without a change. A code span holds it, so a reader never reads it as Markdown.
 func conformanceReportValue(value string) string {
 	if value == "" {
 		return "(none)"
