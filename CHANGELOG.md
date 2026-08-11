@@ -7,6 +7,19 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- The `corpus`, `conformance`, `cover` and `fuzz` make targets.
+- The FoxIO corpus pin in `testdata/foxio.pin`, and `scripts/fetch-corpus.sh`, which
+  fetches the corpus at that commit. The corpus is FoxIO-licensed material, so the
+  repository holds no fetched file.
+- A benchmark for the processor, and one benchmark for each method.
+
+### Changed
+
+- The module needs Go 1.24 or later. It needed Go 1.22 before this change, so a consumer
+  on Go 1.22 or Go 1.23 must move to Go 1.24.
+
 ## [v0.3.0] - 2026-04-08
 
 ### Added
