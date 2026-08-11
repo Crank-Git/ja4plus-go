@@ -36,8 +36,8 @@ type JA4XFingerprinter struct {
 	streams        map[string][]byte
 	processedCerts map[string]struct{}
 	// certsByStream names the certificate hashes that each stream produced. It is the
-	// removal path of processedCerts, which the certificate hash keys and no connection
-	// keys. Without it CleanupConnection leaves every hash for the life of the process.
+	// removal path of processedCerts, whose key is the certificate hash alone. Without
+	// this index CleanupConnection leaves every hash for the life of the process.
 	certsByStream map[string]map[string]struct{}
 	lastCleanup   time.Time
 }
@@ -141,8 +141,8 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	delete(f.streams, fwd)
 	delete(f.streams, rev)
 
-	// certsByStream is the reverse lookup that processedCerts needs, because the
-	// certificate hash keys that set and no connection keys it.
+	// certsByStream is the reverse lookup that processedCerts needs. The key of
+	// processedCerts is the certificate hash, so that set names no connection.
 	for _, stream := range []string{fwd, rev} {
 		for certHash := range f.certsByStream[stream] {
 			delete(f.processedCerts, certHash)
@@ -161,8 +161,8 @@ func (f *JA4XFingerprinter) cleanup() {
 	}
 
 	// Prune processed certs.
-	// certsByStream indexes the same set, so it drops with it. A stale index would grow
-	// without a bound and would remove a hash the set no longer holds.
+	// certsByStream indexes the processedCerts set, so the reset of one resets the other.
+	// A stale index grows without a bound. It also removes a hash the set no longer holds.
 	if len(f.processedCerts) > ja4xMaxProcessedCerts {
 		f.processedCerts = make(map[string]struct{}, ja4xPrunedCerts)
 		f.certsByStream = make(map[string]map[string]struct{})

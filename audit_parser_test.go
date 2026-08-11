@@ -70,8 +70,8 @@ func TestF22_1_ALPNValueHexEncodesTheWholeValueAndDisagreesWithTheFoxioVector(t 
 func TestF22_2_ParseClientHelloStopsAtTheRecordLength(t *testing.T) {
 	// F-22-2 is closed. `ParseClientHello` read the record length and then bounded every
 	// later slice by the payload length. A payload that holds two TLS records therefore
-	// let the first record's extensions length reach into the second record, and the
-	// parser read `0x1603` as an extension type. The bound is now the end of the record.
+	// let the first record's extensions length reach into the second record. The parser
+	// then read `0x1603` as an extension type. The bound is now the end of the record.
 	hello := auditParserClientHello(t, []parser.TLSExtension{parser.MakeSNIExtension("a.example")})
 	second := parser.BuildServerHello(0x0303, 0x1302, []parser.TLSExtension{parser.MakeALPNExtension("h2")})
 

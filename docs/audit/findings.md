@@ -588,8 +588,8 @@ The maintainer chooses one of three answers.
 
 ### F-23-14 — the lookup table loads once for the life of the process
 
-`lookup.go:37` holds a `sync.Once`, so a program that calls `LookupFingerprint` before a
-new mapping file reaches the cache path reads the embedded table until it exits.
+`lookup.go:37` holds a `sync.Once`. A program that calls `LookupFingerprint` before a new
+mapping file reaches the cache path reads the embedded table until it exits.
 `ja4plus db update` already prints `note: existing processes must be restarted to pick up
 the new database`, so the command-line program states the same behaviour.
 
