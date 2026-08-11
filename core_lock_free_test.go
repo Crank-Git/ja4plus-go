@@ -12,8 +12,7 @@ import (
 )
 
 // buildShardKeyUDPPacket builds one IPv4 UDP packet that carries the given payload.
-// The shard key tests need a UDP transport layer, and the payload carries the QUIC
-// header that proves the key ignores the connection identifier.
+// GetShardKey reads the transport layer, so a shard key test needs a real UDP header.
 func buildShardKeyUDPPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte) gopacket.Packet {
 	ip := &layers.IPv4{
 		SrcIP:    net.ParseIP(srcIP),
@@ -37,19 +36,34 @@ func buildShardKeyUDPPacket(srcIP, dstIP string, srcPort, dstPort uint16, payloa
 	return pkt
 }
 
-// buildQUICInitialPayload builds one QUIC version 1 Initial packet header.
-// RFC 9000 section 17.2.2 states the field order. The body after the header is
-// opaque to GetShardKey, so the payload carries a fixed filler.
+// quicInitialDatagramBytes is the smallest datagram that carries a client Initial
+// packet. RFC 9000 section 14.1 states this minimum.
+const quicInitialDatagramBytes = 1200
+
+// buildQUICInitialPayload builds one QUIC version 1 Initial packet.
+// RFC 9000 section 17.2.2 states the field order that this function writes.
+// The packet payload is a filler of zero bytes, because GetShardKey reads no
+// byte of the UDP payload.
 func buildQUICInitialPayload(dcid, scid []byte) []byte {
+	// The two low bits of the first byte hold the packet number length less one.
 	out := []byte{0xC3}
+	const packetNumberBytes = 4
+
 	out = binary.BigEndian.AppendUint32(out, 0x00000001)
 	out = append(out, byte(len(dcid)))
 	out = append(out, dcid...)
 	out = append(out, byte(len(scid)))
 	out = append(out, scid...)
-	out = append(out, 0x00) // Token length, a variable-length integer of value 0.
-	out = append(out, 0x44, 0x20)
-	out = append(out, make([]byte, 0x420)...)
+	out = append(out, 0x00) // Token Length, a variable-length integer of value 0.
+
+	// The Length field counts the Packet Number and the Packet Payload.
+	// A two-byte variable-length integer carries the 0b01 prefix in its top bits.
+	const lengthFieldBytes = 2
+	remainder := quicInitialDatagramBytes - len(out) - lengthFieldBytes
+	out = binary.BigEndian.AppendUint16(out, uint16(remainder)|0x4000)
+
+	out = binary.BigEndian.AppendUint32(out, 0x00000001) // Packet Number.
+	out = append(out, make([]byte, remainder-packetNumberBytes)...)
 	return out
 }
 
@@ -75,8 +89,8 @@ func buildShardKeyICMPPacket() gopacket.Packet {
 	return pkt
 }
 
-// FR-concurrency-18. A connection that lands on two shards splits its state and
-// produces a wrong fingerprint, and nothing reports the fault.
+// FR-concurrency-18. A connection that lands on two shards splits its state.
+// A split connection produces a wrong fingerprint, and no check reports the fault.
 func TestGetShardKey_ReturnsOneKeyForBothDirectionsOfOneConnection(t *testing.T) {
 	proc := NewProcessor()
 
@@ -239,16 +253,42 @@ func TestFingerprinters_HoldNoLockOnThePerPacketPath(t *testing.T) {
 	}
 
 	for name, fp := range fingerprinters {
-		typ := reflect.TypeOf(fp).Elem()
-		for i := 0; i < typ.NumField(); i++ {
-			field := typ.Field(i)
-			if field.Type.PkgPath() == "sync" {
-				t.Errorf("%s holds field %s of type %s; a fingerprinter holds no lock", name, field.Name, field.Type)
-			}
+		for _, path := range findSyncFields(reflect.TypeOf(fp), name, make(map[reflect.Type]bool)) {
+			t.Errorf("%s reaches a lock at %s; a fingerprinter holds no lock", name, path)
 		}
 	}
 
-	if reflect.TypeOf(Processor{}).NumField() != 10 {
-		t.Errorf("Processor holds %d fields, want the 10 fingerprinters and no lock", reflect.TypeOf(Processor{}).NumField())
+	for _, path := range findSyncFields(reflect.TypeOf(&Processor{}), "Processor", make(map[reflect.Type]bool)) {
+		t.Errorf("Processor reaches a lock at %s; the per-packet path acquires no lock", path)
+	}
+}
+
+// findSyncFields returns the path of every field that the type reaches whose own
+// type comes from the sync package.
+// It follows a pointer, a slice, a map and an array, so a lock behind one of them
+// does not escape the search.
+// The seen map stops the search on a type that holds itself.
+func findSyncFields(typ reflect.Type, path string, seen map[reflect.Type]bool) []string {
+	if typ == nil || seen[typ] {
+		return nil
+	}
+	seen[typ] = true
+
+	if typ.PkgPath() == "sync" {
+		return []string{path}
+	}
+
+	switch typ.Kind() {
+	case reflect.Pointer, reflect.Slice, reflect.Array, reflect.Map:
+		return findSyncFields(typ.Elem(), path+".*", seen)
+	case reflect.Struct:
+		var found []string
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
+			found = append(found, findSyncFields(field.Type, path+"."+field.Name, seen)...)
+		}
+		return found
+	default:
+		return nil
 	}
 }
