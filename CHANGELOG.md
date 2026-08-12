@@ -47,6 +47,65 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- No exported name, and two tests that hold the JA4H value of one request across every
+  run: `TestJA4H_ComputesOneValueForOneRequestOnEveryRun` and
+  `TestJA4H_SortsTheCookiePairListByTheCookieName`, in `ja4h_determinism_test.go`. Issue
+  #303 reports two JA4H values for `http-empty-useragent.pcap`, and **the defect does not
+  reproduce on this tree**. 10 consecutive runs of `make conformance` on `d7b01d0`
+  produced one deviation key set and one report, and 3 more runs after this change agreed.
+  The 10 report copies share the SHA-256 prefix `47f414a1bf67f069`. `ja4h.go:315` is the
+  one map range that the JA4H value reads, and `ja4h.go:318` sorts that result by the
+  cookie name. A map key is unique, so the comparator meets no tie. **Issue #286 is the
+  probable closer**, because `internal/parser/http.go:88` now returns nil for a header
+  block that has not ended. The worker removed the sort at `ja4h.go:318`, and each test
+  then failed. **The member changes no library file, and it moves no fingerprint value.**
+  The run reports 1623 matches, 680 deviations, 409 accepted deviations and 409 register
+  keys before and after. Issue #303 holds the measurement.
+- No exported name, and one check in the conformance suite that compares the recorded
+  `ours` value of a register entry against the value the run produces. `compareConformance`
+  read the presence of the key alone before this change, at
+  `conformance_engine_test.go:99`. An entry therefore stayed accepted after a later change
+  moved the value it records. The suite now fails with one line for each stale entry.
+  `docs/audit/conformance.md` gains the summary row `Stale register entries` and the
+  section `## Stale register entries`. That section states the result of every run, so a
+  reader tells a healthy register from a renderer that dropped a row. The `## Terms` table
+  of `docs/specs/spec.md` gains the row `stale entry`. **The run reports 0 stale entries
+  against the 409 register keys**, so the check blocks nothing today. **The check covers
+  the value half alone, and never the orphan half.** A register key that the run never
+  reaches falls outside the key loop of the engine, and issue #307 asks for no second pass
+  over the register. Seven tests hold the check, and `go vet -tags conformance ./...`
+  reported `result.Stale undefined` before the engine held the field. The worker changed
+  one character of the first register entry, and the run then reported `the run reports 1
+  stale register entries`. **The member moves no fingerprint value.** The four counts read
+  1623, 680, 409 and 409 before and after. Issue #307 holds the measurement.
+- No exported name, and one rule that forbids `git stash` in a worktree of this
+  repository. `CLAUDE.md` `## Conventions` holds the rule as the first bullet, and
+  `.claude/rules/worktrees.md` holds the reason, the three alternatives and two readings.
+  Batch #293 lost the work of issue #295 to a stash push and a stash pop, and neither
+  worker saw an error. **A worktree cannot hold a stash of its own.** `git-worktree(1)` at
+  git 2.53.0 shares every ref under `refs/` except `refs/bisect`, `refs/worktree` and
+  `refs/rewritten`, and `git-stash(1)` writes `refs/stash`. Copy the file with `cp`, or
+  restore it with `git checkout -- <file>`. `.githooks/reference-transaction` refuses a
+  write to `refs/stash` from a linked worktree, and it repairs no `git stash pop`. **The
+  hook is inert until the maintainer runs `git config core.hooksPath .githooks`.** The
+  second reading records that a `PostToolUse` hook of `.claude/settings.json` did not run
+  for a worktree-isolated worker, so a `PreToolUse` hook stops no worker. **The member
+  changes no Go file, and it moves no fingerprint value.** Issue #305 holds the readings.
+- No exported name, and eight numbered requirements that hold `CloseConnectionWindow`:
+  FR-parity-33a through FR-parity-33h, at
+  `docs/specs/features/08-python-parity.md:136-154`. They number the fingerprinter method,
+  the two processor methods, the endpoint order, the eviction, the empty window, the miss
+  case and the test. Epic 10 freezes the exported surface, and the freeze reads the spec,
+  so an unnumbered method escapes it. **The ordinal carries a letter, because
+  FR-parity-34 through FR-parity-60 already exist.** A renumber would break the references
+  that ten test files and four documents hold.
+  `docs/specs/features/08-python-parity.md:287` gains the eviction row, which separates
+  `CloseConnectionWindow` from `CleanupConnection`. `docs/specs/spec.md:432` gains the
+  register row, and that row states that this project named the behaviour first. Rule 2 of
+  `.claude/rules/parity.md` therefore runs toward the port, and the row cites
+  `Crank-Git/ja4plus#598`. `docs/specs/spec.md:473` names the method in the `Cleared by`
+  cell of `JA4SSHFingerprinter`. **The member changes no Go file, and it moves no
+  fingerprint value.** Issue #264 holds the change.
 - One exported name, which carries the FoxIO `JA4_o` value: the `OriginalOrder` field of
   `FingerprintResult`. `JA4_o` hashes each list of the wire-order raw form, and
   `RawOriginalOrder` holds the same two lists unhashed, so one function builds the two.
