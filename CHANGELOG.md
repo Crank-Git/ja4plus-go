@@ -47,6 +47,60 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- No exported name, and one guard that holds every citation of `docs/specs/foxio/`.
+  `foxio_citation_base_test.go` holds 849 lines and seven tests. It reads every
+  path-shaped code span of the directory against the seven bases of the table at
+  `docs/specs/foxio/README.md:41-49`, and
+  `docs/specs/features/11-foxio-reference.md:106-120` numbers the check as
+  FR-reference-18a through FR-reference-18l. **The shape check of FR-reference-18b needs
+  no corpus.** `foxio_citation_base_test.go:530` declares `foxioCorpusAbsentMessage`, and
+  every skip of the file writes that sentence, so no skip of the file is silent. **The
+  line-bound check of FR-reference-18h opens the file a citation names**, and it fails a
+  citation that names a line past the end of it. **A counted exception table holds two
+  entries and three spans**, and each entry names one page, one span, one count and one
+  reason. `docs/specs/foxio/README.md` carries 2 spans of `ja4l.py`, and
+  `docs/specs/foxio/port-register.md` carries 1. An exception that now resolves fails
+  `TestTheCitationExceptionTableHoldsNoSpanThatNowResolves`. **The
+  member watched four failure modes**: a citation under no base, that same citation with
+  the corpus moved aside, a citation that names a line past the end of its file, and a
+  stale exception count. **The line-bound check found a defect that no reader had seen.**
+  `docs/specs/foxio/port-register.md:81` cites `.claude/rules/external-apis.md:95` and
+  `.claude/rules/external-apis.md:101`, and this repository holds a file at that path with
+  62 lines. A resolver that reads base 5 before base 7 therefore answers from the wrong
+  repository and reports nothing. `docs/specs/foxio/README.md:90-91` states that the
+  citations of the verbatim copy name paths of the port, so base 7 outranks base 5 on that
+  page. **No page changed, and the resolver reads the recorded order.** **One comment of
+  the new file named a guard that guarded nothing, and `c5e2aad` repairs that inside the
+  batch.** `foxio_citation_base_test.go:527-529` names
+  `TestTheCISkipDetectorMatchesNoUntaggedSkipMessage`, and the extractor of
+  `conformance_skip_marker_test.go` read a string literal alone. `foxioCorpusAbsentMessage`
+  concatenates a package constant and two literals, so that guard read no skip of the file
+  that names it. **The repair makes the claim true rather than correct the comment.** The
+  extractor now reads the skip argument through `go/ast`, and it resolves a literal, a
+  constant of the package and a concatenation of the two. **A skip argument it cannot read
+  now fails the test**, so the silent gap cannot return. The repair was watched failing on
+  a temporary file that skips with a constant carrying the marker, and on a skip that
+  passes a variable. **The member moves no fingerprint value.** The four counts read 1623,
+  680, 409 and 409 before and after. Issue #335 holds the guard, and issue #351 records
+  that the guard reaches no citation outside `docs/specs/foxio/`.
+- No exported name, and one rule that names the repository of an issue citation.
+  `.claude/rules/rulings.md:35-49` holds `## A citation names its repository`, and
+  `.claude/rules/rulings.md:37` states that a bare `#N` names an issue of this repository.
+  A citation of the port names the port, as `the port's issue #N` in a sentence or as
+  `Crank-Git/ja4plus#N` in a table cell. **The member ships one rule, and not eighteen
+  edits.** **The form is one the tree already uses.** Measured at `c5e2aad` over `*.go`,
+  `*.md`, `*.html`, `*.json` and `*.yml`, outside the untracked `testdata/foxio/`, the tree
+  writes `Crank-Git/ja4plus#N` 5 times, `port issue #N` 5 times, `` `Crank-Git/ja4plus`
+  issue #N `` 3 times and `the port's issue #N` once. **Two pages carry a
+  local rule, and the section names both.** The `Ruling` column of the register names the
+  port, and `docs/specs/spec.md:380` now states that. `docs/specs/foxio/port-register.md`
+  is a verbatim copy of the port's specification, so a bare number in it names the port.
+  **The member changed three citations.** `docs/specs/spec.md:446` now reads `This
+  repository's #216`, and `ja4l_test.go:1272-1273` now names both halves of one question.
+  **The JA4L part count is issue #127 here and issue #225 in the port**, and the member
+  confirmed the port title `Decide the JA4L form: the part count, the protocol part and
+  the duplicate server value` on 2026-08-12. **The member changes no Go file outside one
+  test comment, and it moves no fingerprint value.** Issue #255 holds the rule.
 - No exported name, and four rows of the `## Terms` table of `docs/specs/spec.md`, at
   `docs/specs/spec.md:122-125`. The rows are `maintainer`, `project manager`, `schema
   violation` and `delegated ruling`. **The member writes four rows, and #261 names
@@ -311,6 +365,55 @@ that the interface declares.
 
 ### Fixed
 
+- The `Maintainer` row of the `## Users & personas` table of `docs/specs/spec.md` now cites
+  the `## Terms` row instead of restating it. `docs/specs/spec.md:262` reads `The person
+  that row maintainer of ## Terms names.`, and the cell stated a second meaning before.
+  `.claude/rules/ste.md` rule 6 gives one word one meaning, and the `maintainer` row at
+  `docs/specs/spec.md:122` bars the word `owner` that the old cell used. **The member
+  checked all 4 rows of the users table against the 100 rows of the `## Terms` table at
+  `docs/specs/spec.md:98-197`.** **It found a second collision on the word `monitor`, and
+  it repaired nothing there.** The `monitor` row at `docs/specs/spec.md:171` names the
+  `ja4plus watch` command, and four sites name a program the caller writes:
+  `docs/specs/spec.md:76`, `docs/specs/spec.md:253`, `docs/specs/spec.md:259` and
+  `docs/specs/features/06-fuzz-testing.md:12`. The collision reaches three sections and a
+  second file, so it sits outside the table this member owns, and issue #344 holds it.
+  **The member changes one line of one document.** It changes no Go file and no register
+  entry, and it moves no fingerprint value. Issue #334 holds the repair.
+- Two mockup fingerprint values, two missing port citations and one wrong field citation.
+  `docs/specs/mockups/02-cli-output.html:59-60` now write
+  `65535_2-1-3-1-1-8-4-0-0_16344_6` on the JA4T line and on the JA4TS line, which is the
+  form ruling #297 delivers. **The sweep found a second dead value, and no ruling moved
+  that one.** `docs/specs/mockups/03-watch-output.html:88` held
+  `ge20cn10enus_9da5c4e0ba8f_e3b0c44298fc_e3b0c44298fc`. `e3b0c44298fc` is the truncated
+  SHA-256 of the empty string, and `internal/parser/hash.go:8` writes `000000000000` for
+  an empty list, **so the library reaches neither value**. The value also contradicts
+  itself, because part a carries the cookie flag `c` and a cookie list that is not empty
+  hashes to no empty value. `testdata/foxio/python/http1-with-cookies.pcapng.json`
+  supplied the repair, and the line now writes
+  `ge11cr04da00_8ddaef5d77af_280f366eaa04_c2fb0fe53442`. **A mockup value that a person
+  composed by hand never matched the library**, so a later member checks a mockup value
+  against a corpus vector and never against a ruling alone. **The port half of #297 is
+  `Crank-Git/ja4plus#215`, and the port needs no change**, because
+  `ja4plus/utils/tcp_options.py:51-56` already writes one entry for each option byte.
+  **The port holds no issue for #285**, and `ja4h_raw_test.go:81-82` records that reading
+  with the port lines that carry the three-field shape. **The field citation at
+  `ja4t_option_byte_count_test.go:76-79` named the wrong field.** Frame 31 of
+  `browsers-x509.pcapng` is a SYN-ACK, so the per-packet vector holds `ja4.ja4ts` and not
+  `ja4.ja4t`, and the comment now names frame 30 as the SYN of the same connection. **The
+  member found one more defect and repaired nothing.**
+  `docs/specs/mockups/02-cli-output.html:56` shows `$ ja4plus
+  testdata/foxio/pcap/tls12.pcap` and six fingerprint lines. `cmd/ja4plus/main.go:74` and
+  `cmd/ja4plus/main.go:100` show that the program takes `ja4plus analyze <pcap-file>`, and
+  `tls12.pcap` reaches one JA4 value alone, so no capture reproduces the example, and issue
+  #350 holds it. **The body of #350 names that line as `:57`, and `:57` is blank**, so a
+  worker of #350 reads `:56`. **The member wrote a bare `#215` that
+  names the port, and `c5e2aad` repairs that inside the batch.** The breach broke the rule
+  that issue #255 added in the same batch. **#215 of this repository is `The JA4L-C
+  occurrences of one QUIC stream are shifted by one against the vector`**, which no part
+  of the JA4T question reaches. `ja4t_option_byte_count_test.go:28-32` now quotes the port
+  docstring as a code span, and it names the port's issue. **The member moves no
+  fingerprint value.** The four counts read 1623, 680, 409 and 409 before and after.
+  Issue #319 holds the repairs.
 - `JA4HFingerprinter` now fills the `Raw` field of `FingerprintResult`, which carries the FoxIO
   `JA4H_r` value. It filled the field on no path before. The FoxIO per-packet vector set
   publishes `ja4.ja4h_r` on 126 records, and the FoxIO per-stream vector set publishes none.
