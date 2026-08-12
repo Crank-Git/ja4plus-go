@@ -259,7 +259,7 @@ Round 2 held three non-goals that round 3 removes, because Go can achieve each o
 | Library author | A Go developer who embeds `ja4plus-go` in a network monitor. | A stable API, a documented concurrency contract, and fingerprints that match every other JA4+ tool. | Import the module and call the exported API. |
 | Analyst | A network analyst who runs `ja4plus` against a capture. | Correct output, and a fingerprint that they can search for in other tools. | Run the command-line program. |
 | Monitor operator | An operator who runs `ja4plus watch` against a live interface. | A process that reads an interface, reports its drop count, and never exhausts memory. | Open a capture handle. This needs elevated privileges on the host. |
-| Maintainer | The repository owner. | Evidence that a change broke no conformance and no parity. | Merge, tag and release. |
+| Maintainer | The person that the `maintainer` row of `## Terms` names. | Evidence that a change broke no conformance and no parity. | Merge, tag and release. |
 
 ## Feature map
 
