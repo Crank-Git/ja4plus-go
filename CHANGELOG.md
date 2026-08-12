@@ -23,8 +23,8 @@ that the interface declares.
   `RawOriginalOrder` holds the same two lists unhashed, so one function builds the two.
   `testdata/foxio/reference/python/ja4.py:291` states the form. The FoxIO key suffix names
   each of the four value fields, so `Raw` carries `_r`, `OriginalOrder` carries `_o` and
-  `RawOriginalOrder` carries `_ro`. The names `FingerprintOriginalOrder`,
-  `HashedOriginalOrder` and `JA4O` were each rejected. Epic 10 freezes the exported surface
+  `RawOriginalOrder` carries `_ro`. This project rejects the names
+  `FingerprintOriginalOrder`, `HashedOriginalOrder` and `JA4O`. Epic 10 freezes the exported surface
   for the whole `v1` series, so the name lands before that freeze.
   `docs/specs/features/05-conformance-gaps.md` FR-gaps-24 through FR-gaps-26 number the
   field. `JA4Fingerprinter` fills the field, and every other fingerprinter leaves it empty.

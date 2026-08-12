@@ -391,8 +391,10 @@ func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
 //
 // The value carries the part a of `JA4`, a hash of the wire-order cipher list and a hash of
 // the wire-order extension list. `testdata/foxio/reference/python/ja4.py:291` states the
-// form. An empty list reaches `parser.EmptyHash`, which
-// `testdata/foxio/reference/python/ja4.py:252` writes as `000000000000`.
+// form. An empty list reaches `parser.EmptyHash`, and
+// `testdata/foxio/reference/rust/ja4/src/lib.rs:184` states that rule.
+// `testdata/foxio/reference/python/ja4.py:248` departs from it on one input, and issue #287
+// records the split that the maintainer rules.
 func computeJA4OriginalOrder(ch *parser.ClientHello) string {
 	cipherList, extList := ja4OriginalOrderLists(ch)
 
