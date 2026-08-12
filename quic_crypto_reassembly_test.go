@@ -21,8 +21,9 @@ const quicReassemblyCaptureDir = "testdata/foxio/pcap"
 // The FoxIO Python implementation reads no QUIC handshake, so both FoxIO vector sets hold
 // no value for either capture. The port records the same reading in its register under the
 // keys `quic-with-several-tls-frames.pcapng/JA4` and `quic-tls-handshake.pcapng/JA4`, and
-// port issue #138 holds the decision. The value below is verbatim from the port's copy of
-// the FoxIO Rust snapshot, at `tests/foxio_vectors/rust_expected/`.
+// port issue #138 holds the decision. The value below is verbatim from the corpus, at
+// `testdata/foxio/reference/rust/ja4/src/snapshots/ja4__insta@quic-with-several-tls-frames.pcapng.snap:12`
+// and at the same line of `ja4__insta@quic-tls-handshake.pcapng.snap`.
 const quicReassemblyRustJA4 = "q13d0310h3_55b375c5d22e_cd85d2d88918"
 
 // quicReassemblyJA4 returns every JA4 fingerprint the library produces for one capture.
