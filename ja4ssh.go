@@ -2,7 +2,9 @@ package ja4plus
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
@@ -21,6 +23,19 @@ type sshConnState struct {
 	hasshServer  string
 	clientBanner string
 	serverBanner string
+	// clientIP, serverIP, clientPort and serverPort name the two endpoints.
+	// CloseOpenWindows reads no packet, so the result reads the endpoints from here.
+	clientIP   string
+	serverIP   string
+	clientPort uint16
+	serverPort uint16
+	// lastSeen holds the timestamp of the last packet of the connection. An open window
+	// carries it, because no packet triggers that emission.
+	lastSeen time.Time
+	// arrival holds the count of connections the fingerprinter opened before this one.
+	// A range over a Go map orders nothing, and CloseOpenWindows publishes in capture
+	// order, so two runs of one capture agree.
+	arrival int
 }
 
 // HASSHResult holds a HASSH fingerprint and associated metadata.
@@ -41,6 +56,9 @@ type HASSHResult struct {
 type JA4SSHFingerprinter struct {
 	connections map[string]*sshConnState
 	packetCount int
+	// arrivals counts the connections the fingerprinter opened. Each connection stores
+	// the value it read at its own start, and CloseOpenWindows publishes in that order.
+	arrivals int
 }
 
 // NewJA4SSH creates a new JA4SSH fingerprinter.
@@ -139,16 +157,26 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		} else {
 			conn.serverACKs++
 		}
-		return f.checkWindow(connKey, conn, packet, srcIP, dstIP, srcPort, dstPort)
+		conn.lastSeen = parser.GetPacketTimestamp(packet)
+
+		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
 	}
 
 	// Initialize connection if needed
 	conn, exists := f.connections[connKey]
 	if !exists {
-		conn = &sshConnState{}
+		conn = &sshConnState{
+			clientIP:   clientIP,
+			serverIP:   serverIP,
+			clientPort: clientPort,
+			serverPort: serverPort,
+			arrival:    f.arrivals,
+		}
 		f.connections[connKey] = conn
+		f.arrivals++
 	}
 	conn.hasSSH = true
+	conn.lastSeen = parser.GetPacketTimestamp(packet)
 
 	// Extract SSH banners and HASSH from KEXINIT
 	if len(payload) >= 4 && payload[0] == 'S' && payload[1] == 'S' && payload[2] == 'H' && payload[3] == '-' {
@@ -184,35 +212,44 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		conn.serverSizes = append(conn.serverSizes, packetSize)
 	}
 
-	return f.checkWindow(connKey, conn, packet, srcIP, dstIP, srcPort, dstPort)
+	return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
 }
 
-// checkWindow checks if the window threshold is met and emits a fingerprint if so.
-func (f *JA4SSHFingerprinter) checkWindow(connKey string, conn *sshConnState, packet gopacket.Packet, srcIP, dstIP string, srcPort, dstPort uint16) ([]FingerprintResult, error) {
-	totalPackets := len(conn.clientSizes) + len(conn.serverSizes) + conn.clientACKs + conn.serverACKs
-
-	// Early trigger at min(packetCount, 10), OR when both HASSH are available
-	// and there's at least 1 packet (matching Python behavior).
-	threshold := f.packetCount
-	if threshold > 10 {
-		threshold = 10
-	}
-
-	hasshReady := totalPackets > 0 && conn.hassh != "" && conn.hasshServer != ""
-	if totalPackets < threshold && !hasshReady {
+// checkWindow emits the window when the count of SSH packets reaches the threshold.
+//
+// The window counts the SSH packets of the two directions, and a bare ACK does not advance
+// it. `technical_details/JA4SSH.png` lists the SSH packet counts and the bare ACK counts as
+// separate fields, and `ja4plus/fingerprinters/ja4ssh.py:259` counts the SSH packets alone.
+// The threshold holds no upper cap, so the default window of 200 emits at 200 packets. The
+// port's issue #28 rules the threshold, and its issue #97 declines an empty window.
+func (f *JA4SSHFingerprinter) checkWindow(conn *sshConnState, packet gopacket.Packet, srcIP, dstIP string, srcPort, dstPort uint16) ([]FingerprintResult, error) {
+	if len(conn.clientSizes)+len(conn.serverSizes) < f.packetCount {
 		return nil, nil
 	}
 
-	// Calculate mode (most common packet size) per direction
-	clientMode := mode(conn.clientSizes)
-	serverMode := mode(conn.serverSizes)
+	result, held := emitSSHWindow(conn, srcIP, dstIP, srcPort, dstPort, parser.GetPacketTimestamp(packet))
+	if !held {
+		return nil, nil
+	}
 
-	clientSSHCount := len(conn.clientSizes)
-	serverSSHCount := len(conn.serverSizes)
+	return []FingerprintResult{result}, nil
+}
+
+// emitSSHWindow returns the value of the open window of the connection, and it starts a new
+// window.
+// It reports false when the window holds no SSH packet, because a value of an empty window
+// describes no traffic. The port's issue #97 declines the same value, and
+// `ja4plus/fingerprinters/ja4ssh.py:423` holds the guard.
+// The mode field reads the packet lengths of the window alone, because the emission clears
+// the two length lists.
+func emitSSHWindow(conn *sshConnState, srcIP, dstIP string, srcPort, dstPort uint16, timestamp time.Time) (FingerprintResult, bool) {
+	if len(conn.clientSizes) == 0 && len(conn.serverSizes) == 0 {
+		return FingerprintResult{}, false
+	}
 
 	fingerprint := fmt.Sprintf("c%ds%d_c%ds%d_c%ds%d",
-		clientMode, serverMode,
-		clientSSHCount, serverSSHCount,
+		mode(conn.clientSizes), mode(conn.serverSizes),
+		len(conn.clientSizes), len(conn.serverSizes),
 		conn.clientACKs, conn.serverACKs,
 	)
 
@@ -223,16 +260,58 @@ func (f *JA4SSHFingerprinter) checkWindow(connKey string, conn *sshConnState, pa
 		DstIP:       dstIP,
 		SrcPort:     srcPort,
 		DstPort:     dstPort,
-		Timestamp:   parser.GetPacketTimestamp(packet),
+		Timestamp:   timestamp,
 	}
 
-	// Reset counters for next window
+	// Start the next window. The mode field of the next value reads that window alone.
 	conn.clientSizes = nil
 	conn.serverSizes = nil
 	conn.clientACKs = 0
 	conn.serverACKs = 0
 
-	return []FingerprintResult{result}, nil
+	return result, true
+}
+
+// CloseOpenWindows returns the value of the window that each connection holds open, and it
+// starts a new window on each one.
+//
+// The caller calls the method when the packet source ends. A connection whose last window
+// never reaches the threshold holds that window open, and no other rule emits it.
+// `rust/ja4/src/ssh.rs:45-55` and `zeek/ja4ssh/main.zeek:160-164` both emit that window, and
+// the port's issues #105, #199 and #214 hold the ruling.
+//
+// It returns the values in the order the packet source opened the connections.
+// It returns an empty slice for a window that holds no SSH packet, so a second call returns
+// an empty slice.
+// Each result names the client of the connection as the source and the server as the
+// destination. No packet triggers this emission, so the result reads the endpoints of the
+// connection. A result that ProcessPacket returns names the sender of the packet that filled
+// the window, which is the direction that every other method of this library reports.
+// The method is opt-in. A caller who never calls it loses the open window, and the library
+// forces no flush.
+func (f *JA4SSHFingerprinter) CloseOpenWindows() []FingerprintResult {
+	f.ensure()
+
+	order := make([]*sshConnState, 0, len(f.connections))
+	for _, conn := range f.connections {
+		order = append(order, conn)
+	}
+
+	sort.Slice(order, func(first, second int) bool {
+		return order[first].arrival < order[second].arrival
+	})
+
+	var results []FingerprintResult
+
+	for _, conn := range order {
+		result, held := emitSSHWindow(
+			conn, conn.clientIP, conn.serverIP, conn.clientPort, conn.serverPort, conn.lastSeen)
+		if held {
+			results = append(results, result)
+		}
+	}
+
+	return results
 }
 
 // GetHASSHFingerprints returns all collected HASSH fingerprints across tracked connections.
@@ -264,6 +343,9 @@ func (f *JA4SSHFingerprinter) GetHASSHFingerprints() []HASSHResult {
 // Reset clears the connection table.
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
+// It keeps the arrival counter. The counter orders the connections that CloseOpenWindows
+// publishes, and a counter that returns to zero would order a new connection against a
+// stale number.
 func (f *JA4SSHFingerprinter) Reset() {
 	f.ensure()
 

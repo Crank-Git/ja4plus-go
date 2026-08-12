@@ -12,6 +12,7 @@ import (
 // FR-concurrency-12 fix. A method outside this set reaches the unguarded Processor.
 var syncProcessorMethodNames = []string{
 	"CleanupConnection",
+	"CloseOpenWindows",
 	"GetShardKey",
 	"ProcessPacket",
 	"Reset",
@@ -40,7 +41,7 @@ func TestNewSyncProcessor_ReturnsAUsableProcessor(t *testing.T) {
 	}
 }
 
-func TestSyncProcessor_ExportsOnlyTheFourWrapperMethods(t *testing.T) {
+func TestSyncProcessor_ExportsOnlyTheNamedWrapperMethods(t *testing.T) {
 	spType := reflect.TypeOf(&SyncProcessor{})
 
 	var got []string

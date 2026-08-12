@@ -406,6 +406,12 @@ func conformanceCoveredMethods(expected map[conformanceKey]string) map[string]bo
 // contract of `.claude/rules/concurrency.md` gives one Processor to one goroutine, so this
 // function creates the Processor and never shares it.
 //
+// The capture ends, so the function calls Processor.CloseOpenWindows and reads the window
+// that each connection holds open. FR-parity-32 states the same call for `cmd/ja4plus`, and
+// the per-stream vector of `ssh-r.pcap` holds `"JA4SSH.5": "c76s76_c66s65_c9s51"`, which
+// reads 131 SSH packets and reaches no window of 200. The per-packet vector holds no such
+// value, so `conformanceProducedByFrame` makes no such call.
+//
 // FR-conformance-22 names the stream by the four address fields. The shape maps the
 // endpoint key of each vector entry to the stream number that the entry carries. A value
 // whose endpoint key reaches no entry keeps the endpoint key as its stream name, so the
@@ -423,14 +429,7 @@ func conformanceProducedByStream(
 	occurrences := make(map[conformanceKey]int)
 	processor := NewProcessor()
 
-	for index, packet := range packets {
-		results, errs := processor.ProcessPacket(packet)
-		for _, err := range errs {
-			// A fingerprinter returns a non-fatal error, so the suite records it and reads
-			// the next packet. An error is not a deviation.
-			t.Logf("%s frame %d: %v", capture, index+1, err)
-		}
-
+	record := func(results []FingerprintResult) {
 		for _, result := range results {
 			endpoint := conformanceEndpointKey(result.SrcIP, result.SrcPort, result.DstIP, result.DstPort)
 
@@ -452,6 +451,19 @@ func conformanceProducedByStream(
 			}
 		}
 	}
+
+	for index, packet := range packets {
+		results, errs := processor.ProcessPacket(packet)
+		for _, err := range errs {
+			// A fingerprinter returns a non-fatal error, so the suite records it and reads
+			// the next packet. An error is not a deviation.
+			t.Logf("%s frame %d: %v", capture, index+1, err)
+		}
+
+		record(results)
+	}
+
+	record(processor.CloseOpenWindows())
 
 	return produced
 }

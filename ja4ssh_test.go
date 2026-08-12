@@ -39,8 +39,11 @@ func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte
 	return pkt
 }
 
+// TestJA4SSH_WindowTrigger holds the emission at the window threshold.
+// Issue #53 removed the upper cap that this test read at 10, and
+// TestJA4SSHEmitsAtThePacketCountAndHoldsNoUpperCap holds the default window of 200.
 func TestJA4SSH_WindowTrigger(t *testing.T) {
-	fp := NewJA4SSH(200) // default window, early trigger at 10
+	fp := NewJA4SSH(10)
 
 	clientIP := "192.168.1.100"
 	serverIP := "10.0.0.1"
@@ -74,7 +77,7 @@ func TestJA4SSH_WindowTrigger(t *testing.T) {
 }
 
 func TestJA4SSH_DirectionPort22(t *testing.T) {
-	fp := NewJA4SSH(10) // window of 10, early trigger at 10
+	fp := NewJA4SSH(10) // The window holds ten SSH packets.
 
 	clientIP := "192.168.1.100"
 	serverIP := "10.0.0.1"
@@ -154,8 +157,9 @@ func TestJA4SSH_Reset(t *testing.T) {
 	}
 }
 
+// TestJA4SSH_EarlyTrigger holds the emission at a window that the caller names.
+// Issue #53 removed the upper cap of 10, so the threshold reads the window alone.
 func TestJA4SSH_EarlyTrigger(t *testing.T) {
-	// With packet count=5, early trigger = min(5, 10) = 5
 	fp := NewJA4SSH(5)
 
 	clientIP := "192.168.1.100"
@@ -175,8 +179,11 @@ func TestJA4SSH_EarlyTrigger(t *testing.T) {
 	}
 }
 
+// TestJA4SSH_ACKCounting holds the two bare ACK fields of the value.
+// A bare ACK does not advance the window, so the window holds seven SSH packets.
+// Issue #53 removed the bare ACK count from the threshold, and FR-parity-28 states the rule.
 func TestJA4SSH_ACKCounting(t *testing.T) {
-	fp := NewJA4SSH(10)
+	fp := NewJA4SSH(7)
 
 	clientIP := "192.168.1.100"
 	serverIP := "10.0.0.1"
@@ -192,7 +199,7 @@ func TestJA4SSH_ACKCounting(t *testing.T) {
 		_, _ = fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, 22, 54321, nil, true))
 	}
 
-	// 2 more SSH data from server — should hit 10 total
+	// 2 more SSH data from server — the window reaches seven SSH packets
 	serverPayload := []byte("SSH-2.0-ServerSSH\r\n")
 	var lastResults []FingerprintResult
 	for i := 0; i < 2; i++ {
