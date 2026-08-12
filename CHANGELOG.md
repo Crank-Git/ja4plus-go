@@ -9,9 +9,10 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, issue #197 put 14 more, and issue #223 put 4 more. A run on the
-current tree reports 1602 matches, 783 deviations, 301 accepted deviations and 301 register
-keys. A count that an entry below states therefore differs from a fresh run.
+put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, and issue #285 put
+108 more. A run on the current tree reports 1608 matches, 695 deviations, 409 accepted
+deviations and 409 register keys. A count that an entry below states therefore differs from a
+fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against
@@ -107,6 +108,35 @@ that the interface declares.
 
 ### Fixed
 
+- `JA4HFingerprinter` now fills the `Raw` field of `FingerprintResult`, which carries the FoxIO
+  `JA4H_r` value. It filled the field on no path before. The FoxIO per-packet vector set
+  publishes `ja4.ja4h_r` on 126 records, and the FoxIO per-stream vector set publishes none.
+  Issue #274 read the per-stream set and left the field empty, and issue #290 recorded that the
+  two sets differ. The form is
+  `<part a>_<header names>_<sorted cookie names>_<sorted cookie pairs>`.
+  `testdata/foxio/reference/wireshark/source/packet-ja4.c:603` writes the four fields, and
+  `testdata/foxio/reference/python/ja4h.py:82` writes the same four. Both references sort the
+  cookie by the cookie name alone:
+  `testdata/foxio/reference/wireshark/source/packet-ja4.c:525` writes the pair list in the name
+  order, and `testdata/foxio/reference/python/ja4h.py:68` sorts the pair list by the name. The
+  base value hashes the same two strings, so `ja4hSortedCookieStrings` builds them once for both
+  forms and the base value cannot drift from the raw form. The two references disagree on the
+  request that holds no cookie, where Wireshark writes four fields and the FoxIO Python
+  reference writes three. Issue #285 holds that reference split, and this change rules nothing:
+  `Raw` follows `RawOriginalOrder`, which issue #274 built in the Python shape, so one ruling
+  moves both fields together. The measurement ran on `origin/batch/311-ja4h-and-harness` at
+  `27e82a5`. The run reports 1602 matches, 783 deviations and 301 accepted deviations before,
+  and 1608 matches, 803 deviations and 301 accepted deviations after. The register holds 301
+  keys before and after, and it gains no entry. 6 `JA4H_r` comparisons close, and each one is a
+  request that holds a cookie. 51 comparisons report `the two values differ`, and every one of
+  the 51 differs by one trailing underscore, which is the split of issue #285. 26 comparisons
+  report a surplus key, on 16 frames of `http1.pcapng` and 10 frames of `CVE-2018-6794.pcap`,
+  and issue #289 already reads that cause. The change moves no `JA4H` value and no `JA4H_ro`
+  value, and the per-stream set reports 1089 matches, 106 deviations and 266 accepted deviations
+  before and after. **The port needs a change**, because
+  `ja4plus/fingerprinters/ja4h.py:70` states that FoxIO publishes no `JA4H_r` key and the port
+  fills only `raw_original_order`. `Crank-Git/ja4plus#600` holds the port half. Issue #310
+  records the change.
 - Part b of JA4T and JA4TS now holds one entry for each option byte the packet carries,
   including every End-of-Option-List byte. `generateTCPFingerprint` read `tcp.Options`, and
   `github.com/google/gopacket@v1.1.19` reports option kind 0 exactly once.
@@ -260,6 +290,25 @@ that the interface declares.
   QUIC capture of the corpus that carries a client hello. Issue #42 holds the measurement.
 
 ### Changed
+
+- **The register declines 108 per-packet JA4H raw values, and the library keeps the per-stream
+  shape.** The keys name 57 `JA4H_ro` comparisons and 51 `JA4H_r` comparisons, on 9 captures.
+  **The maintainer ruled on 2026-08-12 in issue #285.** The two FoxIO vector sets disagree, and
+  no single value satisfies both. On a request that carries no cookie the per-stream set holds
+  `co10nn010000_User-Agent_` and the per-packet set holds `co10nn010000_User-Agent__`. On the
+  last cookie pair the per-packet set writes a trailing comma, and the per-stream set writes
+  none. `.claude/rules/parity.md` rule 3 names the shared vector set as the gate, and the
+  Python port writes the per-stream shape. The library therefore follows the per-stream set.
+  `wireshark/source/packet-ja4.c:615` writes the format string with no condition, and `:1181`
+  and `:1183` append the commas. `:1637-1638` truncate `unsorted_cookie_fields` alone, so the
+  trailing comma of `unsorted_cookie_values` survives. `zeek/ja4h/main.zeek:210` writes four
+  fields always. **Every one of the 108 comparisons differs by that shape alone**, and issue
+  #314 measured each one. The 26 surplus `JA4H_r` keys reach no entry, because issue #289 holds
+  their cause. The 69 comparisons on frames that produce no JA4H value reach no entry either.
+  **This change moves no fingerprint value.** Measured on `595ed13` with the corpus present:
+  the run reports 1608 matches before and after. It reports 803 deviations before and 695
+  after, and 301 accepted deviations before and 409 after. The register holds 301 keys before
+  and 409 after, and no entry reads as closed. Issue #314 holds the measurement.
 
 - **The register declines four FoxIO JA4SSH values, and the library keeps its own value.** The
   four keys are `ssh-r.pcap/1/JA4SSH.1`, `ssh-r.pcap/2/JA4SSH.1`,
