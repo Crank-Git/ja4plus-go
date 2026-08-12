@@ -12,7 +12,7 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 943 |
-| Deviations | 3248 |
+| Deviations | 3247 |
 | Accepted deviations | 0 |
 | Captures the suite compared | 35 |
 | Captures the suite compared nothing on | 3 |
@@ -21,14 +21,14 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
-| per-stream | 635 | 1471 | 0 |
+| per-stream | 635 | 1470 | 0 |
 | per-packet | 308 | 1777 | 0 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 
 ## Deviations
 
-The run reports 3248 deviations in 197 groups. One group is one capture, one method and one vector set.
+The run reports 3247 deviations in 197 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -425,9 +425,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls3.pcapng` | per-stream | JA4 | 7 | `tls3.pcapng/11/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_02518cc01a32` | (none) |
 | `tls3.pcapng` | per-stream | JA4 | 7 | `tls3.pcapng/12/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_117873b7a39c` | (none) |
 | `tls3.pcapng` | per-stream | JA4H | 1 | `tls3.pcapng/8/JA4H_ro` | the vector holds a value the library does not produce | `ge11nn07enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language,If-None-Match,If-Modified-Since_` | (none) |
-| `tls3.pcapng` | per-stream | JA4L | 14 | `tls3.pcapng/10/JA4L-C` | the two values differ | `78_128` | `31_128` |
-| `tls3.pcapng` | per-stream | JA4L | 14 | `tls3.pcapng/11/JA4L-C` | the two values differ | `66_128` | `30_128` |
-| `tls3.pcapng` | per-stream | JA4L | 14 | `tls3.pcapng/12/JA4L-C` | the two values differ | `360_128` | `22_128` |
+| `tls3.pcapng` | per-stream | JA4L | 13 | `tls3.pcapng/10/JA4L-C` | the two values differ | `78_128` | `31_128` |
+| `tls3.pcapng` | per-stream | JA4L | 13 | `tls3.pcapng/11/JA4L-C` | the two values differ | `66_128` | `30_128` |
+| `tls3.pcapng` | per-stream | JA4L | 13 | `tls3.pcapng/12/JA4L-C` | the two values differ | `360_128` | `22_128` |
 | `tls3.pcapng` | per-stream | JA4LS | 14 | `tls3.pcapng/10/JA4L-S` | the two values differ | `34691_38` | `69383_38` |
 | `tls3.pcapng` | per-stream | JA4LS | 14 | `tls3.pcapng/11/JA4L-S` | the two values differ | `2442_57` | `4884_57` |
 | `tls3.pcapng` | per-stream | JA4LS | 14 | `tls3.pcapng/12/JA4L-S` | the two values differ | `36498_35` | `72997_35` |
@@ -849,7 +849,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `tls3.pcapng` | JA4H | per-packet and per-stream | deviation | 2 | 15 | — |
 | `tls3.pcapng` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls3.pcapng` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `tls3.pcapng` | JA4L | per-packet and per-stream | deviation | 0 | 35 | — |
+| `tls3.pcapng` | JA4L | per-packet and per-stream | deviation | 0 | 34 | — |
 | `tls3.pcapng` | JA4LS | per-packet and per-stream | deviation | 0 | 41 | — |
 | `tls3.pcapng` | JA4T | per-packet | match | 8 | 0 | — |
 | `tls3.pcapng` | JA4TS | per-packet | match | 8 | 0 | — |

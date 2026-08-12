@@ -191,8 +191,15 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 		}
 	}
 
-	// The server sends one to five packets after point B. The client measurement starts at
-	// the last of them, so every server packet moves point C until point D fills.
+	// The two client points read a Handshake packet only, and every other long-header type
+	// fills neither of them.
+	// `ja4plus/fingerprinters/ja4l.py:580-581` states the rule.
+	if !parser.IsQUICHandshakePacket(udp.Payload) {
+		return nil, nil
+	}
+
+	// The server sends one to five Handshake packets. The client measurement starts at the
+	// last of them, so every server packet moves point C until point D fills.
 	if _, ok := conn.timestamps["B"]; ok {
 		if _, ok := conn.timestamps["D"]; !ok && !isClient {
 			conn.timestamps["C"] = ts
