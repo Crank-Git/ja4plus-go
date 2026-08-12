@@ -138,8 +138,8 @@ file that did not exist.
   `features/08-python-parity.md` is closed.
 - **FR-release-50** — The release does not proceed until `mkdocs build --strict`
   succeeds.
-- **FR-release-51** — The CHANGELOG records `CloseOpenWindows` as a breaking change to the
-  exported `Fingerprinter` interface.
+- **FR-release-51** — The CHANGELOG records `CloseOpenWindows` on the optional interface
+  `WindowCloser`, and records that the exported `Fingerprinter` interface does not change.
 - **FR-release-52** — The CHANGELOG records JA4LS as a new method, and states eleven
   methods and ten fingerprinters.
 

@@ -142,8 +142,10 @@ JA4SSH emits one value for every 200 SSH packets of a connection. A connection w
 window never reaches that count holds the window open, and no packet emits it. Call
 `CloseOpenWindows` when the packet source ends, or lose that window. When one connection
 ends before the packet source does, call `CloseConnectionWindow` for it instead.
-`Processor` and `SyncProcessor` each carry both methods, and each one reaches every
-fingerprinter that implements the interface.
+`Processor` and `SyncProcessor` each carry both methods. `CloseOpenWindows` reaches every
+fingerprinter that implements `WindowCloser`. `CloseConnectionWindow` reaches every
+fingerprinter that implements `ConnectionWindowCloser`. A fingerprinter that implements one
+of the two interfaces alone reaches that interface's method.
 
 ```go
 proc := ja4plus.NewProcessor()
