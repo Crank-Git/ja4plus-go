@@ -165,13 +165,22 @@ func buildVXLANQUICPacket(t *testing.T, payload []byte) gopacket.Packet {
 func buildVXLANQUICPacketOnPort(t *testing.T, innerSrcPort uint16, payload []byte) gopacket.Packet {
 	t.Helper()
 
+	return buildVXLANQUICPacketFrom(t, tunnelOuterSrcIP, innerSrcPort, payload)
+}
+
+// buildVXLANQUICPacketFrom returns one VXLAN packet that the named outer source address
+// carries. Two tunnel endpoints of one path send one connection from two outer addresses, so a
+// test that reads the index needs more than one outer address.
+func buildVXLANQUICPacketFrom(t *testing.T, outerSrcIP string, innerSrcPort uint16, payload []byte) gopacket.Packet {
+	t.Helper()
+
 	outerEth := &layers.Ethernet{
 		SrcMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
 		DstMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
 		EthernetType: layers.EthernetTypeIPv4,
 	}
 	outerIP := &layers.IPv4{
-		SrcIP:    net.ParseIP(tunnelOuterSrcIP),
+		SrcIP:    net.ParseIP(outerSrcIP),
 		DstIP:    net.ParseIP(tunnelOuterDstIP),
 		Protocol: layers.IPProtocolUDP,
 		Version:  4,

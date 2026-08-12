@@ -227,6 +227,40 @@ func TestJA4SCleanupByTheGroupingKeyRemovesEveryTunneledConnection(t *testing.T)
 	}
 }
 
+// JA4S holds one index entry for one connection that two outer addresses carry.
+//
+// Two tunnel endpoints of one path send one connection from two outer addresses, and a client
+// repeats an Initial that no server acknowledges. The second packet moves the reported key of
+// the connection, so the entry of the first reported key stays for the life of the process.
+// `ja4plus/fingerprinters/ja4l.py:170` removes the previous entry for the same reason.
+func TestJA4SHoldsOneIndexEntryForATunneledConnectionThatTwoOuterAddressesCarry(t *testing.T) {
+	fingerprinter := NewJA4S()
+	handshake := buildClientHelloPayload()[5:]
+	initial := buildQUICClientInitial(t, tunneledDCID(0), []byte{0x01, 0x02, 0x03, 0x04}, handshake)
+
+	// The second address is the outer source of a second tunnel endpoint. The inner pair holds
+	// one connection, so the grouping key of the two packets holds one value.
+	for _, outerSrcIP := range []string{tunnelOuterSrcIP, "100.20.9.3"} {
+		packet := buildVXLANQUICPacketFrom(t, outerSrcIP, tunnelInnerSrcPort, initial)
+		if _, err := fingerprinter.ProcessPacket(packet); err != nil {
+			t.Fatalf("ProcessPacket returns the error %v", err)
+		}
+	}
+
+	if got := len(fingerprinter.quicDCIDs); got != 1 {
+		t.Fatalf("the connection identifier table holds %d entries, and the two packets carry one connection",
+			got)
+	}
+	if got := len(fingerprinter.groupingKeys); got != 1 {
+		t.Errorf("the grouping key index holds %d entries, and the two packets carry one connection",
+			got)
+	}
+	if got := len(fingerprinter.reportedKeys); got != 1 {
+		t.Errorf("the reported key index holds %d entries, and the two packets carry one connection",
+			got)
+	}
+}
+
 // Reset clears every table that a tunneled connection fills, for JA4 and for JA4S.
 // A table the index does not reach is a table Reset may not clear.
 func TestResetClearsEveryTunneledTableOfJA4AndJA4S(t *testing.T) {

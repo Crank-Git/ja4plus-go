@@ -156,6 +156,14 @@ func (f *JA4SFingerprinter) indexReported(packet gopacket.Packet, connKey string
 		return
 	}
 
+	// Two tunnel endpoints of one path send one connection from two outer addresses, so a
+	// second packet can move the reported key. The entry of the previous reported key would
+	// then stay for the life of the process.
+	// `ja4plus/fingerprinters/ja4l.py:170` removes the previous entry the same way.
+	if previous, held := f.reportedKeys[connKey]; held {
+		delete(f.groupingKeys, previous)
+	}
+
 	reportedKey := fmt.Sprintf("%s:%d-%s:%d", reportedSrcIP, srcPort, reportedDstIP, dstPort)
 	f.groupingKeys[reportedKey] = connKey
 	f.reportedKeys[connKey] = reportedKey
