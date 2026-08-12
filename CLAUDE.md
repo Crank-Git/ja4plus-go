@@ -119,7 +119,7 @@ exits 0, and that exit code reports no site build.**
 - **The project manager runs one cross-member review at every batch gate.** Spawn it with
   no `name`. Read the spawn response. A response that names a mailbox reached the
   cross-session path, and that path can return an idle signal and no text. A cross-member
-  review that returns no text checked nothing. The project manager then runs the five
+  review that returns no text checked nothing. The project manager then runs the six
   categories by hand, and it says so in the gate comment.
   `.claude/rules/cross-member-review.md` holds the measurement, the return contract and
   the procedure.
