@@ -9,6 +9,14 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Eight exported names, which read a pcapng Decryption Secrets Block and decrypt one QUIC
+  packet with a TLS secret: `ErrNoSecret`, `KeyLog`, `ParseKeyLog`,
+  `ReadKeyLogFromCapture`, `KeyLog.Secret`, `KeyLog.ClientRandoms`, `KeyLog.Len` and
+  `DecryptQUICPacket`. The maintainer accepted the eight names on 2026-08-11, before the
+  `v1.0.0` freeze. `docs/specs/features/05-conformance-gaps.md` FR-gaps-15 through
+  FR-gaps-18 state the requirements, and the `Interface` register row of
+  `docs/specs/spec.md` records that the port adopts these names under parity rule 2. The
+  change moves no fingerprint.
 - The `corpus`, `conformance`, `cover` and `fuzz` make targets.
 - The FoxIO corpus pin in `testdata/foxio.pin`, and `scripts/fetch-corpus.sh`, which
   fetches the corpus at that commit. The corpus is FoxIO-licensed material, so the
@@ -28,6 +36,23 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **A tunneled connection now carries two keys, and the fingerprint of such a connection
+  moves.** This is a breaking behaviour change under `v1.0.0`. A `FingerprintResult` for a
+  GRE, ERSPAN, VXLAN or Geneve packet holds the outer address pair with the inner port
+  pair, and the first packet of the connection fixes that pairing. The library collects
+  packets into one connection by the inner address pair and the inner port pair, and
+  `GetShardKey` returns that grouping pair. A JA4L value and a JA4LS value read the
+  time-to-live of the outer address layer. Earlier releases read the outer address pair
+  for both keys and read the tunnel transport layer for the port pair, so a mirrored
+  capture merged both directions of one session into one connection and a VXLAN packet
+  reported the tunnel port 4789. The three tunneled captures of the FoxIO corpus move:
+  `gre-sample.pcap`, `gre-erspan-vxlan.pcap` and `tcpdump-geneve.pcap`. The maintainer
+  ruled this on 2026-08-11, and `docs/specs/spec.md` `## Changelog` row 12 records it.
+- The parser reads no fingerprint from a packet that nests more than four tunnel layers,
+  and it returns a non-fatal error that names the limit. It returns the same result for a
+  tunnel whose inner packet it does not read, such as a GRE header that names an unknown
+  protocol type or a truncated inner frame. No released value moves, because no capture of
+  the FoxIO corpus nests more than three tunnel layers.
 - **A changed fingerprint.** The library produces the JA4 value
   `q13d0310h3_55b375c5d22e_cd85d2d88918` on `quic-with-several-tls-frames.pcapng` and on
   `quic-tls-handshake.pcapng`, and it produced none before. The FoxIO Rust implementation

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 
@@ -912,4 +913,245 @@ func ParseQUICServerInitial(payload []byte, clientDCID []byte) (*ServerHello, er
 		sh.IsQUIC = true
 	}
 	return sh, nil
+}
+
+// ErrNoSecret reports that the caller supplied no secret for the connection.
+var ErrNoSecret = errors.New("parser: the caller supplied no secret for the connection")
+
+// The packet protection sizes of TLS_AES_128_GCM_SHA256, which RFC 9001 Section 5.1
+// derives from the cipher suite.
+const (
+	// quicSecretLength is the byte count of a SHA-256 traffic secret.
+	quicSecretLength = 32
+	// quicKeyLength is the byte count of an AES-128 key.
+	quicKeyLength = 16
+	// quicIVLength is the byte count of the initialization vector.
+	quicIVLength = 12
+	// quicSampleLength is the byte count of the header protection sample.
+	quicSampleLength = 16
+	// quicTagLength is the byte count of the AEAD tag.
+	quicTagLength = 16
+)
+
+// quicMaxConnectionIDLength is the largest Destination Connection ID that RFC 9000
+// Section 17.2 allows.
+const quicMaxConnectionIDLength = 20
+
+// quicPacketTypeRetry names the long header packet type that carries no protection.
+const quicPacketTypeRetry = 0x30
+
+// DeriveQUICKeys returns the packet protection key, the initialization vector and the
+// header protection key of one TLS traffic secret.
+// RFC 9001 Section 5.1 states the three labels `quic key`, `quic iv` and `quic hp`.
+// It returns an error for a secret of another length, because the library reads the
+// SHA-256 key schedule of TLS_AES_128_GCM_SHA256 only.
+func DeriveQUICKeys(secret []byte) (key, iv, hpKey []byte, err error) {
+	if len(secret) == 0 {
+		return nil, nil, nil, ErrNoSecret
+	}
+
+	if len(secret) != quicSecretLength {
+		return nil, nil, nil, fmt.Errorf("parser: the secret holds %d bytes, and the library reads %d",
+			len(secret), quicSecretLength)
+	}
+
+	key, err = hkdfExpandLabel(secret, "quic key", nil, quicKeyLength)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	iv, err = hkdfExpandLabel(secret, "quic iv", nil, quicIVLength)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	hpKey, err = hkdfExpandLabel(secret, "quic hp", nil, quicKeyLength)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return key, iv, hpKey, nil
+}
+
+// DecryptQUICPacketWithSecret returns the frame bytes of one QUIC packet, which the
+// caller's traffic secret protects.
+// The payload starts at the first byte of the packet, and a longer buffer is allowed,
+// because one datagram carries more than one packet.
+// connectionIDLength states the Destination Connection ID length of a short header
+// packet. A long header packet carries its own lengths, so it ignores that argument.
+// It returns ErrNoSecret when the caller supplies no secret.
+// It returns a non-fatal error for a packet it cannot read, and it never panics.
+func DecryptQUICPacketWithSecret(payload, secret []byte, connectionIDLength int) ([]byte, error) {
+	if len(secret) == 0 {
+		return nil, ErrNoSecret
+	}
+
+	pnOffset, end, headerMask, err := quicProtectedRange(payload, connectionIDLength)
+	if err != nil {
+		return nil, err
+	}
+
+	key, iv, hpKey, err := DeriveQUICKeys(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	sampleOffset := pnOffset + 4
+	if sampleOffset+quicSampleLength > end {
+		return nil, fmt.Errorf("parser: the packet holds %d bytes, and the header protection sample needs %d",
+			end, sampleOffset+quicSampleLength)
+	}
+
+	mask, err := aesECBEncryptBlock(hpKey, payload[sampleOffset:sampleOffset+quicSampleLength])
+	if err != nil {
+		return nil, err
+	}
+
+	header := make([]byte, end)
+	copy(header, payload[:end])
+	header[0] ^= mask[0] & headerMask
+
+	packetNumberLength := int(header[0]&0x03) + 1
+	if pnOffset+packetNumberLength > end {
+		return nil, errors.New("parser: the packet number passes the packet")
+	}
+
+	var packetNumber uint64
+
+	for i := range packetNumberLength {
+		header[pnOffset+i] ^= mask[1+i]
+		packetNumber = packetNumber<<8 | uint64(header[pnOffset+i])
+	}
+
+	nonce := make([]byte, len(iv))
+	copy(nonce, iv)
+
+	for i := range 8 {
+		nonce[len(nonce)-1-i] ^= byte(packetNumber >> (8 * i))
+	}
+
+	start := pnOffset + packetNumberLength
+	if end-start <= quicTagLength {
+		return nil, errors.New("parser: the packet carries no protected frame")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	plaintext, err := aead.Open(nil, nonce, payload[start:end], header[:start])
+	if err != nil {
+		return nil, fmt.Errorf("parser: the secret does not open the packet: %w", err)
+	}
+
+	return plaintext, nil
+}
+
+// quicProtectedRange returns the packet number offset, the end of the packet and the
+// first-byte mask of the header protection.
+// RFC 9001 Section 5.4.1 masks four bits of the first byte of a long header packet, and
+// five bits of the first byte of a short header packet.
+func quicProtectedRange(payload []byte, connectionIDLength int) (pnOffset, end int, headerMask byte, err error) {
+	if len(payload) < 1 {
+		return 0, 0, 0, errors.New("parser: the packet holds no byte")
+	}
+
+	if payload[0]&0x80 == 0 {
+		if connectionIDLength < 0 || connectionIDLength > quicMaxConnectionIDLength {
+			return 0, 0, 0, fmt.Errorf("parser: the caller states the connection identifier length %d",
+				connectionIDLength)
+		}
+
+		pnOffset = 1 + connectionIDLength
+		if pnOffset >= len(payload) {
+			return 0, 0, 0, errors.New("parser: the connection identifier passes the packet")
+		}
+
+		return pnOffset, len(payload), 0x1f, nil
+	}
+
+	if len(payload) < 5 {
+		return 0, 0, 0, errors.New("parser: the long header holds no version")
+	}
+
+	version := binary.BigEndian.Uint32(payload[1:5])
+	if version != quicV1 && version != quicV2 {
+		return 0, 0, 0, fmt.Errorf("parser: the packet states the QUIC version %#08x", version)
+	}
+
+	if quicIsRetry(payload[0], version) {
+		return 0, 0, 0, errors.New("parser: a Retry packet carries no protected frame")
+	}
+
+	pos := 5
+
+	for range 2 {
+		if pos >= len(payload) {
+			return 0, 0, 0, errors.New("parser: the connection identifier length passes the packet")
+		}
+
+		length := int(payload[pos])
+		if length > quicMaxConnectionIDLength {
+			return 0, 0, 0, fmt.Errorf("parser: the packet states the connection identifier length %d", length)
+		}
+
+		pos += 1 + length
+		if pos > len(payload) {
+			return 0, 0, 0, errors.New("parser: the connection identifier passes the packet")
+		}
+	}
+
+	// An Initial packet carries a token, and every other long header packet carries none.
+	if quicIsInitial(payload[0], version) {
+		tokenLength, next, e := DecodeVarint(payload, pos)
+		if e != nil {
+			return 0, 0, 0, fmt.Errorf("parser: the token length is unreadable: %w", e)
+		}
+
+		pos = next
+		if tokenLength > uint64(len(payload)-pos) {
+			return 0, 0, 0, errors.New("parser: the token passes the packet")
+		}
+
+		pos += int(tokenLength)
+	}
+
+	length, next, err := DecodeVarint(payload, pos)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("parser: the length is unreadable: %w", err)
+	}
+
+	pos = next
+	if length > uint64(len(payload)-pos) {
+		return 0, 0, 0, errors.New("parser: the length passes the packet")
+	}
+
+	return pos, pos + int(length), 0x0f, nil
+}
+
+// quicIsRetry reports whether the first byte names a Retry packet.
+// RFC 9369 Section 3.2 states the type `0b00` for QUIC version 2, and RFC 9000
+// Section 17.2 states the type `0b11` for QUIC version 1.
+func quicIsRetry(firstByte byte, version uint32) bool {
+	if version == quicV2 {
+		return firstByte&0x30 == 0x00
+	}
+
+	return firstByte&0x30 == quicPacketTypeRetry
+}
+
+// quicIsInitial reports whether the first byte names an Initial packet.
+// RFC 9369 Section 3.2 gives QUIC version 2 another type value for each packet type.
+func quicIsInitial(firstByte byte, version uint32) bool {
+	if version == quicV2 {
+		return firstByte&0x30 == 0x10
+	}
+
+	return firstByte&0x30 == 0x00
 }

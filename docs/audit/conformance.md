@@ -116,16 +116,15 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `gre-erspan-vxlan.pcap` | per-packet | JA4H | 3 | `gre-erspan-vxlan.pcap/4/JA4H_ro.1` | the vector holds a value the library does not produce | `ge10nn000000___` | (none) |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4T | 1 | `gre-erspan-vxlan.pcap/1/JA4T.1` | the two values differ | `8192_00_00_00` | `8192_0_0_0` |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4TS | 1 | `gre-erspan-vxlan.pcap/2/JA4TS.1` | the two values differ | `8192_00_00_00` | `8192_0_0_0` |
-| `gre-erspan-vxlan.pcap` | per-stream | JA4L | 2 | `gre-erspan-vxlan.pcap/0/JA4L-C` | the vector holds a value the library does not produce | `953_64` | (none) |
-| `gre-erspan-vxlan.pcap` | per-stream | JA4L | 2 | `gre-erspan-vxlan.pcap/100.20.9.1:65174-100.20.9.2:80/JA4L-C` | the library produces a value the vector does not hold | (none) | `6894_64` |
-| `gre-erspan-vxlan.pcap` | per-stream | JA4LS | 1 | `gre-erspan-vxlan.pcap/0/JA4L-S` | the vector holds a value the library does not produce | `997_64` | (none) |
+| `gre-erspan-vxlan.pcap` | per-stream | JA4L | 1 | `gre-erspan-vxlan.pcap/0/JA4L-C` | the two values differ | `953_64` | `1907_64` |
+| `gre-erspan-vxlan.pcap` | per-stream | JA4LS | 1 | `gre-erspan-vxlan.pcap/0/JA4L-S` | the two values differ | `997_64` | `1994_64` |
 | `gre-sample.pcap` | per-packet | JA4SSH | 14 | `gre-sample.pcap/19/JA4SSH.1` | the library produces a value the vector does not hold | (none) | `c24s23_c2s2_c1s1` |
 | `gre-sample.pcap` | per-packet | JA4SSH | 14 | `gre-sample.pcap/20/JA4SSH.1` | the library produces a value the vector does not hold | (none) | `c0s0_c0s0_c1s0` |
 | `gre-sample.pcap` | per-packet | JA4SSH | 14 | `gre-sample.pcap/21/JA4SSH.1` | the library produces a value the vector does not hold | (none) | `c0s0_c0s0_c0s1` |
-| `gre-sample.pcap` | per-stream | JA4L | 2 | `gre-sample.pcap/0/JA4L-C` | the two values differ | `26150_255` | `72_255` |
-| `gre-sample.pcap` | per-stream | JA4L | 2 | `gre-sample.pcap/172.27.1.66:123-66.59.109.137:123/JA4L-C` | the library produces a value the vector does not hold | (none) | `56629_255` |
-| `gre-sample.pcap` | per-stream | JA4LS | 2 | `gre-sample.pcap/0/JA4L-S` | the two values differ | `22952_236` | `45904_236` |
-| `gre-sample.pcap` | per-stream | JA4LS | 2 | `gre-sample.pcap/172.27.1.66:123-66.59.109.137:123/JA4L-S` | the library produces a value the vector does not hold | (none) | `74086_236` |
+| `gre-sample.pcap` | per-stream | JA4L | 1 | `gre-sample.pcap/0/JA4L-C` | the two values differ | `26150_255` | `72_255` |
+| `gre-sample.pcap` | per-stream | JA4LS | 4 | `gre-sample.pcap/0/JA4L-S` | the two values differ | `22952_236` | `45904_236` |
+| `gre-sample.pcap` | per-stream | JA4LS | 4 | `gre-sample.pcap/172.27.1.66:123-66.59.109.137:123/JA4L-S` | the library produces a value the vector does not hold | (none) | `74086_236` |
+| `gre-sample.pcap` | per-stream | JA4LS | 4 | `gre-sample.pcap/172.27.1.66:123-66.59.109.137:123/JA4L-S.2` | the library produces a value the vector does not hold | (none) | `56629_236` |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 4 | `http-empty-useragent.pcap/5/JA4H.1` | the library produces a value the vector does not hold | (none) | `ge10nn000000_000000000000_000000000000_000000000000` |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 4 | `http-empty-useragent.pcap/9/JA4H.1` | the vector holds a value the library does not produce | `ge10nn010000_b8bcd45ac095_000000000000_000000000000` | (none) |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 4 | `http-empty-useragent.pcap/9/JA4H_r.1` | the vector holds a value the library does not produce | `ge10nn010000_User-Agent__` | (none) |
@@ -538,7 +537,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `gre-erspan-vxlan.pcap` | JA4H | per-packet | deviation | 0 | 3 | — |
 | `gre-erspan-vxlan.pcap` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-erspan-vxlan.pcap` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `gre-erspan-vxlan.pcap` | JA4L | per-stream | deviation | 0 | 2 | — |
+| `gre-erspan-vxlan.pcap` | JA4L | per-stream | deviation | 0 | 1 | — |
 | `gre-erspan-vxlan.pcap` | JA4LS | per-stream | deviation | 0 | 1 | — |
 | `gre-erspan-vxlan.pcap` | JA4T | per-packet | deviation | 0 | 1 | — |
 | `gre-erspan-vxlan.pcap` | JA4TS | per-packet | deviation | 0 | 1 | — |
@@ -549,8 +548,8 @@ The table holds one row for each capture and each method. A row records `not app
 | `gre-sample.pcap` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-sample.pcap` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-sample.pcap` | JA4SSH | per-packet | deviation | 0 | 14 | — |
-| `gre-sample.pcap` | JA4L | per-stream | deviation | 0 | 2 | — |
-| `gre-sample.pcap` | JA4LS | per-stream | deviation | 0 | 2 | — |
+| `gre-sample.pcap` | JA4L | per-stream | deviation | 0 | 1 | — |
+| `gre-sample.pcap` | JA4LS | per-stream | deviation | 0 | 4 | — |
 | `gre-sample.pcap` | JA4T | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-sample.pcap` | JA4TS | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-sample.pcap` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |

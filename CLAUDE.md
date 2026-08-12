@@ -54,6 +54,7 @@ of that register name a change to this repository. Read
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
 | `internal/capture/` | Opening a live interface. Holds the pure-Go backend and the libpcap backend. |
+| `internal/keylog/` | Reading a pcapng Decryption Secrets Block and a key log in the NSS key log format. |
 | `testdata/foxio/` | The fetched FoxIO corpus. Not tracked in git. |
 | `testdata/deviations.json` | The register: one entry per accepted difference from a FoxIO value. Tracked. |
 | `docs/specs/` | The spec package. Tracked. Not published to the site. |
