@@ -8,9 +8,10 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
-entries into `testdata/deviations.json`, and the register held no entry before that. A run
-on the current tree reports 1035 matches, 1348 deviations, 150 accepted deviations and 150
-register keys. A count that an entry below states therefore differs from a fresh run.
+entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
+put 35 more entries into it. A run on the current tree reports 1076 matches, 1290 deviations,
+185 accepted deviations and 185 register keys. A count that an entry below states therefore
+differs from a fresh run.
 
 ### Added
 
@@ -78,28 +79,37 @@ register keys. A count that an entry below states therefore differs from a fresh
 
 - **JA4L now fills the TCP client measurement point from the packet that the Python
   reference names, and the client value of a TCP connection moves.** This is a breaking
-  behaviour change under `v1.0.0`, and **the maintainer has not ruled on it.** Point `C`
-  reads every packet that carries `ACK`, carries no `SYN`, and holds the relative sequence
-  number `1` and the relative acknowledgement number `1`. A later such packet replaces the
-  point. A packet that carries a whole HTTP request moves no point, because the reference
-  keeps such a packet under a separate cache. Earlier releases read the first packet that
-  carried `ACK` and no `SYN`, they tested no sequence number, and the point never moved.
-  **The four FoxIO implementations disagree here, so this is a ruling and not a reading.**
-  `docs/specs/foxio/JA4L.md` R33 states the four rules, and R34 states that the two FoxIO
-  vector sets hold two different values for stream 0 of `badcurveball.pcap`. Python states
-  the rule that this change implements, at `python/ja4.py:570`. Wireshark, Rust and Zeek
-  each fill the point once and never move it. Issue #196 holds the question, and the branch
-  must not merge before the maintainer rules. The conformance run reports 703 matches, 1402
-  deviations and 150 accepted deviations in the per-stream set before the change, and 701
-  matches, 1449 deviations and 150 accepted deviations after it. The per-packet set reports
-  332 matches and 1753 deviations before the change, and 332 matches and 1788 deviations
-  after it. The register key count stays at 150. The last JA4L-C value of a stream moves on
-  43 comparisons across 22 captures, and it then reaches the per-stream vector value on 53
-  of the 54 comparisons that the set holds. `gre-erspan-vxlan.pcap` stream 0 reaches no
-  value, which issue #199 covers. **The recorded deviation count rises, because the
-  per-stream harness numbers a second emission as the occurrence `JA4L-C.2` and it compares
-  the first emission against the vector.** The run measured the change on
-  `epic/48-parity-tls-latency` at `ec0f63e`.
+  behaviour change under `v1.0.0`. **The maintainer ruled on 2026-08-12 in issue #196.**
+  Point `C` reads every packet that carries `ACK`, carries no `SYN`, and holds the relative
+  sequence number `1` and the relative acknowledgement number `1`. A later such packet
+  replaces the point. A packet that carries a whole HTTP request moves no point, because the
+  reference keeps such a packet under a separate cache. Earlier releases read the first packet
+  that carried `ACK` and no `SYN`, they tested no sequence number, and the point never moved.
+  **The four FoxIO implementations state three different rules, so this is a ruling and not a
+  reading.** `docs/specs/foxio/JA4L.md` R33 states the four rules, and R34 states that the two
+  FoxIO vector sets hold two different values for stream 0 of `badcurveball.pcap`. Python
+  states the rule that this change implements, at `python/ja4.py:570`. Wireshark, Rust and
+  Zeek each fill the point once and never move it. `docs/specs/spec.md` `## Changelog` round
+  15 records the ruling. **The ruling knowingly gives up the per-packet vector**, which holds
+  `2177_64_114797` on frame 9 of `badcurveball.pcap` while the library writes part a as
+  `2181`. Thirty-five entries reach `testdata/deviations.json` for that divergence, each with
+  `"capability": false` and the ruling `#196`. Each reason states the part a divergence alone,
+  because issue #197 owns the third part. The conformance harness now compares the last
+  emission for a per-stream method that the vector holds once. The library keeps its
+  per-packet streaming contract, it suppresses no intermediate value, and it gains no flush.
+  **Two further repairs land in the same change, and the reference is unanimous on both.**
+  Point `A` and point `B` no longer move, so a repeated SYN-ACK reports no second server
+  value; `python/common.py:101` names both fields. The two endpoint names of a relative number
+  read the grouping address pair, so the mirrored session of `gre-erspan-vxlan.pcap` keeps its
+  client value. Measured on `epic/48-parity-tls-latency` at `3e7a47a` with the corpus present:
+  43 `JA4L-C` comparisons moved to match on 22 captures, and 35 per-packet `JA4L` comparisons
+  gained a registered divergence. The per-stream set reports 703 matches, 514 deviations and
+  150 accepted deviations before the change, and 744 matches, 457 deviations and 150 accepted
+  deviations after it. The per-packet set reports 332 matches, 834 deviations and 0 accepted
+  deviations before the change, and 332 matches, 833 deviations and 35 accepted deviations
+  after it. The register holds 150 keys before and 185 after. Every `JA4L-C` comparison of the
+  per-stream set now matches. Issues #205 and #206 hold the two comparisons the harness change
+  leaves worse, both on `chrome-cloudflare-quic-with-secrets.pcapng` stream 0.
 - **JA4L and JA4LS now report half of the measured time, and every latency value moves.**
   This is a breaking behaviour change under `v1.0.0`. The `JA4L.png` image labels part a
   `One-way TCP latency in µs (1ms = 1,000µs)`. `docs/specs/foxio/JA4L.md` R6 states that
