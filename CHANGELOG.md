@@ -77,6 +77,20 @@ differs from a fresh run.
 
 ### Changed
 
+- **The JA4L third part reaches a recorded reading, and it moves no fingerprint.**
+  `docs/specs/foxio/JA4L.md` R35 states the reading, and `docs/specs/spec.md` `## Changelog`
+  round 16 states the measurement. On a TCP connection the third number of a per-packet vector
+  is the Wireshark part c, which R24 names as the numerator of `ja4.ja4l_delta`. The
+  `tcpdump-geneve.pcap` frame 13 vector holds `ja4.ja4l` as `93_64_124` and `ja4.ja4l_delta`
+  as `1.3`, and `124 / 93` reads `1.3`. Issue #127 declines that part c, so this release adds
+  one test that holds the two-part TCP form. **On a QUIC connection the third part is the
+  marker `quic`, and the part count stays open.** The two FoxIO vector sets state two
+  different part counts for one QUIC connection: on stream 36 of `ssh2.pcapng` the per-stream
+  vector holds `JA4L-C` as `169_128` and the per-packet vector holds `ja4.ja4l` as
+  `169_128_quic` on frame 1147. The marker moves 16 QUIC values on 3 captures, it closes 2
+  per-packet comparisons, and it opens 13 per-stream comparisons that match exactly today.
+  **Issue #197 holds the question, and the maintainer rules.** The register holds 185 keys
+  before and after, and no entry reads as closed.
 - **JA4L now fills the TCP client measurement point from the packet that the Python
   reference names, and the client value of a TCP connection moves.** This is a breaking
   behaviour change under `v1.0.0`. **The maintainer ruled on 2026-08-12 in issue #196.**
