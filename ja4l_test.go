@@ -573,8 +573,8 @@ func TestJA4LFillsTheQUICClientPointsInTheReferenceDirection(t *testing.T) {
 	if len(dResults) != 1 {
 		t.Fatalf("D: expected one result, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=25000_55" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=25000_55")
+	if dResults[0].Fingerprint != "JA4L-C=25000_55_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=25000_55_quic")
 	}
 }
 
@@ -619,8 +619,8 @@ func TestJA4LMovesTheQUICClientPointToTheLastServerPacket(t *testing.T) {
 	if len(dResults) != 1 {
 		t.Fatalf("D: expected one result, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=10000_55" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=10000_55")
+	if dResults[0].Fingerprint != "JA4L-C=10000_55_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=10000_55_quic")
 	}
 
 	// Point C stops at point D, so a later server packet moves nothing.
@@ -685,8 +685,8 @@ func TestJA4LFillsTheQUICClientPointsOnlyFromAHandshakePacket(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("client Handshake: expected one result, got %v", results)
 	}
-	if results[0].Fingerprint != "JA4L-C=5000_55" {
-		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=5000_55")
+	if results[0].Fingerprint != "JA4L-C=5000_55_quic" {
+		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=5000_55_quic")
 	}
 }
 
