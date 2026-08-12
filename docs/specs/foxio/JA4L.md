@@ -219,3 +219,27 @@ image.
   the point from the Client Hello at `python/ja4.py:570`, and Wireshark bars a
   payload-bearing packet at `wireshark/source/packet-ja4.c:1302`. **R33 states why the two
   sets disagree, and issue #196 holds the question.**
+- **R35** — **The two FoxIO vector sets state two different part counts for one QUIC
+  connection.** The per-stream set writes two parts, and the per-packet set writes three
+  parts with the marker `quic`. Two pairs separate the part count alone, because the latency
+  and the TTL agree in each pair.
+    - On stream 36 of `ssh2.pcapng` the per-stream vector holds `JA4L-C` as `169_128` and
+      `JA4L-S` as `5389_57`. On frame 1147 the per-packet vector holds `ja4.ja4l` as
+      `169_128_quic` and `ja4.ja4ls` as `5389_57_quic`.
+    - On stream 22 of `tls3.pcapng` the per-stream vector holds `JA4L-C` as `336_128`. On
+      frame 162 the per-packet vector holds `ja4.ja4l` as `336_128_quic`.
+  R31 records the source split that produces the two sets. Python writes no marker at
+  `python/ja4.py:165`, and it produces the per-stream set. Wireshark writes the format
+  `"%d_%d_quic"` at `wireshark/source/packet-ja4.c:1441`, and it produces the per-packet set.
+  **One library value reaches one set, so the two sets cannot both match.** The measurement
+  reads `epic/48-parity-tls-latency` at `887ab53` with the corpus present. The marker moves
+  the library value on 16 per-packet comparisons and on 16 per-stream comparisons, across 3
+  captures. It closes 2 per-packet comparisons. It opens 13 per-stream comparisons that match
+  exactly today.
+  The per-stream set reports 744 matches and 457 deviations without the marker, and 731
+  matches and 470 deviations with it. The per-packet set reports 332 matches and 833
+  deviations without it, and 334 matches and 831 deviations with it. **Two rulings point
+  opposite ways, so issue #197 holds the question and the maintainer rules.** Issue #127
+  writes the marker on a QUIC connection. Round 15 of the `## Changelog` of
+  `docs/specs/spec.md` follows the per-stream set where the two sets disagree, and it states
+  that the ruling knowingly gives up the per-packet vector.

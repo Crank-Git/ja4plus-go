@@ -1268,3 +1268,55 @@ func TestJA4LMovesNoClientPointWhenTheCaptureHoldsNoSYN(t *testing.T) {
 		t.Errorf("bare ACK: expected no results, got %v", results)
 	}
 }
+
+// TestJA4LWritesTwoPartsOnATCPConnectionInGeneve holds the TCP half of the issue #127
+// ruling. The ruling writes two parts on a TCP connection, and it declines the third part
+// that Wireshark writes there. Every candidate answer to the open QUIC question keeps this
+// part count, so this test holds under each one. `docs/specs/foxio/JA4L.md` R29 records the
+// split, R30 records the `tcp` literal that this project declines, and R35 records the open
+// question.
+//
+// The `tcpdump-geneve.pcap` frame 13 per-packet vector holds `ja4.ja4l` as `93_64_124` and
+// `ja4.ja4ls` as `24_64_380`. The third number of each one is the Wireshark part c, which
+// `docs/specs/foxio/JA4L.md` R24 names as the numerator of `ja4.ja4l_delta`. The vector
+// holds that delta as `1.3`, and `124 / 93` reads `1.3`. This test holds the part count,
+// so it fails when a repair writes a marker on a TCP connection. Port issue #225 holds the
+// other half.
+func TestJA4LWritesTwoPartsOnATCPConnectionInGeneve(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	syn := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, true, false)
+	syn.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(syn); len(results) != 0 {
+		t.Fatalf("SYN: expected no results, got %v", results)
+	}
+
+	synAck := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, true, true)
+	synAck.Metadata().Timestamp = baseTime.Add(48 * time.Microsecond)
+	serverResults, err := fp.ProcessPacket(synAck)
+	if err != nil {
+		t.Fatalf("SYN-ACK: %v", err)
+	}
+	if len(serverResults) != 1 {
+		t.Fatalf("SYN-ACK: expected one result, got %v", serverResults)
+	}
+	if serverResults[0].Fingerprint != "JA4L-S=24_64" {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", serverResults[0].Fingerprint, "JA4L-S=24_64")
+	}
+
+	bareACK := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, false, true)
+	bareACK.Metadata().Timestamp = baseTime.Add(234 * time.Microsecond)
+	clientResults, err := fp.ProcessPacket(bareACK)
+	if err != nil {
+		t.Fatalf("bare ACK: %v", err)
+	}
+	if len(clientResults) != 1 {
+		t.Fatalf("bare ACK: expected one result, got %v", clientResults)
+	}
+	if clientResults[0].Fingerprint != "JA4L-C=93_64" {
+		t.Errorf("bare ACK: Fingerprint = %q, want %q", clientResults[0].Fingerprint, "JA4L-C=93_64")
+	}
+}
