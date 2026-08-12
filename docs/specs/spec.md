@@ -180,6 +180,7 @@ across both repositories, because a reader moves between them.
 | fetch | verb | To download the corpus from the reference at the pinned commit. | pull, sync, grab |
 | close | verb | To change the code so that a finding or a deviation no longer exists. | fix, resolve, address |
 | guard | noun | One test that fails when a fact a document states and a fact the repository holds disagree. | check, assertion, sentinel |
+| autostash | noun | The stash entry that git creates for the `--autostash` option of `git merge`, `git rebase` or `git pull`. git records it in `MERGE_AUTOSTASH` or in `autostash`, and it writes `refs/stash` when the entry cannot re-apply. | auto stash, temporary stash |
 | conform | verb | To produce the same output as the FoxIO reference. | comply, match spec |
 | emit | verb | To return a fingerprint from a fingerprinter. | output, produce, yield |
 | decline | verb | To choose not to reproduce a FoxIO value or not to build a capability, and to record the choice in the register. | reject, skip, ignore |
