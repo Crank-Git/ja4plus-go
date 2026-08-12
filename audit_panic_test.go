@@ -346,9 +346,10 @@ func auditDecoyOutcome(call func() ([]FingerprintResult, error)) (any, []Fingerp
 }
 
 func TestAUDPLayerOfAnotherConcreteTypeMakesJA4ReturnAnError(t *testing.T) {
-	// F-24-1 is closed. `ja4.go` takes the second result of the UDP type assertion, so the
-	// decoy packet reaches a non-fatal error rather than a panic. `CLAUDE.md` states that
-	// a fingerprinter returns a non-fatal error and never a panic.
+	// F-24-1 is closed. `ja4.go` takes the second result of the UDP type assertion in
+	// foreignUDPLayerError, so the decoy packet reaches a non-fatal error rather than a
+	// panic. `CLAUDE.md` states that a fingerprinter returns a non-fatal error and never a
+	// panic.
 	fingerprinter := NewJA4()
 
 	recovered, results, err := auditDecoyOutcome(func() ([]FingerprintResult, error) {
@@ -975,7 +976,9 @@ func TestTheThreeTypeAssertionsThatFindingsNameNowTakeTwoResults(t *testing.T) {
 		path    string
 		wanted  string
 	}{
-		{"F-24-1", "ja4.go", "udp, ok := udpLayer.(*layers.UDP)"},
+		// #170 moved the assertion of F-24-1 into foreignUDPLayerError, because the QUIC
+		// branch of ja4.go now reads the UDP layer through the parser helper.
+		{"F-24-1", "ja4.go", "if _, held := udpLayer.(*layers.UDP); held {"},
 		{"F-24-2", "ja4d.go", "udp, ok := udpLayer.(*layers.UDP)"},
 		{"F-24-3", "ja4d.go", "dhcp, ok := dhcpLayer.(*layers.DHCPv4)"},
 	}

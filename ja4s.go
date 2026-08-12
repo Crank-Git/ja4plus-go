@@ -5,7 +5,6 @@ import (
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 )
 
 // JA4SFingerprinter computes JA4S TLS Server Hello fingerprints.
@@ -56,44 +55,45 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 
 	// Try QUIC in UDP packets
 	if sh == nil {
-		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
-			// A caller that supplies a custom decoder can register another concrete type
-			// under the UDP layer type. A fingerprinter returns a non-fatal error for it.
-			udp, ok := udpLayer.(*layers.UDP)
-			if !ok {
-				return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
-			}
-			if len(udp.Payload) > 0 {
-				srcPort = uint16(udp.SrcPort)
-				dstPort = uint16(udp.DstPort)
+		// The helper reads the UDP layer of the innermost packet. A tunnel carries its own
+		// UDP header, and that header names the tunnel and not the connection.
+		udp := parser.GetUDPLayer(packet)
+		if udp == nil {
+			return nil, foreignUDPLayerError(packet)
+		}
 
-				// Build connection key for DCID tracking
-				srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
-				connKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
-				reverseKey := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+		if len(udp.Payload) > 0 {
+			srcPort = uint16(udp.SrcPort)
+			dstPort = uint16(udp.DstPort)
 
-				// Check if this is a client Initial (to capture DCID)
-				ch, _ := parser.ParseQUICInitial(udp.Payload)
-				if ch != nil {
-					// Extract DCID from the packet for later server decryption
-					if len(udp.Payload) > 5 {
-						dcidLen := int(udp.Payload[5])
-						if 6+dcidLen <= len(udp.Payload) {
-							dcid := make([]byte, dcidLen)
-							copy(dcid, udp.Payload[6:6+dcidLen])
-							f.quicDCIDs[connKey] = dcid
-						}
+			// The key holds the grouping key, so it reads the inner address pair.
+			// GetShardKey reads the same pair, and a tunneled connection would
+			// otherwise reach one shard under two names.
+			groupSrcIP, groupDstIP, _ := parser.GetGroupingIPInfo(packet)
+			connKey := fmt.Sprintf("%s:%d-%s:%d", groupSrcIP, srcPort, groupDstIP, dstPort)
+			reverseKey := fmt.Sprintf("%s:%d-%s:%d", groupDstIP, dstPort, groupSrcIP, srcPort)
+
+			// Check if this is a client Initial (to capture DCID)
+			ch, _ := parser.ParseQUICInitial(udp.Payload)
+			if ch != nil {
+				// Extract DCID from the packet for later server decryption
+				if len(udp.Payload) > 5 {
+					dcidLen := int(udp.Payload[5])
+					if 6+dcidLen <= len(udp.Payload) {
+						dcid := make([]byte, dcidLen)
+						copy(dcid, udp.Payload[6:6+dcidLen])
+						f.quicDCIDs[connKey] = dcid
 					}
-					return nil, nil
 				}
+				return nil, nil
+			}
 
-				// Try as server Initial using stored DCID
-				if dcid, ok := f.quicDCIDs[reverseKey]; ok {
-					var err error
-					sh, err = parser.ParseQUICServerInitial(udp.Payload, dcid)
-					if err != nil {
-						return nil, err
-					}
+			// Try as server Initial using stored DCID
+			if dcid, ok := f.quicDCIDs[reverseKey]; ok {
+				var err error
+				sh, err = parser.ParseQUICServerInitial(udp.Payload, dcid)
+				if err != nil {
+					return nil, err
 				}
 			}
 		}
@@ -134,6 +134,8 @@ func (f *JA4SFingerprinter) Reset() {
 
 // CleanupConnection removes internal state for the given connection.
 // JA4S QUIC state is keyed by directional tuple: srcIP:srcPort-dstIP:dstPort.
+// The caller names the grouping key of a tunneled connection, so it names the inner
+// address pair and the inner port pair.
 func (f *JA4SFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 
