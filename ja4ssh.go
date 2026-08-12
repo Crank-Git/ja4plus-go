@@ -94,7 +94,7 @@ func (f *JA4SSHFingerprinter) ensure() {
 
 // ProcessPacket processes a packet and returns JA4SSH fingerprints when a window fills.
 // It returns the open window of the connection on a packet that carries the FIN flag and the
-// ACK flag, because that packet closes the connection. Issue #222 holds the readings.
+// ACK flag. Such a packet closes the connection. Issue #222 holds the readings.
 func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
 	f.ensure()
 
@@ -162,7 +162,7 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// at `ja4plus/fingerprinters/ja4ssh.py:176`.
 	opensOnSSHPort := isBareACK && (srcPort == 22 || dstPort == 22)
 
-	// A packet that carries the FIN flag and the ACK flag closes the connection, and the
+	// A packet that carries the FIN flag and the ACK flag closes the connection. The
 	// reference emits the window the connection holds open on it.
 	// `wireshark/source/packet-ja4.c:1400` tests the flags and
 	// `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:555` tests the two
@@ -344,8 +344,8 @@ func emitSSHWindow(conn *sshConnState, srcIP, dstIP string, srcPort, dstPort uin
 // The caller calls the method when the packet source ends. A connection whose last window
 // never reaches the threshold holds that window open, and this method is the one rule that
 // emits it.
-// A connection that sends a packet with the FIN flag and the ACK flag holds no window open,
-// because ProcessPacket emits the window on that packet.
+// ProcessPacket emits the open window on a packet that carries the FIN flag and the ACK flag.
+// A connection that sends such a packet therefore holds no window open.
 // `rust/ja4/src/ssh.rs:45-55` and `zeek/ja4ssh/main.zeek:160-164` both emit that window, and
 // the port's issues #105, #199 and #214 hold the ruling.
 //
