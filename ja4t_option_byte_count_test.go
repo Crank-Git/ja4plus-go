@@ -24,6 +24,11 @@ import (
 //
 // Ruling #125 stays closed. It keys the part width on the value, and this ruling decides
 // the entry count.
+//
+// The port half of this ruling is `Crank-Git/ja4plus#215`, and it is closed. The port needs
+// no change, because it already writes one entry for each option byte. The docstring of
+// `option_bytes` at `ja4plus/utils/tcp_options.py:51-56` states that it reads the bytes the
+// capture carries rather than the parsed option list, and line 56 names #215 as reading D2.
 
 // tcpOptionEndList returns a TCP End-of-Option-List option.
 func tcpOptionEndList() layers.TCPOption {
@@ -45,8 +50,9 @@ func tcpOptionTimestamps(data []byte) layers.TCPOption {
 }
 
 // The option list below reaches twelve bytes, so gopacket adds no pad byte. The bytes are
-// `02 04 05 b4 01 03 03 02 04 02 00 00`, which `browsers-x509.pcapng` frame 31 carries.
-// The per-packet vector for that frame holds `64240_2-1-3-4-0-0_1460_2`.
+// `02 04 05 b4 01 03 03 02 04 02 00 00`. The test builds them on a SYN, because JA4T and
+// JA4TS read one builder. `TestJA4TSWritesOneEntryForEachEndOfOptionListByte` names the
+// capture that carries the bytes.
 func TestJA4TWritesOneEntryForEachEndOfOptionListByte(t *testing.T) {
 	options := []layers.TCPOption{
 		tcpOptionMSS(1460),
@@ -66,6 +72,11 @@ func TestJA4TWritesOneEntryForEachEndOfOptionListByte(t *testing.T) {
 }
 
 // A SYN-ACK reaches the same rule, because JA4T and JA4TS share one builder.
+//
+// `browsers-x509.pcapng` frame 31 is a SYN-ACK, and it carries the option bytes above. The
+// per-packet vector for that frame holds `ja4.ja4ts` as `64240_2-1-3-4-0-0_1460_2`. Frame
+// 30 is the SYN of the same connection, and its `ja4.ja4t` value is
+// `64240_2-1-3-1-1-4_1460_8`.
 func TestJA4TSWritesOneEntryForEachEndOfOptionListByte(t *testing.T) {
 	options := []layers.TCPOption{
 		tcpOptionMSS(1460),
