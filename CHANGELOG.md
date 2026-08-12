@@ -114,7 +114,7 @@ that the interface declares.
   the header to `tcp.Padding`, and breaks the option loop. The library therefore wrote one
   entry where the wire holds two, and no reference produces that count.
   `wireshark/source/packet-ja4.c:1456` appends one entry for each `tcp.option_kind` field
-  occurrence, `rust/ja4/src/tcp.rs:70` reads that same field list, and the port reads the raw
+  occurrence. `rust/ja4/src/tcp.rs:70` reads that same field list. The port reads the raw
   option bytes in `ja4plus/utils/tcp_options.py`. Each of the three writes two entries for
   `badcurveball.pcap` frame 1, and the per-packet vector holds
   `65535_2-1-3-1-1-8-4-0-0_1386_6`. `zeek/ja4t/main.zeek:96-98` breaks before the append and
@@ -124,12 +124,17 @@ that the interface declares.
   assigns the whole header, and it parses the option list under each option length field. A
   zero byte inside the data of a timestamps option or a segment size option reaches no entry.
   The read stops at the first length the region does not hold, so a crafted option list
-  reaches no panic and no unbounded loop. Ruling #125 stays closed, because it keys the part
-  width on the value and this ruling decides the entry count. The measurement reads
-  `batch/311-ja4h-and-harness` at `27e82a5`, with the corpus present. 15 comparisons reach a
-  match, 10 of them JA4T and 5 of them JA4TS, and no comparison opens. The run reports 1602
-  matches before and 1617 after, 783 deviations before and 768 after, and 301 accepted
-  deviations and 301 register keys before and after. No register entry reads as closed.
+  reaches no panic and no unbounded loop. The read is also bounded by the data offset. A
+  crafted segment states a header length the segment does not hold, and
+  `layers/tcp.go:264-268` then assigns `tcp.Contents` the payload as well as the header.
+  `layers/tcp.go:319` adds that layer before it reads the error, so the fingerprinter reaches
+  it, and an unbounded read would build part b out of payload bytes. Ruling #125 stays
+  closed, because it keys the part width on the value and this ruling decides the entry
+  count. The measurement reads `batch/311-ja4h-and-harness` at `27e82a5`, with the corpus
+  present. 15 comparisons reach a match, 10 of them JA4T and 5 of them JA4TS, and no
+  comparison opens. The run reports 1602 matches before and 1617 after. It reports 783
+  deviations before and 768 after. It reports 301 accepted deviations and 301 register keys
+  before and after. No register entry reads as closed.
 - `ProcessPacket` now emits the open JA4SSH window on a packet that carries the FIN flag and
   the ACK flag. Such a packet closes the connection, and the reference writes the value on it.
   `wireshark/source/packet-ja4.c:1400` tests the flags and

@@ -106,12 +106,19 @@ func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8
 // `gopacket` assigns `tcp.Contents` the whole header at `layers/tcp.go:270`, so the slice
 // after the first 20 bytes holds every option byte. It returns nil for a header that
 // carries no option.
+//
+// The data offset states the header length, and a crafted segment states a length the
+// segment does not hold. `layers/tcp.go:264-268` assigns `tcp.Contents = data` for such a
+// segment, and that slice holds the payload as well as the header. `layers/tcp.go:319`
+// adds the layer before it reads the error, so a fingerprinter reads that segment. The
+// bound below returns nil for it, which is what `tcp.Options` reported before #297.
 func tcpOptionRegion(tcp *layers.TCP) []byte {
 	const tcpHeaderLength = 20
-	if len(tcp.Contents) <= tcpHeaderLength {
+	headerLength := int(tcp.DataOffset) * 4
+	if headerLength <= tcpHeaderLength || headerLength > len(tcp.Contents) {
 		return nil
 	}
-	return tcp.Contents[tcpHeaderLength:]
+	return tcp.Contents[tcpHeaderLength:headerLength]
 }
 
 // generateTCPFingerprint builds the fingerprint string from TCP header fields.

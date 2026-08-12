@@ -3,6 +3,7 @@ package ja4plus
 import (
 	"testing"
 
+	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
 
@@ -159,6 +160,43 @@ func TestTCPOptionEntriesStopsAtAMalformedOptionLength(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// A data offset that the segment does not hold must reach no option byte.
+//
+// `layers/tcp.go:264-268` assigns `tcp.Contents = data` for such a segment, and that slice
+// holds the payload as well as the header. `layers/tcp.go:319` adds the layer before it
+// reads the error, so the fingerprinter reads that segment. A read of `tcp.Contents[20:]`
+// alone would build part b, the segment size and the window scale out of payload bytes
+// that an attacker chooses.
+//
+// `gopacket` returns from the error path before it enters its own option loop, so the old
+// read of `tcp.Options` reported an empty option list here. This test holds that result.
+func TestJA4TReadsNoOptionByteFromADataOffsetTheSegmentDoesNotHold(t *testing.T) {
+	options := []layers.TCPOption{
+		tcpOptionMSS(1460),
+		tcpOptionNop(),
+		tcpOptionWindowScale(2),
+		tcpOptionSACKPermitted(),
+		tcpOptionEndList(),
+		tcpOptionEndList(),
+	}
+	frame := buildTCPPacket(t, 12345, 443, true, false, 64240, options).Data()
+
+	// The frame holds a 14-byte Ethernet header and a 20-byte IPv4 header, so the TCP
+	// header starts at byte 34. Byte 12 of that header holds the data offset in its high
+	// nibble. A value of 15 claims a 60-byte header, and the segment holds 32 bytes.
+	const tcpStart = 34
+	crafted := make([]byte, len(frame))
+	copy(crafted, frame)
+	crafted[tcpStart+12] = 0xf0 | (crafted[tcpStart+12] & 0x0f)
+
+	pkt := gopacket.NewPacket(crafted, layers.LayerTypeEthernet, gopacket.Default)
+	got := ComputeJA4T(pkt)
+	want := "64240_00_00_00"
+	if got != want {
+		t.Errorf("JA4T for the data offset the segment does not hold: got %q, want %q", got, want)
 	}
 }
 
