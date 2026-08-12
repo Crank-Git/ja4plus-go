@@ -147,6 +147,18 @@ func TestJA4TSWritesTwoZeroDigitsForAnEmptyOptionList(t *testing.T) {
 	}
 }
 
+// FR-parity-35 on the server side. The SYN-ACK carries a segment size option of zero, so
+// the rule keys on the value here too.
+func TestJA4TSWritesTwoZeroDigitsForASegmentSizeOfZero(t *testing.T) {
+	options := []layers.TCPOption{tcpOptionMSS(0), tcpOptionWindowScale(7), tcpOptionNop()}
+	pkt := buildTCPPacket(t, 443, 12345, true, true, 8540, options)
+
+	const want = "8540_2-3-1_00_7"
+	if got := ComputeJA4TS(pkt); got != want {
+		t.Errorf("JA4TS of a SYN-ACK whose segment size is zero is %q, and the reference writes %q", got, want)
+	}
+}
+
 // FR-parity-36 on the server side. The SYN-ACK carries a window scale option of zero.
 func TestJA4TSWritesTwoZeroDigitsForAWindowScaleOfZero(t *testing.T) {
 	options := []layers.TCPOption{tcpOptionMSS(1220), tcpOptionWindowScale(0), tcpOptionNop()}
