@@ -128,6 +128,29 @@ All fingerprinters share a common interface:
 | `ProcessPacket(pkt)` | Process a packet, returns `[]FingerprintResult` or nil |
 | `Reset()` | Clears all collected state |
 
+`JA4SSHFingerprinter` also implements `WindowCloser`, which carries one method.
+
+| Method | Description |
+|--------|-------------|
+| `CloseOpenWindows()` | Emits the window each connection holds open, and returns the results |
+
+JA4SSH emits one value for every 200 SSH packets of a connection. A connection whose last
+window never reaches that count holds the window open, and no packet emits it. Call
+`CloseOpenWindows` when the packet source ends, or lose that window. `Processor` and
+`SyncProcessor` each carry the method, and each one reaches every fingerprinter that
+implements the interface.
+
+```go
+proc := ja4plus.NewProcessor()
+for _, pkt := range packets {
+    results, _ := proc.ProcessPacket(pkt)
+    _ = results
+}
+
+// The capture ends, so emit the window each connection holds open.
+trailing := proc.CloseOpenWindows()
+```
+
 ### One-Shot Functions
 
 For stateless fingerprinting without maintaining state:
@@ -246,8 +269,8 @@ func shardIndex(key string, shards int) int {
 
 `SyncProcessor` wraps a `Processor` and serializes every call with one mutex. It costs one
 mutex acquisition for each packet. `SyncProcessor` exports `ProcessPacket`, `Reset`,
-`CleanupConnection` and `GetShardKey`, and it exposes no way to reach the inner
-`Processor`.
+`CleanupConnection`, `CloseOpenWindows` and `GetShardKey`, and it exposes no way to reach the
+inner `Processor`.
 
 ```go
 // processShared shares one SyncProcessor between the workers and returns every result.
