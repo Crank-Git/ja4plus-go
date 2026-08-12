@@ -122,6 +122,7 @@ across both repositories, because a reader moves between them.
 | register | noun | The tracked file `testdata/deviations.json`, which holds one entry for each accepted difference from a FoxIO value. | deviation list, exception file |
 | value decline | noun | One register entry that records a disagreement with a FoxIO value. An implementation change on either side could close it. The entry carries `"capability": false`. | value dispute, defect entry |
 | capability decline | noun | One register entry that records a capability this project chose not to build. No implementation change closes it. The entry carries `"capability": true`. | scope decline, boundary decline |
+| stale entry | noun | One register entry whose recorded `ours` value differs from the value the run produces. The entry then accepts a comparison it does not describe, and the conformance suite fails. | drifted entry, outdated entry |
 | exclusion | noun | A capture or a stream that the conformance suite makes no comparison for. | exception, skip, ignore |
 | transcription | noun | This project's own prose form of one FoxIO image, held under `docs/specs/foxio/`. | translation, copy, write-up |
 | corroboration | noun | One FoxIO-authored source, other than the image, that states the same rule. | confirmation, second opinion |

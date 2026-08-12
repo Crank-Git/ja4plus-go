@@ -14,6 +14,7 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Matches | 1623 |
 | Deviations | 680 |
 | Accepted deviations | 409 |
+| Stale register entries | 0 |
 | Captures the suite compared | 35 |
 | Captures the suite compared nothing on | 3 |
 
@@ -274,6 +275,12 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `v6.pcap` | per-packet | JA4SSH | 4 | `v6.pcap/72/JA4SSH.1` | the two values differ | `c20s12_c18s21_c10s1` | `c20s20_c18s25_c10s1` |
 | `v6.pcap` | per-packet | JA4SSH | 4 | `v6.pcap/73/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
 | `v6.pcap` | per-packet | JA4SSH | 4 | `v6.pcap/74/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
+
+## Stale register entries
+
+An entry of `testdata/deviations.json` records the value this library produced when the maintainer ruled. A later change moves that value, and the entry then accepts a comparison it does not describe.
+
+The run reports no stale register entry.
 
 ## Results
 

@@ -325,6 +325,80 @@ func TestTheComparisonNamesEveryKeyThatMatches(t *testing.T) {
 	}
 }
 
+// #307 makes a stale register entry a fourth kind. The report names the key, the recorded
+// value and the produced value, so a reader repairs the entry without a rerun.
+func TestTheReportNamesEveryStaleRegisterEntry(t *testing.T) {
+	report := newConformanceReport("27f0cbf")
+	report.readCapture("ssh2.pcapng")
+	report.recordComparison("ssh2.pcapng", "per-packet", conformanceComparison{
+		Stale: []conformanceStaleEntry{{
+			Key:      conformanceKey{Capture: "ssh2.pcapng", Stream: "15", Method: "JA4SSH.1"},
+			Recorded: "c36s36_c55s53_c14s14",
+			Produced: "c36s36_c55s53_c13s14",
+		}},
+	})
+
+	text := report.render()
+
+	for _, wanted := range []string{
+		"## Stale register entries",
+		"| Stale register entries | 1 |",
+		"ssh2.pcapng/15/JA4SSH.1",
+		"c36s36_c55s53_c14s14",
+		"c36s36_c55s53_c13s14",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
+// The report collects a stale entry in the order the run reaches each capture, and it sorts
+// the section by key. An unsorted section changes on a run that reads the captures in
+// another order.
+func TestTheReportSortsTheStaleRegisterEntriesByKey(t *testing.T) {
+	report := newConformanceReport("27f0cbf")
+
+	for _, capture := range []string{"tls12.pcap", "dhcp.pcapng"} {
+		report.readCapture(capture)
+		report.recordComparison(capture, "per-stream", conformanceComparison{
+			Stale: []conformanceStaleEntry{{
+				Key:      conformanceKey{Capture: capture, Stream: "1", Method: "JA4"},
+				Recorded: "recorded-" + capture,
+				Produced: "produced-" + capture,
+			}},
+		})
+	}
+
+	text := report.render()
+
+	first := strings.Index(text, "`dhcp.pcapng/1/JA4`")
+	second := strings.Index(text, "`tls12.pcap/1/JA4`")
+
+	if first < 0 || second < 0 {
+		t.Fatalf("the report holds %d stale rows, and the fixture holds 2", len(report.stale))
+	}
+
+	if first > second {
+		t.Errorf("the report writes `tls12.pcap/1/JA4` before `dhcp.pcapng/1/JA4`, and the sorted order names `dhcp.pcapng` first")
+	}
+}
+
+// A run that reaches every recorded value states that result. A section a reader finds
+// empty says nothing about the register.
+func TestTheReportStatesThatARunReportsNoStaleRegisterEntry(t *testing.T) {
+	text := oneConformanceReport().render()
+
+	for _, wanted := range []string{
+		"| Stale register entries | 0 |",
+		"The run reports no stale register entry.",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
 // The report is tracked, and FR-conformance-27 rewrites it on every run. This test reads
 // the tracked file and proves its path and its shape. `TestConformance` fails the run when
 // the write itself fails, and the two checks together hold FR-conformance-27.
