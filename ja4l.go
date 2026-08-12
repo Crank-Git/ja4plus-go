@@ -340,15 +340,16 @@ func (f *JA4LFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 
 	reportedKey, _ := f.normalizeKey(proto, srcIP, srcPort, dstIP, dstPort)
 
-	// A caller that names the grouping key reaches the connection through the second
-	// delete, because no tunnel separates the two keys for most connections.
+	// A caller that names the grouping key reaches no index entry, and the key it gave
+	// removes the connection directly. `ja4plus/fingerprinters/ja4l.py:216` falls back the
+	// same way.
 	connKey, indexed := f.groupingKeys[reportedKey]
-	if indexed {
-		delete(f.groupingKeys, reportedKey)
-		delete(f.connections, connKey)
+	if !indexed {
+		connKey = reportedKey
 	}
 
-	delete(f.connections, reportedKey)
+	delete(f.groupingKeys, reportedKey)
+	delete(f.connections, connKey)
 }
 
 // CalculateDistance estimates physical distance in miles from one-way latency.
