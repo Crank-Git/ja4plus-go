@@ -1,8 +1,12 @@
 package ja4plus
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -64,12 +68,131 @@ func hasConformanceBuildTag(source string) bool {
 	return strings.Contains(head, "//go:build conformance")
 }
 
-// untaggedSkipMessage returns the format string of every `t.Skip` call and every
-// `t.Skipf` call in a test file of the repository root that carries no `conformance`
-// build tag. It maps the file name to the messages of that file.
+// skipCall returns every `t.Skip` call and every `t.Skipf` call of the file that carries
+// an argument.
+func skipCall(file *ast.File) []*ast.CallExpr {
+	var calls []*ast.CallExpr
+
+	ast.Inspect(file, func(node ast.Node) bool {
+		call, ok := node.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+
+		selector, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+
+		if selector.Sel.Name != "Skip" && selector.Sel.Name != "Skipf" {
+			return true
+		}
+
+		if len(call.Args) > 0 {
+			calls = append(calls, call)
+		}
+
+		return true
+	})
+
+	return calls
+}
+
+// packageConstant maps the name of each constant of the parsed files to the expression
+// that defines it.
+func packageConstant(parsed map[string]*ast.File) map[string]ast.Expr {
+	value := map[string]ast.Expr{}
+
+	for _, file := range parsed {
+		for _, declaration := range file.Decls {
+			general, ok := declaration.(*ast.GenDecl)
+			if !ok || general.Tok != token.CONST {
+				continue
+			}
+
+			for _, specification := range general.Specs {
+				spec, ok := specification.(*ast.ValueSpec)
+				if !ok || len(spec.Names) != len(spec.Values) {
+					continue
+				}
+
+				for index, name := range spec.Names {
+					value[name.Name] = spec.Values[index]
+				}
+			}
+		}
+	}
+
+	return value
+}
+
+// constantString returns the string that the expression holds, and it reports whether
+// every part of the expression resolved. It reads a string literal, a constant of the
+// package, and a concatenation of the two.
+//
+// The depth bounds the recursion. Go rejects a constant cycle at compile time, and this
+// test reads a syntax tree that no compiler has accepted yet.
+func constantString(expr ast.Expr, value map[string]ast.Expr, depth int) (string, bool) {
+	const maxDepth = 32
+
+	if depth > maxDepth {
+		return "", false
+	}
+
+	switch node := expr.(type) {
+	case *ast.BasicLit:
+		if node.Kind != token.STRING {
+			return "", false
+		}
+
+		text, err := strconv.Unquote(node.Value)
+		if err != nil {
+			return "", false
+		}
+
+		return text, true
+
+	case *ast.Ident:
+		next, ok := value[node.Name]
+		if !ok {
+			return "", false
+		}
+
+		return constantString(next, value, depth+1)
+
+	case *ast.ParenExpr:
+		return constantString(node.X, value, depth+1)
+
+	case *ast.BinaryExpr:
+		if node.Op != token.ADD {
+			return "", false
+		}
+
+		left, leftOK := constantString(node.X, value, depth+1)
+		right, rightOK := constantString(node.Y, value, depth+1)
+
+		if !leftOK || !rightOK {
+			return "", false
+		}
+
+		return left + right, true
+	}
+
+	return "", false
+}
+
+// untaggedSkipMessage returns the message of every `t.Skip` call and every `t.Skipf` call
+// in a test file of the repository root that carries no `conformance` build tag. It maps
+// the file name to the messages of that file.
 //
 // `make conformance` runs `go test -tags conformance -count=1 -v ./...`, so these files
 // run inside the conformance job and every message reaches `conformance.log`.
+//
+// It reads each argument through the syntax tree, because a skip call passes a constant
+// as often as a string literal. A text search for a string literal reads nothing from
+// `t.Skip(foxioCorpusAbsentMessage)`, so the four skips of `foxio_citation_base_test.go`
+// stood outside this guard from #335 until #342. A message that this function cannot read
+// fails the caller, so the gap cannot return without a report.
 func untaggedSkipMessage(t *testing.T) map[string][]string {
 	t.Helper()
 
@@ -78,8 +201,8 @@ func untaggedSkipMessage(t *testing.T) map[string][]string {
 		t.Fatalf("list the test files of the repository root: %v", err)
 	}
 
-	skipCall := regexp.MustCompile(`t\.Skipf?\(\s*"((?:[^"\\]|\\.)*)"`)
-	message := map[string][]string{}
+	fileSet := token.NewFileSet()
+	parsed := map[string]*ast.File{}
 
 	for _, name := range names {
 		source := readRepoFile(t, name)
@@ -87,8 +210,29 @@ func untaggedSkipMessage(t *testing.T) map[string][]string {
 			continue
 		}
 
-		for _, call := range skipCall.FindAllStringSubmatch(source, -1) {
-			message[name] = append(message[name], call[1])
+		file, parseErr := parser.ParseFile(fileSet, name, source, 0)
+		if parseErr != nil {
+			t.Fatalf("parse %s: %v", name, parseErr)
+		}
+
+		parsed[name] = file
+	}
+
+	value := packageConstant(parsed)
+	message := map[string][]string{}
+
+	for name, file := range parsed {
+		for _, call := range skipCall(file) {
+			text, ok := constantString(call.Args[0], value, 0)
+			if !ok {
+				t.Errorf("this test reads no message from the skip call at %s, so the CI skip "+
+					"detector runs against no text there. Write the message as a string literal, "+
+					"or as a constant of this package. #342.", fileSet.Position(call.Pos()))
+
+				continue
+			}
+
+			message[name] = append(message[name], text)
 		}
 	}
 
