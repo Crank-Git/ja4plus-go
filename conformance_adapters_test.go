@@ -425,15 +425,14 @@ func conformanceStreamMethodOfResult(result FingerprintResult) (string, string, 
 // conformanceStreamValuesOfResult returns every per-stream method value that the result
 // carries.
 //
-// One result carries three fields, because a fingerprinter reports the fingerprint, the raw
-// form and the wire-order raw form together. An empty field states that the fingerprinter
-// produced nothing, so this function reports no value for it. A JA4L result carries the
-// fingerprint alone, and the two raw fields of it are empty.
+// One result carries four fields, because a fingerprinter reports the fingerprint, the raw
+// form, the hashed wire-order form and the raw wire-order form together. An empty field
+// states that the fingerprinter produced nothing, so this function reports no value for it.
+// A JA4L result carries the fingerprint alone, and the three other fields of it are empty.
 //
-// The library produces no value for `JA4_o`, which FoxIO hashes from the wire-order form.
-// The per-stream vector holds `JA4_o.1` on 150 entries, so the suite reports each one as a
-// value the library does not produce. That is a finding for Epic 5, and never a reason to
-// change a fingerprinter here.
+// `ja4.go` fills `OriginalOrder`, which FoxIO hashes from the wire-order form, and no other
+// fingerprinter fills it. Issue #277 added the field, and the per-stream vector holds
+// `JA4_o` on 160 entries.
 func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMethodValue {
 	method, fingerprint, held := conformanceStreamMethodOfResult(result)
 	if !held {
@@ -445,6 +444,7 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 	for _, value := range []conformanceMethodValue{
 		{Method: method, Value: fingerprint},
 		{Method: method + "_r", Value: result.Raw},
+		{Method: method + "_o", Value: result.OriginalOrder},
 		{Method: method + "_ro", Value: result.RawOriginalOrder},
 	} {
 		if value.Value != "" {

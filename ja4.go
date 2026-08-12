@@ -145,12 +145,14 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 
 	raw := computeJA4RawFromClientHello(ch)
 	rawOO := computeJA4RawOriginalOrder(ch)
+	originalOrder := computeJA4OriginalOrder(ch)
 
 	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
 	result := FingerprintResult{
 		Fingerprint:      fingerprint,
 		Raw:              raw,
+		OriginalOrder:    originalOrder,
 		RawOriginalOrder: rawOO,
 		Type:             "ja4",
 		SrcIP:            srcIP,
@@ -353,27 +355,51 @@ func ja4ExtensionHash(ch *parser.ClientHello) string {
 	return parser.TruncatedHash(extStr)
 }
 
-// computeJA4RawOriginalOrder generates the original wire-order raw JA4 fingerprint.
-// Unlike the sorted raw variant, this preserves wire order and keeps SNI/ALPN in extensions.
-func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
-	partA := ja4PartA(ch)
+// ja4OriginalOrderLists returns the wire-order cipher list and the wire-order extension
+// list of a client hello.
+//
+// `JA4_o` hashes each of the two lists, and `JA4_ro` writes each one unhashed, so one
+// function builds both. Two builders drift apart, and a reader then cannot tell which of
+// the two values is wrong.
+//
+// The extension list keeps SNI and ALPN, because
+// `testdata/foxio/reference/python/common.py:144` removes the two only when it sorts. It
+// carries the signature algorithms after a `_` separator, which
+// `testdata/foxio/reference/python/ja4.py:246` appends before it hashes.
+func ja4OriginalOrderLists(ch *parser.ClientHello) (string, string) {
+	cipherList := formatHexList(parser.FilterGreaseValues(ch.CipherSuites))
+	extList := formatHexList(parser.FilterGreaseValues(ch.Extensions))
 
-	// Cipher list: GREASE filtered, original wire order (no sorting)
-	ciphers := parser.FilterGreaseValues(ch.CipherSuites)
-	cipherList := formatHexList(ciphers)
-
-	// Extension list: GREASE filtered, original wire order, SNI/ALPN PRESERVED
-	extensions := parser.FilterGreaseValues(ch.Extensions)
-	extList := formatHexList(extensions)
-
-	// Signature algorithms in original order.
 	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
 	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
 	if len(sigAlgs) > 0 {
-		sigAlgList := formatHexList(sigAlgs)
-		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
+		extList = extList + "_" + formatHexList(sigAlgs)
 	}
-	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
+
+	return cipherList, extList
+}
+
+// computeJA4RawOriginalOrder generates the original wire-order raw JA4 fingerprint.
+// Unlike the sorted raw variant, this preserves wire order and keeps SNI/ALPN in extensions.
+func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
+	cipherList, extList := ja4OriginalOrderLists(ch)
+
+	return fmt.Sprintf("%s_%s_%s", ja4PartA(ch), cipherList, extList)
+}
+
+// computeJA4OriginalOrder generates the FoxIO `JA4_o` value of a client hello.
+//
+// The value carries the part a of `JA4`, a hash of the wire-order cipher list and a hash of
+// the wire-order extension list. `testdata/foxio/reference/python/ja4.py:291` states the
+// form. An empty list reaches `parser.EmptyHash`, and
+// `testdata/foxio/reference/rust/ja4/src/lib.rs:184` states that rule.
+// `testdata/foxio/reference/python/ja4.py:248` departs from it on one input, and issue #287
+// records the split that the maintainer rules.
+func computeJA4OriginalOrder(ch *parser.ClientHello) string {
+	cipherList, extList := ja4OriginalOrderLists(ch)
+
+	return fmt.Sprintf("%s_%s_%s", ja4PartA(ch),
+		parser.TruncatedHash(cipherList), parser.TruncatedHash(extList))
 }
 
 // foreignUDPLayerError returns a non-fatal error when the packet holds a UDP layer type
