@@ -270,17 +270,17 @@ that the interface declares.
   `co10nn010000_User-Agent_` and the per-packet set holds `co10nn010000_User-Agent__`. On the
   last cookie pair the per-packet set writes a trailing comma, and the per-stream set writes
   none. `.claude/rules/parity.md` rule 3 names the shared vector set as the gate, and the
-  Python port writes the per-stream shape, so the library follows the per-stream set.
-  `wireshark/source/packet-ja4.c:615` writes the format string with no condition, `:1181` and
-  `:1183` append the commas, and `:1637-1638` truncate `unsorted_cookie_fields` alone, so the
+  Python port writes the per-stream shape. The library therefore follows the per-stream set.
+  `wireshark/source/packet-ja4.c:615` writes the format string with no condition, and `:1181`
+  and `:1183` append the commas. `:1637-1638` truncate `unsorted_cookie_fields` alone, so the
   trailing comma of `unsorted_cookie_values` survives. `zeek/ja4h/main.zeek:210` writes four
   fields always. **Every one of the 108 comparisons differs by that shape alone**, and issue
   #314 measured each one. The 26 surplus `JA4H_r` keys reach no entry, because issue #289 holds
-  their cause, and the 69 comparisons on frames that produce no JA4H value reach no entry
-  either. **This change moves no fingerprint value.** Measured on `595ed13` with the corpus
-  present: the run reports 1608 matches before and after, 803 deviations before and 695 after,
-  and 301 accepted deviations before and 409 after. The register holds 301 keys before and 409
-  after, and no entry reads as closed. Issue #314 holds the measurement.
+  their cause. The 69 comparisons on frames that produce no JA4H value reach no entry either.
+  **This change moves no fingerprint value.** Measured on `595ed13` with the corpus present:
+  the run reports 1608 matches before and after. It reports 803 deviations before and 695
+  after, and 301 accepted deviations before and 409 after. The register holds 301 keys before
+  and 409 after, and no entry reads as closed. Issue #314 holds the measurement.
 
 - **The register declines four FoxIO JA4SSH values, and the library keeps its own value.** The
   four keys are `ssh-r.pcap/1/JA4SSH.1`, `ssh-r.pcap/2/JA4SSH.1`,
