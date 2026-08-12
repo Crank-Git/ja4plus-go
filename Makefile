@@ -1,4 +1,4 @@
-.PHONY: build test lint bench clean corpus conformance cover fuzz
+.PHONY: build test lint lint-cache-check bench clean corpus conformance cover fuzz
 
 build:
 	go build -o bin/ja4plus ./cmd/ja4plus
@@ -6,8 +6,21 @@ build:
 test:
 	go test -v -race ./...
 
+# `golangci-lint` writes an absolute file path into each cached issue. One cache serves the
+# whole user account. A second checkout of the same package content reads back a path
+# inside the first checkout.
+# That first checkout is often a worktree the project manager has removed. The `nolint`
+# processor then cannot open the file, so every suppressed finding leaks into the report.
+# #257 measured 13 such findings against a path that did not exist.
+# One cache for each checkout keeps every cached path inside the checkout that wrote it.
+# `scripts/check-lint-cache.sh` proves both halves of this.
 lint:
-	golangci-lint run
+	GOLANGCI_LINT_CACHE=$(CURDIR)/.golangci-cache golangci-lint run
+
+# The guard for #257. It reproduces the stale cache defect, then it proves that one cache
+# for each checkout holds the defect back. It reads no file of this repository.
+lint-cache-check:
+	./scripts/check-lint-cache.sh
 
 # `-run '^$$'` holds the unit tests back, so this target measures and does nothing else.
 # `corpus_fetch_test.go` spawns `bash`, `curl` and `tar`, and one test resolves a name.
@@ -45,4 +58,4 @@ fuzz:
 	done
 
 clean:
-	rm -rf bin/ coverage.out
+	rm -rf bin/ coverage.out .golangci-cache
