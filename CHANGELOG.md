@@ -34,8 +34,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `v1.0.0`. The library reads the UDP payload for a QUIC long header, and it reads the
   direction of the flow from the UDP port 443 alone. A flow whose two ports are 443 names
   no server, so the library produces no value for it. Earlier releases timed every UDP
-  flow and read the direction from the address that sent the first packet, so an NTP flow
-  or a DNS flow produced a JA4L value that the reference does not produce.
+  flow, and they read the direction from the address that sent the first packet. An NTP
+  flow therefore produced a JA4L value that the reference does not produce.
   `ja4plus/fingerprinters/ja4l.py:554-566` states the rule, and every FoxIO reference
   agrees, so this is a reading and not a ruling. The library stops producing 193 values
   across six captures of the FoxIO corpus: `gre-sample.pcap`, `latest.pcapng`,

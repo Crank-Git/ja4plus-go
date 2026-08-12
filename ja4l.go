@@ -158,8 +158,8 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	dstPort := uint16(udp.DstPort)
 
 	// The reference reads the direction of a QUIC flow from the UDP port alone.
-	// A flow whose two ports are the QUIC port names no server, so the direction of a
-	// packet is unknown and every value it gives is a guess.
+	// A flow whose two ports are the QUIC port names no server. The direction of such a
+	// packet is unknown, and every value it gives is a guess.
 	// `ja4plus/fingerprinters/ja4l.py:561-566` states the rule.
 	toServer := dstPort == quicPort
 	fromServer := srcPort == quicPort

@@ -442,11 +442,11 @@ func buildUDPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
 
-// TestJA4L_UDPServerFirstObservation regresses the bug where processUDP only
-// started the QUIC 4-point timing when the FIRST observed packet arrived in
-// the lexicographic "forward" direction. The client IP is the lexicographic larger one
-// here, so the packets run in the reverse direction of the key.
-func TestJA4L_UDPServerFirstObservation(t *testing.T) {
+// TestJA4LTimesAQUICFlowThatRunsAgainstTheKeyDirection regresses the bug where processUDP
+// started the QUIC 4-point timing only for a packet in the lexicographic forward
+// direction. The client address is the lexicographic larger one here, so every client
+// packet runs against the direction of the key.
+func TestJA4LTimesAQUICFlowThatRunsAgainstTheKeyDirection(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	clientIP := net.IP{192, 168, 1, 1}
@@ -548,6 +548,46 @@ func TestJA4LProducesNoJA4LSForTheNTPFlowOfGreSamplePcap(t *testing.T) {
 		if len(results) != 0 {
 			t.Fatalf("packet %d: expected no results, got %v", i, results)
 		}
+	}
+}
+
+// TestJA4LProducesNoValueForANonQUICPayloadOnPort443 isolates the QUIC long-header gate.
+// The two ports name a direction here, so the port rule admits this flow and the payload
+// alone decides. The test fails when the gate goes away.
+// `ja4plus/fingerprinters/ja4l.py:554-558` states the rule. Issue #173 holds the reading.
+func TestJA4LProducesNoValueForANonQUICPayloadOnPort443(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	// The client packet carries no QUIC long header, so it fills no measurement point.
+	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, ntpPayload())
+	a.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(a); len(results) != 0 {
+		t.Fatalf("a: expected no results, got %v", results)
+	}
+
+	// The server packet completes no value, because the first packet filled no point.
+	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, ntpPayload())
+	b.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(b); len(results) != 0 {
+		t.Fatalf("b: expected no results, got %v", results)
+	}
+
+	// The same two ports with a QUIC long header do produce a value, which proves the
+	// payload is the one thing that separates the two runs.
+	fp = NewJA4L()
+	c := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicLongHeaderPayload())
+	c.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(c); len(results) != 0 {
+		t.Fatalf("c: expected no results, got %v", results)
+	}
+	d := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
+	d.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	dResults, _ := fp.ProcessPacket(d)
+	if len(dResults) != 1 || !strings.HasPrefix(dResults[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("d: expected one JA4L-S result, got %v", dResults)
 	}
 }
 

@@ -165,8 +165,11 @@ type CryptoFragment struct {
 }
 
 // HasQUICLongHeader reports whether a UDP payload carries a QUIC long-header packet.
-// It returns false when the payload is shorter than 5 bytes, when the payload carries a
-// short header, and when the payload carries a version negotiation packet.
+// It returns false for each of these payloads:
+//   - a payload shorter than 5 bytes;
+//   - a payload that carries a short header;
+//   - a payload that carries a version negotiation packet.
+//
 // It reads no packet type, because a version this parser does not know still carries a
 // long header. RFC 9000 Section 17.2 states the form.
 func HasQUICLongHeader(payload []byte) bool {
