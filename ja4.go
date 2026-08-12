@@ -163,7 +163,7 @@ func (f *JA4Fingerprinter) Reset() {
 // reported key. JA4L holds the same contract.
 // A tunneled connection groups under the inner address pair, and this method reads no
 // index from the reported key to the grouping key. It therefore removes no tunneled
-// connection today.
+// connection.
 // TODO(#193): Read the grouping key of a tunneled connection from the reported key.
 func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()

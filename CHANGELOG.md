@@ -7,7 +7,7 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Every measurement in this section names the base it was taken on. Issue #42 put 150
+Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. A run
 on the current tree reports 1035 matches, 3155 deviations, 150 accepted deviations and 150
 register keys. A count that an entry below states therefore differs from a fresh run.
