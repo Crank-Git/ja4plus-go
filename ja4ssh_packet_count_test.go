@@ -101,7 +101,9 @@ func TestJA4SSHCountsTheSSHPacketsOfSshPcapng(t *testing.T) {
 //
 // The FoxIO per-stream vector at `testdata/foxio/python/ssh-r.pcap.json` holds five values
 // for stream 2, whose client port is 46396. Four windows of 200 SSH packets fill, and the
-// fifth value reads the window that the connection holds open at the end of the capture.
+// FIN+ACK packet of the close emits the fifth value. Issue #222 moved that value from
+// CloseOpenWindows to ProcessPacket, and part c of it then read `c9s51` and matched the
+// vector.
 //
 // This test reads part b of each value, which holds the two SSH packet counts. Part b is the
 // field that issue #200 repairs. Part a and part c of the first value carry two differences
@@ -117,29 +119,25 @@ func TestJA4SSHCountsTheSSHPacketsOfSshPcapng(t *testing.T) {
 func TestJA4SSHCountsTheSSHPacketsOfSshRPcap(t *testing.T) {
 	run := ja4sshValuesOfCapture(t, "ssh-r.pcap", 46396)
 
-	// The two SSH packet counts of the four windows the FoxIO vector holds.
-	counts := []string{"c104s96", "c108s92", "c106s94", "c111s89"}
+	// The two SSH packet counts of the five values the FoxIO vector holds.
+	counts := []string{"c104s96", "c108s92", "c106s94", "c111s89", "c66s65"}
 
 	if len(run.Window) != len(counts) {
-		t.Fatalf("ProcessPacket produced %d JA4SSH values %v, and the FoxIO vector holds %d filled windows",
+		t.Fatalf("ProcessPacket produced %d JA4SSH values %v, and the FoxIO vector holds %d values",
 			len(run.Window), run.Window, len(counts))
 	}
 
 	for index, expected := range counts {
 		produced := ja4sshPacketCountPart(t, run.Window[index])
 		if produced != expected {
-			t.Errorf("window %d counts %s SSH packets, and the FoxIO vector counts %s",
+			t.Errorf("value %d counts %s SSH packets, and the FoxIO vector counts %s",
 				index+1, produced, expected)
 		}
 	}
 
-	if len(run.Closed) != 1 {
-		t.Fatalf("CloseOpenWindows produced %d JA4SSH values %v, and the connection holds one window open",
+	if len(run.Closed) != 0 {
+		t.Errorf("CloseOpenWindows produced %d JA4SSH values %v, and the FIN+ACK packet emptied the window",
 			len(run.Closed), run.Closed)
-	}
-
-	if produced := ja4sshPacketCountPart(t, run.Closed[0]); produced != "c66s65" {
-		t.Errorf("the open window counts %s SSH packets, and the FoxIO vector counts c66s65", produced)
 	}
 }
 
