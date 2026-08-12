@@ -253,11 +253,13 @@ func computeJA4SFromServerHello(sh *parser.ServerHello) string {
 //
 // The raw form holds the extensions in the wire order, and it sorts no list.
 // `rust/ja4/src/tls.rs:467` and `wireshark/source/packet-ja4.c:547` each build the raw
-// form from the string the fingerprint hashes, so the raw form is the hash preimage with
-// the prefix in front of it. `ja4plus/fingerprinters/ja4s.py:179` states the same rule for
-// the Python port. FoxIO publishes `JA4S_r` and publishes no `JA4S_ro`, so the `_r` suffix
-// names the wire order here and not the sorted order that JA4 gives it. Issue #275 records
-// the measurement.
+// form from the string the fingerprint hashes. The raw form is that hash preimage with the
+// prefix in front of it. `ja4plus/fingerprinters/ja4s.py:179` states the same rule for the
+// Python port.
+//
+// FoxIO publishes `JA4S_r` and publishes no `JA4S_ro`. The `_r` suffix therefore names the
+// wire order here, and not the sorted order that JA4 gives it. Issue #275 records the
+// measurement.
 func computeJA4SPair(sh *parser.ServerHello) (fingerprint, raw string) {
 	proto := "t"
 	if sh.IsQUIC {

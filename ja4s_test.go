@@ -446,9 +446,9 @@ func TestTheJA4SRawFormSharesThePrefixOfTheFingerprint(t *testing.T) {
 // TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension holds the
 // empty case to the reference form.
 //
-// `rust/ja4/src/tls.rs:461` joins an empty extension list to an empty string, and it
-// appends that string after the separator. The fingerprint reaches `parser.EmptyHash` on
-// the same input. Issue #275 records the rule.
+// `rust/ja4/src/tls.rs:462` joins an empty extension list to an empty string, and
+// `rust/ja4/src/tls.rs:467` appends that string after the separator. The fingerprint
+// reaches `parser.EmptyHash` on the same input. Issue #275 records the rule.
 func TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension(t *testing.T) {
 	sh := &parser.ServerHello{
 		Version:     0x0303,
@@ -473,7 +473,9 @@ func TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension(t
 // FoxIO publishes `JA4S_r` and publishes no `JA4S_ro`, so `RawOriginalOrder` stays empty.
 // `conformance_adapters_test.go:58` names `JA4S_r` and names no `JA4S_ro`, so a value in
 // `RawOriginalOrder` emits a key the vector never holds.
-// `ja4plus/fingerprinters/ja4s.py:179` states the same rule. Issue #275 records it.
+// `ja4plus/fingerprinters/ja4s.py:179` states the same rule. The Python port fills its own
+// `raw_original_order` field with the raw form at `ja4plus/fingerprinters/ja4s.py:182`, and
+// it emits no `JA4S_ro` key from it. Issue #275 records the rule.
 func TestTheJA4SResultCarriesTheRawFormAndLeavesRawOriginalOrderEmpty(t *testing.T) {
 	payload := buildServerHelloPayload(0xc02b, []uint16{0x0000, 0xff01, 0x000b}, "")
 	packet := buildTCPPayloadPacket(t, payload)
