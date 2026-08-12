@@ -32,9 +32,13 @@ func conformanceSharedKeys(stream, packet []conformanceKey) []conformanceKey {
 
 	var shared []conformanceKey
 
+	// The check removes the key from the set after it reports it. A caller that passed one
+	// key twice in the second set would otherwise report one collision twice.
 	for _, key := range packet {
 		if _, both := held[key]; both {
 			shared = append(shared, key)
+
+			delete(held, key)
 		}
 	}
 
@@ -99,6 +103,13 @@ func TestNoKeyNamesBothAPerStreamAndAPerPacketComparison(t *testing.T) {
 		near += outcome.near
 		streamKeys += outcome.streamKeys
 		packetKeys += outcome.packetKeys
+	}
+
+	// A guard that compares two empty key spaces passes and proves nothing. A broken vector
+	// path would reach that state, so the test reads the size of each space.
+	if streamKeys == 0 || packetKeys == 0 {
+		t.Errorf("the corpus reports %d per-stream keys and %d per-packet keys, and the suite compares a value in each set",
+			streamKeys, packetKeys)
 	}
 
 	// The near count is the measurement #217 asks for, and it fails nothing. It counts the
