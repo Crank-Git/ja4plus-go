@@ -9,9 +9,11 @@ mockups: [mockups/01-conformance-report.html]
 
 ## Purpose
 
-The library claims to implement the FoxIO specification. Nothing tests that claim. The
-repository holds one expected-output file, `testdata/http1-with-cookies.expected.json`,
-covering two methods on one capture.
+The library claims to implement the FoxIO specification. Nothing tested that claim. This
+paragraph records the state before this feature set. The repository held one
+expected-output file, `testdata/http1-with-cookies.expected.json`. It held the value of
+two methods on one capture. #35 removed the file, and the `Data touched` table records
+the removal.
 
 FoxIO publishes a corpus. It holds 38 captures, 37 per-stream vectors under
 `python/test/testdata/`, and 37 per-packet vectors under `wireshark/test/testdata/`. The
@@ -51,6 +53,13 @@ deviation list that Epic 5 closes.
 - **FR-conformance-8** — `.gitignore` ignores `testdata/foxio/`.
 - **FR-conformance-9** — The script fails with a message that names the network when it
   cannot reach the reference.
+- **FR-conformance-38** — The script writes the reference to `testdata/foxio/reference/`,
+  under the path names that the FoxIO repository uses.
+- **FR-conformance-39** — The reference holds no capture and no vector, because
+  `testdata/foxio/pcap/`, `testdata/foxio/python/` and `testdata/foxio/wireshark/` hold
+  them.
+- **FR-conformance-40** — The script downloads again when `testdata/foxio/.fetched` names
+  the pinned commit and a corpus directory is absent.
 
 ### The harness
 
@@ -110,7 +119,9 @@ deviation list that Epic 5 closes.
   pull request.
 - **FR-conformance-35** — The CI job fails when the suite reports any deviation.
 - **FR-conformance-36** — The CI job fails when the suite skips.
-- **FR-conformance-37** — The CI job caches the corpus by the pinned commit.
+- **FR-conformance-37** — The CI job caches the corpus by the pinned commit and by the
+  hash of `scripts/fetch-corpus.sh`. That script decides which directories a complete
+  corpus holds, so a layout change misses the cache.
 
 ## User flows
 
@@ -123,11 +134,14 @@ deviation list that Epic 5 closes.
 
 ### CI gates a pull request
 
-1. The workflow restores the corpus from the cache, keyed by the pinned commit.
+1. The workflow restores the corpus from the cache, keyed by the pinned commit and by the
+   hash of `scripts/fetch-corpus.sh`.
 2. The workflow runs `make corpus` when the cache misses.
 3. The workflow runs `make conformance`.
 4. The job fails when the suite reports a deviation.
-5. The job attaches `docs/audit/conformance.md` as an artifact.
+5. The job attaches `conformance.log` as an artifact. The log names every deviation. The
+   job attaches no report, because git tracks `docs/audit/conformance.md` and a reader
+   reaches it from the branch.
 
 ### The maintainer moves the pin
 

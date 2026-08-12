@@ -235,21 +235,12 @@ func TestGetShardKey_ReturnsAnEmptyKeyForAPacketWithNoTransportLayer(t *testing.
 func TestFingerprinters_HoldNoLockOnThePerPacketPath(t *testing.T) {
 	proc := NewProcessor()
 
-	fingerprinters := map[string]any{
-		"JA4Fingerprinter":    proc.ja4,
-		"JA4SFingerprinter":   proc.ja4s,
-		"JA4HFingerprinter":   proc.ja4h,
-		"JA4TFingerprinter":   proc.ja4t,
-		"JA4TSFingerprinter":  proc.ja4ts,
-		"JA4LFingerprinter":   proc.ja4l,
-		"JA4XFingerprinter":   proc.ja4x,
-		"JA4SSHFingerprinter": proc.ja4ssh,
-		"JA4DFingerprinter":   proc.ja4d,
-		"JA4D6Fingerprinter":  proc.ja4d6,
-	}
+	// The processor run list is the source of truth of the set, so a new fingerprinter
+	// reaches this test with no edit. Issue #148 records the fault a second list produces.
+	fingerprinters := processorFingerprinters(proc)
 
-	if len(fingerprinters) != 10 {
-		t.Fatalf("the test names %d fingerprinters, want 10", len(fingerprinters))
+	if len(fingerprinters) == 0 {
+		t.Fatal("the processor runs no fingerprinter, so this test proves nothing")
 	}
 
 	for name, fp := range fingerprinters {
