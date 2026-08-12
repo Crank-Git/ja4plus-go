@@ -393,8 +393,15 @@ func conformanceStreamIdentity(entry conformanceStreamEntry) (conformanceStreamC
 // that names more than one connection gains the source port, in the form `0:50280`. The
 // name holds no `/`, so the register key form of `testdata/README.md` still reads in three
 // parts.
+//
+// The name reads the source port of the first entry of the connection, and never the source
+// port of each entry. FoxIO writes one entry for each HTTP request, and it swaps the two
+// ends between a request and a response. `http2-with-cookies.pcapng` writes the source port
+// `58847` and then `443` for one connection, so the source port of one entry names no
+// connection.
 func conformanceStreamNames(connections []conformanceStreamConnection) (map[string]string, error) {
 	endpointsOfStream := make(map[string]map[string]bool)
+	portOfEndpoint := make(map[string]uint16, len(connections))
 
 	for _, connection := range connections {
 		endpoints, held := endpointsOfStream[connection.stream]
@@ -404,6 +411,10 @@ func conformanceStreamNames(connections []conformanceStreamConnection) (map[stri
 		}
 
 		endpoints[connection.endpoint] = true
+
+		if _, held := portOfEndpoint[connection.endpoint]; !held {
+			portOfEndpoint[connection.endpoint] = connection.sourcePort
+		}
 	}
 
 	names := make(map[string]string, len(connections))
@@ -412,7 +423,7 @@ func conformanceStreamNames(connections []conformanceStreamConnection) (map[stri
 	for _, connection := range connections {
 		name := connection.stream
 		if len(endpointsOfStream[connection.stream]) > 1 {
-			name = connection.stream + ":" + strconv.FormatUint(uint64(connection.sourcePort), 10)
+			name = connection.stream + ":" + strconv.FormatUint(uint64(portOfEndpoint[connection.endpoint]), 10)
 		}
 
 		// Two connections that reach one name would collapse again, and the collapse is the

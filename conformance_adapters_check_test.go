@@ -278,6 +278,50 @@ func TestTheStreamAdapterKeepsTwoConnectionsOfOneStreamNumberApart(t *testing.T)
 	}
 }
 
+// FoxIO writes one entry for each HTTP request, and it swaps the two ends between a request
+// and a response. `http2-with-cookies.pcapng` writes the source port `58847` and then `443`
+// for one connection, so the source port of one entry names no connection.
+//
+// The stream name reads the source port of the first entry of the connection. A name that
+// read the source port of each entry would give one connection two names, and the values of
+// that connection would then reach two keys.
+func TestTheStreamNameReadsTheSourcePortOfTheFirstEntryOfAConnection(t *testing.T) {
+	const capture = "chrome-cloudflare-quic-with-secrets.pcapng"
+
+	request := oneConformanceQuicStreamEntry("57098", map[string]string{"JA4": "a"})
+
+	response := oneConformanceStreamEntry(map[string]string{"JA4S": "b"})
+	response["src"] = json.RawMessage(`"2606:4700:10::6816:826"`)
+	response["dst"] = json.RawMessage(`"2001:db8:1::1"`)
+	response["srcport"] = json.RawMessage(`"443"`)
+	response["dstport"] = json.RawMessage(`"57098"`)
+
+	shape, err := conformanceExpectedFromStreamVector(capture, []conformanceStreamEntry{
+		request,
+		response,
+		oneConformanceQuicStreamEntry("50280", map[string]string{"JA4L-C": "113_64"}),
+	})
+	if err != nil {
+		t.Fatalf("the adapter rejects the three entries: %v", err)
+	}
+
+	wanted := map[conformanceKey]string{
+		{Capture: capture, Stream: "0:57098", Method: "JA4"}:    "a",
+		{Capture: capture, Stream: "0:57098", Method: "JA4S"}:   "b",
+		{Capture: capture, Stream: "0:50280", Method: "JA4L-C"}: "113_64",
+	}
+
+	if len(shape.Expected) != len(wanted) {
+		t.Fatalf("the adapter reads %d values, and the three entries hold %d", len(shape.Expected), len(wanted))
+	}
+
+	for key, value := range wanted {
+		if got := shape.Expected[key]; got != value {
+			t.Errorf("the adapter writes %q under the key %q, and the vector holds %q", got, key, value)
+		}
+	}
+}
+
 // A stream number that names one connection keeps the bare number. A register key of
 // `testdata/deviations.json` therefore names the comparison it named before, and the
 // disambiguation reaches the colliding stream number alone.
