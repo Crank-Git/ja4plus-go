@@ -25,8 +25,10 @@ import (
 //
 // The suite compares the two vector sets, and it compares each one on its own. A
 // per-packet record names its frame, so a per-packet key holds the frame number. A
-// per-stream entry names a stream by the `src`, `dst`, `srcport` and `dstport` fields, so a
-// per-stream key holds the stream number that the entry carries.
+// per-stream entry names a connection by the `src`, `dst`, `srcport` and `dstport` fields,
+// so a per-stream key holds the stream name of that connection.
+// `conformanceStreamNames` of `conformance_adapters_test.go` states the two forms of the
+// stream name, and issue #250 states why a stream number alone names no connection.
 //
 // `conformance_adapters_test.go` holds the two adapters and FR-conformance-20 through
 // FR-conformance-26.
@@ -417,11 +419,11 @@ func conformanceCoveredMethods(expected map[conformanceKey]string) map[string]bo
 // reads 131 SSH packets and reaches no window of 200. The per-packet vector holds no such
 // value, so `conformanceProducedByFrame` makes no such call.
 //
-// FR-conformance-22 names the stream by the four address fields. The shape maps the
-// endpoint key of each vector entry to the stream number that the entry carries. A value
-// whose endpoint key reaches no entry keeps the endpoint key as its stream name, so the
-// deviation names the connection that produced it. The endpoint key holds no `/`, so the
-// register key form of `testdata/README.md` still reads in three parts.
+// FR-conformance-22 names the connection by the four address fields. The shape maps the
+// endpoint key of each vector entry to the stream name of that connection. A value whose
+// endpoint key reaches no entry keeps the endpoint key as its stream name, so the deviation
+// names the connection that produced it. The endpoint key holds no `/`, so the register key
+// form of `testdata/README.md` still reads in three parts.
 func conformanceProducedByStream(
 	t *testing.T,
 	capture string,
@@ -487,9 +489,9 @@ func conformanceProducedByStream(
 }
 
 // conformanceConnectionKey names one connection of one method of one stream.
-// The group holds the capture, the stream and the method. The endpoint holds the address
-// pair. Two connections of one capture can carry one stream number, so the group alone
-// names no connection.
+// The group holds the capture, the stream name and the method. The endpoint holds the
+// address pair. Issue #250 gives one stream name to one connection, and this type keeps the
+// endpoint so that a later vector that groups two connections still reads each one apart.
 type conformanceConnectionKey struct {
 	group    conformanceKey
 	endpoint string
@@ -499,11 +501,11 @@ type conformanceConnectionKey struct {
 //
 // FoxIO writes one per-stream entry for one connection. It numbers two entries of
 // `chrome-cloudflare-quic-with-secrets.pcapng` with the stream number `0`. One of those two
-// connections carries TCP, and the other carries QUIC. The vector group therefore holds two
-// values. The adapter writes an occurrence number for them, so the last-emission rule of
-// issue #196 reaches no value of the group. The client point of the TCP connection moves,
-// and the library reports `30_64` and then `149_64` for it. The surplus first value shifts
-// every later occurrence by one. Issue #215 holds the reading.
+// connections carries TCP, and the other carries QUIC. Issue #215 read the merged group,
+// and issue #250 gives each connection its own stream name. The client point of the TCP
+// connection moves, and the library reports `30_64` and then `149_64` for it. This
+// collection keeps the last value of the connection, so the first value shifts no
+// occurrence number.
 type conformanceMovedPoints struct {
 	// last holds the last value of one connection.
 	last map[conformanceConnectionKey]string
