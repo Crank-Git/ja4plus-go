@@ -63,6 +63,23 @@ type conformanceDeviation struct {
 	Accepted bool
 }
 
+// conformanceStaleEntry is one register entry whose recorded `ours` value differs from the
+// value the run produces. #307 states the defect it reports.
+//
+// A register entry records the two values that the maintainer ruled on. A later change
+// moves the value this library produces, and the entry then accepts a comparison it does
+// not describe. FR-reference-26 never reaches such an entry, because the two values still
+// differ.
+type conformanceStaleEntry struct {
+	// Key names the comparison the register entry accepts.
+	Key conformanceKey
+	// Recorded is the `ours` value of the register entry.
+	Recorded string
+	// Produced is the value the run produces. It is the empty string when the library
+	// produces no value for the key.
+	Produced string
+}
+
 // conformanceComparison holds the outcome of one comparison run.
 type conformanceComparison struct {
 	// Matches counts the comparisons where the two values are equal and the register
@@ -76,6 +93,9 @@ type conformanceComparison struct {
 	// Closed names every comparison that the register names and that now matches.
 	// FR-reference-26 fails the suite for each one.
 	Closed []conformanceKey
+	// Stale holds every register entry whose recorded value the run no longer produces,
+	// sorted by key. #307 fails the suite for each one.
+	Stale []conformanceStaleEntry
 }
 
 // compareConformance returns the comparison of the produced values with the vector values.
@@ -86,6 +106,10 @@ type conformanceComparison struct {
 // The register maps a key to the entry that accepts the difference. A key the register
 // names produces an accepted deviation when the two values differ, and a closed entry when
 // the two values are equal. A nil register accepts nothing.
+//
+// A key the register names produces a stale entry when the recorded `ours` value differs
+// from the produced value. A stale entry stands beside a match, a deviation and a closed
+// entry, and it replaces none of them.
 func compareConformance(
 	produced map[conformanceKey]string,
 	expected map[conformanceKey]string,
@@ -96,7 +120,18 @@ func compareConformance(
 	for _, key := range conformanceComparedKeys(produced, expected) {
 		producedValue, libraryHolds := produced[key]
 		expectedValue, vectorHolds := expected[key]
-		_, registered := register[key]
+		entry, registered := register[key]
+
+		// #307 reads the recorded value of the entry, and never its presence alone. The
+		// check stands outside the two branches below, because a stale record is a defect of
+		// the register and it says nothing about the comparison.
+		if registered && entry.Ours != producedValue {
+			result.Stale = append(result.Stale, conformanceStaleEntry{
+				Key:      key,
+				Recorded: entry.Ours,
+				Produced: producedValue,
+			})
+		}
 
 		if libraryHolds && vectorHolds && producedValue == expectedValue {
 			if registered {

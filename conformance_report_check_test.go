@@ -325,6 +325,49 @@ func TestTheComparisonNamesEveryKeyThatMatches(t *testing.T) {
 	}
 }
 
+// #307 makes a stale register entry a fourth kind. The report names the key, the recorded
+// value and the produced value, so a reader repairs the entry without a rerun.
+func TestTheReportNamesEveryStaleRegisterEntry(t *testing.T) {
+	report := newConformanceReport("27f0cbf")
+	report.readCapture("ssh2.pcapng")
+	report.recordComparison("ssh2.pcapng", "per-packet", conformanceComparison{
+		Stale: []conformanceStaleEntry{{
+			Key:      conformanceKey{Capture: "ssh2.pcapng", Stream: "15", Method: "JA4SSH.1"},
+			Recorded: "c36s36_c55s53_c14s14",
+			Produced: "c36s36_c55s53_c13s14",
+		}},
+	})
+
+	text := report.render()
+
+	for _, wanted := range []string{
+		"## Stale register entries",
+		"| Stale register entries | 1 |",
+		"ssh2.pcapng/15/JA4SSH.1",
+		"c36s36_c55s53_c14s14",
+		"c36s36_c55s53_c13s14",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
+// A run that reaches every recorded value states that result. A section a reader finds
+// empty says nothing about the register.
+func TestTheReportStatesThatARunReportsNoStaleRegisterEntry(t *testing.T) {
+	text := oneConformanceReport().render()
+
+	for _, wanted := range []string{
+		"| Stale register entries | 0 |",
+		"The run reports no stale register entry.",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
 // The report is tracked, and FR-conformance-27 rewrites it on every run. This test reads
 // the tracked file and proves its path and its shape. `TestConformance` fails the run when
 // the write itself fails, and the two checks together hold FR-conformance-27.
