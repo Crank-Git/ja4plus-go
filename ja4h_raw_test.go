@@ -79,9 +79,9 @@ func TestJA4H_RawHoldsTheSortedCookieOrder(t *testing.T) {
 // later ruling reverses the shape, which is the point of it.
 //
 // `Crank-Git/ja4plus` holds no issue for this question, and the port needs no change. The
-// port writes the same three-field shape: `ja4plus/fingerprinters/ja4h.py:532` builds
-// `f"{part_a}_{headers_str}_"`, and lines 535 to 538 append the two cookie fields only when
-// the request carries a cookie. The docstring at lines 516 to 518 states the same rule.
+// port writes the same three-field shape. `ja4plus/fingerprinters/ja4h.py:532` builds
+// `f"{part_a}_{headers_str}_"`. Lines 535 to 538 append the two cookie fields only when the
+// request carries a cookie. The docstring at lines 516 to 518 states the same rule.
 func TestJA4H_RawEndsAfterTheHeaderNamesWhenTheRequestHoldsNoCookie(t *testing.T) {
 	raw := "GET /p HTTP/1.1\r\n" +
 		"Host: example.com\r\n" +
