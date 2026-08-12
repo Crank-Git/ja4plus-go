@@ -309,10 +309,10 @@ type conformanceMethodValue struct {
 // `JA4HFingerprinter` fills `RawOriginalOrder`. Issues #274 through #277 added the four.
 //
 // The `_o` branch reaches no comparison at the pinned commit, and #290 added it for
-// symmetry with `conformanceStreamValuesOfResult`. `conformanceMethodOfResultType` maps no
-// result type to `JA4`, because the per-packet vector set names no JA4 field, so a `JA4_o`
-// value reaches this function and no vector. A branch that is absent instead reports every
-// later value as absent for ever, and the suite then states no cause.
+// symmetry with `conformanceStreamValuesOfResult`. The per-packet vector set names no JA4
+// field, so `conformanceMethodOfResultType` maps no result type to `JA4`. A `JA4_o` value
+// therefore reaches this function and no vector. A branch that is absent instead reports
+// every later value as absent for ever, and the suite then states no cause.
 func conformanceValuesOfResult(result FingerprintResult) []conformanceMethodValue {
 	method, fingerprint, held := conformanceMethodOfResultType(result)
 	if !held {
