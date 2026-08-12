@@ -99,12 +99,15 @@ that the interface declares.
   after the store, whether the store succeeded or failed. **The cross-member review of
   batch #321 measured that loss, and `4a30c33` repaired the hook inside the batch.** The
   ref name, the old value and the new value separate nothing, and `GIT_REFLOG_ACTION` is
-  unset, so the hook reads the state file that git writes.
+  unset. The hook therefore reads the state file that git writes.
   `.githooks/reference-transaction:27-31` tests `MERGE_AUTOSTASH`,
   `rebase-merge/autostash` and `rebase-apply/autostash` under the git directory of the
-  worktree. **One case stays uncovered**: a hand-written stash while a rebase autostash is
-  pending exits 0. That case destroys nothing, and the rule at `CLAUDE.md:115` binds every
-  agent whether or not the hook runs. `docs/specs/spec.md` `## Terms` gains the row
+  worktree. **`.claude/rules/worktrees.md` records two limits of the repaired hook.**
+  `:262` holds the one case that misses a refusal: a hand-written stash while a rebase
+  autostash is pending exits 0. That case destroys nothing. `:245` holds one over-refusal:
+  the hook refuses `git stash drop` on the entry it allowed, and the `Dropped` line prints
+  the object id first, so the entry stays reachable. The rule at `CLAUDE.md:115` binds
+  every agent whether or not the hook runs. `docs/specs/spec.md` `## Terms` gains the row
   `autostash`. **The hook is inert until the maintainer runs
   `git config core.hooksPath .githooks`.** The
   second reading records that a `PostToolUse` hook of `.claude/settings.json` did not run
@@ -119,10 +122,10 @@ that the interface declares.
   FR-parity-34 through FR-parity-60 already exist.** A renumber would break the references
   that ten test files and four documents hold.
   `docs/specs/features/08-python-parity.md:287` gains the eviction row, which separates
-  `CloseConnectionWindow` from `CleanupConnection`. `docs/specs/spec.md:432` gains the
+  `CloseConnectionWindow` from `CleanupConnection`. `docs/specs/spec.md:433` gains the
   register row, and that row states that this project named the behaviour first. Rule 2 of
   `.claude/rules/parity.md` therefore runs toward the port, and the row cites
-  `Crank-Git/ja4plus#598`. `docs/specs/spec.md:473` names the method in the `Cleared by`
+  `Crank-Git/ja4plus#598`. `docs/specs/spec.md:474` names the method in the `Cleared by`
   cell of `JA4SSHFingerprinter`. **The member changes no Go file, and it moves no
   fingerprint value.** Issue #264 holds the change.
 - One exported name, which carries the FoxIO `JA4_o` value: the `OriginalOrder` field of
