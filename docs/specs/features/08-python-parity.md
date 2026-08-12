@@ -237,7 +237,7 @@ that FR-parity-32 adds a line to.
 | `ja4x.go` | A test only. The behaviour already matches. |
 | `ja4d.go`, `ja4d6.go` | The repeated option 57, the BOOTP rule, the relay message. |
 | `ja4h.go` | A test only. `ja4h.go:171-173` already matches. |
-| `types.go` | `CloseOpenWindows` joins the `Fingerprinter` interface. |
+| `types.go` | `WindowCloser` declares `CloseOpenWindows`, and `Fingerprinter` does not change. |
 | `processor.go` | `Processor.CloseOpenWindows`. |
 | `cmd/ja4plus/main.go` | The end-of-capture call. |
 | `testdata/deviations.json` | The value declines that FR-parity-22 and FR-parity-50 add. |
@@ -252,10 +252,11 @@ that FR-parity-32 adds a line to.
 | FoxIO reference | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4> |
 | `github.com/google/gopacket` | v1.1.19 | <https://pkg.go.dev/github.com/google/gopacket> |
 
-**`CloseOpenWindows` is a breaking change to an exported interface.** `Fingerprinter` is
-an exported interface, and a new method breaks every third-party implementation of it. The
-library is at `v0.3.0`, so the break is allowed now and never after the freeze.
-`features/10-release.md` records it in the CHANGELOG as a breaking change.
+**`CloseOpenWindows` breaks no exported interface.** The maintainer ruled on 2026-08-11 that
+the method sits on the second optional interface `WindowCloser`, and #53 records the ruling.
+`Fingerprinter` does not change, so no third-party implementation of it breaks. A caller
+discovers the capability with a type assertion. `features/10-release.md` FR-release-51 states
+what the CHANGELOG records.
 
 ## Edge cases & failures
 
