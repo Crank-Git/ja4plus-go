@@ -64,6 +64,19 @@ func (p *SyncProcessor) CleanupConnection(srcIP string, srcPort uint16, dstIP st
 	p.proc.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
 }
 
+// CloseOpenWindows returns the value of the window that each fingerprinter holds open.
+// Call it when the packet source ends, because a connection whose last window never reaches
+// the threshold holds that window open.
+// The mutex serializes it against a ProcessPacket call, so no result escapes while another
+// goroutine changes the fingerprinter state.
+func (p *SyncProcessor) CloseOpenWindows() []FingerprintResult {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.ensure()
+
+	return p.proc.CloseOpenWindows()
+}
+
 // GetShardKey returns one routing key for both directions of the connection.
 // It returns an empty string for a packet that carries neither a TCP layer nor a UDP
 // layer. The caller decides what to do with an empty key.
