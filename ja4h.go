@@ -323,14 +323,7 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 // A request that carries no cookie ends after the header names and one underscore.
 // `testdata/foxio/reference/python/ja4h.py` appends the two cookie fields only when the
 // request holds a cookie, and 68 of the 89 per-stream vector values carry that shape.
-//
-// It returns the empty string for a nil request, because a caller reads an empty field as
-// a value the library does not produce.
 func computeJA4HRawOriginalOrder(req *parser.HTTPRequest) string {
-	if req == nil {
-		return ""
-	}
-
 	raw := ja4hPartA(req) + "_" + strings.Join(ja4hHeaderNames(req), ",") + "_"
 
 	if len(req.CookieNames) == 0 {
