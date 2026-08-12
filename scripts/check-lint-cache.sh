@@ -79,8 +79,10 @@ if run_lint "$work/second" "$work/shared-cache" "$work/shared.log"; then
 	exit 1
 fi
 
+# `head` closes the pipe early, and `pipefail` would read that as a failure of the whole
+# script. The report is evidence for the reader, so it never decides the exit code.
 echo "check-lint-cache: the shared cache reports a finding against the removed copy:"
-grep "probe.go" "$work/shared.log" | grep -v "^level=" | head -3
+grep "probe.go:" "$work/shared.log" | grep -v "^level=" | head -3 || true
 
 echo "check-lint-cache: step 2 requires no finding, because each copy holds its own cache"
 
