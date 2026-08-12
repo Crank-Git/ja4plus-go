@@ -57,9 +57,9 @@ that the interface declares.
   manager` come from `.claude/rules/rulings.md` `## The two words` and `## What a
   delegated session may rule`. `schema violation` comes from `.claude/rules/parity.md`
   `## Where a difference comes from`, which names `a value the published schema forbids`.
-  The `delegated ruling` meaning carries the two load-bearing sentences of the delegation
-  section: a schema violation has one right answer and a reference split has none, and a
-  delegated ruling stays provisional until the maintainer confirms it. **The member
+  The `delegated ruling` meaning carries the two sentences that decide the boundary. A
+  schema violation has one right answer, and a reference split has none. A delegated
+  ruling stays provisional until the maintainer confirms it. **The member
   writes no `## Changelog` row**, because a member that writes its own round produces the
   defect #278 records. Issue #331 holds that row. **The member changes no Go file, and it
   moves no fingerprint value.** Issue #261 holds the change.
@@ -92,14 +92,14 @@ that the interface declares.
 - No exported name, and one statement of the base directory that every FoxIO citation
   joins to, at `docs/specs/foxio/README.md:37`. **The member changes no citation, and
   that is the result.** #254 asks for a `reference/` prefix on every citation of
-  `docs/specs/foxio/`, and the measurement proves that sweep wrong. **`make corpus`
+  `docs/specs/foxio/`, and the measurement proves that prefix wrong. **`make corpus`
   writes two corpus roots.** `scripts/fetch-corpus.sh:149` moves `pcap`,
   `python/test/testdata` and `wireshark/test/testdata` out of the staged tree, and
   `scripts/fetch-corpus.sh:167` then writes the rest to `testdata/foxio/reference/`. Four
   citations of the nine method pages name
   `python/test/testdata/browsers-x509.pcapng.json`, which `make corpus` writes under
   `testdata/foxio/python/`, so a blanket prefix breaks each one. **The short citation
-  form is also a repository-wide convention, and a Go change is needed to move it.**
+  form is also a repository-wide convention, and a Go change alone moves it.**
   `.claude/rules/rulings.md` states the form, and `ja4l.go:141`, `ja4t.go:132`,
   `ja4ssh.go:158` and `ja4x_raw_test.go:101` carry it. Five assertions of
   `foxio_transcription_tcp_test.go` anchor on it, at `:230-232` and `:251-252`. A first
@@ -135,7 +135,8 @@ that the interface declares.
   change.** Read the spawn response: the in-process path names an output file, and the
   cross-session path names a mailbox. A response that names a mailbox gets one more spawn
   on the in-process path, and no session waits on a cross-session spawn. **The file
-  records two open questions, and it states that neither one is measured.** **The member
+  records two open questions, and it states that nobody has measured either one.** **The
+  member
   changes no Go file, and it moves no fingerprint value.** Issue #260 holds the
   measurement.
 - No exported name, and two tests that hold the JA4H value of one request across every
