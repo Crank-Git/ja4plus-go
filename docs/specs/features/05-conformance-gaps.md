@@ -104,6 +104,21 @@ the deviation list exists, not before.
 - **FR-gaps-23** — The library bounds the accumulated fragment buffer for one QUIC
   connection, and drops the connection when the bound is exceeded.
 
+### The hashed wire-order form
+
+The FoxIO per-stream vector set holds a `JA4_o` value on 160 entries.
+`testdata/foxio/reference/python/ja4.py:291` builds the value, and it hashes each list of
+the wire-order raw form.
+
+- **FR-gaps-24** — `FingerprintResult` holds the exported field `OriginalOrder`, which
+  carries the FoxIO `JA4_o` value.
+- **FR-gaps-25** — `JA4Fingerprinter` fills `OriginalOrder` with the part a of `JA4`, a
+  hash of the wire-order cipher list and a hash of the wire-order extension list.
+- **FR-gaps-26** — Every fingerprinter other than `JA4Fingerprinter` leaves
+  `OriginalOrder` empty, because neither FoxIO vector set publishes a second `_o` key. The
+  per-stream set publishes `JA4_o` alone, and the per-packet set publishes no `_o` key.
+  Issue #290 scoped this requirement to the two vector sets.
+
 ## User flows
 
 ### An engineer closes a deviation
@@ -153,6 +168,8 @@ No entity changes. The following files change.
 | `internal/parser/secrets.go` | New. Holds the key-log reader. |
 | `capture.go` | New or changed. Reads a Decryption Secrets Block. |
 | `docs/audit/conformance-exclusions.md` | New. |
+| `types.go` | Gains the `OriginalOrder` field of `FingerprintResult`. |
+| `ja4.go` | Gains the builder of the `JA4_o` value. |
 | `CHANGELOG.md` | One entry for each changed fingerprint. |
 
 ## Interfaces

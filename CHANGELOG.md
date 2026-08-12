@@ -10,14 +10,44 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 13 more, and issue #223 put 4 more. A run on the
-current tree reports 1091 matches, 1275 deviations, 202 accepted deviations and 202 register
+current tree reports 1545 matches, 940 deviations, 203 accepted deviations and 203 register
 keys. A count that an entry below states therefore differs from a fresh run.
+
+**Batch #281 filled four raw fields, and this paragraph records the measurement of the whole
+batch.** Issue #274 filled `JA4H_ro`, issue #275 filled `JA4S_r`, issue #276 filled `JA4X_r`
+and issue #277 added `OriginalOrder` for `JA4_o`. Only #277 disclosed counts, and its
+"before" figures already held the three other members, so no entry below states the batch
+total. The batch ran from `388b6c8` to `5282cb9`. The run reports 1091 matches, 1274
+deviations and 203 accepted deviations before, and 1545 matches, 940 deviations and 203
+accepted deviations after. The per-stream set reports 742 matches and 458 deviations before,
+and 1043 matches and 250 deviations after. The per-packet set reports 349 matches and 816
+deviations before, and 502 matches and 690 deviations after. The register holds 203 keys
+before and after, so the batch moves 454 comparisons to a match and accepts no new deviation.
+Issue #290 records this measurement.
 
 ### Added
 
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- One exported name, which carries the FoxIO `JA4_o` value: the `OriginalOrder` field of
+  `FingerprintResult`. `JA4_o` hashes each list of the wire-order raw form, and
+  `RawOriginalOrder` holds the same two lists unhashed, so one function builds the two.
+  `testdata/foxio/reference/python/ja4.py:291` states the form. The FoxIO key suffix names
+  each of the four value fields, so `Raw` carries `_r`, `OriginalOrder` carries `_o` and
+  `RawOriginalOrder` carries `_ro`. This project rejects the names
+  `FingerprintOriginalOrder`, `HashedOriginalOrder` and `JA4O`. Epic 10 freezes the exported surface
+  for the whole `v1` series, so the name lands before that freeze.
+  `docs/specs/features/05-conformance-gaps.md` FR-gaps-24 through FR-gaps-26 number the
+  field. `JA4Fingerprinter` fills the field, and every other fingerprinter leaves it empty.
+  The measurement ran on `origin/batch/281-raw-forms` at `d8ac53f`. The run reports 1400
+  matches, 1036 deviations and 203 accepted deviations before, and 1545 matches, 940
+  deviations and 203 accepted deviations after. The register holds 203 keys before and
+  after. 145 `JA4_o` comparisons close, and 49 new deviations appear. Each new deviation is
+  a `JA4_o` value that the vector does not hold. The change moves no `JA4` value, no
+  `JA4_r` value and no `JA4_ro` value. Issue #277 records the field, and issue #287 records
+  one reference split that four comparisons reach. **The port needs no change**, because
+  `Crank-Git/ja4plus` emits `JA4_o` already.
 - Four exported names, which emit the JA4SSH window that one connection holds open and then
   remove that connection: the `ConnectionWindowCloser` interface,
   `JA4SSHFingerprinter.CloseConnectionWindow`, `Processor.CloseConnectionWindow` and

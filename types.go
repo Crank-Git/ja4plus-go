@@ -62,9 +62,23 @@ type ConnectionWindowCloser interface {
 }
 
 // FingerprintResult holds a single fingerprint and its metadata.
+//
+// Four fields carry one method value each, and the FoxIO key suffix names each one.
+// `Fingerprint` carries the bare key, `Raw` carries `_r`, `OriginalOrder` carries `_o` and
+// `RawOriginalOrder` carries `_ro`. A fingerprinter that produces no value for one of the
+// four leaves that field empty. The vector set that the fingerprinter reads states the
+// reason. The FoxIO per-stream vector set publishes `JA4H_ro` and no `JA4H_r` value, so
+// `JA4H` leaves `Raw` empty. The FoxIO per-packet vector set publishes `ja4.ja4h_r`, which
+// `conformancePacketMethods` of `conformance_test.go` maps. Issue #290 records this
+// correction.
 type FingerprintResult struct {
-	Fingerprint      string
-	Raw              string
+	Fingerprint string
+	Raw         string
+	// OriginalOrder holds `JA4_o`, which hashes each list of the wire-order raw form.
+	// `RawOriginalOrder` holds the same two lists unhashed, so the two fields read one
+	// input. `testdata/foxio/reference/python/ja4.py:291` states the rule, and issue #277
+	// records the field.
+	OriginalOrder    string
 	RawOriginalOrder string // JA4_ro: wire-order, no sorting, SNI/ALPN preserved
 	Type             string
 	SrcIP            string
