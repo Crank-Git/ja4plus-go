@@ -125,15 +125,19 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 
-	fingerprint := computeJA4SFromServerHello(sh)
+	fingerprint, raw := computeJA4SPair(sh)
 	if fingerprint == "" {
 		return nil, nil
 	}
 
 	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
+	// RawOriginalOrder stays empty, because FoxIO publishes `JA4S_r` and publishes no
+	// `JA4S_ro`. The raw form already holds the wire order, so a second field would emit a
+	// key that no vector holds. Issue #275 records the rule.
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
+		Raw:         raw,
 		Type:        "ja4s",
 		SrcIP:       srcIP,
 		DstIP:       dstIP,
@@ -238,6 +242,25 @@ func ComputeJA4S(packet gopacket.Packet) string {
 
 // computeJA4SFromServerHello generates a JA4S fingerprint from a parsed ServerHello.
 func computeJA4SFromServerHello(sh *parser.ServerHello) string {
+	fingerprint, _ := computeJA4SPair(sh)
+	return fingerprint
+}
+
+// computeJA4SPair returns the JA4S fingerprint and the JA4S_r raw form of the ServerHello.
+//
+// The two values hold one prefix, and they differ on the last part alone. One function
+// builds both, so the raw form cannot drift from the fingerprint.
+//
+// The raw form holds the extensions in the wire order, and it sorts no list.
+// `rust/ja4/src/tls.rs:467` and `wireshark/source/packet-ja4.c:547` each build the raw
+// form from the string the fingerprint hashes. The raw form is that hash preimage with the
+// prefix in front of it. `ja4plus/fingerprinters/ja4s.py:179` states the same rule for the
+// Python port.
+//
+// FoxIO publishes `JA4S_r` and publishes no `JA4S_ro`. The `_r` suffix therefore names the
+// wire order here, and not the sorted order that JA4 gives it. Issue #275 records the
+// measurement.
+func computeJA4SPair(sh *parser.ServerHello) (fingerprint, raw string) {
 	proto := "t"
 	if sh.IsQUIC {
 		proto = "q"
@@ -267,13 +290,17 @@ func computeJA4SFromServerHello(sh *parser.ServerHello) string {
 	// Cipher: 4-char lowercase hex
 	cipherStr := fmt.Sprintf("%04x", sh.CipherSuite)
 
-	// Extension hash: ORIGINAL WIRE ORDER, INCLUDING GREASE, no SNI/ALPN removal
+	// Extension list: ORIGINAL WIRE ORDER, INCLUDING GREASE, no SNI/ALPN removal
+	extList := formatHexList(sh.Extensions)
+
 	var extHash string
 	if len(sh.Extensions) == 0 {
 		extHash = parser.EmptyHash
 	} else {
-		extHash = parser.TruncatedHash(formatHexList(sh.Extensions))
+		extHash = parser.TruncatedHash(extList)
 	}
 
-	return fmt.Sprintf("%s_%s_%s", partA, cipherStr, extHash)
+	prefix := fmt.Sprintf("%s_%s", partA, cipherStr)
+
+	return prefix + "_" + extHash, prefix + "_" + extList
 }
