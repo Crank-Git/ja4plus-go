@@ -56,8 +56,8 @@ conclusion from 140346 ms against 4065 ms.**
 
 **Arm B and arm C both carry a name, and they reach different paths.** So a name alone
 does not decide the path. That conclusion reads the path of each arm, and it reads no
-duration, so the brief of arm C does not weaken it. **Arm C shows a named in-process spawn
-that reports, and one arm that moves two variables proves no cause.**
+duration. The brief of arm C therefore does not weaken it. **Arm C shows a named
+in-process spawn that reports.** One arm that moves two variables proves no cause.
 
 **Arm A returned a complete report, and it met the return contract below without a
 request.** It wrote `Nothing found in category 1.` for a category with no finding, and it

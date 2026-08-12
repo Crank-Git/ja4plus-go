@@ -49,8 +49,8 @@ and the last two rows reach no file of this checkout.
 | 7 | The port repository `Crank-Git/ja4plus` | `ja4plus/fingerprinters/ja4ssh.py` | The port, at the commit that `docs/specs/foxio/port-register.md` records |
 
 **Every page of this directory uses more than one base, and this page states no count of
-pages.** A count of pages goes stale at the next edit, and the rule then sends a reader to
-a path that the tree does not hold. #254 records that failure.
+pages.** A count of pages goes stale at the next edit. The stale rule then sends a reader
+to a path that no tree holds. #254 records that failure.
 
 **Where two bases can hold one citation, the sentence around it names the repository or
 the commit.** `docs/specs/foxio/zeek.md:124` cites `docs/specs/foxio/JA4T.md`, and this
@@ -120,8 +120,8 @@ later edit of any page moves a count, and it breaks no rule of this page.
 tree, and the resolver found each name at exactly one path.
 
 **No citation names a line past the end of the file it names.** The resolver compared each
-`:line` suffix against the line count of the resolved file, for bases 1, 2, 3 and 5, and it
-compared each one against the line count of the recovered file for base 4.
+`:line` suffix against the line count of the resolved file. For base 4 it read the line
+count of the recovered file.
 
 **One citation resolves under no base: `ja4l.py`, at
 `docs/specs/foxio/port-register.md:80`.** The FoxIO `python/` directory at the pin holds
