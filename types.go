@@ -67,10 +67,11 @@ type ConnectionWindowCloser interface {
 // `Fingerprint` carries the bare key, `Raw` carries `_r`, `OriginalOrder` carries `_o` and
 // `RawOriginalOrder` carries `_ro`. A fingerprinter that produces no value for one of the
 // four leaves that field empty. The vector set that the fingerprinter reads states the
-// reason. The FoxIO per-stream vector set publishes `JA4H_ro` and no `JA4H_r` value, so
-// `JA4H` leaves `Raw` empty. The FoxIO per-packet vector set publishes `ja4.ja4h_r`, which
-// `conformancePacketMethods` of `conformance_test.go` maps. Issue #290 records this
-// correction.
+// reason. The FoxIO per-stream vector set publishes `JA4H_ro` and no `JA4H_r` value, and
+// the FoxIO per-packet vector set publishes `ja4.ja4h_r` on 126 records. `JA4H` therefore
+// fills both fields, because the per-packet set states the raw sorted value that the
+// per-stream set omits. Issue #290 recorded that the two sets differ, and issue #310 filled
+// `Raw`.
 type FingerprintResult struct {
 	Fingerprint string
 	Raw         string
