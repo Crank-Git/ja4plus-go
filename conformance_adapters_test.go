@@ -66,6 +66,31 @@ var conformanceStreamMethodKeys = map[string]bool{
 	"JA4L-S":  true,
 }
 
+// conformanceMovingPointFingerprinter names the fingerprinter whose measurement point moves.
+//
+// `methodNameOfFingerprinter` reads the stem `ja4l` from this name, and every member of
+// `conformanceLastEmissionMethods` carries that stem. A test derives the tie. A rename of
+// the fingerprinter therefore fails the suite, and the rule reaches no name that the
+// processor no longer runs.
+const conformanceMovingPointFingerprinter = "JA4LFingerprinter"
+
+// conformanceLastEmissionMethods names every per-stream method whose bare vector key
+// compares the last value the library reports.
+//
+// The maintainer ruled on 2026-08-12 in issue #196 that the harness compares the last JA4L
+// emission of one stream. `docs/specs/foxio/JA4L.md` R33 names the measurement point that
+// moves, and `ja4l_test.go` holds the rule that point B never moves.
+//
+// Round 20 of the `## Changelog` of `docs/specs/spec.md` narrows the ruling to this set, and
+// it reverses no part of round 15. A method that emits once per protocol reaches no entry
+// here, and a method that emits once per request reaches none either. The second value of
+// such a method is a surplus value, and a surplus value reports as a deviation. Issue #209
+// measured what the wider rule cost.
+var conformanceLastEmissionMethods = map[string]bool{
+	"JA4L-C": true,
+	"JA4L-S": true,
+}
+
 // conformancePacketNonMethodFields names every per-packet vector field that holds no
 // fingerprint.
 //
@@ -430,15 +455,38 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 // The vector writes `JA4.1` and it writes `JA4S`, so the produced key follows the form the
 // vector uses for that method.
 //
-// A method that the vector holds once keeps the bare key for every value of one stream, so
-// the last value the library reports replaces the earlier ones. The reference is a batch
-// program that publishes the final state of its cache, and this library is a streaming
+// A method emits twice on one stream for two different reasons, and one rule cannot serve
+// both.
+//
+// A method of `conformanceLastEmissionMethods` keeps the bare key for every value of one
+// stream, so the last value the library reports replaces the earlier ones. The reference is a
+// batch program that publishes the final state of its cache, and this library is a streaming
 // interface that reports a value for each packet. A moved measurement point therefore
 // reports twice, and the last report holds the value that the reference publishes.
 // `docs/specs/foxio/JA4L.md` R33 names the measurement point that moves, and the maintainer
 // ruled on 2026-08-12 in issue #196.
+//
+// Every other method gains an occurrence number for the second value and for each value
+// after it. Such a method emits once per protocol, or once per request, so the second value
+// is a surplus value and not a moved point. The bare key then keeps the value the vector
+// names, and the surplus value reports as the deviation kind of FR-conformance-17. Round 20
+// of the `## Changelog` of `docs/specs/spec.md` records the narrower rule, and issue #209
+// measured what the wider rule cost.
+//
+// Two callers reach this function, and each one reaches a different branch.
+// `conformanceProducedByStream` at `conformance_test.go:449` builds the produced map, and it
+// counts the emissions of the library, so it reaches the second branch below. This function
+// builds the expected map through `conformanceWriteStreamGroup`, which forces
+// `usesOccurrence` true whenever one vector group holds more than one value. The occurrence
+// of an expected value is therefore always 1, and the expected map reaches the second branch
+// on no input. **Keep the branch.** The produced map needs it, and no special case in this
+// function bars the expected map from it.
 func conformanceStreamMethodKey(method string, occurrence int, usesOccurrence bool) string {
 	if usesOccurrence {
+		return conformanceMethodOccurrence(method, occurrence)
+	}
+
+	if occurrence > 1 && !conformanceLastEmissionMethods[method] {
 		return conformanceMethodOccurrence(method, occurrence)
 	}
 
