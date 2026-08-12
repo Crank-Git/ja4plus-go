@@ -40,6 +40,17 @@
     11,
     4,
     3,
-    2
-  ]
+    2,
+    5,
+    "8a"
+  ],
+  "nextEpic": "8a",
+  "nextIssues": [
+    196,
+    197,
+    53
+  ],
+  "promotion": "declined 2026-08-11; keep accumulating on dev until the Epic 10 freeze is closer",
+  "maxBackgroundWorkers": 3,
+  "rulingsEscalation": "interrupt the maintainer immediately; never park a ruling"
 }
