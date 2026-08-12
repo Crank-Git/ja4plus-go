@@ -9,8 +9,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1065
-matches, 1288 deviations, 198 accepted deviations and 198 register keys. A count that an entry
+put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1077
+matches, 1278 deviations, 198 accepted deviations and 198 register keys. A count that an entry
 below states therefore differs from a fresh run.
 
 ### Added
@@ -58,11 +58,11 @@ below states therefore differs from a fresh run.
   `wireshark/source/packet-ja4.c:1469` counts one packet for each `ssh.direction` field, and
   `python/ja4ssh.py:94` counts the packet whose protocol list holds `ssh`. The port holds the
   same rule at `ja4plus/fingerprinters/ja4ssh.py:247`. Issue #200 records the readings.
-  Measured against `batch/210-session5-followups` at `0751acc` with the corpus present: 12
+  Measured against `batch/210-session5-followups` at `5f05554` with the corpus present: 12
   JA4SSH comparisons moved to a match and 2 spurious values appeared, on `gre-sample.pcap`,
   `ssh-r.pcap`, `ssh-scp-1050.pcap`, `ssh.pcapng`, `ssh2.pcapng`, `sshv1.pcap` and `v6.pcap`.
-  The run reports 1076 matches before and 1088 after, 1290 deviations before and 1280 after,
-  and 185 register keys before and after. The JA4SSH deviation count falls from 42 to 32.
+  The run reports 1065 matches before and 1077 after, 1288 deviations before and 1278 after,
+  and 198 register keys before and after. The JA4SSH deviation count falls from 42 to 32.
 - The JA4SSH window now emits at the packet count the caller names, and the threshold holds
   no upper cap. `ja4ssh.go:196-199` capped it at 10, so the library over-emitted by hundreds
   of values on one capture. The window also counts the SSH packets of the two directions
