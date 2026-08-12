@@ -1332,6 +1332,8 @@ func TestJA4LWritesTwoPartsOnATCPConnectionInGeneve(t *testing.T) {
 //
 // `ja4plus/fingerprinters/ja4l.py:62` defines `QUIC_MARKER = "quic"`, and the port writes
 // three parts at `:549` and at `:602`. Port issue #225 holds the other half.
+//
+// The test holds FR-parity-20, FR-parity-24 and FR-ja4ls-4.
 func TestJA4LWritesThreePartsOnAQUICConnectionInSsh2Pcapng(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2023, 7, 6, 0, 0, 0, 0, time.UTC)

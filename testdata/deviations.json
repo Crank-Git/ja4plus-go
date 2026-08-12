@@ -1485,7 +1485,7 @@
     "ours": "16192_57_quic",
     "theirs": "16192_57",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "ssh2.pcapng/36/JA4L-C",
@@ -1493,7 +1493,7 @@
     "ours": "169_128_quic",
     "theirs": "169_128",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "ssh2.pcapng/36/JA4L-S",
@@ -1501,7 +1501,7 @@
     "ours": "5389_57_quic",
     "theirs": "5389_57",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/21/JA4L-C",
@@ -1509,7 +1509,7 @@
     "ours": "59_128_quic",
     "theirs": "59_128",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/21/JA4L-S",
@@ -1517,7 +1517,7 @@
     "ours": "4213_59_quic",
     "theirs": "4213_59",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/22/JA4L-C",
@@ -1525,7 +1525,7 @@
     "ours": "336_128_quic",
     "theirs": "336_128",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/22/JA4L-S",
@@ -1533,7 +1533,7 @@
     "ours": "5580_57_quic",
     "theirs": "5580_57",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/23/JA4L-C",
@@ -1541,7 +1541,7 @@
     "ours": "40_128_quic",
     "theirs": "40_128",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/23/JA4L-S",
@@ -1549,7 +1549,7 @@
     "ours": "4455_58_quic",
     "theirs": "4455_58",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/24/JA4L-C",
@@ -1557,7 +1557,7 @@
     "ours": "59_128_quic",
     "theirs": "59_128",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/24/JA4L-S",
@@ -1565,7 +1565,7 @@
     "ours": "3590_57_quic",
     "theirs": "3590_57",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/28/JA4L-C",
@@ -1573,7 +1573,7 @@
     "ours": "45_128_quic",
     "theirs": "45_128",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
     "key": "tls3.pcapng/28/JA4L-S",
@@ -1581,6 +1581,6 @@
     "ours": "3298_58_quic",
     "theirs": "3298_58",
     "ruling": "#197",
-    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector of this comparison holds two parts."
+    "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   }
 ]
