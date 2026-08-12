@@ -37,9 +37,10 @@ commit. `make corpus` writes that repository to `testdata/foxio/reference/`, at
 **Join a citation to `testdata/foxio/reference/`.** Read `python/ja4.py:161` as line 161
 of `testdata/foxio/reference/python/ja4.py`.
 
-**`scripts/fetch-corpus.sh:102` moves three directories out of the reference tree**, so a
-citation of one of the three reaches no path under `testdata/foxio/reference/`. Join a
-citation of one of the three to the corpus directory of the right-hand column.
+**`scripts/fetch-corpus.sh:149` moves three directories out of the staged tree first**, so
+a citation of one of the three reaches no path under `testdata/foxio/reference/`.
+`scripts/fetch-corpus.sh:102` names the three. Join a citation of one of the three to the
+corpus directory of the right-hand column.
 
 | The FoxIO path a citation names | Where `make corpus` writes it | What it holds |
 |---|---|---|
@@ -97,16 +98,16 @@ reports.
 
 ## Reproduce the measurement
 
-`scripts/fetch-corpus.sh:167` writes the whole FoxIO repository to
-`testdata/foxio/reference/`, and `scripts/fetch-corpus.sh:102` then moves `pcap`,
-`python/test/testdata` and `wireshark/test/testdata` into `testdata/foxio/`.
+`scripts/fetch-corpus.sh:149` moves `pcap`, `python/test/testdata` and
+`wireshark/test/testdata` into `testdata/foxio/`. `scripts/fetch-corpus.sh:167` then writes
+the rest of the FoxIO repository to `testdata/foxio/reference/`.
 `testdata/foxio/reference/technical_details/` therefore holds each file of the table above,
 so `make corpus` reproduces every row.
 
 **The command below clones FoxIO-licensed material into the working directory.** This
 repository commits no part of that material. `NOTICE` holds the FoxIO terms.
 
-A reader who holds no corpus runs the command below, from an empty directory.
+If you hold no corpus, run the command below from an empty directory.
 
 ```sh
 git clone https://github.com/FoxIO-LLC/ja4.git &&
