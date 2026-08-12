@@ -41,6 +41,11 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reported the tunnel port 4789. The three tunneled captures of the FoxIO corpus move:
   `gre-sample.pcap`, `gre-erspan-vxlan.pcap` and `tcpdump-geneve.pcap`. The maintainer
   ruled this on 2026-08-11, and `docs/specs/spec.md` `## Changelog` row 12 records it.
+  The first repair reached the paths that call the parser helper. The JA4 and JA4S QUIC
+  branches read the outer UDP layer directly, so they reported the tunnel port and grouped
+  a tunneled connection by the outer address pair. #170 routes those two branches through
+  the helper. No capture of the FoxIO corpus carries QUIC inside a tunnel, so no value
+  moves and a constructed test in `quic_tunnel_test.go` holds the behaviour.
 - The parser reads no fingerprint from a packet that nests more than four tunnel layers,
   and it returns a non-fatal error that names the limit. It returns the same result for a
   tunnel whose inner packet it does not read, such as a GRE header that names an unknown
