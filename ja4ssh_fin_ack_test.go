@@ -68,6 +68,40 @@ func buildSSHFINACK(srcIP, dstIP string, srcPort, dstPort uint16, seq uint32) go
 	return pkt
 }
 
+// buildSSHFINPSHACK returns one TCP packet that carries the FIN flag, the PSH flag, the ACK
+// flag and one SSH payload.
+//
+// `python/ja4.py:555` and `ja4plus/fingerprinters/ja4ssh.py:268` each test the FIN bit and the
+// ACK bit, so this packet reaches the emission.
+// `wireshark/source/packet-ja4.c:1400` tests `tcp_flags == 0x011`, which this packet fails.
+func buildSSHFINPSHACK(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte, seq uint32) gopacket.Packet {
+	ip := &layers.IPv4{
+		SrcIP:    net.ParseIP(srcIP),
+		DstIP:    net.ParseIP(dstIP),
+		Protocol: layers.IPProtocolTCP,
+		Version:  4,
+		TTL:      64,
+	}
+	tcp := &layers.TCP{
+		SrcPort: layers.TCPPort(srcPort),
+		DstPort: layers.TCPPort(dstPort),
+		ACK:     true,
+		FIN:     true,
+		PSH:     true,
+		Seq:     seq,
+	}
+	_ = tcp.SetNetworkLayerForChecksum(ip)
+
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+	_ = gopacket.SerializeLayers(buf, opts, ip, tcp, gopacket.Payload(payload))
+
+	pkt := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeIPv4, gopacket.Default)
+	pkt.Metadata().Timestamp = time.Now()
+
+	return pkt
+}
+
 // ja4sshBareACKPart returns part c of one JA4SSH value, which holds the two bare ACK counts.
 func ja4sshBareACKPart(t *testing.T, value string) string {
 	t.Helper()
@@ -241,6 +275,34 @@ func TestJA4SSHCountsTheBareACKThatFollowsAFINACKPacketInTheNextWindow(t *testin
 	if closed := fingerprinter.CloseOpenWindows(); len(closed) != 0 {
 		t.Errorf("CloseOpenWindows returns %d values %v, and a window of bare ACKs alone emits nothing",
 			len(closed), closed)
+	}
+}
+
+// TestJA4SSHEmitsTheOpenWindowOnAFINPSHACKPacket holds the flag test of issue #222. The test
+// reads the FIN bit and the ACK bit alone, so a packet that also carries the PSH flag closes
+// the window. The payload of that packet reaches the window first.
+func TestJA4SSHEmitsTheOpenWindowOnAFINPSHACKPacket(t *testing.T) {
+	fingerprinter := NewJA4SSH(200)
+	payload := sshPayloadOfSize(36)
+
+	if _, err := fingerprinter.ProcessPacket(buildSSHSegment(
+		"192.168.1.100", "10.0.0.1", 54321, 22, payload, sshSeqOfPacket(0, payload))); err != nil {
+		t.Fatalf("the fingerprinter returns the error %v for the SSH segment", err)
+	}
+
+	results, err := fingerprinter.ProcessPacket(buildSSHFINPSHACK(
+		"192.168.1.100", "10.0.0.1", 54321, 22, payload, sshSeqOfPacket(1, payload)))
+	if err != nil {
+		t.Fatalf("the fingerprinter returns the error %v for the FIN+PSH+ACK packet", err)
+	}
+
+	if len(results) != 1 {
+		t.Fatalf("the fingerprinter emits %d values on the FIN+PSH+ACK packet, and it emits 1", len(results))
+	}
+
+	if results[0].Fingerprint != "c36s0_c2s0_c0s0" {
+		t.Errorf("the fingerprinter produces %q, and the window counts the payload of the closing packet",
+			results[0].Fingerprint)
 	}
 }
 

@@ -197,8 +197,11 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// A packet that carries no payload reaches the bare ACK counter, and it advances no
 	// window.
 	if len(payload) == 0 {
-		switch {
-		case isBareACK:
+		if !isBareACK && !closesConnection {
+			return nil, nil
+		}
+
+		if isBareACK {
 			// The count reads no SSH state, because the handshake ACK precedes every SSH packet
 			// of the connection. `ja4plus/fingerprinters/ja4ssh.py:250` counts the same way.
 
@@ -209,8 +212,6 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 				conn.serverACKs++
 			}
 			conn.lastSeen = parser.GetPacketTimestamp(packet)
-		case !closesConnection:
-			return nil, nil
 		}
 
 		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort, closesConnection)
@@ -341,7 +342,8 @@ func emitSSHWindow(conn *sshConnState, srcIP, dstIP string, srcPort, dstPort uin
 // starts a new window on each one.
 //
 // The caller calls the method when the packet source ends. A connection whose last window
-// never reaches the threshold holds that window open, and no other rule emits it.
+// never reaches the threshold holds that window open, and this method is the one rule that
+// emits it.
 // A connection that sends a packet with the FIN flag and the ACK flag holds no window open,
 // because ProcessPacket emits the window on that packet.
 // `rust/ja4/src/ssh.rs:45-55` and `zeek/ja4ssh/main.zeek:160-164` both emit that window, and
