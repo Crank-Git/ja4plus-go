@@ -560,15 +560,32 @@ func auditAddedFileKeys(added map[string]string) map[string][]string {
 	return keys
 }
 
+// twiceClassifiedAuditFiles returns each file that both tables name.
+//
+// One file carries one classification. A file that carries both claims an audit and denies
+// it, so the reader reports it. The result is sorted, because a test that reports a map in
+// its iteration order prints a different line order on each run.
+func twiceClassifiedAuditFiles(readers map[string][]string, added map[string]string) []string {
+	var twice []string
+
+	for file := range added {
+		if _, read := readers[file]; read {
+			twice = append(twice, file)
+		}
+	}
+
+	slices.Sort(twice)
+
+	return twice
+}
+
 func TestTheReportClassifiesEveryGoFileOfTheThreeDirectories(t *testing.T) {
 	page := readRepoFile(t, auditReportFile)
 	readers := auditSetRows(t, page)
 	added := auditAddedRows(t, page)
 
-	for file := range added {
-		if _, read := readers[file]; read {
-			t.Errorf("the report records %s as read and as added, and one file carries one classification", file)
-		}
+	for _, file := range twiceClassifiedAuditFiles(readers, added) {
+		t.Errorf("the report records %s as read and as added, and one file carries one classification", file)
 	}
 
 	files := auditGoFiles(t)
@@ -590,6 +607,16 @@ func TestTheClassificationReaderRejectsAFileThatNeitherTableNames(t *testing.T) 
 	unclassified := unclassifiedAuditFiles(files, readers, added)
 	if !slices.Equal(unclassified, []string{"cmd/ja4plus/main.go"}) {
 		t.Errorf("the reader reports %v, and one file carries no classification", unclassified)
+	}
+}
+
+func TestTheClassificationReaderRejectsAFileThatBothTablesName(t *testing.T) {
+	readers := map[string][]string{"ja4.go": {"22"}, "lookup.go": {"22", "23"}}
+	added := map[string]string{"lookup.go": "39", "internal/parser/tls.go": "39"}
+
+	twice := twiceClassifiedAuditFiles(readers, added)
+	if !slices.Equal(twice, []string{"lookup.go"}) {
+		t.Errorf("the reader reports %v, and one file carries both classifications", twice)
 	}
 }
 
