@@ -70,21 +70,36 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 				return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
 			}
 			if len(udp.Payload) > 0 {
+				// DecryptQUICInitialCrypto returns the fragments it read beside a truncation
+				// error. The fingerprinter keeps them, because a whole client hello can sit
+				// in front of the truncated frame.
 				frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
-				if err != nil {
+				if len(frags) == 0 && err != nil {
 					return nil, err
 				}
 				if len(frags) > 0 && len(dcid) > 0 {
 					dcidKey := fmt.Sprintf("%x", dcid)
-					f.quicFragments[dcidKey] = append(f.quicFragments[dcidKey], frags...)
 
 					// Record DCID-to-tuple mapping for cleanup and shard routing
 					srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 					tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, uint16(udp.SrcPort), dstIP, uint16(udp.DstPort))
 					f.dcidToTuple[dcidKey] = tupleKey
 
+					// A sender that never completes a client hello reaches the fragment
+					// buffer bound. The fingerprinter then drops the connection state,
+					// because an unbounded buffer is a memory-exhaustion path.
+					collected, err := parser.CollectCryptoFragments(f.quicFragments[dcidKey], frags)
+					if err != nil {
+						delete(f.quicFragments, dcidKey)
+						delete(f.dcidToTuple, dcidKey)
+
+						return nil, err
+					}
+
+					f.quicFragments[dcidKey] = collected
+
 					// Try to parse ClientHello from accumulated fragments
-					ch, err = parser.ClientHelloFromCryptoFragments(f.quicFragments[dcidKey])
+					ch, err = parser.ClientHelloFromCryptoFragments(collected)
 					if err != nil {
 						return nil, err
 					}

@@ -36,8 +36,15 @@ var (
 // QUIC frame type constants.
 const (
 	quicFramePadding = 0x00
+	quicFramePing    = 0x01
 	quicFrameCrypto  = 0x06
 )
+
+// MaxCryptoBufferBytes is the highest number of bytes one connection collects from CRYPTO
+// frames. RFC 9000 Section 16 lets a CRYPTO frame offset reach 4611686018427387903, and
+// ReassembleCryptoFrames allocates a buffer that reaches the highest offset. A client
+// hello reaches a few kilobytes, so this bound holds every real handshake message.
+const MaxCryptoBufferBytes = 16384
 
 // DecodeVarint decodes a QUIC variable-length integer from data at position pos.
 // Returns the decoded value and the new position after the varint, or an error.
@@ -333,13 +340,13 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 		return nil, err
 	}
 
-	// Parse CRYPTO frames from plaintext
+	// Parse CRYPTO frames from plaintext.
+	// ParseCryptoFrames returns the fragments it read beside a truncation error, and a
+	// whole client hello can sit in front of the truncated frame. The reader therefore
+	// keeps the fragments, and reports the error only when it read none.
 	fragments, err := ParseCryptoFrames(plaintext)
-	if err != nil {
-		return nil, err
-	}
 	if len(fragments) == 0 {
-		return nil, nil
+		return nil, err
 	}
 
 	// Reassemble CRYPTO frame data
@@ -494,14 +501,78 @@ func DecryptQUICInitialCrypto(payload []byte) (fragments []CryptoFragment, dcid 
 	return fragments, dcid, e
 }
 
+// CollectCryptoFragments adds the fragments of one packet to the fragments the caller
+// holds, and returns the whole set.
+// It drops a fragment that names an offset above MaxCryptoBufferBytes, because such a
+// fragment describes no real client hello.
+// It returns an error when the collected bytes reach MaxCryptoBufferBytes. The caller then
+// drops the connection state, because the sender never completes a client hello.
+func CollectCryptoFragments(collected []CryptoFragment, fragments []CryptoFragment) ([]CryptoFragment, error) {
+	held := 0
+	for _, fragment := range collected {
+		held += len(fragment.Data)
+	}
+
+	for _, fragment := range fragments {
+		if fragment.Offset > MaxCryptoBufferBytes ||
+			fragment.Offset+uint64(len(fragment.Data)) > MaxCryptoBufferBytes {
+			continue
+		}
+
+		// A sender that repeats one fragment grows the set without a bound, so the reader
+		// stops before it passes the bound rather than after.
+		if held+len(fragment.Data) > MaxCryptoBufferBytes {
+			return collected, errors.New("CRYPTO fragments reach the buffer bound")
+		}
+
+		collected = append(collected, fragment)
+		held += len(fragment.Data)
+	}
+
+	return collected, nil
+}
+
+// cryptoFragmentsReach returns the count of bytes the fragments cover from offset 0 with
+// no gap.
+// ReassembleCryptoFrames writes a zero byte over a range that no fragment covers, so a
+// reader that measures the highest offset alone reads a message the sender never sent. The
+// caller passes fragments that ReassembleCryptoFrames already sorted by offset.
+func cryptoFragmentsReach(fragments []CryptoFragment) uint64 {
+	var reach uint64
+
+	for _, fragment := range fragments {
+		if fragment.Offset > reach {
+			break
+		}
+
+		if end := fragment.Offset + uint64(len(fragment.Data)); end > reach {
+			reach = end
+		}
+	}
+
+	return reach
+}
+
 // ClientHelloFromCryptoFragments reassembles CRYPTO fragments and parses a ClientHello.
 // Returns nil, nil if the data is not a ClientHello.
+// Returns nil, nil while a fragment of the handshake message is still missing, so that the
+// caller collects the fragments of another QUIC Initial packet.
 func ClientHelloFromCryptoFragments(fragments []CryptoFragment) (*ClientHello, error) {
+	// ReassembleCryptoFrames sorts the fragments by offset, so cryptoFragmentsReach below
+	// reads them in order.
 	assembled := ReassembleCryptoFrames(fragments)
-	if len(assembled) == 0 {
+	reach := cryptoFragmentsReach(fragments)
+	if len(assembled) < 4 || reach < 4 {
 		return nil, nil
 	}
 	if assembled[0] != TLSHandshakeClientHello {
+		return nil, nil
+	}
+	// The handshake message holds a 24-bit length at bytes 1 to 3. A reader that parses a
+	// part of the message produces a fingerprint of a cipher list that the client never
+	// sent, so the reader waits for every byte the length names.
+	messageLength := int(assembled[1])<<16 | int(assembled[2])<<8 | int(assembled[3])
+	if uint64(4+messageLength) > reach {
 		return nil, nil
 	}
 	tlsRecord := make([]byte, 5+len(assembled))
@@ -529,7 +600,10 @@ func ParseCryptoFrames(data []byte) ([]CryptoFragment, error) {
 	for pos < len(data) {
 		frameType := data[pos]
 
-		if frameType == quicFramePadding {
+		// RFC 9000 Section 19.2 gives the PING frame no field, so the reader steps over one
+		// byte. A client that fragments its client hello puts a PING frame in front of the
+		// CRYPTO frames, and a reader that stops there reads no client hello at all.
+		if frameType == quicFramePadding || frameType == quicFramePing {
 			pos++
 			continue
 		}
@@ -804,12 +878,12 @@ func ParseQUICServerInitial(payload []byte, clientDCID []byte) (*ServerHello, er
 		return nil, err
 	}
 
+	// ParseCryptoFrames returns the fragments it read beside a truncation error, and a
+	// whole server hello can sit in front of the truncated frame. The reader therefore
+	// keeps the fragments, and reports the error only when it read none.
 	fragments, err := ParseCryptoFrames(plaintext)
-	if err != nil {
-		return nil, err
-	}
 	if len(fragments) == 0 {
-		return nil, nil
+		return nil, err
 	}
 
 	assembled := ReassembleCryptoFrames(fragments)

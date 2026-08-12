@@ -27,6 +27,13 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `docs/audit/license-decision.md`, which transcribes the maintainer's license decision
   and the date of each part of it.
 
+### Fixed
+
+- The QUIC CRYPTO stream reassembly. `ParseCryptoFrames` stepped over a PADDING frame
+  alone, so a PING frame in front of the CRYPTO frames hid the whole client hello. RFC 9000
+  Section 19.2 gives the PING frame no field. The library now produces a JA4 value on every
+  QUIC capture of the corpus that carries a client hello. Issue #42 holds the measurement.
+
 ### Changed
 
 - **A tunneled connection now carries two keys, and the fingerprint of such a connection
@@ -46,6 +53,24 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   tunnel whose inner packet it does not read, such as a GRE header that names an unknown
   protocol type or a truncated inner frame. No released value moves, because no capture of
   the FoxIO corpus nests more than three tunnel layers.
+- **A changed fingerprint.** The library produces the JA4 value
+  `q13d0310h3_55b375c5d22e_cd85d2d88918` on `quic-with-several-tls-frames.pcapng` and on
+  `quic-tls-handshake.pcapng`, and it produced none before. The FoxIO Rust implementation
+  produces the same value on both captures. On
+  `chrome-cloudflare-quic-with-secrets.pcapng` stream 0 the JA4 value moves from
+  `q12i030000_55b375c5d22e_000000000000` to `q13d0310h3_55b375c5d22e_cd85d2d88918`, and the
+  raw form moves from `q12i030000_1301,1302,1303_` to
+  `q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201`.
+  The earlier value read a part of the client hello, so it named three cipher suites and no
+  extension. A released version produced it, so this is a breaking behaviour change under
+  `v1.0.0`. Issue #42 holds the measurement.
+- `ClientHelloFromCryptoFragments` returns no client hello while a fragment of the
+  handshake message is still missing. It parsed a part of the message before, which
+  produced a fingerprint of a cipher list that the client never sent.
+- The QUIC fragment buffer of one connection reaches 16384 bytes. The JA4 fingerprinter
+  drops the connection state when a sender passes the bound, because an unbounded buffer is
+  a memory-exhaustion path. `parser.MaxCryptoBufferBytes` holds the bound, and the port
+  holds the same value.
 - The license correction. The repository states two licenses, and it names which material
   each one covers. The original Go code carries the BSD 3-Clause license.
   FoxIO License 1.1 covers nine of the methods that this project implements, and that
