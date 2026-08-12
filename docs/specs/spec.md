@@ -124,6 +124,7 @@ across both repositories, because a reader moves between them.
 | parity | noun | The state where this project and the port expose the same interface and produce the same fingerprint. | alignment, sync, consistency |
 | audit | noun | A read-only review of the code that produces findings. | review, sweep, pass |
 | finding | noun | One defect that the audit reports, with a file and a line. | issue, bug, problem |
+| added file | noun | One `.go` file of the three directories the audit reads, that a later issue added after the audit ran. No audit reads it, and `docs/audit/findings.md` names the issue that added it. | new file, unaudited file |
 | gate | noun | A CI job that fails the build when its check fails. | check, guard, step |
 | contract | noun | A documented rule that a caller must obey. | guarantee, promise, invariant |
 | connection | noun | One network flow, identified by a five-tuple or by a QUIC connection identifier. | session, stream, flow |

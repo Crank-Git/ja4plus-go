@@ -70,6 +70,9 @@ var auditFileColumns = []string{"File", "Audit date"}
 // auditSetColumns names every column of the audit set table.
 var auditSetColumns = []string{"File", "Read by"}
 
+// auditAddedColumns names every column of the table of added files.
+var auditAddedColumns = []string{"File", "Added by"}
+
 // auditSuspectedColumns names every column of the suspected findings table.
 var auditSuspectedColumns = []string{"ID", "Files", "Owner", "Status", "Findings", "Reason"}
 
@@ -449,28 +452,181 @@ func auditSetRows(t *testing.T, page string) map[string][]string {
 	return readers
 }
 
-func TestTheAuditSetNamesEveryGoFileThatTheAuditReads(t *testing.T) {
-	readers := auditSetRows(t, readRepoFile(t, auditReportFile))
+// readAuditAddedRow returns the file of one added file row, and the issue that added it.
+//
+// It returns an error in three cases.
+//
+//   - The row names no file.
+//   - The second cell names no issue.
+//   - The second cell names an issue of the audit. Such an issue reads its files, so the
+//     audit set records them and this table does not.
+func readAuditAddedRow(cells []string) (string, string, error) {
+	file := strings.Trim(cells[0], "`")
 
-	recorded := make([]string, 0, len(readers))
-	for file := range readers {
-		recorded = append(recorded, file)
+	if file == "" {
+		return "", "", fmt.Errorf("the row names no file")
 	}
 
-	slices.Sort(recorded)
+	match := auditIssuePattern.FindStringSubmatch(strings.TrimSpace(cells[1]))
+	if match == nil {
+		return file, "", fmt.Errorf("the row for %s names the issue %q, which is no issue", file, cells[1])
+	}
 
-	wanted := auditGoFiles(t)
+	if slices.Contains(auditIssues, match[1]) {
+		return file, match[1], fmt.Errorf("the row for %s names issue #%s, which owns a section of the audit and reads its own files",
+			file, match[1])
+	}
 
-	for _, file := range wanted {
-		if !slices.Contains(recorded, file) {
-			t.Errorf("the audit set omits %s, and FR-audit-1 reads every file of the three directories", file)
+	return file, match[1], nil
+}
+
+// auditAddedRows returns the file of each added file row, and the issue that added it.
+//
+// An audit of Epic 2 read no file that a later epic adds, so a reader row for such a file
+// records an audit that nobody performed. The report classifies the file as added instead,
+// and names the issue that added it. Issue #162 states the classification.
+func auditAddedRows(t *testing.T, page string) map[string]string {
+	t.Helper()
+
+	rows, err := auditTableRows(auditMarkedBlock(t, page, "added-files"), auditAddedColumns)
+	if err != nil {
+		t.Fatalf("the added files table: %v", err)
+	}
+
+	added := make(map[string]string, len(rows))
+
+	for _, cells := range rows {
+		file, issue, err := readAuditAddedRow(cells)
+		if err != nil {
+			t.Errorf("the added files table: %v", err)
+			continue
+		}
+
+		if _, held := added[file]; held {
+			t.Errorf("the added files table names %s twice, and one file carries one row", file)
+		}
+
+		added[file] = issue
+	}
+
+	return added
+}
+
+// unclassifiedAuditFiles returns each file the report classifies neither way.
+//
+// A file of the three directories carries one of two classifications: an audit issue reads
+// it, or a later issue added it. A file that carries neither is a file the record does not
+// account for.
+func unclassifiedAuditFiles(files []string, readers map[string][]string, added map[string]string) []string {
+	var unclassified []string
+
+	for _, file := range files {
+		_, read := readers[file]
+		_, later := added[file]
+
+		if !read && !later {
+			unclassified = append(unclassified, file)
 		}
 	}
 
-	for _, file := range recorded {
-		if !slices.Contains(wanted, file) {
-			t.Errorf("the audit set names %s, and the three directories hold no such file", file)
+	return unclassified
+}
+
+// unknownAuditFiles returns each file the report classifies that the three directories do
+// not hold. A row for an absent file records a classification of nothing.
+func unknownAuditFiles(files []string, recorded ...map[string][]string) []string {
+	var unknown []string
+
+	for _, table := range recorded {
+		for file := range table {
+			if !slices.Contains(files, file) {
+				unknown = append(unknown, file)
+			}
 		}
+	}
+
+	slices.Sort(unknown)
+
+	return unknown
+}
+
+// auditAddedFileKeys returns the added file table in the shape unknownAuditFiles reads.
+func auditAddedFileKeys(added map[string]string) map[string][]string {
+	keys := make(map[string][]string, len(added))
+	for file, issue := range added {
+		keys[file] = []string{issue}
+	}
+
+	return keys
+}
+
+func TestTheReportClassifiesEveryGoFileOfTheThreeDirectories(t *testing.T) {
+	page := readRepoFile(t, auditReportFile)
+	readers := auditSetRows(t, page)
+	added := auditAddedRows(t, page)
+
+	for file := range added {
+		if _, read := readers[file]; read {
+			t.Errorf("the report records %s as read and as added, and one file carries one classification", file)
+		}
+	}
+
+	files := auditGoFiles(t)
+
+	for _, file := range unclassifiedAuditFiles(files, readers, added) {
+		t.Errorf("the report classifies %s neither as read by an audit issue nor as added by a later issue, and FR-audit-1 reads every file of the three directories", file)
+	}
+
+	for _, file := range unknownAuditFiles(files, readers, auditAddedFileKeys(added)) {
+		t.Errorf("the report classifies %s, and the three directories hold no such file", file)
+	}
+}
+
+func TestTheClassificationReaderRejectsAFileThatNeitherTableNames(t *testing.T) {
+	files := []string{"ja4.go", "internal/parser/tls.go", "cmd/ja4plus/main.go"}
+	readers := map[string][]string{"ja4.go": {"22"}}
+	added := map[string]string{"internal/parser/tls.go": "39"}
+
+	unclassified := unclassifiedAuditFiles(files, readers, added)
+	if !slices.Equal(unclassified, []string{"cmd/ja4plus/main.go"}) {
+		t.Errorf("the reader reports %v, and one file carries no classification", unclassified)
+	}
+}
+
+func TestTheClassificationReaderRejectsARowForAnAbsentFile(t *testing.T) {
+	files := []string{"ja4.go"}
+
+	unknown := unknownAuditFiles(files,
+		map[string][]string{"ja4.go": {"22"}, "gone.go": {"22"}},
+		map[string][]string{"later.go": {"39"}})
+
+	if !slices.Equal(unknown, []string{"gone.go", "later.go"}) {
+		t.Errorf("the reader reports %v, and two rows name a file the three directories do not hold", unknown)
+	}
+}
+
+func TestTheAddedFileReaderRejectsADefectiveRow(t *testing.T) {
+	if _, _, err := readAuditAddedRow([]string{"`internal/parser/tls.go`", "#39"}); err != nil {
+		t.Fatalf("the reader declines a sound row: %v", err)
+	}
+
+	cases := []struct {
+		name string
+		row  []string
+	}{
+		{"the row names no file", []string{"", "#39"}},
+		{"the issue holds no number sign", []string{"`internal/parser/tls.go`", "39"}},
+		{"the issue is empty", []string{"`internal/parser/tls.go`", ""}},
+		{"the issue is a word", []string{"`internal/parser/tls.go`", "a later epic"}},
+		{"the issue owns a section of the audit", []string{"`internal/parser/tls.go`", "#22"}},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if _, _, err := readAuditAddedRow(testCase.row); err == nil {
+				t.Errorf("the reader accepts a row where %s", testCase.name)
+			}
+		})
 	}
 }
 
