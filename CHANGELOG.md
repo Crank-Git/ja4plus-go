@@ -56,9 +56,11 @@ that the interface declares.
   no corpus.** `foxio_citation_base_test.go:530` declares `foxioCorpusAbsentMessage`, and
   every skip of the file writes that sentence, so no skip of the file is silent. **The
   line-bound check of FR-reference-18h opens the file a citation names**, and it fails a
-  citation that names a line past the end of it. **A counted exception table holds three
-  spans**, and each one names one page, one span, one count and one reason. An exception
-  that now resolves fails `TestTheCitationExceptionTableHoldsNoSpanThatNowResolves`. **The
+  citation that names a line past the end of it. **A counted exception table holds two
+  entries and three spans**, and each entry names one page, one span, one count and one
+  reason. `docs/specs/foxio/README.md` carries 2 spans of `ja4l.py`, and
+  `docs/specs/foxio/port-register.md` carries 1. An exception that now resolves fails
+  `TestTheCitationExceptionTableHoldsNoSpanThatNowResolves`. **The
   member watched four failure modes**: a citation under no base, that same citation with
   the corpus moved aside, a citation that names a line past the end of its file, and a
   stale exception count. **The line-bound check found a defect that no reader had seen.**
