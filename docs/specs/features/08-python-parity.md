@@ -133,6 +133,23 @@ The port's issues #28, #96, #97, #105, #199 and #214 hold these rulings.
   ends.
 - **FR-parity-33** — A test asserts that a connection with 15 SSH packets and a window of
   200 produces no fingerprint before `CloseOpenWindows` and one after it.
+- **FR-parity-33a** — `JA4SSHFingerprinter` exports `CloseConnectionWindow`, which emits
+  the window one connection holds open and returns the results. The maintainer ruled the
+  method on 2026-08-12, and issue #216 records the ruling. This project named the
+  behaviour first, and `Crank-Git/ja4plus` issue #598 holds the port half.
+- **FR-parity-33b** — `CloseConnectionWindow` reads the two endpoints of the connection in
+  either order, as `CleanupConnection` does.
+- **FR-parity-33c** — `CloseConnectionWindow` removes the connection from the state table,
+  so a second call returns an empty slice.
+- **FR-parity-33d** — `CloseConnectionWindow` returns an empty slice for a connection the
+  state table does not hold.
+- **FR-parity-33e** — `CleanupConnection` emits no fingerprint. A caller that wants the
+  open window of one connection calls `CloseConnectionWindow` instead.
+- **FR-parity-33f** — `Processor` and `SyncProcessor` each export
+  `CloseConnectionWindow`, which calls each fingerprinter that implements
+  `ConnectionWindowCloser` and returns the joined results.
+- **FR-parity-33g** — A test asserts that a connection with an open window produces one
+  fingerprint on the first `CloseConnectionWindow` call and none on the second.
 
 ### JA4T and JA4TS
 
@@ -264,6 +281,7 @@ what the CHANGELOG records.
 |---|---|
 | A connection holds an open window and the caller never calls `CloseOpenWindows`. | The window is lost. The method is opt-in, and the library forces no flush. |
 | `CloseOpenWindows` is called twice. | The second call returns an empty slice. A window is emitted once. |
+| The caller evicts one connection and wants the window that connection holds open. | `CloseConnectionWindow` emits that window and removes the connection. `CleanupConnection` removes the connection and emits nothing. FR-parity-33a and FR-parity-33e cover the two. |
 | A RST arrives before any SYN-ACK. | No JA4TS value. FR-parity-43 covers it. |
 | The server sends three SYN-ACK packets. | Part e holds two delays, joined by `-`. |
 | A DHCPv6 message nests a relay inside a relay. | Subfield 1 writes the outermost type. FR-parity-54 says "the outer", and the test builds the two-level case. |
