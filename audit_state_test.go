@@ -26,22 +26,13 @@ const (
 	auditStateServerIP = "10.0.0.5"
 )
 
-// auditStateFingerprinters returns the ten fingerprinters of the processor by name.
+// auditStateFingerprinters returns every fingerprinter of the processor by name.
 // The audit reads each one, because FR-audit-16 names the results slice of every
 // fingerprinter and FR-audit-18 names every field that holds state.
-func auditStateFingerprinters(proc *Processor) map[string]any {
-	return map[string]any{
-		"JA4Fingerprinter":    proc.ja4,
-		"JA4SFingerprinter":   proc.ja4s,
-		"JA4HFingerprinter":   proc.ja4h,
-		"JA4TFingerprinter":   proc.ja4t,
-		"JA4TSFingerprinter":  proc.ja4ts,
-		"JA4LFingerprinter":   proc.ja4l,
-		"JA4XFingerprinter":   proc.ja4x,
-		"JA4SSHFingerprinter": proc.ja4ssh,
-		"JA4DFingerprinter":   proc.ja4d,
-		"JA4D6Fingerprinter":  proc.ja4d6,
-	}
+// It derives the set from the processor run list, so a new fingerprinter reaches the audit
+// with no edit. Issue #148 records the fault a second list produces.
+func auditStateFingerprinters(proc *Processor) map[string]Fingerprinter {
+	return processorFingerprinters(proc)
 }
 
 // auditStateLengths returns the length of every map field and every slice field that the
@@ -140,8 +131,8 @@ func TestReset_ClearsEveryStateFieldOfEveryFingerprinter(t *testing.T) {
 
 	fingerprinters := auditStateFingerprinters(proc)
 
-	if len(fingerprinters) != 10 {
-		t.Fatalf("the test names %d fingerprinters, want 10", len(fingerprinters))
+	if len(fingerprinters) == 0 {
+		t.Fatal("the processor runs no fingerprinter, so this test proves nothing")
 	}
 
 	held := 0

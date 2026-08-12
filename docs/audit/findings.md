@@ -80,6 +80,31 @@ the same time. Each one records its own audit date in its own table, under
 `internal/parser/testhelpers.go` carries no `_test.go` suffix, so the compiler builds it
 into the package that ships. The audit reads it for that reason.
 
+## The files a later issue added
+
+The audit ran in Epic 2, and it read the files the repository held then. **A later epic
+adds a file to one of the three directories, and no audit reads that file.** A `Read by`
+row for it records an audit that nobody performed, so the audit set never gains one.
+
+**The report classifies such a file as an added file, and the `Added by` column names the
+issue that added it.** That classification states the true history of the file, and it
+claims no audit.
+
+The two classifications cover the three directories. One audit issue reads the file, or
+one later issue added it. **A file that carries neither classification fails
+`TestTheReportClassifiesEveryGoFileOfTheThreeDirectories`**, so the guard keeps its force
+and an added file reaches an honest row.
+
+Issue #162 states this classification, and the project manager decided it on issue #40.
+
+<!-- added-files:begin -->
+| File | Added by |
+|---|---|
+<!-- added-files:end -->
+
+The table holds no row today, because an audit issue reads every file of the three
+directories.
+
 ## The record
 
 ### The fields of a finding
