@@ -148,6 +148,44 @@ func TestFoxioPinNamesOneFullCommitHash(t *testing.T) {
 	}
 }
 
+// corpusCacheKey returns the cache key that the conformance job of the workflow names.
+// It fails the test when the workflow names no such key.
+func corpusCacheKey(t *testing.T, workflow string) string {
+	t.Helper()
+
+	match := regexp.MustCompile(`(?m)^\s*key:\s*(foxio-corpus.*)$`).FindStringSubmatch(workflow)
+	if match == nil {
+		t.Fatalf(".github/workflows/ci.yml names no corpus cache key")
+	}
+
+	return strings.TrimSpace(match[1])
+}
+
+// FR-conformance-37 — the cache key reads the hash of `scripts/fetch-corpus.sh`, because
+// that script decides which directories a complete corpus holds. `actions/cache@v4` writes
+// no entry when the key matches an entry that already exists, and GitHub states that the
+// content of an entry never changes. #165 added `testdata/foxio/reference/` and moved no
+// pin, so every run restored a corpus that the script rejects, downloaded the archive
+// again, and wrote nothing back. The hash moves the key on the commit that changes the
+// layout, and no reader has to remember a version number.
+func TestTheCorpusCacheKeyReadsTheHashOfTheFetchScript(t *testing.T) {
+	key := corpusCacheKey(t, readRepoFile(t, ".github/workflows/ci.yml"))
+
+	if !strings.Contains(key, "hashFiles('scripts/fetch-corpus.sh')") {
+		t.Errorf("the corpus cache key is %q, and it reads no hash of scripts/fetch-corpus.sh", key)
+	}
+}
+
+// FR-conformance-37 — the cache key reads the pinned commit, so a pin move misses the
+// cache and the next run fetches the corpus of the new commit.
+func TestTheCorpusCacheKeyReadsThePinnedCommit(t *testing.T) {
+	key := corpusCacheKey(t, readRepoFile(t, ".github/workflows/ci.yml"))
+
+	if !strings.Contains(key, "steps.pin.outputs.commit") {
+		t.Errorf("the corpus cache key is %q, and it reads no pinned commit", key)
+	}
+}
+
 func TestFetchCorpusWritesTheCapturesAndTheVectors(t *testing.T) {
 	requireCorpusFetchTools(t)
 

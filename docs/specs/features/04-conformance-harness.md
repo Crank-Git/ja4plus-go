@@ -119,7 +119,9 @@ deviation list that Epic 5 closes.
   pull request.
 - **FR-conformance-35** — The CI job fails when the suite reports any deviation.
 - **FR-conformance-36** — The CI job fails when the suite skips.
-- **FR-conformance-37** — The CI job caches the corpus by the pinned commit.
+- **FR-conformance-37** — The CI job caches the corpus by the pinned commit and by the
+  hash of `scripts/fetch-corpus.sh`. That script decides which directories a complete
+  corpus holds, so a layout change misses the cache.
 
 ## User flows
 
@@ -132,7 +134,8 @@ deviation list that Epic 5 closes.
 
 ### CI gates a pull request
 
-1. The workflow restores the corpus from the cache, keyed by the pinned commit.
+1. The workflow restores the corpus from the cache, keyed by the pinned commit and by the
+   hash of `scripts/fetch-corpus.sh`.
 2. The workflow runs `make corpus` when the cache misses.
 3. The workflow runs `make conformance`.
 4. The job fails when the suite reports a deviation.
