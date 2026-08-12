@@ -18,6 +18,9 @@ project declines.
 Never write "we decided" for a reading, and never write "the spec says" for a ruling. The
 port settled this vocabulary in its issue #533, and both repositories use it.
 
+**`## What a delegated session may rule` below states the one case where a delegated
+project manager makes a ruling.** The table holds for every other question.
+
 ## A reading cites a file and a line
 
 A claim about a source is worthless without the location. Write
@@ -79,6 +82,64 @@ Stop and ask the maintainer when any of these is true. Do not pick an answer.
 **A guess here is worse than a delay.** A rule this project invents makes it answer
 differently from every FoxIO implementation on the same bytes, and comparison is the only
 thing a fingerprint is for.
+
+## What a delegated session may rule
+
+**The maintainer delegates a session to a project manager, and this section states what
+that delegation permits.** The maintainer approved this delegation on 2026-08-12, and #246
+records it.
+
+**A schema violation has one right answer, and a reference split has none.** That sentence
+is the boundary. The project manager rules a schema violation under a delegation. It rules
+no reference split, and it rules no other question.
+
+**A delegated ruling is a ruling, and never a reading.** A reading concludes what one
+source states. A delegated ruling decides what the library does where a published FoxIO
+value contradicts a published FoxIO rule. No source settles that question, because FoxIO
+publishes both of them.
+
+A delegated ruling is permitted only when every one of these is true.
+
+1. A published rule states the answer, and that rule ranks at 1 or at 2 in the source
+   ranking above.
+2. Every FoxIO implementation enforces that rule. One implementation that departs makes
+   the question a reference split, and this section bars a reference split.
+3. A recorded measurement proves the violation, and each citation names a file and a line.
+4. The register entry or the test carries a provisional marker, and it names the issue.
+5. The entry names a reversal path, so the maintainer reverses the ruling with one action.
+
+**A question that fails one condition belongs to the maintainer.** The project manager
+labels the issue `status:needs-feedback`, and it builds nothing that depends on the answer.
+
+**The stop conditions above hold without a change.** Each one names a question that no rank
+1 source and no rank 2 source settles, so no delegation reaches it.
+
+**The maintainer confirms a delegated ruling, or reverses it.** A delegated ruling that the
+maintainer has not confirmed stays provisional. A later reader reads a provisional ruling
+as unconfirmed, and never as settled.
+
+### Three examples
+
+**#223 is a delegated ruling, and the maintainer confirmed it on 2026-08-12.** A published
+FoxIO value contradicts a rule that every implementation enforces.
+`docs/specs/foxio/JA4SSH.md` R13 is a rank 1 rule, and it states that the mode is `0` when
+the side sent no SSH packet. `zeek/ja4ssh/main.zeek:63`,
+`wireshark/source/packet-ja4.c:400`, `rust/ja4/src/ssh.rs:284` and `python/ja4ssh.py:51`
+each enforce R13. `testdata/foxio/python/ssh-scp-1050.pcap.json` holds
+`c112s1460_c0s200_c36s0`, which pairs a client mode of `112` with a client packet count of
+`0`. The five conditions each hold, and one answer is right.
+
+**#216 belongs to the maintainer, and the project manager ruled nothing.** The question is
+whether `CleanupConnection` emits the JA4SSH window that a connection holds open. Both
+candidate answers change the exported surface, and no FoxIO source addresses a state table.
+Condition 1 fails, and the choice is a genuine one.
+
+**#247 belongs to the maintainer, and the project manager ruled nothing.** The question is
+the JA4L part count on a TCP connection. `docs/specs/foxio/JA4L.md` R3 is a rank 1 image
+rule that states three parts, and ruling #127 declines part c on a TCP connection. The four
+FoxIO implementations split two against two, so condition 2 fails. The maintainer ruled the
+question on 2026-08-12, and round 25 of the `## Changelog` of `docs/specs/spec.md` records
+that ruling.
 
 ## Every ruling is reversible
 
