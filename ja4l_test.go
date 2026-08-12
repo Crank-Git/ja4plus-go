@@ -1269,8 +1269,10 @@ func TestJA4LMovesNoClientPointWhenTheCaptureHoldsNoSYN(t *testing.T) {
 	}
 }
 
-// TestJA4LWritesTwoPartsOnATCPConnectionInGeneve holds the TCP half of the issue #127
-// ruling. The ruling writes two parts on a TCP connection, and it declines the third part
+// TestJA4LWritesTwoPartsOnATCPConnectionInGeneve holds the TCP half of the ruling of
+// issue #127 in this repository. The port's issue #127 rules the JA4 ALPN value instead,
+// so a reader who reads that number bare reaches the wrong ruling. Issue #255 records the
+// collision. The ruling writes two parts on a TCP connection, and it declines the third part
 // that Wireshark writes there. Every candidate answer to the open QUIC question keeps this
 // part count, so this test holds under each one. `docs/specs/foxio/JA4L.md` R29 records the
 // split, R30 records the `tcp` literal that this project declines, and R35 records the open
