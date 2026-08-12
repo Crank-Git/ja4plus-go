@@ -10,25 +10,6 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-// foreignUDPLayerError returns a non-fatal error when the packet holds a UDP layer type
-// that carries another concrete type. It returns nil for every other packet.
-//
-// A caller that supplies a custom decoder registers such a type, and parser.GetUDPLayer
-// returns nil for it. Finding F-24-1 requires the error, because a silent skip tells the
-// caller nothing about the layer the fingerprinter declined to read.
-func foreignUDPLayerError(packet gopacket.Packet) error {
-	udpLayer := packet.Layer(layers.LayerTypeUDP)
-	if udpLayer == nil {
-		return nil
-	}
-
-	if _, held := udpLayer.(*layers.UDP); held {
-		return nil
-	}
-
-	return fmt.Errorf("the UDP layer carries the type %T", udpLayer)
-}
-
 // JA4Fingerprinter computes JA4 TLS Client Hello fingerprints.
 //
 // One JA4Fingerprinter serves one goroutine. It holds state that no lock guards.
@@ -344,6 +325,29 @@ func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
 		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
 	}
 	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
+}
+
+// foreignUDPLayerError returns a non-fatal error when the packet holds a UDP layer type
+// that carries another concrete type. It returns nil for every other packet.
+// JA4 and JA4S both call it.
+//
+// A caller that supplies a custom decoder registers such a type, and parser.GetUDPLayer
+// returns nil for it. Finding F-24-1 requires the error, because a silent skip tells the
+// caller nothing about the layer the fingerprinter declined to read.
+//
+// It reads the outermost UDP layer type. A foreign type inside a tunnel therefore reaches
+// no error, because the tunnel carries a genuine UDP header that matches first.
+func foreignUDPLayerError(packet gopacket.Packet) error {
+	udpLayer := packet.Layer(layers.LayerTypeUDP)
+	if udpLayer == nil {
+		return nil
+	}
+
+	if _, held := udpLayer.(*layers.UDP); held {
+		return nil
+	}
+
+	return fmt.Errorf("the UDP layer carries the type %T", udpLayer)
 }
 
 // formatHexList formats a slice of uint16 as comma-separated 4-char lowercase hex.

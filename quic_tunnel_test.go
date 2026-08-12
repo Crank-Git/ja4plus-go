@@ -68,7 +68,7 @@ func appendQUICVarint(out []byte, value uint64) []byte {
 // decrypts. The packet carries the handshake message in one CRYPTO frame.
 //
 // The Initial keys of QUIC version 1 come from the destination connection identifier and
-// from a fixed salt, so the packet needs no key exchange and no key log.
+// from a fixed salt. The packet therefore needs no key exchange and no key log.
 // RFC 9001 section 5.2 states that derivation, and RFC 9001 section 5.4 states the header
 // protection this function applies.
 func buildQUICClientInitial(t *testing.T, dcid, scid, handshake []byte) []byte {
