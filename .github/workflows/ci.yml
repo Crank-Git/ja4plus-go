@@ -65,9 +65,9 @@ jobs:
       # entry that already exists, and GitHub states that the content of an entry never
       # changes. A layout change under an unmoved pin would therefore restore a corpus that
       # `scripts/fetch-corpus.sh` rejects, download the archive again, and write nothing
-      # back. #165 added `testdata/foxio/reference/` and moved no pin, and that defeated
-      # this cache until the hash arrived. Change the script to change the key. Nobody has
-      # to remember a version number.
+      # back. #165 added `testdata/foxio/reference/` and moved no pin, so this cache saved
+      # nothing until the hash arrived. The commit that changes the script changes the key,
+      # and the key needs no version number that a reader must remember.
       #
       # `corpus_fetch_test.go` holds both halves of the key.
       - name: Restore the corpus

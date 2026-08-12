@@ -153,7 +153,7 @@ func TestFoxioPinNamesOneFullCommitHash(t *testing.T) {
 func corpusCacheKey(t *testing.T, workflow string) string {
 	t.Helper()
 
-	match := regexp.MustCompile(`(?m)^\s*key:\s*(foxio-corpus.*)$`).FindStringSubmatch(workflow)
+	match := regexp.MustCompile(`(?m)^[ \t]*key:[ \t]*(foxio-corpus.*)$`).FindStringSubmatch(workflow)
 	if match == nil {
 		t.Fatalf(".github/workflows/ci.yml names no corpus cache key")
 	}
@@ -167,7 +167,7 @@ func corpusCacheKey(t *testing.T, workflow string) string {
 // content of an entry never changes. #165 added `testdata/foxio/reference/` and moved no
 // pin, so every run restored a corpus that the script rejects, downloaded the archive
 // again, and wrote nothing back. The hash moves the key on the commit that changes the
-// layout, and no reader has to remember a version number.
+// layout, and the key needs no version number that a reader must remember.
 func TestTheCorpusCacheKeyReadsTheHashOfTheFetchScript(t *testing.T) {
 	key := corpusCacheKey(t, readRepoFile(t, ".github/workflows/ci.yml"))
 
