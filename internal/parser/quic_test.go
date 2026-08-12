@@ -278,6 +278,59 @@ func TestHkdfExpandLabel(t *testing.T) {
 	}
 }
 
+func TestHasQUICLongHeaderReadsTheHeaderForm(t *testing.T) {
+	cases := []struct {
+		name    string
+		payload []byte
+		want    bool
+	}{
+		{"a version 1 long header", []byte{0xc0, 0x00, 0x00, 0x00, 0x01, 0x00}, true},
+		{"a version 2 long header", []byte{0xd0, 0x6b, 0x33, 0x43, 0xcf, 0x00}, true},
+		{"a version this parser does not know", []byte{0xc0, 0xaa, 0xbb, 0xcc, 0xdd}, true},
+		{"a short header", []byte{0x40, 0x00, 0x00, 0x00, 0x01, 0x00}, false},
+		{"a version negotiation packet", []byte{0xc0, 0x00, 0x00, 0x00, 0x00, 0x00}, false},
+		{"a payload of 4 bytes", []byte{0xc0, 0x00, 0x00, 0x00}, false},
+		{"an empty payload", nil, false},
+		{"an NTP message", make([]byte, 48), false},
+	}
+	for _, one := range cases {
+		t.Run(one.name, func(t *testing.T) {
+			if got := HasQUICLongHeader(one.payload); got != one.want {
+				t.Errorf("HasQUICLongHeader() = %v, want %v", got, one.want)
+			}
+		})
+	}
+}
+
+// TestIsQUICHandshakePacketReadsThePacketType holds the two type tables that the two QUIC
+// versions state. RFC 9000 Section 17.2 gives the Handshake type `0b10`, and RFC 9369
+// Section 3.2 gives it `0b11` for version 2. Issue #186 holds the reading.
+func TestIsQUICHandshakePacketReadsThePacketType(t *testing.T) {
+	cases := []struct {
+		name    string
+		payload []byte
+		want    bool
+	}{
+		{"a version 1 Handshake packet", []byte{0xe0, 0x00, 0x00, 0x00, 0x01, 0x00}, true},
+		{"a version 1 Initial packet", []byte{0xc0, 0x00, 0x00, 0x00, 0x01, 0x00}, false},
+		{"a version 1 Retry packet", []byte{0xf0, 0x00, 0x00, 0x00, 0x01, 0x00}, false},
+		{"a version 2 Handshake packet", []byte{0xf0, 0x6b, 0x33, 0x43, 0xcf, 0x00}, true},
+		{"a version 2 Initial packet", []byte{0xd0, 0x6b, 0x33, 0x43, 0xcf, 0x00}, false},
+		{"a version this parser does not know", []byte{0xe0, 0xaa, 0xbb, 0xcc, 0xdd}, true},
+		{"a short header", []byte{0x60, 0x00, 0x00, 0x00, 0x01, 0x00}, false},
+		{"a version negotiation packet", []byte{0xe0, 0x00, 0x00, 0x00, 0x00, 0x00}, false},
+		{"a payload of 4 bytes", []byte{0xe0, 0x00, 0x00, 0x00}, false},
+		{"an empty payload", nil, false},
+	}
+	for _, one := range cases {
+		t.Run(one.name, func(t *testing.T) {
+			if got := IsQUICHandshakePacket(one.payload); got != one.want {
+				t.Errorf("IsQUICHandshakePacket() = %v, want %v", got, one.want)
+			}
+		})
+	}
+}
+
 func bytesEqual(a, b []byte) bool {
 	if len(a) != len(b) {
 		return false

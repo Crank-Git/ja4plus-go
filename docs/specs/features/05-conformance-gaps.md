@@ -70,6 +70,8 @@ the deviation list exists, not before.
   packet does not move it.
 - **FR-gaps-14b** — A JA4L value and a JA4LS value read the time-to-live of the outer
   address layer.
+- **FR-gaps-14c** — `CleanupConnection` reads the reported key, so a caller removes a
+  connection with the address pair that a `FingerprintResult` carries.
 
 ### QUIC decryption secrets
 

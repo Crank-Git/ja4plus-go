@@ -161,6 +161,8 @@ func (p *Processor) Reset() {
 // fingerprinters. Each fingerprinter normalizes the 5-tuple to its own internal
 // key format. Call this when a connection is evicted from the monitor's tracker
 // to prevent state leaks in long-running processes.
+// The caller names the address pair that a FingerprintResult carries, which is the
+// reported key. One call reaches every fingerprinter, so one contract governs them all.
 func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	p.ensure()
 

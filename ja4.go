@@ -16,7 +16,7 @@ import (
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4Fingerprinter struct {
 	quicFragments map[string][]parser.CryptoFragment // DCID hex -> accumulated fragments
-	dcidToTuple   map[string]string                  // DCID hex -> 5-tuple key for cleanup
+	dcidToTuple   map[string]string                  // DCID hex -> grouping key for cleanup
 }
 
 // NewJA4 creates a new JA4Fingerprinter.
@@ -62,55 +62,56 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 
 	// Try QUIC in UDP packets with multi-packet CRYPTO frame accumulation
 	if ch == nil {
-		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
-			// A caller that supplies a custom decoder can register another concrete type
-			// under the UDP layer type. A fingerprinter returns a non-fatal error for it.
-			udp, ok := udpLayer.(*layers.UDP)
-			if !ok {
-				return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+		// The helper reads the UDP layer of the innermost packet. A tunnel carries its own
+		// UDP header, and that header names the tunnel and not the connection.
+		udp := parser.GetUDPLayer(packet)
+		if udp == nil {
+			return nil, foreignUDPLayerError(packet)
+		}
+
+		if len(udp.Payload) > 0 {
+			// DecryptQUICInitialCrypto returns the fragments it read beside a truncation
+			// error. The fingerprinter keeps them, because a whole client hello can sit
+			// in front of the truncated frame.
+			frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
+			if len(frags) == 0 && err != nil {
+				return nil, err
 			}
-			if len(udp.Payload) > 0 {
-				// DecryptQUICInitialCrypto returns the fragments it read beside a truncation
-				// error. The fingerprinter keeps them, because a whole client hello can sit
-				// in front of the truncated frame.
-				frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
-				if len(frags) == 0 && err != nil {
+			if len(frags) > 0 && len(dcid) > 0 {
+				dcidKey := fmt.Sprintf("%x", dcid)
+
+				// The entry holds the grouping key, so it reads the inner address pair.
+				// GetShardKey reads the same pair, and a tunneled connection would
+				// otherwise reach one shard under two names.
+				groupSrcIP, groupDstIP, _ := parser.GetGroupingIPInfo(packet)
+				tupleKey := fmt.Sprintf("%s:%d-%s:%d", groupSrcIP, uint16(udp.SrcPort), groupDstIP, uint16(udp.DstPort))
+				f.dcidToTuple[dcidKey] = tupleKey
+
+				// A sender that never completes a client hello reaches the fragment
+				// buffer bound. The fingerprinter then drops the connection state,
+				// because an unbounded buffer is a memory-exhaustion path.
+				collected, err := parser.CollectCryptoFragments(f.quicFragments[dcidKey], frags)
+				if err != nil {
+					delete(f.quicFragments, dcidKey)
+					delete(f.dcidToTuple, dcidKey)
+
 					return nil, err
 				}
-				if len(frags) > 0 && len(dcid) > 0 {
-					dcidKey := fmt.Sprintf("%x", dcid)
 
-					// Record DCID-to-tuple mapping for cleanup and shard routing
-					srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
-					tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, uint16(udp.SrcPort), dstIP, uint16(udp.DstPort))
-					f.dcidToTuple[dcidKey] = tupleKey
+				f.quicFragments[dcidKey] = collected
 
-					// A sender that never completes a client hello reaches the fragment
-					// buffer bound. The fingerprinter then drops the connection state,
-					// because an unbounded buffer is a memory-exhaustion path.
-					collected, err := parser.CollectCryptoFragments(f.quicFragments[dcidKey], frags)
-					if err != nil {
-						delete(f.quicFragments, dcidKey)
-						delete(f.dcidToTuple, dcidKey)
-
-						return nil, err
-					}
-
-					f.quicFragments[dcidKey] = collected
-
-					// Try to parse ClientHello from accumulated fragments
-					ch, err = parser.ClientHelloFromCryptoFragments(collected)
-					if err != nil {
-						return nil, err
-					}
-					if ch != nil {
-						delete(f.quicFragments, dcidKey)
-						delete(f.dcidToTuple, dcidKey)
-					}
+				// Try to parse ClientHello from accumulated fragments
+				ch, err = parser.ClientHelloFromCryptoFragments(collected)
+				if err != nil {
+					return nil, err
 				}
-				srcPort = uint16(udp.SrcPort)
-				dstPort = uint16(udp.DstPort)
+				if ch != nil {
+					delete(f.quicFragments, dcidKey)
+					delete(f.dcidToTuple, dcidKey)
+				}
 			}
+			srcPort = uint16(udp.SrcPort)
+			dstPort = uint16(udp.DstPort)
 		}
 	}
 
@@ -158,6 +159,12 @@ func (f *JA4Fingerprinter) Reset() {
 // via the dcidToTuple reverse map and cleans the corresponding fragments.
 // The caller names the two endpoints in either order, because the reverse map holds the
 // order of the datagram that carried the client hello.
+// The caller names the address pair that a FingerprintResult carries, which is the
+// reported key. JA4L holds the same contract.
+// A tunneled connection groups under the inner address pair, and this method reads no
+// index from the reported key to the grouping key. It therefore removes no tunneled
+// connection.
+// TODO(#193): Read the grouping key of a tunneled connection from the reported key.
 func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 
@@ -337,6 +344,29 @@ func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
 		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
 	}
 	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
+}
+
+// foreignUDPLayerError returns a non-fatal error when the packet holds a UDP layer type
+// that carries another concrete type. It returns nil for every other packet.
+// JA4 and JA4S both call it.
+//
+// A caller that supplies a custom decoder registers such a type, and parser.GetUDPLayer
+// returns nil for it. Finding F-24-1 requires the error, because a silent skip tells the
+// caller nothing about the layer the fingerprinter declined to read.
+//
+// It reads the outermost UDP layer type. A foreign type inside a tunnel therefore reaches
+// no error, because the tunnel carries a genuine UDP header that matches first.
+func foreignUDPLayerError(packet gopacket.Packet) error {
+	udpLayer := packet.Layer(layers.LayerTypeUDP)
+	if udpLayer == nil {
+		return nil
+	}
+
+	if _, held := udpLayer.(*layers.UDP); held {
+		return nil
+	}
+
+	return fmt.Errorf("the UDP layer carries the type %T", udpLayer)
 }
 
 // formatHexList formats a slice of uint16 as comma-separated 4-char lowercase hex.

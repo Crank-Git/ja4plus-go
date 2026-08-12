@@ -171,6 +171,41 @@ type CryptoFragment struct {
 	Data   []byte
 }
 
+// HasQUICLongHeader reports whether a UDP payload carries a QUIC long-header packet.
+// It returns false for each of these payloads:
+//   - a payload shorter than 5 bytes;
+//   - a payload that carries a short header;
+//   - a payload that carries a version negotiation packet.
+//
+// It reads no packet type, because a version this parser does not know still carries a
+// long header. RFC 9000 Section 17.2 states the form.
+func HasQUICLongHeader(payload []byte) bool {
+	if len(payload) < 5 {
+		return false
+	}
+	if payload[0]&0x80 == 0 {
+		return false
+	}
+	return binary.BigEndian.Uint32(payload[1:5]) != 0
+}
+
+// IsQUICHandshakePacket reports whether a UDP payload carries a QUIC Handshake packet.
+// It returns false for every payload that HasQUICLongHeader returns false for.
+// A version this parser does not know reads the version 1 type values, because RFC 9000
+// Section 17.2 states them and only RFC 9369 Section 3.2 moves them.
+func IsQUICHandshakePacket(payload []byte) bool {
+	if !HasQUICLongHeader(payload) {
+		return false
+	}
+
+	version := binary.BigEndian.Uint32(payload[1:5])
+	if version == quicV2 {
+		return payload[0]&0x30 == 0x30
+	}
+
+	return payload[0]&0x30 == 0x20
+}
+
 // ParseQUICInitial parses a QUIC Initial packet and extracts the TLS ClientHello.
 // Returns nil, nil if the payload is not a QUIC Initial packet.
 // Returns nil, error if it looks like a QUIC Initial but decryption/parsing fails.
