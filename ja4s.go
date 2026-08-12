@@ -134,8 +134,12 @@ func (f *JA4SFingerprinter) Reset() {
 
 // CleanupConnection removes internal state for the given connection.
 // JA4S QUIC state is keyed by directional tuple: srcIP:srcPort-dstIP:dstPort.
-// The caller names the grouping key of a tunneled connection, so it names the inner
-// address pair and the inner port pair.
+// The caller names the address pair that a FingerprintResult carries, which is the
+// reported key. JA4L holds the same contract.
+// A tunneled connection groups under the inner address pair, and this method reads no
+// index from the reported key to the grouping key. It therefore removes no tunneled
+// connection today.
+// TODO(#193): Read the grouping key of a tunneled connection from the reported key.
 func (f *JA4SFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 

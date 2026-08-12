@@ -1,10 +1,15 @@
 package ja4plus
 
 import (
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 // tunnelSkipWithoutCapture skips the test when the corpus holds no such capture.
@@ -245,5 +250,99 @@ func TestJA4LCleanupConnectionRemovesATunneledConnectionByTheReportedKey(t *test
 	if got := len(fingerprinter.connections); got != held-1 {
 		t.Errorf("CleanupConnection leaves %d of %d connections, and it removes the one the caller named",
 			got, held)
+	}
+}
+
+// buildVXLANTCPSYNPacket returns one VXLAN packet that carries a TCP SYN packet inside it.
+// The outer address pair names the tunnel, and the inner address pair names the connection.
+//
+// No capture of the FoxIO corpus holds one tunneled connection alone, so no vector proves
+// that CleanupConnection empties both state maps. This function builds the separating
+// packet. The tunnel is VXLAN, and RFC 7348 section 5 states the port 4789.
+func buildVXLANTCPSYNPacket(t *testing.T) gopacket.Packet {
+	t.Helper()
+
+	outerEth := &layers.Ethernet{
+		SrcMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+		DstMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	outerIP := &layers.IPv4{
+		SrcIP:    net.ParseIP(tunnelOuterSrcIP),
+		DstIP:    net.ParseIP(tunnelOuterDstIP),
+		Protocol: layers.IPProtocolUDP,
+		Version:  4,
+		TTL:      255,
+	}
+	outerUDP := &layers.UDP{SrcPort: vxlanUDPPort, DstPort: vxlanUDPPort}
+	if err := outerUDP.SetNetworkLayerForChecksum(outerIP); err != nil {
+		t.Fatalf("SetNetworkLayerForChecksum returns the error %v", err)
+	}
+
+	vxlan := &layers.VXLAN{ValidIDFlag: true, VNI: 100}
+
+	innerEth := &layers.Ethernet{
+		SrcMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x03},
+		DstMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x04},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	innerIP := &layers.IPv4{
+		SrcIP:    net.ParseIP(tunnelInnerSrcIP),
+		DstIP:    net.ParseIP(tunnelInnerDstIP),
+		Protocol: layers.IPProtocolTCP,
+		Version:  4,
+		TTL:      64,
+	}
+	innerTCP := &layers.TCP{
+		SrcPort: tunnelInnerSrcPort,
+		DstPort: tunnelInnerDstPort,
+		SYN:     true,
+		Window:  64240,
+	}
+	if err := innerTCP.SetNetworkLayerForChecksum(innerIP); err != nil {
+		t.Fatalf("SetNetworkLayerForChecksum returns the error %v", err)
+	}
+
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+	err := gopacket.SerializeLayers(buf, opts,
+		outerEth, outerIP, outerUDP, vxlan, innerEth, innerIP, innerTCP)
+	if err != nil {
+		t.Fatalf("SerializeLayers returns the error %v", err)
+	}
+
+	packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+	packet.Metadata().Timestamp = time.Unix(1, 0)
+
+	return packet
+}
+
+// CleanupConnection empties both state maps when the caller names the grouping key.
+//
+// The index holds the reported key, and the fallback path treats the key the caller gave
+// as the grouping key. That path removes the connection and leaves the index entry, so one
+// entry leaks for every tunneled connection. Issue #193 holds the reading, and
+// `.claude/rules/concurrency.md` requires a removal path for every state map.
+func TestJA4LCleanupConnectionEmptiesBothMapsWhenTheCallerNamesTheGroupingKey(t *testing.T) {
+	packet := buildVXLANTCPSYNPacket(t)
+
+	fingerprinter := NewJA4L()
+	if _, err := fingerprinter.ProcessPacket(packet); err != nil {
+		t.Fatalf("ProcessPacket returns the error %v", err)
+	}
+
+	if len(fingerprinter.connections) != 1 || len(fingerprinter.groupingKeys) != 1 {
+		t.Fatalf("the fingerprinter holds %d connections and %d index entries, and the packet opens one of each",
+			len(fingerprinter.connections), len(fingerprinter.groupingKeys))
+	}
+
+	// The caller names the inner address pair, which is the grouping key.
+	fingerprinter.CleanupConnection(tunnelInnerSrcIP, tunnelInnerSrcPort, tunnelInnerDstIP, tunnelInnerDstPort, "tcp")
+
+	if got := len(fingerprinter.connections); got != 0 {
+		t.Errorf("CleanupConnection leaves %d connections, and the caller named the only one", got)
+	}
+	if got := len(fingerprinter.groupingKeys); got != 0 {
+		t.Errorf("CleanupConnection leaves %d index entries, and every entry of a removed connection goes with it", got)
 	}
 }

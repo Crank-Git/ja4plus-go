@@ -348,6 +348,16 @@ func (f *JA4LFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 		connKey = reportedKey
 	}
 
+	// A caller that names the grouping key removes no index entry above, because the index
+	// holds the reported key alone. The connection carries the reported pair, so the method
+	// reads that pair and removes the entry the caller cannot name. Without this removal one
+	// entry leaks for every tunneled connection. Issue #193 holds the reading.
+	if conn, held := f.connections[connKey]; held && conn.reportedSrcIP != "" {
+		indexedKey, _ := f.normalizeKey(conn.proto,
+			conn.reportedSrcIP, conn.reportedSrcPort, conn.reportedDstIP, conn.reportedDstPort)
+		delete(f.groupingKeys, indexedKey)
+	}
+
 	delete(f.groupingKeys, reportedKey)
 	delete(f.connections, connKey)
 }
