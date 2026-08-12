@@ -3,6 +3,7 @@ package ja4plus
 import (
 	"encoding/binary"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
@@ -55,8 +56,13 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	windowSize := tcp.Window
 
 	var optionParts []string
-	mss := "0"
-	wscale := "0"
+
+	// The two-digit form keys on the value, and never on the presence of the option. An
+	// absent option and an option that carries zero therefore write the same part.
+	// Ruling #125 states the form, and `wireshark/source/packet-ja4.c:668` and
+	// `zeek/ja4t/main.zeek:206` each test the value.
+	var mss uint16
+	var wscale uint8
 
 	for _, opt := range tcp.Options {
 		switch opt.OptionType {
@@ -67,12 +73,12 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 		case layers.TCPOptionKindMSS:
 			optionParts = append(optionParts, "2")
 			if len(opt.OptionData) >= 2 {
-				mss = fmt.Sprintf("%d", binary.BigEndian.Uint16(opt.OptionData[:2]))
+				mss = binary.BigEndian.Uint16(opt.OptionData[:2])
 			}
 		case layers.TCPOptionKindWindowScale:
 			optionParts = append(optionParts, "3")
 			if len(opt.OptionData) >= 1 {
-				wscale = fmt.Sprintf("%d", opt.OptionData[0])
+				wscale = opt.OptionData[0]
 			}
 		case layers.TCPOptionKindSACKPermitted:
 			optionParts = append(optionParts, "4")
@@ -81,12 +87,22 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 		}
 	}
 
-	optionsStr := "0"
+	optionsStr := "00"
 	if len(optionParts) > 0 {
 		optionsStr = strings.Join(optionParts, "-")
 	}
 
-	fingerprint := fmt.Sprintf("%d_%s_%s_%s", windowSize, optionsStr, mss, wscale)
+	// Part c and part d take different forms above zero. Zeek writes part c as
+	// `fmt("%02d", ...)` at `zeek/ja4t/main.zeek:204`, so a segment size below 10 carries
+	// a leading zero. Zeek writes part d as `"%d"` above zero at
+	// `zeek/ja4t/main.zeek:209`, so a window scale carries none.
+	// `wireshark/source/packet-ja4.c:664-676` writes the same two forms.
+	wscaleStr := "00"
+	if wscale != 0 {
+		wscaleStr = strconv.Itoa(int(wscale))
+	}
+
+	fingerprint := fmt.Sprintf("%d_%s_%02d_%s", windowSize, optionsStr, mss, wscaleStr)
 	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
 	return &FingerprintResult{
