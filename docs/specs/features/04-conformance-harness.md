@@ -51,6 +51,13 @@ deviation list that Epic 5 closes.
 - **FR-conformance-8** — `.gitignore` ignores `testdata/foxio/`.
 - **FR-conformance-9** — The script fails with a message that names the network when it
   cannot reach the reference.
+- **FR-conformance-38** — The script writes the reference to `testdata/foxio/reference/`,
+  under the path names that the FoxIO repository uses.
+- **FR-conformance-39** — The reference holds no capture and no vector, because
+  `testdata/foxio/pcap/`, `testdata/foxio/python/` and `testdata/foxio/wireshark/` hold
+  them.
+- **FR-conformance-40** — The script downloads again when `testdata/foxio/.fetched` names
+  the pinned commit and a corpus directory is absent.
 
 ### The harness
 

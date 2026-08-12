@@ -57,8 +57,8 @@ func newCorpusFetchRoot(t *testing.T) string {
 	return root
 }
 
-// newCorpusArchive returns the path of a gzip archive that holds the three corpus
-// directories. The archive has one top directory, as the FoxIO archive does.
+// newCorpusArchive returns the path of a gzip archive that holds the corpus and the
+// reference. The archive has one top directory, as the FoxIO archive does.
 func newCorpusArchive(t *testing.T) string {
 	t.Helper()
 
@@ -69,6 +69,10 @@ func newCorpusArchive(t *testing.T) string {
 		"pcap/dhcp.pcapng":                         "capture",
 		"python/test/testdata/tls12.pcap.json":     "[]",
 		"wireshark/test/testdata/dhcp.pcapng.json": "[]",
+		"python/test/test_ja4_output.py":           "the per-stream harness",
+		"python/ja4.py":                            "the per-stream reference",
+		"wireshark/test/test_tshark_output.py":     "the per-packet harness",
+		"technical_details/JA4.png":                "the JA4 image",
 		"README.md":                                "the archive holds more than the corpus",
 	}
 
@@ -131,7 +135,7 @@ func TestFoxioPinNamesOneFullCommitHash(t *testing.T) {
 	}
 }
 
-func TestFetchCorpusWritesTheThreeCorpusDirectories(t *testing.T) {
+func TestFetchCorpusWritesTheCapturesAndTheVectors(t *testing.T) {
 	requireCorpusFetchTools(t)
 
 	root := newCorpusFetchRoot(t)
@@ -149,6 +153,80 @@ func TestFetchCorpusWritesTheThreeCorpusDirectories(t *testing.T) {
 		if _, statErr := os.Stat(filepath.Join(root, path)); statErr != nil {
 			t.Errorf("%s is absent: %v\n%s", path, statErr, output)
 		}
+	}
+}
+
+// FR-conformance-38 — `.claude/rules/rulings.md` requires a reading to cite a file and a
+// line at the pinned commit. #165 found that no FoxIO source file reached the corpus, so
+// the citation of #41 was unverifiable here. The reference tree holds the cited paths
+// below `testdata/foxio/reference/`, under the names the FoxIO repository uses.
+func TestFetchCorpusWritesTheReferenceTreeUnderTheFoxioPaths(t *testing.T) {
+	requireCorpusFetchTools(t)
+
+	root := newCorpusFetchRoot(t)
+	output, err := runFetchCorpus(t, root, fileURL(newCorpusArchive(t)))
+	if err != nil {
+		t.Fatalf("the script failed: %v\n%s", err, output)
+	}
+
+	for _, path := range []string{
+		"testdata/foxio/reference/technical_details/JA4.png",
+		"testdata/foxio/reference/python/test/test_ja4_output.py",
+		"testdata/foxio/reference/python/ja4.py",
+		"testdata/foxio/reference/wireshark/test/test_tshark_output.py",
+	} {
+		if _, statErr := os.Stat(filepath.Join(root, path)); statErr != nil {
+			t.Errorf("%s is absent: %v\n%s", path, statErr, output)
+		}
+	}
+}
+
+// FR-conformance-39 — the corpus holds one copy of each capture and of each vector. A
+// second copy below `reference/` would let a reader compare the corpus with itself.
+func TestFetchCorpusWritesOneCopyOfEachCaptureAndVector(t *testing.T) {
+	requireCorpusFetchTools(t)
+
+	root := newCorpusFetchRoot(t)
+	output, err := runFetchCorpus(t, root, fileURL(newCorpusArchive(t)))
+	if err != nil {
+		t.Fatalf("the script failed: %v\n%s", err, output)
+	}
+
+	for _, path := range []string{
+		"testdata/foxio/reference/pcap",
+		"testdata/foxio/reference/python/test/testdata",
+		"testdata/foxio/reference/wireshark/test/testdata",
+	} {
+		if _, statErr := os.Stat(filepath.Join(root, path)); statErr == nil {
+			t.Errorf("%s is present, and the corpus holds that content once\n%s", path, output)
+		}
+	}
+}
+
+// FR-conformance-40 — a corpus that an earlier version of the script wrote holds the
+// pinned commit and no reference tree. The script fetches again for that corpus, because
+// the commit alone does not report a complete corpus.
+func TestFetchCorpusFetchesAgainWhenTheReferenceTreeIsAbsent(t *testing.T) {
+	requireCorpusFetchTools(t)
+
+	root := newCorpusFetchRoot(t)
+	archive := fileURL(newCorpusArchive(t))
+	if output, err := runFetchCorpus(t, root, archive); err != nil {
+		t.Fatalf("the first run failed: %v\n%s", err, output)
+	}
+
+	reference := filepath.Join(root, "testdata", "foxio", "reference")
+	if err := os.RemoveAll(reference); err != nil {
+		t.Fatalf("remove the reference tree: %v", err)
+	}
+
+	output, err := runFetchCorpus(t, root, archive)
+	if err != nil {
+		t.Fatalf("the second run failed: %v\n%s", err, output)
+	}
+
+	if _, statErr := os.Stat(filepath.Join(reference, "technical_details", "JA4.png")); statErr != nil {
+		t.Errorf("the second run wrote no reference tree: %v\n%s", statErr, output)
 	}
 }
 
