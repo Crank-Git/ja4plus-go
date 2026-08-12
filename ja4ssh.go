@@ -487,10 +487,14 @@ func (f *JA4SSHFingerprinter) CloseConnectionWindow(srcIP string, srcPort uint16
 		return nil
 	}
 
-	delete(f.connections, connKey)
-
 	result, held := emitSSHWindow(
 		conn, conn.clientIP, conn.serverIP, conn.clientPort, conn.serverPort, conn.lastSeen)
+
+	// The eviction follows the emission, which is the order the ruling of issue #216 states.
+	// A window that holds no SSH packet reaches this line too, because CleanupConnection
+	// evicts such a connection and this method must not leave it behind.
+	delete(f.connections, connKey)
+
 	if !held {
 		return nil
 	}
