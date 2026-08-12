@@ -66,8 +66,11 @@ type ConnectionWindowCloser interface {
 // Four fields carry one method value each, and the FoxIO key suffix names each one.
 // `Fingerprint` carries the bare key, `Raw` carries `_r`, `OriginalOrder` carries `_o` and
 // `RawOriginalOrder` carries `_ro`. A fingerprinter that produces no value for one of the
-// four leaves that field empty, because FoxIO publishes no key of that name for every
-// method.
+// four leaves that field empty. The vector set that the fingerprinter reads states the
+// reason. The FoxIO per-stream vector set publishes `JA4H_ro` and no `JA4H_r` value, so
+// `JA4H` leaves `Raw` empty. The FoxIO per-packet vector set publishes `ja4.ja4h_r`, which
+// `conformancePacketMethods` of `conformance_test.go` maps. Issue #290 records this
+// correction.
 type FingerprintResult struct {
 	Fingerprint string
 	Raw         string

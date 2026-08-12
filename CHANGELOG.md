@@ -10,8 +10,20 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 13 more, and issue #223 put 4 more. A run on the
-current tree reports 1091 matches, 1275 deviations, 202 accepted deviations and 202 register
+current tree reports 1545 matches, 940 deviations, 203 accepted deviations and 203 register
 keys. A count that an entry below states therefore differs from a fresh run.
+
+**Batch #281 filled four raw fields, and this paragraph records the measurement of the whole
+batch.** Issue #274 filled `JA4H_ro`, issue #275 filled `JA4S_r`, issue #276 filled `JA4X_r`
+and issue #277 added `OriginalOrder` for `JA4_o`. Only #277 disclosed counts, and its
+"before" figures already held the three other members, so no entry below states the batch
+total. The batch ran from `388b6c8` to `5282cb9`. The run reports 1091 matches, 1274
+deviations and 203 accepted deviations before, and 1545 matches, 940 deviations and 203
+accepted deviations after. The per-stream set reports 742 matches and 458 deviations before,
+and 1043 matches and 250 deviations after. The per-packet set reports 349 matches and 816
+deviations before, and 502 matches and 690 deviations after. The register holds 203 keys
+before and after, so the batch moves 454 comparisons to a match and accepts no new deviation.
+Issue #290 records this measurement.
 
 ### Added
 
