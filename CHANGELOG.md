@@ -29,6 +29,22 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **JA4L and JA4LS now report half of the measured time, and every latency value moves.**
+  This is a breaking behaviour change under `v1.0.0`. The `JA4L.png` image labels part a
+  `One-way TCP latency in µs (1ms = 1,000µs)`. `docs/specs/foxio/JA4L.md` R6 states that
+  part a is half of the measured time, because one measurement covers a round trip.
+  Earlier releases reported the whole time between the two measurement points. Every value
+  was therefore exactly twice the FoxIO vector, and JA4L matched on no capture. R6 cites
+  four FoxIO reference implementations that each divide by 2. The two integer references
+  truncate the half toward zero, and Go integer division truncates the same way. Every
+  FoxIO reference agrees, so this is a reading and not a ruling. The conformance run
+  reports 943 matches and 3247 deviations before the change. It reports 1011 matches and
+  3179 deviations after it. The register key count stays at 0. On the per-stream vector
+  set, JA4LS falls from 59 deviations to 3, and JA4L falls from 56 deviations to 44.
+  Twenty-four captures move, and JA4LS now matches on every stream of twenty-one of them.
+  The per-packet counts stay at 308 matches and 1777 deviations. A per-packet JA4L vector
+  carries a third part that the library does not yet produce. Issue #166 holds the
+  measurement.
 - **JA4L now fills the two QUIC client measurement points in the reference direction, and
   the client value of a QUIC connection moves.** This is a breaking behaviour change under
   `v1.0.0`. A server Handshake packet fills point C, and a client Handshake packet fills
