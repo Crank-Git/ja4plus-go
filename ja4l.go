@@ -147,6 +147,15 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 
 	// SYN packet (not SYN-ACK).
 	if tcpLayer.SYN && !tcpLayer.ACK {
+		// A SYN that carries another initial sequence number opens another connection on the
+		// same endpoints, and the reference counts the two separately.
+		// `ja4plus/fingerprinters/ja4l.py:433-437` holds the test, and
+		// `ja4plus/fingerprinters/ja4l.py:406-417` clears the state. Issue #211 holds the
+		// reading.
+		if conn.opensASecondConnection(source, tcpLayer.Seq) {
+			conn.restart()
+		}
+
 		conn.isns[source] = tcpLayer.Seq
 
 		if _, held := conn.timestamps["A"]; held {
@@ -212,6 +221,39 @@ func (c *connState) relativeNumbers(source, target string, seq, acknowledgement 
 	}
 
 	return seq - sourceISN, acknowledgement - targetISN, true
+}
+
+// opensASecondConnection reports whether one SYN opens a second connection on the endpoints of
+// a connection that this state already times.
+//
+// The endpoint that sends a retransmitted SYN holds the initial sequence number of that SYN
+// already, so a retransmission opens no second connection.
+// `ja4plus/fingerprinters/ja4l.py:435` reads the initial sequence number of the endpoint with
+// `dict.get`, which matches no value when the connection holds none for that endpoint.
+func (c *connState) opensASecondConnection(source string, sequence uint32) bool {
+	if _, held := c.timestamps["A"]; !held {
+		return false
+	}
+
+	isn, held := c.isns[source]
+
+	return !held || isn != sequence
+}
+
+// restart drops every measurement point of one connection.
+//
+// A second connection that reuses the endpoints of a closed one reads the points of the first
+// one without this call, and its client value grows with the age of the state.
+// `ja4plus/fingerprinters/ja4l.py:406-417` clears the same three maps. The port also drops the
+// index of the client value it reported, and this library holds no such index, because
+// ProcessPacket returns every result to the caller. Issue #25 removed the results slice.
+//
+// The endpoints that every result reports stay, because the first packet of the address pair
+// fixes them. `docs/specs/spec.md` `## Changelog` holds that ruling.
+func (c *connState) restart() {
+	c.timestamps = make(map[string]time.Time)
+	c.ttls = make(map[string]uint8)
+	c.isns = make(map[string]uint32)
 }
 
 // holdsACompleteHTTPRequest reports whether the payload holds an HTTP request with its whole

@@ -44,6 +44,21 @@ below states therefore differs from a fresh run.
 
 ### Fixed
 
+- JA4L now times a second connection on one grouping key from the measurement points of that
+  connection. `ja4l.go:150` wrote the initial sequence number of the endpoint before the guard
+  that holds point A, so a second connection kept the points of the first one. The second
+  connection then reported no server value, and its client value measured the first SYN-ACK, so
+  the value grew with the age of the state. A SYN that carries an initial sequence number the
+  connection does not hold now restarts the connection. The restart drops the timestamps, the
+  time-to-live values and the initial sequence numbers, and it keeps the endpoints that every
+  result reports. `ja4plus/fingerprinters/ja4l.py:433-437` holds the same test, and
+  `ja4plus/fingerprinters/ja4l.py:406-417` clears the same three maps, so this is a reading and
+  not a ruling. The corpus holds no capture that reaches one grouping key twice, so
+  `TestJA4LTimesASecondConnectionOnOneGroupingKeyFromItsOwnPoints` builds the separating packet
+  sequence. Measured against `batch/210-session5-followups` at `5f05554` with the corpus
+  present: the run reports 1065 matches, 1288 deviations and 198 accepted deviations before and
+  after, and the register holds 198 keys before and after. The change moves no fingerprint of
+  the corpus. Issue #211 holds the reading.
 - The JA4SSH window now emits at the packet count the caller names, and the threshold holds
   no upper cap. `ja4ssh.go:196-199` capped it at 10, so the library over-emitted by hundreds
   of values on one capture. The window also counts the SSH packets of the two directions
