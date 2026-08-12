@@ -125,8 +125,9 @@ func TestFoxioInventoryPageHoldsOneRowPerFileOfTechnicalDetails(t *testing.T) {
 }
 
 // FR-reference-3 — the page states the command that reproduces the measurement.
-// `scripts/fetch-corpus.sh` fetches three corpus directories and never
-// `technical_details/`, so the command reads the FoxIO repository directly.
+// The command reads the FoxIO repository directly, so a reader reproduces the measurement
+// without the corpus. #165 added `technical_details/` to the corpus at
+// `testdata/foxio/reference/technical_details/`, and the same command reads it there.
 func TestFoxioInventoryPageStatesTheCommandThatReproducesTheMeasurement(t *testing.T) {
 	page := readFoxioInventoryPage(t)
 	pin := readFoxioInventoryPin(t)
