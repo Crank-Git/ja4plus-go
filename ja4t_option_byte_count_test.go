@@ -51,7 +51,7 @@ func tcpOptionTimestamps(data []byte) layers.TCPOption {
 
 // The option list below reaches twelve bytes, so gopacket adds no pad byte. The bytes are
 // `02 04 05 b4 01 03 03 02 04 02 00 00`. The test builds them on a SYN, because JA4T and
-// JA4TS read one builder. `TestJA4TSWritesOneEntryForEachEndOfOptionListByte` names the
+// JA4TS share one builder. `TestJA4TSWritesOneEntryForEachEndOfOptionListByte` names the
 // capture that carries the bytes.
 func TestJA4TWritesOneEntryForEachEndOfOptionListByte(t *testing.T) {
 	options := []layers.TCPOption{
