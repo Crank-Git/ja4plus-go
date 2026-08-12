@@ -66,6 +66,30 @@ var conformanceStreamMethodKeys = map[string]bool{
 	"JA4L-S":  true,
 }
 
+// conformanceMovingPointFingerprinter names the fingerprinter whose measurement point moves.
+//
+// `methodNameOfFingerprinter` reads the stem `ja4l` from this name, and every member of
+// `conformanceLastEmissionMethods` carries that stem. A test derives the tie, so a rename of
+// the fingerprinter fails the suite rather than leaving the rule on a name that no longer
+// runs.
+const conformanceMovingPointFingerprinter = "JA4LFingerprinter"
+
+// conformanceLastEmissionMethods names every per-stream method whose bare vector key
+// compares the last value the library reports.
+//
+// The maintainer ruled on 2026-08-12 in issue #196 that the harness compares the last JA4L
+// emission of one stream. `docs/specs/foxio/JA4L.md` R33 names the measurement point that
+// moves, and `ja4l_test.go` holds the rule that point B never moves.
+//
+// Round 20 of the `## Changelog` of `docs/specs/spec.md` narrows the ruling to this set, and
+// it reverses no part of round 15. A method that emits once per protocol, or once per
+// request, reaches no entry here: its second value is a surplus, and a surplus reports as a
+// deviation. Issue #209 measured what the wider rule cost.
+var conformanceLastEmissionMethods = map[string]bool{
+	"JA4L-C": true,
+	"JA4L-S": true,
+}
+
 // conformancePacketNonMethodFields names every per-packet vector field that holds no
 // fingerprint.
 //
