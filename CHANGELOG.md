@@ -88,8 +88,10 @@ that the interface declares.
   `.claude/rules/rulings.md:37` states that a bare `#N` names an issue of this repository.
   A citation of the port names the port, as `the port's issue #N` in a sentence or as
   `Crank-Git/ja4plus#N` in a table cell. **The member ships one rule, and not eighteen
-  edits.** The form follows the majority usage of the tree, which holds 39 citations of an
-  issue of the port and names the port in a sentence in 32 of them. **Two pages carry a
+  edits.** **The form is one the tree already uses.** Measured at `c5e2aad` over `*.go`,
+  `*.md`, `*.html`, `*.json` and `*.yml`, outside the untracked `testdata/foxio/`, the tree
+  writes `Crank-Git/ja4plus#N` 5 times, `port issue #N` 5 times, `` `Crank-Git/ja4plus`
+  issue #N `` 3 times and `the port's issue #N` once. **Two pages carry a
   local rule, and the section names both.** The `Ruling` column of the register names the
   port, and `docs/specs/spec.md:380` now states that. `docs/specs/foxio/port-register.md`
   is a verbatim copy of the port's specification, so a bare number in it names the port.
