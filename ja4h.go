@@ -195,8 +195,8 @@ func ja4hNormalizeVersion(v string) string {
 
 // ja4hPartA builds part a of the JA4H value from a parsed HTTP request.
 //
-// The base value and the raw original-order form share part a, so one function builds it
-// for both. A second copy of this arithmetic would let the two forms disagree.
+// The base value and the two raw forms share part a, so one function builds it for the
+// three. A second copy of this arithmetic would let the forms disagree.
 func ja4hPartA(req *parser.HTTPRequest) string {
 	// method: first 2 chars, lowercase.
 	method := strings.ToLower(req.Method)
@@ -254,8 +254,8 @@ func ja4hPartA(req *parser.HTTPRequest) string {
 
 // ja4hHeaderNames returns the header names in wire order, with the original case.
 //
-// The base value hashes this list and the raw original-order form writes it, so one
-// function builds it for both.
+// The base value hashes this list and the two raw forms write it, so one function builds
+// it for the three.
 // It drops the Cookie header, the Referer header and every pseudo-header, because part a
 // counts the same set.
 func ja4hHeaderNames(req *parser.HTTPRequest) []string {
