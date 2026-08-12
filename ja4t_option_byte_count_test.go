@@ -28,7 +28,8 @@ import (
 // The port half of this ruling is `Crank-Git/ja4plus#215`, and it is closed. The port needs
 // no change, because it already writes one entry for each option byte. The docstring of
 // `option_bytes` at `ja4plus/utils/tcp_options.py:51-56` states that it reads the option
-// bytes the capture carries. Line 56 names #215 as reading D2.
+// bytes the capture carries. Line 56 of that docstring writes
+// `#215 records the reading as D2.`, and that bare number names the port's issue #215.
 
 // tcpOptionEndList returns a TCP End-of-Option-List option.
 func tcpOptionEndList() layers.TCPOption {
