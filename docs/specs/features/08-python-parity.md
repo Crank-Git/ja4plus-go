@@ -122,8 +122,12 @@ The port's issues #28, #96, #97, #105, #199 and #214 hold these rulings.
 - **FR-parity-28** — A window that holds no SSH packet produces no fingerprint.
 - **FR-parity-29** — `JA4SSHFingerprinter` exports `CloseOpenWindows`, which emits the
   window each connection holds open and returns the results.
-- **FR-parity-30** — Every fingerprinter exports `CloseOpenWindows`. A stateless
-  fingerprinter returns an empty slice.
+- **FR-parity-30** — `WindowCloser` declares `CloseOpenWindows` alone, and
+  `ConnectionWindowCloser` declares `CloseConnectionWindow` alone. A stateless fingerprinter
+  implements neither interface, and `Processor` skips it. Each `Processor` call site asserts
+  the interface that declares the one method it calls. The maintainer ruled the placement on
+  2026-08-11 and the split on 2026-08-12. Issue #53 records the placement, and issue #268
+  records the split.
 - **FR-parity-31** — `Processor` exports `CloseOpenWindows`, which calls each
   fingerprinter and returns the joined results.
 - **FR-parity-32** — `cmd/ja4plus` calls `Processor.CloseOpenWindows` when the capture
@@ -293,12 +297,12 @@ library is at `v0.3.0`, so the break is allowed now and never after the freeze.
    on a one-byte value and on a non-alphanumeric byte, and no ruling covers a zero-byte
    value. This project must not invent an answer alone. The maintainer rules once, and the
    ruling lands in both repositories.
-2. **Does `CloseOpenWindows` belong on the `Fingerprinter` interface, or on a second
-   interface that a fingerprinter may implement?** FR-parity-30 puts it on `Fingerprinter`
-   and makes every stateless fingerprinter return an empty slice, which matches the port's
-   shape. A separate optional interface is more idiomatic Go and breaks no third-party
-   implementation. **The freeze makes this the last chance to choose.**
-3. **Does the drift check belong in this repository at all?** FR-parity-57 commits a copy
+2. **Does the drift check belong in this repository at all?** FR-parity-57 commits a copy
    of another repository's document, which will go stale. The alternative is a scheduled
    workflow that reads the port and opens an issue, which is a network call in CI rather
    than in a test.
+
+**One question closed, and the list drops it.** It asked where `CloseOpenWindows` sits. The
+maintainer ruled on 2026-08-11 that the method sits on a second optional interface, and on
+2026-08-12 that each capability holds an interface of its own. FR-parity-30 above states the
+answer. Issue #53 records the first ruling, and issue #268 records the second one.
