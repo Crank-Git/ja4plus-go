@@ -231,9 +231,11 @@ image.
   R31 records the source split that produces the two sets. Python writes no marker at
   `python/ja4.py:165`, and it produces the per-stream set. Wireshark writes the format
   `"%d_%d_quic"` at `wireshark/source/packet-ja4.c:1441`, and it produces the per-packet set.
-  **One library value reaches one set, so the two sets cannot both match.** Measured against `epic/48-parity-tls-latency` at
-  `887ab53` with the corpus present: the marker moves 16 QUIC values on 3 captures, it closes
-  2 per-packet comparisons, and it opens 13 per-stream comparisons that match exactly today.
+  **One library value reaches one set, so the two sets cannot both match.** The measurement
+  reads `epic/48-parity-tls-latency` at `887ab53` with the corpus present. The marker moves
+  the library value on 16 per-packet comparisons and on 16 per-stream comparisons, across 3
+  captures. It closes 2 per-packet comparisons. It opens 13 per-stream comparisons that match
+  exactly today.
   The per-stream set reports 744 matches and 457 deviations without the marker, and 731
   matches and 470 deviations with it. The per-packet set reports 332 matches and 833
   deviations without it, and 334 matches and 831 deviations with it. **Two rulings point
