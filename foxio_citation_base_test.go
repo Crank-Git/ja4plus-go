@@ -176,7 +176,10 @@ func foxioBlankFencedBlock(page string) []string {
 			continue
 		}
 
-		if fence >= open {
+		// A closing fence carries nothing after the backticks, and an opening fence
+		// carries an info string. A line of content that opens with a longer backtick run
+		// therefore closes no block.
+		if fence >= open && foxioFenceCloses(line) {
 			open = 0
 		}
 
@@ -203,6 +206,12 @@ func foxioFenceLength(line string) int {
 	return count
 }
 
+// foxioFenceCloses reports whether the line can close a fence. A closing fence holds
+// backticks alone.
+func foxioFenceCloses(line string) bool {
+	return strings.Trim(strings.TrimSpace(line), "`") == ""
+}
+
 // foxioPathShaped reports whether the span names a path, and returns the path and the
 // cited line number.
 //
@@ -225,6 +234,12 @@ func foxioPathShaped(span string) (path string, number int, ok bool) {
 	}
 
 	if strings.ContainsAny(path, " \t*?") {
+		return "", 0, false
+	}
+
+	// A colon that survives the suffix parse is not a line number. A URL carries one, and
+	// a URL names no path of a base.
+	if strings.Contains(path, ":") {
 		return "", 0, false
 	}
 
@@ -397,6 +412,15 @@ func (r *foxioResolver) resolve(citation foxioCitation) (foxioResolution, bool) 
 		if match, ok := r.unique(r.captureName, path); ok {
 			return foxioResolution{base: 3, file: match}, true
 		}
+
+		// A bare source file name is a short form of base 1, so it reads before base 5.
+		// `docs/specs/foxio/README.md:118-120` states that form, and
+		// `docs/specs/foxio/port-register.md` writes `packet-ja4.c:1328`. A name that this
+		// repository also holds at its root would otherwise read as base 5, and the line
+		// bound would then read the wrong file.
+		if match, ok := r.unique(r.referenceName, path); ok {
+			return foxioResolution{base: 1, file: match}, true
+		}
 	}
 
 	if _, ok := r.recoveredLines[path]; ok {
@@ -415,18 +439,17 @@ func (r *foxioResolver) resolve(citation foxioCitation) (foxioResolution, bool) 
 		return foxioResolution{base: 5, file: path}, true
 	}
 
-	if r.corpus {
-		// A bare source file name is a short form of base 1. The copy writes
-		// `packet-ja4.c:1328`, and the FoxIO tree holds that file at one path.
-		if match, ok := r.unique(r.referenceName, path); ok {
-			return foxioResolution{base: 1, file: match}, true
-		}
-	}
-
 	// Base 6. FoxIO deleted the file before the pin, so the corpus holds it at no path.
-	// The sentence around the citation names the commit.
-	if strings.HasPrefix(path, "technical_details/") {
-		return foxioResolution{base: 6}, true
+	//
+	// The rule names the recovered files, and it accepts no other `technical_details/`
+	// path. A bare prefix rule would accept `technical_details/JA4ZZZ.md`, which names a
+	// file that existed at no commit. `docs/specs/foxio/README.md:86-87` states that five
+	// of the seven recovered files exist at no commit after `b6f3ff4`, and the other two
+	// resolve at base 1.
+	if name, found := strings.CutPrefix(path, "technical_details/"); found {
+		if _, recovered := r.recoveredLines[name]; recovered {
+			return foxioResolution{base: 6, file: foxioDeletedSpecsPage}, true
+		}
 	}
 
 	return foxioResolution{}, false
@@ -690,16 +713,24 @@ func TestNoCitationOfTheFoxioDirectoryNamesALinePastTheEndOfItsFile(t *testing.T
 			continue
 		}
 
-		// Base 6 and base 7 reach no file of this checkout, so neither one bounds a line.
-		if resolution.base == 6 || resolution.base == 7 {
+		// Base 7 reaches the port, and this checkout holds no file of it, so no line
+		// count bounds it.
+		if resolution.base == 7 {
 			continue
 		}
 
 		count := 0
 
-		if resolution.base == 4 {
+		switch resolution.base {
+		case 4:
+			// Base 4 names a line of the recovered file, and never a line of the page.
 			count = resolver.recoveredLines[citation.path]
-		} else {
+		case 6:
+			// Base 6 names the same deleted file that base 4 reproduces, under the
+			// `technical_details/` path. The recovered block therefore bounds it.
+			name, _ := strings.CutPrefix(citation.path, "technical_details/")
+			count = resolver.recoveredLines[name]
+		default:
 			content, err := os.ReadFile(resolution.file)
 			if err != nil {
 				t.Errorf("%s:%d cites %q, and %s does not open: %v",
@@ -709,6 +740,11 @@ func TestNoCitationOfTheFoxioDirectoryNamesALinePastTheEndOfItsFile(t *testing.T
 			}
 
 			count = len(strings.Split(strings.TrimSuffix(string(content), "\n"), "\n"))
+		}
+
+		// A base that reaches no file counts no line, and a zero count bounds nothing.
+		if count == 0 {
+			continue
 		}
 
 		if citation.number > count {
