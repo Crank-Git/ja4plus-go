@@ -18,8 +18,8 @@ states how to read a citation.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
 `testdata/foxio/reference/`.** Read `zeek/ja4l/main.zeek:112` as line 112 of
-`testdata/foxio/reference/zeek/ja4l/main.zeek`. `docs/specs/foxio/README.md` states the rule, and it
-names each path that the rule does not cover.
+`testdata/foxio/reference/zeek/ja4l/main.zeek`. `docs/specs/foxio/README.md` states the
+rule, and it names each path that the rule does not cover.
 
 ## What the image does not specify
 

@@ -19,9 +19,9 @@ states how to read a citation.
 **This page reproduces no image.** Follow the link above to read it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `python/ja4.py:220` as line 220 of
-`testdata/foxio/reference/python/ja4.py`. `docs/specs/foxio/README.md` states the rule, and it
-names each path that the rule does not cover.
+`testdata/foxio/reference/`.** Read `python/ja4.py:220` as line 220 of `testdata/foxio/reference/python/ja4.py`.
+`docs/specs/foxio/README.md` states the rule, and it names each path that the rule does
+not cover.
 
 JA4 is the one method that holds a complete text specification at the pinned commit. The
 source ranking puts the image first and the text second. A rule below cites the image

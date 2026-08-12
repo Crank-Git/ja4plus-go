@@ -18,8 +18,8 @@ states how to read a citation.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
 `testdata/foxio/reference/`.** Read `wireshark/source/packet-ja4.c:1537` as line 1537 of
-`testdata/foxio/reference/wireshark/source/packet-ja4.c`. `docs/specs/foxio/README.md` states the rule, and it
-names each path that the rule does not cover.
+`testdata/foxio/reference/wireshark/source/packet-ja4.c`. `docs/specs/foxio/README.md`
+states the rule, and it names each path that the rule does not cover.
 
 ## Which implementations state a rule
 

@@ -19,9 +19,9 @@ states how to read a citation.
 **This page reproduces no image.** Follow the link above to read it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `python/ja4h.py:13` as line 13 of
-`testdata/foxio/reference/python/ja4h.py`. `docs/specs/foxio/README.md` states the rule, and it
-names each path that the rule does not cover.
+`testdata/foxio/reference/`.** Read `python/ja4h.py:13` as line 13 of `testdata/foxio/reference/python/ja4h.py`.
+`docs/specs/foxio/README.md` states the rule, and it names each path that the rule does
+not cover.
 
 **`technical_details/JA4H.md` builds no fingerprint.** It holds one section, and that
 section states the header count rule. R8 below cites it. Every other rule comes from the
