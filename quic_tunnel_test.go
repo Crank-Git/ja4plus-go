@@ -262,10 +262,10 @@ func TestJA4ReadsTheInnerUDPLayerOfAVXLANTunneledQUICInitial(t *testing.T) {
 // The JA4 grouping key of a tunneled QUIC packet holds the inner address pair and the inner
 // port pair.
 //
-// The CRYPTO frame of this packet delivers 40 bytes of the handshake message. The
-// fingerprinter returns a non-fatal error for the incomplete message, and it keeps the
-// entry that names the connection. `GetShardKey` reads the same pair, and issue #170
-// records the disagreement.
+// The CRYPTO frame of this packet delivers 40 bytes of the handshake message. Issue #42
+// makes an absent fragment an ordinary intermediate state of the reassembly, so
+// ProcessPacket returns no error and it keeps the entry that names the connection.
+// `GetShardKey` reads the same pair, and issue #170 records the disagreement.
 func TestJA4GroupsATunneledQUICPacketByTheInnerPair(t *testing.T) {
 	dcid := []byte{0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x09}
 	scid := []byte{0x01, 0x02, 0x03, 0x04}
@@ -274,8 +274,8 @@ func TestJA4GroupsATunneledQUICPacketByTheInnerPair(t *testing.T) {
 	packet := buildVXLANQUICPacket(t, buildQUICClientInitial(t, dcid, scid, handshake))
 
 	fingerprinter := NewJA4()
-	if _, err := fingerprinter.ProcessPacket(packet); err == nil {
-		t.Fatalf("ProcessPacket returns no error, and the CRYPTO frame holds an incomplete message")
+	if _, err := fingerprinter.ProcessPacket(packet); err != nil {
+		t.Fatalf("ProcessPacket returns the error %v, and an absent fragment is no error", err)
 	}
 
 	if len(fingerprinter.dcidToTuple) != 1 {
