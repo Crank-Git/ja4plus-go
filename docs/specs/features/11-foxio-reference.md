@@ -114,6 +114,15 @@ image. Fact 4 is why FR-reference-12 recovers the deleted text.
   exists.
 - **FR-reference-28** — A test asserts that the file parses and that every entry holds
   every field.
+- **FR-reference-29** — The middle part of `key` holds one of three things.
+    - The stream number, for a per-stream comparison.
+    - The endpoint key, where no vector entry names the connection.
+    - The frame number, for a per-packet comparison.
+- **FR-reference-29a** — `testdata/README.md` states the three meanings.
+- **FR-reference-30** — **One key names one comparison.** A test asserts that no key of the
+  corpus names a comparison in the per-stream set and in the per-packet set.
+- **FR-reference-31** — The register holds each key once. The reader declines a second
+  entry for one key.
 
 ## User flows
 
@@ -151,6 +160,10 @@ This feature set changes no screen.
   because a reworded quotation is no longer evidence.
 - **A register entry is an accepted difference, not a hidden failure.** An entry that
   stops differing is a defect in the register.
+- **A register key names one comparison, and the middle part of it names one thing.** The
+  per-stream set writes the stream number there, and the per-packet set writes the frame
+  number. Both are small integers, so a reader cannot tell them apart. FR-reference-30 keeps
+  the two key spaces separate, because one register serves both sets.
 
 ## Data touched
 
@@ -162,7 +175,9 @@ This feature set changes no screen.
 | `docs/specs/foxio/zeek.md` | New. |
 | `docs/specs/foxio/port-register.md` | New. |
 | `testdata/deviations.json` | New. Tracked. |
+| `testdata/README.md` | States the schema and the two meanings of the middle key part. |
 | `conformance_test.go` | Reads the register. |
+| `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces
@@ -187,6 +202,8 @@ pin. FR-reference-12 records the commit it read, and the two commits differ on p
 | A rule appears in no image and in no deleted file. | The page records the gap and names the implementations that state the rule. `JA4SSH.md` R11 is such a rule in the port. |
 | Two FoxIO implementations disagree and no vector separates them. | The page marks a reference split. A test builds the separating packet, because the corpus cannot. |
 | The register names a capture the corpus does not hold. | The test that FR-reference-28 adds fails. |
+| One key names a per-stream comparison and a per-packet comparison. | The test that FR-reference-30 adds fails, and it names the key. |
+| Two entries hold one key. | The reader declines the register, and the test that FR-reference-31 adds fails. |
 | A FoxIO image is unreadable at the pin. | The transcription stops, and the gap goes to `Risks & open questions` in the spec. |
 
 ## Acceptance criteria
