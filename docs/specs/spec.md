@@ -188,6 +188,10 @@ across both repositories, because a reader moves between them.
 | conform | verb | To produce the same output as the FoxIO reference. | comply, match spec |
 | emit | verb | To return a fingerprint from a fingerprinter. | output, produce, yield |
 | decline | verb | To choose not to reproduce a FoxIO value or not to build a capability, and to record the choice in the register. | reject, skip, ignore |
+| batch | noun | One set of issues that the project manager builds together and merges as one. It never names a JA4SSH window, and row `window` above declines the word for that meaning. | group, wave, set |
+| member | noun | One issue of a batch, and the pull request that builds it. | task, item, sub-issue |
+| cross-member review | noun | One read-only review of the merged result of a whole batch, which looks for a defect that no member reaches alone. Never shorten it to `review`, because row `audit` above declines that word. `.claude/rules/cross-member-review.md` states the return contract. | batch review, integration review, merge review |
+| spawn path | noun | The mechanism a spawned agent returns its result through. This project measures two: the in-process path, which delivers a result to the spawner without a request, and the cross-session path, which delivers a result to the session that addresses the agent, and which can return an idle signal and no text instead. | spawn mode, return path, channel |
 
 ## Goals
 
