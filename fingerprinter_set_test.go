@@ -8,8 +8,8 @@ import (
 )
 
 // Issue #148 closes a gap that a later change opens. The package held one list of the
-// fingerprinter set for each reader, and derived none of them from another. A new
-// fingerprinter therefore reached the processor and left every count at its old value.
+// fingerprinter set for each reader. It derived no list from another. A new fingerprinter
+// therefore reached the processor, and every count stayed at its old value.
 //
 // The list that Processor.fingerprinters returns is the source of truth of the set. Every
 // other list in the package derives from the two functions below, so a new fingerprinter
@@ -78,20 +78,23 @@ func processorFieldNames() []string {
 	return names
 }
 
-// fingerprinterShortName returns the lower-case name of the fingerprinter, such as `ja4h`.
-// A benchmark case and a `FingerprintResult.Type` value read this form.
-func fingerprinterShortName(typeName string) string {
+// methodNameOfFingerprinter returns the method name that the type name states, such as
+// `ja4h`. A benchmark case and a `FingerprintResult.Type` value read this form.
+// It returns one method name for each fingerprinter. JA4LFingerprinter therefore returns
+// `ja4l` alone, and the second method of that fingerprinter reaches no caller of this
+// function.
+func methodNameOfFingerprinter(typeName string) string {
 	return strings.ToLower(strings.TrimSuffix(typeName, "Fingerprinter"))
 }
 
-// assertCoversEveryFingerprinterShortName fails when the lower-case names are not exactly
-// the set the processor runs.
-func assertCoversEveryFingerprinterShortName(t *testing.T, source string, names []string) {
+// assertCoversEveryMethodName fails when the method names are not exactly one name for
+// each fingerprinter the processor runs.
+func assertCoversEveryMethodName(t *testing.T, source string, names []string) {
 	t.Helper()
 
 	var want []string
 	for _, name := range processorFingerprinterNames() {
-		want = append(want, fingerprinterShortName(name))
+		want = append(want, methodNameOfFingerprinter(name))
 	}
 	slices.Sort(want)
 
@@ -132,8 +135,8 @@ func TestNewProcessorFillsEveryFingerprinterField(t *testing.T) {
 	}
 }
 
-// A caller who writes `var p Processor` reaches ensure, and a field that ensure omits
-// panics on the first packet.
+// A caller who writes `var p Processor` reaches ensure. A field that ensure omits panics
+// on the first packet.
 func TestEnsureFillsEveryFingerprinterFieldOfAZeroValueProcessor(t *testing.T) {
 	var proc Processor
 	proc.ensure()

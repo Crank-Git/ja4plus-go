@@ -263,14 +263,15 @@ func TestEachBenchmarkPacketProducesOneFingerprint(t *testing.T) {
 		}},
 	}
 
-	// The case set derives from the processor run list, so a new fingerprinter that reaches
-	// no benchmark fails here. Issue #148 records the fault a second list produces.
+	// The check reads the processor run list, so a new fingerprinter that reaches no case
+	// above fails here. A person still writes the case, because each one builds its own
+	// packet. Issue #148 records the fault a hardcoded count produces.
 	var names []string
 	for _, tc := range cases {
 		names = append(names, tc.name)
 	}
 
-	assertCoversEveryFingerprinterShortName(t, "the benchmark cases", names)
+	assertCoversEveryMethodName(t, "the benchmark cases", names)
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

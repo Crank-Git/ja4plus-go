@@ -99,8 +99,8 @@ func (p *Processor) ensure() {
 
 // fingerprinters returns every fingerprinter of the processor, in the order the processor
 // runs them.
-// It is the one list of the set. ProcessPacket, Reset and CleanupConnection each read it,
-// and a test compares it against the fields of Processor. Issue #148 records the fault a
+// It is the one list of the set. ProcessPacket, Reset and CleanupConnection each read it.
+// A test compares it against the fields of Processor. Issue #148 records the fault a
 // second list produces: a new fingerprinter that reaches one list and no other.
 // The caller calls ensure first, because a nil entry panics on the first packet.
 func (p *Processor) fingerprinters() []Fingerprinter {

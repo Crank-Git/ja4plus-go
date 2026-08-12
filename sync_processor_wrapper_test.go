@@ -4,7 +4,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -20,7 +22,7 @@ import (
 // therefore reads the source of each wrapper.
 
 // A caller who shares one SyncProcessor reaches every exported Processor method through
-// it, so a method outside the wrapper is a method the shared pattern cannot call.
+// it. The shared pattern cannot call a method that the wrapper omits.
 func TestSyncProcessorWrapsEveryExportedProcessorMethod(t *testing.T) {
 	procType := reflect.TypeOf(&Processor{})
 	syncType := reflect.TypeOf(&SyncProcessor{})
@@ -49,8 +51,8 @@ func TestSyncProcessorWrapsEveryExportedProcessorMethod(t *testing.T) {
 }
 
 // FR-concurrency-13 states that the mutex covers the whole call.
-// The lock is the first statement, so no result escapes before the wrapper holds it, and
-// the unlock is deferred, so a panic in the inner call releases it.
+// The lock is the first statement, so no result escapes before the wrapper holds it.
+// The unlock is deferred, so a panic in the inner call releases the mutex.
 func TestEverySyncProcessorMethodTakesTheMutexFirst(t *testing.T) {
 	methods := syncProcessorMethodDeclarations(t)
 
@@ -76,35 +78,47 @@ func TestEverySyncProcessorMethodTakesTheMutexFirst(t *testing.T) {
 }
 
 // syncProcessorMethodDeclarations returns the body of every exported method of
-// SyncProcessor, by method name. It reads the source, because the mutex rule states the
-// shape of the body and reflection reports no statement.
+// SyncProcessor, by method name.
+// It reads the source, because the mutex rule states the shape of the body. Reflection
+// reports no statement of a body.
+// It reads every source file of the package. A wrapper that Go declares outside
+// sync_processor.go takes the mutex too, and a search of one file would miss it.
 func syncProcessorMethodDeclarations(t *testing.T) map[string]*ast.BlockStmt {
 	t.Helper()
 
-	const file = "sync_processor.go"
-
-	parsed, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
+	files, err := filepath.Glob("*.go")
 	if err != nil {
-		t.Fatalf("parse %s: %v", file, err)
+		t.Fatalf("list the source files: %v", err)
 	}
 
 	bodies := map[string]*ast.BlockStmt{}
 
-	for _, decl := range parsed.Decls {
-		function, ok := decl.(*ast.FuncDecl)
-		if !ok || function.Recv == nil || function.Body == nil {
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
 			continue
 		}
 
-		if !ast.IsExported(function.Name.Name) {
-			continue
+		parsed, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", file, err)
 		}
 
-		if receiverTypeName(function.Recv) != "SyncProcessor" {
-			continue
-		}
+		for _, decl := range parsed.Decls {
+			function, ok := decl.(*ast.FuncDecl)
+			if !ok || function.Recv == nil || function.Body == nil {
+				continue
+			}
 
-		bodies[function.Name.Name] = function.Body
+			if !ast.IsExported(function.Name.Name) {
+				continue
+			}
+
+			if receiverTypeName(function.Recv) != "SyncProcessor" {
+				continue
+			}
+
+			bodies[function.Name.Name] = function.Body
+		}
 	}
 
 	return bodies
