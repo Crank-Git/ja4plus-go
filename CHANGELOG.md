@@ -62,6 +62,22 @@ below states therefore differs from a fresh run.
   part a, which issue #223 owns. No value appears and no value disappears. The run reports 1078
   matches before and 1085 after, 1293 deviations before and 1286 after, and 198 register keys
   before and after. The JA4SSH deviation count falls from 32 to 25.
+- The conformance harness now compares the last JA4L value of each connection, and no longer
+  the last JA4L value of each stream number. FoxIO writes one per-stream entry for one
+  connection, and it numbers two entries of `chrome-cloudflare-quic-with-secrets.pcapng` with
+  the stream number `0`: the TCP connection of the source port `57098` and the QUIC connection
+  of the source port `50280`. The vector group therefore held two values, the adapter wrote an
+  occurrence number for them, and the last-emission rule of issue #196 reached no value. The
+  client measurement point of the TCP connection moves, so the library reports `30_64` at frame
+  3 and `149_64` at frame 4, and the surplus first value shifted every later occurrence by one.
+  The three JA4L-C occurrences of that stream held `30_64`, `149_64` and `113_64_quic` against
+  the two values `149_64` and `113_64` that the vector holds. `conformance_test.go` collapses the
+  values of one connection, and it keeps the bare key on the last value of the stream. This
+  change moves no fingerprint, and it writes no register entry. Issue #215 holds the reading.
+  Measured against `batch/236-ja4ssh-remainder` at `a3b2bf9` with the corpus present: 1 JA4L-C
+  comparison moved to a match, 1 surplus JA4L-C comparison went away, and 1 JA4L-C comparison
+  still reports the QUIC marker that issue #197 adds. The run reports 1078 matches before and
+  1079 after, 1293 deviations before and 1291 after, and 198 register keys before and after.
 - JA4SSH now counts the SSH packets that FoxIO counts, so the window fills and
   `ProcessPacket` emits a value again. `internal/parser/ssh.go:17` reads the four-byte length
   field of an SSH record, and a cipher hides that field after the key exchange, so the library

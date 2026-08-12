@@ -4,6 +4,7 @@ package ja4plus
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"strconv"
 	"testing"
 )
@@ -418,5 +419,42 @@ func TestTheStreamAdapterNamesTheStreamByTheStreamField(t *testing.T) {
 
 	if err := checkDeviationKey(key.String()); err != nil {
 		t.Errorf("the register reader rejects the key %q: %v", key.String(), err)
+	}
+}
+
+// One vector entry names one connection, so the last-emission rule of issue #196 reads one
+// connection and never one stream number. FoxIO writes the stream number `0` for two
+// connections of `chrome-cloudflare-quic-with-secrets.pcapng`. The first one carries TCP on
+// the source port `57098`, and the second one carries QUIC on the source port `50280`. The
+// client point of the TCP connection moves, so the library reports `30_64` and then `149_64`
+// for it. Issue #215 holds the reading.
+func TestTheStreamAdapterReportsOneJA4LCValuePerConnectionOnChromeCloudflareQuic(t *testing.T) {
+	conformanceSkipWithoutCorpus(t)
+
+	const capture = "chrome-cloudflare-quic-with-secrets.pcapng"
+
+	path := conformanceVectorPath(conformanceStreamVectorDir, capture)
+	if path == "" {
+		t.Fatalf("the corpus holds no per-stream vector for %s", capture)
+	}
+
+	shape, err := conformanceExpectedFromStreamVector(capture, conformanceReadStreamVector(t, path))
+	if err != nil {
+		t.Fatalf("the per-stream adapter fails: %v", err)
+	}
+
+	packets := loadPCAP(t, filepath.Join(conformanceCaptureDir, capture))
+	produced := conformanceProducedByStream(t, capture, packets, shape)
+
+	first := conformanceKey{Capture: capture, Stream: "0", Method: "JA4L-C.1"}
+	if produced[first] != "149_64" {
+		t.Errorf("the harness reports %q for %q, and the last value of the TCP connection is `149_64`",
+			produced[first], first)
+	}
+
+	third := conformanceKey{Capture: capture, Stream: "0", Method: "JA4L-C.3"}
+	if value, held := produced[third]; held {
+		t.Errorf("the harness reports %q for %q, and the capture holds two connections that carry the stream number `0`",
+			value, third)
 	}
 }
