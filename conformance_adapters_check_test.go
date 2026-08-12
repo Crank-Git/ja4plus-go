@@ -424,10 +424,10 @@ func TestTheStreamAdapterNamesTheStreamByTheStreamField(t *testing.T) {
 
 // One vector entry names one connection, so the last-emission rule of issue #196 reads one
 // connection and never one stream number. FoxIO writes the stream number `0` for two
-// connections of `chrome-cloudflare-quic-with-secrets.pcapng`: the TCP connection of the
-// source port `57098` and the QUIC connection of the source port `50280`. The client
-// measurement point of the TCP connection moves, so the library reports `30_64` and then
-// `149_64` for it. Issue #215 holds the reading.
+// connections of `chrome-cloudflare-quic-with-secrets.pcapng`. The first one carries TCP on
+// the source port `57098`, and the second one carries QUIC on the source port `50280`. The
+// client point of the TCP connection moves, so the library reports `30_64` and then `149_64`
+// for it. Issue #215 holds the reading.
 func TestTheStreamAdapterReportsOneJA4LCValuePerConnectionOnChromeCloudflareQuic(t *testing.T) {
 	conformanceSkipWithoutCorpus(t)
 

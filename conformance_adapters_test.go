@@ -478,13 +478,13 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 // of the `## Changelog` of `docs/specs/spec.md` records the narrower rule, and issue #209
 // measured what the wider rule cost.
 //
-// Two callers reach this function, and each one reaches a different branch.
+// Three callers reach this function, and each one reaches a different branch.
 // `conformanceProducedByStream` at `conformance_test.go:460` builds the produced map, and it
-// counts the emissions of the library, so it reaches the second branch below. A method of
-// `conformanceLastEmissionMethods` reaches that caller with the occurrence of one connection,
-// because `conformanceMovedPoints` collapses the emissions of one connection first. This
-// function
-// builds the expected map through `conformanceWriteStreamGroup`, which forces
+// counts the emissions of the library, so it reaches the second branch below.
+// `conformanceMovedPoints.write` at `conformance_test.go:547` builds the produced map for a
+// method of `conformanceLastEmissionMethods`, and it counts the connections of one group. It
+// reaches the first branch or the third one. This function builds the expected map through
+// `conformanceWriteStreamGroup`, which forces
 // `usesOccurrence` true whenever one vector group holds more than one value. The occurrence
 // of an expected value is therefore always 1, and the expected map reaches the second branch
 // on no input. **Keep the branch.** The produced map needs it, and no special case in this

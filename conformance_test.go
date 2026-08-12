@@ -482,9 +482,9 @@ func conformanceProducedByStream(
 }
 
 // conformanceConnectionKey names one connection of one method of one stream.
-// The group holds the capture, the stream and the method, and the endpoint holds the
-// address pair. Two connections of one capture can carry one stream number, so the group
-// alone names no connection.
+// The group holds the capture, the stream and the method. The endpoint holds the address
+// pair. Two connections of one capture can carry one stream number, so the group alone
+// names no connection.
 type conformanceConnectionKey struct {
 	group    conformanceKey
 	endpoint string
@@ -492,13 +492,13 @@ type conformanceConnectionKey struct {
 
 // conformanceMovedPoints collects the values of every method whose measurement point moves.
 //
-// FoxIO writes one per-stream entry for one connection, and it numbers two entries of one
-// capture with one stream number. `chrome-cloudflare-quic-with-secrets.pcapng` holds a TCP
-// connection and a QUIC connection that both carry the stream number `0`. The vector group
-// then holds two values, the adapter writes an occurrence number for them, and the
-// last-emission rule of issue #196 reaches no value. The library reports `30_64` and then
-// `149_64` for the moved client point of the TCP connection, so the surplus first value
-// shifts every later occurrence by one. Issue #215 holds the reading.
+// FoxIO writes one per-stream entry for one connection. It numbers two entries of
+// `chrome-cloudflare-quic-with-secrets.pcapng` with the stream number `0`. One of those two
+// connections carries TCP, and the other carries QUIC. The vector group therefore holds two
+// values. The adapter writes an occurrence number for them, so the last-emission rule of
+// issue #196 reaches no value of the group. The client point of the TCP connection moves,
+// and the library reports `30_64` and then `149_64` for it. The surplus first value shifts
+// every later occurrence by one. Issue #215 holds the reading.
 type conformanceMovedPoints struct {
 	// last holds the last value of one connection.
 	last map[conformanceConnectionKey]string
@@ -537,8 +537,8 @@ func (m *conformanceMovedPoints) record(group conformanceKey, endpoint, value st
 // key carries none keeps the last value of the whole group, because one bare key compares
 // one value.
 func (m *conformanceMovedPoints) write(produced map[conformanceKey]string, shape conformanceStreamShape) {
-	// A range over a map orders nothing, and each group writes its own keys, so the result
-	// is the same on every run.
+	// A range over a map orders nothing. Each group writes its own keys, so the result is
+	// the same on every run.
 	for group, endpoints := range m.order {
 		if !shape.UsesOccurrence[group] {
 			key := conformanceKey{
