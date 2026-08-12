@@ -595,6 +595,7 @@ type conformanceSetTotals struct {
 	Deviations       int
 	AcceptedDeviants int
 	Closed           int
+	Stale            int
 }
 
 // conformanceRunTotals counts the outcome of the whole run.
@@ -681,6 +682,7 @@ func conformanceRunTotalsAsCounts(totals conformanceRunTotals) conformanceReport
 		Matches:       totals.Stream.Matches + totals.Packet.Matches,
 		Deviations:    totals.Stream.Deviations + totals.Packet.Deviations,
 		Accepted:      totals.Stream.AcceptedDeviants + totals.Packet.AcceptedDeviants,
+		Stale:         totals.Stream.Stale + totals.Packet.Stale,
 	}
 }
 
@@ -827,6 +829,7 @@ func conformanceRecordComparison(
 
 	totals.Matches += comparison.Matches
 	totals.Closed += len(comparison.Closed)
+	totals.Stale += len(comparison.Stale)
 
 	for _, deviation := range comparison.Deviations {
 		if deviation.Accepted {
@@ -846,6 +849,14 @@ func conformanceRecordComparison(
 	// FR-reference-26 fails the suite when a comparison the register names now matches.
 	for _, key := range comparison.Closed {
 		t.Errorf("the register names %s, and the comparison now matches, so the entry is closed and must leave the register", key)
+	}
+
+	// #307 fails the suite when a register entry records a value the run no longer produces.
+	// The project fails a gate rather than print a warning, as #227 and #306 do, because a
+	// stale entry accepts a difference the maintainer never ruled on.
+	for _, stale := range comparison.Stale {
+		t.Errorf("the register names %s and records the value %q, and the run produces %q, so the entry records a comparison this run does not make",
+			stale.Key, stale.Recorded, stale.Produced)
 	}
 
 	t.Logf("the capture reports %d matches and %d deviations in the %s set",
@@ -868,6 +879,10 @@ func conformanceReportTotals(t *testing.T, totals conformanceRunTotals) {
 
 	t.Logf("the run reports %d matches, %d deviations and %d accepted deviations",
 		matches, deviations, totals.Stream.AcceptedDeviants+totals.Packet.AcceptedDeviants)
+
+	// #307 states the count on every run. A count of 0 is the measurement that proves the
+	// register records the values this run produces.
+	t.Logf("the run reports %d stale register entries", totals.Stream.Stale+totals.Packet.Stale)
 
 	if deviations > 0 {
 		t.Errorf("the run reports %d deviations that the register does not hold, and Epic 5 closes them", deviations)

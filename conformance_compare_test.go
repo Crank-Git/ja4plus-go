@@ -216,6 +216,160 @@ func TestTheComparisonReportsAClosedEntryWhenARegisteredComparisonMatches(t *tes
 	}
 }
 
+// #307 states that a register entry records a value the run no longer produces. The entry
+// then accepts a comparison it does not describe, and FR-reference-26 never fires, because
+// the two values still differ.
+func TestTheComparisonReportsAStaleEntryWhenTheRunNoLongerProducesTheRecordedValue(t *testing.T) {
+	key := oneConformanceKey("JA4L-S")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "6252_57"},
+		map[conformanceKey]string{key: "6252_59"},
+		register,
+	)
+
+	if len(result.Stale) != 1 {
+		t.Fatalf("the comparison reports %d stale entries, and the run produces `6252_57` where the register records `6252_58`",
+			len(result.Stale))
+	}
+
+	stale := result.Stale[0]
+
+	if stale.Key != key {
+		t.Errorf("the comparison reports the stale entry %q, and the register names %q", stale.Key, key)
+	}
+
+	if stale.Recorded != "6252_58" || stale.Produced != "6252_57" {
+		t.Errorf("the stale entry records %q and produces %q, and the fixture holds `6252_58` and `6252_57`",
+			stale.Recorded, stale.Produced)
+	}
+
+	// The entry still accepts the deviation. A stale record is a defect of the register,
+	// and it never turns a ruling into an unaccepted deviation.
+	if len(result.Deviations) != 1 || !result.Deviations[0].Accepted {
+		t.Errorf("the comparison reports %d deviations, and the register names the comparison %q",
+			len(result.Deviations), key)
+	}
+}
+
+// An entry the run still reaches is not stale. A check that reported one on every entry
+// would fail every run and gate nothing.
+func TestTheComparisonReportsNoStaleEntryWhenTheRunProducesTheRecordedValue(t *testing.T) {
+	key := oneConformanceKey("JA4L-S")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "6252_58"},
+		map[conformanceKey]string{key: "6252_59"},
+		register,
+	)
+
+	if len(result.Stale) != 0 {
+		t.Errorf("the comparison reports %d stale entries, and the run produces the recorded value `6252_58`",
+			len(result.Stale))
+	}
+}
+
+// A capability decline records the empty string, because the library produces no value.
+// The library that starts to produce one makes that record wrong.
+func TestTheComparisonReportsAStaleEntryWhenTheLibraryProducesAValueACapabilityDeclineDenies(t *testing.T) {
+	key := oneConformanceKey("JA4L-S")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Capability: true, Ours: "", Theirs: "6252_59", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "6252_58"},
+		map[conformanceKey]string{key: "6252_59"},
+		register,
+	)
+
+	if len(result.Stale) != 1 {
+		t.Fatalf("the comparison reports %d stale entries, and the entry records no value where the run produces `6252_58`",
+			len(result.Stale))
+	}
+
+	if result.Stale[0].Recorded != "" || result.Stale[0].Produced != "6252_58" {
+		t.Errorf("the stale entry records %q and produces %q, and the fixture holds the empty string and `6252_58`",
+			result.Stale[0].Recorded, result.Stale[0].Produced)
+	}
+}
+
+// A capability decline that still holds produces no value, and the empty record matches it.
+func TestTheComparisonReportsNoStaleEntryWhenACapabilityDeclineStillProducesNoValue(t *testing.T) {
+	key := oneConformanceKey("JA4L-S")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Capability: true, Ours: "", Theirs: "6252_59", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{},
+		map[conformanceKey]string{key: "6252_59"},
+		register,
+	)
+
+	if len(result.Stale) != 0 {
+		t.Errorf("the comparison reports %d stale entries, and the library produces no value for the key %q",
+			len(result.Stale), key)
+	}
+}
+
+// One entry carries two defects when the run reaches the vector value and the entry records
+// a third value. The suite then prints one message for each, and neither one replaces the
+// other.
+func TestTheComparisonReportsAClosedEntryAndAStaleEntryForOneRegisterKey(t *testing.T) {
+	key := oneConformanceKey("JA4L-S")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "6252_59"},
+		map[conformanceKey]string{key: "6252_59"},
+		register,
+	)
+
+	if len(result.Closed) != 1 {
+		t.Fatalf("the comparison reports %d closed entries, and the run produces the vector value `6252_59`",
+			len(result.Closed))
+	}
+
+	if len(result.Stale) != 1 {
+		t.Fatalf("the comparison reports %d stale entries, and the entry records `6252_58` where the run produces `6252_59`",
+			len(result.Stale))
+	}
+
+	if result.Matches != 0 {
+		t.Errorf("the comparison counts %d matches, and the register names the comparison %q", result.Matches, key)
+	}
+}
+
+// The register names no comparison the run makes, so no stale entry can stand. A nil
+// register accepts nothing, and it must report nothing.
+func TestTheComparisonReportsNoStaleEntryWhenTheRegisterNamesNoComparison(t *testing.T) {
+	key := oneConformanceKey("JA4")
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "t13d1715h2_5b57614c22b0_3d5424432f58"},
+		map[conformanceKey]string{key: "t13d1715h2_5b57614c22b0_3d5424432f57"},
+		nil,
+	)
+
+	if len(result.Stale) != 0 {
+		t.Errorf("the comparison reports %d stale entries, and the register names no comparison", len(result.Stale))
+	}
+}
+
 // The engine sorts its deviations, so a report and a failure message read the same on
 // every run. A range over a map orders nothing.
 func TestTheComparisonSortsTheDeviationsByKey(t *testing.T) {

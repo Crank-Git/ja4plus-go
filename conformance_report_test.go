@@ -143,6 +143,7 @@ type conformanceReportSetTotals struct {
 	Matches    int
 	Deviations int
 	Accepted   int
+	Stale      int
 }
 
 // conformanceReport collects the outcome of one conformance run and renders it.
@@ -162,6 +163,9 @@ type conformanceReport struct {
 	groups map[conformanceReportGroupKey]*conformanceReportGroup
 	// sets counts the outcome of each vector set.
 	sets map[string]conformanceReportSetTotals
+	// stale holds every register entry the run no longer reaches, in the key order the
+	// engine writes.
+	stale []conformanceStaleEntry
 	// err holds the first method key the report could not place.
 	err error
 }
@@ -237,6 +241,11 @@ func (r *conformanceReport) recordComparison(capture, set string, comparison con
 		r.counts[conformanceReportCell{Capture: capture, Method: method}] = count
 		r.addDeviation(capture, method, set, deviation)
 	}
+
+	// A stale entry names a register entry rather than a comparison, so it reaches no row
+	// of the result table. #307 gives it a section of its own.
+	r.stale = append(r.stale, comparison.Stale...)
+	setTotals.Stale += len(comparison.Stale)
 
 	r.sets[set] = setTotals
 }
@@ -411,6 +420,7 @@ type conformanceReportCounts struct {
 	Matches       int
 	Deviations    int
 	Accepted      int
+	Stale         int
 }
 
 // totals counts the whole run from the comparisons the report holds.
@@ -425,6 +435,7 @@ func (r *conformanceReport) totals() conformanceReportCounts {
 		totals.Matches += set.Matches
 		totals.Deviations += set.Deviations
 		totals.Accepted += set.Accepted
+		totals.Stale += set.Stale
 	}
 
 	compared := make(map[string]bool, len(r.captures))
@@ -448,6 +459,7 @@ func (r *conformanceReport) render() string {
 	r.renderHead(&out)
 	r.renderSummary(&out)
 	r.renderDeviations(&out)
+	r.renderStale(&out)
 	r.renderResults(&out)
 
 	return out.String()
@@ -471,6 +483,7 @@ func (r *conformanceReport) renderSummary(out *strings.Builder) {
 	fmt.Fprintf(out, "| Matches | %d |\n", totals.Matches)
 	fmt.Fprintf(out, "| Deviations | %d |\n", totals.Deviations)
 	fmt.Fprintf(out, "| Accepted deviations | %d |\n", totals.Accepted)
+	fmt.Fprintf(out, "| Stale register entries | %d |\n", totals.Stale)
 	fmt.Fprintf(out, "| Captures the suite compared | %d |\n", totals.Compared)
 	fmt.Fprintf(out, "| Captures the suite compared nothing on | %d |\n\n", totals.NotApplicable)
 
@@ -519,6 +532,37 @@ func (r *conformanceReport) renderDeviations(out *strings.Builder) {
 				deviation.Kind, accepted,
 				conformanceReportValue(deviation.Expected), conformanceReportValue(deviation.Produced))
 		}
+	}
+
+	out.WriteString("\n")
+}
+
+// renderStale writes the stale register entries. It holds #307.
+//
+// The section states the result of every run, and never of a failed run alone. A reader who
+// finds no section cannot tell a healthy register from a renderer that dropped one.
+func (r *conformanceReport) renderStale(out *strings.Builder) {
+	out.WriteString("## Stale register entries\n\n")
+	out.WriteString("An entry of `testdata/deviations.json` records the value this library produced when the " +
+		"maintainer ruled. A later change moves that value, and the entry then accepts a comparison it does not " +
+		"describe.\n\n")
+
+	if len(r.stale) == 0 {
+		out.WriteString("The run reports no stale register entry.\n\n")
+
+		return
+	}
+
+	entries := slices.Clone(r.stale)
+	slices.SortStableFunc(entries, func(first, second conformanceStaleEntry) int {
+		return strings.Compare(first.Key.String(), second.Key.String())
+	})
+
+	out.WriteString("| Comparison | Recorded | Produced |\n|---|---|---|\n")
+
+	for _, entry := range entries {
+		fmt.Fprintf(out, "| `%s` | %s | %s |\n",
+			entry.Key, conformanceReportValue(entry.Recorded), conformanceReportValue(entry.Produced))
 	}
 
 	out.WriteString("\n")
