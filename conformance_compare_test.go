@@ -415,9 +415,9 @@ func TestTheConformanceKeyWritesTheRegisterKeyForm(t *testing.T) {
 	}
 }
 
-// #328 states that the stale check of #307 visits only the keys the run reaches. A register
-// entry whose key neither map holds reaches no comparison, so the comparison names the keys
-// it reaches and the run subtracts them from the register.
+// #328 states that the stale check of #307 reaches the keys of the two value maps alone. A
+// register entry whose key neither map holds reaches no comparison, so the comparison names
+// the keys it reaches and the run subtracts them from the register.
 func TestTheComparisonNamesEveryRegisterKeyItReaches(t *testing.T) {
 	reached := oneConformanceKey("JA4")
 	absent := oneConformanceKey("JA4S")

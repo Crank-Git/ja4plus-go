@@ -86,7 +86,7 @@ type conformanceStaleEntry struct {
 // A register entry names a comparison. A renamed method key, a dropped capture or a moved
 // stream name each stop the run from making that comparison. The entry then accepts a
 // difference that no comparison of the run reports. FR-reference-26 never reaches such an
-// entry, and #307 never reaches it either, because both checks visit the compared keys
+// entry, and #307 never reaches it either, because both checks read the compared keys
 // alone.
 type conformanceOrphanEntry struct {
 	// Key names the comparison the register entry accepts.
@@ -111,7 +111,7 @@ type conformanceComparison struct {
 	// Stale holds every register entry whose recorded value the run no longer produces,
 	// sorted by key. #307 fails the suite for each one.
 	Stale []conformanceStaleEntry
-	// Reached names every register key that this comparison visits, sorted by key. It holds
+	// Reached names every register key that this comparison reaches, sorted by key. It holds
 	// FR-conformance-33h. The run subtracts the reached keys from the register, and each key
 	// that remains names an orphan entry.
 	Reached []conformanceKey

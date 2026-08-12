@@ -285,7 +285,7 @@ The run reports no stale register entry.
 
 ## Orphan register entries
 
-An entry of `testdata/deviations.json` names one comparison. The run that makes no comparison for that key reports the entry here, because the entry then accepts a difference the run never measures.
+An entry of `testdata/deviations.json` names one comparison. No comparison of the run reaches the key of an entry below, so the entry accepts a difference the run never measures.
 
 The run reports no orphan register entry.
 

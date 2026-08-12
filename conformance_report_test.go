@@ -166,7 +166,7 @@ type conformanceReport struct {
 	// stale holds every register entry the run no longer reaches, in the key order the
 	// engine writes.
 	stale []conformanceStaleEntry
-	// reached names every register key that a comparison of the run visits. #328 subtracts
+	// reached names every register key that a comparison of the run reaches. #328 subtracts
 	// it from the register.
 	reached map[conformanceKey]bool
 	// orphan holds every register entry that no comparison of the run reaches, sorted by
@@ -599,13 +599,12 @@ func (r *conformanceReport) renderStale(out *strings.Builder) {
 // The section states the result of every run, and never of a failed run alone. A reader who
 // finds no section cannot tell a healthy register from a renderer that dropped one.
 //
-// The row holds no produced value. The run makes no comparison for the key, so it produces
-// nothing to print.
+// The row holds no produced value. No comparison of the run reaches the key, so the run
+// produces nothing to print.
 func (r *conformanceReport) renderOrphans(out *strings.Builder) {
 	out.WriteString("## Orphan register entries\n\n")
-	out.WriteString("An entry of `testdata/deviations.json` names one comparison. The run that makes no comparison " +
-		"for that key reports the entry here, because the entry then accepts a difference the run never " +
-		"measures.\n\n")
+	out.WriteString("An entry of `testdata/deviations.json` names one comparison. No comparison of the run reaches " +
+		"the key of an entry below, so the entry accepts a difference the run never measures.\n\n")
 
 	if len(r.orphan) == 0 {
 		out.WriteString("The run reports no orphan register entry.\n\n")

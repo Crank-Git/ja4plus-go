@@ -606,7 +606,7 @@ type conformanceRunTotals struct {
 	StreamValues  int
 	Stream        conformanceSetTotals
 	Packet        conformanceSetTotals
-	// Reached names every register key that a comparison of the run visits. #328 reads it
+	// Reached names every register key that a comparison of the run reaches. #328 reads it
 	// once, after the last capture, because one comparison reads one capture and one vector
 	// set.
 	Reached map[conformanceKey]bool
@@ -616,7 +616,7 @@ type conformanceRunTotals struct {
 	Orphan int
 }
 
-// recordReached keeps every register key that the comparison visits.
+// recordReached keeps every register key that the comparison reaches.
 func (totals *conformanceRunTotals) recordReached(comparison conformanceComparison) {
 	for _, key := range comparison.Reached {
 		totals.Reached[key] = true
