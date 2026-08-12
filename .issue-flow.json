@@ -52,5 +52,11 @@
   ],
   "promotion": "declined 2026-08-11; keep accumulating on dev until the Epic 10 freeze is closer",
   "maxBackgroundWorkers": 3,
-  "rulingsEscalation": "interrupt the maintainer immediately; never park a ruling"
+  "rulingsEscalation": "interrupt the maintainer immediately; never park a ruling",
+  "portRepo": "Crank-Git/ja4plus",
+  "portParity": {
+    "rule": "This library matches the port one to one. Where that leaves a choice, follow the FoxIO material. Stated by the maintainer on 2026-08-12.",
+    "keepPortIssuesUpdated": "Every cross-repository finding reaches an issue or a comment in Crank-Git/ja4plus in the same session, so the maintainer can run a hotfix there. A finding that needs no port change says so, on the Go issue, with the port file and line that proves it.",
+    "namesForThePython": "python/ja4.py inside testdata/foxio/ is FoxIO's reference Python. The port is Crank-Git/ja4plus. They disagree, and one wrong citation reached a ruling on 2026-08-12. Name which one, every time."
+  }
 }
