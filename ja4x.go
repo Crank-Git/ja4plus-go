@@ -230,10 +230,11 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 					continue
 				}
 
-				fp := ComputeJA4XFromDER(certDER)
+				fp, raw := computeJA4XWithRaw(certDER)
 				if fp != "" {
 					result := FingerprintResult{
 						Fingerprint: fp,
+						Raw:         raw,
 						Type:        "ja4x",
 						SrcIP:       srcIP,
 						DstIP:       dstIP,
@@ -309,14 +310,18 @@ func extractCertificates(data []byte) [][]byte {
 	return certs
 }
 
-// ComputeJA4XFromDER computes a JA4X fingerprint from DER-encoded certificate bytes.
-// Returns an empty string if the certificate cannot be parsed.
+// ja4xParts returns the three unhashed object identifier lists of the certificate.
+// The order is the issuer list, the subject list and the extension list. The second
+// return value is false when the certificate cannot be read.
 //
-// Format: {issuer_hash}_{subject_hash}_{extension_hash}
-func ComputeJA4XFromDER(certDER []byte) string {
+// Each list holds the hexadecimal form of an identifier, and a comma separates each pair.
+// R8, R9 and R10 of `docs/specs/foxio/JA4X.md` state the three rules, and no sort applies.
+func ja4xParts(certDER []byte) ([3]string, bool) {
+	var parts [3]string
+
 	cert, err := x509.ParseCertificate(certDER)
 	if err != nil {
-		return ""
+		return parts, false
 	}
 
 	// Extract issuer RDN OIDs.
@@ -337,11 +342,45 @@ func ComputeJA4XFromDER(certDER []byte) string {
 		extOIDs = append(extOIDs, parser.OIDToHex(ext.Id.String()))
 	}
 
-	issuerHash := parser.TruncatedHash(strings.Join(issuerOIDs, ","))
-	subjectHash := parser.TruncatedHash(strings.Join(subjectOIDs, ","))
-	extHash := parser.TruncatedHash(strings.Join(extOIDs, ","))
+	parts[0] = strings.Join(issuerOIDs, ",")
+	parts[1] = strings.Join(subjectOIDs, ",")
+	parts[2] = strings.Join(extOIDs, ",")
 
-	return fmt.Sprintf("%s_%s_%s", issuerHash, subjectHash, extHash)
+	return parts, true
+}
+
+// computeJA4XWithRaw returns the JA4X fingerprint and the JA4X_r raw form of the
+// certificate. It returns two empty strings when the certificate cannot be read.
+//
+// Both values read the same three lists, so the raw form is the exact preimage of the
+// fingerprint. `testdata/foxio/reference/rust/ja4x/src/lib.rs:49` hashes each part into
+// the fingerprint, and `:50` writes the raw form as
+// `let ja4x_r = with_raw.then(|| parts.join("_"));`.
+//
+// The zero sentinel of R12 belongs to the hashed form alone, because FoxIO runs its hash
+// on the hashed form. An empty list therefore reaches the raw form as an empty part.
+func computeJA4XWithRaw(certDER []byte) (string, string) {
+	parts, ok := ja4xParts(certDER)
+	if !ok {
+		return "", ""
+	}
+
+	fingerprint := fmt.Sprintf("%s_%s_%s",
+		parser.TruncatedHash(parts[0]),
+		parser.TruncatedHash(parts[1]),
+		parser.TruncatedHash(parts[2]),
+	)
+
+	return fingerprint, strings.Join(parts[:], "_")
+}
+
+// ComputeJA4XFromDER computes a JA4X fingerprint from DER-encoded certificate bytes.
+// Returns an empty string if the certificate cannot be parsed.
+//
+// Format: {issuer_hash}_{subject_hash}_{extension_hash}
+func ComputeJA4XFromDER(certDER []byte) string {
+	fingerprint, _ := computeJA4XWithRaw(certDER)
+	return fingerprint
 }
 
 // ComputeJA4XFromPEM computes a JA4X fingerprint from PEM-encoded certificate bytes.
