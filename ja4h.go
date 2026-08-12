@@ -70,14 +70,18 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		if req != nil {
 			fingerprint := computeJA4HFromRequest(req)
 			if fingerprint != "" {
+				// JA4H fills no `Raw` field. The FoxIO per-stream vector set publishes
+				// `JA4H_ro` and no `JA4H_r` value, so a sorted form matches no vector.
+				// #274 records that decision, and `TestJA4H_RawStaysEmpty` holds it.
 				result := FingerprintResult{
-					Fingerprint: fingerprint,
-					Type:        "ja4h",
-					SrcIP:       srcIP,
-					DstIP:       dstIP,
-					SrcPort:     srcPort,
-					DstPort:     dstPort,
-					Timestamp:   parser.GetPacketTimestamp(packet),
+					Fingerprint:      fingerprint,
+					RawOriginalOrder: computeJA4HRawOriginalOrder(req),
+					Type:             "ja4h",
+					SrcIP:            srcIP,
+					DstIP:            dstIP,
+					SrcPort:          srcPort,
+					DstPort:          dstPort,
+					Timestamp:        parser.GetPacketTimestamp(packet),
 				}
 				f.reassembler.RemoveStream(streamKey)
 				return []FingerprintResult{result}, nil
@@ -106,13 +110,14 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	}
 
 	result := FingerprintResult{
-		Fingerprint: fingerprint,
-		Type:        "ja4h",
-		SrcIP:       srcIP,
-		DstIP:       dstIP,
-		SrcPort:     srcPort,
-		DstPort:     dstPort,
-		Timestamp:   parser.GetPacketTimestamp(packet),
+		Fingerprint:      fingerprint,
+		RawOriginalOrder: computeJA4HRawOriginalOrder(req),
+		Type:             "ja4h",
+		SrcIP:            srcIP,
+		DstIP:            dstIP,
+		SrcPort:          srcPort,
+		DstPort:          dstPort,
+		Timestamp:        parser.GetPacketTimestamp(packet),
 	}
 	f.reassembler.RemoveStream(streamKey)
 	return []FingerprintResult{result}, nil
@@ -185,12 +190,11 @@ func ja4hNormalizeVersion(v string) string {
 	return out
 }
 
-// computeJA4HFromRequest builds the JA4H fingerprint from a parsed HTTP request.
+// ja4hPartA builds part a of the JA4H value from a parsed HTTP request.
 //
-// Format: {method}{ver}{cookie}{referer}{count}{lang}_{header_hash}_{cookie_name_hash}_{cookie_value_hash}
-func computeJA4HFromRequest(req *parser.HTTPRequest) string {
-	// Part A components.
-
+// The base value and the raw original-order form share part a, so one function builds it
+// for both. A second copy of this arithmetic would let the two forms disagree.
+func ja4hPartA(req *parser.HTTPRequest) string {
 	// method: first 2 chars, lowercase.
 	method := strings.ToLower(req.Method)
 	if len(method) > 2 {
@@ -246,9 +250,16 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 		}
 	}
 
-	partA := fmt.Sprintf("%s%s%s%s%02d%s", method, ver, cookieFlag, refererFlag, headerCount, langCode)
+	return fmt.Sprintf("%s%s%s%s%02d%s", method, ver, cookieFlag, refererFlag, headerCount, langCode)
+}
 
-	// Part B: header names in original order, excluding Cookie, Referer, pseudo-headers.
+// ja4hHeaderNames returns the header names in wire order, with the original case.
+//
+// The base value hashes this list and the raw original-order form writes it, so one
+// function builds it for both.
+// It drops the Cookie header, the Referer header and every pseudo-header, because part a
+// counts the same set.
+func ja4hHeaderNames(req *parser.HTTPRequest) []string {
 	var filteredHeaders []string
 	for _, h := range req.HeaderNames {
 		if h == "" || strings.HasPrefix(h, ":") {
@@ -260,7 +271,17 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 		}
 		filteredHeaders = append(filteredHeaders, h)
 	}
-	headersStr := strings.Join(filteredHeaders, ",")
+	return filteredHeaders
+}
+
+// computeJA4HFromRequest builds the JA4H fingerprint from a parsed HTTP request.
+//
+// Format: {method}{ver}{cookie}{referer}{count}{lang}_{header_hash}_{cookie_name_hash}_{cookie_value_hash}
+func computeJA4HFromRequest(req *parser.HTTPRequest) string {
+	partA := ja4hPartA(req)
+
+	// Part B: header names in original order, excluding Cookie, Referer, pseudo-headers.
+	headersStr := strings.Join(ja4hHeaderNames(req), ",")
 	partB := parser.TruncatedHash(headersStr)
 
 	// Part C: sorted cookie field names.
@@ -290,4 +311,29 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 	partD := parser.TruncatedHash(cookieValuesStr)
 
 	return fmt.Sprintf("%s_%s_%s_%s", partA, partB, partC, partD)
+}
+
+// computeJA4HRawOriginalOrder builds the FoxIO `JA4H_ro` value of a parsed HTTP request.
+//
+// The form is `<part a>_<header names>_<cookie names>_<cookie pairs>`. Each list holds the
+// wire order, which is what separates this value from the base value. The base value
+// hashes the sorted cookie name and the sorted cookie pair, so a sorted raw form would
+// carry no information the base value lacks.
+//
+// A request that carries no cookie ends after the header names and one underscore.
+// `testdata/foxio/reference/python/ja4h.py` appends the two cookie fields only when the
+// request holds a cookie, and 68 of the 89 per-stream vector values carry that shape.
+func computeJA4HRawOriginalOrder(req *parser.HTTPRequest) string {
+	raw := ja4hPartA(req) + "_" + strings.Join(ja4hHeaderNames(req), ",") + "_"
+
+	if len(req.CookieNames) == 0 {
+		return raw
+	}
+
+	pairs := make([]string, len(req.CookieNames))
+	for i, name := range req.CookieNames {
+		pairs[i] = name + "=" + req.Cookies[name]
+	}
+
+	return raw + strings.Join(req.CookieNames, ",") + "_" + strings.Join(pairs, ",")
 }
