@@ -261,7 +261,7 @@ checkout instead.
 
 **2. The hook allows a hand-written stash while a rebase autostash is pending.** git
 refuses a hand-written stash during a conflicted merge, so the merge case holds. A stopped
-rebase with a clean index is the one hole:
+rebase with a clean index is the one case the hook does not cover:
 
 ```
 === rebase-merge/autostash present: yes
@@ -270,5 +270,5 @@ Saved working directory and index state WIP on (no branch): 1e64ea7 other
 === exit code: 0
 ```
 
-**That hole misses a refusal, and it destroys nothing.** The rule at the head of this file
+**That case misses a refusal, and it destroys nothing.** The rule at the head of this file
 covers it, and the rule binds every agent whether or not the maintainer installs the hook.
