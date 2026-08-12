@@ -18,6 +18,9 @@ project declines.
 Never write "we decided" for a reading, and never write "the spec says" for a ruling. The
 port settled this vocabulary in its issue #533, and both repositories use it.
 
+**`## What a delegated session may rule` below states the one case where a delegated
+project manager makes a ruling.** The table holds for every other question.
+
 ## A reading cites a file and a line
 
 A claim about a source is worthless without the location. Write
@@ -83,19 +86,24 @@ thing a fingerprint is for.
 ## What a delegated session may rule
 
 **The maintainer delegates a session to a project manager, and this section states what
-that delegation permits.** The maintainer approved the carve-out on 2026-08-12, and #246
+that delegation permits.** The maintainer approved this delegation on 2026-08-12, and #246
 records it.
 
 **A schema violation has one right answer, and a reference split has none.** That sentence
 is the boundary. The project manager rules a schema violation under a delegation. It rules
 no reference split, and it rules no other question.
 
+**A delegated ruling is a ruling, and never a reading.** A reading concludes what one
+source states. A delegated ruling decides what the library does where a published FoxIO
+value contradicts a published FoxIO rule. No source settles that question, because FoxIO
+publishes both of them.
+
 A delegated ruling is permitted only when every one of these is true.
 
 1. A published rule states the answer, and that rule ranks at 1 or at 2 in the source
    ranking above.
 2. Every FoxIO implementation enforces that rule. One implementation that departs makes
-   the question a reference split, and a reference split is barred.
+   the question a reference split, and this section bars a reference split.
 3. A recorded measurement proves the violation, and each citation names a file and a line.
 4. The register entry or the test carries a provisional marker, and it names the issue.
 5. The entry names a reversal path, so the maintainer reverses the ruling with one action.
