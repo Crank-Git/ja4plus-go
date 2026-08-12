@@ -166,6 +166,12 @@ type conformanceReport struct {
 	// stale holds every register entry the run no longer reaches, in the key order the
 	// engine writes.
 	stale []conformanceStaleEntry
+	// reached names every register key that a comparison of the run reaches. #328 subtracts
+	// it from the register.
+	reached map[conformanceKey]bool
+	// orphan holds every register entry that no comparison of the run reaches, sorted by
+	// key. `recordOrphans` fills it.
+	orphan []conformanceOrphanEntry
 	// err holds the first method key the report could not place.
 	err error
 }
@@ -178,6 +184,7 @@ func newConformanceReport(commit string) *conformanceReport {
 		counts:   make(map[conformanceReportCell]conformanceReportCount),
 		groups:   make(map[conformanceReportGroupKey]*conformanceReportGroup),
 		sets:     make(map[string]conformanceReportSetTotals),
+		reached:  make(map[conformanceKey]bool),
 	}
 }
 
@@ -247,7 +254,22 @@ func (r *conformanceReport) recordComparison(capture, set string, comparison con
 	r.stale = append(r.stale, comparison.Stale...)
 	setTotals.Stale += len(comparison.Stale)
 
+	// #328 collects the reached keys of every comparison. The report counts the orphan
+	// entries on its own, and `conformance_test.go` compares the result with its own count.
+	for _, key := range comparison.Reached {
+		r.reached[key] = true
+	}
+
 	r.sets[set] = setTotals
+}
+
+// recordOrphans records every register entry that no comparison of the run reaches.
+// It holds FR-conformance-33i.
+//
+// The caller calls it once, after the last comparison. A caller that calls it earlier
+// reports an orphan entry for each comparison the run has not yet made.
+func (r *conformanceReport) recordOrphans(register map[conformanceKey]deviationEntry) {
+	r.orphan = conformanceOrphanEntries(register, r.reached)
 }
 
 // hold records the first error the report met.
@@ -421,6 +443,7 @@ type conformanceReportCounts struct {
 	Deviations    int
 	Accepted      int
 	Stale         int
+	Orphan        int
 }
 
 // totals counts the whole run from the comparisons the report holds.
@@ -429,7 +452,7 @@ type conformanceReportCounts struct {
 // `conformanceRunTotals`. Two counts that must agree catch a renderer that drops a
 // comparison, which one count cannot.
 func (r *conformanceReport) totals() conformanceReportCounts {
-	totals := conformanceReportCounts{Captures: len(r.captures)}
+	totals := conformanceReportCounts{Captures: len(r.captures), Orphan: len(r.orphan)}
 
 	for _, set := range r.sets {
 		totals.Matches += set.Matches
@@ -460,6 +483,7 @@ func (r *conformanceReport) render() string {
 	r.renderSummary(&out)
 	r.renderDeviations(&out)
 	r.renderStale(&out)
+	r.renderOrphans(&out)
 	r.renderResults(&out)
 
 	return out.String()
@@ -484,6 +508,7 @@ func (r *conformanceReport) renderSummary(out *strings.Builder) {
 	fmt.Fprintf(out, "| Deviations | %d |\n", totals.Deviations)
 	fmt.Fprintf(out, "| Accepted deviations | %d |\n", totals.Accepted)
 	fmt.Fprintf(out, "| Stale register entries | %d |\n", totals.Stale)
+	fmt.Fprintf(out, "| Orphan register entries | %d |\n", totals.Orphan)
 	fmt.Fprintf(out, "| Captures the suite compared | %d |\n", totals.Compared)
 	fmt.Fprintf(out, "| Captures the suite compared nothing on | %d |\n\n", totals.NotApplicable)
 
@@ -563,6 +588,34 @@ func (r *conformanceReport) renderStale(out *strings.Builder) {
 	for _, entry := range entries {
 		fmt.Fprintf(out, "| `%s` | %s | %s |\n",
 			entry.Key, conformanceReportValue(entry.Recorded), conformanceReportValue(entry.Produced))
+	}
+
+	out.WriteString("\n")
+}
+
+// renderOrphans writes the orphan register entries. It holds FR-conformance-33m,
+// FR-conformance-33n and FR-conformance-33o, and #328 states the defect it reports.
+//
+// The section states the result of every run, and never of a failed run alone. A reader who
+// finds no section cannot tell a healthy register from a renderer that dropped one.
+//
+// The row holds no produced value. No comparison of the run reaches the key, so the run
+// produces nothing to print.
+func (r *conformanceReport) renderOrphans(out *strings.Builder) {
+	out.WriteString("## Orphan register entries\n\n")
+	out.WriteString("An entry of `testdata/deviations.json` names one comparison. No comparison of the run reaches " +
+		"the key of an entry below, so the entry accepts a difference the run never measures.\n\n")
+
+	if len(r.orphan) == 0 {
+		out.WriteString("The run reports no orphan register entry.\n\n")
+
+		return
+	}
+
+	out.WriteString("| Comparison | Recorded |\n|---|---|\n")
+
+	for _, entry := range r.orphan {
+		fmt.Fprintf(out, "| `%s` | %s |\n", entry.Key, conformanceReportValue(entry.Recorded))
 	}
 
 	out.WriteString("\n")

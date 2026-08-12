@@ -123,6 +123,19 @@ deviation list that Epic 5 closes.
 - **FR-conformance-33f** — The section holds one row for each stale entry.
 - **FR-conformance-33g** — The section states that the run reports no stale register entry
   when the count is 0.
+- **FR-conformance-33h** — The suite names every register key that a comparison of the run
+  reaches.
+- **FR-conformance-33i** — A register entry whose key no comparison of the run reaches is
+  an orphan entry.
+- **FR-conformance-33j** — **An orphan entry fails the suite.**
+- **FR-conformance-33k** — The suite reads the register for an orphan entry once, after the
+  last capture.
+- **FR-conformance-33l** — The summary names the count of orphan entries.
+- **FR-conformance-33m** — The report holds a `## Orphan register entries` section on every
+  run.
+- **FR-conformance-33n** — The section holds one row for each orphan entry.
+- **FR-conformance-33o** — The section states that the run reports no orphan register entry
+  when the count is 0.
 
 ### The gate
 

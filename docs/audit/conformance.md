@@ -15,6 +15,7 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Deviations | 680 |
 | Accepted deviations | 409 |
 | Stale register entries | 0 |
+| Orphan register entries | 0 |
 | Captures the suite compared | 35 |
 | Captures the suite compared nothing on | 3 |
 
@@ -281,6 +282,12 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 An entry of `testdata/deviations.json` records the value this library produced when the maintainer ruled. A later change moves that value, and the entry then accepts a comparison it does not describe.
 
 The run reports no stale register entry.
+
+## Orphan register entries
+
+An entry of `testdata/deviations.json` names one comparison. No comparison of the run reaches the key of an entry below, so the entry accepts a difference the run never measures.
+
+The run reports no orphan register entry.
 
 ## Results
 

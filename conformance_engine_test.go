@@ -80,6 +80,21 @@ type conformanceStaleEntry struct {
 	Produced string
 }
 
+// conformanceOrphanEntry is one register entry whose key no comparison of the run reaches.
+// #328 states the defect it reports.
+//
+// A register entry names a comparison. A renamed method key, a dropped capture or a moved
+// stream name each stop the run from making that comparison. The entry then accepts a
+// difference that no comparison of the run reports. FR-reference-26 never reaches such an
+// entry, and #307 never reaches it either, because both checks read the compared keys
+// alone.
+type conformanceOrphanEntry struct {
+	// Key names the comparison the register entry accepts.
+	Key conformanceKey
+	// Recorded is the `ours` value of the register entry.
+	Recorded string
+}
+
 // conformanceComparison holds the outcome of one comparison run.
 type conformanceComparison struct {
 	// Matches counts the comparisons where the two values are equal and the register
@@ -96,6 +111,10 @@ type conformanceComparison struct {
 	// Stale holds every register entry whose recorded value the run no longer produces,
 	// sorted by key. #307 fails the suite for each one.
 	Stale []conformanceStaleEntry
+	// Reached names every register key that this comparison reaches, sorted by key. It holds
+	// FR-conformance-33h. The run subtracts the reached keys from the register, and each key
+	// that remains names an orphan entry.
+	Reached []conformanceKey
 }
 
 // compareConformance returns the comparison of the produced values with the vector values.
@@ -110,6 +129,10 @@ type conformanceComparison struct {
 // A key the register names produces a stale entry when the recorded `ours` value differs
 // from the produced value. A stale entry stands beside a match, a deviation and a closed
 // entry, and it replaces none of them.
+//
+// A key the register names also reaches `Reached`. The comparison reads one capture and one
+// vector set, so it sees one part of the register. `conformanceOrphanEntries` reads the
+// reached keys of the whole run.
 func compareConformance(
 	produced map[conformanceKey]string,
 	expected map[conformanceKey]string,
@@ -121,6 +144,12 @@ func compareConformance(
 		producedValue, libraryHolds := produced[key]
 		expectedValue, vectorHolds := expected[key]
 		entry, registered := register[key]
+
+		// #328 records the key before the branches below. A closed entry and a stale entry
+		// each name a key the run reaches, so the record stands outside every branch.
+		if registered {
+			result.Reached = append(result.Reached, key)
+		}
 
 		// #307 reads the recorded value of the entry, and never its presence alone. The
 		// check stands outside the two branches below, because a stale record is a defect of
@@ -170,6 +199,34 @@ func compareConformance(
 	}
 
 	return result
+}
+
+// conformanceOrphanEntries returns one entry for each register key that the reached set does
+// not hold, sorted by key. It holds FR-conformance-33i.
+//
+// The caller passes the reached keys of the whole run, and never of one comparison. One
+// comparison reads one capture and one vector set, so a key it does not reach is a key
+// another comparison of the run reaches.
+func conformanceOrphanEntries(
+	register map[conformanceKey]deviationEntry,
+	reached map[conformanceKey]bool,
+) []conformanceOrphanEntry {
+	var entries []conformanceOrphanEntry
+
+	for key, entry := range register {
+		if reached[key] {
+			continue
+		}
+
+		entries = append(entries, conformanceOrphanEntry{Key: key, Recorded: entry.Ours})
+	}
+
+	// A range over a map orders nothing, and an unordered report changes on every run.
+	slices.SortFunc(entries, func(first, second conformanceOrphanEntry) int {
+		return strings.Compare(first.Key.String(), second.Key.String())
+	})
+
+	return entries
 }
 
 // conformanceComparedKeys returns every key of the two maps, sorted.

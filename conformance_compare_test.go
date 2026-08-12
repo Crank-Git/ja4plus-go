@@ -414,3 +414,135 @@ func TestTheConformanceKeyWritesTheRegisterKeyForm(t *testing.T) {
 		t.Errorf("the register reader rejects the key %q: %v", key.String(), err)
 	}
 }
+
+// #328 states that the stale check of #307 reaches the keys of the two value maps alone. A
+// register entry whose key neither map holds reaches no comparison, so the comparison names
+// the keys it reaches and the run subtracts them from the register.
+func TestTheComparisonNamesEveryRegisterKeyItReaches(t *testing.T) {
+	reached := oneConformanceKey("JA4")
+	absent := oneConformanceKey("JA4S")
+
+	register := map[conformanceKey]deviationEntry{
+		reached: {Key: reached.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
+		absent:  {Key: absent.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{reached: "ours"},
+		map[conformanceKey]string{reached: "theirs"},
+		register,
+	)
+
+	if len(result.Reached) != 1 {
+		t.Fatalf("the comparison names %d reached register keys, and it compares the one key %q",
+			len(result.Reached), reached)
+	}
+
+	if result.Reached[0] != reached {
+		t.Errorf("the comparison names the reached key %q, and it compares %q", result.Reached[0], reached)
+	}
+}
+
+// A key that the register does not name measures nothing about the register, so the
+// comparison names it nowhere.
+func TestTheComparisonNamesNoReachedKeyThatTheRegisterDoesNotHold(t *testing.T) {
+	key := oneConformanceKey("JA4")
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "value"},
+		map[conformanceKey]string{key: "value"},
+		nil,
+	)
+
+	if len(result.Reached) != 0 {
+		t.Errorf("the comparison names %d reached register keys, and the register holds none", len(result.Reached))
+	}
+}
+
+// A closed entry names a key the run reaches. An orphan check that counted it as unreached
+// would report an orphan the register does not hold.
+func TestTheComparisonNamesAReachedKeyForAClosedEntry(t *testing.T) {
+	key := oneConformanceKey("JA4")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Ours: "value", Theirs: "value", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "value"},
+		map[conformanceKey]string{key: "value"},
+		register,
+	)
+
+	if len(result.Closed) != 1 {
+		t.Fatalf("the comparison reports %d closed entries, and the two values are equal", len(result.Closed))
+	}
+
+	if len(result.Reached) != 1 || result.Reached[0] != key {
+		t.Errorf("the comparison names %d reached register keys, and it compares the closed key %q",
+			len(result.Reached), key)
+	}
+}
+
+// #328 states the orphan entry. The run reaches the key of one entry and no key of the
+// other, so the second entry is an orphan entry.
+func TestTheOrphanEntriesNameEveryRegisterKeyTheRunNeverReaches(t *testing.T) {
+	reached := oneConformanceKey("JA4")
+	orphan := oneConformanceKey("JA4S")
+
+	register := map[conformanceKey]deviationEntry{
+		reached: {Key: reached.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
+		orphan:  {Key: orphan.String(), Ours: "recorded", Theirs: "theirs", Ruling: "#20"},
+	}
+
+	entries := conformanceOrphanEntries(register, map[conformanceKey]bool{reached: true})
+
+	if len(entries) != 1 {
+		t.Fatalf("the run reports %d orphan entries, and it reaches the key of one of the two entries", len(entries))
+	}
+
+	if entries[0].Key != orphan {
+		t.Errorf("the run reports the orphan entry %q, and it reaches no key of %q", entries[0].Key, orphan)
+	}
+
+	if entries[0].Recorded != "recorded" {
+		t.Errorf("the orphan entry records %q, and the register entry holds `recorded`", entries[0].Recorded)
+	}
+}
+
+// An orphan check that fired on a reached key would fail every run and gate nothing.
+func TestTheOrphanEntriesNameNoRegisterKeyTheRunReaches(t *testing.T) {
+	key := oneConformanceKey("JA4")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
+	}
+
+	entries := conformanceOrphanEntries(register, map[conformanceKey]bool{key: true})
+
+	if len(entries) != 0 {
+		t.Errorf("the run reports %d orphan entries, and it reaches the key of the one entry", len(entries))
+	}
+}
+
+// A range over the register orders nothing, and an unordered report changes on every run.
+func TestTheOrphanEntriesSortTheEntriesByKey(t *testing.T) {
+	first := conformanceKey{Capture: "dhcp.pcapng", Stream: "1", Method: "JA4D"}
+	second := conformanceKey{Capture: "tls12.pcap", Stream: "1", Method: "JA4"}
+
+	register := map[conformanceKey]deviationEntry{
+		second: {Key: second.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
+		first:  {Key: first.String(), Ours: "ours", Theirs: "theirs", Ruling: "#20"},
+	}
+
+	entries := conformanceOrphanEntries(register, nil)
+
+	if len(entries) != 2 {
+		t.Fatalf("the run reports %d orphan entries, and it reaches no key of the two entries", len(entries))
+	}
+
+	if entries[0].Key != first || entries[1].Key != second {
+		t.Errorf("the run reports the orphan entries %q and %q, and the sorted order names `dhcp.pcapng` first",
+			entries[0].Key, entries[1].Key)
+	}
+}
