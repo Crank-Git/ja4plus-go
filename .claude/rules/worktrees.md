@@ -78,17 +78,17 @@ The bytes did not change. `command -v gofmt` reported `/opt/homebrew/bin/gofmt`,
 **A hook that `.claude/settings.json` configures did not run for a worktree-isolated
 subagent.** So a `PreToolUse` hook stops no worker from running `git stash`.
 
-**The permission system does reach a worker.** A worker of this batch was refused a
-command by the worktree guard, and the refusal named the worktree. A `deny` rule in
-`.claude/settings.json` is therefore the mechanism that stops the command at the agent.
-That change is the maintainer's, because it changes what every future session may run.
-#305 states the proposal.
+**This reading states no result for a `deny` rule of `.claude/settings.json`.** The harness
+refused two commands of that worker, and each refusal named the worktree. That refusal
+comes from the worktree isolation of the harness, and not from a rule of
+`.claude/settings.json`, so it measures nothing about a `deny` rule. #305 states the
+proposal, and the maintainer owns that file.
 
-## The guard: `.githooks/reference-transaction`
+## The git hook: `.githooks/reference-transaction`
 
-git 2.53.0 defines no `pre-stash` hook. `githooks(5)` names 24 hooks, and none of them
-runs before a stash. `reference-transaction` is the one hook that reaches the stash,
-because it runs for every ref update, and `githooks(5)` states the abort:
+git 2.53.0 defines no `pre-stash` hook. `man githooks | grep -i -c stash` reports `0`, so
+the page never names the stash. `reference-transaction` is the one hook that reaches the
+stash, because it runs for every ref update, and `githooks(5)` states the abort:
 
 > The exit status of the hook is ignored for any state except for the "prepared" state.
 > In the "prepared" state, a non-zero exit status will cause the transaction to be
@@ -108,6 +108,8 @@ git config core.hooksPath .githooks
 ### What the hook was watched doing
 
 A throwaway repository with two linked worktrees produced each result below, at git 2.53.0.
+That repository stood inside the worktree of the worker, and the worker removed it. **No
+command of this watch reached the stash ref of this repository.**
 
 **It refuses `git stash push`, and the working tree survives.**
 
@@ -129,8 +131,8 @@ worktree.** Both reported exit code 0.
 **It does not undo a `git stash pop`.** git applies the stash to the working tree before
 it updates the ref, so the hook aborts the ref update after the files change. A pop in a
 linked worktree left the file of the other worktree in place, and it emptied the stash
-reflog while `refs/stash` survived. **Read the hook as a guard against the creation of a
-shared stash, and never as a repair of a pop.**
+reflog while `refs/stash` survived. **The hook stops a worker from creating a shared stash,
+and it repairs no pop.**
 
 **A relative `core.hooksPath` resolves per worktree.** The hook did not run until the file
 was committed, because each worktree looks for `.githooks` under its own root. A first

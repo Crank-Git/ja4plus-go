@@ -115,7 +115,7 @@ exits 0, and that exit code reports no site build.**
 - **No agent runs `git stash` in a worktree of this repository.** Every worktree shares one
   stash ref, so a stash here destroys the work of another worktree. Copy the file with `cp`
   before you change it. Restore a committed file with `git checkout -- <file>`.
-  `.claude/rules/worktrees.md` holds the reason, the third alternative and the guard.
+  `.claude/rules/worktrees.md` holds the reason, the third alternative and the git hook.
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
   the reference is wrong. Never change a FoxIO vector to make a test pass.
 - **Where the FoxIO implementations disagree, a person decides.** That is a ruling, not a
