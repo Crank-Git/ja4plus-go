@@ -137,7 +137,7 @@ because it can return an idle signal and no text at any point.
 address later, such as an issue worker that needs rework by message. A cross-member review
 reports once and ends, so it needs no name.
 
-## The five categories
+## The six categories
 
 The cross-member review checks each category below, and it reports on every one by name.
 
@@ -148,6 +148,21 @@ The cross-member review checks each category below, and it reports on every one 
 | 3 | A broken cross-reference | One member names a file, a section, an issue or an anchor that another member moved, renamed or never created. |
 | 4 | A violated rule | One member adds a rule, and a change breaks it. The change of a sibling breaks it, or the member's own change breaks it. |
 | 5 | An unreleased resource | One member allocates a map entry, a handle or a file, and no member releases it. |
+| 6 | An unsupported claim | One member states a fact about the merged result, and the merged result does not hold it. A count, an arithmetic result, or a named guard that guards nothing. |
+
+**Category 6 is new, and the batch #342 review earned it.** That review found two defects,
+and neither one fits category 3. Category 3 names one mechanism: a target that another
+member **moved, renamed or never created**. Both targets of batch #342 exist under the name
+the member wrote. `foxio_citation_base_test.go:527-529` named
+`TestTheCISkipDetectorMatchesNoUntaggedSkipMessage`, that test exists, and its extractor
+read no skip of the file that named it. The second finding was a count in a pull-request
+body that the table below it contradicts.
+
+**This file adds a category rather than widening category 3, because one category states
+one mechanism.** `.claude/rules/ste.md` rule 6 states one word, one meaning. A category 3
+that covers a missing target and a false claim about a present target gives one number two
+meanings, and a review that reports `Nothing found in category 3.` then answers two
+questions with one sentence.
 
 **Category 4 covers the member that breaks its own new rule.** A member that writes a rule
 and then breaks it on the same page passes every per-issue check, because the rule and the
@@ -157,6 +172,32 @@ breach land in one pull request. Batch #331 found one: #254 wrote the citation r
 **Start at the surface that more than one member edited.** List the files the merged result
 changes, count the members that touched each one, and read the shared files first. Every
 defect of the table in `## Why the project runs one` sits on a shared surface.
+
+**Then read every rule the batch adds, against the whole merged tree.** List each rule a
+member writes, and grep the tree for a breach of it. Read the files that no other member
+touched, because a rule binds every file and not the shared ones alone.
+
+**A shared surface finds no rule breach.** Both findings of batch #342 sat on a surface that
+exactly one member edited, and each one was a cross-member defect because one member wrote a
+rule that another member's file breaks. #255 wrote `## A citation names its repository` in
+`.claude/rules/rulings.md`, and #319 wrote a bare `#215` that names the port in
+`ja4t_option_byte_count_test.go`. No shared file holds that pair.
+
+## What a pull-request body is, and how a finding cites one
+
+**A pull-request body is in scope.** A member writes its measurement there, and the batch
+`## Changelog` round copies that measurement into `docs/specs/spec.md`. A wrong number in a
+body therefore reaches the tree, and the review is the last check before it does.
+
+**Item 4 of the return contract asks for a `file:line`, and a pull-request body holds no
+line.** A finding against a body cites the pull request, the heading of the section, and a
+verbatim quotation of the sentence. Write `pull request #349, `## Measurement``. Add the
+`file:line` of the tree that disproves the sentence, because the body states a fact about
+the tree and the tree is the evidence.
+
+**A finding against a body names no repair of the body.** A merged body is a record of what
+its author measured. The review reports the true number, and the batch documentation writes
+that number.
 
 ## The return contract
 
@@ -168,7 +209,7 @@ manager repairs the brief.
 1. The final message of the review is the whole report, as text.
 2. The report opens with one line headed `VERDICT`. It states `clean` or `findings`, and
    it states the count of findings.
-3. The report holds one section for each of the five categories, numbered and named.
+3. The report holds one section for each of the six categories, numbered and named.
 4. A category with a finding carries each finding, with a `file:line` citation and a
    verbatim quotation of the text that holds the defect.
 5. **A category with no finding carries the sentence `Nothing found in category N.`** That
@@ -200,7 +241,7 @@ Run these steps in order.
 1. Read the spawn response.
 2. If it names a mailbox, spawn one more cross-member review on the in-process path.
 3. **Never wait on a cross-session spawn.** It can stop without text at any point.
-4. If the second spawn also returns no text, run every one of the five categories by hand.
+4. If the second spawn also returns no text, run every one of the six categories by hand.
 5. Read the merged result with `git diff <remote>/dev...<remote>/batch/<n>-<slug>`.
 6. Read each changed file at its merged state.
 7. Write a gate comment on the batch pull request.
