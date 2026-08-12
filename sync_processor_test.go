@@ -12,6 +12,8 @@ import (
 // FR-concurrency-12 fix. A method outside this set reaches the unguarded Processor.
 var syncProcessorMethodNames = []string{
 	"CleanupConnection",
+	// Issue #216 adds CloseConnectionWindow, which emits the open window of one connection.
+	"CloseConnectionWindow",
 	"CloseOpenWindows",
 	"GetShardKey",
 	"ProcessPacket",
@@ -210,6 +212,48 @@ func TestSyncProcessor_SerializesCleanupConnectionAgainstProcessPacket(t *testin
 			for i := 0; i < packets; i++ {
 				sp.CleanupConnection("192.168.1.1", uint16(40000+g),
 					"10.0.0.1", uint16(443+i), "tcp")
+			}
+		}(g)
+	}
+
+	wg.Wait()
+}
+
+// TestSyncProcessor_SerializesCloseConnectionWindowAgainstProcessPacket holds the rule of
+// `.claude/rules/concurrency.md`: a new exported Processor method carries a race test.
+// The method returns a result, so the mutex must cover the whole call. A result that escapes
+// while another goroutine changes the fingerprinter state would race. Issue #216 adds the
+// method.
+func TestSyncProcessor_SerializesCloseConnectionWindowAgainstProcessPacket(t *testing.T) {
+	const goroutines = 8
+	const packets = 50
+
+	sp := NewSyncProcessor()
+
+	var wg sync.WaitGroup
+	for g := 0; g < goroutines; g++ {
+		wg.Add(1)
+		go func(g int) {
+			defer wg.Done()
+			for i := 0; i < packets; i++ {
+				pkt := buildSYNPacket("192.168.1.1", "10.0.0.1",
+					uint16(40000+g), uint16(443+i))
+				_, _ = sp.ProcessPacket(pkt)
+			}
+		}(g)
+	}
+
+	for g := 0; g < goroutines; g++ {
+		wg.Add(1)
+		go func(g int) {
+			defer wg.Done()
+			for i := 0; i < packets; i++ {
+				for _, result := range sp.CloseConnectionWindow("192.168.1.1", uint16(40000+g),
+					"10.0.0.1", uint16(443+i), "tcp") {
+					// The read reaches the result outside the lock, which is the race a
+					// wrapper that returns state under the lock would produce.
+					_ = result.Fingerprint
+				}
 			}
 		}(g)
 	}

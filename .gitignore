@@ -2,6 +2,10 @@
 bin/
 dist/
 
+# The linter cache. `make lint` holds one for each checkout, so a cached issue never
+# carries a path into another checkout. See #257.
+.golangci-cache/
+
 # The coverage profile that `make cover` and the CI test job write.
 coverage.out
 

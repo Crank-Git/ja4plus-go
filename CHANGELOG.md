@@ -15,6 +15,23 @@ keys. A count that an entry below states therefore differs from a fresh run.
 
 ### Added
 
+An entry counts an interface as one exported name. It counts no second name for the method
+that the interface declares.
+
+- Four exported names, which emit the JA4SSH window that one connection holds open and then
+  remove that connection: the `ConnectionWindowCloser` interface,
+  `JA4SSHFingerprinter.CloseConnectionWindow`, `Processor.CloseConnectionWindow` and
+  `SyncProcessor.CloseConnectionWindow`. The maintainer ruled the name on 2026-08-12, and
+  issue #216 records the ruling. `CloseOpenWindows` reaches every connection at the end of
+  the packet source, and this method reaches one connection before that moment. The method
+  takes the connection key that `CleanupConnection` accepts, and `CleanupConnection` keeps
+  its signature. Epic 10 freezes the exported surface for the whole `v1` series, so the name
+  lands before that freeze. No conformance vector separates the two answers, so ten tests
+  build the separating sequence. The change moves no fingerprint. Issue #264 records that no
+  spec file numbers the method as a requirement, and the maintainer ruled on issue #268 that
+  the method sits on its own interface. `WindowCloser` keeps `CloseOpenWindows` alone, and
+  each dispatch asserts one capability, so a type that implements one method alone is never
+  skipped.
 - Four exported names, which emit the JA4SSH window that a connection holds open at the end
   of the packet source: the `WindowCloser` interface, `JA4SSHFingerprinter.CloseOpenWindows`,
   `Processor.CloseOpenWindows` and `SyncProcessor.CloseOpenWindows`. The maintainer ruled on

@@ -52,9 +52,10 @@ Then confirm three properties of the snapshot.
 ## 4. Update the record
 
 - `CHANGELOG.md` describes the released behaviour and nothing else.
-- **Breaking changes are named as breaking.** `CloseOpenWindows` joining the exported
-  `Fingerprinter` interface is one. JA4LS arriving as a new method is not breaking, but the
-  CHANGELOG states it and states eleven methods through ten fingerprinters.
+- **Breaking changes are named as breaking.** `CloseOpenWindows` is not one. It sits on the
+  optional interface `WindowCloser`, and the exported `Fingerprinter` interface does not
+  change. JA4LS is a new method and it breaks nothing, and the CHANGELOG states it and
+  states eleven methods through ten fingerprinters.
 - `docs/api/v1.md` records every exported name.
 
 ## 5. Tag
@@ -76,6 +77,7 @@ notes.** It is never reported as passing.
 After `v1.0.0` the exported names and signatures stay stable for the whole `v1` series.
 Breaking that promise means `v2` and a changed import path.
 
-**Before you tag `v1.0.0`, confirm the three open rulings of R9 are settled**, especially
-whether `CloseOpenWindows` sits on `Fingerprinter` or on a separate optional interface. That
-question expires at the freeze: afterwards, the optional interface is the only answer left.
+**Before you tag `v1.0.0`, confirm the maintainer settled every open R9 question of
+`docs/specs/spec.md`.** R9 question 2 is settled already. The maintainer ruled on 2026-08-11
+that `CloseOpenWindows` sits on the optional interface `WindowCloser`, and #53 records the
+ruling. Never re-ask that question.

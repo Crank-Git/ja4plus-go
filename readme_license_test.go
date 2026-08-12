@@ -204,14 +204,19 @@ func TestDocGoHoldsThePackageClauseAlone(t *testing.T) {
 //
 // `docs/specs` records the defect that issue #12 repairs, and it quotes the FoxIO list
 // verbatim. `.claude` and `.git` hold no license statement about this library.
+//
+// `.golangci-cache` holds the linter cache that #257 moved inside the checkout. The
+// extension filter below admits the empty extension and `.txt`, which that cache holds in
+// thousands of files, so the scan reads the whole cache after a `make lint` run.
 var licenseClaimSkipDirs = map[string]bool{
-	".git":         true,
-	".claude":      true,
-	"bin":          true,
-	"docs/specs":   true,
-	"testdata":     true,
-	"assets":       true,
-	"node_modules": true,
+	".git":            true,
+	".claude":         true,
+	".golangci-cache": true,
+	"bin":             true,
+	"docs/specs":      true,
+	"testdata":        true,
+	"assets":          true,
+	"node_modules":    true,
 }
 
 // licenseClaimExtensions holds the file kinds the repository-wide scan reads.

@@ -157,6 +157,8 @@ func NewSyncProcessor() *SyncProcessor
 func (p *SyncProcessor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, []error)
 func (p *SyncProcessor) Reset()
 func (p *SyncProcessor) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string)
+func (p *SyncProcessor) CloseOpenWindows() []FingerprintResult
+func (p *SyncProcessor) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult
 func (p *SyncProcessor) GetShardKey(packet gopacket.Packet) string
 ```
 
@@ -180,8 +182,8 @@ The Go memory model decides what "safe" means here. See
 - [ ] `go doc` for each of the ten fingerprinter types prints the concurrency contract.
 - [ ] `go doc github.com/Crank-Git/ja4plus-go SyncProcessor` prints the wrapper contract.
 - [ ] `NewSyncProcessor` returns a usable `SyncProcessor`.
-- [ ] `SyncProcessor` exports `ProcessPacket`, `Reset`, `CleanupConnection` and
-      `GetShardKey`, and nothing else.
+- [ ] `SyncProcessor` exports `ProcessPacket`, `Reset`, `CleanupConnection`,
+      `CloseOpenWindows`, `CloseConnectionWindow` and `GetShardKey`, and nothing else.
 - [ ] A test drives one `SyncProcessor` from eight goroutines and passes under
       `go test -race`.
 - [ ] A test drives four sharded `Processor` values and passes under `go test -race`.
