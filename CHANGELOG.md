@@ -73,7 +73,12 @@ that the interface declares.
   against the 409 register keys**, so the check blocks nothing today. **The check covers
   the value half alone, and never the orphan half.** A register key that the run never
   reaches falls outside the key loop of the engine. Issue #307 asks for no second pass over
-  the register. Nine tests hold the check, and `go vet -tags conformance ./...`
+  the register. **`docs/specs/features/04-conformance-harness.md:115-125` numbers the
+  check as FR-conformance-33a through FR-conformance-33g.** The behaviour reached no
+  requirement when `6a03362` merged, and `4a30c33` numbered it inside this batch. The
+  ordinal carries a letter, because `.github/workflows/ci.yml`, `corpus_fetch_test.go`,
+  `conformance_skip_marker_test.go` and `docs/specs/spec.md` cite FR-conformance-34
+  through FR-conformance-39. Nine tests hold the check, and `go vet -tags conformance ./...`
   reported `result.Stale undefined` before the engine held the field. The worker changed
   one character of the first register entry, and the run then reported `the run reports 1
   stale register entries`. **The member moves no fingerprint value.** The four counts read
@@ -85,9 +90,23 @@ that the interface declares.
   worker saw an error. **A worktree cannot hold a stash of its own.** `git-worktree(1)` at
   git 2.53.0 shares every ref under `refs/`, except `refs/bisect`, `refs/worktree` and
   `refs/rewritten`. `git-stash(1)` writes `refs/stash`. Copy the file with `cp`, or
-  restore it with `git checkout -- <file>`. `.githooks/reference-transaction` refuses a
-  write to `refs/stash` from a linked worktree, and it repairs no `git stash pop`. **The
-  hook is inert until the maintainer runs `git config core.hooksPath .githooks`.** The
+  restore it with `git checkout -- <file>`. **`.githooks/reference-transaction` refuses a
+  hand-written stash from a linked worktree, and it lets an autostash store through.** It
+  repairs no `git stash pop`. **The first hook refused the autostash store too, and that
+  refusal destroyed the work git had just saved.** `git merge --autostash`,
+  `merge.autostash`, `rebase.autostash` and `git pull --rebase --autostash` each fall back
+  to `git stash store` when the entry cannot re-apply. git removes the autostash file
+  after the store, whether the store succeeded or failed. **The cross-member review of
+  batch #321 measured that loss, and `4a30c33` repaired the hook inside the batch.** The
+  ref name, the old value and the new value separate nothing, and `GIT_REFLOG_ACTION` is
+  unset, so the hook reads the state file that git writes.
+  `.githooks/reference-transaction:27-31` tests `MERGE_AUTOSTASH`,
+  `rebase-merge/autostash` and `rebase-apply/autostash` under the git directory of the
+  worktree. **One case stays uncovered**: a hand-written stash while a rebase autostash is
+  pending exits 0. That case destroys nothing, and the rule at `CLAUDE.md:115` binds every
+  agent whether or not the hook runs. `docs/specs/spec.md` `## Terms` gains the row
+  `autostash`. **The hook is inert until the maintainer runs
+  `git config core.hooksPath .githooks`.** The
   second reading records that a `PostToolUse` hook of `.claude/settings.json` did not run
   for a worktree-isolated worker. A `PreToolUse` hook therefore stops no worker. **The member
   changes no Go file, and it moves no fingerprint value.** Issue #305 holds the readings.
