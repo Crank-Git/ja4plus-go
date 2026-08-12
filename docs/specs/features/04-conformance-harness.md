@@ -9,9 +9,11 @@ mockups: [mockups/01-conformance-report.html]
 
 ## Purpose
 
-The library claims to implement the FoxIO specification. Nothing tests that claim. The
-repository holds one expected-output file, `testdata/http1-with-cookies.expected.json`,
-covering two methods on one capture.
+The library claims to implement the FoxIO specification. Nothing tested that claim. This
+paragraph records the state before this feature set. The repository held one
+expected-output file, `testdata/http1-with-cookies.expected.json`. It held the value of
+two methods on one capture. #35 removed the file, and the `Data touched` table records
+the removal.
 
 FoxIO publishes a corpus. It holds 38 captures, 37 per-stream vectors under
 `python/test/testdata/`, and 37 per-packet vectors under `wireshark/test/testdata/`. The
@@ -134,7 +136,9 @@ deviation list that Epic 5 closes.
 2. The workflow runs `make corpus` when the cache misses.
 3. The workflow runs `make conformance`.
 4. The job fails when the suite reports a deviation.
-5. The job attaches `docs/audit/conformance.md` as an artifact.
+5. The job attaches `conformance.log` as an artifact. The log names every deviation. The
+   job attaches no report, because git tracks `docs/audit/conformance.md` and a reader
+   reaches it from the branch.
 
 ### The maintainer moves the pin
 
