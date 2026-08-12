@@ -192,6 +192,13 @@ func TestFetchCorpusWritesOneCopyOfEachCaptureAndVector(t *testing.T) {
 		t.Fatalf("the script failed: %v\n%s", err, output)
 	}
 
+	// The absence check below passes for a corpus that holds no reference tree at all, so
+	// this check states that the reference tree is present first.
+	reference := filepath.Join(root, "testdata", "foxio", "reference")
+	if _, statErr := os.Stat(reference); statErr != nil {
+		t.Fatalf("the reference tree is absent: %v\n%s", statErr, output)
+	}
+
 	for _, path := range []string{
 		"testdata/foxio/reference/pcap",
 		"testdata/foxio/reference/python/test/testdata",
