@@ -97,6 +97,27 @@ func (p *Processor) ensure() {
 	}
 }
 
+// fingerprinters returns every fingerprinter of the processor, in the order the processor
+// runs them.
+// It is the one list of the set. ProcessPacket, Reset and CleanupConnection each read it,
+// and a test compares it against the fields of Processor. Issue #148 records the fault a
+// second list produces: a new fingerprinter that reaches one list and no other.
+// The caller calls ensure first, because a nil entry panics on the first packet.
+func (p *Processor) fingerprinters() []Fingerprinter {
+	return []Fingerprinter{
+		p.ja4,
+		p.ja4s,
+		p.ja4h,
+		p.ja4t,
+		p.ja4ts,
+		p.ja4l,
+		p.ja4x,
+		p.ja4ssh,
+		p.ja4d,
+		p.ja4d6,
+	}
+}
+
 // ProcessPacket runs all fingerprinters on the given packet.
 // It returns all fingerprint results and any non-fatal errors encountered.
 func (p *Processor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, []error) {
@@ -113,20 +134,7 @@ func (p *Processor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, 
 	var allResults []FingerprintResult
 	var allErrors []error
 
-	fingerprinters := []Fingerprinter{
-		p.ja4,
-		p.ja4s,
-		p.ja4h,
-		p.ja4t,
-		p.ja4ts,
-		p.ja4l,
-		p.ja4x,
-		p.ja4ssh,
-		p.ja4d,
-		p.ja4d6,
-	}
-
-	for _, fp := range fingerprinters {
+	for _, fp := range p.fingerprinters() {
 		results, err := fp.ProcessPacket(packet)
 		if err != nil {
 			allErrors = append(allErrors, err)
@@ -144,16 +152,9 @@ func (p *Processor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, 
 func (p *Processor) Reset() {
 	p.ensure()
 
-	p.ja4.Reset()
-	p.ja4s.Reset()
-	p.ja4h.Reset()
-	p.ja4t.Reset()
-	p.ja4ts.Reset()
-	p.ja4l.Reset()
-	p.ja4x.Reset()
-	p.ja4ssh.Reset()
-	p.ja4d.Reset()
-	p.ja4d6.Reset()
+	for _, fp := range p.fingerprinters() {
+		fp.Reset()
+	}
 }
 
 // CleanupConnection removes internal state for the given connection across all
@@ -163,16 +164,9 @@ func (p *Processor) Reset() {
 func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	p.ensure()
 
-	p.ja4.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4s.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4h.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4t.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4ts.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4l.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4x.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4ssh.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4d.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
-	p.ja4d6.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
+	for _, fp := range p.fingerprinters() {
+		fp.CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)
+	}
 }
 
 // GetShardKey returns a stable key that routes one packet to one Processor shard.

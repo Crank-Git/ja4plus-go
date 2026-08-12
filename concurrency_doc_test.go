@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -26,24 +27,39 @@ import (
 // One phrase for every type keeps the statement identical across the package.
 const concurrencyContractPhrase = "serves one goroutine"
 
-// concurrencyFingerprinterTypes names each fingerprinter type and the file that declares
-// it. FR-concurrency-2 covers the ten fingerprinter types, and ten fingerprinters carry
-// eleven methods, because JA4LFingerprinter writes both JA4L and JA4LS.
-var concurrencyFingerprinterTypes = map[string]string{
-	"JA4Fingerprinter":    "ja4.go",
-	"JA4SFingerprinter":   "ja4s.go",
-	"JA4HFingerprinter":   "ja4h.go",
-	"JA4TFingerprinter":   "ja4t.go",
-	"JA4TSFingerprinter":  "ja4ts.go",
-	"JA4LFingerprinter":   "ja4l.go",
-	"JA4XFingerprinter":   "ja4x.go",
-	"JA4SSHFingerprinter": "ja4ssh.go",
-	"JA4DFingerprinter":   "ja4d.go",
-	"JA4D6Fingerprinter":  "ja4d6.go",
+// concurrencyFingerprinterTypes returns the file that declares each fingerprinter type, by
+// type name. FR-concurrency-2 covers the ten fingerprinter types, and ten fingerprinters
+// carry eleven methods, because JA4LFingerprinter writes both JA4L and JA4LS.
+//
+// It reads the fields of Processor by reflection, so a new fingerprinter reaches this test
+// with no edit here. Issue #148 records the fault a second list produces.
+// The file name follows the type name, because JA4SSHFingerprinter declares itself in
+// ja4ssh.go.
+func concurrencyFingerprinterTypes() map[string]string {
+	processor := reflect.TypeOf(ja4plus.Processor{})
+	fingerprinter := reflect.TypeOf((*ja4plus.Fingerprinter)(nil)).Elem()
+
+	types := map[string]string{}
+	for index := 0; index < processor.NumField(); index++ {
+		field := processor.Field(index)
+		if !field.Type.Implements(fingerprinter) {
+			continue
+		}
+
+		fieldType := field.Type
+		for fieldType.Kind() == reflect.Pointer {
+			fieldType = fieldType.Elem()
+		}
+
+		name := fieldType.Name()
+		types[name] = strings.ToLower(strings.TrimSuffix(name, "Fingerprinter")) + ".go"
+	}
+
+	return types
 }
 
 func TestFingerprinterTypeCountIsTen(t *testing.T) {
-	if got := len(concurrencyFingerprinterTypes); got != 10 {
+	if got := len(concurrencyFingerprinterTypes()); got != 10 {
 		t.Errorf("fingerprinter type count = %d, want 10", got)
 	}
 }
@@ -60,7 +76,7 @@ func TestProcessorDocCommentStatesTheConcurrencyContract(t *testing.T) {
 }
 
 func TestEachFingerprinterDocCommentStatesTheConcurrencyContract(t *testing.T) {
-	for typeName, file := range concurrencyFingerprinterTypes {
+	for typeName, file := range concurrencyFingerprinterTypes() {
 		doc := docCommentOf(t, file, "type "+typeName+" struct")
 
 		for _, want := range []string{concurrencyContractPhrase, "SyncProcessor"} {
@@ -122,7 +138,7 @@ func TestConcurrencyDocumentationCountsFingerprintersAndNotMethods(t *testing.T)
 	// because JA4LFingerprinter writes both JA4L and JA4LS. Ten fingerprinters carry
 	// eleven methods, so a document that applies the count of ten to methods is wrong.
 	files := []string{"processor.go", "doc.go", "README.md", "concurrency_doc_test.go"}
-	for _, file := range concurrencyFingerprinterTypes {
+	for _, file := range concurrencyFingerprinterTypes() {
 		files = append(files, file)
 	}
 
