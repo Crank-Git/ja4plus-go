@@ -16,8 +16,8 @@ type JA4SFingerprinter struct {
 	// groupingKeys reads the grouping key of a connection from the reported key.
 	// A caller of CleanupConnection holds the address pair that a FingerprintResult carries,
 	// and a tunneled connection groups under the inner pair. Without this map the caller
-	// names a key that `quicDCIDs` never holds. FR-gaps-14c states the rule for JA4L, and
-	// `ja4l.go` holds the same map under the same name.
+	// names a key that `quicDCIDs` never holds. FR-gaps-14d states the rule, and `ja4l.go`
+	// holds the same map under the same name.
 	groupingKeys map[string]string
 	// reportedKeys reads the reported key of a connection from the grouping key.
 	// A caller that names the grouping key cannot name the reported key, so the removal reads
@@ -193,8 +193,8 @@ func (f *JA4SFingerprinter) dropConnection(groupingKey string) {
 // A tunneled connection groups under the inner address pair, so this method reads the
 // grouping key from the index first. It falls back to the key the caller gave, because a
 // caller of GetShardKey holds the grouping key instead.
-// `ja4plus/fingerprinters/ja4l.py:216` falls back the same way, and issue #193 records the
-// leak that the absent index caused.
+// FR-gaps-14e states the fallback, and `ja4plus/fingerprinters/ja4l.py:216` holds it too.
+// Issue #193 records the leak that the absent index caused.
 func (f *JA4SFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 
