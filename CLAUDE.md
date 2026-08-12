@@ -78,12 +78,21 @@ packet belongs in `cmd/`.
 | `make fuzz` | Run each fuzz target for 30 seconds. |
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
-| `make vuln` | Run `govulncheck`. |
-| `make mutate` | Run the mutation sweep over the named package set. Slow. Gates nothing. |
-| `make prerelease` | Install the built artifact into a clean environment and run it. |
-| `make docs` | Build the documentation site with `mkdocs build --strict`. |
+| `make vuln` | **Not built yet.** #65 adds the target. It runs `govulncheck`. |
+| `make mutate` | **Not built yet.** #90 adds the target, under Epic #89. It runs the mutation sweep over the named package set. Slow. Gates nothing. |
+| `make prerelease` | **Not built yet.** #95 through #99 add the target, under Epic #94. It installs the built artifact into a clean environment and runs it. |
+| `make docs` | **Not built yet.** #84 configures MkDocs and adds the target. It builds the documentation site with `mkdocs build --strict`. |
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
+
+**The `Makefile` defines the first eight rows of this table, and none of the last four.**
+Read an absent target as work a later issue does, and never as a broken target. One of the
+four exits 0, so read the exit code of `make docs` as nothing.
+
+- `make vuln`, `make mutate` and `make prerelease` each exit 2. Each one prints one line
+  that names the target: ``make: *** No rule to make target `vuln'.  Stop.``
+- `make docs` exits 0 and prints ``make: Nothing to be done for `docs'.``, because `docs/`
+  is a directory and the name holds no recipe.
 
 ## A change is done when
 
@@ -92,8 +101,10 @@ Run `make corpus` once before `make conformance`. The conformance suite skips wi
 3. `golangci-lint run` reports nothing.
 4. `make conformance` reports no deviation that `testdata/deviations.json` does not hold,
    and the register holds no entry whose comparison now matches.
-5. Coverage does not fall below the value in `.coverage-floor`.
-6. `make docs` succeeds, when the change touches a page.
+5. **This step is unrunnable today, because the repository holds no `.coverage-floor` file.
+   #68 builds it.** Coverage does not fall below the value in `.coverage-floor`.
+6. **This step is unrunnable today, because the `Makefile` defines no `docs` target. #84
+   builds it.** `make docs` succeeds, when the change touches a page.
 
 ## Conventions
 
