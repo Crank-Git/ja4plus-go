@@ -57,14 +57,56 @@ func IsTLSHandshake(payload []byte) bool {
 	return ht == TLSHandshakeClientHello || ht == TLSHandshakeServerHello
 }
 
+// handshakeRecordOffset returns the offset of the first handshake record of the payload.
+// It returns -1 when the payload holds no handshake record.
+//
+// A TLS 1.3 client in compatibility mode sends a ChangeCipherSpec record before its second
+// client hello. One TCP segment carries both records. A reader that reads only the first
+// byte of that segment misses the second hello. Issue #295 records the 40 absent values.
+// `testdata/foxio/pcap/tls-handshake.pcapng` packet 125 holds the two records.
+//
+// The walk steps over a record of any type that is not a handshake record. A peer may send
+// a record other than a ChangeCipherSpec record first.
+// `ja4plus/utils/tls_utils.py:76-103` walks the same way in the Python port.
+//
+// Every payload is untrusted input. The walk advances by at least 5 bytes for each record.
+// It stops at a length field that passes the end of the payload.
+func handshakeRecordOffset(payload []byte) int {
+	for pos := 0; pos+5 <= len(payload); {
+		if payload[pos] == TLSRecordTypeHandshake {
+			return pos
+		}
+
+		recordLength := int(payload[pos+3])<<8 | int(payload[pos+4])
+
+		// A step needs the whole record. The walk stops at a length that passes the
+		// end of the payload.
+		next := pos + 5 + recordLength
+		if next > len(payload) {
+			return -1
+		}
+
+		pos = next
+	}
+
+	return -1
+}
+
 // ParseClientHello parses a TLS ClientHello from raw TCP payload bytes.
 // Returns nil, nil if the payload is not a TLS ClientHello.
 // Returns nil, error if it looks like a ClientHello but is truncated/malformed.
+//
+// It reads the first handshake record of the payload. It steps over each record in front
+// of that one. A TLS 1.3 client sends a ChangeCipherSpec record before its second client
+// hello. Issue #295 records the values that the first-byte reader missed.
 func ParseClientHello(payload []byte) (*ClientHello, error) {
-	if len(payload) < 5 {
+	offset := handshakeRecordOffset(payload)
+	if offset < 0 {
 		return nil, nil
 	}
-	if payload[0] != TLSRecordTypeHandshake {
+	payload = payload[offset:]
+
+	if len(payload) < 5 {
 		return nil, nil
 	}
 
