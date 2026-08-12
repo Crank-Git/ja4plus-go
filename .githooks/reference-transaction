@@ -20,6 +20,15 @@ common_dir=$(git rev-parse --git-common-dir)
 
 while read -r _old _new ref; do
 	if [ "$ref" = "refs/stash" ]; then
+		# git records a pending autostash in one of these three files, and it removes the
+		# file only after `git stash store` writes refs/stash. A refusal here destroys the
+		# recovery entry point that git just printed, so the hook lets the store through.
+		# #321 records the loss that the refusal produced.
+		if [ -f "$git_dir/MERGE_AUTOSTASH" ] ||
+			[ -f "$git_dir/rebase-merge/autostash" ] ||
+			[ -f "$git_dir/rebase-apply/autostash" ]; then
+			exit 0
+		fi
 		echo "refuse: this worktree must not write refs/stash." >&2
 		echo "refuse: every worktree of this repository shares that ref, so a stash here" >&2
 		echo "refuse: destroys the work of another worktree. #305 records one such loss." >&2

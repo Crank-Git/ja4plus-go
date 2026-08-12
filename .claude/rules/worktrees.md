@@ -96,7 +96,8 @@ stash, because it runs for every ref update, and `githooks(5)` states the abort:
 
 `.githooks/reference-transaction` refuses a write to `refs/stash` from a linked worktree.
 It leaves the main checkout alone, because a person who stashes there holds the whole
-repository.
+repository. **It lets an autostash store through.**
+`### The autostash defect, and the repair` below states the reason and the measurement.
 
 **The hook is inert until the maintainer installs it.** Install it with one command, from
 the main checkout:
@@ -105,7 +106,7 @@ the main checkout:
 git config core.hooksPath .githooks
 ```
 
-### What the hook was watched doing
+### What the first hook was watched doing
 
 A throwaway repository with two linked worktrees produced each result below, at git 2.53.0.
 That repository stood inside the worktree of the worker, and the worker removed it. **No
@@ -144,3 +145,130 @@ $ git rev-parse --git-path hooks
 $ ls -la .githooks
 ls: .githooks: No such file or directory
 ```
+
+### The autostash defect, and the repair
+
+**The first hook destroyed the work that git saved for the user.** The cross-member review
+of batch #321 measured it, and #321 repaired it. The first hook is commit `edae54e` of
+#305.
+
+`git-merge(1)` at git 2.53.0 states what `--autostash` writes:
+
+> Automatically create a temporary stash entry before the operation begins, record it in
+> the ref MERGE_AUTOSTASH and apply it after the operation ends.
+
+When that entry cannot re-apply, git runs `git stash store` to keep it. The first hook
+refused that ref write. `git merge --autostash`, `merge.autostash`, `rebase.autostash` and
+`git pull --rebase --autostash` each reach the same fallback.
+
+**The refusal loses the entry.** git removes the autostash file after the store, and it
+removes the file whether the store succeeded or failed. So the saved state survives only
+as the object id on the `error:` line. **The hook's own advice names `cp` and
+`git checkout --`, and neither one reaches an autostash that the user never created.**
+
+The watch below ran in a throwaway repository with two linked worktrees, at git 2.53.0,
+outside this repository. A dirty worktree ran `git merge --autostash`, the merge
+conflicted, and `git commit` concluded it.
+
+```
+=== git commit (concludes the conflicted merge):
+refuse: this worktree must not write refs/stash.
+refuse: every worktree of this repository shares that ref, so a stash here
+refuse: destroys the work of another worktree. #305 records one such loss.
+refuse: copy the file with cp, or restore it with git checkout -- <file>.
+fatal: ref updates aborted by hook
+error: cannot store 14dc222ce712faecf3889274bb3681d872bb7bfb
+=== commit exit: 0
+=== git stash list:
+=== MERGE_AUTOSTASH:
+ls: .../worktrees/wt/MERGE_AUTOSTASH: No such file or directory
+```
+
+#321 took the path that discriminates, and it declined the path that removes the hook. An
+instrumented hook recorded what git gives it at the moment of the store:
+
+```
+--- hook fired ---
+argv: prepared
+stdin: 0000000000000000000000000000000000000000 14dc222ce712faecf3889274bb3681d872bb7bfb refs/stash
+MERGE_AUTOSTASH exists: yes
+GIT_REFLOG_ACTION: [unset]
+--- end hook ---
+```
+
+**The ref name, the old value and the new value separate nothing.** A hand-written stash
+presents the same three fields, and `GIT_REFLOG_ACTION` is unset. **The autostash file is
+the one discriminator, and git writes it.** The hook tests `MERGE_AUTOSTASH`,
+`rebase-merge/autostash` and `rebase-apply/autostash` under the git directory of the
+worktree, and it exits 0 when one of them is present.
+
+### What the repaired hook was watched doing
+
+Each result below comes from the file this repository holds, at git 2.53.0, in a throwaway
+repository with four linked worktrees.
+
+**It allows the merge autostash store, and the entry survives.**
+
+```
+=== git commit (concludes the conflicted merge):
+Applying autostash resulted in conflicts.
+Your changes are safe in the stash.
+You can run "git stash pop" or "git stash drop" at any time.
+=== git stash list:
+stash@{0}: autostash
+```
+
+**It allows the rebase autostash store.** `git rebase --continue` reported exit code 0 and
+the same three lines.
+
+**It still refuses a hand-written `git stash push` in a linked worktree.**
+
+```
+=== git stash push:
+refuse: this worktree must not write refs/stash.
+refuse: every worktree of this repository shares that ref, so a stash here
+refuse: destroys the work of another worktree. #305 records one such loss.
+refuse: copy the file with cp, or restore it with git checkout -- <file>.
+fatal: ref updates aborted by hook
+=== exit code: 128
+=== f.txt after the refusal:
+line1
+HAND-WRITTEN
+line3
+```
+
+**It still allows a stash from the main checkout.** `git stash push` there reported exit
+code 0.
+
+### Two limits of the repaired hook
+
+**1. The hook refuses `git stash drop` on the entry it allowed.** A drop writes
+`refs/stash`, and no autostash file is present by then.
+
+```
+=== git stash drop:
+Dropped refs/stash@{0} (567fb749452956a7a74b9a6365d1157ac202bb0b)
+refuse: this worktree must not write refs/stash.
+refuse: every worktree of this repository shares that ref, so a stash here
+refuse: destroys the work of another worktree. #305 records one such loss.
+refuse: copy the file with cp, or restore it with git checkout -- <file>.
+fatal: ref updates aborted by hook
+=== exit code: 128
+```
+
+The line above prints the object id, so the entry stays reachable. Drop it from the main
+checkout instead.
+
+**2. The hook allows a hand-written stash while a rebase autostash is pending.** git
+refuses a hand-written stash during a conflicted merge, so the merge case holds. A stopped
+rebase with a clean index is the one hole:
+
+```
+=== rebase-merge/autostash present: yes
+=== git stash push (hand-written, index clean, autostash pending):
+Saved working directory and index state WIP on (no branch): 1e64ea7 other
+=== exit code: 0
+```
+
+**That hole misses a refusal, and it destroys nothing.** The rule at the head of this file
+covers it, and the rule binds every agent whether or not the maintainer installs the hook.

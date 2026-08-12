@@ -112,6 +112,14 @@ deviation list that Epic 5 closes.
   value.
 - **FR-conformance-33** — A row records `not applicable` only when the vector holds no
   value for that method on that capture.
+- **FR-conformance-33a** — The suite compares the `ours` value of each register entry with
+  the value the run produces for that key.
+- **FR-conformance-33b** — **A register entry whose `ours` value differs from the produced
+  value is a stale entry, and it fails the suite.**
+- **FR-conformance-33c** — The summary names the count of stale entries.
+- **FR-conformance-33d** — The report holds a `## Stale register entries` section on every
+  run. The section holds one row for each stale entry. The section states that the run
+  reports no stale register entry when the count is 0.
 
 ### The gate
 
