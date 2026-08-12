@@ -188,20 +188,41 @@ func TestJA4SSHCloseOpenWindowsReturnsAnEmptySliceOnASecondCall(t *testing.T) {
 }
 
 // TestJA4SSHLosesTheOpenWindowWhenNoCallerClosesIt holds the edge case that the issue names.
-// The method is opt-in, and the library forces no flush.
+// The method is opt-in, and the library forces no flush. No other exported method emits the
+// open window, so a caller who evicts the connection loses that window.
 func TestJA4SSHLosesTheOpenWindowWhenNoCallerClosesIt(t *testing.T) {
-	fingerprinter := NewJA4SSH(200)
+	// CleanupConnection evicts the connection, and Reset clears the table. Neither one
+	// returns a value, so neither one can flush the window.
+	cases := map[string]func(f *JA4SSHFingerprinter){
+		"CleanupConnection": func(f *JA4SSHFingerprinter) {
+			f.CleanupConnection("192.168.1.100", 54321, "10.0.0.1", 22, "tcp")
+		},
+		"Reset": func(f *JA4SSHFingerprinter) { f.Reset() },
+	}
 
-	for count := 0; count < 15; count++ {
-		results, err := fingerprinter.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false))
-		if err != nil {
-			t.Fatalf("the fingerprinter returned an error at packet %d: %v", count+1, err)
-		}
+	for name, evict := range cases {
+		t.Run(name, func(t *testing.T) {
+			fingerprinter := NewJA4SSH(200)
 
-		if len(results) != 0 {
-			t.Fatalf("the fingerprinter emitted at packet %d, and the caller closed no window", count+1)
-		}
+			for count := 0; count < 15; count++ {
+				results, err := fingerprinter.ProcessPacket(
+					buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false))
+				if err != nil {
+					t.Fatalf("the fingerprinter returned an error at packet %d: %v", count+1, err)
+				}
+
+				if len(results) != 0 {
+					t.Fatalf("the fingerprinter emitted at packet %d, and the window holds 200", count+1)
+				}
+			}
+
+			evict(fingerprinter)
+
+			if closed := fingerprinter.CloseOpenWindows(); len(closed) != 0 {
+				t.Errorf("CloseOpenWindows produced %d values after %s, and the window is lost",
+					len(closed), name)
+			}
+		})
 	}
 }
 
