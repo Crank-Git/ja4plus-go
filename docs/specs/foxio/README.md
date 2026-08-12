@@ -28,6 +28,51 @@ Each file below is at
 Append the file name to that address to reach one file. **This directory reproduces no
 FoxIO image.** It links to each one.
 
+## How to read a citation
+
+A citation on a page of this directory names a path in the FoxIO repository at the pinned
+commit. `make corpus` writes that repository to `testdata/foxio/reference/`, at
+`scripts/fetch-corpus.sh:167`.
+
+**Join a citation to `testdata/foxio/reference/`.** Read `python/ja4.py:161` as line 161
+of `testdata/foxio/reference/python/ja4.py`.
+
+**`scripts/fetch-corpus.sh:149` moves three directories out of the staged tree first**, so
+a citation of one of the three reaches no path under `testdata/foxio/reference/`.
+`scripts/fetch-corpus.sh:102` names the three. Join a citation of one of the three to the
+corpus directory of the right-hand column.
+
+| The FoxIO path a citation names | Where `make corpus` writes it | What it holds |
+|---|---|---|
+| `pcap` | `testdata/foxio/pcap/` | The captures |
+| `python/test/testdata` | `testdata/foxio/python/` | The per-stream vectors |
+| `wireshark/test/testdata` | `testdata/foxio/wireshark/` | The per-packet vectors |
+
+**`testdata/foxio/python/` holds no source file, and it is never the base of a citation.**
+A reader who joins `python/ja4.py` to `testdata/foxio/` lands in the vector directory and
+reaches nothing. **That failure is silent.** Issue #254 records the measurement, and one
+wrong citation reached a ruling on 2026-08-12.
+
+**`python/ja4.py` is the FoxIO reference program, and it is never the port.** The port is
+the Python implementation at `Crank-Git/ja4plus`, and the two disagree. A citation of the
+port names a path of the port, and `docs/specs/foxio/port-register.md` holds the port
+material this project copies.
+
+Two pages of this directory cite a path that `testdata/foxio/reference/` does not hold,
+and each one states its own base.
+
+- `docs/specs/foxio/deleted-text-specifications.md` reads `technical_details/` at the
+  parent of FoxIO commit `b6f3ff4`. That commit is not the pin, and five of the seven
+  recovered files exist at no commit after `b6f3ff4`. The page names the commit at each
+  recovered file.
+- `docs/specs/foxio/port-register.md` is a verbatim copy of a section of the port's
+  specification. Its citations name paths of the port, and no reader edits the copy.
+
+**If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier
+version of `scripts/fetch-corpus.sh` wrote names the pinned commit and holds no reference
+tree. `scripts/fetch-corpus.sh:55` now reads the directories as well as the commit, so the
+next run fetches the corpus again.
+
 ## The inventory
 
 The directory holds twelve files at the pinned commit: three text files and nine images.
@@ -53,14 +98,16 @@ reports.
 
 ## Reproduce the measurement
 
-`scripts/fetch-corpus.sh` fetches `pcap/`, `python/test/testdata` and
-`wireshark/test/testdata`. It fetches no part of `technical_details/`, so it reproduces
-nothing on this page.
+`scripts/fetch-corpus.sh:149` moves `pcap`, `python/test/testdata` and
+`wireshark/test/testdata` into `testdata/foxio/`. `scripts/fetch-corpus.sh:167` then writes
+the rest of the FoxIO repository to `testdata/foxio/reference/`.
+`testdata/foxio/reference/technical_details/` therefore holds each file of the table above,
+so `make corpus` reproduces every row.
 
 **The command below clones FoxIO-licensed material into the working directory.** This
 repository commits no part of that material. `NOTICE` holds the FoxIO terms.
 
-Run this command instead, from an empty directory.
+If you hold no corpus, run the command below from an empty directory.
 
 ```sh
 git clone https://github.com/FoxIO-LLC/ja4.git &&

@@ -3,7 +3,8 @@
 This page transcribes the FoxIO image that specifies JA4H. **This page records what each
 source states, and it decides no value.** `.claude/rules/rulings.md` states who rules.
 
-`docs/specs/foxio/README.md` holds the inventory and the pinned commit.
+`docs/specs/foxio/README.md` holds the inventory, the pinned commit and the rule that
+states how to read a citation.
 
 ## The source
 
@@ -16,6 +17,11 @@ source states, and it decides no value.** `.claude/rules/rulings.md` states who 
 | Text file at the pin | `technical_details/JA4H.md`, 278 bytes |
 
 **This page reproduces no image.** Follow the link above to read it.
+
+A citation names a path in the FoxIO repository at the pinned commit. **Join it to
+`testdata/foxio/reference/`.** Read `python/ja4h.py:13` as line 13 of
+`testdata/foxio/reference/python/ja4h.py`. `docs/specs/foxio/README.md` states the rule,
+and it names each path that the rule does not cover.
 
 **`technical_details/JA4H.md` builds no fingerprint.** It holds one section, and that
 section states the header count rule. R8 below cites it. Every other rule comes from the
