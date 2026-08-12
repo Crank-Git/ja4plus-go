@@ -145,6 +145,28 @@ jobs:
             exit 1
           fi
 
+      # The suite rewrites `docs/audit/conformance.md` on every run, and it writes the file
+      # before it reports a deviation. The file on disk is therefore current whenever the
+      # suite runs, and a difference against the commit means the commit holds a stale
+      # report.
+      #
+      # #197 and #211 each moved a value and regenerated no report, so the tracked file
+      # held the counts of an older tree until #227 measured it. No test pins a report
+      # count, so a stale report stays invisible until a reader trusts it.
+      #
+      # This step adds one failure, and it reads no exit status of the run above. An honest
+      # exit 2 on a deviation therefore still reports a deviation.
+      #
+      # The four steps above fail first when the suite skips or does not build. The suite
+      # writes no report in those cases, and this step must not report the reason instead.
+      - name: Fail when the tracked conformance report is stale
+        run: |
+          if ! git diff --exit-code -- docs/audit/conformance.md; then
+            echo "the run rewrote docs/audit/conformance.md, so this commit holds a stale report" >&2
+            echo "run \`make corpus\` and \`make conformance\`, then commit the file" >&2
+            exit 1
+          fi
+
       # A reader of the pull request reaches the job summary from the checks tab.
       #
       # A pull request from a fork controls `testdata/foxio.pin`, so the pin is untrusted
