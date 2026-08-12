@@ -14,7 +14,7 @@ import (
 // directory. `docs/specs/foxio/README.md` `## How to read a citation` declares seven
 // bases. #254 repaired every citation against that rule and could not hold the repair,
 // because its acceptance criteria barred a Go file change. This file holds it, and it
-// holds FR-reference-18a through FR-reference-18g.
+// holds FR-reference-18a through FR-reference-18l.
 //
 // The failure this guard catches is silent. A writer joins `python/ja4.py` to
 // `testdata/foxio/` by habit, the directory exists, and the file does not. #254 records
@@ -47,7 +47,7 @@ const foxioPortRegisterPage = "docs/specs/foxio/port-register.md"
 // The set holds no `log` extension. `conn.log` and `ssl.log` name a Zeek output stream in
 // prose, and neither one names a file this project cites. The FoxIO tree holds `conn.log`
 // at three paths under `zeek/tests/Traces/`, so a bare-name rule resolves it under no
-// single path and `ssl.log` would resolve by accident.
+// single path. It holds `ssl.log` at one path, so that name would resolve by accident.
 var foxioCitationExtension = map[string]bool{
 	"c": true, "csv": true, "go": true, "json": true, "md": true,
 	"pcap": true, "pcapng": true, "pin": true, "png": true, "py": true,
@@ -539,7 +539,9 @@ func TestEveryCitationOfTheFoxioDirectoryResolvesUnderADeclaredBase(t *testing.T
 	}
 }
 
-// FR-reference-18b — the shape check reads no corpus, and it runs on every checkout.
+// FR-reference-18b, FR-reference-18c and FR-reference-18d — the shape check reads the
+// first directory of each span, it opens no file of the corpus, and it runs on every
+// checkout.
 //
 // A span that reaches no file of this checkout must still name a directory that one of
 // the bases holds. #254 records the failure this catches: a writer joins `python/ja4.py`
@@ -638,7 +640,8 @@ func foxioExtension(path string) string {
 	return final[dot+1:]
 }
 
-// FR-reference-18c — an exception that now resolves fails the test. A stale exception
+// FR-reference-18e, FR-reference-18f and FR-reference-18g — an exception that now
+// resolves fails the test. A stale exception
 // hides the next defect, exactly as a page-wide skip does.
 func TestTheCitationExceptionTableHoldsNoSpanThatNowResolves(t *testing.T) {
 	resolver := newFoxioResolver(t)
@@ -671,7 +674,7 @@ func TestTheCitationExceptionTableHoldsNoSpanThatNowResolves(t *testing.T) {
 	}
 }
 
-// FR-reference-18d — no citation names a line past the end of the file it names.
+// FR-reference-18h — no citation names a line past the end of the file it names.
 //
 // A citation that names a line the file does not hold sends a reader to nothing, and the
 // reader cannot tell that from a moved line.
@@ -715,7 +718,8 @@ func TestNoCitationOfTheFoxioDirectoryNamesALinePastTheEndOfItsFile(t *testing.T
 	}
 }
 
-// FR-reference-18e — the two pages that state their own base are named in the test.
+// FR-reference-18i and FR-reference-18j — the test names the two pages that state their
+// own base, and it states the reason for each one.
 //
 // `docs/specs/foxio/deleted-text-specifications.md` is base 4, and it reproduces each
 // recovered file verbatim. `docs/specs/foxio/port-register.md` is base 7, and it is a
@@ -734,7 +738,7 @@ func TestTheTwoPagesThatStateTheirOwnCitationBaseExist(t *testing.T) {
 	}
 }
 
-// FR-reference-18f — the recorded FoxIO root directories match the corpus. The shape
+// FR-reference-18k — the recorded FoxIO root directories match the corpus. The shape
 // check reads the recorded set, so a pin move that adds a directory must fail here rather
 // than pass silently.
 func TestTheFoxioTopLevelDirectorySetMatchesTheCorpus(t *testing.T) {
@@ -769,7 +773,7 @@ func TestTheFoxioTopLevelDirectorySetMatchesTheCorpus(t *testing.T) {
 	}
 }
 
-// FR-reference-18g — the resolver states that it read no corpus, and it never skips
+// FR-reference-18l — the resolver states that it read no corpus, and it never skips
 // without that sentence. #335 records that a test which skips silently is not a guard.
 func TestTheCitationResolverStatesThatItReadNoCorpus(t *testing.T) {
 	if !strings.Contains(foxioCorpusAbsentMessage, foxioCorpusReferenceDir) {
