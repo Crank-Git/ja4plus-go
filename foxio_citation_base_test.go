@@ -23,9 +23,9 @@ import (
 // `foxio_deleted_specs_test.go` declares foxioReferenceDir, and that directory holds the
 // pages that carry a citation.
 
-// foxioCitationPageCount records the pages of the directory. `make corpus` writes no page
-// here, so the count moves only when a person adds a page.
-const foxioCitationPageCount = 13
+// This file records no count of pages. `docs/specs/foxio/README.md:51-53` states that a
+// count of pages goes stale at the next edit, and that the citation rule needs none. A
+// constant here would break the rule this file holds.
 
 // foxioCorpusReferenceDir holds the FoxIO repository at the pin.
 // `scripts/fetch-corpus.sh:167` writes it, and `make corpus` runs that script.
@@ -113,8 +113,9 @@ var foxioCitationException = []struct {
 		span:  "ja4l.py",
 		count: 2,
 		reason: "The page reports the one citation of the verbatim copy that resolves under " +
-			"no base. It names the file twice, once in the heading sentence and once in the " +
-			"sentence that states the count.",
+			"no base, and it names the file twice. `README.md:126` names it in the sentence " +
+			"that reports the defect, and `README.md:128` names it in the sentence that " +
+			"lists the files the FoxIO `python/` directory holds at the pin.",
 	},
 	{
 		page:  foxioPortRegisterPage,
@@ -252,9 +253,9 @@ func foxioCitationPage(t *testing.T) []string {
 		t.Fatalf("list the pages of %s: %v", foxioReferenceDir, err)
 	}
 
-	if len(names) != foxioCitationPageCount {
-		t.Fatalf("%s holds %d pages, and the citation rule reads %d",
-			foxioReferenceDir, len(names), foxioCitationPageCount)
+	if len(names) == 0 {
+		t.Fatalf("%s holds no page, and the citation rule reads every page of it",
+			foxioReferenceDir)
 	}
 
 	sort.Strings(names)
