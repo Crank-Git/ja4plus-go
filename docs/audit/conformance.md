@@ -11,8 +11,8 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1077 |
-| Deviations | 1278 |
+| Matches | 1078 |
+| Deviations | 1293 |
 | Accepted deviations | 198 |
 | Captures the suite compared | 35 |
 | Captures the suite compared nothing on | 3 |
@@ -21,14 +21,14 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
-| per-stream | 736 | 454 | 163 |
+| per-stream | 737 | 469 | 163 |
 | per-packet | 341 | 824 | 35 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 
 ## Deviations
 
-The run reports 1476 deviations in 154 groups. One group is one capture, one method and one vector set.
+The run reports 1491 deviations in 154 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -41,8 +41,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `CVE-2018-6794.pcap` | per-packet | JA4TS | 3 | `CVE-2018-6794.pcap/11/JA4TS.1` | the two values differ | `15500_00_00_00` | `15500_0_0_0` |
 | `CVE-2018-6794.pcap` | per-packet | JA4TS | 3 | `CVE-2018-6794.pcap/2/JA4TS.1` | the two values differ | `15500_00_00_00` | `15500_0_0_0` |
 | `CVE-2018-6794.pcap` | per-packet | JA4TS | 3 | `CVE-2018-6794.pcap/20/JA4TS.1` | the two values differ | `15500_00_00_00` | `15500_0_0_0` |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/0/JA4H_ro` | the vector holds a value the library does not produce | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` | (none) |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/1/JA4H_ro` | the vector holds a value the library does not produce | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language_` | (none) |
+| `CVE-2018-6794.pcap` | per-stream | JA4H | 12 | `CVE-2018-6794.pcap/0/JA4H.2` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_6cd0fb54989b_000000000000_000000000000` |
+| `CVE-2018-6794.pcap` | per-stream | JA4H | 12 | `CVE-2018-6794.pcap/0/JA4H.3` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_6cd0fb54989b_000000000000_000000000000` |
+| `CVE-2018-6794.pcap` | per-stream | JA4H | 12 | `CVE-2018-6794.pcap/0/JA4H.4` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_6cd0fb54989b_000000000000_000000000000` |
 | `badcurveball.pcap` | per-packet | JA4L | 3 | `badcurveball.pcap/3/JA4L.1` | the library produces a value the vector does not hold | (none) | `2177_64` |
 | `badcurveball.pcap` | per-packet | JA4L | 3 | `badcurveball.pcap/4/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `2181_64` |
 | `badcurveball.pcap` | per-packet | JA4L | 3 | `badcurveball.pcap/9/JA4L.1` | the vector holds a value the library does not produce | `2177_64_114797` | (none) |
@@ -99,7 +100,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4L | 3 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4L-C.2` | the two values differ | `113_64` | `149_64` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4L | 3 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4L-C.3` | the library produces a value the vector does not hold | (none) | `113_64_quic` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4LS | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4L-S.2` | the two values differ | `10990_56` | `9285_56_quic` |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4S` | the two values differ | `t130200_1301_234ea6891581` | `q130200_1301_234ea6891581` |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4S.2` | the library produces a value the vector does not hold | (none) | `q130200_1301_234ea6891581` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4X | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_7bf9a7bf7029` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4X | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_44440d41940c` | (none) |
@@ -331,9 +332,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls-handshake.pcapng` | per-stream | JA4 | 139 | `tls-handshake.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_8fc3c02244b2` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4 | 139 | `tls-handshake.pcapng/1/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_2331e95fde68` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4 | 139 | `tls-handshake.pcapng/10/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_b16532485edd` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4S | 78 | `tls-handshake.pcapng/0/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4S | 78 | `tls-handshake.pcapng/1/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4S | 78 | `tls-handshake.pcapng/10/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4S | 83 | `tls-handshake.pcapng/0/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4S | 83 | `tls-handshake.pcapng/1/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4S | 83 | `tls-handshake.pcapng/10/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/34/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_7bf9a7bf7029` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/34/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/40/JA4X.2` | the two values differ | `7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2` | `7d5dbb3783b4_7d5dbb3783b4_f269f029c206` |
@@ -385,7 +386,7 @@ The table holds one row for each capture and each method. A row records `not app
 |---|---|---|---|---|---|---|
 | `CVE-2018-6794.pcap` | JA4 | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `CVE-2018-6794.pcap` | JA4S | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `CVE-2018-6794.pcap` | JA4H | per-packet and per-stream | deviation | 4 | 16 | — |
+| `CVE-2018-6794.pcap` | JA4H | per-packet and per-stream | deviation | 4 | 26 | — |
 | `CVE-2018-6794.pcap` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `CVE-2018-6794.pcap` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `CVE-2018-6794.pcap` | JA4L | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
@@ -417,7 +418,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `browsers-x509.pcapng` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `browsers-x509.pcapng` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | JA4 | per-stream | deviation | 3 | 4 | — |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | JA4S | per-packet and per-stream | deviation | 2 | 4 | — |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | JA4S | per-packet and per-stream | deviation | 3 | 4 | — |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | JA4H | per-packet and per-stream | deviation | 0 | 5 | — |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | JA4X | per-stream | deviation | 0 | 2 | — |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
@@ -736,7 +737,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `tls-alpn-h2.pcap` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-alpn-h2.pcap` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
 | `tls-handshake.pcapng` | JA4 | per-stream | deviation | 177 | 139 | — |
-| `tls-handshake.pcapng` | JA4S | per-packet and per-stream | deviation | 141 | 163 | — |
+| `tls-handshake.pcapng` | JA4S | per-packet and per-stream | deviation | 141 | 168 | — |
 | `tls-handshake.pcapng` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-handshake.pcapng` | JA4X | per-packet and per-stream | deviation | 12 | 30 | — |
 | `tls-handshake.pcapng` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |

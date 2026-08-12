@@ -163,7 +163,7 @@ func TestTheCIWorkflowCountsTheConformanceTaggedFiles(t *testing.T) {
 		t.Fatalf(".github/workflows/ci.yml states no count of the files that the build tag hides")
 	}
 
-	// The comment writes the count as a word, and the repository holds seven such files.
+	// The comment writes the count as a word, and the repository holds eight such files.
 	word := map[int]string{3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine"}
 
 	if count[1] != word[tagged] {

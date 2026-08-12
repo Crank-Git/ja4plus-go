@@ -454,15 +454,29 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 // The vector writes `JA4.1` and it writes `JA4S`, so the produced key follows the form the
 // vector uses for that method.
 //
-// A method that the vector holds once keeps the bare key for every value of one stream, so
-// the last value the library reports replaces the earlier ones. The reference is a batch
-// program that publishes the final state of its cache, and this library is a streaming
+// A method emits twice on one stream for two different reasons, and one rule cannot serve
+// both.
+//
+// A method of `conformanceLastEmissionMethods` keeps the bare key for every value of one
+// stream, so the last value the library reports replaces the earlier ones. The reference is a
+// batch program that publishes the final state of its cache, and this library is a streaming
 // interface that reports a value for each packet. A moved measurement point therefore
 // reports twice, and the last report holds the value that the reference publishes.
 // `docs/specs/foxio/JA4L.md` R33 names the measurement point that moves, and the maintainer
 // ruled on 2026-08-12 in issue #196.
+//
+// Every other method gains an occurrence number for the second value and for each value
+// after it. Such a method emits once per protocol, or once per request, so the second value
+// is a surplus and not a moved point. The bare key then keeps the value the vector names, and
+// the surplus reports as the deviation kind of FR-conformance-17. Round 20 of the
+// `## Changelog` of `docs/specs/spec.md` records the narrowing, and issue #209 measured what
+// the wider rule cost.
 func conformanceStreamMethodKey(method string, occurrence int, usesOccurrence bool) string {
 	if usesOccurrence {
+		return conformanceMethodOccurrence(method, occurrence)
+	}
+
+	if occurrence > 1 && !conformanceLastEmissionMethods[method] {
 		return conformanceMethodOccurrence(method, occurrence)
 	}
 
