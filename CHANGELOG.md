@@ -55,8 +55,8 @@ differs from a fresh run.
   `parser.SSHMessageTracker`, which follows the SSH message boundary and reads the TCP
   sequence number, so the count reads the SSH message and not the TCP segment. Two FoxIO
   implementations state the rule and the two agree:
-  `wireshark/source/packet-ja4.c:1470` counts one packet for each `ssh.direction` field, and
-  `python/ja4ssh.py:95` counts the packet whose protocol list holds `ssh`. The port holds the
+  `wireshark/source/packet-ja4.c:1469` counts one packet for each `ssh.direction` field, and
+  `python/ja4ssh.py:94` counts the packet whose protocol list holds `ssh`. The port holds the
   same rule at `ja4plus/fingerprinters/ja4ssh.py:247`. Issue #200 records the readings.
   Measured against `batch/210-session5-followups` at `0751acc` with the corpus present: 12
   JA4SSH comparisons moved to a match and 2 spurious values appeared, on `gre-sample.pcap`,

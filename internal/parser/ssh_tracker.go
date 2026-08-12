@@ -58,8 +58,8 @@ var sshBannerPrefix = []byte("SSH-")
 //
 // The FoxIO reference counts the packets `tshark` labels `ssh`. `tshark` reassembles an SSH
 // message that spans two TCP segments, and it labels only the segment that completes the
-// message. `wireshark/source/packet-ja4.c:1470` counts one packet for each `ssh.direction`
-// field, and `python/ja4ssh.py:95` counts the packet whose protocol list holds `ssh`. This
+// message. `wireshark/source/packet-ja4.c:1469` counts one packet for each `ssh.direction`
+// field, and `python/ja4ssh.py:94` counts the packet whose protocol list holds `ssh`. This
 // type reproduces that boundary, so the JA4SSH packet count reads the SSH message and not
 // the TCP segment.
 //
@@ -206,8 +206,13 @@ func (t *SSHMessageTracker) hold(payload []byte, seq uint32) []int {
 // takeReady returns the held segment that starts at or before the next sequence number.
 // It reports false when the buffer holds no such segment.
 //
-// A sequence number maps to one distance, so the nearest held segment is one segment and a
-// range over the map orders nothing that matters.
+// This method reads the nearest held segment from one pass, and `ja4plus/utils/ssh_utils.py:196`
+// reaches the same order by a sort. **`pending` is keyed by the sequence number**, and one
+// sequence number maps to one distance, so no two entries reach the same distance. `hold`
+// replaces the entry of a repeated sequence number and adds no second one. A reader who
+// changes the key type of `pending` breaks that invariant, and this pass then needs the sort.
+// The comparison also names the smaller sequence number on a tie, because a range over a Go
+// map orders nothing and a tie would otherwise pick a segment at random.
 func (t *SSHMessageTracker) takeReady() ([]byte, uint32, bool) {
 	var (
 		bestSeq    uint32
@@ -217,7 +222,7 @@ func (t *SSHMessageTracker) takeReady() ([]byte, uint32, bool) {
 
 	for seq := range t.pending {
 		offset := sshSeqOffset(seq, t.nextSeq)
-		if !found || offset < bestOffset {
+		if !found || offset < bestOffset || (offset == bestOffset && seq < bestSeq) {
 			bestSeq, bestOffset, found = seq, offset, true
 		}
 	}

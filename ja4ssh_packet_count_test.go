@@ -13,9 +13,9 @@ import (
 //
 // Two FoxIO implementations state the counting rule, and the two agree.
 //
-//   - `testdata/foxio/reference/wireshark/source/packet-ja4.c:1470` counts one packet for
+//   - `testdata/foxio/reference/wireshark/source/packet-ja4.c:1469` counts one packet for
 //     each `ssh.direction` field of the frame, which the `tshark` SSH dissector writes.
-//   - `testdata/foxio/reference/python/ja4ssh.py:95` reads
+//   - `testdata/foxio/reference/python/ja4ssh.py:94` reads
 //     `has_ssh = ('ssh' in x['protos']) or ('direction' in x) or has_ssh_extras`, so it
 //     counts the packet that `tshark` labels `ssh`.
 //

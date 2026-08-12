@@ -15,9 +15,10 @@ import (
 // sshPayloadOfSize returns one whole SSH binary packet of the size the caller names.
 //
 // The payload holds the four-byte length field, the padding length and the message code that
-// RFC 4253 section 6 states, so `parser.IsSSHPacket` reads it as SSH data. It opens with no
-// version line, so `parser.SSHMessageTracker` follows no message boundary in the direction
-// and counts every segment of it. The caller names a size of 8 bytes or more.
+// RFC 4253 section 6 states. `parser.IsSSHPacket` therefore reads it as SSH data. It opens
+// with no version line, so `parser.SSHMessageTracker` follows no message boundary in the
+// direction. The tracker counts every segment of that direction. The caller names a size of 8
+// bytes or more.
 func sshPayloadOfSize(size int) []byte {
 	payload := make([]byte, size)
 	binary.BigEndian.PutUint32(payload, uint32(size-4))

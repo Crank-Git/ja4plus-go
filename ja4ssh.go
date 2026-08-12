@@ -149,8 +149,11 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	// A cipher hides the length field of every SSH record after the key exchange, so the
 	// byte test denies a record the reference counts. A payload on a connection the library
-	// already reads still carries SSH. `ja4plus/fingerprinters/ja4ssh.py:179` holds the same
-	// guard, and issue #200 records the 42 comparisons that a stricter guard cost.
+	// already reads still carries SSH. Issue #200 records the 42 comparisons that a stricter
+	// guard cost.
+	// `ja4plus/fingerprinters/ja4ssh.py:179` admits one packet more: a bare ACK on port 22
+	// opens a connection there, so the port counts the bare ACK of the TCP handshake. Issue
+	// #221 holds that rule, which reaches part c and not the SSH packet count.
 	if !hasSSHData && !exists {
 		return nil, nil
 	}
@@ -234,10 +237,10 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	}
 
 	// Count the SSH packets that FoxIO counts. The reference reads the label that the
-	// `tshark` SSH dissector writes, so it counts the segment that completes an SSH message
-	// and it counts no segment that holds part of one.
-	// `wireshark/source/packet-ja4.c:1470` counts one packet for each `ssh.direction` field,
-	// and `python/ja4ssh.py:95` counts the packet whose protocol list holds `ssh`. The port
+	// `tshark` SSH dissector writes. That dissector labels the segment that completes an SSH
+	// message. It labels no segment that holds part of one.
+	// `wireshark/source/packet-ja4.c:1469` counts one packet for each `ssh.direction` field,
+	// and `python/ja4ssh.py:94` counts the packet whose protocol list holds `ssh`. The port
 	// holds the same rule at `ja4plus/fingerprinters/ja4ssh.py:247`.
 	// The version line of either direction identifies the connection, so an opaque record
 	// counts from that point on.
