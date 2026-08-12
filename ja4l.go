@@ -123,39 +123,65 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 
 	// The SYN of each endpoint carries the initial sequence number that every relative
 	// number of that endpoint counts from.
-	source := tcpEndpoint(srcIP, srcPort)
+	//
+	// The two endpoint names read the grouping address pair, and never the reported pair. A
+	// mirror sends both directions of one session from one outer address to one other outer
+	// address, so the reported pair names the sender of every packet alike. The initial
+	// sequence number of the server would then reach a name that no client packet reads, and
+	// `gre-erspan-vxlan.pcap` stream 0 would reach no client value.
+	source := tcpEndpoint(groupSrcIP, srcPort)
+
+	// Point A and point B never move. `python/common.py:101` names `A` and `B` among the
+	// fields that the reference declines to update, so a repeated SYN or a repeated SYN-ACK
+	// keeps the first timestamp and the first TTL. A second server value would repeat the
+	// first, and the reference publishes one server value for one connection.
+	// `ja4plus/fingerprinters/ja4l.py:456-461` holds the same rule, and the port measured the
+	// repeat on `ssh2.pcapng` stream 15 in its issue #272.
 
 	// SYN packet (not SYN-ACK).
 	if tcpLayer.SYN && !tcpLayer.ACK {
 		conn.isns[source] = tcpLayer.Seq
+
+		if _, held := conn.timestamps["A"]; held {
+			return nil, nil
+		}
+
 		conn.timestamps["A"] = ts
 		conn.ttls["client"] = ttl
+
 		return nil, nil
 	}
 
 	// SYN-ACK packet.
 	if tcpLayer.SYN && tcpLayer.ACK {
 		conn.isns[source] = tcpLayer.Seq
+
+		if _, held := conn.timestamps["B"]; held {
+			return nil, nil
+		}
+
 		conn.timestamps["B"] = ts
 		conn.ttls["server"] = ttl
 
 		if synTime, ok := conn.timestamps["A"]; ok {
 			return f.emitResult("JA4L-S", ts.Sub(synTime), ttl, conn, ts), nil
 		}
+
 		return nil, nil
 	}
 
 	// ACK packet that carries no SYN.
 	if tcpLayer.ACK && !tcpLayer.SYN {
-		return f.clientPoint(conn, tcpLayer, source, tcpEndpoint(dstIP, dstPort), ts), nil
+		return f.clientPoint(conn, tcpLayer, source, tcpEndpoint(groupDstIP, dstPort), ts), nil
 	}
 
 	return nil, nil
 }
 
 // tcpEndpoint names one endpoint of a TCP connection.
-// The reference reads the address of the outer layer and the port of the inner layer, so a
-// mirrored capture separates its two directions by the port alone.
+// The caller supplies the grouping address of the endpoint, which separates the two
+// directions of a mirrored session. `docs/specs/spec.md` `## Changelog` round 12 states the
+// two keys of a tunneled connection.
 func tcpEndpoint(ip string, port uint16) string {
 	return fmt.Sprintf("%s:%d", ip, port)
 }

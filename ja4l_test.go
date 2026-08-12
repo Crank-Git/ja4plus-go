@@ -1191,6 +1191,54 @@ func TestJA4LMovesTheClientPointToThePartialRequestOfHttpEmptyUseragentPcap(t *t
 	}
 }
 
+// TestJA4LMovesNoServerPointForARepeatedSynAck holds the rule that point B never moves.
+//
+// `python/common.py:101` names `A` and `B` among the fields that the reference declines to
+// update, so a repeated SYN-ACK keeps the first timestamp. A second server value would repeat
+// the first, and the reference publishes one server value for one connection.
+// `ja4plus/fingerprinters/ja4l.py:456-461` holds the same rule, and the port measured the
+// repeat on `ssh2.pcapng` stream 15 in its issue #272.
+//
+// Every FoxIO reference agrees here, so this is a reading and not a ruling. The maintainer
+// ruled on 2026-08-12 in issue #196 that the conformance harness compares the last emission,
+// which is what makes a repeated server value reach the comparison.
+func TestJA4LMovesNoServerPointForARepeatedSynAck(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	const (
+		clientISN uint32 = 1000
+		serverISN uint32 = 2000
+	)
+
+	synPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	_, _ = fp.ProcessPacket(synPkt)
+
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 58, 443, 12345, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(12504 * time.Microsecond)
+	results, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=6252_58" {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=6252_58")
+	}
+
+	// The server repeats the SYN-ACK. The packet moves no point, and it reports no value.
+	repeatPkt := buildTCPStreamPacket(t, serverIP, clientIP, 58, 443, 12345, true, true, serverISN, clientISN+1, nil)
+	repeatPkt.Metadata().Timestamp = baseTime.Add(18334 * time.Microsecond)
+	results, err = fp.ProcessPacket(repeatPkt)
+	if err != nil {
+		t.Fatalf("repeated SYN-ACK: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("repeated SYN-ACK: expected no results, got %v", results)
+	}
+}
+
 // TestJA4LMovesNoClientPointWhenTheCaptureHoldsNoSYN holds the guard that a relative number
 // needs. `python/ja4.py:570` reads the relative sequence number that
 // the dissector counts from the initial sequence number of each endpoint. A capture that
