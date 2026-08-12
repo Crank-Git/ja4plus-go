@@ -427,6 +427,7 @@ func conformanceProducedByStream(
 
 	produced := make(map[conformanceKey]string)
 	occurrences := make(map[conformanceKey]int)
+	moved := newConformanceMovedPoints()
 	processor := NewProcessor()
 
 	record := func(results []FingerprintResult) {
@@ -444,6 +445,16 @@ func conformanceProducedByStream(
 				}
 
 				counter := conformanceKey{Capture: capture, Stream: stream, Method: value.Method}
+
+				// A method whose measurement point moves reports more than once for one
+				// connection, and the reference publishes the last of those values. The
+				// collapse therefore counts connections, and never emissions.
+				if conformanceLastEmissionMethods[value.Method] {
+					moved.record(counter, endpoint, value.Value)
+
+					continue
+				}
+
 				occurrences[counter]++
 
 				method := conformanceStreamMethodKey(value.Method, occurrences[counter], shape.UsesOccurrence[counter])
@@ -465,7 +476,90 @@ func conformanceProducedByStream(
 
 	record(processor.CloseOpenWindows())
 
+	moved.write(produced, shape)
+
 	return produced
+}
+
+// conformanceConnectionKey names one connection of one method of one stream.
+// The group holds the capture, the stream and the method, and the endpoint holds the
+// address pair. Two connections of one capture can carry one stream number, so the group
+// alone names no connection.
+type conformanceConnectionKey struct {
+	group    conformanceKey
+	endpoint string
+}
+
+// conformanceMovedPoints collects the values of every method whose measurement point moves.
+//
+// FoxIO writes one per-stream entry for one connection, and it numbers two entries of one
+// capture with one stream number. `chrome-cloudflare-quic-with-secrets.pcapng` holds a TCP
+// connection and a QUIC connection that both carry the stream number `0`. The vector group
+// then holds two values, the adapter writes an occurrence number for them, and the
+// last-emission rule of issue #196 reaches no value. The library reports `30_64` and then
+// `149_64` for the moved client point of the TCP connection, so the surplus first value
+// shifts every later occurrence by one. Issue #215 holds the reading.
+type conformanceMovedPoints struct {
+	// last holds the last value of one connection.
+	last map[conformanceConnectionKey]string
+	// order holds the endpoint of each connection of one group, in the order in which the
+	// connection first reported a value.
+	order map[conformanceKey][]string
+	// streamLast holds the last value of the whole group, which the bare key compares.
+	streamLast map[conformanceKey]string
+}
+
+// newConformanceMovedPoints returns an empty collection.
+func newConformanceMovedPoints() *conformanceMovedPoints {
+	return &conformanceMovedPoints{
+		last:       make(map[conformanceConnectionKey]string),
+		order:      make(map[conformanceKey][]string),
+		streamLast: make(map[conformanceKey]string),
+	}
+}
+
+// record keeps one value that the connection of the endpoint reports for the group.
+func (m *conformanceMovedPoints) record(group conformanceKey, endpoint, value string) {
+	connection := conformanceConnectionKey{group: group, endpoint: endpoint}
+
+	if _, held := m.last[connection]; !held {
+		m.order[group] = append(m.order[group], endpoint)
+	}
+
+	m.last[connection] = value
+	m.streamLast[group] = value
+}
+
+// write adds the collected values to the produced map.
+//
+// A group whose vector key carries an occurrence number holds one value for each
+// connection, in the order in which the connections first reported. A group whose vector
+// key carries none keeps the last value of the whole group, because one bare key compares
+// one value.
+func (m *conformanceMovedPoints) write(produced map[conformanceKey]string, shape conformanceStreamShape) {
+	// A range over a map orders nothing, and each group writes its own keys, so the result
+	// is the same on every run.
+	for group, endpoints := range m.order {
+		if !shape.UsesOccurrence[group] {
+			key := conformanceKey{
+				Capture: group.Capture,
+				Stream:  group.Stream,
+				Method:  conformanceStreamMethodKey(group.Method, 1, false),
+			}
+			produced[key] = m.streamLast[group]
+
+			continue
+		}
+
+		for index, endpoint := range endpoints {
+			key := conformanceKey{
+				Capture: group.Capture,
+				Stream:  group.Stream,
+				Method:  conformanceStreamMethodKey(group.Method, index+1, true),
+			}
+			produced[key] = m.last[conformanceConnectionKey{group: group, endpoint: endpoint}]
+		}
+	}
 }
 
 // conformanceRegisterByKey returns the register, keyed by the comparison each entry names.

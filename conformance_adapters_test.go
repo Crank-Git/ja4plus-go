@@ -81,6 +81,11 @@ const conformanceMovingPointFingerprinter = "JA4LFingerprinter"
 // emission of one stream. `docs/specs/foxio/JA4L.md` R33 names the measurement point that
 // moves, and `ja4l_test.go` holds the rule that point B never moves.
 //
+// The collapse reads one connection, and never one stream number. FoxIO writes one
+// per-stream entry for one connection, and two entries of one capture can carry one stream
+// number. `conformanceMovedPoints` in `conformance_test.go` holds the collapse, and issue
+// #215 holds the reading.
+//
 // Round 20 of the `## Changelog` of `docs/specs/spec.md` narrows the ruling to this set, and
 // it reverses no part of round 15. A method that emits once per protocol reaches no entry
 // here, and a method that emits once per request reaches none either. The second value of
@@ -474,8 +479,11 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 // measured what the wider rule cost.
 //
 // Two callers reach this function, and each one reaches a different branch.
-// `conformanceProducedByStream` at `conformance_test.go:449` builds the produced map, and it
-// counts the emissions of the library, so it reaches the second branch below. This function
+// `conformanceProducedByStream` at `conformance_test.go:460` builds the produced map, and it
+// counts the emissions of the library, so it reaches the second branch below. A method of
+// `conformanceLastEmissionMethods` reaches that caller with the occurrence of one connection,
+// because `conformanceMovedPoints` collapses the emissions of one connection first. This
+// function
 // builds the expected map through `conformanceWriteStreamGroup`, which forces
 // `usesOccurrence` true whenever one vector group holds more than one value. The occurrence
 // of an expected value is therefore always 1, and the expected map reaches the second branch
