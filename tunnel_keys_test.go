@@ -194,3 +194,56 @@ func TestJA4LReadsTheOuterTimeToLiveOnTheGRECapture(t *testing.T) {
 		t.Errorf("JA4L produces no value for the SSH connection of gre-sample.pcap")
 	}
 }
+
+// CleanupConnection reads the reported key, so it removes a tunneled connection.
+//
+// The capture is `gre-erspan-vxlan.pcap` and the method is JA4L. The grouping key holds
+// the inner address pair `10.16.27.12` and `10.16.27.131`, and every result reports the
+// outer pair `100.20.9.2` and `100.20.9.1`. A caller holds the reported pair alone, so a
+// cleanup that read the grouping key would leave the state table full.
+//
+// `ja4plus/fingerprinters/ja4l.py:216` holds the same rule, and FR-gaps-14c states it.
+func TestJA4LCleanupConnectionRemovesATunneledConnectionByTheReportedKey(t *testing.T) {
+	tunnelSkipWithoutCapture(t, "gre-erspan-vxlan.pcap")
+
+	packets := loadPCAP(t, filepath.Join(corpusCaptureDir, "gre-erspan-vxlan.pcap"))
+	if len(packets) == 0 {
+		t.Fatalf("gre-erspan-vxlan.pcap holds no packet")
+	}
+
+	fingerprinter := NewJA4L()
+
+	var result FingerprintResult
+
+	for _, packet := range packets {
+		results, _ := fingerprinter.ProcessPacket(packet)
+		if len(results) > 0 {
+			result = results[0]
+			break
+		}
+	}
+
+	if result.Fingerprint == "" {
+		t.Fatalf("JA4L produces no value on gre-erspan-vxlan.pcap")
+	}
+
+	// The grouping key reads the inner pair, so the state table proves the two keys differ.
+	for key := range fingerprinter.connections {
+		if strings.Contains(key, result.SrcIP) {
+			t.Fatalf("the state table holds the key %q, and the reported address %s reaches it directly",
+				key, result.SrcIP)
+		}
+	}
+
+	held := len(fingerprinter.connections)
+	if held == 0 {
+		t.Fatalf("JA4L holds no connection state after it produced %q", result.Fingerprint)
+	}
+
+	fingerprinter.CleanupConnection(result.SrcIP, result.SrcPort, result.DstIP, result.DstPort, "tcp")
+
+	if got := len(fingerprinter.connections); got != held-1 {
+		t.Errorf("CleanupConnection leaves %d of %d connections, and it removes the one the caller named",
+			got, held)
+	}
+}
