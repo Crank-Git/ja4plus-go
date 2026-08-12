@@ -77,6 +77,20 @@ func (p *SyncProcessor) CloseOpenWindows() []FingerprintResult {
 	return p.proc.CloseOpenWindows()
 }
 
+// CloseConnectionWindow returns the value of the window that one connection holds open, and
+// it then removes the connection.
+// Call it when the monitor evicts a connection, because CleanupConnection emits nothing and
+// the open window is then lost.
+// The mutex serializes it against a ProcessPacket call, so no result escapes while another
+// goroutine changes the fingerprinter state.
+func (p *SyncProcessor) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.ensure()
+
+	return p.proc.CloseConnectionWindow(srcIP, srcPort, dstIP, dstPort, proto)
+}
+
 // GetShardKey returns one routing key for both directions of the connection.
 // It returns an empty string for a packet that carries neither a TCP layer nor a UDP
 // layer. The caller decides what to do with an empty key.
