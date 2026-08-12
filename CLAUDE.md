@@ -72,7 +72,8 @@ packet belongs in `cmd/`.
 |---|---|
 | `make build` | Build the command-line program into `bin/`. |
 | `make test` | Run the unit tests under the race detector. |
-| `make lint` | Run `golangci-lint` at the pinned version. |
+| `make lint` | Run `golangci-lint` at the pinned version, with one cache for this checkout. |
+| `make lint-cache-check` | Prove the stale linter cache defect of #257, and prove the repair. |
 | `make corpus` | Fetch the FoxIO corpus at the pinned commit. |
 | `make conformance` | Run the conformance suite against the corpus. |
 | `make fuzz` | Run each fuzz target for 30 seconds. |
@@ -85,7 +86,7 @@ packet belongs in `cmd/`.
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
 
-**The `Makefile` defines the first eight rows of this table, and none of the last four.**
+**The `Makefile` defines the first nine rows of this table, and none of the last four.**
 An absent target is work a later issue does, and never a broken target. **`make docs`
 exits 0, and that exit code reports no site build.**
 
@@ -98,7 +99,10 @@ exits 0, and that exit code reports no site build.**
 
 1. `go build ./...` succeeds.
 2. `go test -race ./...` passes.
-3. `golangci-lint run` reports nothing.
+3. `make lint` reports nothing. **Run the linter through `make lint`, and never as a bare
+   `golangci-lint run`.** A bare run reads the linter cache of the whole user account. That
+   cache holds an absolute path from another checkout, and #257 records the false failure
+   it produces.
 4. `make conformance` reports no deviation that `testdata/deviations.json` does not hold,
    and the register holds no entry whose comparison now matches.
 5. **This step is unrunnable today, because the repository holds no `.coverage-floor` file.
