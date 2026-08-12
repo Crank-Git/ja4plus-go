@@ -36,9 +36,9 @@ type Fingerprinter interface {
 // The maintainer ruled this placement on 2026-08-11, and issue #53 records the ruling.
 //
 // The interface declares one method, and ConnectionWindowCloser declares the other one.
-// A two-method interface skipped a type that implements one of the two methods, and that
-// type then lost the dispatch of the method it does implement. The maintainer ruled the
-// split on 2026-08-12, and issue #268 records the ruling.
+// A two-method interface skipped a type that implements one of the two methods. That type
+// then lost the dispatch of the method it does implement. The maintainer ruled the split on
+// 2026-08-12, and issue #268 records the ruling.
 type WindowCloser interface {
 	// CloseOpenWindows returns the value of the window that each connection holds open,
 	// and it starts a new window on each one. A second call returns an empty slice.

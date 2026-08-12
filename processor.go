@@ -188,8 +188,8 @@ func (p *Processor) CloseOpenWindows() []FingerprintResult {
 // closeOpenWindows joins the open window of each fingerprinter of the list.
 //
 // The assertion names WindowCloser, which declares the one method this function calls. A
-// call site that asserts more than it calls skips a type that implements the called method,
-// and that type then loses a capability `v0.3.0` already delivers. The maintainer ruled the
+// call site that asserts more than it calls skips a type that implements the called method.
+// That type then loses a capability `v0.3.0` already delivers. The maintainer ruled the
 // per-capability assertion on 2026-08-12, and issue #268 records the ruling.
 // The function sits beside the method so that a test reaches this dispatch with a
 // fingerprinter that Processor holds no field for.

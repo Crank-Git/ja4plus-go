@@ -255,8 +255,9 @@ func TestJA4SSHCleanupConnectionEmitsNoValueAfterTheRuling(t *testing.T) {
 }
 
 // TestProcessorCloseConnectionWindowReturnsTheJoinedResults holds the processor path.
-// A caller of the processor reaches every fingerprinter that implements WindowCloser, and
-// the processor skips every other one. Issue #216 adds the method.
+// A caller of the processor reaches every fingerprinter that implements
+// ConnectionWindowCloser, and the processor skips every other one. Issue #216 adds the
+// method, and issue #268 gives the method an interface of its own.
 func TestProcessorCloseConnectionWindowReturnsTheJoinedResults(t *testing.T) {
 	processor := NewProcessor()
 	payload := sshPayloadOfSize(36)

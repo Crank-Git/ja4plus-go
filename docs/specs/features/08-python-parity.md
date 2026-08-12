@@ -125,9 +125,8 @@ The port's issues #28, #96, #97, #105, #199 and #214 hold these rulings.
 - **FR-parity-30** — `WindowCloser` declares `CloseOpenWindows` alone, and
   `ConnectionWindowCloser` declares `CloseConnectionWindow` alone. A stateless fingerprinter
   implements neither interface, and `Processor` skips it. Each `Processor` call site asserts
-  the interface that declares the one method it calls. The maintainer ruled the placement on
-  2026-08-11 and the split on 2026-08-12. Issue #53 records the placement, and issue #268
-  records the split.
+  the interface that declares the one method it calls. Issue #53 records the placement, and
+  issue #268 records the split.
 - **FR-parity-31** — `Processor` exports `CloseOpenWindows`, which calls each
   fingerprinter and returns the joined results.
 - **FR-parity-32** — `cmd/ja4plus` calls `Processor.CloseOpenWindows` when the capture
