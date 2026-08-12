@@ -86,13 +86,13 @@ packet belongs in `cmd/`.
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
 
 **The `Makefile` defines the first eight rows of this table, and none of the last four.**
-Read an absent target as work a later issue does, and never as a broken target. One of the
-four exits 0, so read the exit code of `make docs` as nothing.
+An absent target is work a later issue does, and never a broken target. **`make docs`
+exits 0, and that exit code reports no site build.**
 
 - `make vuln`, `make mutate` and `make prerelease` each exit 2. Each one prints one line
   that names the target: ``make: *** No rule to make target `vuln'.  Stop.``
-- `make docs` exits 0 and prints ``make: Nothing to be done for `docs'.``, because `docs/`
-  is a directory and the name holds no recipe.
+- `make docs` prints ``make: Nothing to be done for `docs'.``, because `docs/` is a
+  directory and the name holds no recipe.
 
 ## A change is done when
 
