@@ -401,10 +401,12 @@ that the interface declares.
   `browsers-x509.pcapng` is a SYN-ACK, so the per-packet vector holds `ja4.ja4ts` and not
   `ja4.ja4t`, and the comment now names frame 30 as the SYN of the same connection. **The
   member found one more defect and repaired nothing.**
-  `docs/specs/mockups/02-cli-output.html:57` shows `$ ja4plus
-  testdata/foxio/pcap/tls12.pcap` and six fingerprint lines. The program takes `ja4plus
-  analyze <pcap-file>`, and `tls12.pcap` reaches one JA4 value alone, so no capture
-  reproduces the example, and issue #350 holds it. **The member wrote a bare `#215` that
+  `docs/specs/mockups/02-cli-output.html:56` shows `$ ja4plus
+  testdata/foxio/pcap/tls12.pcap` and six fingerprint lines. `cmd/ja4plus/main.go:74` and
+  `cmd/ja4plus/main.go:100` show that the program takes `ja4plus analyze <pcap-file>`, and
+  `tls12.pcap` reaches one JA4 value alone, so no capture reproduces the example, and issue
+  #350 holds it. **The body of pull request #348 names that line as `:57`, and `:57` is
+  blank.** **The member wrote a bare `#215` that
   names the port, and `c5e2aad` repairs that inside the batch.** The breach broke the rule
   that issue #255 added in the same batch. **#215 of this repository is `The JA4L-C
   occurrences of one QUIC stream are shifted by one against the vector`**, which no part
