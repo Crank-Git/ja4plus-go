@@ -89,9 +89,9 @@ that the interface declares.
   `changelog_counts_freshness_test.go:135-137` already concedes the asymmetry. **The
   member moves no fingerprint value.** The four counts read 1623, 680, 409 and 409 before
   and after. Issue #328 holds the measurement.
-- No exported name, and one statement of the base directory that every FoxIO citation
-  joins to, at `docs/specs/foxio/README.md:37`. **The member changes no citation, and
-  that is the result.** #254 asks for a `reference/` prefix on every citation of
+- No exported name, and one statement of the bases that a FoxIO citation joins to, at
+  `docs/specs/foxio/README.md:31-49`. **The member changes no citation, and that is the
+  result.** #254 asks for a `reference/` prefix on every citation of
   `docs/specs/foxio/`, and the measurement proves that prefix wrong. **`make corpus`
   writes two corpus roots.** `scripts/fetch-corpus.sh:149` moves `pcap`,
   `python/test/testdata` and `wireshark/test/testdata` out of the staged tree, and
@@ -108,13 +108,31 @@ that the interface declares.
   **The member repairs two false statements as well.** `zeek.md` stated that a path is
   relative to the `zeek/` directory of the FoxIO repository, while every citation on the
   page already carries that prefix. `README.md` stated that the script fetches no part of
-  `technical_details/`, and 576 citations depend on that tree. The member reads 723
-  path-shaped code spans across the pages of `docs/specs/foxio/` and opens the target of
-  each citation. 673 citations resolve, and the 3 that do not are a branch name and a
-  repository name. **No test holds the repair**, because the acceptance criteria of #254
-  bar a Go file change. Issue #335 records the guard, and it names a shape check that
-  needs no corpus. **The member changes no Go file, and it moves no fingerprint value.**
-  Issue #254 holds the measurement.
+  `technical_details/`, and `testdata/foxio/reference/technical_details/` holds each file
+  of the inventory table at `docs/specs/foxio/README.md:166`. **#254 stated its rule on a
+  page whose own citations break it, and the cross-member review of this batch found
+  that.** The rule named two bases, and the tree holds seven, so it sent a reader of
+  `docs/specs/foxio/zeek.md:76` to a path that no tree holds. **That is the silent
+  failure #254 exists to stop, on the page that states the rule.** **`db52e4a` repairs it
+  inside the batch.** `docs/specs/foxio/README.md:41-49` now holds one table of seven
+  bases, and the page states no count of pages. A count of pages goes stale at the next
+  edit, and that is how the defect arose. **Base 2 is evidence that no member named.** A
+  page cites a bare image name such as `JA4D.png`, and that file sits at
+  `testdata/foxio/reference/technical_details/JA4D.png`. The FoxIO repository root holds
+  no file of that name, so base 1 reaches it at no path.
+  `docs/specs/foxio/README.md:110` counts 27 spans at base 2. **`docs/specs/foxio/README.md:96-131` records the measurement of
+  the repaired rule.** A resolver read the thirteen pages of the directory and 822
+  path-shaped code spans. 621 resolve at base 1, 15 at the short form of base 1, 27 at
+  base 2, 26 at base 3, 19 at base 4, 83 at base 5, 10 at base 6, 18 at base 7, and 3
+  under no base. **No citation names a line past the end of the file it names.** **One
+  citation resolves under no base, and the page reports it rather than repointing it**:
+  `ja4l.py`, at `docs/specs/foxio/port-register.md:80`. The FoxIO `python/` directory at
+  the pin holds `common.py`, `ja4.py`, `ja4h.py`, `ja4ssh.py` and `ja4x.py`, and no
+  `ja4l.py`. **The repair changes `README.md` alone, so #254 still changes no citation.**
+  **No test holds the repair**, because the acceptance criteria of #254 bar a Go file
+  change. Issue #335 records the guard, and it names a shape check that needs no corpus.
+  **The member changes no Go file, and it moves no fingerprint value.** Issue #254 holds
+  the measurement of the member, and #339 holds the measurement of the repair.
 - No exported name, and `.claude/rules/cross-member-review.md`. The file states why the
   project runs a cross-member review, how to spawn one that reports, the five categories
   and the return contract. `CLAUDE.md:119` gains one bullet of `## Conventions` that
@@ -123,22 +141,34 @@ that the interface declares.
   `mailbox`, `idle signal` and `spawn path`. **The member appends the six rows at the end
   of the table**, so they touch no row that #261 wrote. **A cross-member review returned
   an idle signal and no text in eight consecutive attempts, across session 5 and session
-  6.** **A controlled three-arm measurement separates the cause.** The worker of #260
-  spawned three agents on 2026-08-12, and it varied one parameter at a time. Arm A
-  carried no `name`, it reached the in-process path, and it reported to the spawner in
-  140346 ms. Arm B carried a `name`, it reached the cross-session path, and it reported
-  to the project manager and never to the spawner. Arm C carried a `name` and `isolation`
-  set to `"worktree"`, it reached the in-process path, and it reported in 4065 ms.
-  **The spawn path separates a review that reports from one that does not, and the name
-  does not.** The session-6 record names the `name` parameter as the cause, and that
-  names the wrong variable. **The rule states the discriminator that survives a harness
-  change.** Read the spawn response: the in-process path names an output file, and the
-  cross-session path names a mailbox. A response that names a mailbox gets one more spawn
-  on the in-process path, and no session waits on a cross-session spawn. **The file
-  records two open questions, and it states that nobody has measured either one.** **The
-  member
-  changes no Go file, and it moves no fingerprint value.** Issue #260 holds the
-  measurement.
+  6.** **The worker of #260 spawned three agents on 2026-08-12 to separate the cause.**
+  Arm A carried no `name` and the review brief, and it reached the in-process path. Arm B
+  carried a `name` and the review brief, and it reached the cross-session path. Arm C
+  carried a `name`, `isolation` set to `"worktree"` and a one-command brief, and it
+  reached the in-process path. Arm A and arm C each reported to the spawner without a
+  request. Arm B reported to the project manager, and never to the spawner. **Arm A
+  against arm B is the one contrast of the measurement that varies a single parameter**,
+  because arm C moves `isolation` and the brief together. **Arm B and arm C both carry a
+  name and reach different paths, so the name alone does not decide the path.** That
+  conclusion reads the path of each arm, and it reads no duration. The session-6 record
+  names the `name` parameter as the cause, and that names the wrong variable. **The
+  cross-member review of this batch found that the first draft read as a one-parameter
+  measurement, and `db52e4a` repairs it inside the batch.**
+  `.claude/rules/cross-member-review.md:47-51` gains a `Brief` column, and `:53-55` states
+  that the two durations measure the two briefs and nothing about the spawn path. **The
+  file records three open questions at `:103-116`, and the third is a fourth arm that
+  nobody has run.** That arm sets `isolation` and carries the review brief, and it
+  separates the two variables that arm C holds together. **The rule states the
+  discriminator that survives a harness change.** Read the spawn response: the in-process
+  path names an output file, and the cross-session path names a mailbox. A response that
+  names a mailbox gets one more spawn on the in-process path, and no session waits on a
+  cross-session spawn. **The review also repaired two of the six rows.** The
+  `cross-member review` row stated that the rule file names the term in full at the head
+  of each section, and the file names it in full at one heading of eleven. The `mailbox`
+  row and the `spawn path` row each declined `channel`, so a reader could not tell
+  whether the word is permitted. The `mailbox` row now keeps the decline, and the
+  `spawn path` row points at it. **The member changes no Go file, and it moves no
+  fingerprint value.** Issue #260 holds the measurement, and #339 holds the repair.
 - No exported name, and two tests that hold the JA4H value of one request across every
   run: `TestJA4H_ComputesOneValueForOneRequestOnEveryRun` and
   `TestJA4H_SortsTheCookiePairListByTheCookieName`, in `ja4h_determinism_test.go`. Issue
