@@ -32,19 +32,19 @@ moving branch is a reading of something the next person cannot see.
 **Never describe an external interface from memory.** `.claude/rules/external-apis.md`
 holds the rule and the interface list.
 
-## A citation names its tracker
+## A citation names its repository
 
-**A bare `#N` names an issue of this repository.** A citation of an issue of the port
-writes `the port's issue #N` in a sentence, or `Crank-Git/ja4plus#N` in a table cell.
-Those two forms are the ones this tree already uses.
+**A bare `#N` names an issue of this repository.** A citation of an issue of the port names
+the port. Write `the port's issue #N` in a sentence, or `Crank-Git/ja4plus#N` in a table
+cell. The tree also holds `port issue #N`, and that form reads the same way.
 
 **A bare number that names the port is a defect.** `#127` names the JA4L part count in
-this repository, and it names the JA4 ALPN value in the port. A reader who does not check
-the tracker conflates an ALPN ruling with a JA4L ruling. Issue #255 records the collision,
-and issue #254 records the same defect in the file namespace.
+this repository, and it names the JA4 ALPN value in the port. A reader who reads the number
+alone conflates an ALPN ruling with a JA4L ruling. Issue #255 records the collision, and
+issue #254 records the same defect in the file namespace.
 
-**One question carries a different number in each tracker.** The JA4L part count is issue
-#127 here and issue #225 in the port. Write both numbers when a reader needs both halves.
+**One question carries a different number in each repository.** The JA4L part count is issue
+#127 here and issue #225 in the port. When a reader needs both halves, write both numbers.
 
 Two pages carry a local rule, and each one states that rule.
 
