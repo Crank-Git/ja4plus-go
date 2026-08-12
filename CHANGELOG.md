@@ -405,8 +405,8 @@ that the interface declares.
   testdata/foxio/pcap/tls12.pcap` and six fingerprint lines. `cmd/ja4plus/main.go:74` and
   `cmd/ja4plus/main.go:100` show that the program takes `ja4plus analyze <pcap-file>`, and
   `tls12.pcap` reaches one JA4 value alone, so no capture reproduces the example, and issue
-  #350 holds it. **The body of pull request #348 names that line as `:57`, and `:57` is
-  blank.** **The member wrote a bare `#215` that
+  #350 holds it. **The body of #350 names that line as `:57`, and `:57` is blank**, so a
+  worker of #350 reads `:56`. **The member wrote a bare `#215` that
   names the port, and `c5e2aad` repairs that inside the batch.** The breach broke the rule
   that issue #255 added in the same batch. **#215 of this repository is `The JA4L-C
   occurrences of one QUIC stream are shifted by one against the vector`**, which no part
