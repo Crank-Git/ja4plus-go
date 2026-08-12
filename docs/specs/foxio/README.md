@@ -30,12 +30,34 @@ FoxIO image.** It links to each one.
 
 ## How to read a citation
 
-A citation on a page of this directory names a path in the FoxIO repository at the pinned
-commit. `make corpus` writes that repository to `testdata/foxio/reference/`, at
+**A citation on a page of this directory names a path, and it joins to one of the bases in
+the table below.** The table states the form each base takes and where a reader resolves
+it. **Try the bases in the order of the table**, because the first row is the common case
+and the last two rows reach no file of this checkout.
+
+`make corpus` writes the FoxIO repository to `testdata/foxio/reference/`, at
 `scripts/fetch-corpus.sh:167`.
 
-**Join a citation to `testdata/foxio/reference/`.** Read `python/ja4.py:161` as line 161
-of `testdata/foxio/reference/python/ja4.py`.
+| N | Base | A citation of that base | Where a reader resolves it |
+|---|---|---|---|
+| 1 | The FoxIO repository at the pin | `python/ja4.py:161` | Line 161 of `testdata/foxio/reference/python/ja4.py` |
+| 2 | `technical_details/` at the pin | `JA4T.png`, `JA4H.md` | `testdata/foxio/reference/technical_details/JA4T.png` |
+| 3 | A moved corpus directory | `pcap/badcurveball.pcap` | The right-hand column of `### The three moved directories` below |
+| 4 | A recovered file of `docs/specs/foxio/deleted-text-specifications.md` | `JA4L.md:19` | Line 19 of the block that the `### JA4L.md` heading of that page carries |
+| 5 | This repository | `.claude/rules/rulings.md:4` | Line 4 of that file, from the root of this checkout |
+| 6 | The FoxIO repository at a commit that the sentence names | `technical_details/JA4L.md` | The FoxIO repository at that commit. FoxIO deleted the file before the pin, so the corpus holds it at no path. |
+| 7 | The port repository `Crank-Git/ja4plus` | `ja4plus/fingerprinters/ja4ssh.py` | The port, at the commit that `docs/specs/foxio/port-register.md` records |
+
+**Every page of this directory uses more than one base, and this page states no count of
+pages.** A count of pages goes stale at the next edit. The stale rule then sends a reader
+to a path that no tree holds. #254 records that failure.
+
+**Where two bases can hold one citation, the sentence around it names the repository or
+the commit.** `docs/specs/foxio/zeek.md:124` cites `docs/specs/foxio/JA4T.md`, and this
+repository holds a file of that path. The sentence names `Crank-Git/ja4plus` and a commit,
+so the citation reads at base 7 and never at base 5.
+
+### The three moved directories
 
 **`scripts/fetch-corpus.sh:149` moves three directories out of the staged tree first**, so
 a citation of one of the three reaches no path under `testdata/foxio/reference/`.
@@ -58,15 +80,55 @@ the Python implementation at `Crank-Git/ja4plus`, and the two disagree. A citati
 port names a path of the port, and `docs/specs/foxio/port-register.md` holds the port
 material this project copies.
 
-Two pages of this directory cite a path that `testdata/foxio/reference/` does not hold,
-and each one states its own base.
+### Two bases that reach no file of this checkout
 
-- `docs/specs/foxio/deleted-text-specifications.md` reads `technical_details/` at the
-  parent of FoxIO commit `b6f3ff4`. That commit is not the pin, and five of the seven
-  recovered files exist at no commit after `b6f3ff4`. The page names the commit at each
-  recovered file.
-- `docs/specs/foxio/port-register.md` is a verbatim copy of a section of the port's
-  specification. Its citations name paths of the port, and no reader edits the copy.
+- **Base 6.** `docs/specs/foxio/deleted-text-specifications.md` reads `technical_details/`
+  at the parent of FoxIO commit `b6f3ff4`. That commit is not the pin, and five of the
+  seven recovered files exist at no commit after `b6f3ff4`. The page names the commit at
+  each recovered file. **Base 4 reaches the same text without a clone**, because the page
+  reproduces each recovered file verbatim.
+- **Base 7.** `docs/specs/foxio/port-register.md` is a verbatim copy of a section of the
+  port's specification. Its citations name paths of the port, and no reader edits the copy.
+  **The copy also uses the citation forms of the port**, and one of them is a bare source
+  file name such as `packet-ja4.c:1328`. The FoxIO tree holds that file at
+  `wireshark/source/packet-ja4.c`, so that form is a short form of base 1.
+
+### The measurement of every citation
+
+**On 2026-08-12 a resolver read the thirteen pages of this directory and resolved every
+path-shaped code span against the fetched corpus and this checkout.** #331 records the
+run. A path-shaped span carries a file extension of the corpus, and it carries an optional
+`:line` suffix. The resolver read 822 of them.
+
+**The counts below record one run on one date, and the rule above needs none of them.** A
+later edit of any page moves a count, and it breaks no rule of this page.
+
+| Base | Spans that resolve under it |
+|---|---|
+| 1 The FoxIO repository at the pin | 621 |
+| 1 The FoxIO repository at the pin, from a bare file name | 15 |
+| 2 `technical_details/` at the pin | 27 |
+| 3 A moved corpus directory | 26 |
+| 4 A recovered file of `docs/specs/foxio/deleted-text-specifications.md` | 19 |
+| 5 This repository | 83 |
+| 6 The FoxIO repository at a named commit | 10 |
+| 7 The port repository | 18 |
+| No base | 3 |
+
+**A bare file name is a short form of base 1.** `docs/specs/foxio/port-register.md` writes
+`packet-ja4.c:1328`, and this page writes `ja4.py`. Each one names one file of the FoxIO
+tree, and the resolver found each name at exactly one path.
+
+**No citation names a line past the end of the file it names.** The resolver compared each
+`:line` suffix against the line count of the resolved file. For base 4 it read the line
+count of the recovered file.
+
+**One citation resolves under no base: `ja4l.py`, at
+`docs/specs/foxio/port-register.md:80`.** The FoxIO `python/` directory at the pin holds
+`common.py`, `ja4.py`, `ja4h.py`, `ja4ssh.py` and `ja4x.py`, and it holds no `ja4l.py`.
+That citation sits inside the verbatim copy of the port's specification, which no reader
+edits. **This page reports the citation, and it repoints nothing.** The table above counts
+three spans under no base, because this paragraph quotes the name twice.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier
 version of `scripts/fetch-corpus.sh` wrote names the pinned commit and holds no reference

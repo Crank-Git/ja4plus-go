@@ -36,22 +36,28 @@ out. Issue #260 records each silence.
 
 ### The measurement
 
-**The worker of #260 spawned three agents on 2026-08-12 and varied one parameter at a
-time.** Each spawn used agent type `general-purpose`, model `sonnet`, and
-`run_in_background` set to true.
+**The worker of #260 spawned three agents on 2026-08-12.** Each spawn used agent type
+`general-purpose`, model `sonnet`, and `run_in_background` set to true.
 
 **Arm A and arm B carry the same brief, and they differ in the `name` parameter alone.**
-Arm C carries a one-command brief, and it separates `name` from `isolation`.
+**Arm C moves two variables at once.** It sets `isolation` to `"worktree"`, and it carries
+a one-command brief in place of the review brief. So arm A against arm B is the one
+contrast of this measurement that moves a single parameter.
 
-| Arm | `name` | `isolation` | Spawn path | Where the result arrived |
-|---|---|---|---|---|
-| A | absent | absent | in-process | The spawner, unasked, in 140346 ms. |
-| B | present | absent | cross-session | The project manager, unasked, once. Never the spawner. |
-| C | present | `"worktree"` | in-process | The spawner, unasked, in 4065 ms. |
+| Arm | `name` | `isolation` | Brief | Spawn path | Where the result arrived |
+|---|---|---|---|---|---|
+| A | absent | absent | The review brief | in-process | The spawner, unasked, in 140346 ms. |
+| B | present | absent | The review brief | cross-session | The project manager, unasked, once. Never the spawner. |
+| C | present | `"worktree"` | One command | in-process | The spawner, unasked, in 4065 ms. |
+
+**The two durations measure the two briefs, and they measure nothing about the spawn
+path.** Arm A read a whole batch, and arm C ran one command. **This file draws no
+conclusion from 140346 ms against 4065 ms.**
 
 **Arm B and arm C both carry a name, and they reach different paths.** So a name alone
-does not decide the path. `isolation` set to `"worktree"` holds a named spawn on the
-in-process path.
+does not decide the path. That conclusion reads the path of each arm, and it reads no
+duration. The brief of arm C therefore does not weaken it. **Arm C shows a named
+in-process spawn that reports.** One arm that moves two variables proves no cause.
 
 **Arm A returned a complete report, and it met the return contract below without a
 request.** It wrote `Nothing found in category 1.` for a category with no finding, and it
@@ -83,7 +89,7 @@ The session-6 handoff states the cause as a name, and issue #260 carries that se
   every one reported unasked.
 - The batch #321 cross-member review carried no name, it was in-process, and it reported
   in full.
-- Arm C carries a name, it is in-process, and it reported in 4065 ms.
+- Arm C carries a name, it is in-process, and it reported unasked.
 
 **Every agent that reached its spawner was in-process.** The one agent that stopped without
 text was cross-session, and it stopped after one report. The `name` parameter matters only
@@ -91,18 +97,23 @@ because it moves a spawn that sets no `isolation` onto the cross-session path.
 
 **No in-process spawn of this session has stopped without text.** The record holds the
 three arms above, the nine issue workers of session 7 and the batch #321 cross-member
-review. **The nine and the batch #321 spawn carry no timing record, so the three arms are
-the one controlled measurement.**
+review. **The nine spawns and the batch #321 spawn record no parameter set, so arm A
+against arm B is the one contrast that moves a single parameter.**
 
-### Two questions this measurement leaves open
+### Three questions this measurement leaves open
 
-**State both of these, and never write a tidier conclusion than the evidence carries.**
+**State all three of these, and never write a tidier conclusion than the evidence
+carries.**
 
 1. **Whether the eight earlier silences were cross-session is unmeasured.** Session 5
    recorded five, and session 6 recorded three. Those spawn records are not in this
    repository. The cross-session path explains them, and that is not proof.
 2. **Whether a cross-session agent reports reliably is unmeasured.** Arm B reported once
    and then returned two idle signals. Nothing here states a rate.
+3. **Whether `isolation` alone holds a named spawn on the in-process path is unmeasured.**
+   Arm C moves `isolation` and the brief together, so the two are confounded in that arm.
+   A fourth arm that sets `isolation` and carries the review brief separates them, and
+   #331 records that nobody has run one.
 
 ### The rule: read the spawn response, and never predict the path
 
@@ -135,25 +146,48 @@ The cross-member review checks each category below, and it reports on every one 
 | 1 | Contradiction | Two members state different facts about one thing. A count in words and the same count in digits is one. |
 | 2 | Duplication | Two members add the same rule, term, section or helper under different names. |
 | 3 | A broken cross-reference | One member names a file, a section, an issue or an anchor that another member moved, renamed or never created. |
-| 4 | A violated rule | One member adds a rule, and the change of a sibling breaks it. |
+| 4 | A violated rule | One member adds a rule, and a change breaks it. The change of a sibling breaks it, or the member's own change breaks it. |
 | 5 | An unreleased resource | One member allocates a map entry, a handle or a file, and no member releases it. |
+
+**Category 4 covers the member that breaks its own new rule.** A member that writes a rule
+and then breaks it on the same page passes every per-issue check, because the rule and the
+breach land in one pull request. Batch #331 found one: #254 wrote the citation rule of
+`docs/specs/foxio/README.md`, and the pages of #254 use bases that the rule never names.
+
+**Start at the surface that more than one member edited.** List the files the merged result
+changes, count the members that touched each one, and read the shared files first. Every
+defect of the table in `## Why the project runs one` sits on a shared surface.
 
 ## The return contract
 
 **The brief of every cross-member review states this contract, and the review meets it.**
+**This contract outranks any other report shape a brief names.** A brief that names a
+different skeleton is wrong, and the review follows the eight items below. The project
+manager repairs the brief.
 
 1. The final message of the review is the whole report, as text.
-2. The report holds one section for each of the five categories, numbered and named.
-3. A category with a finding carries each finding, with a `file:line` citation and a
+2. The report opens with one line headed `VERDICT`. It states `clean` or `findings`, and
+   it states the count of findings.
+3. The report holds one section for each of the five categories, numbered and named.
+4. A category with a finding carries each finding, with a `file:line` citation and a
    verbatim quotation of the text that holds the defect.
-4. **A category with no finding carries the sentence `Nothing found in category N.`** That
+5. **A category with no finding carries the sentence `Nothing found in category N.`** That
    answer is valid and complete, and the report never omits a category.
-5. The report ends with a section headed `NOT CHECKED`. It names everything the review
+6. **A category that the merged result gives no material for is answered in one line.**
+   Category 5 reads code that owns a resource. A batch that changes no such code answers
+   category 5 with `Nothing found in category 5.` and one sentence of reason.
+7. The report ends with a section headed `NOT CHECKED`. It names everything the review
    could not verify, and the reason for each one.
-6. The review returns the report without a request.
+8. The review returns the report without a request.
 
 **A report that omits a category is an incomplete report.** The project manager treats the
 missing category as unchecked, and it runs that category by hand.
+
+**The rule keeps the contract, and the brief adopts it.** Batch #331 recorded the
+disagreement: the brief named a `VERDICT / FINDINGS / CHECKED AND CLEAN / NOT CHECKED`
+skeleton, and it named no per-category section. A list of clean categories can drop a
+category and read as complete, and a numbered section for each of the five cannot. Item 2
+carries the `VERDICT` line of that skeleton, so the two shapes now agree.
 
 ## What the project manager does when a review returns no text
 
