@@ -1,6 +1,7 @@
 package ja4plus
 
 import (
+	"encoding/binary"
 	"testing"
 )
 
@@ -11,14 +12,27 @@ import (
 // `buildSSHPacket` lives in `ja4ssh_test.go`. It sets the ACK flag on every packet, so a
 // packet with no payload is a bare ACK.
 
-// sshPayloadOfSize returns an SSH data payload of the size the caller names.
-// The payload opens with `SSH-2.0-` so that `parser.IsSSHPacket` reads it as SSH data.
-// The caller names a size of 8 bytes or more.
+// sshPayloadOfSize returns one whole SSH binary packet of the size the caller names.
+//
+// The payload holds the four-byte length field, the padding length and the message code that
+// RFC 4253 section 6 states, so `parser.IsSSHPacket` reads it as SSH data. It opens with no
+// version line, so `parser.SSHMessageTracker` follows no message boundary in the direction
+// and counts every segment of it. The caller names a size of 8 bytes or more.
 func sshPayloadOfSize(size int) []byte {
 	payload := make([]byte, size)
-	copy(payload, "SSH-2.0-")
+	binary.BigEndian.PutUint32(payload, uint32(size-4))
+	// The padding length stays below the message length, and the message code names
+	// SSH_MSG_CHANNEL_DATA.
+	payload[4] = 4
+	payload[5] = 94
 
 	return payload
+}
+
+// sshSeqOfPacket returns the TCP sequence number of one segment of a direction that sends
+// segments of one size. The first segment of a direction carries the sequence number 1.
+func sshSeqOfPacket(index int, payload []byte) uint32 {
+	return uint32(1 + index*len(payload))
 }
 
 // TestJA4SSHEmitsAtThePacketCountAndHoldsNoUpperCap holds FR-parity-25 and FR-parity-26.
@@ -30,7 +44,7 @@ func TestJA4SSHEmitsAtThePacketCountAndHoldsNoUpperCap(t *testing.T) {
 
 	for count := 1; count < 200; count++ {
 		results, err := fingerprinter.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, payload, false))
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload, sshSeqOfPacket(count-1, payload)))
 		if err != nil {
 			t.Fatalf("the fingerprinter returned an error at packet %d: %v", count, err)
 		}
@@ -41,7 +55,7 @@ func TestJA4SSHEmitsAtThePacketCountAndHoldsNoUpperCap(t *testing.T) {
 	}
 
 	results, err := fingerprinter.ProcessPacket(
-		buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, payload, false))
+		buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload, sshSeqOfPacket(199, payload)))
 	if err != nil {
 		t.Fatalf("the fingerprinter returned an error at packet 200: %v", err)
 	}
@@ -61,18 +75,27 @@ func TestJA4SSHEmitsAtThePacketCountAndHoldsNoUpperCap(t *testing.T) {
 func TestJA4SSHReadsTheModeOfTheWindowAlone(t *testing.T) {
 	fingerprinter := NewJA4SSH(4)
 
+	first := sshPayloadOfSize(36)
+
 	for count := 0; count < 4; count++ {
 		if _, err := fingerprinter.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false)); err != nil {
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, first,
+				sshSeqOfPacket(count, first))); err != nil {
 			t.Fatalf("the fingerprinter returned an error in the first window: %v", err)
 		}
 	}
 
 	var second []FingerprintResult
 
+	// The second window continues the sequence space of the direction, so its first segment
+	// follows the four segments of the first window.
+	larger := sshPayloadOfSize(100)
+	base := sshSeqOfPacket(4, first)
+
 	for count := 0; count < 4; count++ {
 		results, err := fingerprinter.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(100), false))
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, larger,
+				base+uint32(count*len(larger))))
 		if err != nil {
 			t.Fatalf("the fingerprinter returned an error in the second window: %v", err)
 		}
@@ -96,9 +119,12 @@ func TestJA4SSHReadsTheModeOfTheWindowAlone(t *testing.T) {
 func TestJA4SSHProducesNoFingerprintForAWindowOfBareACKs(t *testing.T) {
 	fingerprinter := NewJA4SSH(3)
 
+	payload := sshPayloadOfSize(36)
+
 	for count := 0; count < 3; count++ {
 		if _, err := fingerprinter.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false)); err != nil {
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload,
+				sshSeqOfPacket(count, payload))); err != nil {
 			t.Fatalf("the fingerprinter returned an error on an SSH packet: %v", err)
 		}
 	}
@@ -127,9 +153,12 @@ func TestJA4SSHProducesNoFingerprintForAWindowOfBareACKs(t *testing.T) {
 func TestJA4SSHCloseOpenWindowsEmitsTheWindowAConnectionHoldsOpen(t *testing.T) {
 	fingerprinter := NewJA4SSH(200)
 
+	payload := sshPayloadOfSize(36)
+
 	for count := 0; count < 15; count++ {
 		results, err := fingerprinter.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false))
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload,
+				sshSeqOfPacket(count, payload)))
 		if err != nil {
 			t.Fatalf("the fingerprinter returned an error at packet %d: %v", count+1, err)
 		}
@@ -170,9 +199,12 @@ func TestJA4SSHCloseOpenWindowsEmitsTheWindowAConnectionHoldsOpen(t *testing.T) 
 func TestJA4SSHCloseOpenWindowsReturnsAnEmptySliceOnASecondCall(t *testing.T) {
 	fingerprinter := NewJA4SSH(200)
 
+	payload := sshPayloadOfSize(36)
+
 	for count := 0; count < 15; count++ {
 		if _, err := fingerprinter.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false)); err != nil {
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload,
+				sshSeqOfPacket(count, payload))); err != nil {
 			t.Fatalf("the fingerprinter returned an error at packet %d: %v", count+1, err)
 		}
 	}
@@ -203,10 +235,12 @@ func TestJA4SSHLosesTheOpenWindowWhenNoCallerClosesIt(t *testing.T) {
 	for name, evict := range cases {
 		t.Run(name, func(t *testing.T) {
 			fingerprinter := NewJA4SSH(200)
+			payload := sshPayloadOfSize(36)
 
 			for count := 0; count < 15; count++ {
 				results, err := fingerprinter.ProcessPacket(
-					buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false))
+					buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload,
+						sshSeqOfPacket(count, payload)))
 				if err != nil {
 					t.Fatalf("the fingerprinter returned an error at packet %d: %v", count+1, err)
 				}
@@ -283,9 +317,12 @@ func TestAStatelessFingerprinterImplementsNoWindowCloser(t *testing.T) {
 func TestProcessorCloseOpenWindowsReturnsTheJoinedResults(t *testing.T) {
 	processor := NewProcessor()
 
+	payload := sshPayloadOfSize(36)
+
 	for count := 0; count < 15; count++ {
 		results, errs := processor.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false))
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload,
+				sshSeqOfPacket(count, payload)))
 		for _, err := range errs {
 			t.Logf("the processor reported a non-fatal error at packet %d: %v", count+1, err)
 		}
@@ -318,9 +355,12 @@ func TestProcessorCloseOpenWindowsReturnsTheJoinedResults(t *testing.T) {
 func TestSyncProcessorCloseOpenWindowsReturnsTheJoinedResults(t *testing.T) {
 	processor := NewSyncProcessor()
 
+	payload := sshPayloadOfSize(36)
+
 	for count := 0; count < 15; count++ {
 		if _, errs := processor.ProcessPacket(
-			buildSSHPacket("192.168.1.100", "10.0.0.1", 54321, 22, sshPayloadOfSize(36), false)); len(errs) > 0 {
+			buildSSHSegment("192.168.1.100", "10.0.0.1", 54321, 22, payload,
+				sshSeqOfPacket(count, payload))); len(errs) > 0 {
 			t.Logf("the processor reported %d non-fatal errors at packet %d", len(errs), count+1)
 		}
 	}

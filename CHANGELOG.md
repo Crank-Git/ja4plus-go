@@ -44,6 +44,25 @@ differs from a fresh run.
 
 ### Fixed
 
+- JA4SSH now counts the SSH packets that FoxIO counts, so the window fills and
+  `ProcessPacket` emits a value again. `internal/parser/ssh.go:17` reads the four-byte length
+  field of an SSH record, and a cipher hides that field after the key exchange, so the library
+  counted almost no SSH packet after the key exchange. On `ssh.pcapng` stream 0 the reference
+  counted 200 SSH packets and the library counted 7, so no window of 200 ever filled and
+  `CloseOpenWindows` was the only emission path. Two changes carry the repair. A payload on a
+  connection the library already reads now counts, because the version line of either
+  direction identifies the connection. `internal/parser/ssh_tracker.go` adds
+  `parser.SSHMessageTracker`, which follows the SSH message boundary and reads the TCP
+  sequence number, so the count reads the SSH message and not the TCP segment. Two FoxIO
+  implementations state the rule and the two agree:
+  `wireshark/source/packet-ja4.c:1470` counts one packet for each `ssh.direction` field, and
+  `python/ja4ssh.py:95` counts the packet whose protocol list holds `ssh`. The port holds the
+  same rule at `ja4plus/fingerprinters/ja4ssh.py:247`. Issue #200 records the readings.
+  Measured against `batch/210-session5-followups` at `0751acc` with the corpus present: 12
+  JA4SSH comparisons moved to a match and 2 spurious values appeared, on `gre-sample.pcap`,
+  `ssh-r.pcap`, `ssh-scp-1050.pcap`, `ssh.pcapng`, `ssh2.pcapng`, `sshv1.pcap` and `v6.pcap`.
+  The run reports 1076 matches before and 1088 after, 1290 deviations before and 1280 after,
+  and 185 register keys before and after. The JA4SSH deviation count falls from 42 to 32.
 - The JA4SSH window now emits at the packet count the caller names, and the threshold holds
   no upper cap. `ja4ssh.go:196-199` capped it at 10, so the library over-emitted by hundreds
   of values on one capture. The window also counts the SSH packets of the two directions

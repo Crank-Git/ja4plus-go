@@ -36,6 +36,12 @@ type sshConnState struct {
 	// A range over a Go map orders nothing, and CloseOpenWindows publishes in capture
 	// order, so two runs of one capture agree.
 	arrival int
+	// clientMessages and serverMessages follow the SSH message boundary of the two
+	// directions. FoxIO counts the segment that completes an SSH message, and it counts no
+	// segment that holds part of one. Issue #200 records the 42 comparisons that a count of
+	// the TCP segment cost.
+	clientMessages parser.SSHMessageTracker
+	serverMessages parser.SSHMessageTracker
 }
 
 // HASSHResult holds a HASSH fingerprint and associated metadata.
@@ -139,31 +145,17 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	connKey := fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
 
-	// If no SSH data detected, check if this is a bare ACK for an existing SSH connection.
-	if !hasSSHData {
-		// Bare ACK per FoxIO PR #281: flags == 0x0010 exactly (only ACK set,
-		// no SYN/FIN/RST/PSH/URG) and zero payload.
-		isBareACK := tcp.ACK && !tcp.SYN && !tcp.FIN && !tcp.RST && !tcp.PSH && !tcp.URG && len(payload) == 0
-		if !isBareACK {
-			return nil, nil
-		}
-		conn, exists := f.connections[connKey]
-		if !exists || (!conn.hasSSH && conn.clientBanner == "" && conn.serverBanner == "") {
-			return nil, nil
-		}
-		// Count ACK for this direction
-		if isClientToServer {
-			conn.clientACKs++
-		} else {
-			conn.serverACKs++
-		}
-		conn.lastSeen = parser.GetPacketTimestamp(packet)
+	conn, exists := f.connections[connKey]
 
-		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
+	// A cipher hides the length field of every SSH record after the key exchange, so the
+	// byte test denies a record the reference counts. A payload on a connection the library
+	// already reads still carries SSH. `ja4plus/fingerprinters/ja4ssh.py:179` holds the same
+	// guard, and issue #200 records the 42 comparisons that a stricter guard cost.
+	if !hasSSHData && !exists {
+		return nil, nil
 	}
 
 	// Initialize connection if needed
-	conn, exists := f.connections[connKey]
 	if !exists {
 		conn = &sshConnState{
 			clientIP:   clientIP,
@@ -175,8 +167,45 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		f.connections[connKey] = conn
 		f.arrivals++
 	}
+
+	// A packet that carries no payload reaches the bare ACK counter, and it advances no
+	// window.
+	if len(payload) == 0 {
+		// Bare ACK per FoxIO PR #281: flags == 0x0010 exactly (only ACK set,
+		// no SYN/FIN/RST/PSH/URG) and zero payload.
+		isBareACK := tcp.ACK && !tcp.SYN && !tcp.FIN && !tcp.RST && !tcp.PSH && !tcp.URG
+		if !isBareACK {
+			return nil, nil
+		}
+
+		if !conn.hasSSH && conn.clientBanner == "" && conn.serverBanner == "" {
+			return nil, nil
+		}
+
+		// Count ACK for this direction
+		if isClientToServer {
+			conn.clientACKs++
+		} else {
+			conn.serverACKs++
+		}
+		conn.lastSeen = parser.GetPacketTimestamp(packet)
+
+		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
+	}
+
 	conn.hasSSH = true
 	conn.lastSeen = parser.GetPacketTimestamp(packet)
+
+	// The tracker reads every payload segment of the direction, and not the segments the
+	// window counts alone. It reads the sequence number too, because a retransmission
+	// repeats bytes the tracker already read, and a segment that arrives out of order
+	// arrives before the segment it follows.
+	tracker := &conn.serverMessages
+	if isClientToServer {
+		tracker = &conn.clientMessages
+	}
+
+	completed := tracker.AddSegment(payload, tcp.Seq)
 
 	// Extract SSH banners and HASSH from KEXINIT
 	if len(payload) >= 4 && payload[0] == 'S' && payload[1] == 'S' && payload[2] == 'H' && payload[3] == '-' {
@@ -204,12 +233,20 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		}
 	}
 
-	// Track SSH data packet size
-	packetSize := len(payload)
-	if isClientToServer {
-		conn.clientSizes = append(conn.clientSizes, packetSize)
-	} else {
-		conn.serverSizes = append(conn.serverSizes, packetSize)
+	// Count the SSH packets that FoxIO counts. The reference reads the label that the
+	// `tshark` SSH dissector writes, so it counts the segment that completes an SSH message
+	// and it counts no segment that holds part of one.
+	// `wireshark/source/packet-ja4.c:1470` counts one packet for each `ssh.direction` field,
+	// and `python/ja4ssh.py:95` counts the packet whose protocol list holds `ssh`. The port
+	// holds the same rule at `ja4plus/fingerprinters/ja4ssh.py:247`.
+	// The version line of either direction identifies the connection, so an opaque record
+	// counts from that point on.
+	if len(completed) > 0 && (hasSSHData || conn.clientBanner != "" || conn.serverBanner != "") {
+		if isClientToServer {
+			conn.clientSizes = append(conn.clientSizes, completed...)
+		} else {
+			conn.serverSizes = append(conn.serverSizes, completed...)
+		}
 	}
 
 	return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)

@@ -100,10 +100,11 @@ Issue #162 states this classification, and the project manager decided it on iss
 <!-- added-files:begin -->
 | File | Added by |
 |---|---|
+| `internal/parser/ssh_tracker.go` | #200 |
 <!-- added-files:end -->
 
-The table holds no row today, because an audit issue reads every file of the three
-directories.
+The table holds one row. Issue #200 added `internal/parser/ssh_tracker.go` after the audit
+of Epic 2, so no audit reads that file.
 
 ## The record
 
