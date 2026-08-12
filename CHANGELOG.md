@@ -47,6 +47,97 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- No exported name, and four rows of the `## Terms` table of `docs/specs/spec.md`, at
+  `docs/specs/spec.md:122-125`. The rows are `maintainer`, `project manager`, `schema
+  violation` and `delegated ruling`. **The member writes four rows, and #261 names
+  three.** The boundary sentence of the `delegated ruling` meaning uses `schema
+  violation`, and `.claude/rules/ste.md` bars a domain word the table does not hold. The
+  project manager accepted the fourth row for that reason. **Every row records a meaning
+  a rule file already fixed, and the member invents none.** `maintainer` and `project
+  manager` come from `.claude/rules/rulings.md` `## The two words` and `## What a
+  delegated session may rule`. `schema violation` comes from `.claude/rules/parity.md`
+  `## Where a difference comes from`, which names `a value the published schema forbids`.
+  The `delegated ruling` meaning carries the two load-bearing sentences of the delegation
+  section: a schema violation has one right answer and a reference split has none, and a
+  delegated ruling stays provisional until the maintainer confirms it. **The member
+  writes no `## Changelog` row**, because a member that writes its own round produces the
+  defect #278 records. Issue #331 holds that row. **The member changes no Go file, and it
+  moves no fingerprint value.** Issue #261 holds the change.
+- No exported name, and one conformance check that reports a register entry the run never
+  reaches. The stale check of #307 visits the keys of one comparison alone, so a register
+  key that no capture produces falls outside every branch of it.
+  `conformanceComparison.Reached` now names every register key that one comparison visits.
+  `conformanceOrphanEntries` subtracts the reached keys of the whole run from the
+  register, and it runs after the last capture. An orphan entry fails the suite, as a
+  stale entry does. `docs/audit/conformance.md` gains the summary row `Orphan register
+  entries` and the section `## Orphan register entries`, and that section states the
+  result of every run. The `## Terms` table of `docs/specs/spec.md:130` gains the row
+  `orphan entry`, beside the `stale entry` row that #307 added.
+  **`docs/specs/features/04-conformance-harness.md:126-138` numbers the check as
+  FR-conformance-33h through FR-conformance-33o**, and the member carries them from its
+  first commit. **The check was watched failing.** The worker added the temporary entry
+  `tls12.pcap/1/JA4ORPHANWATCH`, ran the suite, and removed the entry. The run reported
+  `the run reaches 409 register keys and reports 1 orphan register entries`, and the
+  report named the entry in both new places. `conformance_test.go:931` writes that line,
+  and `conformanceReportTotals` calls `t.Helper()` at `conformance_test.go:910`, so the
+  run attributes the line to the caller at `conformance_test.go:680`.
+  **The run on the merged tree reaches all 409 register keys and reports 0 orphan
+  register entries**, so the check reports no finding against the register today.
+  **`Accepted == 409 == |register|` was the whole proof that no register entry had
+  drifted, and two named checks now replace it.** That identity fails the moment one
+  batch adds an entry and removes another in one commit, and
+  `changelog_counts_freshness_test.go:135-137` already concedes the asymmetry. **The
+  member moves no fingerprint value.** The four counts read 1623, 680, 409 and 409 before
+  and after. Issue #328 holds the measurement.
+- No exported name, and one statement of the base directory that every FoxIO citation
+  joins to, at `docs/specs/foxio/README.md:37`. **The member changes no citation, and
+  that is the result.** #254 asks for a `reference/` prefix on every citation of
+  `docs/specs/foxio/`, and the measurement proves that sweep wrong. **`make corpus`
+  writes two corpus roots.** `scripts/fetch-corpus.sh:149` moves `pcap`,
+  `python/test/testdata` and `wireshark/test/testdata` out of the staged tree, and
+  `scripts/fetch-corpus.sh:167` then writes the rest to `testdata/foxio/reference/`. Four
+  citations of the nine method pages name
+  `python/test/testdata/browsers-x509.pcapng.json`, which `make corpus` writes under
+  `testdata/foxio/python/`, so a blanket prefix breaks each one. **The short citation
+  form is also a repository-wide convention, and a Go change is needed to move it.**
+  `.claude/rules/rulings.md` states the form, and `ja4l.go:141`, `ja4t.go:132`,
+  `ja4ssh.go:158` and `ja4x_raw_test.go:101` carry it. Five assertions of
+  `foxio_transcription_tcp_test.go` anchor on it, at `:230-232` and `:251-252`. A first
+  draft repointed the four vector citations, and
+  `TestTLSTranscriptionRulesThatNameAnImplementationCarryAFileAndALine` then failed.
+  **The member repairs two false statements as well.** `zeek.md` stated that a path is
+  relative to the `zeek/` directory of the FoxIO repository, while every citation on the
+  page already carries that prefix. `README.md` stated that the script fetches no part of
+  `technical_details/`, and 576 citations depend on that tree. The member reads 723
+  path-shaped code spans across the pages of `docs/specs/foxio/` and opens the target of
+  each citation. 673 citations resolve, and the 3 that do not are a branch name and a
+  repository name. **No test holds the repair**, because the acceptance criteria of #254
+  bar a Go file change. Issue #335 records the guard, and it names a shape check that
+  needs no corpus. **The member changes no Go file, and it moves no fingerprint value.**
+  Issue #254 holds the measurement.
+- No exported name, and `.claude/rules/cross-member-review.md`. The file states why the
+  project runs a cross-member review, how to spawn one that reports, the five categories
+  and the return contract. `CLAUDE.md:119` gains one bullet of `## Conventions` that
+  points at it, as #305 did for `.claude/rules/worktrees.md`. The `## Terms` table of
+  `docs/specs/spec.md:192-197` gains six rows: `batch`, `member`, `cross-member review`,
+  `mailbox`, `idle signal` and `spawn path`. **The member appends the six rows at the end
+  of the table**, so they touch no row that #261 wrote. **A cross-member review returned
+  an idle signal and no text in eight consecutive attempts, across session 5 and session
+  6.** **A controlled three-arm measurement separates the cause.** The worker of #260
+  spawned three agents on 2026-08-12, and it varied one parameter at a time. Arm A
+  carried no `name`, it reached the in-process path, and it reported to the spawner in
+  140346 ms. Arm B carried a `name`, it reached the cross-session path, and it reported
+  to the project manager and never to the spawner. Arm C carried a `name` and `isolation`
+  set to `"worktree"`, it reached the in-process path, and it reported in 4065 ms.
+  **The spawn path separates a review that reports from one that does not, and the name
+  does not.** The session-6 record names the `name` parameter as the cause, and that
+  names the wrong variable. **The rule states the discriminator that survives a harness
+  change.** Read the spawn response: the in-process path names an output file, and the
+  cross-session path names a mailbox. A response that names a mailbox gets one more spawn
+  on the in-process path, and no session waits on a cross-session spawn. **The file
+  records two open questions, and it states that neither one is measured.** **The member
+  changes no Go file, and it moves no fingerprint value.** Issue #260 holds the
+  measurement.
 - No exported name, and two tests that hold the JA4H value of one request across every
   run: `TestJA4H_ComputesOneValueForOneRequestOnEveryRun` and
   `TestJA4H_SortsTheCookiePairListByTheCookieName`, in `ja4h_determinism_test.go`. Issue
