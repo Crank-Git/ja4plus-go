@@ -13,12 +13,25 @@ import (
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4SFingerprinter struct {
 	quicDCIDs map[string][]byte // tracks client DCIDs for QUIC server decryption
+	// groupingKeys reads the grouping key of a connection from the reported key.
+	// A caller of CleanupConnection holds the address pair that a FingerprintResult carries,
+	// and a tunneled connection groups under the inner pair. Without this map the caller
+	// names a key that `quicDCIDs` never holds. FR-gaps-14c states the rule for JA4L, and
+	// `ja4l.go` holds the same map under the same name.
+	groupingKeys map[string]string
+	// reportedKeys reads the reported key of a connection from the grouping key.
+	// A caller that names the grouping key cannot name the reported key, so the removal reads
+	// this map to reach the index entry of the connection. `ja4l.go` reads the reported pair
+	// of the connection state for the same reason.
+	reportedKeys map[string]string
 }
 
 // NewJA4S creates a new JA4SFingerprinter.
 func NewJA4S() *JA4SFingerprinter {
 	return &JA4SFingerprinter{
-		quicDCIDs: make(map[string][]byte),
+		quicDCIDs:    make(map[string][]byte),
+		groupingKeys: make(map[string]string),
+		reportedKeys: make(map[string]string),
 	}
 }
 
@@ -28,6 +41,14 @@ func NewJA4S() *JA4SFingerprinter {
 func (f *JA4SFingerprinter) ensure() {
 	if f.quicDCIDs == nil {
 		f.quicDCIDs = make(map[string][]byte)
+	}
+
+	if f.groupingKeys == nil {
+		f.groupingKeys = make(map[string]string)
+	}
+
+	if f.reportedKeys == nil {
+		f.reportedKeys = make(map[string]string)
 	}
 }
 
@@ -83,6 +104,7 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 						dcid := make([]byte, dcidLen)
 						copy(dcid, udp.Payload[6:6+dcidLen])
 						f.quicDCIDs[connKey] = dcid
+						f.indexReported(packet, connKey, srcPort, dstPort)
 					}
 				}
 				return nil, nil
@@ -123,30 +145,69 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears the QUIC connection identifier table.
+// indexReported records the reported key of the connection, so that CleanupConnection
+// reaches the grouping key from the address pair a FingerprintResult carries.
+// The reported key holds the outer address pair with the inner port pair. The two keys hold
+// one value for a connection that no tunnel carries.
+// It records nothing when the packet carries no address layer that the parser reads.
+func (f *JA4SFingerprinter) indexReported(packet gopacket.Packet, connKey string, srcPort, dstPort uint16) {
+	reportedSrcIP, reportedDstIP, _, held := parser.GetIPInfo(packet)
+	if !held {
+		return
+	}
+
+	reportedKey := fmt.Sprintf("%s:%d-%s:%d", reportedSrcIP, srcPort, reportedDstIP, dstPort)
+	f.groupingKeys[reportedKey] = connKey
+	f.reportedKeys[connKey] = reportedKey
+}
+
+// Reset clears the QUIC connection identifier table and the two index tables.
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4SFingerprinter) Reset() {
 	f.ensure()
 
 	f.quicDCIDs = make(map[string][]byte)
+	f.groupingKeys = make(map[string]string)
+	f.reportedKeys = make(map[string]string)
+}
+
+// dropConnection removes every table entry that one grouping key holds.
+// A caller that names the grouping key cannot name the reported key, so this method reads the
+// reported key from the connection. Without that removal one index entry leaks for every
+// tunneled connection, and a long-running monitor never reclaims it.
+func (f *JA4SFingerprinter) dropConnection(groupingKey string) {
+	if reportedKey, held := f.reportedKeys[groupingKey]; held {
+		delete(f.groupingKeys, reportedKey)
+	}
+
+	delete(f.reportedKeys, groupingKey)
+	delete(f.quicDCIDs, groupingKey)
 }
 
 // CleanupConnection removes internal state for the given connection.
 // JA4S QUIC state is keyed by directional tuple: srcIP:srcPort-dstIP:dstPort.
 // The caller names the address pair that a FingerprintResult carries, which is the
 // reported key. JA4L holds the same contract.
-// A tunneled connection groups under the inner address pair, and this method reads no
-// index from the reported key to the grouping key. It therefore removes no tunneled
-// connection.
-// TODO(#193): Read the grouping key of a tunneled connection from the reported key.
+// The caller names the two endpoints in either order, so this method reads both orders.
+// A tunneled connection groups under the inner address pair, so this method reads the
+// grouping key from the index first. It falls back to the key the caller gave, because a
+// caller of GetShardKey holds the grouping key instead.
+// `ja4plus/fingerprinters/ja4l.py:216` falls back the same way, and issue #193 records the
+// leak that the absent index caused.
 func (f *JA4SFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 
 	fwd := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
-	delete(f.quicDCIDs, fwd)
-	delete(f.quicDCIDs, rev)
+
+	for _, key := range []string{fwd, rev} {
+		if groupingKey, indexed := f.groupingKeys[key]; indexed {
+			f.dropConnection(groupingKey)
+		}
+
+		f.dropConnection(key)
+	}
 }
 
 // ComputeJA4S is a convenience function that extracts a JA4S fingerprint from a packet.

@@ -123,6 +123,10 @@ func TestJA4CleanupByTheReportedKeyRemovesEveryTunneledConnection(t *testing.T) 
 		t.Fatalf("the fragment table holds %d entries, and the test opens %d connections",
 			got, tunneledConnectionCount)
 	}
+	if got := len(fingerprinter.dcidToReported); got != tunneledConnectionCount {
+		t.Fatalf("the index holds %d entries, and the test opens %d connections",
+			got, tunneledConnectionCount)
+	}
 
 	cleanupByTheReportedKey(fingerprinter, ports)
 
@@ -132,6 +136,10 @@ func TestJA4CleanupByTheReportedKeyRemovesEveryTunneledConnection(t *testing.T) 
 	}
 	if got := len(fingerprinter.quicFragments); got != 0 {
 		t.Errorf("CleanupConnection leaves %d entries in the fragment table, and one leaks for every tunneled connection",
+			got)
+	}
+	if got := len(fingerprinter.dcidToReported); got != 0 {
+		t.Errorf("CleanupConnection leaves %d entries in the index, and one leaks for every tunneled connection",
 			got)
 	}
 }
@@ -155,6 +163,10 @@ func TestJA4CleanupByTheGroupingKeyRemovesEveryTunneledConnection(t *testing.T) 
 	if got := len(fingerprinter.quicFragments); got != 0 {
 		t.Errorf("CleanupConnection leaves %d entries in the fragment table", got)
 	}
+	if got := len(fingerprinter.dcidToReported); got != 0 {
+		t.Errorf("CleanupConnection leaves %d entries in the index, and the caller cannot name the reported key",
+			got)
+	}
 }
 
 // JA4S removes every tunneled connection that a caller names by the reported key.
@@ -169,11 +181,27 @@ func TestJA4SCleanupByTheReportedKeyRemovesEveryTunneledConnection(t *testing.T)
 		t.Fatalf("the connection identifier table holds %d entries, and the test opens %d connections",
 			got, tunneledConnectionCount)
 	}
+	if got := len(fingerprinter.groupingKeys); got != tunneledConnectionCount {
+		t.Fatalf("the grouping key index holds %d entries, and the test opens %d connections",
+			got, tunneledConnectionCount)
+	}
+	if got := len(fingerprinter.reportedKeys); got != tunneledConnectionCount {
+		t.Fatalf("the reported key index holds %d entries, and the test opens %d connections",
+			got, tunneledConnectionCount)
+	}
 
 	cleanupByTheReportedKey(fingerprinter, ports)
 
 	if got := len(fingerprinter.quicDCIDs); got != 0 {
 		t.Errorf("CleanupConnection leaves %d entries in the connection identifier table, and one leaks for every tunneled connection",
+			got)
+	}
+	if got := len(fingerprinter.groupingKeys); got != 0 {
+		t.Errorf("CleanupConnection leaves %d entries in the grouping key index, and one leaks for every tunneled connection",
+			got)
+	}
+	if got := len(fingerprinter.reportedKeys); got != 0 {
+		t.Errorf("CleanupConnection leaves %d entries in the reported key index, and one leaks for every tunneled connection",
 			got)
 	}
 }
@@ -190,6 +218,13 @@ func TestJA4SCleanupByTheGroupingKeyRemovesEveryTunneledConnection(t *testing.T)
 	if got := len(fingerprinter.quicDCIDs); got != 0 {
 		t.Errorf("CleanupConnection leaves %d entries in the connection identifier table", got)
 	}
+	if got := len(fingerprinter.groupingKeys); got != 0 {
+		t.Errorf("CleanupConnection leaves %d entries in the grouping key index, and the caller cannot name the reported key",
+			got)
+	}
+	if got := len(fingerprinter.reportedKeys); got != 0 {
+		t.Errorf("CleanupConnection leaves %d entries in the reported key index", got)
+	}
 }
 
 // Reset clears every table that a tunneled connection fills, for JA4 and for JA4S.
@@ -205,6 +240,9 @@ func TestResetClearsEveryTunneledTableOfJA4AndJA4S(t *testing.T) {
 	if got := len(ja4.quicFragments); got != 0 {
 		t.Errorf("Reset leaves %d entries in the JA4 fragment table", got)
 	}
+	if got := len(ja4.dcidToReported); got != 0 {
+		t.Errorf("Reset leaves %d entries in the JA4 index", got)
+	}
 
 	ja4s := NewJA4S()
 	openTunneledJA4SConnections(t, ja4s)
@@ -212,5 +250,11 @@ func TestResetClearsEveryTunneledTableOfJA4AndJA4S(t *testing.T) {
 
 	if got := len(ja4s.quicDCIDs); got != 0 {
 		t.Errorf("Reset leaves %d entries in the JA4S connection identifier table", got)
+	}
+	if got := len(ja4s.groupingKeys); got != 0 {
+		t.Errorf("Reset leaves %d entries in the JA4S grouping key index", got)
+	}
+	if got := len(ja4s.reportedKeys); got != 0 {
+		t.Errorf("Reset leaves %d entries in the JA4S reported key index", got)
 	}
 }
