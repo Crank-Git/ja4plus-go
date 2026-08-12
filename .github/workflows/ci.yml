@@ -94,7 +94,7 @@ jobs:
           fi
           echo "testdata/foxio/pcap holds $captures captures."
 
-      # The `conformance` build tag hides seven test files from every other job, so no
+      # The `conformance` build tag hides eight test files from every other job, so no
       # other job compiles them. `go vet` type-checks them, and a compile error fails here
       # rather than reaching the run below, which holds the exit status back.
       - name: Vet the conformance suite
