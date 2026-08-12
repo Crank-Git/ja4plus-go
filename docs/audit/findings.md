@@ -93,7 +93,7 @@ claims no audit.
 The two classifications cover the three directories. One audit issue reads the file, or
 one later issue added it. **A file that carries neither classification fails
 `TestTheReportClassifiesEveryGoFileOfTheThreeDirectories`**, so the guard keeps its force
-and a new file reaches an honest row.
+and an added file reaches an honest row.
 
 Issue #162 states this classification, and the project manager decided it on issue #40.
 
