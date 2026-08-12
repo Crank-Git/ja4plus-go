@@ -11,8 +11,8 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1086 |
-| Deviations | 1284 |
+| Matches | 1091 |
+| Deviations | 1279 |
 | Accepted deviations | 198 |
 | Captures the suite compared | 35 |
 | Captures the suite compared nothing on | 3 |
@@ -21,14 +21,14 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
-| per-stream | 741 | 464 | 163 |
-| per-packet | 345 | 820 | 35 |
+| per-stream | 742 | 463 | 163 |
+| per-packet | 349 | 816 | 35 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 
 ## Deviations
 
-The run reports 1482 deviations in 152 groups. One group is one capture, one method and one vector set.
+The run reports 1477 deviations in 152 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -107,8 +107,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `gre-erspan-vxlan.pcap` | per-packet | JA4H | 3 | `gre-erspan-vxlan.pcap/4/JA4H_ro.1` | the vector holds a value the library does not produce | `ge10nn000000___` | (none) |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4T | 1 | `gre-erspan-vxlan.pcap/1/JA4T.1` | the two values differ | `8192_00_00_00` | `8192_0_0_0` |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4TS | 1 | `gre-erspan-vxlan.pcap/2/JA4TS.1` | the two values differ | `8192_00_00_00` | `8192_0_0_0` |
-| `gre-sample.pcap` | per-packet | JA4SSH | 2 | `gre-sample.pcap/30/JA4SSH.1` | the vector holds a value the library does not produce | `c24s23_c4s4_c5s4` | (none) |
-| `gre-sample.pcap` | per-packet | JA4SSH | 2 | `gre-sample.pcap/31/JA4SSH.1` | the vector holds a value the library does not produce | `c24s23_c4s4_c5s4` | (none) |
+| `gre-sample.pcap` | per-packet | JA4SSH | 1 | `gre-sample.pcap/31/JA4SSH.1` | the vector holds a value the library does not produce | `c24s23_c4s4_c5s4` | (none) |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 4 | `http-empty-useragent.pcap/5/JA4H.1` | the library produces a value the vector does not hold | (none) | `ge10nn000000_000000000000_000000000000_000000000000` |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 4 | `http-empty-useragent.pcap/9/JA4H.1` | the vector holds a value the library does not produce | `ge10nn010000_b8bcd45ac095_000000000000_000000000000` | (none) |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 4 | `http-empty-useragent.pcap/9/JA4H_r.1` | the vector holds a value the library does not produce | `ge10nn010000_User-Agent__` | (none) |
@@ -241,12 +240,12 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `ssh-r.pcap` | per-packet | JA4LS | 6 | `ssh-r.pcap/2/JA4LS.1` | the library produces a value the vector does not hold | (none) | `32_64` |
 | `ssh-r.pcap` | per-packet | JA4LS | 6 | `ssh-r.pcap/297/JA4LS.1` | the library produces a value the vector does not hold | (none) | `4171_116` |
 | `ssh-r.pcap` | per-packet | JA4LS | 6 | `ssh-r.pcap/304/JA4LS.1` | the vector holds a value the library does not produce | `4171_116_8099` | (none) |
-| `ssh-r.pcap` | per-packet | JA4SSH | 6 | `ssh-r.pcap/1826/JA4SSH.1` | the vector holds a value the library does not produce | `c76s76_c66s65_c9s51` | (none) |
-| `ssh-r.pcap` | per-packet | JA4SSH | 6 | `ssh-r.pcap/1831/JA4SSH.1` | the vector holds a value the library does not produce | `c76s76_c66s65_c9s52` | (none) |
-| `ssh-r.pcap` | per-packet | JA4SSH | 6 | `ssh-r.pcap/1850/JA4SSH.1` | the vector holds a value the library does not produce | `c64s64_c33s48_c41s2` | (none) |
-| `ssh-r.pcap` | per-stream | JA4SSH | 4 | `ssh-r.pcap/0/JA4SSH.2` | the two values differ | `c64s64_c0s0_c0s1` | `c64s64_c33s48_c42s2` |
-| `ssh-r.pcap` | per-stream | JA4SSH | 4 | `ssh-r.pcap/1/JA4SSH.1` | the two values differ | `c64s64_c6s5_c4s5` | `c48s21_c6s5_c5s5` |
-| `ssh-r.pcap` | per-stream | JA4SSH | 4 | `ssh-r.pcap/2/JA4SSH.1` | the two values differ | `c64s64_c104s96_c19s82` | `c76s76_c104s96_c19s82` |
+| `ssh-r.pcap` | per-packet | JA4SSH | 3 | `ssh-r.pcap/1831/JA4SSH.1` | the vector holds a value the library does not produce | `c76s76_c66s65_c9s52` | (none) |
+| `ssh-r.pcap` | per-packet | JA4SSH | 3 | `ssh-r.pcap/1851/JA4SSH.1` | the vector holds a value the library does not produce | `c64s64_c33s48_c41s2` | (none) |
+| `ssh-r.pcap` | per-packet | JA4SSH | 3 | `ssh-r.pcap/339/JA4SSH.1` | the vector holds a value the library does not produce | `c48s21_c6s5_c4s5` | (none) |
+| `ssh-r.pcap` | per-stream | JA4SSH | 3 | `ssh-r.pcap/0/JA4SSH.2` | the two values differ | `c64s64_c0s0_c0s1` | `c64s64_c33s48_c41s2` |
+| `ssh-r.pcap` | per-stream | JA4SSH | 3 | `ssh-r.pcap/1/JA4SSH.1` | the two values differ | `c64s64_c6s5_c4s5` | `c48s21_c6s5_c4s5` |
+| `ssh-r.pcap` | per-stream | JA4SSH | 3 | `ssh-r.pcap/2/JA4SSH.1` | the two values differ | `c64s64_c104s96_c19s82` | `c76s76_c104s96_c19s82` |
 | `ssh-scp-1050.pcap` | per-packet | JA4L | 3 | `ssh-scp-1050.pcap/10/JA4L.1` | the vector holds a value the library does not produce | `179_128_2773` | (none) |
 | `ssh-scp-1050.pcap` | per-packet | JA4L | 3 | `ssh-scp-1050.pcap/3/JA4L.1` | the library produces a value the vector does not hold | (none) | `179_128` |
 | `ssh-scp-1050.pcap` | per-packet | JA4L | 3 | `ssh-scp-1050.pcap/4/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `6615_128` |
@@ -302,7 +301,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `ssh2.pcapng` | per-stream | JA4X | 4 | `ssh2.pcapng/11/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_0f2217ba412e` | (none) |
 | `ssh2.pcapng` | per-stream | JA4X | 4 | `ssh2.pcapng/11/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_c34b04c10969` | (none) |
 | `ssh2.pcapng` | per-stream | JA4X | 4 | `ssh2.pcapng/12/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_7022c563de38_0ce9ea683d50` | (none) |
-| `sshv1.pcap` | per-packet | JA4SSH | 4 | `sshv1.pcap/72/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
+| `sshv1.pcap` | per-packet | JA4SSH | 4 | `sshv1.pcap/72/JA4SSH.1` | the two values differ | `c20s12_c18s21_c10s1` | `c20s20_c18s25_c10s1` |
 | `sshv1.pcap` | per-packet | JA4SSH | 4 | `sshv1.pcap/73/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
 | `sshv1.pcap` | per-packet | JA4SSH | 4 | `sshv1.pcap/74/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
 | `sshv1.pcap` | per-packet | JA4T | 1 | `sshv1.pcap/16/JA4T.1` | the two values differ | `8192_2-1-3-1-1-8_1440_00` | `8192_2-1-3-1-1-8_1440_0` |
@@ -367,7 +366,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls3.pcapng` | per-stream | JA4S | 13 | `tls3.pcapng/10/JA4S_r` | the vector holds a value the library does not produce | `t130300_1301_002b,0033,0029` | (none) |
 | `tls3.pcapng` | per-stream | JA4S | 13 | `tls3.pcapng/11/JA4S_r` | the vector holds a value the library does not produce | `t130300_1301_0029,0033,002b` | (none) |
 | `tls3.pcapng` | per-stream | JA4S | 13 | `tls3.pcapng/12/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_002b,0033` | (none) |
-| `v6.pcap` | per-packet | JA4SSH | 4 | `v6.pcap/72/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
+| `v6.pcap` | per-packet | JA4SSH | 4 | `v6.pcap/72/JA4SSH.1` | the two values differ | `c20s12_c18s21_c10s1` | `c20s20_c18s25_c10s1` |
 | `v6.pcap` | per-packet | JA4SSH | 4 | `v6.pcap/73/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
 | `v6.pcap` | per-packet | JA4SSH | 4 | `v6.pcap/74/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
 | `v6.pcap` | per-packet | JA4T | 1 | `v6.pcap/16/JA4T.1` | the two values differ | `8192_2-1-3-1-1-8_1440_00` | `8192_2-1-3-1-1-8_1440_0` |
@@ -471,7 +470,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `gre-sample.pcap` | JA4S | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-sample.pcap` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-sample.pcap` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `gre-sample.pcap` | JA4SSH | per-packet | deviation | 0 | 2 | — |
+| `gre-sample.pcap` | JA4SSH | per-packet | deviation | 1 | 1 | — |
 | `gre-sample.pcap` | JA4L | per-stream | match | 1 | 0 | — |
 | `gre-sample.pcap` | JA4LS | per-stream | match | 1 | 0 | — |
 | `gre-sample.pcap` | JA4T | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
@@ -636,7 +635,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `ssh-r.pcap` | JA4S | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `ssh-r.pcap` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `ssh-r.pcap` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `ssh-r.pcap` | JA4SSH | per-packet and per-stream | deviation | 9 | 10 | — |
+| `ssh-r.pcap` | JA4SSH | per-packet and per-stream | deviation | 13 | 6 | — |
 | `ssh-r.pcap` | JA4L | per-packet and per-stream | deviation | 3 | 9 | — |
 | `ssh-r.pcap` | JA4LS | per-packet and per-stream | deviation | 3 | 6 | — |
 | `ssh-r.pcap` | JA4T | per-packet | match | 3 | 0 | — |

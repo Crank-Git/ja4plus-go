@@ -93,6 +93,8 @@ func (f *JA4SSHFingerprinter) ensure() {
 }
 
 // ProcessPacket processes a packet and returns JA4SSH fingerprints when a window fills.
+// It returns the open window of the connection on a packet that carries the FIN flag and the
+// ACK flag, because that packet closes the connection. Issue #222 holds the readings.
 func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
 	f.ensure()
 
@@ -160,6 +162,17 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// at `ja4plus/fingerprinters/ja4ssh.py:176`.
 	opensOnSSHPort := isBareACK && (srcPort == 22 || dstPort == 22)
 
+	// A packet that carries the FIN flag and the ACK flag closes the connection, and the
+	// reference emits the window the connection holds open on it.
+	// `wireshark/source/packet-ja4.c:1400` tests the flags and
+	// `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:555` tests the two
+	// flags and `python/ja4.py:556` calls `finalize_ja4ssh`. The port holds the rule at
+	// `ja4plus/fingerprinters/ja4ssh.py:268`.
+	// The test reads the two flags alone, and it reads no other flag, so a FIN+PSH+ACK packet
+	// reaches the emission. `wireshark/source/packet-ja4.c:1400` tests `tcp_flags == 0x011`
+	// instead, and issue #222 follows the port.
+	closesConnection := tcp.FIN && tcp.ACK
+
 	// A cipher hides the length field of every SSH record after the key exchange, so the
 	// byte test denies a record the reference counts. A payload on a connection the library
 	// already reads still carries SSH. Issue #200 records the 42 comparisons that a stricter
@@ -184,22 +197,23 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// A packet that carries no payload reaches the bare ACK counter, and it advances no
 	// window.
 	if len(payload) == 0 {
-		if !isBareACK {
+		switch {
+		case isBareACK:
+			// The count reads no SSH state, because the handshake ACK precedes every SSH packet
+			// of the connection. `ja4plus/fingerprinters/ja4ssh.py:250` counts the same way.
+
+			// Count ACK for this direction
+			if isClientToServer {
+				conn.clientACKs++
+			} else {
+				conn.serverACKs++
+			}
+			conn.lastSeen = parser.GetPacketTimestamp(packet)
+		case !closesConnection:
 			return nil, nil
 		}
 
-		// The count reads no SSH state, because the handshake ACK precedes every SSH packet
-		// of the connection. `ja4plus/fingerprinters/ja4ssh.py:250` counts the same way.
-
-		// Count ACK for this direction
-		if isClientToServer {
-			conn.clientACKs++
-		} else {
-			conn.serverACKs++
-		}
-		conn.lastSeen = parser.GetPacketTimestamp(packet)
-
-		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
+		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort, closesConnection)
 	}
 
 	conn.lastSeen = parser.GetPacketTimestamp(packet)
@@ -257,18 +271,24 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		}
 	}
 
-	return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
+	return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort, closesConnection)
 }
 
-// checkWindow emits the window when the count of SSH packets reaches the threshold.
+// checkWindow emits the window when the count of SSH packets reaches the threshold, and it
+// emits the open window when the packet closes the connection.
 //
 // The window counts the SSH packets of the two directions, and a bare ACK does not advance
 // it. `technical_details/JA4SSH.png` lists the SSH packet counts and the bare ACK counts as
 // separate fields, and `ja4plus/fingerprinters/ja4ssh.py:259` counts the SSH packets alone.
 // The threshold holds no upper cap, so the default window of 200 emits at 200 packets. The
 // port's issue #28 rules the threshold, and its issue #97 declines an empty window.
-func (f *JA4SSHFingerprinter) checkWindow(conn *sshConnState, packet gopacket.Packet, srcIP, dstIP string, srcPort, dstPort uint16) ([]FingerprintResult, error) {
-	if len(conn.clientSizes)+len(conn.serverSizes) < f.packetCount {
+//
+// `closing` reports a packet that carries the FIN flag and the ACK flag. One packet reaches
+// one emission, because the reference reads one window boundary for it. The port holds the
+// same order at `ja4plus/fingerprinters/ja4ssh.py:261` and
+// `ja4plus/fingerprinters/ja4ssh.py:268`. Issue #222 records the reading.
+func (f *JA4SSHFingerprinter) checkWindow(conn *sshConnState, packet gopacket.Packet, srcIP, dstIP string, srcPort, dstPort uint16, closing bool) ([]FingerprintResult, error) {
+	if len(conn.clientSizes)+len(conn.serverSizes) < f.packetCount && !closing {
 		return nil, nil
 	}
 
@@ -322,6 +342,8 @@ func emitSSHWindow(conn *sshConnState, srcIP, dstIP string, srcPort, dstPort uin
 //
 // The caller calls the method when the packet source ends. A connection whose last window
 // never reaches the threshold holds that window open, and no other rule emits it.
+// A connection that sends a packet with the FIN flag and the ACK flag holds no window open,
+// because ProcessPacket emits the window on that packet.
 // `rust/ja4/src/ssh.rs:45-55` and `zeek/ja4ssh/main.zeek:160-164` both emit that window, and
 // the port's issues #105, #199 and #214 hold the ruling.
 //
