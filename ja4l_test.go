@@ -1384,3 +1384,133 @@ func TestJA4LWritesThreePartsOnAQUICConnectionInSsh2Pcapng(t *testing.T) {
 		t.Errorf("D: Fingerprint = %q, want %q", clientResults[0].Fingerprint, "JA4L-C=169_128_quic")
 	}
 }
+
+// TestJA4LTimesASecondConnectionOnOneGroupingKeyFromItsOwnPoints holds the restart rule of the
+// reference on a grouping key that two connections reach.
+//
+// A SYN that carries an initial sequence number the connection does not hold opens another
+// connection on the same endpoints. `ja4plus/fingerprinters/ja4l.py:433-437` holds the test.
+// `ja4plus/fingerprinters/ja4l.py:406-417` clears the state.
+//
+// The corpus holds no capture that reaches one grouping key twice, so this test builds the
+// separating packet sequence. Issue #211 holds the reading, and port issue #272 holds the guard
+// that makes the second value stale without the restart.
+func TestJA4LTimesASecondConnectionOnOneGroupingKeyFromItsOwnPoints(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	const (
+		firstClientISN  uint32 = 1000
+		firstServerISN  uint32 = 5000
+		secondClientISN uint32 = 900000
+		secondServerISN uint32 = 700000
+	)
+
+	// The first connection completes, and it reports both values.
+	syn := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, firstClientISN, 0, nil)
+	syn.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(syn); len(results) != 0 {
+		t.Fatalf("first SYN: expected no results, got %v", results)
+	}
+
+	synAck := buildTCPStreamPacket(t, serverIP, clientIP, 64, 443, 12345, true, true, firstServerISN, firstClientISN+1, nil)
+	synAck.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
+	results, err := fp.ProcessPacket(synAck)
+	if err != nil {
+		t.Fatalf("first SYN-ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=50000_64" {
+		t.Errorf("first SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=50000_64")
+	}
+
+	ack := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, false, true, firstClientISN+1, firstServerISN+1, nil)
+	ack.Metadata().Timestamp = baseTime.Add(200 * time.Millisecond)
+	results, err = fp.ProcessPacket(ack)
+	if err != nil {
+		t.Fatalf("first ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=50000_64" {
+		t.Errorf("first ACK: Fingerprint = %q, want %q", got, "JA4L-C=50000_64")
+	}
+
+	// The second connection reuses the grouping key 10 seconds later, and no caller calls
+	// CleanupConnection between the two.
+	secondStart := baseTime.Add(10 * time.Second)
+
+	syn2 := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, secondClientISN, 0, nil)
+	syn2.Metadata().Timestamp = secondStart
+	if results, _ := fp.ProcessPacket(syn2); len(results) != 0 {
+		t.Fatalf("second SYN: expected no results, got %v", results)
+	}
+
+	// The second server value measures the second SYN and the second SYN-ACK. Without the
+	// restart the point B guard keeps the first timestamp, and the packet reports nothing.
+	synAck2 := buildTCPStreamPacket(t, serverIP, clientIP, 64, 443, 12345, true, true, secondServerISN, secondClientISN+1, nil)
+	synAck2.Metadata().Timestamp = secondStart.Add(150 * time.Millisecond)
+	results, err = fp.ProcessPacket(synAck2)
+	if err != nil {
+		t.Fatalf("second SYN-ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=75000_64" {
+		t.Errorf("second SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=75000_64")
+	}
+
+	// The second client value measures the second SYN-ACK and the second bare ACK. Without
+	// the restart it measures the first SYN-ACK, and the value grows with the age of the
+	// state.
+	ack2 := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, false, true, secondClientISN+1, secondServerISN+1, nil)
+	ack2.Metadata().Timestamp = secondStart.Add(320 * time.Millisecond)
+	results, err = fp.ProcessPacket(ack2)
+	if err != nil {
+		t.Fatalf("second ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=85000_64" {
+		t.Errorf("second ACK: Fingerprint = %q, want %q", got, "JA4L-C=85000_64")
+	}
+}
+
+// TestJA4LKeepsPointAWhenARepeatedSYNCarriesTheSameInitialSequenceNumber holds the point A
+// guard against the restart rule.
+//
+// A retransmitted SYN carries the initial sequence number the connection already holds, so it
+// opens no second connection. `ja4plus/fingerprinters/ja4l.py:435` tests the sequence number
+// before it restarts, and `python/common.py:101` names `A` among the fields that the reference
+// declines to update. Issue #211 holds the reading, and issue #196 measured the guard on
+// `ssh2.pcapng` stream 15.
+func TestJA4LKeepsPointAWhenARepeatedSYNCarriesTheSameInitialSequenceNumber(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	const (
+		clientISN uint32 = 1000
+		serverISN uint32 = 5000
+	)
+
+	syn := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, clientISN, 0, nil)
+	syn.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(syn); len(results) != 0 {
+		t.Fatalf("SYN: expected no results, got %v", results)
+	}
+
+	repeated := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, clientISN, 0, nil)
+	repeated.Metadata().Timestamp = baseTime.Add(40 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(repeated); len(results) != 0 {
+		t.Fatalf("repeated SYN: expected no results, got %v", results)
+	}
+
+	// The value measures the first SYN. A restart here would measure the repeated SYN, and
+	// the value would read 30000.
+	synAck := buildTCPStreamPacket(t, serverIP, clientIP, 64, 443, 12345, true, true, serverISN, clientISN+1, nil)
+	synAck.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
+	results, err := fp.ProcessPacket(synAck)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=50000_64" {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=50000_64")
+	}
+}
