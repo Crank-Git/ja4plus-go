@@ -125,6 +125,11 @@ func compareConformance(
 		// #307 reads the recorded value of the entry, and never its presence alone. The
 		// check stands outside the two branches below, because a stale record is a defect of
 		// the register and it says nothing about the comparison.
+		//
+		// The check reads `producedValue` and never `libraryHolds`. A key the library
+		// produces no value for reads the empty string, and a capability decline records the
+		// empty string, so the two agree. This holds because no fingerprinter of this project
+		// returns an empty value without an error.
 		if registered && entry.Ours != producedValue {
 			result.Stale = append(result.Stale, conformanceStaleEntry{
 				Key:      key,

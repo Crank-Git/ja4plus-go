@@ -353,6 +353,37 @@ func TestTheReportNamesEveryStaleRegisterEntry(t *testing.T) {
 	}
 }
 
+// The report collects a stale entry in the order the run reaches each capture, and it sorts
+// the section by key. An unsorted section changes on a run that reads the captures in
+// another order.
+func TestTheReportSortsTheStaleRegisterEntriesByKey(t *testing.T) {
+	report := newConformanceReport("27f0cbf")
+
+	for _, capture := range []string{"tls12.pcap", "dhcp.pcapng"} {
+		report.readCapture(capture)
+		report.recordComparison(capture, "per-stream", conformanceComparison{
+			Stale: []conformanceStaleEntry{{
+				Key:      conformanceKey{Capture: capture, Stream: "1", Method: "JA4"},
+				Recorded: "recorded-" + capture,
+				Produced: "produced-" + capture,
+			}},
+		})
+	}
+
+	text := report.render()
+
+	first := strings.Index(text, "`dhcp.pcapng/1/JA4`")
+	second := strings.Index(text, "`tls12.pcap/1/JA4`")
+
+	if first < 0 || second < 0 {
+		t.Fatalf("the report holds %d stale rows, and the fixture holds 2", len(report.stale))
+	}
+
+	if first > second {
+		t.Errorf("the report writes `tls12.pcap/1/JA4` before `dhcp.pcapng/1/JA4`, and the sorted order names `dhcp.pcapng` first")
+	}
+}
+
 // A run that reaches every recorded value states that result. A section a reader finds
 // empty says nothing about the register.
 func TestTheReportStatesThatARunReportsNoStaleRegisterEntry(t *testing.T) {

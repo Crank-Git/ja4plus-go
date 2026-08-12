@@ -323,6 +323,37 @@ func TestTheComparisonReportsNoStaleEntryWhenACapabilityDeclineStillProducesNoVa
 	}
 }
 
+// One entry carries two defects when the run reaches the vector value and the entry records
+// a third value. The suite then prints one message for each, and neither one replaces the
+// other.
+func TestTheComparisonReportsAClosedEntryAndAStaleEntryForOneRegisterKey(t *testing.T) {
+	key := oneConformanceKey("JA4L-S")
+
+	register := map[conformanceKey]deviationEntry{
+		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
+	}
+
+	result := compareConformance(
+		map[conformanceKey]string{key: "6252_59"},
+		map[conformanceKey]string{key: "6252_59"},
+		register,
+	)
+
+	if len(result.Closed) != 1 {
+		t.Fatalf("the comparison reports %d closed entries, and the run produces the vector value `6252_59`",
+			len(result.Closed))
+	}
+
+	if len(result.Stale) != 1 {
+		t.Fatalf("the comparison reports %d stale entries, and the entry records `6252_58` where the run produces `6252_59`",
+			len(result.Stale))
+	}
+
+	if result.Matches != 0 {
+		t.Errorf("the comparison counts %d matches, and the register names the comparison %q", result.Matches, key)
+	}
+}
+
 // The register names no comparison the run makes, so no stale entry can stand. A nil
 // register accepts nothing, and it must report nothing.
 func TestTheComparisonReportsNoStaleEntryWhenTheRegisterNamesNoComparison(t *testing.T) {
