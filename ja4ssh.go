@@ -18,7 +18,6 @@ type sshConnState struct {
 	serverSizes  []int
 	clientACKs   int
 	serverACKs   int
-	hasSSH       bool // whether we've seen SSH data on this connection
 	hassh        string
 	hasshServer  string
 	clientBanner string
@@ -202,7 +201,6 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
 	}
 
-	conn.hasSSH = true
 	conn.lastSeen = parser.GetPacketTimestamp(packet)
 
 	// The tracker reads every payload segment of the direction, and not the segments the
