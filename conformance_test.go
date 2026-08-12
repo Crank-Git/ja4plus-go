@@ -301,14 +301,18 @@ type conformanceMethodValue struct {
 
 // conformanceValuesOfResult returns every method value that the result carries.
 //
-// One result carries three fields, because a fingerprinter reports the fingerprint, the
-// raw form and the wire-order raw form together. An empty field states that the
-// fingerprinter produced nothing, so this function reports no value for it.
+// One result carries four value fields, and this function emits each one. An empty field
+// states that the fingerprinter produced nothing, so this function reports no value for it.
 //
-// `ja4.go:96` and `ja4.go:97` set the two raw fields, and no other fingerprinter sets
-// either. The per-packet vector set names no field for JA4, so the two raw branches report
-// nothing at the pinned commit. The two branches hold the comparison that a filled raw
-// field needs. Without them the suite reports every new raw value as absent for ever.
+// Four fingerprinters fill a raw field. `JA4Fingerprinter` fills `Raw`, `OriginalOrder`
+// and `RawOriginalOrder`, `JA4SFingerprinter` and `JA4XFingerprinter` each fill `Raw`, and
+// `JA4HFingerprinter` fills `RawOriginalOrder`. Issues #274 through #277 added the four.
+//
+// The `_o` branch reaches no comparison at the pinned commit, and #290 added it for
+// symmetry with `conformanceStreamValuesOfResult`. `conformanceMethodOfResultType` maps no
+// result type to `JA4`, because the per-packet vector set names no JA4 field, so a `JA4_o`
+// value reaches this function and no vector. A branch that is absent instead reports every
+// later value as absent for ever, and the suite then states no cause.
 func conformanceValuesOfResult(result FingerprintResult) []conformanceMethodValue {
 	method, fingerprint, held := conformanceMethodOfResultType(result)
 	if !held {
@@ -320,6 +324,7 @@ func conformanceValuesOfResult(result FingerprintResult) []conformanceMethodValu
 	for _, value := range []conformanceMethodValue{
 		{Method: method, Value: fingerprint},
 		{Method: method + "_r", Value: result.Raw},
+		{Method: method + "_o", Value: result.OriginalOrder},
 		{Method: method + "_ro", Value: result.RawOriginalOrder},
 	} {
 		if value.Value != "" {
