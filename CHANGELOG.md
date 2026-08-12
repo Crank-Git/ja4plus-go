@@ -7,6 +7,11 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Every measurement in this section names the base of the run that produced it. Issue #42 put 150
+entries into `testdata/deviations.json`, and the register held no entry before that. A run
+on the current tree reports 1035 matches, 3155 deviations, 150 accepted deviations and 150
+register keys. A count that an entry below states therefore differs from a fresh run.
+
 ### Added
 
 - Eight exported names, which read a pcapng Decryption Secrets Block and decrypt one QUIC
@@ -27,6 +32,26 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `docs/audit/license-decision.md`, which transcribes the maintainer's license decision
   and the date of each part of it.
 
+### Fixed
+
+- `CleanupConnection` on JA4L now removes a tunneled connection. The method normalized the
+  address pair the caller gave, and it deleted that one key. `normalizeKey` builds the
+  grouping key from the inner address pair, and a `FingerprintResult` reports the outer
+  pair, so the two keys never met. A caller that named the reported pair removed no
+  tunneled connection, and `connections` grew without a bound. `JA4LFingerprinter` now
+  holds `groupingKeys`, which reads the grouping key from the reported key. The method
+  removes the connection and every index entry of it, so a caller that names either key
+  leaves no state behind. `ja4plus/fingerprinters/ja4l.py:100-104` holds the same map, and
+  `ja4plus/fingerprinters/ja4l.py:216` holds the same cleanup rule. Every FoxIO reference
+  and the port agree, so this is a reading and not a ruling.
+  `docs/specs/features/05-conformance-gaps.md` FR-gaps-14c states the rule, and issue #169
+  holds the reading. JA4 and JA4S read no such index, so they remove no tunneled
+  connection, and issue #193 owns that repair. The change moves no fingerprint.
+- The QUIC CRYPTO stream reassembly. `ParseCryptoFrames` stepped over a PADDING frame
+  alone, so a PING frame in front of the CRYPTO frames hid the whole client hello. RFC 9000
+  Section 19.2 gives the PING frame no field. The library now produces a JA4 value on every
+  QUIC capture of the corpus that carries a client hello. Issue #42 holds the measurement.
+
 ### Changed
 
 - **JA4L and JA4LS now report half of the measured time, and every latency value moves.**
@@ -44,7 +69,7 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Twenty-four captures move, and JA4LS now matches on every stream of twenty-one of them.
   The per-packet counts stay at 308 matches and 1777 deviations. A per-packet JA4L vector
   carries a third part that the library does not yet produce. Issue #166 holds the
-  measurement.
+  measurement, and the run measured the change on `batch/184-ja4l-repairs` at `f4aa6e6`.
 - **JA4L now fills the two QUIC client measurement points in the reference direction, and
   the client value of a QUIC connection moves.** This is a breaking behaviour change under
   `v1.0.0`. A server Handshake packet fills point C, and a client Handshake packet fills
@@ -61,7 +86,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   per-packet vector set, seven JA4L client values reach the packet the vector names, and
   four values that sat on a server packet go away. On the per-stream vector set,
   `tls3.pcapng` streams 22, 23 and 24 produce a JA4L-C value again, and each one is twice
-  the vector value, which #166 halves. Issue #186 holds the measurement.
+  the vector value, which #166 halves. Issue #186 holds the measurement, and the run
+  measured the change on `batch/184-ja4l-repairs` at `4d46f47`.
 - **JA4L and JA4LS now read a UDP flow only when the flow carries QUIC, and the library
   produces no value for another UDP flow.** This is a breaking behaviour change under
   `v1.0.0`. The library reads the UDP payload for a QUIC long header, and it reads the
@@ -74,7 +100,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   across six captures of the FoxIO corpus: `gre-sample.pcap`, `latest.pcapng`,
   `ssh2.pcapng`, `sshv1.pcap`, `tls3.pcapng` and `v6.pcap`. The conformance run reports
   3441 deviations before the change and 3251 after it, and the register key count stays
-  at 0. Issue #173 holds the measurement.
+  at 0. Issue #173 holds the measurement, and the run measured the change on
+  `batch/184-ja4l-repairs` at `c1f13d5`.
 - **A tunneled connection now carries two keys, and the fingerprint of such a connection
   moves.** This is a breaking behaviour change under `v1.0.0`. A `FingerprintResult` for a
   GRE, ERSPAN, VXLAN or Geneve packet holds the outer address pair with the inner port
@@ -98,6 +125,24 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   tunnel whose inner packet it does not read, such as a GRE header that names an unknown
   protocol type or a truncated inner frame. No released value moves, because no capture of
   the FoxIO corpus nests more than three tunnel layers.
+- **A changed fingerprint.** The library produces the JA4 value
+  `q13d0310h3_55b375c5d22e_cd85d2d88918` on `quic-with-several-tls-frames.pcapng` and on
+  `quic-tls-handshake.pcapng`, and it produced none before. The FoxIO Rust implementation
+  produces the same value on both captures. On
+  `chrome-cloudflare-quic-with-secrets.pcapng` stream 0 the JA4 value moves from
+  `q12i030000_55b375c5d22e_000000000000` to `q13d0310h3_55b375c5d22e_cd85d2d88918`, and the
+  raw form moves from `q12i030000_1301,1302,1303_` to
+  `q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201`.
+  The earlier value read a part of the client hello, so it named three cipher suites and no
+  extension. A released version produced it, so this is a breaking behaviour change under
+  `v1.0.0`. Issue #42 holds the measurement.
+- `ClientHelloFromCryptoFragments` returns no client hello while a fragment of the
+  handshake message is still missing. It parsed a part of the message before, which
+  produced a fingerprint of a cipher list that the client never sent.
+- The QUIC fragment buffer of one connection reaches 16384 bytes. The JA4 fingerprinter
+  drops the connection state when a sender passes the bound, because an unbounded buffer is
+  a memory-exhaustion path. `parser.MaxCryptoBufferBytes` holds the bound, and the port
+  holds the same value.
 - The license correction. The repository states two licenses, and it names which material
   each one covers. The original Go code carries the BSD 3-Clause license.
   FoxIO License 1.1 covers nine of the methods that this project implements, and that

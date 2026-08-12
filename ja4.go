@@ -70,13 +70,15 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		}
 
 		if len(udp.Payload) > 0 {
+			// DecryptQUICInitialCrypto returns the fragments it read beside a truncation
+			// error. The fingerprinter keeps them, because a whole client hello can sit
+			// in front of the truncated frame.
 			frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
-			if err != nil {
+			if len(frags) == 0 && err != nil {
 				return nil, err
 			}
 			if len(frags) > 0 && len(dcid) > 0 {
 				dcidKey := fmt.Sprintf("%x", dcid)
-				f.quicFragments[dcidKey] = append(f.quicFragments[dcidKey], frags...)
 
 				// The entry holds the grouping key, so it reads the inner address pair.
 				// GetShardKey reads the same pair, and a tunneled connection would
@@ -85,8 +87,21 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 				tupleKey := fmt.Sprintf("%s:%d-%s:%d", groupSrcIP, uint16(udp.SrcPort), groupDstIP, uint16(udp.DstPort))
 				f.dcidToTuple[dcidKey] = tupleKey
 
+				// A sender that never completes a client hello reaches the fragment
+				// buffer bound. The fingerprinter then drops the connection state,
+				// because an unbounded buffer is a memory-exhaustion path.
+				collected, err := parser.CollectCryptoFragments(f.quicFragments[dcidKey], frags)
+				if err != nil {
+					delete(f.quicFragments, dcidKey)
+					delete(f.dcidToTuple, dcidKey)
+
+					return nil, err
+				}
+
+				f.quicFragments[dcidKey] = collected
+
 				// Try to parse ClientHello from accumulated fragments
-				ch, err = parser.ClientHelloFromCryptoFragments(f.quicFragments[dcidKey])
+				ch, err = parser.ClientHelloFromCryptoFragments(collected)
 				if err != nil {
 					return nil, err
 				}
@@ -144,8 +159,12 @@ func (f *JA4Fingerprinter) Reset() {
 // via the dcidToTuple reverse map and cleans the corresponding fragments.
 // The caller names the two endpoints in either order, because the reverse map holds the
 // order of the datagram that carried the client hello.
-// The caller names the grouping key of a tunneled connection, so it names the inner
-// address pair and the inner port pair.
+// The caller names the address pair that a FingerprintResult carries, which is the
+// reported key. JA4L holds the same contract.
+// A tunneled connection groups under the inner address pair, and this method reads no
+// index from the reported key to the grouping key. It therefore removes no tunneled
+// connection.
+// TODO(#193): Read the grouping key of a tunneled connection from the reported key.
 func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 

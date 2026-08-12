@@ -11,9 +11,9 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1011 |
-| Deviations | 3179 |
-| Accepted deviations | 0 |
+| Matches | 1035 |
+| Deviations | 3155 |
+| Accepted deviations | 150 |
 | Captures the suite compared | 35 |
 | Captures the suite compared nothing on | 3 |
 
@@ -21,14 +21,14 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
-| per-stream | 703 | 1402 | 0 |
-| per-packet | 308 | 1777 | 0 |
+| per-stream | 703 | 1402 | 150 |
+| per-packet | 332 | 1753 | 0 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 
 ## Deviations
 
-The run reports 3179 deviations in 175 groups. One group is one capture, one method and one vector set.
+The run reports 3305 deviations in 175 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -93,9 +93,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-packet | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/49/JA4S_r.1` | the vector holds a value the library does not produce | `q130200_1301_0033,002b` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-packet | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/6/JA4S_r.1` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-packet | JA4T | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/1/JA4T.1` | the two values differ | `65535_2-1-3-1-1-8-4-0-0_1440_6` | `65535_2-1-3-1-1-8-4-0_1440_6` |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4 | 4 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4.2` | the library produces a value the vector does not hold | (none) | `q12i030000_55b375c5d22e_000000000000` |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4 | 4 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4.2` | the library produces a value the vector does not hold | (none) | `q13d0310h3_55b375c5d22e_cd85d2d88918` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4 | 4 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_2d79a7d73c2f` | (none) |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4 | 4 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4_r.2` | the library produces a value the vector does not hold | (none) | `q12i030000_1301,1302,1303_` |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4 | 4 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4_r.2` | the library produces a value the vector does not hold | (none) | `q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4H | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4H` | the vector holds a value the library does not produce | `ge20nn12enus_60f823d07c94_000000000000_000000000000` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4H | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4H_ro` | the vector holds a value the library does not produce | `ge20nn12enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4L | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4L-C.1` | the two values differ | `149_64` | `30_64` |
@@ -352,18 +352,18 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls-alpn-h2.pcap` | per-stream | JA4 | 1 | `tls-alpn-h2.pcap/0/JA4_o.1` | the vector holds a value the library does not produce | `t12d4605h2_644f5d117d98_094daec7ec8d` | (none) |
 | `tls-alpn-h2.pcap` | per-stream | JA4L | 1 | `tls-alpn-h2.pcap/0/JA4L-C` | the two values differ | `3911_64` | `35_64` |
 | `tls-alpn-h2.pcap` | per-stream | JA4S | 1 | `tls-alpn-h2.pcap/0/JA4S_r` | the vector holds a value the library does not produce | `t1204h2_cca9_0000,ff01,000b,0010` | (none) |
-| `tls-handshake.pcapng` | per-packet | JA4S | 103 | `tls-handshake.pcapng/10/JA4S_r.1` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
-| `tls-handshake.pcapng` | per-packet | JA4S | 103 | `tls-handshake.pcapng/100/JA4S_r.1` | the vector holds a value the library does not produce | `t130300_1301_002b,0033,0029` | (none) |
-| `tls-handshake.pcapng` | per-packet | JA4S | 103 | `tls-handshake.pcapng/102/JA4S.1` | the vector holds a value the library does not produce | `q130200_1301_a56c5b993250` | (none) |
+| `tls-handshake.pcapng` | per-packet | JA4S | 85 | `tls-handshake.pcapng/10/JA4S_r.1` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
+| `tls-handshake.pcapng` | per-packet | JA4S | 85 | `tls-handshake.pcapng/100/JA4S_r.1` | the vector holds a value the library does not produce | `t130300_1301_002b,0033,0029` | (none) |
+| `tls-handshake.pcapng` | per-packet | JA4S | 85 | `tls-handshake.pcapng/102/JA4S_r.1` | the vector holds a value the library does not produce | `q130200_1301_002b,0033` | (none) |
 | `tls-handshake.pcapng` | per-packet | JA4X | 22 | `tls-handshake.pcapng/112/JA4X_r.1` | the vector holds a value the library does not produce | `550406,55040a,550403_550406,550408,550407,55040a,550403_551d23,551d0e,551d11,551d0f,551d25,551d1f,551d20,2b06010505070101,551d13,2b06010401d679020402` | (none) |
 | `tls-handshake.pcapng` | per-packet | JA4X | 22 | `tls-handshake.pcapng/112/JA4X_r.2` | the vector holds a value the library does not produce | `550406,55040a,55040b,550403_550406,55040a,550403_551d13,551d0e,551d23,551d0f,551d25,2b06010505070101,551d1f,551d20` | (none) |
 | `tls-handshake.pcapng` | per-packet | JA4X | 22 | `tls-handshake.pcapng/130/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_7bf9a7bf7029` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4 | 85 | `tls-handshake.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_8fc3c02244b2` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4 | 85 | `tls-handshake.pcapng/1/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_2331e95fde68` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4 | 85 | `tls-handshake.pcapng/10/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_b16532485edd` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4S | 65 | `tls-handshake.pcapng/0/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4S | 65 | `tls-handshake.pcapng/1/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
-| `tls-handshake.pcapng` | per-stream | JA4S | 65 | `tls-handshake.pcapng/10/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4 | 139 | `tls-handshake.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_8fc3c02244b2` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4 | 139 | `tls-handshake.pcapng/1/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_2331e95fde68` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4 | 139 | `tls-handshake.pcapng/10/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_b16532485edd` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4S | 83 | `tls-handshake.pcapng/0/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4S | 83 | `tls-handshake.pcapng/1/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
+| `tls-handshake.pcapng` | per-stream | JA4S | 83 | `tls-handshake.pcapng/10/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/34/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_7bf9a7bf7029` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/34/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/40/JA4X.2` | the two values differ | `7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2` | `7d5dbb3783b4_7d5dbb3783b4_f269f029c206` |
@@ -372,9 +372,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls-non-ascii-alpn.pcapng` | per-stream | JA4 | 4 | `tls-non-ascii-alpn.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d151699_acb858a92679_8fc3c02244b2` | (none) |
 | `tls-non-ascii-alpn.pcapng` | per-stream | JA4 | 4 | `tls-non-ascii-alpn.pcapng/0/JA4_r.1` | the two values differ | `t13d151699_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0015,0017,001b,0023,002b,002d,0033,4469,ff01_0403,0804,0401,0503,0805,0501,0806,0601` | `t13d1516bd_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0015,0017,001b,0023,002b,002d,0033,4469,ff01_0403,0804,0401,0503,0805,0501,0806,0601` |
 | `tls-non-ascii-alpn.pcapng` | per-stream | JA4S | 1 | `tls-non-ascii-alpn.pcapng/0/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
-| `tls-sni.pcapng` | per-stream | JA4 | 85 | `tls-sni.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_8fc3c02244b2` | (none) |
-| `tls-sni.pcapng` | per-stream | JA4 | 85 | `tls-sni.pcapng/1/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_2331e95fde68` | (none) |
-| `tls-sni.pcapng` | per-stream | JA4 | 85 | `tls-sni.pcapng/10/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_b16532485edd` | (none) |
+| `tls-sni.pcapng` | per-stream | JA4 | 139 | `tls-sni.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_8fc3c02244b2` | (none) |
+| `tls-sni.pcapng` | per-stream | JA4 | 139 | `tls-sni.pcapng/1/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_2331e95fde68` | (none) |
+| `tls-sni.pcapng` | per-stream | JA4 | 139 | `tls-sni.pcapng/10/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_b16532485edd` | (none) |
 | `tls12.pcap` | per-stream | JA4 | 1 | `tls12.pcap/0/JA4_o.1` | the vector holds a value the library does not produce | `t13d1715h2_5b234860e130_014157ec0da2` | (none) |
 | `tls3.pcapng` | per-packet | JA4H | 14 | `tls3.pcapng/47/JA4H.1` | the vector holds a value the library does not produce | `ms11nn050000_1ae2aaf984bf_000000000000_000000000000` | (none) |
 | `tls3.pcapng` | per-packet | JA4H | 14 | `tls3.pcapng/47/JA4H_r.1` | the vector holds a value the library does not produce | `ms11nn050000_Host,Content-Length,MAN,MX,ST__` | (none) |
@@ -385,20 +385,20 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls3.pcapng` | per-packet | JA4LS | 27 | `tls3.pcapng/144/JA4LS.1` | the library produces a value the vector does not hold | (none) | `4213_59` |
 | `tls3.pcapng` | per-packet | JA4LS | 27 | `tls3.pcapng/147/JA4LS.1` | the vector holds a value the library does not produce | `4213_59_quic` | (none) |
 | `tls3.pcapng` | per-packet | JA4LS | 27 | `tls3.pcapng/149/JA4LS.1` | the library produces a value the vector does not hold | (none) | `4455_58` |
-| `tls3.pcapng` | per-packet | JA4S | 19 | `tls3.pcapng/144/JA4S.1` | the vector holds a value the library does not produce | `q130200_1301_234ea6891581` | (none) |
-| `tls3.pcapng` | per-packet | JA4S | 19 | `tls3.pcapng/144/JA4S_r.1` | the vector holds a value the library does not produce | `q130200_1301_0033,002b` | (none) |
-| `tls3.pcapng` | per-packet | JA4S | 19 | `tls3.pcapng/149/JA4S.1` | the vector holds a value the library does not produce | `q130200_1301_a56c5b993250` | (none) |
-| `tls3.pcapng` | per-stream | JA4 | 7 | `tls3.pcapng/10/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_cd85e435c726` | (none) |
-| `tls3.pcapng` | per-stream | JA4 | 7 | `tls3.pcapng/11/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_02518cc01a32` | (none) |
-| `tls3.pcapng` | per-stream | JA4 | 7 | `tls3.pcapng/12/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_117873b7a39c` | (none) |
+| `tls3.pcapng` | per-packet | JA4S | 13 | `tls3.pcapng/144/JA4S_r.1` | the vector holds a value the library does not produce | `q130200_1301_0033,002b` | (none) |
+| `tls3.pcapng` | per-packet | JA4S | 13 | `tls3.pcapng/149/JA4S_r.1` | the vector holds a value the library does not produce | `q130200_1301_002b,0033` | (none) |
+| `tls3.pcapng` | per-packet | JA4S | 13 | `tls3.pcapng/155/JA4S_r.1` | the vector holds a value the library does not produce | `q130200_1301_0033,002b` | (none) |
+| `tls3.pcapng` | per-stream | JA4 | 25 | `tls3.pcapng/10/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_cd85e435c726` | (none) |
+| `tls3.pcapng` | per-stream | JA4 | 25 | `tls3.pcapng/11/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_02518cc01a32` | (none) |
+| `tls3.pcapng` | per-stream | JA4 | 25 | `tls3.pcapng/12/JA4_o.1` | the vector holds a value the library does not produce | `t13d1516h2_acb858a92679_117873b7a39c` | (none) |
 | `tls3.pcapng` | per-stream | JA4H | 1 | `tls3.pcapng/8/JA4H_ro` | the vector holds a value the library does not produce | `ge11nn07enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language,If-None-Match,If-Modified-Since_` | (none) |
 | `tls3.pcapng` | per-stream | JA4L | 7 | `tls3.pcapng/10/JA4L-C` | the two values differ | `78_128` | `15_128` |
 | `tls3.pcapng` | per-stream | JA4L | 7 | `tls3.pcapng/11/JA4L-C` | the two values differ | `66_128` | `15_128` |
 | `tls3.pcapng` | per-stream | JA4L | 7 | `tls3.pcapng/12/JA4L-C` | the two values differ | `360_128` | `11_128` |
 | `tls3.pcapng` | per-stream | JA4LS | 1 | `tls3.pcapng/25/JA4L-S` | the two values differ | `3583_57` | `3051_57` |
-| `tls3.pcapng` | per-stream | JA4S | 7 | `tls3.pcapng/10/JA4S_r` | the vector holds a value the library does not produce | `t130300_1301_002b,0033,0029` | (none) |
-| `tls3.pcapng` | per-stream | JA4S | 7 | `tls3.pcapng/11/JA4S_r` | the vector holds a value the library does not produce | `t130300_1301_0029,0033,002b` | (none) |
-| `tls3.pcapng` | per-stream | JA4S | 7 | `tls3.pcapng/12/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_002b,0033` | (none) |
+| `tls3.pcapng` | per-stream | JA4S | 13 | `tls3.pcapng/10/JA4S_r` | the vector holds a value the library does not produce | `t130300_1301_002b,0033,0029` | (none) |
+| `tls3.pcapng` | per-stream | JA4S | 13 | `tls3.pcapng/11/JA4S_r` | the vector holds a value the library does not produce | `t130300_1301_0029,0033,002b` | (none) |
+| `tls3.pcapng` | per-stream | JA4S | 13 | `tls3.pcapng/12/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_002b,0033` | (none) |
 | `v6.pcap` | per-packet | JA4SSH | 6 | `v6.pcap/43/JA4SSH.1` | the library produces a value the vector does not hold | (none) | `c15s15_c3s3_c3s1` |
 | `v6.pcap` | per-packet | JA4SSH | 6 | `v6.pcap/72/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
 | `v6.pcap` | per-packet | JA4SSH | 6 | `v6.pcap/73/JA4SSH.1` | the vector holds a value the library does not produce | `c20s12_c18s21_c10s1` | (none) |
@@ -764,8 +764,8 @@ The table holds one row for each capture and each method. A row records `not app
 | `tls-alpn-h2.pcap` | JA4TS | per-packet | match | 1 | 0 | — |
 | `tls-alpn-h2.pcap` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-alpn-h2.pcap` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
-| `tls-handshake.pcapng` | JA4 | per-stream | deviation | 177 | 85 | — |
-| `tls-handshake.pcapng` | JA4S | per-packet and per-stream | deviation | 123 | 168 | — |
+| `tls-handshake.pcapng` | JA4 | per-stream | deviation | 177 | 139 | — |
+| `tls-handshake.pcapng` | JA4S | per-packet and per-stream | deviation | 141 | 168 | — |
 | `tls-handshake.pcapng` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-handshake.pcapng` | JA4X | per-packet and per-stream | deviation | 12 | 30 | — |
 | `tls-handshake.pcapng` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
@@ -786,7 +786,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `tls-non-ascii-alpn.pcapng` | JA4TS | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-non-ascii-alpn.pcapng` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-non-ascii-alpn.pcapng` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
-| `tls-sni.pcapng` | JA4 | per-stream | deviation | 177 | 85 | — |
+| `tls-sni.pcapng` | JA4 | per-stream | deviation | 177 | 139 | — |
 | `tls-sni.pcapng` | JA4S | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-sni.pcapng` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-sni.pcapng` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
@@ -808,8 +808,8 @@ The table holds one row for each capture and each method. A row records `not app
 | `tls12.pcap` | JA4TS | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls12.pcap` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls12.pcap` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
-| `tls3.pcapng` | JA4 | per-stream | deviation | 21 | 7 | — |
-| `tls3.pcapng` | JA4S | per-packet and per-stream | deviation | 14 | 26 | — |
+| `tls3.pcapng` | JA4 | per-stream | deviation | 21 | 25 | — |
+| `tls3.pcapng` | JA4S | per-packet and per-stream | deviation | 20 | 26 | — |
 | `tls3.pcapng` | JA4H | per-packet and per-stream | deviation | 2 | 15 | — |
 | `tls3.pcapng` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls3.pcapng` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
