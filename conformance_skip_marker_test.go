@@ -92,8 +92,8 @@ func untaggedSkipMessage(t *testing.T) map[string][]string {
 		}
 	}
 
-	// A regular expression that matches nothing would pass every test below without
-	// reading one message.
+	// A regular expression that matches nothing would pass every test below and never
+	// read one message.
 	if len(message) == 0 {
 		t.Fatal("the repository root holds no untagged test file with a skip message")
 	}
