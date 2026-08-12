@@ -56,8 +56,8 @@ holds one of three things.
 | The per-stream set, where no vector entry names the connection | The endpoint key, written `<src>:<srcport>-<dst>:<dstport>` with the two endpoints sorted. | `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4` |
 | The per-packet set, under `foxio/wireshark/` | The frame number of the vector record, counted from 1. | `badcurveball.pcap/4/JA4L.1` |
 
-**A stream number and a frame number read alike, because both are small integers.** Read
-the vector set that holds the value before you read the middle part of an entry. An endpoint
+**A stream number and a frame number read alike, because both are small integers.** Before
+you read the middle part of an entry, read the vector set that holds the value. An endpoint
 key holds no `/`, so a key of any of the three forms still reads in three parts.
 
 **One key names one comparison.** The suite reads one register for both sets, so a key that

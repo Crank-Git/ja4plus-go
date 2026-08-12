@@ -114,9 +114,11 @@ image. Fact 4 is why FR-reference-12 recovers the deleted text.
   exists.
 - **FR-reference-28** — A test asserts that the file parses and that every entry holds
   every field.
-- **FR-reference-29** — The middle part of `key` holds the stream number for a per-stream
-  comparison, the endpoint key where no vector entry names the connection, and the frame
-  number for a per-packet comparison. `testdata/README.md` states the three meanings.
+- **FR-reference-29** — The middle part of `key` holds one of three things.
+    - The stream number, for a per-stream comparison.
+    - The endpoint key, where no vector entry names the connection.
+    - The frame number, for a per-packet comparison.
+- **FR-reference-29a** — `testdata/README.md` states the three meanings.
 - **FR-reference-30** — **One key names one comparison.** A test asserts that no key of the
   corpus names a comparison in the per-stream set and in the per-packet set.
 - **FR-reference-31** — The register holds each key once. The reader declines a second

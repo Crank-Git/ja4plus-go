@@ -75,8 +75,8 @@ func parseDeviationRegister(content []byte) ([]deviationEntry, error) {
 	entries := make([]deviationEntry, 0, len(raw))
 
 	// FR-reference-31 gives one entry to one comparison. The conformance suite reads the
-	// register as a map, so a second entry for one key replaces the first in silence and
-	// the ruling of the first entry then accepts nothing.
+	// register as a map, so a second entry for one key replaces the first in silence. The
+	// ruling of the first entry then accepts nothing.
 	first := make(map[string]int, len(raw))
 
 	for index, fields := range raw {
