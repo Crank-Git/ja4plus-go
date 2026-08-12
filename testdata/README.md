@@ -16,9 +16,9 @@ for an expected value.
 
 ## The register
 
-`deviations.json` holds a JSON array. **The array is empty today**, because no conformance
-run has measured a deviation. `docs/specs/features/11-foxio-reference.md` FR-reference-19
-through FR-reference-24 state the file and the schema, and `deviations_test.go` holds them.
+`deviations.json` holds a JSON array. **Each entry records one ruling that a conformance
+run measured.** `docs/specs/features/11-foxio-reference.md` FR-reference-19 through
+FR-reference-24 state the file and the schema, and `deviations_test.go` holds them.
 
 **An entry records a ruling, and only the maintainer makes one.** Read
 `.claude/rules/rulings.md` before you add an entry. Never write an entry for a difference
@@ -34,7 +34,7 @@ Each entry is a JSON object that holds six fields, and no other field.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `key` | string | The capture, the stream and the method, written `<capture>/<stream>/<method>`. |
+| `key` | string | The capture, the stream and the method, written `<capture>/<stream>/<method>`. **The middle part holds a stream number or a frame number.** The section below states which. |
 | `capability` | boolean | `true` for a capability decline. `false` for a value decline. |
 | `ours` | string | The value this library produces. A capability decline holds the empty string here. |
 | `theirs` | string | The value the FoxIO reference produces. |
@@ -43,6 +43,25 @@ Each entry is a JSON object that holds six fields, and no other field.
 
 `docs/specs/spec.md` `## Terms` defines the words `value decline` and `capability
 decline`.
+
+### The middle part of the key
+
+**The middle part holds whichever number the comparison uses.** The conformance suite
+compares two vector sets, and each set names a value differently.
+
+| Set | The middle part holds | One key |
+|---|---|---|
+| The per-stream set, under `foxio/python/` | The stream number of the vector entry. | `ssh2.pcapng/33/JA4L-S` |
+| The per-packet set, under `foxio/wireshark/` | The frame number of the vector record, counted from 1. | `badcurveball.pcap/4/JA4L.1` |
+
+**A stream number and a frame number read alike, because both are small integers.** Read
+the vector set that holds the value before you read the middle part of an entry.
+
+**One key names one comparison.** The suite reads one register for both sets, so a key that
+named a comparison in each set would accept a difference the maintainer never ruled on.
+FR-reference-30 fails the suite for such a key, and
+`conformance_key_kind_test.go` holds that test. FR-reference-31 gives one entry to one key,
+and `deviations_test.go` holds it.
 
 ### One entry
 
@@ -59,5 +78,5 @@ decline`.
 ]
 ```
 
-**That example is not a register entry.** It shows the form, and the register holds no
-entry.
+**That example is not a register entry.** It shows the form, and the register holds no entry
+for that key.
