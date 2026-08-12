@@ -9,11 +9,20 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. A run
-on the current tree reports 1035 matches, 3155 deviations, 150 accepted deviations and 150
+on the current tree reports 1035 matches, 1348 deviations, 150 accepted deviations and 150
 register keys. A count that an entry below states therefore differs from a fresh run.
 
 ### Added
 
+- Four exported names, which emit the JA4SSH window that a connection holds open at the end
+  of the packet source: the `WindowCloser` interface, `JA4SSHFingerprinter.CloseOpenWindows`,
+  `Processor.CloseOpenWindows` and `SyncProcessor.CloseOpenWindows`. The maintainer ruled on
+  2026-08-11 that the method sits on a second optional interface, so the exported
+  `Fingerprinter` interface does not change and no third-party implementation breaks. A
+  caller discovers the interface with a type assertion, and a stateless fingerprinter
+  implements nothing. `cmd/ja4plus analyze` calls the method when the capture ends.
+  `docs/specs/features/08-python-parity.md` FR-parity-29 through FR-parity-33 state the
+  requirements, and the port's issues #105, #199 and #214 hold the ruling.
 - Eight exported names, which read a pcapng Decryption Secrets Block and decrypt one QUIC
   packet with a TLS secret: `ErrNoSecret`, `KeyLog`, `ParseKeyLog`,
   `ReadKeyLogFromCapture`, `KeyLog.Secret`, `KeyLog.ClientRandoms`, `KeyLog.Len` and
@@ -34,6 +43,19 @@ register keys. A count that an entry below states therefore differs from a fresh
 
 ### Fixed
 
+- The JA4SSH window now emits at the packet count the caller names, and the threshold holds
+  no upper cap. `ja4ssh.go:196-199` capped it at 10, so the library over-emitted by hundreds
+  of values on one capture. The window also counts the SSH packets of the two directions
+  alone, so a bare ACK no longer advances it and a window of bare ACKs produces no value.
+  The HASSH trigger goes too: `ja4ssh.go:201` emitted when the two HASSH values were present
+  and the window held one packet, and the port holds no such rule. `docs/specs/spec.md`
+  `## Parity with ja4plus` holds the four JA4SSH rows, FR-parity-25 through FR-parity-28
+  state the requirements, and the port's issues #28, #96 and #97 hold the rulings. Measured
+  against `epic/48-parity-tls-latency` at `ec0f63e` with the corpus present: 1807 JA4SSH
+  comparisons moved, on `gre-sample.pcap`, `ssh-r.pcap`, `ssh-scp-1050.pcap`, `ssh.pcapng`,
+  `ssh2.pcapng`, `sshv1.pcap` and `v6.pcap`. The run reports 1035 matches before and after,
+  3155 deviations before and 1348 after, and 150 register keys before and after. Every moved
+  comparison was an extra value that the vector does not hold.
 - `CleanupConnection` on JA4L now removes a tunneled connection. The method normalized the
   address pair the caller gave, and it deleted that one key. `normalizeKey` builds the
   grouping key from the inner address pair, and a `FingerprintResult` reports the outer

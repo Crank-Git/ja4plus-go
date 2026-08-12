@@ -25,6 +25,21 @@ type Fingerprinter interface {
 	CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string)
 }
 
+// WindowCloser is the interface that a fingerprinter implements when a connection holds a
+// window open at the end of the packet source. JA4SSH holds such a window, and no other
+// method of this library does.
+//
+// The interface sits beside Fingerprinter and not inside it. Fingerprinter is exported, and
+// a new method on it breaks every third-party implementation, which `v1.0.0` forbids for the
+// whole `v1` series. A caller discovers this interface with a type assertion, as a caller of
+// `io.WriterTo` does. A stateless fingerprinter implements nothing, and Processor skips it.
+// The maintainer ruled this placement on 2026-08-11, and issue #53 records the ruling.
+type WindowCloser interface {
+	// CloseOpenWindows returns the value of the window that each connection holds open,
+	// and it starts a new window on each one. A second call returns an empty slice.
+	CloseOpenWindows() []FingerprintResult
+}
+
 // FingerprintResult holds a single fingerprint and its metadata.
 type FingerprintResult struct {
 	Fingerprint      string
