@@ -3,7 +3,8 @@
 This page transcribes one FoxIO image as numbered rules. **The page records what each
 source states. The page decides no value.** `.claude/rules/rulings.md` states who rules.
 
-`docs/specs/foxio/README.md` holds the inventory and the pinned commit.
+`docs/specs/foxio/README.md` holds the inventory, the pinned commit and the rule that
+states how to read a citation.
 
 ## The source
 
@@ -15,8 +16,10 @@ source states. The page decides no value.** `.claude/rules/rulings.md` states wh
 
 **This page reproduces no image.** The link above reaches it.
 
-A citation names a file of the FoxIO repository at the pinned commit. Read
-`zeek/ja4t/main.zeek:180` as line 180 of that file at that commit.
+A citation names a path in the FoxIO repository at the pinned commit. **Join it to
+`testdata/foxio/reference/`.** Read `zeek/ja4t/main.zeek:180` as line 180 of
+`testdata/foxio/reference/zeek/ja4t/main.zeek`. `docs/specs/foxio/README.md` states the rule, and it
+names each path that the rule does not cover.
 
 ## What the image specifies
 
