@@ -784,15 +784,15 @@ func TestJA4LProducesNoValueWhenBothUDPPortsAre443(t *testing.T) {
 	}
 }
 
-// TestJA4LHalvesTheServerDeltaOfBadcurveballPcap holds the rule that the reference states.
-// JA4L material states `One-way TCP latency in us`, and `ja4plus/fingerprinters/ja4l.py:49`
-// records that reading. `ja4plus/fingerprinters/ja4l.py:358` divides by 2 and truncates
-// toward zero.
-// The `badcurveball.pcap` stream 0 handshake spans 1563 microseconds and carries the server
-// TTL 238. The FoxIO per-stream vector holds `JA4L-S` of `781_238`, and 1563 / 2 truncates
-// to 781. A rounded half gives 782, so this capture separates the two rules.
+// TestJA4LHalvesTheServerLatencyOfBadcurveballPcap holds the rule that the reference
+// states. `docs/specs/foxio/JA4L.md` R6 states that part a is half of the measured time.
+// R6 cites four FoxIO reference implementations that each divide by 2.
+// The test builds the handshake of `badcurveball.pcap` stream 0 rather than reads the
+// capture. That handshake spans 1563 microseconds and carries the server TTL 238.
+// The FoxIO per-stream vector holds `JA4L-S` of `781_238`, and 1563 / 2 truncates to 781.
+// A rounded half gives 782, so this handshake separates the two rounding rules.
 // Issue #166 holds the reading.
-func TestJA4LHalvesTheServerDeltaOfBadcurveballPcap(t *testing.T) {
+func TestJA4LHalvesTheServerLatencyOfBadcurveballPcap(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	clientIP := net.IP{192, 168, 1, 1}
@@ -818,11 +818,11 @@ func TestJA4LHalvesTheServerDeltaOfBadcurveballPcap(t *testing.T) {
 	}
 }
 
-// TestJA4LHalvesTheClientDelta holds the same rule on the client value.
-// `ja4plus/fingerprinters/ja4l.py:15` states that `JA4L-C` is half the time from `B` to
-// `C`. The delta here is 4355 microseconds, which truncates to 2177.
+// TestJA4LHalvesTheClientLatency holds the same rule on the client value.
+// `docs/specs/foxio/JA4L.md` R7 states that part a of a TCP connection measures the ACK
+// against the SYN-ACK. The time here is 4355 microseconds, which truncates to 2177.
 // Issue #166 holds the reading.
-func TestJA4LHalvesTheClientDelta(t *testing.T) {
+func TestJA4LHalvesTheClientLatency(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	clientIP := net.IP{192, 168, 1, 1}

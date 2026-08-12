@@ -14,8 +14,8 @@ import (
 // `ja4plus/fingerprinters/ja4l.py:55` holds the same value.
 const quicPort uint16 = 443
 
-// latencyDivisor turns a measured delta into the one-way latency that JA4L reports.
-// `ja4plus/fingerprinters/ja4l.py:52` holds the same value.
+// latencyDivisor turns a measured time into the one-way latency that JA4L reports.
+// One measurement covers a round trip. `docs/specs/foxio/JA4L.md` R6 states the rule.
 const latencyDivisor = 2
 
 type connState struct {
@@ -269,11 +269,12 @@ func (c *connState) report(srcIP string, srcPort uint16, dstIP string, dstPort u
 }
 
 func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uint8, conn *connState, ts time.Time) []FingerprintResult {
-	// JA4L reports one-way latency, so the value is half the measured delta.
-	// JA4L material states `One-way TCP latency in us`, and
-	// `ja4plus/fingerprinters/ja4l.py:49` records that reading.
-	// `ja4plus/fingerprinters/ja4l.py:358` truncates the half toward zero, and Go integer
-	// division truncates the same way. Issue #166 holds the reading.
+	// JA4L reports one-way latency, so the value is half the time between the two
+	// measurement points.
+	// `docs/specs/foxio/JA4L.md` R6 states the rule. R6 cites four FoxIO reference
+	// implementations that each divide by 2.
+	// The two integer references truncate the half toward zero. Go integer division
+	// truncates the same way. Issue #166 holds the reading.
 	latencyUS := int(diff.Microseconds()) / latencyDivisor
 	if latencyUS < 1 {
 		latencyUS = 1
