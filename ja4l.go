@@ -41,12 +41,19 @@ type connState struct {
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4LFingerprinter struct {
 	connections map[string]*connState
+	// groupingKeys reads the grouping key of a connection from the reported key.
+	// A caller of CleanupConnection holds the address pair that a FingerprintResult
+	// carries, and a tunneled connection groups under the inner pair. Without this map the
+	// caller names a key that `connections` never holds.
+	// `ja4plus/fingerprinters/ja4l.py:100-104` holds the same map.
+	groupingKeys map[string]string
 }
 
 // NewJA4L creates a new JA4L latency fingerprinter.
 func NewJA4L() *JA4LFingerprinter {
 	return &JA4LFingerprinter{
-		connections: make(map[string]*connState),
+		connections:  make(map[string]*connState),
+		groupingKeys: make(map[string]string),
 	}
 }
 
@@ -56,6 +63,10 @@ func NewJA4L() *JA4LFingerprinter {
 func (f *JA4LFingerprinter) ensure() {
 	if f.connections == nil {
 		f.connections = make(map[string]*connState)
+	}
+
+	if f.groupingKeys == nil {
+		f.groupingKeys = make(map[string]string)
 	}
 }
 
@@ -99,7 +110,9 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 	connKey, direction := f.normalizeKey("tcp", groupSrcIP, srcPort, groupDstIP, dstPort)
 
 	conn := f.getOrCreateConn(connKey, direction, "tcp")
-	conn.report(srcIP, srcPort, dstIP, dstPort)
+	if conn.report(srcIP, srcPort, dstIP, dstPort) {
+		f.indexReported(conn)
+	}
 	ts := parser.GetPacketTimestamp(packet)
 
 	// SYN packet (not SYN-ACK).
@@ -175,7 +188,9 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	connKey, direction := f.normalizeKey("udp", groupSrcIP, srcPort, groupDstIP, dstPort)
 
 	conn := f.getOrCreateConn(connKey, direction, "udp")
-	conn.report(srcIP, srcPort, dstIP, dstPort)
+	if conn.report(srcIP, srcPort, dstIP, dstPort) {
+		f.indexReported(conn)
+	}
 	ts := parser.GetPacketTimestamp(packet)
 
 	// 4-point QUIC timing: A (client) -> B (server) -> C (server) -> D (client)
@@ -257,15 +272,28 @@ func (f *JA4LFingerprinter) getOrCreateConn(connKey, direction, proto string) *c
 
 // report fixes the endpoints that every result of this connection carries.
 // The first packet of the connection sets them, and a later packet does not move them.
-func (c *connState) report(srcIP string, srcPort uint16, dstIP string, dstPort uint16) {
+// It returns true when it set them, so that the caller indexes the reported key once.
+func (c *connState) report(srcIP string, srcPort uint16, dstIP string, dstPort uint16) bool {
 	if c.reportedSrcIP != "" {
-		return
+		return false
 	}
 
 	c.reportedSrcIP = srcIP
 	c.reportedDstIP = dstIP
 	c.reportedSrcPort = srcPort
 	c.reportedDstPort = dstPort
+
+	return true
+}
+
+// indexReported records the reported key of the connection, so that CleanupConnection
+// reaches the grouping key from the address pair a FingerprintResult carries.
+// The two keys hold one value for a connection that no tunnel carries.
+// FR-gaps-14c states the rule.
+func (f *JA4LFingerprinter) indexReported(conn *connState) {
+	reportedKey, _ := f.normalizeKey(conn.proto,
+		conn.reportedSrcIP, conn.reportedSrcPort, conn.reportedDstIP, conn.reportedDstPort)
+	f.groupingKeys[reportedKey] = conn.connKey
 }
 
 func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uint8, conn *connState, ts time.Time) []FingerprintResult {
@@ -299,15 +327,28 @@ func (f *JA4LFingerprinter) Reset() {
 	f.ensure()
 
 	f.connections = make(map[string]*connState)
+	f.groupingKeys = make(map[string]string)
 }
 
 // CleanupConnection removes internal state for the given connection.
+// The caller names the address pair that a FingerprintResult carries, which is the
+// reported key. A tunneled connection groups under the inner address pair, so this method
+// reads the grouping key from the reported key first.
 // JA4L normalizes keys lexicographically by IP then port.
 func (f *JA4LFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 
-	connKey, _ := f.normalizeKey(proto, srcIP, srcPort, dstIP, dstPort)
-	delete(f.connections, connKey)
+	reportedKey, _ := f.normalizeKey(proto, srcIP, srcPort, dstIP, dstPort)
+
+	// A caller that names the grouping key reaches the connection through the second
+	// delete, because no tunnel separates the two keys for most connections.
+	connKey, indexed := f.groupingKeys[reportedKey]
+	if indexed {
+		delete(f.groupingKeys, reportedKey)
+		delete(f.connections, connKey)
+	}
+
+	delete(f.connections, reportedKey)
 }
 
 // CalculateDistance estimates physical distance in miles from one-way latency.
