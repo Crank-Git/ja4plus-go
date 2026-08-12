@@ -1,12 +1,14 @@
 package ja4plus
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 // quicPort is the UDP port that names the server of a QUIC flow.
@@ -21,9 +23,13 @@ const latencyDivisor = 2
 type connState struct {
 	timestamps map[string]time.Time // "A", "B", "C", "D" (for QUIC 4-point)
 	ttls       map[string]uint8     // "client", "server"
-	direction  string               // "forward" or "reverse"
-	connKey    string
-	proto      string // "tcp" or "udp"
+	// isns holds the initial sequence number of each endpoint, keyed by the endpoint.
+	// The client measurement point reads a relative sequence number, and a relative number
+	// needs the initial sequence number that the SYN of the endpoint carries.
+	isns      map[string]uint32
+	direction string // "forward" or "reverse"
+	connKey   string
+	proto     string // "tcp" or "udp"
 	// The four fields below hold the endpoints that every result of this connection
 	// reports. The first packet fixes them, because a mirror sends both directions from
 	// one outer address pair and a later packet would otherwise pair that one address with
@@ -115,8 +121,13 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 	}
 	ts := parser.GetPacketTimestamp(packet)
 
+	// The SYN of each endpoint carries the initial sequence number that every relative
+	// number of that endpoint counts from.
+	source := tcpEndpoint(srcIP, srcPort)
+
 	// SYN packet (not SYN-ACK).
 	if tcpLayer.SYN && !tcpLayer.ACK {
+		conn.isns[source] = tcpLayer.Seq
 		conn.timestamps["A"] = ts
 		conn.ttls["client"] = ttl
 		return nil, nil
@@ -124,6 +135,7 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 
 	// SYN-ACK packet.
 	if tcpLayer.SYN && tcpLayer.ACK {
+		conn.isns[source] = tcpLayer.Seq
 		conn.timestamps["B"] = ts
 		conn.ttls["server"] = ttl
 
@@ -133,18 +145,103 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 		return nil, nil
 	}
 
-	// ACK packet (completing handshake).
+	// ACK packet that carries no SYN.
 	if tcpLayer.ACK && !tcpLayer.SYN {
-		if synAckTime, ok := conn.timestamps["B"]; ok {
-			if _, already := conn.timestamps["C"]; already {
-				return nil, nil
-			}
-			conn.timestamps["C"] = ts
-			return f.emitResult("JA4L-C", ts.Sub(synAckTime), ttl, conn, ts), nil
-		}
+		return f.clientPoint(conn, tcpLayer, source, tcpEndpoint(dstIP, dstPort), ts), nil
 	}
 
 	return nil, nil
+}
+
+// tcpEndpoint names one endpoint of a TCP connection.
+// The reference reads the address of the outer layer and the port of the inner layer, so a
+// mirrored capture separates its two directions by the port alone.
+func tcpEndpoint(ip string, port uint16) string {
+	return fmt.Sprintf("%s:%d", ip, port)
+}
+
+// relativeNumbers returns the relative sequence number and the relative acknowledgement
+// number of one TCP packet.
+//
+// It returns false when the capture holds no SYN for one of the two endpoints, because a
+// relative number counts from the initial sequence number that the SYN carries.
+// `python/ja4.py:570` reads the two numbers that the dissector counts. A sequence number
+// wraps at 32 bits, and unsigned subtraction wraps the same way.
+func (c *connState) relativeNumbers(source, target string, seq, acknowledgement uint32) (uint32, uint32, bool) {
+	sourceISN, held := c.isns[source]
+	if !held {
+		return 0, 0, false
+	}
+
+	targetISN, held := c.isns[target]
+	if !held {
+		return 0, 0, false
+	}
+
+	return seq - sourceISN, acknowledgement - targetISN, true
+}
+
+// holdsACompleteHTTPRequest reports whether the payload holds an HTTP request with its whole
+// header block.
+//
+// The reference keeps the timestamps of a packet under the protocol that its dissector
+// reports, and `python/common.py:77-83` gives a packet of the `http` protocol a separate
+// cache. That cache holds no measurement point of the connection, so a packet that carries a
+// whole request moves the client point of no connection. A packet that carries the first part
+// of a request reaches the same cache as any other TCP packet, and it does move the point.
+//
+// `latest.pcapng` stream 6 and `http-empty-useragent.pcap` prove the two halves.
+func holdsACompleteHTTPRequest(payload []byte) bool {
+	if !parser.IsHTTPRequest(payload) {
+		return false
+	}
+
+	return bytes.Contains(payload, []byte("\r\n\r\n")) || bytes.Contains(payload, []byte("\n\n"))
+}
+
+// clientPoint moves the client measurement point to this packet, and it returns the JA4L-C
+// value that the packet gives.
+//
+// The reference records the point on every packet that carries `ACK`, carries no `SYN`, and
+// holds the relative sequence number `1` and the relative acknowledgement number `1`. That is
+// the bare ACK of the handshake first, and then the first packet of the application
+// handshake. `python/ja4.py:570` states the rule.
+//
+// The point moves. `python/common.py:101` omits `C` from the fields
+// that it declines to update, so a later packet replaces the point and the value.
+//
+// The point moves in either direction, and the value reads the client TTL for a packet of
+// either direction. `python/ja4.py:159` reads `client_ttl`.
+//
+// Issue #196 holds the reading.
+func (f *JA4LFingerprinter) clientPoint(
+	conn *connState,
+	tcpLayer *layers.TCP,
+	source, target string,
+	ts time.Time,
+) []FingerprintResult {
+	synAckTime, held := conn.timestamps["B"]
+	if !held {
+		return nil
+	}
+
+	clientTTL, held := conn.ttls["client"]
+	if !held {
+		return nil
+	}
+
+	sequence, acknowledgement, read := conn.relativeNumbers(source, target, tcpLayer.Seq, tcpLayer.Ack)
+	if !read || sequence != 1 || acknowledgement != 1 {
+		return nil
+	}
+
+	if holdsACompleteHTTPRequest(tcpLayer.Payload) {
+		return nil
+	}
+
+	conn.timestamps["C"] = ts
+
+	return f.emitResult("JA4L-C", ts.Sub(synAckTime), clientTTL, conn, ts)
 }
 
 func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintResult, error) {
@@ -261,6 +358,7 @@ func (f *JA4LFingerprinter) getOrCreateConn(connKey, direction, proto string) *c
 		conn = &connState{
 			timestamps: make(map[string]time.Time),
 			ttls:       make(map[string]uint8),
+			isns:       make(map[string]uint32),
 			direction:  direction,
 			connKey:    connKey,
 			proto:      proto,
