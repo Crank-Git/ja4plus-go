@@ -9,9 +9,9 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1077
-matches, 1278 deviations, 198 accepted deviations and 198 register keys. A count that an entry
-below states therefore differs from a fresh run.
+put 35 more entries into it, issue #197 put 13 more, and issue #223 put 4 more. A run on the
+current tree reports 1091 matches, 1275 deviations, 202 accepted deviations and 202 register
+keys. A count that an entry below states therefore differs from a fresh run.
 
 ### Added
 
@@ -44,6 +44,63 @@ below states therefore differs from a fresh run.
 
 ### Fixed
 
+- `ProcessPacket` now emits the open JA4SSH window on a packet that carries the FIN flag and
+  the ACK flag. Such a packet closes the connection, and the reference writes the value on it.
+  `wireshark/source/packet-ja4.c:1400` tests the flags and
+  `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:555` tests the two
+  flags, `python/ja4.py:556` calls `finalize_ja4ssh`, and `python/ja4.py:370` defines it. The
+  port emits the window at `ja4plus/fingerprinters/ja4ssh.py:268`. Before the change
+  `CloseOpenWindows` was the one emission path, so a value the vector anchors to a FIN+ACK
+  packet reached no per-packet comparison. The emission clears the four counters of the window.
+  `python/ja4.py:377` deletes the stream from the cache, and the port clears the counters at
+  `ja4plus/fingerprinters/ja4ssh.py:439`. `wireshark/source/packet-ja4.c:1485` clears the
+  counters of a filled window alone, so Wireshark writes one value twice, at `ssh-r.pcap`
+  frame 1850 and at frame 1851. The library follows the port, and the maintainer's rule of
+  2026-08-12 states that order. An empty window still emits nothing, so the second FIN+ACK
+  packet of a close emits nothing. Issue #222 records the readings, and issue #221 recorded the
+  `ssh-r.pcap` bare ACK reading that this change completes. The measurement reads
+  `batch/236-ja4ssh-remainder` at `53e8678`, with the corpus present. 5 comparisons reach a
+  match, over `gre-sample.pcap` frame 30, `ssh-r.pcap` frames 335, 1826 and 1850, and
+  `ssh-r.pcap` stream 2 `JA4SSH.5`. 4 values move from `CloseOpenWindows` to `ProcessPacket`,
+  and part c of `ssh-r.pcap` stream 1 falls from `c5s5` to `c4s5`. `sshv1.pcap` frame 72 and
+  `v6.pcap` frame 72 now hold a value that differs, and the SSH version 1 packet boundary
+  causes that difference. The run reports 1086 matches before and 1091 after, 1284 deviations
+  before and 1279 after, and 198 register keys before and after. No register entry reads as
+  closed.
+- JA4SSH part c now counts the bare ACK of the TCP handshake. The third packet of the handshake
+  carries the ACK flag alone and no payload. It arrives before the first SSH packet of the
+  connection. `ProcessPacket` opened its state table on SSH data alone, so it dropped that
+  packet. Part c reported one client ACK too few in the first window of a connection. The
+  reference reads no SSH state before it counts:
+  `wireshark/source/packet-ja4.c:1302` tests the flags and the payload length, and
+  `python/ja4ssh.py:112` tests the same two fields. Both read the TCP port to pick the side, at
+  `wireshark/source/packet-ja4.c:1303` and at `python/ja4ssh.py:113`. A bare ACK therefore opens
+  a connection where TCP port 22 is the source port or the destination port. The port holds the
+  same test at `ja4plus/fingerprinters/ja4ssh.py:176`. A bare ACK of a connection the library
+  already reads counts on every TCP port, as `ja4plus/fingerprinters/ja4ssh.py:250` does. Issue
+  #221 records the readings. Issue #200 decomposed the cause. The measurement reads
+  `batch/236-ja4ssh-remainder` at `a3b2bf9`, with the corpus present. Part c moves on 8
+  comparisons, over `ssh-r.pcap` streams 0 and 2, `ssh-scp-1050.pcap` stream 0 and
+  `ssh2.pcapng` stream 14. 7 comparisons reach a match. `ssh-r.pcap/2/JA4SSH.1` still differs in
+  part a, which issue #223 owns. No value appears and no value disappears. The run reports 1078
+  matches before and 1085 after, 1293 deviations before and 1286 after, and 198 register keys
+  before and after. The JA4SSH deviation count falls from 32 to 25.
+- The conformance harness now compares the last JA4L value of each connection, and no longer
+  the last JA4L value of each stream number. FoxIO writes one per-stream entry for one
+  connection, and it numbers two entries of `chrome-cloudflare-quic-with-secrets.pcapng` with
+  the stream number `0`: the TCP connection of the source port `57098` and the QUIC connection
+  of the source port `50280`. The vector group therefore held two values, the adapter wrote an
+  occurrence number for them, and the last-emission rule of issue #196 reached no value. The
+  client measurement point of the TCP connection moves, so the library reports `30_64` at frame
+  3 and `149_64` at frame 4, and the surplus first value shifted every later occurrence by one.
+  The three JA4L-C occurrences of that stream held `30_64`, `149_64` and `113_64_quic` against
+  the two values `149_64` and `113_64` that the vector holds. `conformance_test.go` collapses the
+  values of one connection, and it keeps the bare key on the last value of the stream. This
+  change moves no fingerprint, and it writes no register entry. Issue #215 holds the reading.
+  Measured against `batch/236-ja4ssh-remainder` at `a3b2bf9` with the corpus present: 1 JA4L-C
+  comparison moved to a match, 1 surplus JA4L-C comparison went away, and 1 JA4L-C comparison
+  still reports the QUIC marker that issue #197 adds. The run reports 1078 matches before and
+  1079 after, 1293 deviations before and 1291 after, and 198 register keys before and after.
 - JA4SSH now counts the SSH packets that FoxIO counts, so the window fills and
   `ProcessPacket` emits a value again. `internal/parser/ssh.go:17` reads the four-byte length
   field of an SSH record, and a cipher hides that field after the key exchange, so the library
@@ -113,6 +170,34 @@ below states therefore differs from a fresh run.
 
 ### Changed
 
+- **The register declines four FoxIO JA4SSH values, and the library keeps its own value.** The
+  four keys are `ssh-r.pcap/1/JA4SSH.1`, `ssh-r.pcap/2/JA4SSH.1`,
+  `ssh-scp-1050.pcap/0/JA4SSH.3` and `ssh-scp-1050.pcap/0/JA4SSH.4`. Each one differs in part a
+  alone, which holds the two mode fields. **The project manager ruled on 2026-08-12 in issue
+  #223, and the ruling is provisional.** `.claude/rules/rulings.md` reserves a ruling to the
+  maintainer. The maintainer delegated the session and slept, and the project manager ruled
+  under that delegation. This is the one provisional ruling of the register, so a later reader
+  confirms it. **The four vectors contradict a rule that the reference implements.**
+  `docs/specs/foxio/JA4SSH.md` R13 states that the mode is `0` when the side sent no SSH packet.
+  Four implementations enforce R13: `zeek/ja4ssh/main.zeek:63`,
+  `wireshark/source/packet-ja4.c:400`, `rust/ja4/src/ssh.rs:284` and `python/ja4ssh.py:51`.
+  `testdata/foxio/python/ssh-scp-1050.pcap.json` holds `c112s1460_c0s200_c36s0` and
+  `c112s1460_c0s200_c23s0`, and each value pairs a client mode of `112` with a client packet
+  count of `0`. **A shallow copy causes the defect.** `python/ja4ssh.py:8` opens the
+  module-level template, and `python/ja4ssh.py:9` and `python/ja4ssh.py:10` hold two mutable
+  lists in it. `python/ja4ssh.py:88` and `python/ja4ssh.py:128` each open a window with
+  `entry['stats'].append(dict(ja4sh_stats))`, and `dict()` copies one level. Every window
+  therefore reads one shared payload list at `python/ja4ssh.py:146`. R8 states that the counters
+  reset after each window, and the two payload lists do not reset. **The per-packet vector
+  agrees with this library.** `testdata/foxio/wireshark/ssh-r.pcap.json` holds
+  `c48s21_c6s5_c4s5` and `c76s76_c104s96_c19s82`, which are the two library values.
+  **The library needs no change, because FR-parity-27 already holds the rule.** The mode reads
+  the packet lengths of its own window alone, and `TestJA4SSHReadsTheModeOfTheWindowAlone` holds
+  that rule. Port issue #96 ruled it. **This change moves no fingerprint value, and it changes
+  no behaviour.** Measured on `batch/236-ja4ssh-remainder` at `cc2c522` with the corpus present:
+  the run reports 1091 matches before and after, and 1279 deviations before and 1275 after. The
+  register holds 198 keys before and 202 after, and no entry reads as closed. Coverage reads
+  72.4% before and after. `docs/specs/spec.md` `## Changelog` round 23 records the ruling.
 - **JA4L now writes the marker `quic` as the third part of a value on a QUIC connection, and a
   TCP connection keeps two parts.** This is a breaking behaviour change under `v1.0.0`.
   **The maintainer ruled on 2026-08-12 in issue #197, and issue #127 holds the original

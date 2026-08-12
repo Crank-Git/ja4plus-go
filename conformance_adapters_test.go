@@ -81,6 +81,11 @@ const conformanceMovingPointFingerprinter = "JA4LFingerprinter"
 // emission of one stream. `docs/specs/foxio/JA4L.md` R33 names the measurement point that
 // moves, and `ja4l_test.go` holds the rule that point B never moves.
 //
+// The collapse reads one connection, and never one stream number. FoxIO writes one
+// per-stream entry for one connection, and two entries of one capture can carry one stream
+// number. `conformanceMovedPoints` in `conformance_test.go` holds the collapse, and issue
+// #215 holds the reading.
+//
 // Round 20 of the `## Changelog` of `docs/specs/spec.md` narrows the ruling to this set, and
 // it reverses no part of round 15. A method that emits once per protocol reaches no entry
 // here, and a method that emits once per request reaches none either. The second value of
@@ -473,10 +478,13 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 // of the `## Changelog` of `docs/specs/spec.md` records the narrower rule, and issue #209
 // measured what the wider rule cost.
 //
-// Two callers reach this function, and each one reaches a different branch.
-// `conformanceProducedByStream` at `conformance_test.go:449` builds the produced map, and it
-// counts the emissions of the library, so it reaches the second branch below. This function
-// builds the expected map through `conformanceWriteStreamGroup`, which forces
+// Three callers reach this function, and each one reaches a different branch.
+// `conformanceProducedByStream` at `conformance_test.go:460` builds the produced map, and it
+// counts the emissions of the library, so it reaches the second branch below.
+// `conformanceMovedPoints.write` at `conformance_test.go:547` builds the produced map for a
+// method of `conformanceLastEmissionMethods`, and it counts the connections of one group. It
+// reaches the first branch or the third one. This function builds the expected map through
+// `conformanceWriteStreamGroup`, which forces
 // `usesOccurrence` true whenever one vector group holds more than one value. The occurrence
 // of an expected value is therefore always 1, and the expected map reaches the second branch
 // on no input. **Keep the branch.** The produced map needs it, and no special case in this
