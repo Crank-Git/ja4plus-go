@@ -12,8 +12,8 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1091 |
-| Deviations | 1275 |
-| Accepted deviations | 202 |
+| Deviations | 1274 |
+| Accepted deviations | 203 |
 | Captures the suite compared | 35 |
 | Captures the suite compared nothing on | 3 |
 
@@ -21,7 +21,7 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
-| per-stream | 742 | 459 | 167 |
+| per-stream | 742 | 458 | 168 |
 | per-packet | 349 | 816 | 35 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
@@ -96,7 +96,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4 | 4 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4_r.2` | the library produces a value the vector does not hold | (none) | `q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4H | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4H` | the vector holds a value the library does not produce | `ge20nn12enus_60f823d07c94_000000000000_000000000000` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4H | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4H_ro` | the vector holds a value the library does not produce | `ge20nn12enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_` | (none) |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4L | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4L-C.2` | the two values differ | `113_64` | `113_64_quic` |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4L | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4L-C.2` | the two values differ (accepted) | `113_64` | `113_64_quic` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4LS | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4L-S.2` | the two values differ | `10990_56` | `9285_56_quic` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4S.2` | the library produces a value the vector does not hold | (none) | `q130200_1301_234ea6891581` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4S_r` | the vector holds a value the library does not produce | `t130200_1301_0033,002b` | (none) |
