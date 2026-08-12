@@ -56,7 +56,7 @@ that the interface declares.
   The 10 report copies share the SHA-256 prefix `47f414a1bf67f069`. `ja4h.go:315` is the
   one map range that the JA4H value reads, and `ja4h.go:318` sorts that result by the
   cookie name. A map key is unique, so the comparator meets no tie. **Issue #286 is the
-  probable closer**, because `internal/parser/http.go:88` now returns nil for a header
+  probable closer**, because `internal/parser/http.go:90` now returns nil for a header
   block that has not ended. The worker removed the sort at `ja4h.go:318`, and each test
   then failed. **The member changes no library file, and it moves no fingerprint value.**
   The run reports 1623 matches, 680 deviations, 409 accepted deviations and 409 register
@@ -73,23 +73,23 @@ that the interface declares.
   against the 409 register keys**, so the check blocks nothing today. **The check covers
   the value half alone, and never the orphan half.** A register key that the run never
   reaches falls outside the key loop of the engine. Issue #307 asks for no second pass over
-  the register. Seven tests hold the check, and `go vet -tags conformance ./...`
+  the register. Nine tests hold the check, and `go vet -tags conformance ./...`
   reported `result.Stale undefined` before the engine held the field. The worker changed
   one character of the first register entry, and the run then reported `the run reports 1
   stale register entries`. **The member moves no fingerprint value.** The four counts read
   1623, 680, 409 and 409 before and after. Issue #307 holds the measurement.
 - No exported name, and one rule that forbids `git stash` in a worktree of this
-  repository. `CLAUDE.md` `## Conventions` holds the rule as the first bullet, and
+  repository. `CLAUDE.md` `## Conventions` holds the rule as the first bullet.
   `.claude/rules/worktrees.md` holds the reason, the three alternatives and two readings.
   Batch #293 lost the work of issue #295 to a stash push and a stash pop, and neither
   worker saw an error. **A worktree cannot hold a stash of its own.** `git-worktree(1)` at
-  git 2.53.0 shares every ref under `refs/` except `refs/bisect`, `refs/worktree` and
-  `refs/rewritten`, and `git-stash(1)` writes `refs/stash`. Copy the file with `cp`, or
+  git 2.53.0 shares every ref under `refs/`, except `refs/bisect`, `refs/worktree` and
+  `refs/rewritten`. `git-stash(1)` writes `refs/stash`. Copy the file with `cp`, or
   restore it with `git checkout -- <file>`. `.githooks/reference-transaction` refuses a
   write to `refs/stash` from a linked worktree, and it repairs no `git stash pop`. **The
   hook is inert until the maintainer runs `git config core.hooksPath .githooks`.** The
   second reading records that a `PostToolUse` hook of `.claude/settings.json` did not run
-  for a worktree-isolated worker, so a `PreToolUse` hook stops no worker. **The member
+  for a worktree-isolated worker. A `PreToolUse` hook therefore stops no worker. **The member
   changes no Go file, and it moves no fingerprint value.** Issue #305 holds the readings.
 - No exported name, and eight numbered requirements that hold `CloseConnectionWindow`:
   FR-parity-33a through FR-parity-33h, at
