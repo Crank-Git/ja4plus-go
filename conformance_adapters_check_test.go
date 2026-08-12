@@ -221,6 +221,80 @@ func TestTheStreamAdapterKeepsTheBareKeyForAStreamThatHoldsOneValue(t *testing.T
 	}
 }
 
+// oneConformanceQuicStreamEntry returns one per-stream vector entry of
+// `chrome-cloudflare-quic-with-secrets.pcapng`. The two connections of that capture share
+// the two addresses and the destination port, and the source port keeps them apart.
+func oneConformanceQuicStreamEntry(sourcePort string, methods map[string]string) conformanceStreamEntry {
+	entry := oneConformanceStreamEntry(methods)
+	entry["src"] = json.RawMessage(`"2001:db8:1::1"`)
+	entry["dst"] = json.RawMessage(`"2606:4700:10::6816:826"`)
+	entry["srcport"] = json.RawMessage(`"` + sourcePort + `"`)
+
+	return entry
+}
+
+// `tcp.stream` and `udp.stream` are two counters, and both start at 0. One capture
+// therefore names a TCP connection and a UDP connection with the stream number `0`.
+// `chrome-cloudflare-quic-with-secrets.pcapng` holds such a pair on the source ports
+// `57098` and `50280`, and the vector keeps the two apart by the source port.
+//
+// A stream name that holds the stream number alone merges the two connections. The harness
+// then reports a value of the second connection as a later occurrence of the first, and the
+// report names a connection that produced no such value. Issue #250 holds the reading.
+func TestTheStreamAdapterKeepsTwoConnectionsOfOneStreamNumberApart(t *testing.T) {
+	const capture = "chrome-cloudflare-quic-with-secrets.pcapng"
+
+	shape, err := conformanceExpectedFromStreamVector(capture, []conformanceStreamEntry{
+		oneConformanceQuicStreamEntry("57098", map[string]string{"JA4L-C": "149_64"}),
+		oneConformanceQuicStreamEntry("50280", map[string]string{"JA4L-C": "113_64"}),
+	})
+	if err != nil {
+		t.Fatalf("the adapter rejects the two entries: %v", err)
+	}
+
+	wanted := map[conformanceKey]string{
+		{Capture: capture, Stream: "0:57098", Method: "JA4L-C"}: "149_64",
+		{Capture: capture, Stream: "0:50280", Method: "JA4L-C"}: "113_64",
+	}
+
+	if len(shape.Expected) != len(wanted) {
+		t.Fatalf("the adapter reads %d values, and the two connections hold %d", len(shape.Expected), len(wanted))
+	}
+
+	for key, value := range wanted {
+		if got := shape.Expected[key]; got != value {
+			t.Errorf("the adapter writes %q under the key %q, and the vector holds %q", got, key, value)
+		}
+	}
+
+	// The producer reads the stream name from this map, so a name the two sides do not
+	// share produces a deviation on every value of the capture.
+	for port, stream := range map[uint16]string{57098: "0:57098", 50280: "0:50280"} {
+		endpoint := conformanceEndpointKey("2001:db8:1::1", port, "2606:4700:10::6816:826", 443)
+		if got := shape.StreamOfEndpoint[endpoint]; got != stream {
+			t.Errorf("the adapter names the connection on the source port %d %q, and the expected key holds %q",
+				port, got, stream)
+		}
+	}
+}
+
+// A stream number that names one connection keeps the bare number. A register key of
+// `testdata/deviations.json` therefore names the comparison it named before, and the
+// disambiguation reaches the colliding stream number alone.
+func TestTheStreamAdapterKeepsTheBareNumberForAStreamNumberOfOneConnection(t *testing.T) {
+	shape, err := conformanceExpectedFromStreamVector("tls12.pcap", []conformanceStreamEntry{
+		oneConformanceStreamEntry(map[string]string{"JA4S": "t130200_1301_234ea6891581"}),
+	})
+	if err != nil {
+		t.Fatalf("the adapter rejects the entry: %v", err)
+	}
+
+	key := conformanceKey{Capture: "tls12.pcap", Stream: "0", Method: "JA4S"}
+	if _, held := shape.Expected[key]; !held {
+		t.Errorf("the adapter writes no value under the key %q", key)
+	}
+}
+
 // The adapter keeps the occurrence number that the vector writes, and it never renumbers
 // one. `JA4X.1` and `JA4X.2` on one stream stay `JA4X.1` and `JA4X.2`.
 func TestTheStreamAdapterKeepsTheOccurrenceNumberTheVectorWrites(t *testing.T) {
@@ -428,6 +502,9 @@ func TestTheStreamAdapterNamesTheStreamByTheStreamField(t *testing.T) {
 // the source port `57098`, and the second one carries QUIC on the source port `50280`. The
 // client point of the TCP connection moves, so the library reports `30_64` and then `149_64`
 // for it. Issue #215 holds the reading.
+//
+// Issue #250 separates the two connections, so each one keeps the bare key `JA4L-C` and the
+// stream name carries the source port.
 func TestTheStreamAdapterReportsOneJA4LCValuePerConnectionOnChromeCloudflareQuic(t *testing.T) {
 	conformanceSkipWithoutCorpus(t)
 
@@ -446,15 +523,28 @@ func TestTheStreamAdapterReportsOneJA4LCValuePerConnectionOnChromeCloudflareQuic
 	packets := loadPCAP(t, filepath.Join(conformanceCaptureDir, capture))
 	produced := conformanceProducedByStream(t, capture, packets, shape)
 
-	first := conformanceKey{Capture: capture, Stream: "0", Method: "JA4L-C.1"}
-	if produced[first] != "149_64" {
+	tcp := conformanceKey{Capture: capture, Stream: "0:57098", Method: "JA4L-C"}
+	if produced[tcp] != "149_64" {
 		t.Errorf("the harness reports %q for %q, and the last value of the TCP connection is `149_64`",
-			produced[first], first)
+			produced[tcp], tcp)
 	}
 
-	third := conformanceKey{Capture: capture, Stream: "0", Method: "JA4L-C.3"}
-	if value, held := produced[third]; held {
-		t.Errorf("the harness reports %q for %q, and the capture holds two connections that carry the stream number `0`",
-			value, third)
+	quic := conformanceKey{Capture: capture, Stream: "0:50280", Method: "JA4L-C"}
+	if produced[quic] != "113_64_quic" {
+		t.Errorf("the harness reports %q for %q, and the last value of the QUIC connection is `113_64_quic`",
+			produced[quic], quic)
+	}
+
+	// A value of one connection numbered as a later occurrence of the other is the defect
+	// that issue #250 repairs. Each connection reports one JA4L-C value, so no occurrence
+	// number reaches the key.
+	for _, method := range []string{"JA4L-C.1", "JA4L-C.2", "JA4L-C.3"} {
+		for _, stream := range []string{"0", "0:57098", "0:50280"} {
+			numbered := conformanceKey{Capture: capture, Stream: stream, Method: method}
+			if value, held := produced[numbered]; held {
+				t.Errorf("the harness reports %q for %q, and each connection reports one JA4L-C value",
+					value, numbered)
+			}
+		}
 	}
 }
