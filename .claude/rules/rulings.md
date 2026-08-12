@@ -32,6 +32,29 @@ moving branch is a reading of something the next person cannot see.
 **Never describe an external interface from memory.** `.claude/rules/external-apis.md`
 holds the rule and the interface list.
 
+## A citation names its tracker
+
+**A bare `#N` names an issue of this repository.** A citation of an issue of the port
+writes `the port's issue #N` in a sentence, or `Crank-Git/ja4plus#N` in a table cell.
+Those two forms are the ones this tree already uses.
+
+**A bare number that names the port is a defect.** `#127` names the JA4L part count in
+this repository, and it names the JA4 ALPN value in the port. A reader who does not check
+the tracker conflates an ALPN ruling with a JA4L ruling. Issue #255 records the collision,
+and issue #254 records the same defect in the file namespace.
+
+**One question carries a different number in each tracker.** The JA4L part count is issue
+#127 here and issue #225 in the port. Write both numbers when a reader needs both halves.
+
+Two pages carry a local rule, and each one states that rule.
+
+- **The `Ruling` column of the register in `docs/specs/spec.md`.** Its preamble states that
+  the column names the port issue, so a bare number in that column names the port. A cell
+  that names an issue of this repository says so.
+- **`docs/specs/foxio/port-register.md`.** It is a verbatim copy of a section of the port's
+  specification, so a bare number in it names the port. `docs/specs/foxio/README.md` holds
+  that reading. **Never edit the copy.**
+
 ## Text copied from FoxIO material is verbatim
 
 `.claude/rules/ste.md` bars a rewording of copied text. **A reworded quotation is no longer
