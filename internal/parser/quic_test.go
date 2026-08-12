@@ -278,6 +278,30 @@ func TestHkdfExpandLabel(t *testing.T) {
 	}
 }
 
+func TestHasQUICLongHeaderReadsTheHeaderForm(t *testing.T) {
+	cases := []struct {
+		name    string
+		payload []byte
+		want    bool
+	}{
+		{"a version 1 long header", []byte{0xc0, 0x00, 0x00, 0x00, 0x01, 0x00}, true},
+		{"a version 2 long header", []byte{0xd0, 0x6b, 0x33, 0x43, 0xcf, 0x00}, true},
+		{"a version this parser does not know", []byte{0xc0, 0xaa, 0xbb, 0xcc, 0xdd}, true},
+		{"a short header", []byte{0x40, 0x00, 0x00, 0x00, 0x01, 0x00}, false},
+		{"a version negotiation packet", []byte{0xc0, 0x00, 0x00, 0x00, 0x00, 0x00}, false},
+		{"a payload of 4 bytes", []byte{0xc0, 0x00, 0x00, 0x00}, false},
+		{"an empty payload", nil, false},
+		{"an NTP message", make([]byte, 48), false},
+	}
+	for _, one := range cases {
+		t.Run(one.name, func(t *testing.T) {
+			if got := HasQUICLongHeader(one.payload); got != one.want {
+				t.Errorf("HasQUICLongHeader() = %v, want %v", got, one.want)
+			}
+		})
+	}
+}
+
 func bytesEqual(a, b []byte) bool {
 	if len(a) != len(b) {
 		return false
