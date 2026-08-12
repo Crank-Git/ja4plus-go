@@ -74,8 +74,8 @@ func TestJA4H_RawHoldsTheSortedCookieOrder(t *testing.T) {
 // `testdata/foxio/reference/python/ja4h.py:82` appends the two cookie fields under
 // `if 'cookie_fields' in x`, so a request with no cookie ends after one underscore.
 // `testdata/foxio/reference/wireshark/source/packet-ja4.c:603` writes two trailing
-// underscores for the same request. #285 rules that split, and this test fails when the
-// ruling reverses the shape.
+// underscores for the same request. **#285 holds that reference split, and the maintainer
+// rules it.** This test fails when a ruling reverses the shape, which is the point of it.
 func TestJA4H_RawEndsAfterTheHeaderNamesWhenTheRequestHoldsNoCookie(t *testing.T) {
 	raw := "GET /p HTTP/1.1\r\n" +
 		"Host: example.com\r\n" +

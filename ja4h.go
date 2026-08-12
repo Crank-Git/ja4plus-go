@@ -369,7 +369,8 @@ func ja4hRawPrefix(req *parser.HTTPRequest) string {
 // `testdata/foxio/reference/python/ja4h.py:82` appends the two cookie fields only when the
 // request holds a cookie, and `computeJA4HRawOriginalOrder` ends the same way.
 // `testdata/foxio/reference/wireshark/source/packet-ja4.c:603` writes two trailing
-// underscores for that request, and #285 rules the split between the two references.
+// underscores for that request. **#285 holds that reference split, and the maintainer rules
+// it.** This function follows `computeJA4HRawOriginalOrder`, so one ruling moves both forms.
 func computeJA4HRaw(req *parser.HTTPRequest) string {
 	raw := ja4hRawPrefix(req)
 
