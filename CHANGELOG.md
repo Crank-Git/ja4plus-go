@@ -58,11 +58,13 @@ below states therefore differs from a fresh run.
   `wireshark/source/packet-ja4.c:1469` counts one packet for each `ssh.direction` field, and
   `python/ja4ssh.py:94` counts the packet whose protocol list holds `ssh`. The port holds the
   same rule at `ja4plus/fingerprinters/ja4ssh.py:247`. Issue #200 records the readings.
-  Measured against `batch/210-session5-followups` at `5f05554` with the corpus present: 12
+  Measured against `batch/210-session5-followups` at `c4978ab` with the corpus present: 12
   JA4SSH comparisons moved to a match and 2 spurious values appeared, on `gre-sample.pcap`,
   `ssh-r.pcap`, `ssh-scp-1050.pcap`, `ssh.pcapng`, `ssh2.pcapng`, `sshv1.pcap` and `v6.pcap`.
   The run reports 1065 matches before and 1077 after, 1288 deviations before and 1278 after,
   and 198 register keys before and after. The JA4SSH deviation count falls from 42 to 32.
+  The base moved twice while this branch was open, and the four counts read the same on
+  `5f05554` and on `c4978ab`, because #211 moves no fingerprint of the corpus.
 - JA4L now times a second connection on one grouping key from the measurement points of that
   connection. `ja4l.go:150` wrote the initial sequence number of the endpoint before the guard
   that holds point A. A second connection therefore kept the points of the first one. It
