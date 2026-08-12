@@ -193,6 +193,16 @@ func runAnalyze(args []string) error {
 		}
 	}
 
+	// The capture ends, so a connection whose last JA4SSH window never reached the threshold
+	// holds that window open. FR-parity-32 emits it here, because no packet triggers it.
+	for _, r := range proc.CloseOpenWindows() {
+		if typesFilter != nil && !typesFilter[strings.ToLower(r.Type)] {
+			continue
+		}
+
+		results = append(results, r)
+	}
+
 	// A fingerprinter returns a non-fatal error for a record it cannot read. One line for
 	// the whole capture reaches standard error, so standard output holds the results
 	// alone. The exit code stays 0, because the capture itself is sound.

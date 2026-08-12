@@ -428,11 +428,17 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 // conformanceStreamMethodKey returns the key form that the vector writes for the method.
 //
 // The vector writes `JA4.1` and it writes `JA4S`, so the produced key follows the form the
-// vector uses for that method. A method that the vector writes without an occurrence number
-// still gains one for the second value on one stream, so an extra value reports as a
-// deviation rather than replacing the first.
+// vector uses for that method.
+//
+// A method that the vector holds once keeps the bare key for every value of one stream, so
+// the last value the library reports replaces the earlier ones. The reference is a batch
+// program that publishes the final state of its cache, and this library is a streaming
+// interface that reports a value for each packet. A moved measurement point therefore
+// reports twice, and the last report holds the value that the reference publishes.
+// `docs/specs/foxio/JA4L.md` R33 names the measurement point that moves, and the maintainer
+// ruled on 2026-08-12 in issue #196.
 func conformanceStreamMethodKey(method string, occurrence int, usesOccurrence bool) string {
-	if usesOccurrence || occurrence > 1 {
+	if usesOccurrence {
 		return conformanceMethodOccurrence(method, occurrence)
 	}
 

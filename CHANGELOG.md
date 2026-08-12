@@ -8,12 +8,22 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
-entries into `testdata/deviations.json`, and the register held no entry before that. A run
-on the current tree reports 1035 matches, 3155 deviations, 150 accepted deviations and 150
-register keys. A count that an entry below states therefore differs from a fresh run.
+entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
+put 35 more entries into it. A run on the current tree reports 1076 matches, 1290 deviations,
+185 accepted deviations and 185 register keys. A count that an entry below states therefore
+differs from a fresh run.
 
 ### Added
 
+- Four exported names, which emit the JA4SSH window that a connection holds open at the end
+  of the packet source: the `WindowCloser` interface, `JA4SSHFingerprinter.CloseOpenWindows`,
+  `Processor.CloseOpenWindows` and `SyncProcessor.CloseOpenWindows`. The maintainer ruled on
+  2026-08-11 that the method sits on a second optional interface, so the exported
+  `Fingerprinter` interface does not change and no third-party implementation breaks. A
+  caller discovers the interface with a type assertion, and a stateless fingerprinter
+  implements nothing. `cmd/ja4plus analyze` calls the method when the capture ends.
+  `docs/specs/features/08-python-parity.md` FR-parity-29 through FR-parity-33 state the
+  requirements, and the port's issues #105, #199 and #214 hold the ruling.
 - Eight exported names, which read a pcapng Decryption Secrets Block and decrypt one QUIC
   packet with a TLS secret: `ErrNoSecret`, `KeyLog`, `ParseKeyLog`,
   `ReadKeyLogFromCapture`, `KeyLog.Secret`, `KeyLog.ClientRandoms`, `KeyLog.Len` and
@@ -34,6 +44,19 @@ register keys. A count that an entry below states therefore differs from a fresh
 
 ### Fixed
 
+- The JA4SSH window now emits at the packet count the caller names, and the threshold holds
+  no upper cap. `ja4ssh.go:196-199` capped it at 10, so the library over-emitted by hundreds
+  of values on one capture. The window also counts the SSH packets of the two directions
+  alone, so a bare ACK no longer advances it and a window of bare ACKs produces no value.
+  The HASSH trigger goes too: `ja4ssh.go:201` emitted when the two HASSH values were present
+  and the window held one packet, and the port holds no such rule. `docs/specs/spec.md`
+  `## Parity with ja4plus` holds the four JA4SSH rows, FR-parity-25 through FR-parity-28
+  state the requirements, and the port's issues #28, #96 and #97 hold the rulings. Measured
+  against `epic/48-parity-tls-latency` at `ec0f63e` with the corpus present: 1807 JA4SSH
+  comparisons moved, on `gre-sample.pcap`, `ssh-r.pcap`, `ssh-scp-1050.pcap`, `ssh.pcapng`,
+  `ssh2.pcapng`, `sshv1.pcap` and `v6.pcap`. The run reports 1035 matches before and after,
+  3155 deviations before and 1348 after, and 150 register keys before and after. Every moved
+  comparison was an extra value that the vector does not hold.
 - `CleanupConnection` on JA4L now removes a tunneled connection. The method normalized the
   address pair the caller gave, and it deleted that one key. `normalizeKey` builds the
   grouping key from the inner address pair, and a `FingerprintResult` reports the outer
@@ -54,6 +77,54 @@ register keys. A count that an entry below states therefore differs from a fresh
 
 ### Changed
 
+- **The JA4L third part reaches a recorded reading, and it moves no fingerprint.**
+  `docs/specs/foxio/JA4L.md` R35 states the reading, and `docs/specs/spec.md` `## Changelog`
+  round 16 states the measurement. On a TCP connection the third number of a per-packet vector
+  is the Wireshark part c, which R24 names as the numerator of `ja4.ja4l_delta`. The
+  `tcpdump-geneve.pcap` frame 13 vector holds `ja4.ja4l` as `93_64_124` and `ja4.ja4l_delta`
+  as `1.3`, and `124 / 93` reads `1.3`. Issue #127 declines that part c, so this release adds
+  one test that holds the two-part TCP form. **On a QUIC connection the third part is the
+  marker `quic`, and the part count stays open.** The two FoxIO vector sets state two
+  different part counts for one QUIC connection. On stream 36 of `ssh2.pcapng` the per-stream
+  vector holds `JA4L-C` as `169_128`, and the per-packet vector holds `ja4.ja4l` as
+  `169_128_quic` on frame 1147. The marker moves the library value on 16 per-packet
+  comparisons and on 16 per-stream comparisons, across 3 captures. It closes 2 per-packet
+  comparisons, and it opens 13 per-stream comparisons that match exactly today.
+  **Issue #197 holds the question, and the maintainer rules.** The register holds 185 keys
+  before and after, and no entry reads as closed.
+- **JA4L now fills the TCP client measurement point from the packet that the Python
+  reference names, and the client value of a TCP connection moves.** This is a breaking
+  behaviour change under `v1.0.0`. **The maintainer ruled on 2026-08-12 in issue #196.**
+  Point `C` reads every packet that carries `ACK`, carries no `SYN`, and holds the relative
+  sequence number `1` and the relative acknowledgement number `1`. A later such packet
+  replaces the point. A packet that carries a whole HTTP request moves no point, because the
+  reference keeps such a packet under a separate cache. Earlier releases read the first packet
+  that carried `ACK` and no `SYN`, they tested no sequence number, and the point never moved.
+  **The four FoxIO implementations state three different rules, so this is a ruling and not a
+  reading.** `docs/specs/foxio/JA4L.md` R33 states the four rules, and R34 states that the two
+  FoxIO vector sets hold two different values for stream 0 of `badcurveball.pcap`. Python
+  states the rule that this change implements, at `python/ja4.py:570`. Wireshark, Rust and
+  Zeek each fill the point once and never move it. `docs/specs/spec.md` `## Changelog` round
+  15 records the ruling. **The ruling knowingly gives up the per-packet vector**, which holds
+  `2177_64_114797` on frame 9 of `badcurveball.pcap` while the library writes part a as
+  `2181`. Thirty-five entries reach `testdata/deviations.json` for that divergence, each with
+  `"capability": false` and the ruling `#196`. Each reason states the part a divergence alone,
+  because issue #197 owns the third part. The conformance harness now compares the last
+  emission for a per-stream method that the vector holds once. The library keeps its
+  per-packet streaming contract, it suppresses no intermediate value, and it gains no flush.
+  **Two further repairs land in the same change, and the reference is unanimous on both.**
+  Point `A` and point `B` no longer move, so a repeated SYN-ACK reports no second server
+  value; `python/common.py:101` names both fields. The two endpoint names of a relative number
+  read the grouping address pair, so the mirrored session of `gre-erspan-vxlan.pcap` keeps its
+  client value. Measured on `epic/48-parity-tls-latency` at `3e7a47a` with the corpus present:
+  43 `JA4L-C` comparisons moved to match on 22 captures, and 35 per-packet `JA4L` comparisons
+  gained a registered divergence. The per-stream set reports 703 matches, 514 deviations and
+  150 accepted deviations before the change, and 744 matches, 457 deviations and 150 accepted
+  deviations after it. The per-packet set reports 332 matches, 834 deviations and 0 accepted
+  deviations before the change, and 332 matches, 833 deviations and 35 accepted deviations
+  after it. The register holds 150 keys before and 185 after. Every `JA4L-C` comparison of the
+  per-stream set now matches. Issues #205 and #206 hold the two comparisons the harness change
+  leaves worse, both on `chrome-cloudflare-quic-with-secrets.pcapng` stream 0.
 - **JA4L and JA4LS now report half of the measured time, and every latency value moves.**
   This is a breaking behaviour change under `v1.0.0`. The `JA4L.png` image labels part a
   `One-way TCP latency in µs (1ms = 1,000µs)`. `docs/specs/foxio/JA4L.md` R6 states that
