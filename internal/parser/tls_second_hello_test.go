@@ -6,9 +6,9 @@ import (
 
 // changeCipherSpecRecord returns the six bytes of a TLS ChangeCipherSpec record.
 //
-// A TLS 1.3 client in compatibility mode sends this record before its second client
-// hello. `testdata/foxio/pcap/tls-handshake.pcapng` packet 125 carries it at offset 0,
-// and the second client hello at offset 6.
+// A TLS 1.3 client in compatibility mode sends this record before its second client hello.
+// `testdata/foxio/pcap/tls-handshake.pcapng` packet 125 carries it at offset 0. The same
+// packet carries the second client hello at offset 6.
 func changeCipherSpecRecord() []byte {
 	return []byte{0x14, 0x03, 0x03, 0x00, 0x01, 0x01}
 }
@@ -114,6 +114,21 @@ func TestParseClientHelloReadsNoHelloPastATruncatedLeadingRecord(t *testing.T) {
 				t.Error("expected nil for a payload that holds no whole client hello")
 			}
 		})
+	}
+}
+
+func TestParseClientHelloReportsATruncatedHelloBehindAChangeCipherSpecRecord(t *testing.T) {
+	// The walk hands a truncated handshake record to the same reader that a first-record
+	// handshake reaches, so one record reports one error wherever it sits.
+	truncated := []byte{0x16, 0x03, 0x03, 0x00, 0x64, 0x01, 0x00, 0x00, 0x60, 0x03}
+	payload := append(changeCipherSpecRecord(), truncated...)
+
+	ch, err := ParseClientHello(payload)
+	if err == nil {
+		t.Fatal("expected an error for a truncated record behind the ChangeCipherSpec record")
+	}
+	if ch != nil {
+		t.Error("expected nil beside the error")
 	}
 }
 
