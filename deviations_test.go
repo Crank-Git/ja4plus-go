@@ -59,12 +59,13 @@ type deviationEntry struct {
 }
 
 // parseDeviationRegister returns one entry for each element of the register content.
-// It returns an error in four cases.
+// It returns an error in five cases.
 //
 //   - The content is not a JSON array of objects.
 //   - An entry omits a field.
 //   - An entry holds a field this project does not define.
 //   - A field value has the wrong form.
+//   - Two entries hold one key.
 func parseDeviationRegister(content []byte) ([]deviationEntry, error) {
 	var raw []map[string]json.RawMessage
 	if err := json.Unmarshal(content, &raw); err != nil {
@@ -73,11 +74,23 @@ func parseDeviationRegister(content []byte) ([]deviationEntry, error) {
 
 	entries := make([]deviationEntry, 0, len(raw))
 
+	// FR-reference-31 gives one entry to one comparison. The conformance suite reads the
+	// register as a map, so a second entry for one key replaces the first in silence. The
+	// ruling of the first entry then accepts nothing.
+	first := make(map[string]int, len(raw))
+
 	for index, fields := range raw {
 		entry, err := readDeviationEntry(fields)
 		if err != nil {
 			return nil, fmt.Errorf("entry %d: %w", index, err)
 		}
+
+		if held, twice := first[entry.Key]; twice {
+			return nil, fmt.Errorf("entry %d holds the key %q, and entry %d holds it too, so one comparison carries two entries",
+				index, entry.Key, held)
+		}
+
+		first[entry.Key] = index
 
 		entries = append(entries, entry)
 	}
@@ -299,7 +312,9 @@ func TestEveryRulingOfTheRegisterNamesAnIssue(t *testing.T) {
 func TestTheReaderAcceptsAWellFormedEntry(t *testing.T) {
 	valueDecline := oneValidDeviationEntry()
 
+	// FR-reference-31 gives one entry to one key, so the second entry carries its own key.
 	capabilityDecline := oneValidDeviationEntry()
+	capabilityDecline["key"] = "ssh2.pcapng/15/JA4L-C"
 	capabilityDecline["capability"] = true
 	capabilityDecline["ours"] = ""
 
@@ -361,10 +376,18 @@ func TestTheReaderRejectsAMalformedRegister(t *testing.T) {
 		return content
 	}
 
+	// Two entries that hold one key need two entries, and `withField` builds one. The
+	// second entry carries a different ruling, so the register reads as two rulings on one
+	// comparison.
+	twiceFirst := oneValidDeviationEntry()
+	twiceSecond := oneValidDeviationEntry()
+	twiceSecond["ruling"] = "#217"
+
 	cases := []struct {
 		name    string
 		content []byte
 	}{
+		{"two entries hold one key", oneDeviationRegister(t, twiceFirst, twiceSecond)},
 		{"the content is not an array", []byte(`{"key": "a.pcap/1/JA4"}`)},
 		{"the content is not JSON", []byte(`not json`)},
 		{"the entry omits the key", withoutField("key")},
@@ -397,6 +420,53 @@ func TestTheReaderRejectsAMalformedRegister(t *testing.T) {
 				t.Errorf("the reader accepts a register where %s", testCase.name)
 			}
 		})
+	}
+}
+
+func TestTheRegisterHoldsEachKeyOnce(t *testing.T) {
+	// This test reads the keys of the tracked file and never `readDeviationRegister`. The
+	// reader declines a second entry for one key, so a test that read the register through
+	// it could never reach this loop and could never fail. FR-reference-31 names a test of
+	// its own, and a reader who moves the check out of the reader still has one.
+	content, err := os.ReadFile(deviationRegisterFile)
+	if err != nil {
+		t.Fatalf("read %s: %v", deviationRegisterFile, err)
+	}
+
+	var raw []struct {
+		Key string `json:"key"`
+	}
+
+	if err := json.Unmarshal(content, &raw); err != nil {
+		t.Fatalf("decode %s: %v", deviationRegisterFile, err)
+	}
+
+	first := make(map[string]int, len(raw))
+
+	for index, entry := range raw {
+		if held, twice := first[entry.Key]; twice {
+			t.Errorf("entry %d and entry %d hold the key %q, and FR-reference-31 gives one entry to one comparison",
+				held, index, entry.Key)
+
+			continue
+		}
+
+		first[entry.Key] = index
+	}
+
+	t.Logf("the register holds %d entries and %d keys", len(raw), len(first))
+}
+
+func TestTheSchemaDocumentStatesTheMeaningOfTheMiddleKeyPart(t *testing.T) {
+	document := readRepoFile(t, "testdata/README.md")
+
+	// FR-reference-29 gives the middle part two meanings, one for each vector set. A reader
+	// cannot tell a frame number from a stream number, because both are small integers, so
+	// the schema document must name both.
+	for _, wanted := range []string{"stream number", "frame number"} {
+		if !strings.Contains(document, wanted) {
+			t.Errorf("testdata/README.md does not name the %s, and FR-reference-29 states both meanings of the middle key part", wanted)
+		}
 	}
 }
 
