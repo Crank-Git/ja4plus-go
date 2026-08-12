@@ -86,7 +86,9 @@ func TestJA4T_SYNACKPacket(t *testing.T) {
 func TestJA4T_NoOptions(t *testing.T) {
 	pkt := buildTCPPacket(t, 12345, 80, true, false, 65535, nil)
 	result := ComputeJA4T(pkt)
-	expected := "65535_0_0_0"
+	// Ruling #125 writes each zero part as two digits. `ja4t_two_digit_test.go` holds the
+	// evidence and the port issue.
+	expected := "65535_00_00_00"
 	if result != expected {
 		t.Errorf("JA4T no options: got %q, want %q", result, expected)
 	}
@@ -98,7 +100,8 @@ func TestJA4T_MSSOnly(t *testing.T) {
 	}
 	pkt := buildTCPPacket(t, 12345, 80, true, false, 8192, options)
 	result := ComputeJA4T(pkt)
-	expected := "8192_2_1400_0"
+	// Ruling #125 writes the absent window scale as two digits.
+	expected := "8192_2_1400_00"
 	if result != expected {
 		t.Errorf("JA4T MSS only: got %q, want %q", result, expected)
 	}
