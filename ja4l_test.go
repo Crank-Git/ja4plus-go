@@ -1389,8 +1389,8 @@ func TestJA4LWritesThreePartsOnAQUICConnectionInSsh2Pcapng(t *testing.T) {
 // reference on a grouping key that two connections reach.
 //
 // A SYN that carries an initial sequence number the connection does not hold opens another
-// connection on the same endpoints. `ja4plus/fingerprinters/ja4l.py:433-437` holds the test,
-// and `ja4plus/fingerprinters/ja4l.py:406-417` clears the state.
+// connection on the same endpoints. `ja4plus/fingerprinters/ja4l.py:433-437` holds the test.
+// `ja4plus/fingerprinters/ja4l.py:406-417` clears the state.
 //
 // The corpus holds no capture that reaches one grouping key twice, so this test builds the
 // separating packet sequence. Issue #211 holds the reading, and port issue #272 holds the guard

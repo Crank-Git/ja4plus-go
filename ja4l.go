@@ -148,8 +148,8 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 	// SYN packet (not SYN-ACK).
 	if tcpLayer.SYN && !tcpLayer.ACK {
 		// A SYN that carries another initial sequence number opens another connection on the
-		// same endpoints, and the reference counts the two separately.
-		// `ja4plus/fingerprinters/ja4l.py:433-437` holds the test, and
+		// same endpoints. The reference counts the two connections separately.
+		// `ja4plus/fingerprinters/ja4l.py:433-437` holds the test.
 		// `ja4plus/fingerprinters/ja4l.py:406-417` clears the state. Issue #211 holds the
 		// reading.
 		if conn.opensASecondConnection(source, tcpLayer.Seq) {
@@ -242,10 +242,10 @@ func (c *connState) opensASecondConnection(source string, sequence uint32) bool 
 
 // restart drops every measurement point of one connection.
 //
-// A second connection that reuses the endpoints of a closed one reads the points of the first
-// one without this call, and its client value grows with the age of the state.
+// Without this call a second connection on the same endpoints reads the points of the first
+// one. Its client value then grows with the age of the state.
 // `ja4plus/fingerprinters/ja4l.py:406-417` clears the same three maps. The port also drops the
-// index of the client value it reported, and this library holds no such index, because
+// index of the client value it reported. This library holds no such index, because
 // ProcessPacket returns every result to the caller. Issue #25 removed the results slice.
 //
 // The endpoints that every result reports stay, because the first packet of the address pair
