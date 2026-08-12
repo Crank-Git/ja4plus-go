@@ -19,8 +19,11 @@ func TestJA4TS_SYNACKWithOptions(t *testing.T) {
 	}
 	pkt := buildTCPPacket(t, 443, 12345, true, true, 29200, options)
 
+	// The option list reaches 23 bytes, so gopacket adds one zero pad byte. The packet
+	// therefore carries two End-of-Option-List bytes, and ruling #297 writes one entry for
+	// each of them.
 	result := ComputeJA4TS(pkt)
-	expected := "29200_2-1-3-1-1-8-4-0_1460_7"
+	expected := "29200_2-1-3-1-1-8-4-0-0_1460_7"
 	if result != expected {
 		t.Errorf("JA4TS SYN-ACK with options: got %q, want %q", result, expected)
 	}
