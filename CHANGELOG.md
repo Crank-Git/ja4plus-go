@@ -44,25 +44,24 @@ below states therefore differs from a fresh run.
 
 ### Fixed
 
-- JA4SSH part c now counts the bare acknowledgement of the TCP handshake. The third packet of
-  the handshake carries the acknowledgement flag alone and no payload, and it arrives before the
-  first SSH packet of the connection. `ProcessPacket` opened its state table on SSH data alone,
-  so it dropped that packet and reported one client acknowledgement too few in the first window
-  of a connection. The reference reads no SSH state before it counts:
+- JA4SSH part c now counts the bare ACK of the TCP handshake. The third packet of the handshake
+  carries the ACK flag alone and no payload. It arrives before the first SSH packet of the
+  connection. `ProcessPacket` opened its state table on SSH data alone, so it dropped that
+  packet. Part c reported one client ACK too few in the first window of a connection. The
+  reference reads no SSH state before it counts:
   `wireshark/source/packet-ja4.c:1302` tests the flags and the payload length, and
   `python/ja4ssh.py:112` tests the same two fields. Both read the TCP port to pick the side, at
-  `wireshark/source/packet-ja4.c:1303` and at `python/ja4ssh.py:113`. A bare acknowledgement
-  therefore opens a connection where port 22 is the source port or the destination port, and
-  the port holds the same test at `ja4plus/fingerprinters/ja4ssh.py:176`. A bare acknowledgement
-  of a connection the library already reads counts on every port, as
-  `ja4plus/fingerprinters/ja4ssh.py:250` does. Issue #221 records the readings, and issue #200
-  decomposed the cause. Measured against `batch/236-ja4ssh-remainder` at `a3b2bf9` with the
-  corpus present: part c moves on 8 comparisons, over `ssh-r.pcap` streams 0 and 2,
-  `ssh-scp-1050.pcap` stream 0 and `ssh2.pcapng` stream 14. 7 comparisons reach a match, and
-  `ssh-r.pcap/2/JA4SSH.1` still differs in part a, which issue #223 owns. No value appears and
-  no value disappears. The run reports 1078 matches before and 1085 after, 1293 deviations
-  before and 1286 after, and 198 register keys before and after. The JA4SSH deviation count
-  falls from 32 to 25.
+  `wireshark/source/packet-ja4.c:1303` and at `python/ja4ssh.py:113`. A bare ACK therefore opens
+  a connection where TCP port 22 is the source port or the destination port. The port holds the
+  same test at `ja4plus/fingerprinters/ja4ssh.py:176`. A bare ACK of a connection the library
+  already reads counts on every TCP port, as `ja4plus/fingerprinters/ja4ssh.py:250` does. Issue
+  #221 records the readings. Issue #200 decomposed the cause. The measurement reads
+  `batch/236-ja4ssh-remainder` at `a3b2bf9`, with the corpus present. Part c moves on 8
+  comparisons, over `ssh-r.pcap` streams 0 and 2, `ssh-scp-1050.pcap` stream 0 and
+  `ssh2.pcapng` stream 14. 7 comparisons reach a match. `ssh-r.pcap/2/JA4SSH.1` still differs in
+  part a, which issue #223 owns. No value appears and no value disappears. The run reports 1078
+  matches before and 1085 after, 1293 deviations before and 1286 after, and 198 register keys
+  before and after. The JA4SSH deviation count falls from 32 to 25.
 - JA4SSH now counts the SSH packets that FoxIO counts, so the window fills and
   `ProcessPacket` emits a value again. `internal/parser/ssh.go:17` reads the four-byte length
   field of an SSH record, and a cipher hides that field after the key exchange, so the library

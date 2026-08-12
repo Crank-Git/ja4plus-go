@@ -151,12 +151,13 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	isBareACK := len(payload) == 0 &&
 		tcp.ACK && !tcp.SYN && !tcp.FIN && !tcp.RST && !tcp.PSH && !tcp.URG
 
-	// The third packet of the TCP handshake is a bare ACK, and it arrives before the first
-	// SSH packet. The reference counts it, so the state table needs the connection before any
-	// SSH data reaches it. `wireshark/source/packet-ja4.c:1302` reads no SSH state first, and
-	// `python/ja4ssh.py:112` counts the same packet.
-	// The port reads the port at `ja4plus/fingerprinters/ja4ssh.py:176`, and a bare ACK on
-	// every TCP connection would fill the state table with traffic that carries no SSH.
+	// The third packet of the TCP handshake is a bare ACK. It arrives before the first SSH
+	// packet, and the reference counts it. The state table therefore needs the connection
+	// before any SSH data reaches it. `wireshark/source/packet-ja4.c:1302` reads no SSH state
+	// first, and `python/ja4ssh.py:112` counts the same packet.
+	// The TCP port picks the connection this test opens. A bare ACK on every TCP connection
+	// would fill the state table with traffic that carries no SSH. The port holds the same test
+	// at `ja4plus/fingerprinters/ja4ssh.py:176`.
 	opensOnSSHPort := isBareACK && (srcPort == 22 || dstPort == 22)
 
 	// A cipher hides the length field of every SSH record after the key exchange, so the
