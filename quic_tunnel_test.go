@@ -156,13 +156,31 @@ func buildQUICClientInitial(t *testing.T, dcid, scid, handshake []byte) []byte {
 func buildVXLANQUICPacket(t *testing.T, payload []byte) gopacket.Packet {
 	t.Helper()
 
+	return buildVXLANQUICPacketOnPort(t, tunnelInnerSrcPort, payload)
+}
+
+// buildVXLANQUICPacketOnPort returns one VXLAN packet that carries the QUIC payload from the
+// named inner source port. A test that opens more than one connection reads one port for
+// each one, because the grouping key holds the port pair.
+func buildVXLANQUICPacketOnPort(t *testing.T, innerSrcPort uint16, payload []byte) gopacket.Packet {
+	t.Helper()
+
+	return buildVXLANQUICPacketFrom(t, tunnelOuterSrcIP, innerSrcPort, payload)
+}
+
+// buildVXLANQUICPacketFrom returns one VXLAN packet that the named outer source address
+// carries. Two tunnel endpoints of one path send one connection from two outer addresses, so a
+// test that reads the index needs more than one outer address.
+func buildVXLANQUICPacketFrom(t *testing.T, outerSrcIP string, innerSrcPort uint16, payload []byte) gopacket.Packet {
+	t.Helper()
+
 	outerEth := &layers.Ethernet{
 		SrcMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
 		DstMAC:       net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
 		EthernetType: layers.EthernetTypeIPv4,
 	}
 	outerIP := &layers.IPv4{
-		SrcIP:    net.ParseIP(tunnelOuterSrcIP),
+		SrcIP:    net.ParseIP(outerSrcIP),
 		DstIP:    net.ParseIP(tunnelOuterDstIP),
 		Protocol: layers.IPProtocolUDP,
 		Version:  4,
@@ -187,7 +205,7 @@ func buildVXLANQUICPacket(t *testing.T, payload []byte) gopacket.Packet {
 		Version:  4,
 		TTL:      64,
 	}
-	innerUDP := &layers.UDP{SrcPort: tunnelInnerSrcPort, DstPort: tunnelInnerDstPort}
+	innerUDP := &layers.UDP{SrcPort: layers.UDPPort(innerSrcPort), DstPort: tunnelInnerDstPort}
 	if err := innerUDP.SetNetworkLayerForChecksum(innerIP); err != nil {
 		t.Fatalf("SetNetworkLayerForChecksum returns the error %v", err)
 	}
@@ -207,8 +225,8 @@ func buildVXLANQUICPacket(t *testing.T, payload []byte) gopacket.Packet {
 	if parser.TunnelDepth(packet) != 1 {
 		t.Fatalf("the packet carries %d tunnel layers, and the test needs 1", parser.TunnelDepth(packet))
 	}
-	if udp := parser.GetUDPLayer(packet); udp == nil || uint16(udp.SrcPort) != tunnelInnerSrcPort {
-		t.Fatalf("the packet decodes no inner UDP layer on port %d", tunnelInnerSrcPort)
+	if udp := parser.GetUDPLayer(packet); udp == nil || uint16(udp.SrcPort) != innerSrcPort {
+		t.Fatalf("the packet decodes no inner UDP layer on port %d", innerSrcPort)
 	}
 
 	return packet
