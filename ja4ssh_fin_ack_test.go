@@ -228,8 +228,8 @@ func TestJA4SSHClearsTheWindowOnAFINACKPacket(t *testing.T) {
 
 // TestJA4SSHCountsTheBareACKThatFollowsAFINACKPacketInTheNextWindow holds the reading that
 // issue #221 recorded for issue #222. `ssh-r.pcap` stream 1 holds 5 client bare ACKs, and the
-// reference counts the first 4. Frame 335 carries a FIN+ACK, and frame 340 carries the fifth
-// bare ACK, which the new window counts.
+// reference counts the first 4. Frame 335 carries a FIN+ACK packet, and frame 340 carries the
+// fifth bare ACK, which the new window counts.
 //
 // The new window holds no SSH packet, so no emission reaches that count.
 func TestJA4SSHCountsTheBareACKThatFollowsAFINACKPacketInTheNextWindow(t *testing.T) {
