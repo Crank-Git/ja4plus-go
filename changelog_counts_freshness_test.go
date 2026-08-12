@@ -13,9 +13,9 @@ import (
 // member moves a whole-tree count by a slice, and no member owned the paragraph.
 //
 // These tests add a failure, and they read no exit status of the conformance run. The suite
-// reports a deviation and exits 2 on the current corpus, so a guard that read that status
-// would turn an honest failure into a false success. #201 records the same trap in the
-// `make docs` target.
+// exits 2 on the current corpus, because it reports a deviation. A guard that read that exit
+// status would report success where the run reports a deviation. #201 records the same trap
+// in the `make docs` target.
 //
 // These tests read `docs/audit/conformance.md` and never the corpus. The suite rewrites that
 // report on every run, and `.github/workflows/ci.yml` fails the job when the tracked report
@@ -23,9 +23,14 @@ import (
 // holds it. The tracked report therefore states the counts the current tree produces. These
 // tests need no corpus, and they skip for no reason.
 //
-// Each identifier below carries the `changelog` prefix. `conformance_report_test.go` carries
-// the `conformance` build tag and declares `conformanceReportCount` for another purpose, so
-// an untagged build hides a collision that `make conformance` then reports as a build
+// These tests read the summary totals of the report, and never its deviation table. #303
+// reports that two runs of one commit produce different deviation keys for
+// `http-empty-useragent.pcap`. The totals hold across those two runs, so that defect moves
+// no count these tests read.
+//
+// Each identifier below carries the `changelog` prefix. `conformance_report_test.go` declares
+// `conformanceReportCount` for another purpose, under the `conformance` build tag. An
+// untagged build hides that collision, and `make conformance` then reports it as a build
 // failure.
 
 // changelogFile is the path of the changelog, relative to the package directory.

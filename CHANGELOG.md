@@ -13,11 +13,11 @@ put 35 more entries into it, issue #197 put 14 more, and issue #223 put 4 more. 
 current tree reports 1602 matches, 783 deviations, 301 accepted deviations and 301 register
 keys. A count that an entry below states therefore differs from a fresh run.
 
-**A test holds this paragraph true, and `changelog_counts_freshness_test.go` is that test.**
+**A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against
 `docs/audit/conformance.md` and against `testdata/deviations.json`. A member that moves a
-count and leaves this paragraph fails `go test ./...`. Issue #306 built the test, after the
-paragraph went stale at the end of three consecutive batches.
+count and leaves this paragraph fails `go test ./...`. Issue #306 built the guard, after the
+paragraph was false at the end of three consecutive batches.
 
 **Batch #293 repaired four fingerprint paths, and this paragraph records the measurement of
 the whole batch.** Issue #55 wrote the two-digit form for a zero JA4T value and a zero JA4TS
