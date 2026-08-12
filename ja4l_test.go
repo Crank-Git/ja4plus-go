@@ -573,8 +573,8 @@ func TestJA4LFillsTheQUICClientPointsInTheReferenceDirection(t *testing.T) {
 	if len(dResults) != 1 {
 		t.Fatalf("D: expected one result, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=25000_55" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=25000_55")
+	if dResults[0].Fingerprint != "JA4L-C=25000_55_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=25000_55_quic")
 	}
 }
 
@@ -619,8 +619,8 @@ func TestJA4LMovesTheQUICClientPointToTheLastServerPacket(t *testing.T) {
 	if len(dResults) != 1 {
 		t.Fatalf("D: expected one result, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=10000_55" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=10000_55")
+	if dResults[0].Fingerprint != "JA4L-C=10000_55_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=10000_55_quic")
 	}
 
 	// Point C stops at point D, so a later server packet moves nothing.
@@ -685,8 +685,8 @@ func TestJA4LFillsTheQUICClientPointsOnlyFromAHandshakePacket(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("client Handshake: expected one result, got %v", results)
 	}
-	if results[0].Fingerprint != "JA4L-C=5000_55" {
-		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=5000_55")
+	if results[0].Fingerprint != "JA4L-C=5000_55_quic" {
+		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=5000_55_quic")
 	}
 }
 
@@ -1318,5 +1318,69 @@ func TestJA4LWritesTwoPartsOnATCPConnectionInGeneve(t *testing.T) {
 	}
 	if clientResults[0].Fingerprint != "JA4L-C=93_64" {
 		t.Errorf("bare ACK: Fingerprint = %q, want %q", clientResults[0].Fingerprint, "JA4L-C=93_64")
+	}
+}
+
+// TestJA4LWritesThreePartsOnAQUICConnectionInSsh2Pcapng holds the ruling of issue #197.
+// A JA4L value of a QUIC connection carries the marker `quic` as the third part.
+//
+// The `ssh2.pcapng` frame 1147 per-packet vector holds `ja4.ja4l` as `169_128_quic` and
+// `ja4.ja4ls` as `5389_57_quic`. This test builds the four measurement points that reach
+// those two values, so it names the capture and the two methods that FR-gaps-2 requires.
+// The client time-to-live is 128 and the server time-to-live is 57, which separates the
+// two values.
+//
+// `ja4plus/fingerprinters/ja4l.py:62` defines `QUIC_MARKER = "quic"`, and the port writes
+// three parts at `:549` and at `:602`. Port issue #225 holds the other half.
+//
+// The test holds FR-parity-20, FR-parity-24 and FR-ja4ls-4.
+func TestJA4LWritesThreePartsOnAQUICConnectionInSsh2Pcapng(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2023, 7, 6, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	// Point A. The client Initial packet starts the server measurement.
+	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 128, 50000, 443, quicLongHeaderPayload())
+	a.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(a); len(results) != 0 {
+		t.Fatalf("A: expected no results, got %v", results)
+	}
+
+	// Point B. The server Initial packet completes the server value, and 10778 microseconds
+	// halve to the 5389 that the vector holds.
+	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 57, 443, 50000, quicLongHeaderPayload())
+	b.Metadata().Timestamp = baseTime.Add(10778 * time.Microsecond)
+	serverResults, err := fp.ProcessPacket(b)
+	if err != nil {
+		t.Fatalf("B: %v", err)
+	}
+	if len(serverResults) != 1 {
+		t.Fatalf("B: expected one result, got %v", serverResults)
+	}
+	if serverResults[0].Fingerprint != "JA4L-S=5389_57_quic" {
+		t.Errorf("B: Fingerprint = %q, want %q", serverResults[0].Fingerprint, "JA4L-S=5389_57_quic")
+	}
+
+	// Point C. The server Handshake packet fills the point, and it completes no value.
+	c := buildUDPPacketWithIPs(t, serverIP, clientIP, 57, 443, 50000, quicHandshakePayload())
+	c.Metadata().Timestamp = baseTime.Add(20000 * time.Microsecond)
+	if results, _ := fp.ProcessPacket(c); len(results) != 0 {
+		t.Fatalf("C: expected no results, got %v", results)
+	}
+
+	// Point D. The client Handshake packet completes the client value, and 338 microseconds
+	// halve to the 169 that the vector holds.
+	d := buildUDPPacketWithIPs(t, clientIP, serverIP, 128, 50000, 443, quicHandshakePayload())
+	d.Metadata().Timestamp = baseTime.Add(20338 * time.Microsecond)
+	clientResults, err := fp.ProcessPacket(d)
+	if err != nil {
+		t.Fatalf("D: %v", err)
+	}
+	if len(clientResults) != 1 {
+		t.Fatalf("D: expected one result, got %v", clientResults)
+	}
+	if clientResults[0].Fingerprint != "JA4L-C=169_128_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", clientResults[0].Fingerprint, "JA4L-C=169_128_quic")
 	}
 }

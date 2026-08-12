@@ -1,0 +1,7 @@
+# Claude Code copies a gitignored file that matches a pattern here into a new worktree.
+# The format is the `.gitignore` format. See <https://code.claude.com/docs/en/worktrees.md>.
+
+# `.gitignore` ignores the FoxIO corpus, because the corpus is FoxIO-licensed material.
+# A new worktree therefore holds no corpus.
+# Without the corpus, `make conformance` skips and coverage reads 2 points low.
+testdata/foxio/

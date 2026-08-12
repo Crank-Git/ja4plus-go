@@ -9,9 +9,9 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it. A run on the current tree reports 1076 matches, 1290 deviations,
-185 accepted deviations and 185 register keys. A count that an entry below states therefore
-differs from a fresh run.
+put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1065
+matches, 1288 deviations, 198 accepted deviations and 198 register keys. A count that an entry
+below states therefore differs from a fresh run.
 
 ### Added
 
@@ -96,6 +96,27 @@ differs from a fresh run.
 
 ### Changed
 
+- **JA4L now writes the marker `quic` as the third part of a value on a QUIC connection, and a
+  TCP connection keeps two parts.** This is a breaking behaviour change under `v1.0.0`.
+  **The maintainer ruled on 2026-08-12 in issue #197, and issue #127 holds the original
+  ruling.** The QUIC half of issue #127 reached no code, and issue #197 found the gap. The
+  deciding rule is that the library matches the port one to one, and that it follows the FoxIO
+  material where that leaves a choice. **The port writes the marker.**
+  `ja4plus/fingerprinters/ja4l.py:62` defines `QUIC_MARKER = "quic"`, and the port writes three
+  parts at `:549` and at `:602`. It writes two parts on a TCP connection at `:446`, `:466` and
+  `:482`. `python/ja4.py` is FoxIO's reference Python inside the corpus, and it is not the port.
+  The FoxIO material reaches the same answer, because `.claude/rules/rulings.md` ranks an image
+  first and `docs/specs/foxio/JA4L.md` R3 states that a value holds three parts. The literal
+  `quic` follows `wireshark/source/packet-ja4.c:1441` and `:1447`. **The entry below records the
+  reading that reached this ruling, and the QUIC part count is no longer open.**
+  **The match count falls, and the ruling accepts that.** Measured on
+  `batch/210-session5-followups` at `0751acc` with the corpus present: the marker moves the
+  library value on 32 comparisons, across 3 captures. It closes 2 per-packet comparisons, and it
+  opens 13 per-stream comparisons that match without it. The run reports 1076 matches before and
+  1065 after. Thirteen entries reach `testdata/deviations.json` with `"capability": false` and
+  the ruling `#197`, and each reason states the per-stream divergence alone. The register holds
+  185 keys before and 198 after, and no entry reads as closed. `docs/specs/spec.md`
+  `## Changelog` round 18 records the ruling.
 - **The JA4L third part reaches a recorded reading, and it moves no fingerprint.**
   `docs/specs/foxio/JA4L.md` R35 states the reading, and `docs/specs/spec.md` `## Changelog`
   round 16 states the measurement. On a TCP connection the third number of a per-packet vector

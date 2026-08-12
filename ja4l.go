@@ -16,6 +16,13 @@ import (
 // `ja4plus/fingerprinters/ja4l.py:55` holds the same value.
 const quicPort uint16 = 443
 
+// quicMarker names the protocol of a QUIC connection in the third part of a JA4L value.
+// A TCP connection carries two parts, and a QUIC connection carries three.
+// `ja4plus/fingerprinters/ja4l.py:62` defines `QUIC_MARKER = "quic"`, and the port writes
+// three parts at `:549` and at `:602`. Issue #197 holds the ruling, and port issue #225
+// holds the other half.
+const quicMarker = "quic"
+
 // latencyDivisor turns a measured time into the one-way latency that JA4L reports.
 // One measurement covers a round trip. `docs/specs/foxio/JA4L.md` R6 states the rule.
 const latencyDivisor = 2
@@ -432,6 +439,13 @@ func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uin
 		latencyUS = 1
 	}
 	fingerprint := fmt.Sprintf("%s=%d_%d", label, latencyUS, ttl)
+
+	// A QUIC connection reaches this method only through processUDP, which admits a UDP
+	// flow that carries a QUIC long header alone. The protocol token therefore names QUIC.
+	if conn.proto == "udp" {
+		fingerprint = fmt.Sprintf("%s_%s", fingerprint, quicMarker)
+	}
+
 	result := FingerprintResult{
 		Fingerprint: fingerprint,
 		Type:        "ja4l",
