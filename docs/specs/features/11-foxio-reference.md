@@ -96,6 +96,28 @@ image. Fact 4 is why FR-reference-12 recovers the deleted text.
   ja4plus-go` section, with the port commit and the retrieval date.
 - **FR-reference-18** — The copy is verbatim.
 
+### The citation base
+
+`docs/specs/foxio/README.md` `## How to read a citation` declares seven bases. #254 wrote
+that rule and repaired every citation against it. #335 holds the repair with a test,
+because a citation that resolves under no base fails silently: a writer joins
+`python/ja4.py` to `testdata/foxio/`, that directory exists, and the file does not.
+
+- **FR-reference-18a** — Every path-shaped code span of a page of `docs/specs/foxio/`
+  resolves under one of the seven declared bases.
+- **FR-reference-18b** — A shape check holds every span on a checkout that ran no
+  `make corpus`. The check reads the first directory of the span, and it opens no file of
+  the corpus.
+- **FR-reference-18c** — An exception names one page, one span, one count and one reason.
+  An exception that now resolves fails a test, and no exception covers a whole page.
+- **FR-reference-18d** — No citation names a line past the end of the file it names.
+- **FR-reference-18e** — The test names the two pages that state their own base, and it
+  states the reason for each one.
+- **FR-reference-18f** — The recorded FoxIO root directories equal the root directories of
+  the fetched corpus.
+- **FR-reference-18g** — A test that the corpus gates states in its skip message that it
+  read no corpus. **No test of this rule skips in silence.**
+
 ### The register file
 
 - **FR-reference-19** — `testdata/deviations.json` exists and is tracked in git.
@@ -178,6 +200,7 @@ This feature set changes no screen.
 | `testdata/README.md` | States the schema and the two meanings of the middle key part. |
 | `conformance_test.go` | Reads the register. |
 | `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
+| `foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18g. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces
