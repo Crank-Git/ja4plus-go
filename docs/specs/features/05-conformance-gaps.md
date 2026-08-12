@@ -72,6 +72,11 @@ the deviation list exists, not before.
   address layer.
 - **FR-gaps-14c** — `CleanupConnection` reads the reported key, so a caller removes a
   connection with the address pair that a `FingerprintResult` carries.
+- **FR-gaps-14d** — `JA4Fingerprinter` and `JA4SFingerprinter` each hold an index that pairs
+  the reported key with the grouping key, so `CleanupConnection` removes a tunneled
+  connection.
+- **FR-gaps-14e** — `CleanupConnection` falls back to the key the caller gave, so a caller
+  that names the grouping key removes the connection.
 
 ### QUIC decryption secrets
 
