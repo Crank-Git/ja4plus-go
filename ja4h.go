@@ -70,11 +70,13 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		if req != nil {
 			fingerprint := computeJA4HFromRequest(req)
 			if fingerprint != "" {
-				// JA4H fills no `Raw` field. The FoxIO per-stream vector set publishes
-				// `JA4H_ro` and no `JA4H_r` value, so a sorted form matches no vector.
-				// #274 records that decision, and `TestJA4H_RawStaysEmpty` holds it.
+				// The two vector sets disagree about the raw sorted form. The per-stream
+				// set publishes no `JA4H_r` value, and the per-packet set publishes 126 of
+				// them. #310 fills the field for the per-packet set, and #274 holds the
+				// per-stream reading.
 				result := FingerprintResult{
 					Fingerprint:      fingerprint,
+					Raw:              computeJA4HRaw(req),
 					RawOriginalOrder: computeJA4HRawOriginalOrder(req),
 					Type:             "ja4h",
 					SrcIP:            srcIP,
@@ -111,6 +113,7 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 
 	result := FingerprintResult{
 		Fingerprint:      fingerprint,
+		Raw:              computeJA4HRaw(req),
 		RawOriginalOrder: computeJA4HRawOriginalOrder(req),
 		Type:             "ja4h",
 		SrcIP:            srcIP,
@@ -192,8 +195,8 @@ func ja4hNormalizeVersion(v string) string {
 
 // ja4hPartA builds part a of the JA4H value from a parsed HTTP request.
 //
-// The base value and the raw original-order form share part a, so one function builds it
-// for both. A second copy of this arithmetic would let the two forms disagree.
+// The base value and the two raw forms share part a, so one function builds it for the
+// three. A second copy of this arithmetic would let the forms disagree.
 func ja4hPartA(req *parser.HTTPRequest) string {
 	// method: first 2 chars, lowercase.
 	method := strings.ToLower(req.Method)
@@ -251,8 +254,8 @@ func ja4hPartA(req *parser.HTTPRequest) string {
 
 // ja4hHeaderNames returns the header names in wire order, with the original case.
 //
-// The base value hashes this list and the raw original-order form writes it, so one
-// function builds it for both.
+// The base value hashes this list and the two raw forms write it, so one function builds
+// it for the three.
 // It drops the Cookie header, the Referer header and every pseudo-header, because part a
 // counts the same set.
 func ja4hHeaderNames(req *parser.HTTPRequest) []string {
@@ -280,14 +283,30 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 	headersStr := strings.Join(ja4hHeaderNames(req), ",")
 	partB := parser.TruncatedHash(headersStr)
 
-	// Part C: sorted cookie field names.
+	// Part C hashes the sorted cookie names, and part D hashes the sorted cookie pairs.
+	cookieNamesStr, cookieValuesStr := ja4hSortedCookieStrings(req)
+	partC := parser.TruncatedHash(cookieNamesStr)
+	partD := parser.TruncatedHash(cookieValuesStr)
+
+	return fmt.Sprintf("%s_%s_%s_%s", partA, partB, partC, partD)
+}
+
+// ja4hSortedCookieStrings returns the sorted cookie name list and the sorted cookie pair
+// list of a parsed HTTP request.
+//
+// The base value hashes both strings and the raw sorted form writes both strings, so one
+// function builds them for both. A second copy of this arithmetic would let the two forms
+// disagree.
+//
+// Both lists sort by the cookie name. `testdata/foxio/reference/python/ja4h.py:68` sorts
+// the pair list by the name alone, and
+// `testdata/foxio/reference/wireshark/source/packet-ja4.c:525` writes the pair list in the
+// name order too.
+func ja4hSortedCookieStrings(req *parser.HTTPRequest) (string, string) {
 	sortedNames := make([]string, len(req.CookieNames))
 	copy(sortedNames, req.CookieNames)
 	sort.Strings(sortedNames)
-	cookieNamesStr := strings.Join(sortedNames, ",")
-	partC := parser.TruncatedHash(cookieNamesStr)
 
-	// Part D: sorted cookie name=value pairs.
 	type cookiePair struct {
 		name  string
 		value string
@@ -303,10 +322,8 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 	for i, p := range pairs {
 		pairStrs[i] = p.name + "=" + p.value
 	}
-	cookieValuesStr := strings.Join(pairStrs, ",")
-	partD := parser.TruncatedHash(cookieValuesStr)
 
-	return fmt.Sprintf("%s_%s_%s_%s", partA, partB, partC, partD)
+	return strings.Join(sortedNames, ","), strings.Join(pairStrs, ",")
 }
 
 // computeJA4HRawOriginalOrder builds the FoxIO `JA4H_ro` value of a parsed HTTP request.
@@ -320,7 +337,7 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 // `testdata/foxio/reference/python/ja4h.py` appends the two cookie fields only when the
 // request holds a cookie, and 68 of the 89 per-stream vector values carry that shape.
 func computeJA4HRawOriginalOrder(req *parser.HTTPRequest) string {
-	raw := ja4hPartA(req) + "_" + strings.Join(ja4hHeaderNames(req), ",") + "_"
+	raw := ja4hRawPrefix(req)
 
 	if len(req.CookieNames) == 0 {
 		return raw
@@ -332,4 +349,36 @@ func computeJA4HRawOriginalOrder(req *parser.HTTPRequest) string {
 	}
 
 	return raw + strings.Join(req.CookieNames, ",") + "_" + strings.Join(pairs, ",")
+}
+
+// ja4hRawPrefix returns the part of a JA4H raw form that the two raw forms share.
+//
+// The form is `<part a>_<header names>_`. The cookie order is the only thing that
+// separates `JA4H_r` from `JA4H_ro`, so one function builds everything before it.
+func ja4hRawPrefix(req *parser.HTTPRequest) string {
+	return ja4hPartA(req) + "_" + strings.Join(ja4hHeaderNames(req), ",") + "_"
+}
+
+// computeJA4HRaw builds the FoxIO `JA4H_r` value of a parsed HTTP request.
+//
+// The form is `<part a>_<header names>_<sorted cookie names>_<sorted cookie pairs>`. Both
+// cookie lists sort by the cookie name, which is what separates this value from
+// `JA4H_ro`. The base value hashes the same two strings, so the two forms read one input.
+//
+// A request that carries no cookie ends after the header names and one underscore.
+// `testdata/foxio/reference/python/ja4h.py:82` appends the two cookie fields only when the
+// request holds a cookie, and `computeJA4HRawOriginalOrder` ends the same way.
+// `testdata/foxio/reference/wireshark/source/packet-ja4.c:603` writes two trailing
+// underscores for that request. **#285 holds that reference split, and the maintainer rules
+// it.** This function follows `computeJA4HRawOriginalOrder`, so one ruling moves both forms.
+func computeJA4HRaw(req *parser.HTTPRequest) string {
+	raw := ja4hRawPrefix(req)
+
+	if len(req.CookieNames) == 0 {
+		return raw
+	}
+
+	names, pairs := ja4hSortedCookieStrings(req)
+
+	return raw + names + "_" + pairs
 }

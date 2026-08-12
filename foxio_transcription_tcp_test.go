@@ -217,6 +217,28 @@ func TestFoxioTCPTranscriptionRecordsTheTwoMeasuredFacts(t *testing.T) {
 	}
 }
 
+// FR-reference-11 — R10 records the Zeek stop at option kind 0, and the references
+// contradict it. Zeek writes no entry, and Wireshark and Rust write one entry for each
+// kind 0 byte. The maintainer ruled the question on 2026-08-12, and #297 holds the ruling.
+//
+// A reader who matches the Zeek rule breaks every other reference, so the page must name
+// each value.
+func TestFoxioTCPTranscriptionMarksTheEndOfOptionListSplit(t *testing.T) {
+	page := readFoxioTCPTranscriptionPage(t, foxioTCPTranscriptionPages["JA4T.png"])
+
+	for _, part := range []string{
+		"`zeek/ja4t/main.zeek:96`",
+		"`wireshark/source/packet-ja4.c:1456`",
+		"`rust/ja4/src/tcp.rs:70`",
+		"2-1-3-1-1-8-4-0-0",
+		"#297",
+	} {
+		if !strings.Contains(page, part) {
+			t.Errorf("docs/specs/foxio/JA4T.md holds no %q, and R10 records a reference split", part)
+		}
+	}
+}
+
 // FR-reference-11 — a rule that the reference implementations contradict is marked as a
 // reference split, and the page states each value. Issue #18 found the JA4TS delay split,
 // and the page must carry both values so that a reader does not match one reference and

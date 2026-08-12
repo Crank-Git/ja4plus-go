@@ -1,7 +1,10 @@
 package ja4plus
 
 import (
+	"encoding/json"
 	"net"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -83,48 +86,65 @@ func TestJA4H_RawOriginalOrderHoldsTheCookieWireOrder(t *testing.T) {
 	}
 }
 
-// TestJA4H_RawStaysEmpty holds the rule that JA4H produces no sorted raw form.
+// TestJA4H_ThePerStreamVectorSetPublishesNoRawKey holds the reading that #274 recorded.
 //
-// The FoxIO per-stream vector set publishes 89 `JA4H_ro` values and no `JA4H_r` value, so
-// a sorted form matches no per-stream vector. `ja4plus/fingerprinters/ja4h.py:70` of the
-// Python port states the same rule. #274 owns this decision.
+// The FoxIO per-stream vector set publishes 89 `JA4H_ro` values and no `JA4H_r` value.
+// `ja4plus/fingerprinters/ja4h.py:70` of the Python port states the same rule, and #274
+// left `Raw` empty for it.
 //
-// `conformance_adapters_test.go` emits a `JA4H_r` key only for a non-empty `Raw`, so an
-// empty field reports no value rather than a wrong one.
-func TestJA4H_RawStaysEmpty(t *testing.T) {
-	requests := []struct {
-		name string
-		raw  string
-	}{
-		{
-			name: "the request holds no cookie",
-			raw: "GET /p HTTP/1.1\r\n" +
-				"Host: example.com\r\n" +
-				"\r\n",
-		},
-		{
-			name: "the request holds a cookie",
-			raw: "GET /p HTTP/1.1\r\n" +
-				"Host: example.com\r\n" +
-				"Cookie: zeta=1; alpha=2\r\n" +
-				"\r\n",
-		},
+// **The per-packet vector set disagrees, and it publishes 126 `ja4.ja4h_r` values.** #290
+// recorded that difference, and #310 fills `Raw` for the per-packet set. This test states
+// the per-stream half alone, so it names no rule about the per-packet set.
+//
+// The test reads the vector files rather than the library, because the claim is about the
+// reference and not about this code. A later FoxIO release that publishes the key fails
+// this test, and the reader then learns that the per-stream comparison gained a key.
+func TestJA4H_ThePerStreamVectorSetPublishesNoRawKey(t *testing.T) {
+	// The conformance suite carries a build tag, so this test names the directory itself.
+	// `keylog_test.go` and `tunnel_keys_test.go` skip on an absent corpus the same way.
+	const streamVectorDir = "testdata/foxio/python"
+
+	if _, statErr := os.Stat(streamVectorDir); statErr != nil {
+		t.Skipf("%s is absent, so run `make corpus` to fetch the FoxIO corpus", streamVectorDir)
 	}
 
-	for _, request := range requests {
-		t.Run(request.name, func(t *testing.T) {
-			packet := buildTCPPacketWithPayload(t, []byte(request.raw))
-			results, err := NewJA4H().ProcessPacket(packet)
-			if err != nil {
-				t.Fatalf("ProcessPacket returned an error: %v", err)
+	paths, err := filepath.Glob(filepath.Join(streamVectorDir, "*.json"))
+	if err != nil {
+		t.Fatalf("the glob of %s returned an error: %v", streamVectorDir, err)
+	}
+	if len(paths) == 0 {
+		t.Fatalf("%s holds no vector file", streamVectorDir)
+	}
+
+	originalOrderKeys := 0
+	rawKeys := 0
+
+	for _, path := range paths {
+		content, readErr := os.ReadFile(path) // #nosec G304 -- the path comes from the corpus glob.
+		if readErr != nil {
+			t.Fatalf("reading %s returned an error: %v", path, readErr)
+		}
+
+		var entries []map[string]json.RawMessage
+		if unmarshalErr := json.Unmarshal(content, &entries); unmarshalErr != nil {
+			t.Fatalf("parsing %s returned an error: %v", path, unmarshalErr)
+		}
+
+		for _, entry := range entries {
+			if _, held := entry["JA4H_ro"]; held {
+				originalOrderKeys++
 			}
-			if len(results) != 1 {
-				t.Fatalf("ProcessPacket returned %d results, and the test expects 1", len(results))
+			if _, held := entry["JA4H_r"]; held {
+				rawKeys++
 			}
-			if results[0].Raw != "" {
-				t.Errorf("Raw is %q, and JA4H fills no sorted raw form", results[0].Raw)
-			}
-		})
+		}
+	}
+
+	if originalOrderKeys != 89 {
+		t.Errorf("the per-stream set holds %d `JA4H_ro` keys, and #274 measured 89", originalOrderKeys)
+	}
+	if rawKeys != 0 {
+		t.Errorf("the per-stream set holds %d `JA4H_r` keys, and #274 measured 0", rawKeys)
 	}
 }
 

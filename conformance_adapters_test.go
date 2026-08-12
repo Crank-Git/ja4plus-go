@@ -185,7 +185,8 @@ type conformanceStreamShape struct {
 	// Expected maps each comparison to the value the vector holds. The method of the key
 	// is the vector key, written exactly as the vector writes it.
 	Expected map[conformanceKey]string
-	// StreamOfEndpoint maps the endpoint key of a connection to the stream that names it.
+	// StreamOfEndpoint maps the endpoint key of a connection to the stream name that the
+	// key of a comparison holds. `conformanceStreamNames` states the two forms of the name.
 	StreamOfEndpoint map[string]string
 	// UsesOccurrence reports whether the key of a method carries an occurrence number on
 	// one stream. The library names a method without one, so the produced key follows the
@@ -236,13 +237,26 @@ func conformanceExpectedFromStreamVector(
 
 	collected := make(map[conformanceKey][]conformanceStreamValue)
 
+	connections := make([]conformanceStreamConnection, len(entries))
+
 	for index, entry := range entries {
-		stream, endpoint, err := conformanceStreamIdentity(entry)
+		connection, err := conformanceStreamIdentity(entry)
 		if err != nil {
 			return shape, fmt.Errorf("entry %d of the per-stream vector for %s: %w", index, capture, err)
 		}
 
-		shape.StreamOfEndpoint[endpoint] = stream
+		connections[index] = connection
+	}
+
+	names, err := conformanceStreamNames(connections)
+	if err != nil {
+		return shape, fmt.Errorf("the per-stream vector for %s: %w", capture, err)
+	}
+
+	shape.StreamOfEndpoint = names
+
+	for index, entry := range entries {
+		stream := names[connections[index].endpoint]
 
 		for key, raw := range entry {
 			method, occurrence, isMethod, err := conformanceRecognizeStreamKey(key)
@@ -327,24 +341,104 @@ func conformanceWriteStreamGroup(
 	return nil
 }
 
-// conformanceStreamIdentity returns the stream number and the endpoint key of one entry.
-func conformanceStreamIdentity(entry conformanceStreamEntry) (string, string, error) {
+// conformanceStreamConnection names the connection that one per-stream vector entry holds.
+type conformanceStreamConnection struct {
+	// stream is the value of the `stream` field, written exactly as the vector writes it.
+	stream string
+	// endpoint is the key that the two directions of the connection share.
+	endpoint string
+	// sourcePort is the value of the `srcport` field. It separates two connections that
+	// carry one stream number.
+	sourcePort uint16
+}
+
+// conformanceStreamIdentity returns the connection that one entry names.
+func conformanceStreamIdentity(entry conformanceStreamEntry) (conformanceStreamConnection, error) {
+	var connection conformanceStreamConnection
+
 	stream, held := entry["stream"]
 	if !held {
-		return "", "", fmt.Errorf("the entry holds no %q field, and FR-conformance-22 names the stream", "stream")
+		return connection, fmt.Errorf("the entry holds no %q field, and FR-conformance-22 names the stream", "stream")
 	}
 
 	source, err := conformanceStreamEndpoint(entry, "src", "srcport")
 	if err != nil {
-		return "", "", err
+		return connection, err
 	}
 
 	destination, err := conformanceStreamEndpoint(entry, "dst", "dstport")
 	if err != nil {
-		return "", "", err
+		return connection, err
 	}
 
-	return string(stream), conformanceEndpointKey(source.address, source.port, destination.address, destination.port), nil
+	connection.stream = string(stream)
+	connection.endpoint = conformanceEndpointKey(source.address, source.port, destination.address, destination.port)
+	connection.sourcePort = source.port
+
+	return connection, nil
+}
+
+// conformanceStreamNames returns the stream name of every connection, keyed by the endpoint
+// key of the connection.
+//
+// **A stream number names no connection on its own.** `tcp.stream` and `udp.stream` are two
+// counters, and both start at 0, so one capture holds a TCP connection and a UDP connection
+// that carry the stream number `0`. `chrome-cloudflare-quic-with-secrets.pcapng` holds such
+// a pair, and the vector keeps the two apart by the source port. A name that holds the
+// stream number alone merges the two connections, and the harness then reports a value of
+// one connection as a later occurrence of the other. Issue #250 holds the reading.
+//
+// A stream number that names one connection keeps the bare number, so a register key of
+// `testdata/deviations.json` still names the comparison it named before. A stream number
+// that names more than one connection gains the source port, in the form `0:50280`. The
+// name holds no `/`, so the register key form of `testdata/README.md` still reads in three
+// parts.
+//
+// The name reads the source port of the first entry of the connection, and never the source
+// port of each entry. FoxIO writes one entry for each HTTP request, and it swaps the two
+// ends between a request and a response. `http2-with-cookies.pcapng` writes the source port
+// `58847` and then `443` for one connection, so the source port of one entry names no
+// connection.
+func conformanceStreamNames(connections []conformanceStreamConnection) (map[string]string, error) {
+	endpointsOfStream := make(map[string]map[string]bool)
+	portOfEndpoint := make(map[string]uint16, len(connections))
+
+	for _, connection := range connections {
+		endpoints, held := endpointsOfStream[connection.stream]
+		if !held {
+			endpoints = make(map[string]bool)
+			endpointsOfStream[connection.stream] = endpoints
+		}
+
+		endpoints[connection.endpoint] = true
+
+		if _, held := portOfEndpoint[connection.endpoint]; !held {
+			portOfEndpoint[connection.endpoint] = connection.sourcePort
+		}
+	}
+
+	names := make(map[string]string, len(connections))
+	owners := make(map[string]string, len(connections))
+
+	for _, connection := range connections {
+		name := connection.stream
+		if len(endpointsOfStream[connection.stream]) > 1 {
+			name = connection.stream + ":" + strconv.FormatUint(uint64(portOfEndpoint[connection.endpoint]), 10)
+		}
+
+		// Two connections that reach one name would collapse again, and the collapse is the
+		// defect this function repairs. The suite fails rather than report a merged count.
+		if owner, held := owners[name]; held && owner != connection.endpoint {
+			return nil, fmt.Errorf(
+				"the connections %q and %q both reach the stream name %q, and one name compares one connection",
+				owner, connection.endpoint, name)
+		}
+
+		owners[name] = connection.endpoint
+		names[connection.endpoint] = name
+	}
+
+	return names, nil
 }
 
 // conformanceStreamAddress is one end of a connection that a per-stream entry names.
