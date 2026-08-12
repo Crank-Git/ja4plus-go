@@ -49,43 +49,89 @@ func (f *JA4TFingerprinter) Reset() {
 func (f *JA4TFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 }
 
+// tcpOptionEntries returns the JA4T part b entries, the maximum segment size and the
+// window scale that a raw TCP option region holds.
+//
+// It reads the raw bytes, because `gopacket` reports the first End-of-Option-List byte and
+// drops every byte after it. `layers/tcp.go:279-282` appends one option for that byte,
+// assigns the rest of the header to `tcp.Padding`, and breaks the option loop. The
+// maintainer ruled on 2026-08-12 that part b holds one entry for each option byte, and
+// #297 records the ruling.
+//
+// A packet carries the option bytes, so an attacker controls them. The read stops at the
+// first length the region does not hold, and it slices no byte past the end.
+func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8) {
+	for i := 0; i < len(region); {
+		kind := layers.TCPOptionKind(region[i])
+		length := 1
+		var data []byte
+		if kind != layers.TCPOptionKindEndList && kind != layers.TCPOptionKindNop {
+			if i+1 >= len(region) {
+				break
+			}
+			length = int(region[i+1])
+			// A length below 2 advances the read by nothing, and the loop never ends.
+			if length < 2 || i+length > len(region) {
+				break
+			}
+			data = region[i+2 : i+length]
+		}
+		switch kind {
+		case layers.TCPOptionKindEndList:
+			entries = append(entries, "0")
+		case layers.TCPOptionKindNop:
+			entries = append(entries, "1")
+		case layers.TCPOptionKindMSS:
+			entries = append(entries, "2")
+			if len(data) >= 2 {
+				mss = binary.BigEndian.Uint16(data[:2])
+			}
+		case layers.TCPOptionKindWindowScale:
+			entries = append(entries, "3")
+			if len(data) >= 1 {
+				wscale = data[0]
+			}
+		case layers.TCPOptionKindSACKPermitted:
+			entries = append(entries, "4")
+		case layers.TCPOptionKindTimestamps:
+			entries = append(entries, "8")
+		}
+		i += length
+	}
+	return entries, mss, wscale
+}
+
+// tcpOptionRegion returns the raw TCP option bytes of the header.
+//
+// `gopacket` assigns `tcp.Contents` the whole header at `layers/tcp.go:270`, so the slice
+// after the first 20 bytes holds every option byte. It returns nil for a header that
+// carries no option.
+//
+// The data offset states the header length, and a crafted segment states a length the
+// segment does not hold. `layers/tcp.go:264-268` assigns `tcp.Contents = data` for such a
+// segment, and that slice holds the payload as well as the header. `layers/tcp.go:319`
+// adds the layer before it reads the error, so a fingerprinter reads that segment. The
+// bound below returns nil for it, which is what `tcp.Options` reported before #297.
+func tcpOptionRegion(tcp *layers.TCP) []byte {
+	const tcpHeaderLength = 20
+	headerLength := int(tcp.DataOffset) * 4
+	if headerLength <= tcpHeaderLength || headerLength > len(tcp.Contents) {
+		return nil
+	}
+	return tcp.Contents[tcpHeaderLength:headerLength]
+}
+
 // generateTCPFingerprint builds the fingerprint string from TCP header fields.
 // Shared between JA4T (SYN) and JA4TS (SYN-ACK).
 // Format: {window_size}_{options}_{mss}_{wscale}
 func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType string) *FingerprintResult {
 	windowSize := tcp.Window
 
-	var optionParts []string
-
 	// The two-digit form keys on the value, and never on the presence of the option. An
 	// absent option and an option that carries zero therefore write the same part.
 	// Ruling #125 states the form, and `wireshark/source/packet-ja4.c:668` and
 	// `zeek/ja4t/main.zeek:206` each test the value.
-	var mss uint16
-	var wscale uint8
-
-	for _, opt := range tcp.Options {
-		switch opt.OptionType {
-		case layers.TCPOptionKindEndList:
-			optionParts = append(optionParts, "0")
-		case layers.TCPOptionKindNop:
-			optionParts = append(optionParts, "1")
-		case layers.TCPOptionKindMSS:
-			optionParts = append(optionParts, "2")
-			if len(opt.OptionData) >= 2 {
-				mss = binary.BigEndian.Uint16(opt.OptionData[:2])
-			}
-		case layers.TCPOptionKindWindowScale:
-			optionParts = append(optionParts, "3")
-			if len(opt.OptionData) >= 1 {
-				wscale = opt.OptionData[0]
-			}
-		case layers.TCPOptionKindSACKPermitted:
-			optionParts = append(optionParts, "4")
-		case layers.TCPOptionKindTimestamps:
-			optionParts = append(optionParts, "8")
-		}
-	}
+	optionParts, mss, wscale := tcpOptionEntries(tcpOptionRegion(tcp))
 
 	optionsStr := "00"
 	if len(optionParts) > 0 {
