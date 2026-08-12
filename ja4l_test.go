@@ -10,9 +10,28 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
+// handshakeSequenceNumbers returns the sequence number and the acknowledgement number that
+// one packet of a three-way handshake carries.
+//
+// The client measurement point reads the relative sequence number and the relative
+// acknowledgement number, so a packet that carries no realistic number reaches no client
+// point. Both endpoints open at the initial sequence number 0, which makes every relative
+// number of the handshake read 1.
+func handshakeSequenceNumbers(syn, ack bool) (uint32, uint32) {
+	switch {
+	case syn && !ack:
+		return 0, 0
+	case syn && ack:
+		return 0, 1
+	default:
+		return 1, 1
+	}
+}
+
 // buildTCPPacketWithIPs builds a TCP packet with specified IPs and TTL.
 func buildTCPPacketWithIPs(t testing.TB, srcIP, dstIP net.IP, ttl uint8, srcPort, dstPort uint16, syn, ack bool) gopacket.Packet {
 	t.Helper()
+	seq, acknum := handshakeSequenceNumbers(syn, ack)
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
 		DstMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
@@ -30,6 +49,8 @@ func buildTCPPacketWithIPs(t testing.TB, srcIP, dstIP net.IP, ttl uint8, srcPort
 		DstPort: layers.TCPPort(dstPort),
 		SYN:     syn,
 		ACK:     ack,
+		Seq:     seq,
+		Ack:     acknum,
 		Window:  65535,
 	}
 	_ = tcp.SetNetworkLayerForChecksum(ip)
@@ -153,7 +174,17 @@ func TestJA4L_MinimumLatency(t *testing.T) {
 	}
 }
 
-func TestJA4L_DuplicateACK(t *testing.T) {
+// TestJA4LMovesTheClientPointToARepeatedBareACK holds the client point rule on a repeated
+// bare ACK.
+//
+// A repeated bare ACK holds the relative sequence number `1` and the relative
+// acknowledgement number `1`, so it meets the rule that
+// `python/ja4.py:570` states.
+// `python/common.py:101` omits `C` from the fields it declines to
+// update, so the second packet replaces the point and the reference reports the later value.
+// Issue #196 holds the reading, and it replaces the earlier expectation that the second
+// packet reports nothing.
+func TestJA4LMovesTheClientPointToARepeatedBareACK(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	clientIP := net.IP{192, 168, 1, 1}
@@ -167,20 +198,18 @@ func TestJA4L_DuplicateACK(t *testing.T) {
 	synAckPkt.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
 	_, _ = fp.ProcessPacket(synAckPkt)
 
-	// First ACK — should produce JA4L-C
 	ackPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, false, true)
 	ackPkt.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
 	results, _ := fp.ProcessPacket(ackPkt)
-	if len(results) != 1 {
-		t.Fatalf("first ACK: expected 1 result, got %d", len(results))
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=25000_64" {
+		t.Errorf("first bare ACK: Fingerprint = %q, want %q", got, "JA4L-C=25000_64")
 	}
 
-	// Second ACK — should be ignored
 	ackPkt2 := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, false, true)
 	ackPkt2.Metadata().Timestamp = baseTime.Add(150 * time.Millisecond)
 	results, _ = fp.ProcessPacket(ackPkt2)
-	if len(results) != 0 {
-		t.Errorf("duplicate ACK: expected no results, got %d", len(results))
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=50000_64" {
+		t.Errorf("second bare ACK: Fingerprint = %q, want %q", got, "JA4L-C=50000_64")
 	}
 }
 
@@ -215,7 +244,8 @@ func buildTCPPacketWithIPv6(t *testing.T, srcIP, dstIP net.IP, hopLimit uint8, s
 	t.Helper()
 	eth := &layers.Ethernet{SrcMAC: []byte{0, 0, 0, 0, 0, 1}, DstMAC: []byte{0, 0, 0, 0, 0, 2}, EthernetType: layers.EthernetTypeIPv6}
 	ip := &layers.IPv6{SrcIP: srcIP, DstIP: dstIP, NextHeader: layers.IPProtocolTCP, HopLimit: hopLimit}
-	tcp := &layers.TCP{SrcPort: layers.TCPPort(srcPort), DstPort: layers.TCPPort(dstPort), SYN: syn, ACK: ack, Window: 65535}
+	seq, acknum := handshakeSequenceNumbers(syn, ack)
+	tcp := &layers.TCP{SrcPort: layers.TCPPort(srcPort), DstPort: layers.TCPPort(dstPort), SYN: syn, ACK: ack, Seq: seq, Ack: acknum, Window: 65535}
 	_ = tcp.SetNetworkLayerForChecksum(ip)
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
@@ -847,5 +877,394 @@ func TestJA4LHalvesTheClientLatency(t *testing.T) {
 	}
 	if results[0].Fingerprint != "JA4L-C=2177_64" {
 		t.Errorf("ACK: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=2177_64")
+	}
+}
+
+// buildTCPStreamPacket builds one TCP packet with explicit sequence numbers and a payload.
+// The client measurement point reads the relative sequence number, the relative
+// acknowledgement number and the payload, so a test of that rule states all three.
+// The function reads the address family from srcIP.
+func buildTCPStreamPacket(
+	t testing.TB,
+	srcIP, dstIP net.IP,
+	ttl uint8,
+	srcPort, dstPort uint16,
+	syn, ack bool,
+	seq, acknum uint32,
+	payload []byte,
+) gopacket.Packet {
+	t.Helper()
+
+	tcp := &layers.TCP{
+		SrcPort: layers.TCPPort(srcPort),
+		DstPort: layers.TCPPort(dstPort),
+		SYN:     syn,
+		ACK:     ack,
+		Seq:     seq,
+		Ack:     acknum,
+		Window:  65535,
+	}
+
+	eth := &layers.Ethernet{
+		SrcMAC: []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+		DstMAC: []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
+	}
+
+	var network gopacket.SerializableLayer
+	if srcIP.To4() != nil {
+		eth.EthernetType = layers.EthernetTypeIPv4
+		ip := &layers.IPv4{
+			SrcIP:    srcIP,
+			DstIP:    dstIP,
+			Protocol: layers.IPProtocolTCP,
+			Version:  4,
+			TTL:      ttl,
+		}
+		_ = tcp.SetNetworkLayerForChecksum(ip)
+		network = ip
+	} else {
+		eth.EthernetType = layers.EthernetTypeIPv6
+		ip := &layers.IPv6{
+			SrcIP:      srcIP,
+			DstIP:      dstIP,
+			NextHeader: layers.IPProtocolTCP,
+			HopLimit:   ttl,
+		}
+		_ = tcp.SetNetworkLayerForChecksum(ip)
+		network = ip
+	}
+
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+	if err := gopacket.SerializeLayers(buf, opts, eth, network, tcp, gopacket.Payload(payload)); err != nil {
+		t.Fatalf("failed to serialize packet: %v", err)
+	}
+
+	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
+// ja4lLastFingerprint returns the fingerprint of the one result the packet gives.
+// It fails the test when the packet gives more than one result, because JA4L reports one
+// value for one packet.
+func ja4lLastFingerprint(t *testing.T, results []FingerprintResult) string {
+	t.Helper()
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+
+	return results[0].Fingerprint
+}
+
+// TestJA4LMovesTheClientPointToTheClientHelloOfBadcurveballPcap holds the client point rule
+// of the reference on the four frames that open stream 0 of `badcurveball.pcap`.
+//
+// `python/ja4.py:570` records the client point on every packet that
+// carries `ACK`, carries no `SYN`, and holds the relative sequence number `1` and the
+// relative acknowledgement number `1`. `python/common.py:101` omits
+// `C` from the fields it declines to update, so a later packet moves the point.
+//
+// The bare ACK arrives at `+0.005918s` and the Client Hello at `+0.005925s`, so the point
+// moves 7 microseconds and the value moves from `2177_64` to `2181_64`. The per-stream
+// vector holds `2181_64`. Issue #196 holds the reading.
+func TestJA4LMovesTheClientPointToTheClientHelloOfBadcurveballPcap(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{172, 130, 128, 76}
+	serverIP := net.IP{54, 226, 182, 138}
+
+	const (
+		clientISN uint32 = 2717333804
+		serverISN uint32 = 1253214926
+	)
+
+	synPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 55318, 443, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(synPkt); len(results) != 0 {
+		t.Fatalf("SYN: expected no results, got %v", results)
+	}
+
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 238, 443, 55318, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(1563 * time.Microsecond)
+	results, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=781_238" {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=781_238")
+	}
+
+	ackPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 55318, 443, false, true, clientISN+1, serverISN+1, nil)
+	ackPkt.Metadata().Timestamp = baseTime.Add(5918 * time.Microsecond)
+	results, err = fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("bare ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=2177_64" {
+		t.Errorf("bare ACK: Fingerprint = %q, want %q", got, "JA4L-C=2177_64")
+	}
+
+	// The Client Hello carries the first payload byte of the client, so it holds the
+	// relative sequence number `1` and it moves the point.
+	clientHello := []byte{0x16, 0x03, 0x01, 0x02, 0x00, 0x01, 0x00, 0x01, 0xfc}
+	helloPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 55318, 443, false, true, clientISN+1, serverISN+1, clientHello)
+	helloPkt.Metadata().Timestamp = baseTime.Add(5925 * time.Microsecond)
+	results, err = fp.ProcessPacket(helloPkt)
+	if err != nil {
+		t.Fatalf("Client Hello: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=2181_64" {
+		t.Errorf("Client Hello: Fingerprint = %q, want %q", got, "JA4L-C=2181_64")
+	}
+}
+
+// TestJA4LMovesNoClientPointForAPacketThatAcknowledgesPayload holds the second half of the
+// relative number rule. Frame 5 of `badcurveball.pcap` acknowledges the 517 payload bytes of
+// the Client Hello, so its relative acknowledgement number is 518 and it moves no point.
+// `python/ja4.py:570` states the rule. Issue #196 holds the reading.
+func TestJA4LMovesNoClientPointForAPacketThatAcknowledgesPayload(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{172, 130, 128, 76}
+	serverIP := net.IP{54, 226, 182, 138}
+
+	const (
+		clientISN uint32 = 2717333804
+		serverISN uint32 = 1253214926
+	)
+
+	synPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 55318, 443, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	_, _ = fp.ProcessPacket(synPkt)
+
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 238, 443, 55318, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(1563 * time.Microsecond)
+	_, _ = fp.ProcessPacket(synAckPkt)
+
+	ackPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 55318, 443, false, true, clientISN+1, serverISN+1, nil)
+	ackPkt.Metadata().Timestamp = baseTime.Add(5918 * time.Microsecond)
+	_, _ = fp.ProcessPacket(ackPkt)
+
+	// The server acknowledges 517 payload bytes, so the relative acknowledgement number
+	// reads 518.
+	serverAck := buildTCPStreamPacket(t, serverIP, clientIP, 238, 443, 55318, false, true, serverISN+1, clientISN+518, nil)
+	serverAck.Metadata().Timestamp = baseTime.Add(21617 * time.Microsecond)
+	results, err := fp.ProcessPacket(serverAck)
+	if err != nil {
+		t.Fatalf("server ACK: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("server ACK: expected no results, got %v", results)
+	}
+}
+
+// TestJA4LKeepsTheClientPointOnTheBareACKOfLatestPcapngStream6 holds the first half of the
+// complete request rule.
+//
+// `python/common.py:77-83` returns a separate cache for a packet
+// whose highest layer is `http` or `http2`. That cache holds no point `A` and no point `B`,
+// so a packet carrying a whole HTTP request moves the client point of no connection.
+//
+// Stream 6 of `latest.pcapng` sends one complete `GET` request. The reference `JA4L-C` is
+// `32_128`, which is the bare ACK. Issue #196 holds the reading.
+func TestJA4LKeepsTheClientPointOnTheBareACKOfLatestPcapngStream6(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{172, 16, 225, 48}
+	serverIP := net.IP{23, 43, 242, 57}
+
+	const (
+		clientISN uint32 = 2970935134
+		serverISN uint32 = 3731049676
+	)
+
+	synPkt := buildTCPStreamPacket(t, clientIP, serverIP, 128, 52939, 80, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	_, _ = fp.ProcessPacket(synPkt)
+
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 57, 80, 52939, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(7831 * time.Microsecond)
+	results, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=3915_57" {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=3915_57")
+	}
+
+	ackPkt := buildTCPStreamPacket(t, clientIP, serverIP, 128, 52939, 80, false, true, clientISN+1, serverISN+1, nil)
+	ackPkt.Metadata().Timestamp = baseTime.Add(7896 * time.Microsecond)
+	results, err = fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("bare ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=32_128" {
+		t.Errorf("bare ACK: Fingerprint = %q, want %q", got, "JA4L-C=32_128")
+	}
+
+	// The request holds the blank line that ends the header block, so it moves no point.
+	request := []byte("GET /roots/dstrootcax3.crl HTTP/1.1\r\nHost: crl.identrust.com\r\n\r\n")
+	requestPkt := buildTCPStreamPacket(t, clientIP, serverIP, 128, 52939, 80, false, true, clientISN+1, serverISN+1, request)
+	requestPkt.Metadata().Timestamp = baseTime.Add(8091 * time.Microsecond)
+	results, err = fp.ProcessPacket(requestPkt)
+	if err != nil {
+		t.Fatalf("complete request: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("complete request: expected no results, got %v", results)
+	}
+}
+
+// TestJA4LMovesTheClientPointToThePartialRequestOfHttpEmptyUseragentPcap holds the second
+// half of the complete request rule, and it holds the TTL rule of the client point.
+//
+// `http-empty-useragent.pcap` sends the request line, the header and the blank line in three
+// packets. The request line holds no blank line, so the dissector reports it as a TCP packet
+// and it moves the client point. The reference `JA4L-C` is `177863_64`.
+//
+// Frame 4 is a bare ACK the server sends, and it holds the relative sequence number `1` and
+// the relative acknowledgement number `1`. It moves the point, and
+// `python/ja4.py:159` reads `client_ttl` for every client value.
+// Issue #196 holds the reading.
+func TestJA4LMovesTheClientPointToThePartialRequestOfHttpEmptyUseragentPcap(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	loopback := net.ParseIP("::1")
+
+	const (
+		clientISN uint32 = 2654111798
+		serverISN uint32 = 3940423380
+	)
+
+	synPkt := buildTCPStreamPacket(t, loopback, loopback, 64, 57722, 9200, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	_, _ = fp.ProcessPacket(synPkt)
+
+	synAckPkt := buildTCPStreamPacket(t, loopback, loopback, 55, 9200, 57722, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(53 * time.Microsecond)
+	_, _ = fp.ProcessPacket(synAckPkt)
+
+	ackPkt := buildTCPStreamPacket(t, loopback, loopback, 64, 57722, 9200, false, true, clientISN+1, serverISN+1, nil)
+	ackPkt.Metadata().Timestamp = baseTime.Add(63 * time.Microsecond)
+	results, err := fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("client bare ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=5_64" {
+		t.Errorf("client bare ACK: Fingerprint = %q, want %q", got, "JA4L-C=5_64")
+	}
+
+	// The server sends this bare ACK, and the client TTL of 64 fills the value. The hop
+	// limit of this packet is 55, so a value of `10_55` reads the wrong TTL.
+	serverAck := buildTCPStreamPacket(t, loopback, loopback, 55, 9200, 57722, false, true, serverISN+1, clientISN+1, nil)
+	serverAck.Metadata().Timestamp = baseTime.Add(74 * time.Microsecond)
+	results, err = fp.ProcessPacket(serverAck)
+	if err != nil {
+		t.Fatalf("server bare ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=10_64" {
+		t.Errorf("server bare ACK: Fingerprint = %q, want %q", got, "JA4L-C=10_64")
+	}
+
+	// The request line holds no blank line, so it moves the point.
+	requestLine := buildTCPStreamPacket(t, loopback, loopback, 64, 57722, 9200, false, true,
+		clientISN+1, serverISN+1, []byte("GET / HTTP/1.0\n"))
+	requestLine.Metadata().Timestamp = baseTime.Add(355780 * time.Microsecond)
+	results, err = fp.ProcessPacket(requestLine)
+	if err != nil {
+		t.Fatalf("request line: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=177863_64" {
+		t.Errorf("request line: Fingerprint = %q, want %q", got, "JA4L-C=177863_64")
+	}
+
+	// The header line starts at the relative sequence number 16, so it moves no point.
+	headerLine := buildTCPStreamPacket(t, loopback, loopback, 64, 57722, 9200, false, true,
+		clientISN+16, serverISN+1, []byte("User-Agent:\n"))
+	headerLine.Metadata().Timestamp = baseTime.Add(355849 * time.Microsecond)
+	results, err = fp.ProcessPacket(headerLine)
+	if err != nil {
+		t.Fatalf("header line: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("header line: expected no results, got %v", results)
+	}
+}
+
+// TestJA4LMovesNoServerPointForARepeatedSynAck holds the rule that point B never moves.
+//
+// `python/common.py:101` names `A` and `B` among the fields that the reference declines to
+// update, so a repeated SYN-ACK keeps the first timestamp. A second server value would repeat
+// the first, and the reference publishes one server value for one connection.
+// `ja4plus/fingerprinters/ja4l.py:456-461` holds the same rule, and the port measured the
+// repeat on `ssh2.pcapng` stream 15 in its issue #272.
+//
+// Every FoxIO reference agrees here, so this is a reading and not a ruling. The maintainer
+// ruled on 2026-08-12 in issue #196 that the conformance harness compares the last emission,
+// which is what makes a repeated server value reach the comparison.
+func TestJA4LMovesNoServerPointForARepeatedSynAck(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	const (
+		clientISN uint32 = 1000
+		serverISN uint32 = 2000
+	)
+
+	synPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	_, _ = fp.ProcessPacket(synPkt)
+
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 58, 443, 12345, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(12504 * time.Microsecond)
+	results, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=6252_58" {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=6252_58")
+	}
+
+	// The server repeats the SYN-ACK. The packet moves no point, and it reports no value.
+	repeatPkt := buildTCPStreamPacket(t, serverIP, clientIP, 58, 443, 12345, true, true, serverISN, clientISN+1, nil)
+	repeatPkt.Metadata().Timestamp = baseTime.Add(18334 * time.Microsecond)
+	results, err = fp.ProcessPacket(repeatPkt)
+	if err != nil {
+		t.Fatalf("repeated SYN-ACK: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("repeated SYN-ACK: expected no results, got %v", results)
+	}
+}
+
+// TestJA4LMovesNoClientPointWhenTheCaptureHoldsNoSYN holds the guard that a relative number
+// needs. `python/ja4.py:570` reads the relative sequence number that
+// the dissector counts from the initial sequence number of each endpoint. A capture that
+// holds no SYN for one endpoint reaches no relative number, so it reaches no client point.
+// Issue #196 holds the reading.
+func TestJA4LMovesNoClientPointWhenTheCaptureHoldsNoSYN(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	const serverISN uint32 = 1253214926
+
+	// The capture starts at the SYN-ACK, so the initial sequence number of the client is
+	// unknown.
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 64, 443, 12345, true, true, serverISN, 99, nil)
+	synAckPkt.Metadata().Timestamp = baseTime
+	_, _ = fp.ProcessPacket(synAckPkt)
+
+	ackPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, false, true, 100, serverISN+1, nil)
+	ackPkt.Metadata().Timestamp = baseTime.Add(100 * time.Microsecond)
+	results, err := fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("bare ACK: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("bare ACK: expected no results, got %v", results)
 	}
 }

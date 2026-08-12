@@ -1198,5 +1198,285 @@
     "theirs": "",
     "ruling": "#42",
     "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "badcurveball.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "2181_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/4/JA4L.1",
+    "capability": false,
+    "ours": "278_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/33/JA4L.1",
+    "capability": false,
+    "ours": "349_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/123/JA4L.1",
+    "capability": false,
+    "ours": "247_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/4/JA4L.1",
+    "capability": false,
+    "ours": "149_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/4/JA4L.1",
+    "capability": false,
+    "ours": "470_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "https3-301-get.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "206_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "latest.pcapng/10/JA4L.1",
+    "capability": false,
+    "ours": "513_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "latest.pcapng/75/JA4L.1",
+    "capability": false,
+    "ours": "449_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "latest.pcapng/101/JA4L.1",
+    "capability": false,
+    "ours": "188_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "latest.pcapng/158/JA4L.1",
+    "capability": false,
+    "ours": "513_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "latest.pcapng/188/JA4L.1",
+    "capability": false,
+    "ours": "487_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "socks-https-example.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "292_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "socks-https-example.pcap/34/JA4L.1",
+    "capability": false,
+    "ours": "30_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "socks-https-example.pcap/64/JA4L.1",
+    "capability": false,
+    "ours": "26_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh-r.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "4991_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh-r.pcap/299/JA4L.1",
+    "capability": false,
+    "ours": "2058_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh-r.pcap/395/JA4L.1",
+    "capability": false,
+    "ours": "184_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh-scp-1050.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "6615_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2-malformed.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "6310_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2-moloch-crash.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "6310_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2.pcapng/90/JA4L.1",
+    "capability": false,
+    "ours": "414_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2.pcapng/159/JA4L.1",
+    "capability": false,
+    "ours": "234_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2.pcapng/232/JA4L.1",
+    "capability": false,
+    "ours": "161_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2.pcapng/252/JA4L.1",
+    "capability": false,
+    "ours": "563_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2.pcapng/266/JA4L.1",
+    "capability": false,
+    "ours": "236_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "ssh2.pcapng/283/JA4L.1",
+    "capability": false,
+    "ours": "2645_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tcpdump-geneve.pcap/6/JA4L.1",
+    "capability": false,
+    "ours": "3418_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tls3.pcapng/63/JA4L.1",
+    "capability": false,
+    "ours": "86_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tls3.pcapng/172/JA4L.1",
+    "capability": false,
+    "ours": "66_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tls3.pcapng/278/JA4L.1",
+    "capability": false,
+    "ours": "78_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tls3.pcapng/281/JA4L.1",
+    "capability": false,
+    "ours": "64_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tls3.pcapng/584/JA4L.1",
+    "capability": false,
+    "ours": "71_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tls3.pcapng/588/JA4L.1",
+    "capability": false,
+    "ours": "53_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "tls3.pcapng/734/JA4L.1",
+    "capability": false,
+    "ours": "360_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
   }
 ]

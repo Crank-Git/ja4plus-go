@@ -192,3 +192,30 @@ image.
   and Wireshark reads no IPv6 field. Zeek reads `rp$ip6$hlim` at `zeek/ja4l/main.zeek:93`.
   Rust reads `ipv6.hlim` at `rust/ja4/src/time.rs:66`. Wireshark reads only `ip.ttl` at
   `wireshark/source/packet-ja4.c:1218`. **Issue #128 holds the question.**
+- **R33** — **Reference split.** The four implementations fill the client measurement point
+  `C` from three different packets, and only Python moves the point after it fills it.
+  **Issue #196 holds the question.**
+    - Python fills `C` from every packet that carries `ACK`, carries no `SYN`, and holds the
+      relative sequence number `1` and the relative acknowledgement number `1`. A payload
+      does not bar the packet. Python reads the condition at `python/ja4.py:570`.
+      `python/common.py:101` omits `C` from the fields that it declines to update, so a
+      later packet replaces the point. `python/common.py:111` stops the point once `D`
+      fills, which reaches a QUIC connection alone.
+    - Wireshark fills `C` from a bare ACK alone, and the point never moves. Wireshark tests
+      `(tcp_flags == 0x010) && (tcp_len == 0)` at `wireshark/source/packet-ja4.c:1302`, and
+      it tests `nstime_is_zero(&conn->timestamp_C)` with `(seq == 1) && (ack == 1)` at
+      `wireshark/source/packet-ja4.c:1311`.
+    - Rust fills `C` from the first packet that carries `ACK` and carries no `SYN`. It reads
+      no sequence number and no payload. Rust maps the flags at
+      `rust/ja4/src/time/tcp.rs:216`, and it reaches the terminal state `Done` at
+      `rust/ja4/src/time/tcp.rs:145`, so the point never moves.
+    - Zeek fills `C` from the second packet that the originator sends. Zeek reads
+      `threshold == 2` at `zeek/ja4l/main.zeek:103`, and the event fires once.
+- **R34** — **The two FoxIO vector sets state two different values for one stream.** On
+  stream 0 of `badcurveball.pcap` the per-stream vector holds `JA4L-C` as `2181_64`, and the
+  per-packet vector holds `ja4.ja4l` as `2177_64_114797` on frame 9. The capture sends the
+  bare ACK at `+0.005918s` and the Client Hello at `+0.005925s`, and the SYN-ACK arrives at
+  `+0.001563s`. The bare ACK gives `2177` and the Client Hello gives `2181`. Python fills
+  the point from the Client Hello at `python/ja4.py:570`, and Wireshark bars a
+  payload-bearing packet at `wireshark/source/packet-ja4.c:1302`. **R33 states why the two
+  sets disagree, and issue #196 holds the question.**
