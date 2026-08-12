@@ -62,6 +62,14 @@ func newCorpusFetchRoot(t *testing.T) string {
 func newCorpusArchive(t *testing.T) string {
 	t.Helper()
 
+	return newCorpusArchiveWithout(t, "")
+}
+
+// newCorpusArchiveWithout returns the same archive without one path. It builds the case
+// where FoxIO moved a file that a reading cites, and the empty name omits nothing.
+func newCorpusArchiveWithout(t *testing.T, omitted string) string {
+	t.Helper()
+
 	stage := t.TempDir()
 	top := filepath.Join(stage, "ja4-fixture")
 	files := map[string]string{
@@ -72,9 +80,14 @@ func newCorpusArchive(t *testing.T) string {
 		"python/test/test_ja4_output.py":           "the per-stream harness",
 		"python/ja4.py":                            "the per-stream reference",
 		"wireshark/test/test_tshark_output.py":     "the per-packet harness",
+		"wireshark/source/packet-ja4.c":            "the per-packet reference",
+		"zeek/ja4/main.zeek":                       "the Zeek reference",
+		"rust/ja4/src/tls.rs":                      "the Rust reference",
 		"technical_details/JA4.png":                "the JA4 image",
 		"README.md":                                "the archive holds more than the corpus",
 	}
+
+	delete(files, omitted)
 
 	for name, content := range files {
 		path := filepath.Join(top, name)
@@ -174,10 +187,31 @@ func TestFetchCorpusWritesTheReferenceTreeUnderTheFoxioPaths(t *testing.T) {
 		"testdata/foxio/reference/python/test/test_ja4_output.py",
 		"testdata/foxio/reference/python/ja4.py",
 		"testdata/foxio/reference/wireshark/test/test_tshark_output.py",
+		"testdata/foxio/reference/wireshark/source/packet-ja4.c",
+		"testdata/foxio/reference/zeek/ja4/main.zeek",
+		"testdata/foxio/reference/rust/ja4/src/tls.rs",
 	} {
 		if _, statErr := os.Stat(filepath.Join(root, path)); statErr != nil {
 			t.Errorf("%s is absent: %v\n%s", path, statErr, output)
 		}
+	}
+}
+
+// FR-conformance-38 — the script stops when the archive holds no file that a reading
+// cites. A reference tree that silently lost one such file would break a reading in
+// `docs/specs/foxio/` and report success.
+func TestFetchCorpusFailsWhenACitedReferenceFileIsAbsent(t *testing.T) {
+	requireCorpusFetchTools(t)
+
+	omitted := "wireshark/source/packet-ja4.c"
+	root := newCorpusFetchRoot(t)
+	output, err := runFetchCorpus(t, root, fileURL(newCorpusArchiveWithout(t, omitted)))
+	if err == nil {
+		t.Fatalf("the script reported success without %s:\n%s", omitted, output)
+	}
+
+	if !strings.Contains(output, omitted) {
+		t.Errorf("the failure message does not name %s:\n%s", omitted, output)
 	}
 }
 

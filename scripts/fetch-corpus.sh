@@ -108,10 +108,23 @@ for index in "${!sources[@]}"; do
 	fi
 done
 
-# These paths carry a citation that this repository already holds. `technical_details/`
-# decides every schema, and the two harness files state which captures FoxIO enumerates.
-# A missing path here means that FoxIO moved the material at this commit.
-cited=(technical_details python/test/test_ja4_output.py wireshark/test/test_tshark_output.py)
+# Each path here carries a citation that `docs/specs/foxio/` already holds, so a silent
+# loss of one breaks a reading this repository depends on. `technical_details/` decides
+# every schema. The two harness files state which captures FoxIO enumerates. The four
+# reference implementations decide behaviour where the image is silent, and
+# `wireshark/source/packet-ja4.c` alone carries 147 citations.
+#
+# A missing path here means that FoxIO moved the material at this commit, and the script
+# stops rather than write a reference tree that a reading cannot cite.
+cited=(
+	technical_details
+	python/ja4.py
+	python/test/test_ja4_output.py
+	wireshark/source/packet-ja4.c
+	wireshark/test/test_tshark_output.py
+	zeek
+	rust
+)
 
 for path in "${cited[@]}"; do
 	if [ ! -e "$stage/src/$path" ]; then
@@ -144,13 +157,16 @@ done
 # The staged tree now holds the whole repository except the three directories the loop
 # moved out of it. The move below therefore writes one copy of each file, and a reader
 # never compares the corpus with itself.
+# The loop above already replaced the captures and the two vector directories, so neither
+# message below may state that the corpus is unchanged. The script removed the fetched file
+# before the loop, so the next run reads an incomplete corpus and fetches again.
 if [ -d "$corpus_dir/reference" ] && ! mv "$corpus_dir/reference" "$corpus_dir/reference.previous"; then
-	fail "the script cannot move $corpus_dir/reference aside. The corpus is unchanged."
+	fail "the script cannot move $corpus_dir/reference aside. The corpus holds the new captures and the new vectors, and the next run fetches again."
 fi
 
 if ! mv "$stage/src" "$corpus_dir/reference"; then
 	mv "$corpus_dir/reference.previous" "$corpus_dir/reference" 2>/dev/null || true
-	fail "the script cannot write $corpus_dir/reference. The corpus holds the previous reference."
+	fail "the script cannot write $corpus_dir/reference. The corpus holds the new captures, the new vectors and the previous reference, and the next run fetches again."
 fi
 
 rm -rf "${corpus_dir:?}/reference.previous"
