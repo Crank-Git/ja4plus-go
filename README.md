@@ -128,12 +128,15 @@ All fingerprinters share a common interface:
 | `ProcessPacket(pkt)` | Process a packet, returns `[]FingerprintResult` or nil |
 | `Reset()` | Clears all collected state |
 
-`JA4SSHFingerprinter` also implements `WindowCloser`, which carries two methods.
+`JA4SSHFingerprinter` also implements `WindowCloser` and `ConnectionWindowCloser`. **Each
+interface carries one method**, so a type that implements one of them reaches that method's
+dispatch and never loses the other. The maintainer ruled the split on 2026-08-12, and issue
+#268 records the ruling.
 
-| Method | Description |
-|--------|-------------|
-| `CloseOpenWindows()` | Emits the window each connection holds open, and returns the results |
-| `CloseConnectionWindow(srcIP, srcPort, dstIP, dstPort, proto)` | Emits the window one connection holds open, removes that connection, and returns the results |
+| Interface | Method | Description |
+|--------|--------|-------------|
+| `WindowCloser` | `CloseOpenWindows()` | Emits the window each connection holds open, and returns the results |
+| `ConnectionWindowCloser` | `CloseConnectionWindow(srcIP, srcPort, dstIP, dstPort, proto)` | Emits the window one connection holds open, removes that connection, and returns the results |
 
 JA4SSH emits one value for every 200 SSH packets of a connection. A connection whose last
 window never reaches that count holds the window open, and no packet emits it. Call

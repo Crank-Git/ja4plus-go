@@ -34,10 +34,26 @@ type Fingerprinter interface {
 // whole `v1` series. A caller discovers this interface with a type assertion, as a caller of
 // `io.WriterTo` does. A stateless fingerprinter implements nothing, and Processor skips it.
 // The maintainer ruled this placement on 2026-08-11, and issue #53 records the ruling.
+//
+// The interface declares one method, and ConnectionWindowCloser declares the other one.
+// A two-method interface skipped a type that implements one of the two methods. That type
+// then lost the dispatch of the method it does implement. The maintainer ruled the split on
+// 2026-08-12, and issue #268 records the ruling.
 type WindowCloser interface {
 	// CloseOpenWindows returns the value of the window that each connection holds open,
 	// and it starts a new window on each one. A second call returns an empty slice.
 	CloseOpenWindows() []FingerprintResult
+}
+
+// ConnectionWindowCloser is the interface that a fingerprinter implements when one named
+// connection holds a window open. JA4SSH holds such a window, and no other method of this
+// library does.
+//
+// The interface sits beside Fingerprinter and beside WindowCloser. Each one declares one
+// capability, as `http.Flusher` and `http.Hijacker` each do, so a type that implements one
+// capability keeps the dispatch of that capability. The maintainer ruled the split on
+// 2026-08-12, and issue #268 records the ruling.
+type ConnectionWindowCloser interface {
 	// CloseConnectionWindow returns the value of the window that one connection holds
 	// open, and it then removes the connection. It names the connection by the same key
 	// CleanupConnection accepts. The maintainer ruled the method on 2026-08-12, and issue

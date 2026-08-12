@@ -182,9 +182,21 @@ func (p *Processor) CleanupConnection(srcIP string, srcPort uint16, dstIP string
 func (p *Processor) CloseOpenWindows() []FingerprintResult {
 	p.ensure()
 
+	return closeOpenWindows(p.fingerprinters())
+}
+
+// closeOpenWindows joins the open window of each fingerprinter of the list.
+//
+// The assertion names WindowCloser, which declares the one method this function calls. A
+// call site that asserts more than it calls skips a type that implements the called method.
+// That type then loses a capability `v0.3.0` already delivers. The maintainer ruled the
+// per-capability assertion on 2026-08-12, and issue #268 records the ruling.
+// The function sits beside the method so that a test reaches this dispatch with a
+// fingerprinter that Processor holds no field for.
+func closeOpenWindows(fingerprinters []Fingerprinter) []FingerprintResult {
 	var results []FingerprintResult
 
-	for _, fp := range p.fingerprinters() {
+	for _, fp := range fingerprinters {
 		closer, holds := fp.(WindowCloser)
 		if !holds {
 			continue
@@ -200,9 +212,9 @@ func (p *Processor) CloseOpenWindows() []FingerprintResult {
 // it then removes the connection from every fingerprinter that holds such a window.
 //
 // The caller calls the method when it evicts one connection. It reaches each fingerprinter
-// that implements WindowCloser and joins the results, in the order the processor runs the
-// fingerprinters. A fingerprinter that implements no WindowCloser holds no window open, so
-// the call skips it.
+// that implements ConnectionWindowCloser and joins the results, in the order the processor
+// runs the fingerprinters. A fingerprinter that implements no ConnectionWindowCloser holds
+// no window open, so the call skips it.
 // The caller names the address pair that a FingerprintResult carries, which is the reported
 // key. CleanupConnection accepts the same key.
 // It removes the connection, so a second call returns an empty slice.
@@ -212,10 +224,23 @@ func (p *Processor) CloseOpenWindows() []FingerprintResult {
 func (p *Processor) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult {
 	p.ensure()
 
+	return closeConnectionWindow(p.fingerprinters(), srcIP, srcPort, dstIP, dstPort, proto)
+}
+
+// closeConnectionWindow joins the open window that each fingerprinter of the list holds for
+// one connection.
+//
+// The assertion names ConnectionWindowCloser, which declares the one method this function
+// calls. A call site that asserts more than it calls skips a type that implements the called
+// method. The maintainer ruled the per-capability assertion on 2026-08-12, and issue #268
+// records the ruling.
+// The function sits beside the method so that a test reaches this dispatch with a
+// fingerprinter that Processor holds no field for.
+func closeConnectionWindow(fingerprinters []Fingerprinter, srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult {
 	var results []FingerprintResult
 
-	for _, fp := range p.fingerprinters() {
-		closer, holds := fp.(WindowCloser)
+	for _, fp := range fingerprinters {
+		closer, holds := fp.(ConnectionWindowCloser)
 		if !holds {
 			continue
 		}

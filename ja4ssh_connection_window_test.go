@@ -210,16 +210,16 @@ func TestAZeroValueJA4SSHFingerprinterClosesNoConnectionWindow(t *testing.T) {
 	}
 }
 
-// TestWindowCloserHoldsCloseConnectionWindow holds the placement the maintainer ruled on
-// 2026-08-12. The method sits on the second optional interface, beside `CloseOpenWindows`,
-// and `Fingerprinter` does not change. Issue #216 records the ruling, and issue #53 records
-// the interface.
-func TestWindowCloserHoldsCloseConnectionWindow(t *testing.T) {
+// TestConnectionWindowCloserHoldsCloseConnectionWindow holds the placement the maintainer
+// ruled on 2026-08-12. The method sits on its own optional interface, and `Fingerprinter`
+// does not change. Issue #216 records the method, issue #53 records the optional interface,
+// and issue #268 records the split that gives the method an interface of its own.
+func TestConnectionWindowCloserHoldsCloseConnectionWindow(t *testing.T) {
 	var fingerprinter Fingerprinter = openOneSSHWindow(t, 15)
 
-	closer, holds := fingerprinter.(WindowCloser)
+	closer, holds := fingerprinter.(ConnectionWindowCloser)
 	if !holds {
-		t.Fatal("JA4SSHFingerprinter implements no WindowCloser, and it holds a window open")
+		t.Fatal("JA4SSHFingerprinter implements no ConnectionWindowCloser, and it holds a window open")
 	}
 
 	if closed := closer.CloseConnectionWindow(
@@ -234,8 +234,8 @@ func TestWindowCloserHoldsCloseConnectionWindow(t *testing.T) {
 func TestAStatelessFingerprinterImplementsNoConnectionWindowCloser(t *testing.T) {
 	var fingerprinter Fingerprinter = NewJA4T()
 
-	if _, holds := fingerprinter.(WindowCloser); holds {
-		t.Error("JA4TFingerprinter implements WindowCloser, and it holds no window open")
+	if _, holds := fingerprinter.(ConnectionWindowCloser); holds {
+		t.Error("JA4TFingerprinter implements ConnectionWindowCloser, and it holds no window open")
 	}
 }
 
@@ -255,8 +255,9 @@ func TestJA4SSHCleanupConnectionEmitsNoValueAfterTheRuling(t *testing.T) {
 }
 
 // TestProcessorCloseConnectionWindowReturnsTheJoinedResults holds the processor path.
-// A caller of the processor reaches every fingerprinter that implements WindowCloser, and
-// the processor skips every other one. Issue #216 adds the method.
+// A caller of the processor reaches every fingerprinter that implements
+// ConnectionWindowCloser, and the processor skips every other one. Issue #216 adds the
+// method, and issue #268 gives the method an interface of its own.
 func TestProcessorCloseConnectionWindowReturnsTheJoinedResults(t *testing.T) {
 	processor := NewProcessor()
 	payload := sshPayloadOfSize(36)
