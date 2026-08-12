@@ -177,11 +177,12 @@ defect of the table in `## Why the project runs one` sits on a shared surface.
 member writes, and grep the tree for a breach of it. Read the files that no other member
 touched, because a rule binds every file and not the shared ones alone.
 
-**A shared surface finds no rule breach.** Both findings of batch #342 sat on a surface that
-exactly one member edited, and each one was a cross-member defect because one member wrote a
-rule that another member's file breaks. #255 wrote `## A citation names its repository` in
-`.claude/rules/rulings.md`, and #319 wrote a bare `#215` that names the port in
-`ja4t_option_byte_count_test.go`. No shared file holds that pair.
+**A rule breach does not sit on a shared surface.** Both findings of batch #342 sat on a
+surface that exactly one member edited. Each one is a cross-member defect, because one
+member wrote a rule that another member's file breaks. #255 wrote
+`## A citation names its repository` in `.claude/rules/rulings.md`, and #319 wrote a bare
+`#215` that names the port in `ja4t_option_byte_count_test.go`. No shared file holds that
+pair.
 
 ## What a pull-request body is, and how a finding cites one
 
@@ -190,10 +191,10 @@ rule that another member's file breaks. #255 wrote `## A citation names its repo
 body therefore reaches the tree, and the review is the last check before it does.
 
 **Item 4 of the return contract asks for a `file:line`, and a pull-request body holds no
-line.** A finding against a body cites the pull request, the heading of the section, and a
-verbatim quotation of the sentence. Write `pull request #349, `## Measurement``. Add the
-`file:line` of the tree that disproves the sentence, because the body states a fact about
-the tree and the tree is the evidence.
+line.** A finding against a body cites three things: the pull request as `#349`, the
+heading of the section that holds the sentence, and a verbatim quotation of the sentence.
+Add the `file:line` of the tree that disproves the sentence, because the body states a
+fact about the tree and the tree is the evidence.
 
 **A finding against a body names no repair of the body.** A merged body is a record of what
 its author measured. The review reports the true number, and the batch documentation writes
