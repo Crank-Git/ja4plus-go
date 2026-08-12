@@ -133,6 +133,25 @@ The port's issues #28, #96, #97, #105, #199 and #214 hold these rulings.
   ends.
 - **FR-parity-33** — A test asserts that a connection with 15 SSH packets and a window of
   200 produces no fingerprint before `CloseOpenWindows` and one after it.
+- **FR-parity-33a** — `JA4SSHFingerprinter` exports `CloseConnectionWindow`, which emits
+  the window one connection holds open and returns the results. The maintainer ruled the
+  method on 2026-08-12, and issue #216 records the ruling. This project named the
+  behaviour first, and `Crank-Git/ja4plus` issue #598 holds the port half.
+- **FR-parity-33b** — `CloseConnectionWindow` reads the two endpoints of the connection in
+  either order, as `CleanupConnection` does.
+- **FR-parity-33c** — `CloseConnectionWindow` removes the connection from the state table,
+  so a second call returns an empty slice.
+- **FR-parity-33d** — `CloseConnectionWindow` returns an empty slice for a connection the
+  state table does not hold.
+- **FR-parity-33e** — `CleanupConnection` emits no fingerprint. A caller that wants the
+  open window of one connection calls `CloseConnectionWindow` instead.
+- **FR-parity-33f** — `Processor` and `SyncProcessor` each export
+  `CloseConnectionWindow`, which calls each fingerprinter that implements
+  `ConnectionWindowCloser` and returns the joined results.
+- **FR-parity-33g** — `CloseConnectionWindow` removes a connection whose window holds no
+  SSH packet. FR-parity-28 states that such a window produces no fingerprint.
+- **FR-parity-33h** — A test asserts that a connection with an open window produces one
+  fingerprint on the first `CloseConnectionWindow` call and none on the second.
 
 ### JA4T and JA4TS
 
@@ -232,13 +251,14 @@ that FR-parity-32 adds a line to.
 |---|---|
 | `ja4.go`, `ja4s.go` | The ALPN form. |
 | `ja4l.go` | One value per connection, the part count, the protocol marker, the retransmission guard. |
-| `ja4ssh.go` | The window threshold, the mode field, the empty-window rule, `CloseOpenWindows`. |
+| `ja4ssh.go` | The window threshold, the mode field, the empty-window rule, `CloseOpenWindows`, `CloseConnectionWindow`. |
 | `ja4t.go`, `ja4ts.go` | The two-digit form, part e, the RST value, the JA4TS state table. |
 | `ja4x.go` | A test only. The behaviour already matches. |
 | `ja4d.go`, `ja4d6.go` | The repeated option 57, the BOOTP rule, the relay message. |
 | `ja4h.go` | A test only. `ja4h.go:171-173` already matches. |
-| `types.go` | `WindowCloser` declares `CloseOpenWindows`, and `Fingerprinter` does not change. |
-| `processor.go` | `Processor.CloseOpenWindows`. |
+| `types.go` | `WindowCloser` declares `CloseOpenWindows`, `ConnectionWindowCloser` declares `CloseConnectionWindow`, and `Fingerprinter` does not change. |
+| `processor.go` | `Processor.CloseOpenWindows`, `Processor.CloseConnectionWindow`. |
+| `sync_processor.go` | `SyncProcessor.CloseOpenWindows`, `SyncProcessor.CloseConnectionWindow`. `features/03-concurrency.md` states the `SyncProcessor` contract. |
 | `cmd/ja4plus/main.go` | The end-of-capture call. |
 | `testdata/deviations.json` | The value declines that FR-parity-22 and FR-parity-50 add. |
 | `docs/parity.md` | New. |
@@ -264,6 +284,7 @@ what the CHANGELOG records.
 |---|---|
 | A connection holds an open window and the caller never calls `CloseOpenWindows`. | The window is lost. The method is opt-in, and the library forces no flush. |
 | `CloseOpenWindows` is called twice. | The second call returns an empty slice. A window is emitted once. |
+| One connection ends before the packet source ends. | `CloseConnectionWindow` emits the window that connection holds open, and it removes the connection. `CleanupConnection` removes the connection and emits nothing. FR-parity-33a and FR-parity-33e cover the two. |
 | A RST arrives before any SYN-ACK. | No JA4TS value. FR-parity-43 covers it. |
 | The server sends three SYN-ACK packets. | Part e holds two delays, joined by `-`. |
 | A DHCPv6 message nests a relay inside a relay. | Subfield 1 writes the outermost type. FR-parity-54 says "the outer", and the test builds the two-level case. |
