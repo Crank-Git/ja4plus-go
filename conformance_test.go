@@ -101,10 +101,15 @@ func conformanceCorpusIsAbsent() bool {
 
 // conformanceSkipWithoutCorpus skips the test when the corpus is absent.
 // FR-conformance-11 requires a message that names `make corpus`.
+//
+// The marker line goes to the log first. Three untagged tests write the same skip
+// message when one capture is absent, so the message alone cannot tell the CI job which
+// skip it reads. `conformance_skip_marker_test.go` holds the constant and the reason.
 func conformanceSkipWithoutCorpus(t *testing.T) {
 	t.Helper()
 
 	if conformanceCorpusIsAbsent() {
+		t.Log(conformanceSkipMarker)
 		t.Skipf("%s is absent, so run `make corpus` to fetch the FoxIO corpus", conformanceCorpusDir)
 	}
 }

@@ -82,7 +82,7 @@ jobs:
           fi
           echo "testdata/foxio/pcap holds $captures captures."
 
-      # The `conformance` build tag hides three test files from every other job, so no
+      # The `conformance` build tag hides seven test files from every other job, so no
       # other job compiles them. `go vet` type-checks them, and a compile error fails here
       # rather than reaching the run below, which holds the exit status back.
       - name: Vet the conformance suite
@@ -117,11 +117,18 @@ jobs:
             exit 1
           fi
 
-      # The suite prints the skip message when it finds no corpus. The step above proves
-      # the corpus is present, so this check catches a skip the directory check cannot see.
+      # The suite writes a marker line when it finds no corpus. The step above proves the
+      # corpus directory holds a capture, so this check catches a skip the directory
+      # check cannot see.
+      #
+      # The check reads the marker and not the skip message. `make conformance` runs the
+      # untagged tests too, and three of them write the same skip message when one
+      # capture is absent. A pin move that renames one capture would then fail this job
+      # with the wrong reason. `conformance_skip_marker_test.go` holds the marker and the
+      # tests that keep the two cases apart.
       - name: Fail when the conformance suite skips
         run: |
-          if grep -q 'to fetch the FoxIO corpus' conformance.log; then
+          if grep -q 'conformance-suite-skip: the corpus is absent' conformance.log; then
             echo "the conformance suite skipped, and FR-conformance-36 fails the job" >&2
             exit 1
           fi
