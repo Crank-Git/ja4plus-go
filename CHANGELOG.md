@@ -7,11 +7,27 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Every measurement in this section names the base of the run that produced it. Issue #42 put 150
+Every measurement in this section names the base of the run that produced it. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, issue #197 put 13 more, and issue #223 put 4 more. A run on the
-current tree reports 1545 matches, 940 deviations, 203 accepted deviations and 203 register
+put 35 more entries into it, issue #197 put 14 more, and issue #223 put 4 more. A run on the
+current tree reports 1602 matches, 783 deviations, 301 accepted deviations and 301 register
 keys. A count that an entry below states therefore differs from a fresh run.
+
+**A test holds this paragraph true, and `changelog_counts_freshness_test.go` is that test.**
+It reads the four counts and the enumeration above, and it compares each one against
+`docs/audit/conformance.md` and against `testdata/deviations.json`. A member that moves a
+count and leaves this paragraph fails `go test ./...`. Issue #306 built the test, after the
+paragraph went stale at the end of three consecutive batches.
+
+**Batch #293 repaired four fingerprint paths, and this paragraph records the measurement of
+the whole batch.** Issue #55 wrote the two-digit form for a zero JA4T value and a zero JA4TS
+value. Issue #286 repaired three defects in the JA4H path. Issue #295 stepped
+`ParseClientHello` over a leading non-handshake record. Issue #287 wrote the `JA4_o` zero
+sentinel that the maintainer ruled on 2026-08-12. Issue #299 put 98 entries into the register
+under the ruling of issue #42. The batch ran from `34b6715` to `db53765`. The run reports 1545
+matches, 940 deviations and 203 accepted deviations before, and 1602 matches, 783 deviations
+and 301 accepted deviations after. The register holds 203 keys before and 301 after. Issue
+#306 records this measurement.
 
 **Batch #281 filled four raw fields, and this paragraph records the measurement of the whole
 batch.** Issue #274 filled `JA4H_ro`, issue #275 filled `JA4S_r`, issue #276 filled `JA4X_r`
