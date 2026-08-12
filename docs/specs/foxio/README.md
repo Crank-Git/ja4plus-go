@@ -91,7 +91,7 @@ material this project copies.
   port's specification. Its citations name paths of the port, and no reader edits the copy.
   **The copy also uses the citation forms of the port**, and one of them is a bare source
   file name such as `packet-ja4.c:1328`. The FoxIO tree holds that file at
-  `wireshark/source/packet-ja4.c`. Seven spans of the copy take that form.
+  `wireshark/source/packet-ja4.c`, so that form is a short form of base 1.
 
 ### The measurement of every citation
 
