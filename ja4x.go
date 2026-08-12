@@ -357,8 +357,9 @@ func ja4xParts(certDER []byte) ([3]string, bool) {
 // the fingerprint, and `:50` writes the raw form as
 // `let ja4x_r = with_raw.then(|| parts.join("_"));`.
 //
-// The zero sentinel of R12 belongs to the hashed form alone, because FoxIO runs its hash
-// on the hashed form. An empty list therefore reaches the raw form as an empty part.
+// R12 of `docs/specs/foxio/JA4X.md` states the zero sentinel `000000000000`, and
+// `parser.TruncatedHash` returns it for an empty list. The raw form hashes nothing, so an
+// empty list reaches the raw form as an empty part and never as the sentinel.
 func computeJA4XWithRaw(certDER []byte) (string, string) {
 	parts, ok := ja4xParts(certDER)
 	if !ok {
