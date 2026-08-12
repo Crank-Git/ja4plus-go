@@ -12,6 +12,8 @@ import (
 // FR-concurrency-12 fix. A method outside this set reaches the unguarded Processor.
 var syncProcessorMethodNames = []string{
 	"CleanupConnection",
+	// Issue #216 adds CloseConnectionWindow, which emits the open window of one connection.
+	"CloseConnectionWindow",
 	"CloseOpenWindows",
 	"GetShardKey",
 	"ProcessPacket",

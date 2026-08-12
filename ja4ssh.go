@@ -421,12 +421,13 @@ func (f *JA4SSHFingerprinter) Reset() {
 	f.connections = make(map[string]*sshConnState)
 }
 
-// CleanupConnection removes internal state for the given connection.
-// JA4SSH normalizes keys by port 22 or higher-port direction.
-func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
-	f.ensure()
-
-	// Try both directions since we normalize by port 22 or higher port
+// sshConnKeyOfEndpoints returns the state-table key of the connection the two endpoints
+// name, in either order.
+// JA4SSH normalizes the key by port 22 or by the higher-port direction, so a caller names
+// the two endpoints in either order and reaches one key.
+// CleanupConnection and CloseConnectionWindow both read it. One rule serves the two, because
+// a second copy of the rule would answer differently after a later change to one copy.
+func sshConnKeyOfEndpoints(srcIP string, srcPort uint16, dstIP string, dstPort uint16) string {
 	var clientIP, serverIP string
 	var clientPort, serverPort uint16
 
@@ -444,8 +445,57 @@ func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, ds
 		clientPort, serverPort = dstPort, srcPort
 	}
 
-	connKey := fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
+	return fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
+}
+
+// CleanupConnection removes internal state for the given connection.
+// JA4SSH normalizes keys by port 22 or higher-port direction.
+// It emits no fingerprint. A caller that wants the open window of the connection calls
+// CloseConnectionWindow instead, and issue #216 records that ruling.
+func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
+	delete(f.connections, sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort))
+}
+
+// CloseConnectionWindow returns the value of the window that one connection holds open, and
+// it then removes the connection.
+//
+// The caller calls the method when it evicts one connection, which is the moment the
+// reference publishes the final window. `rust/ja4/src/ssh.rs:45-55` and
+// `zeek/ja4ssh/main.zeek:160-164` both emit at teardown, and CloseOpenWindows reaches every
+// connection at once, which is the wrong instrument for one connection that just ended.
+// The maintainer ruled the method on 2026-08-12, and issue #216 records the ruling.
+//
+// It names the connection by the same key CleanupConnection accepts, so the caller names the
+// two endpoints in either order.
+// It returns an empty slice for a connection the state table does not hold, and an empty
+// slice for a window that holds no SSH packet. It removes the connection in both cases, so a
+// second call returns an empty slice.
+// The result names the client of the connection as the source and the server as the
+// destination, as a result of CloseOpenWindows does. No packet triggers this emission, so the
+// result reads the endpoints of the connection.
+// The method is opt-in. CleanupConnection still emits nothing, so a caller that only reclaims
+// memory receives no fingerprint it did not ask for.
+func (f *JA4SSHFingerprinter) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult {
+	f.ensure()
+
+	connKey := sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort)
+
+	conn, exists := f.connections[connKey]
+	if !exists {
+		return nil
+	}
+
 	delete(f.connections, connKey)
+
+	result, held := emitSSHWindow(
+		conn, conn.clientIP, conn.serverIP, conn.clientPort, conn.serverPort, conn.lastSeen)
+	if !held {
+		return nil
+	}
+
+	return []FingerprintResult{result}
 }
 
 // mode returns the most common value in a slice. Returns 0 if the slice is empty.

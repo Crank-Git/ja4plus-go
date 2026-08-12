@@ -38,6 +38,11 @@ type WindowCloser interface {
 	// CloseOpenWindows returns the value of the window that each connection holds open,
 	// and it starts a new window on each one. A second call returns an empty slice.
 	CloseOpenWindows() []FingerprintResult
+	// CloseConnectionWindow returns the value of the window that one connection holds
+	// open, and it then removes the connection. It names the connection by the same key
+	// CleanupConnection accepts. The maintainer ruled the method on 2026-08-12, and issue
+	// #216 records the ruling.
+	CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult
 }
 
 // FingerprintResult holds a single fingerprint and its metadata.

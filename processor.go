@@ -196,6 +196,36 @@ func (p *Processor) CloseOpenWindows() []FingerprintResult {
 	return results
 }
 
+// CloseConnectionWindow returns the value of the window that one connection holds open, and
+// it then removes the connection from every fingerprinter that holds such a window.
+//
+// The caller calls the method when it evicts one connection. It reaches each fingerprinter
+// that implements WindowCloser and joins the results, in the order the processor runs the
+// fingerprinters. A fingerprinter that implements no WindowCloser holds no window open, so
+// the call skips it.
+// The caller names the address pair that a FingerprintResult carries, which is the reported
+// key. CleanupConnection accepts the same key.
+// It removes the connection, so a second call returns an empty slice.
+// CleanupConnection still emits nothing, so a caller that only reclaims memory receives no
+// fingerprint it did not ask for. The maintainer ruled the method on 2026-08-12, and issue
+// #216 records the ruling.
+func (p *Processor) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult {
+	p.ensure()
+
+	var results []FingerprintResult
+
+	for _, fp := range p.fingerprinters() {
+		closer, holds := fp.(WindowCloser)
+		if !holds {
+			continue
+		}
+
+		results = append(results, closer.CloseConnectionWindow(srcIP, srcPort, dstIP, dstPort, proto)...)
+	}
+
+	return results
+}
+
 // GetShardKey returns a stable key that routes one packet to one Processor shard.
 // The key is the sorted five-tuple, so a packet and its reply return one key.
 // The key reads no QUIC connection identifier, so every packet of one QUIC
