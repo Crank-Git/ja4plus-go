@@ -29,6 +29,19 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **JA4L and JA4LS now read a UDP flow only when the flow carries QUIC, and the library
+  produces no value for another UDP flow.** This is a breaking behaviour change under
+  `v1.0.0`. The library reads the UDP payload for a QUIC long header, and it reads the
+  direction of the flow from the UDP port 443 alone. A flow whose two ports are 443 names
+  no server, so the library produces no value for it. Earlier releases timed every UDP
+  flow and read the direction from the address that sent the first packet, so an NTP flow
+  or a DNS flow produced a JA4L value that the reference does not produce.
+  `ja4plus/fingerprinters/ja4l.py:554-566` states the rule, and every FoxIO reference
+  agrees, so this is a reading and not a ruling. The library stops producing 193 values
+  across six captures of the FoxIO corpus: `gre-sample.pcap`, `latest.pcapng`,
+  `ssh2.pcapng`, `sshv1.pcap`, `tls3.pcapng` and `v6.pcap`. The conformance run reports
+  3441 deviations before the change and 3251 after it, and the register key count stays
+  at 0. Issue #173 holds the measurement.
 - **A tunneled connection now carries two keys, and the fingerprint of such a connection
   moves.** This is a breaking behaviour change under `v1.0.0`. A `FingerprintResult` for a
   GRE, ERSPAN, VXLAN or Geneve packet holds the outer address pair with the inner port

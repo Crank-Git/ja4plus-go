@@ -9,13 +9,17 @@ import (
 	"github.com/google/gopacket"
 )
 
+// quicPort is the UDP port that names the server of a QUIC flow.
+// The reference reads the direction of every QUIC packet from this one number.
+// `ja4plus/fingerprinters/ja4l.py:55` holds the same value.
+const quicPort uint16 = 443
+
 type connState struct {
 	timestamps map[string]time.Time // "A", "B", "C", "D" (for QUIC 4-point)
 	ttls       map[string]uint8     // "client", "server"
 	direction  string               // "forward" or "reverse"
 	connKey    string
 	proto      string // "tcp" or "udp"
-	clientIP   string // for UDP/QUIC: the IP that sent the first observed packet
 	// The four fields below hold the endpoints that every result of this connection
 	// reports. The first packet fixes them, because a mirror sends both directions from
 	// one outer address pair and a later packet would otherwise pair that one address with
@@ -132,6 +136,14 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 		return nil, nil
 	}
 
+	// JA4L reads a UDP flow only when the flow carries QUIC. An NTP flow reaches this
+	// method, and the reference produces no value for it.
+	// `ja4plus/fingerprinters/ja4l.py:554-558` states the rule, and issue #173 holds the
+	// reading.
+	if !parser.HasQUICLongHeader(udp.Payload) {
+		return nil, nil
+	}
+
 	srcIP, dstIP, ttl, ok := parser.GetIPInfo(packet)
 	if !ok {
 		return nil, nil
@@ -145,20 +157,22 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	srcPort := uint16(udp.SrcPort)
 	dstPort := uint16(udp.DstPort)
 
+	// The reference reads the direction of a QUIC flow from the UDP port alone.
+	// A flow whose two ports are the QUIC port names no server, so the direction of a
+	// packet is unknown and every value it gives is a guess.
+	// `ja4plus/fingerprinters/ja4l.py:561-566` states the rule.
+	toServer := dstPort == quicPort
+	fromServer := srcPort == quicPort
+	if toServer == fromServer {
+		return nil, nil
+	}
+	isClient := toServer
+
 	connKey, direction := f.normalizeKey("udp", groupSrcIP, srcPort, groupDstIP, dstPort)
 
 	conn := f.getOrCreateConn(connKey, direction, "udp")
 	conn.report(srcIP, srcPort, dstIP, dstPort)
 	ts := parser.GetPacketTimestamp(packet)
-
-	// Anchor the client on the first observed packet of this connection so
-	// server-first observations still produce a valid 4-point QUIC timing.
-	// The anchor reads the grouping address, because a mirror sends both directions from
-	// one outer address and that address names no direction.
-	if conn.clientIP == "" {
-		conn.clientIP = groupSrcIP
-	}
-	isClient := groupSrcIP == conn.clientIP
 
 	// 4-point QUIC timing: A (client) -> B (server) -> C (client) -> D (server)
 	if _, ok := conn.timestamps["A"]; !ok && isClient {

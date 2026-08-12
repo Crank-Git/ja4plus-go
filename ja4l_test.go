@@ -399,8 +399,23 @@ func TestJA4L_ServerAndClientAreDistinct(t *testing.T) {
 	}
 }
 
-// buildUDPPacketWithIPs builds a UDP packet with specified IPs/TTL/ports.
-func buildUDPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort, dstPort uint16) gopacket.Packet {
+// quicLongHeaderPayload returns the bytes of a QUIC version 1 long-header datagram.
+// JA4L reads a UDP flow only when the flow carries a QUIC long header, so a UDP test of
+// JA4L supplies this payload.
+func quicLongHeaderPayload() []byte {
+	return []byte{0xc0, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}
+}
+
+// ntpPayload returns the bytes of an NTP client message.
+// `gre-sample.pcap` carries six such messages on port 123.
+func ntpPayload() []byte {
+	payload := make([]byte, 48)
+	payload[0] = 0x1b
+	return payload
+}
+
+// buildUDPPacketWithIPs builds a UDP packet with specified IPs/TTL/ports and payload.
+func buildUDPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort, dstPort uint16, payload []byte) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
@@ -421,7 +436,7 @@ func buildUDPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort
 	_ = udp.SetNetworkLayerForChecksum(ip)
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	if err := gopacket.SerializeLayers(buf, opts, eth, ip, udp); err != nil {
+	if err := gopacket.SerializeLayers(buf, opts, eth, ip, udp, gopacket.Payload(payload)); err != nil {
 		t.Fatalf("failed to serialize udp packet: %v", err)
 	}
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
@@ -429,28 +444,23 @@ func buildUDPPacketWithIPs(t *testing.T, srcIP, dstIP net.IP, ttl uint8, srcPort
 
 // TestJA4L_UDPServerFirstObservation regresses the bug where processUDP only
 // started the QUIC 4-point timing when the FIRST observed packet arrived in
-// the lexicographic "forward" direction. After the fix, the client side is
-// anchored on whichever side sent the first observed packet (regardless of
-// direction), so server-first captures or reverse-direction handshakes still
-// produce JA4L-S and JA4L-C fingerprints.
+// the lexicographic "forward" direction. The client IP is the lexicographic larger one
+// here, so the packets run in the reverse direction of the key.
 func TestJA4L_UDPServerFirstObservation(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	// Pick IPs/ports so that "client" IP would be the lexicographic LARGER
-	// one — i.e., reverse direction in normalizeKey terms — to exercise the
-	// bug case.
 	clientIP := net.IP{192, 168, 1, 1}
 	serverIP := net.IP{10, 0, 0, 1}
 
 	// Packet 1 (A): client -> server at t=0
-	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443)
+	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicLongHeaderPayload())
 	a.Metadata().Timestamp = baseTime
 	if results, _ := fp.ProcessPacket(a); len(results) != 0 {
 		t.Fatalf("A: expected no results, got %d (%q)", len(results), results[0].Fingerprint)
 	}
 
 	// Packet 2 (B): server -> client at t=50ms — should emit JA4L-S
-	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000)
+	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	b.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
 	bResults, err := fp.ProcessPacket(b)
 	if err != nil {
@@ -461,14 +471,14 @@ func TestJA4L_UDPServerFirstObservation(t *testing.T) {
 	}
 
 	// Packet 3 (C): client -> server at t=100ms (no result yet)
-	c := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443)
+	c := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicLongHeaderPayload())
 	c.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
 	if results, _ := fp.ProcessPacket(c); len(results) != 0 {
 		t.Fatalf("C: expected no results, got %d", len(results))
 	}
 
 	// Packet 4 (D): server -> client at t=150ms — should emit JA4L-C
-	d := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000)
+	d := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	d.Metadata().Timestamp = baseTime.Add(150 * time.Millisecond)
 	dResults, err := fp.ProcessPacket(d)
 	if err != nil {
@@ -479,28 +489,86 @@ func TestJA4L_UDPServerFirstObservation(t *testing.T) {
 	}
 }
 
-// TestJA4L_UDPServerFirstWhenServerSendsFirst regresses the same bug from the
-// opposite angle: a connection where the server's IP happens to be the FIRST
-// observed (e.g., we tap mid-stream). Anchoring on the first packet labels
-// that side as the "client" anchor so the 4-point exchange still produces
-// fingerprints rather than silently dropping all packets.
-func TestJA4L_UDPServerFirstWhenServerSendsFirst(t *testing.T) {
+// TestJA4LReadsTheDirectionOfAUDPFlowFromThePort holds the rule that the reference
+// states. `ja4plus/fingerprinters/ja4l.py:561-562` reads the direction from the UDP port
+// alone, so a server packet that leads its client packet starts no measurement.
+// Issue #173 holds the reading.
+func TestJA4LReadsTheDirectionOfAUDPFlowFromThePort(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	a := net.IP{10, 0, 0, 1}
-	b := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+	clientIP := net.IP{192, 168, 1, 1}
 
-	// First observed packet is from `a` -> `b`, so `a` becomes the anchor.
-	p1 := buildUDPPacketWithIPs(t, a, b, 64, 443, 50000)
+	// The server packet leads, and the port names it as the server.
+	p1 := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	p1.Metadata().Timestamp = baseTime
 	if results, _ := fp.ProcessPacket(p1); len(results) != 0 {
-		t.Fatalf("p1: unexpected results %v", results)
+		t.Fatalf("p1: expected no results, got %v", results)
 	}
 
-	p2 := buildUDPPacketWithIPs(t, b, a, 64, 50000, 443)
+	// The client packet fills the first measurement point, and it completes no value.
+	p2 := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicLongHeaderPayload())
 	p2.Metadata().Timestamp = baseTime.Add(20 * time.Millisecond)
-	r2, _ := fp.ProcessPacket(p2)
-	if len(r2) != 1 || !strings.HasPrefix(r2[0].Fingerprint, "JA4L-S=") {
-		t.Fatalf("p2: expected JA4L-S, got %v", r2)
+	if results, _ := fp.ProcessPacket(p2); len(results) != 0 {
+		t.Fatalf("p2: expected no results, got %v", results)
+	}
+
+	// The next server packet completes the server value.
+	p3 := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
+	p3.Metadata().Timestamp = baseTime.Add(40 * time.Millisecond)
+	r3, _ := fp.ProcessPacket(p3)
+	if len(r3) != 1 || !strings.HasPrefix(r3[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("p3: expected JA4L-S, got %v", r3)
+	}
+}
+
+// TestJA4LProducesNoJA4LSForTheNTPFlowOfGreSamplePcap holds the rule that the reference
+// states. `ja4plus/fingerprinters/ja4l.py:554-558` returns None when the UDP payload
+// carries no QUIC long header, and an NTP message carries none.
+// `gre-sample.pcap` carries six NTP messages on port 123, and the FoxIO vector holds no
+// JA4L value and no JA4LS value for them. Issue #173 holds the reading.
+func TestJA4LProducesNoJA4LSForTheNTPFlowOfGreSamplePcap(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	packets := []gopacket.Packet{
+		buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 123, ntpPayload()),
+		buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 123, 50000, ntpPayload()),
+		buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 123, ntpPayload()),
+		buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 123, 50000, ntpPayload()),
+	}
+	for i, packet := range packets {
+		packet.Metadata().Timestamp = baseTime.Add(time.Duration(i) * 20 * time.Millisecond)
+		results, err := fp.ProcessPacket(packet)
+		if err != nil {
+			t.Fatalf("packet %d: %v", i, err)
+		}
+		if len(results) != 0 {
+			t.Fatalf("packet %d: expected no results, got %v", i, results)
+		}
+	}
+}
+
+// TestJA4LProducesNoValueWhenBothUDPPortsAre443 holds the rule that the reference states.
+// `ja4plus/fingerprinters/ja4l.py:563-566` returns None for such a flow, because the two
+// ports name no server. Issue #173 holds the reading.
+func TestJA4LProducesNoValueWhenBothUDPPortsAre443(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	one := net.IP{192, 168, 1, 1}
+	two := net.IP{10, 0, 0, 1}
+
+	p1 := buildUDPPacketWithIPs(t, one, two, 64, 443, 443, quicLongHeaderPayload())
+	p1.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(p1); len(results) != 0 {
+		t.Fatalf("p1: expected no results, got %v", results)
+	}
+
+	p2 := buildUDPPacketWithIPs(t, two, one, 64, 443, 443, quicLongHeaderPayload())
+	p2.Metadata().Timestamp = baseTime.Add(20 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(p2); len(results) != 0 {
+		t.Fatalf("p2: expected no results, got %v", results)
 	}
 }
