@@ -115,7 +115,9 @@ the wire-order raw form.
 - **FR-gaps-25** — `JA4Fingerprinter` fills `OriginalOrder` with the part a of `JA4`, a
   hash of the wire-order cipher list and a hash of the wire-order extension list.
 - **FR-gaps-26** — Every fingerprinter other than `JA4Fingerprinter` leaves
-  `OriginalOrder` empty, because FoxIO publishes no other key of that form.
+  `OriginalOrder` empty, because neither FoxIO vector set publishes a second `_o` key. The
+  per-stream set publishes `JA4_o` alone, and the per-packet set publishes no `_o` key.
+  Issue #290 scoped this requirement to the two vector sets.
 
 ## User flows
 
