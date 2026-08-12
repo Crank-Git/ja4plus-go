@@ -69,9 +69,9 @@ var conformanceStreamMethodKeys = map[string]bool{
 // conformanceMovingPointFingerprinter names the fingerprinter whose measurement point moves.
 //
 // `methodNameOfFingerprinter` reads the stem `ja4l` from this name, and every member of
-// `conformanceLastEmissionMethods` carries that stem. A test derives the tie, so a rename of
-// the fingerprinter fails the suite rather than leaving the rule on a name that no longer
-// runs.
+// `conformanceLastEmissionMethods` carries that stem. A test derives the tie. A rename of
+// the fingerprinter therefore fails the suite, and the rule reaches no name that the
+// processor no longer runs.
 const conformanceMovingPointFingerprinter = "JA4LFingerprinter"
 
 // conformanceLastEmissionMethods names every per-stream method whose bare vector key
@@ -82,9 +82,10 @@ const conformanceMovingPointFingerprinter = "JA4LFingerprinter"
 // moves, and `ja4l_test.go` holds the rule that point B never moves.
 //
 // Round 20 of the `## Changelog` of `docs/specs/spec.md` narrows the ruling to this set, and
-// it reverses no part of round 15. A method that emits once per protocol, or once per
-// request, reaches no entry here: its second value is a surplus, and a surplus reports as a
-// deviation. Issue #209 measured what the wider rule cost.
+// it reverses no part of round 15. A method that emits once per protocol reaches no entry
+// here, and a method that emits once per request reaches none either. The second value of
+// such a method is a surplus value, and a surplus value reports as a deviation. Issue #209
+// measured what the wider rule cost.
 var conformanceLastEmissionMethods = map[string]bool{
 	"JA4L-C": true,
 	"JA4L-S": true,
@@ -467,10 +468,19 @@ func conformanceStreamValuesOfResult(result FingerprintResult) []conformanceMeth
 //
 // Every other method gains an occurrence number for the second value and for each value
 // after it. Such a method emits once per protocol, or once per request, so the second value
-// is a surplus and not a moved point. The bare key then keeps the value the vector names, and
-// the surplus reports as the deviation kind of FR-conformance-17. Round 20 of the
-// `## Changelog` of `docs/specs/spec.md` records the narrowing, and issue #209 measured what
-// the wider rule cost.
+// is a surplus value and not a moved point. The bare key then keeps the value the vector
+// names, and the surplus value reports as the deviation kind of FR-conformance-17. Round 20
+// of the `## Changelog` of `docs/specs/spec.md` records the narrower rule, and issue #209
+// measured what the wider rule cost.
+//
+// Two callers reach this function, and each one reaches a different branch.
+// `conformanceProducedByStream` at `conformance_test.go:449` builds the produced map, and it
+// counts the emissions of the library, so it reaches the second branch below. This function
+// builds the expected map through `conformanceWriteStreamGroup`, which forces
+// `usesOccurrence` true whenever one vector group holds more than one value. The occurrence
+// of an expected value is therefore always 1, and the expected map reaches the second branch
+// on no input. **Keep the branch.** The produced map needs it, and no special case in this
+// function bars the expected map from it.
 func conformanceStreamMethodKey(method string, occurrence int, usesOccurrence bool) string {
 	if usesOccurrence {
 		return conformanceMethodOccurrence(method, occurrence)

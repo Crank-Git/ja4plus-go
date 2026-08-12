@@ -9,7 +9,8 @@ import (
 )
 
 // These tests hold the comparison scope of the bare vector key. Issue #209 states the
-// defect, and round 20 of the `## Changelog` of `docs/specs/spec.md` records the narrowing.
+// defect, and round 20 of the `## Changelog` of `docs/specs/spec.md` records the narrower
+// rule.
 //
 // A method emits twice on one stream for two different reasons, and one rule cannot serve
 // both. A measurement point that moves reports the same connection twice, and the last
@@ -20,8 +21,8 @@ import (
 // the occurrence and the key form decides which value reaches the comparison.
 
 // The library produces a TLS value and a QUIC value for JA4S on stream 0 of
-// `chrome-cloudflare-quic-with-secrets.pcapng`, and the per-stream vector writes the bare
-// key `JA4S` with the TLS value `t130200_1301_234ea6891581`.
+// `chrome-cloudflare-quic-with-secrets.pcapng`. The per-stream vector writes the bare key
+// `JA4S`, and it holds the TLS value `t130200_1301_234ea6891581`.
 //
 // `docs/audit/conformance.md` recorded the deviation `the two values differ` with the vector
 // value `t130200_1301_234ea6891581` and the library value `q130200_1301_234ea6891581`. The
@@ -36,8 +37,8 @@ func TestTheHarnessNumbersTheSecondJA4SValueOfOneStream(t *testing.T) {
 	}
 }
 
-// FoxIO writes one per-stream entry for each HTTP request, so a capture whose vector holds
-// one entry for a stream still reads more than one request from that stream.
+// FoxIO writes one per-stream entry for each HTTP request. A vector that holds one entry for
+// a stream still reaches a stream that carries more than one request.
 //
 // `CVE-2018-6794.pcap/0/JA4H` fell from 12 deviations to 2 under the bare key, and the
 // second, third and fourth request values reached no comparison.
@@ -74,8 +75,8 @@ func TestTheHarnessComparesTheLastJA4LValueOfOneStream(t *testing.T) {
 	}
 }
 
-// A vector key that carries an occurrence number keeps that form for every method, so the
-// last-emission rule reaches no stream whose vector numbers the values.
+// A vector key that carries an occurrence number keeps that form for every method. The
+// last-emission rule therefore reaches no stream whose vector numbers the values.
 func TestTheHarnessKeepsTheOccurrenceFormForEveryMethodTheVectorNumbers(t *testing.T) {
 	for _, method := range []string{"JA4L-C", "JA4S", "JA4X"} {
 		t.Run(method, func(t *testing.T) {
@@ -92,14 +93,17 @@ func TestTheHarnessKeepsTheOccurrenceFormForEveryMethodTheVectorNumbers(t *testi
 // The set derives from `conformanceStreamMethodKeys` and from `conformanceStreamMethodKey`,
 // so no third list states it. Issue #148 requires a derived list, because a hardcoded one
 // leaves a new method behind.
+//
+// `conformanceStreamMethodKeys` already holds each raw form as its own key, for example
+// `JA4H_r`. This loop therefore synthesizes no suffix. A synthesized form could repeat a key
+// the map already holds. The caller compares two sorted lists, so one repeated member would
+// fail the test for the wrong reason.
 func conformanceCollapsingMethods() []string {
 	var collapsing []string
 
 	for method := range conformanceStreamMethodKeys {
-		for _, form := range []string{method, method + "_r", method + "_ro"} {
-			if conformanceStreamMethodKey(form, 2, false) == form {
-				collapsing = append(collapsing, form)
-			}
+		if conformanceStreamMethodKey(method, 2, false) == method {
+			collapsing = append(collapsing, method)
 		}
 	}
 
@@ -121,8 +125,8 @@ func TestTheLastEmissionSetHoldsTheTwoJA4LMethodsAlone(t *testing.T) {
 	}
 }
 
-// Every member of the last-emission set names a per-stream vector key, so a typo in the set
-// fails the suite rather than widening the rule by accident.
+// Every member of the last-emission set names a per-stream vector key. A typo in the set
+// therefore fails the suite, and it widens the rule on no method.
 func TestEveryLastEmissionMethodNamesAPerStreamVectorKey(t *testing.T) {
 	for method := range conformanceLastEmissionMethods {
 		if !conformanceStreamMethodKeys[method] {
@@ -132,8 +136,8 @@ func TestEveryLastEmissionMethodNamesAPerStreamVectorKey(t *testing.T) {
 }
 
 // Every member of the last-emission set names the fingerprinter whose measurement point
-// moves. The stem derives from `Processor.fingerprinters`, so a rename of that fingerprinter
-// fails this test rather than leaving the rule attached to a name that no longer runs.
+// moves. The stem derives from `Processor.fingerprinters`. A rename of that fingerprinter
+// therefore fails this test, and the rule stays on no name that the processor no longer runs.
 func TestEveryLastEmissionMethodNamesTheFingerprinterWhosePointMoves(t *testing.T) {
 	stem := methodNameOfFingerprinter(conformanceMovingPointFingerprinter)
 
@@ -150,10 +154,16 @@ func TestEveryLastEmissionMethodNamesTheFingerprinterWhosePointMoves(t *testing.
 	}
 }
 
-// A surplus value reports as an extra value, and the value the vector names still matches.
-// FR-conformance-17 names that deviation kind, and over-emission is a defect this project
-// has had: issue #33 measured 617 values for `ssh-r.pcap` where the vector holds 11.
-func TestASurplusValueReportsAsAnExtraValueAndKeepsTheMatch(t *testing.T) {
+// A surplus value keeps the match of the value the vector names.
+//
+// This is the behavior that issue #209 repairs. The bare key lost a real match on
+// `chrome-cloudflare-quic-with-secrets.pcapng/0/JA4S`, and the loss is what made #209 a
+// defect and not a missing guard.
+//
+// The surplus value still reports, which FR-conformance-17 names. Over-emission is a defect
+// this project has had, and issue #33 measured 617 values for `ssh-r.pcap` where the vector
+// holds 11.
+func TestASurplusValueKeepsTheMatch(t *testing.T) {
 	capture := "chrome-cloudflare-quic-with-secrets.pcapng"
 
 	produced := map[conformanceKey]string{
