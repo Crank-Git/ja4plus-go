@@ -71,7 +71,7 @@ func TestJA4L_FullHandshake(t *testing.T) {
 	if !strings.HasPrefix(results[0].Fingerprint, "JA4L-S=") {
 		t.Errorf("SYN-ACK: expected JA4L-S prefix, got %q", results[0].Fingerprint)
 	}
-	expected := "JA4L-S=100000_64"
+	expected := "JA4L-S=50000_64"
 	if results[0].Fingerprint != expected {
 		t.Errorf("SYN-ACK: got %q, want %q", results[0].Fingerprint, expected)
 	}
@@ -89,7 +89,7 @@ func TestJA4L_FullHandshake(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("ACK: expected 1 result, got %d", len(results))
 	}
-	expected = "JA4L-C=100000_64"
+	expected = "JA4L-C=50000_64"
 	if results[0].Fingerprint != expected {
 		t.Errorf("ACK: got %q, want %q", results[0].Fingerprint, expected)
 	}
@@ -252,7 +252,7 @@ func TestJA4L_IPv6Handshake(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("SYN-ACK: expected 1 result, got %d", len(results))
 	}
-	expected := "JA4L-S=100000_64"
+	expected := "JA4L-S=50000_64"
 	if results[0].Fingerprint != expected {
 		t.Errorf("SYN-ACK: got %q, want %q", results[0].Fingerprint, expected)
 	}
@@ -270,7 +270,7 @@ func TestJA4L_IPv6Handshake(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("ACK: expected 1 result, got %d", len(results))
 	}
-	expected = "JA4L-C=100000_64"
+	expected = "JA4L-C=50000_64"
 	if results[0].Fingerprint != expected {
 		t.Errorf("ACK: got %q, want %q", results[0].Fingerprint, expected)
 	}
@@ -543,8 +543,8 @@ func TestJA4LFillsTheQUICClientPointsInTheReferenceDirection(t *testing.T) {
 	if len(dResults) != 1 {
 		t.Fatalf("D: expected one result, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=50000_55" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=50000_55")
+	if dResults[0].Fingerprint != "JA4L-C=25000_55" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=25000_55")
 	}
 }
 
@@ -589,8 +589,8 @@ func TestJA4LMovesTheQUICClientPointToTheLastServerPacket(t *testing.T) {
 	if len(dResults) != 1 {
 		t.Fatalf("D: expected one result, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=20000_55" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=20000_55")
+	if dResults[0].Fingerprint != "JA4L-C=10000_55" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=10000_55")
 	}
 
 	// Point C stops at point D, so a later server packet moves nothing.
@@ -655,8 +655,8 @@ func TestJA4LFillsTheQUICClientPointsOnlyFromAHandshakePacket(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("client Handshake: expected one result, got %v", results)
 	}
-	if results[0].Fingerprint != "JA4L-C=10000_55" {
-		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=10000_55")
+	if results[0].Fingerprint != "JA4L-C=5000_55" {
+		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=5000_55")
 	}
 }
 
@@ -781,5 +781,71 @@ func TestJA4LProducesNoValueWhenBothUDPPortsAre443(t *testing.T) {
 	p2.Metadata().Timestamp = baseTime.Add(20 * time.Millisecond)
 	if results, _ := fp.ProcessPacket(p2); len(results) != 0 {
 		t.Fatalf("p2: expected no results, got %v", results)
+	}
+}
+
+// TestJA4LHalvesTheServerDeltaOfBadcurveballPcap holds the rule that the reference states.
+// JA4L material states `One-way TCP latency in us`, and `ja4plus/fingerprinters/ja4l.py:49`
+// records that reading. `ja4plus/fingerprinters/ja4l.py:358` divides by 2 and truncates
+// toward zero.
+// The `badcurveball.pcap` stream 0 handshake spans 1563 microseconds and carries the server
+// TTL 238. The FoxIO per-stream vector holds `JA4L-S` of `781_238`, and 1563 / 2 truncates
+// to 781. A rounded half gives 782, so this capture separates the two rules.
+// Issue #166 holds the reading.
+func TestJA4LHalvesTheServerDeltaOfBadcurveballPcap(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	synPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, true, false)
+	synPkt.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(synPkt); len(results) != 0 {
+		t.Fatalf("SYN: expected no results, got %v", results)
+	}
+
+	synAckPkt := buildTCPPacketWithIPs(t, serverIP, clientIP, 238, 443, 12345, true, true)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(1563 * time.Microsecond)
+	results, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("SYN-ACK: expected 1 result, got %d", len(results))
+	}
+	if results[0].Fingerprint != "JA4L-S=781_238" {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-S=781_238")
+	}
+}
+
+// TestJA4LHalvesTheClientDelta holds the same rule on the client value.
+// `ja4plus/fingerprinters/ja4l.py:15` states that `JA4L-C` is half the time from `B` to
+// `C`. The delta here is 4355 microseconds, which truncates to 2177.
+// Issue #166 holds the reading.
+func TestJA4LHalvesTheClientDelta(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	synPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, true, false)
+	synPkt.Metadata().Timestamp = baseTime
+	_, _ = fp.ProcessPacket(synPkt)
+
+	synAckPkt := buildTCPPacketWithIPs(t, serverIP, clientIP, 238, 443, 12345, true, true)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(1563 * time.Microsecond)
+	_, _ = fp.ProcessPacket(synAckPkt)
+
+	ackPkt := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, false, true)
+	ackPkt.Metadata().Timestamp = baseTime.Add((1563 + 4355) * time.Microsecond)
+	results, err := fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("ACK: unexpected error: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("ACK: expected 1 result, got %d", len(results))
+	}
+	if results[0].Fingerprint != "JA4L-C=2177_64" {
+		t.Errorf("ACK: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=2177_64")
 	}
 }

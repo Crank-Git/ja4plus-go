@@ -29,6 +29,19 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **JA4L and JA4LS now report half of the measured delta, and every latency value moves.**
+  This is a breaking behaviour change under `v1.0.0`. JA4L material states
+  `One-way TCP latency in us`, and `ja4plus/fingerprinters/ja4l.py:49` records that
+  reading. Earlier releases reported the whole delta, so every value was exactly twice the
+  FoxIO vector. `ja4plus/fingerprinters/ja4l.py:358` truncates the half toward zero, and
+  Go integer division truncates the same way. Every FoxIO reference agrees, so this is a
+  reading and not a ruling. The conformance run reports 943 matches and 3247 deviations
+  before the change, and 1011 matches and 3179 deviations after it. The register key count
+  stays at 0. On the per-stream vector set, JA4LS falls from 59 deviations to 3, and JA4L
+  falls from 56 deviations to 44. Twenty-four captures move, and JA4LS now matches on
+  every stream of twenty-one of them. The per-packet counts stay at 308 matches and 1777
+  deviations, because a per-packet JA4L vector carries a third part that the library does
+  not yet produce. Issue #166 holds the measurement.
 - **JA4L now fills the two QUIC client measurement points in the reference direction, and
   the client value of a QUIC connection moves.** This is a breaking behaviour change under
   `v1.0.0`. A server Handshake packet fills point C, and a client Handshake packet fills

@@ -14,6 +14,10 @@ import (
 // `ja4plus/fingerprinters/ja4l.py:55` holds the same value.
 const quicPort uint16 = 443
 
+// latencyDivisor turns a measured delta into the one-way latency that JA4L reports.
+// `ja4plus/fingerprinters/ja4l.py:52` holds the same value.
+const latencyDivisor = 2
+
 type connState struct {
 	timestamps map[string]time.Time // "A", "B", "C", "D" (for QUIC 4-point)
 	ttls       map[string]uint8     // "client", "server"
@@ -265,7 +269,12 @@ func (c *connState) report(srcIP string, srcPort uint16, dstIP string, dstPort u
 }
 
 func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uint8, conn *connState, ts time.Time) []FingerprintResult {
-	latencyUS := int(diff.Microseconds())
+	// JA4L reports one-way latency, so the value is half the measured delta.
+	// JA4L material states `One-way TCP latency in us`, and
+	// `ja4plus/fingerprinters/ja4l.py:49` records that reading.
+	// `ja4plus/fingerprinters/ja4l.py:358` truncates the half toward zero, and Go integer
+	// division truncates the same way. Issue #166 holds the reading.
+	latencyUS := int(diff.Microseconds()) / latencyDivisor
 	if latencyUS < 1 {
 		latencyUS = 1
 	}
