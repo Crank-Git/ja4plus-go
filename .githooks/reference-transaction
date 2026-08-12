@@ -1,0 +1,31 @@
+#!/bin/sh
+# Refuse a write to refs/stash from a linked worktree.
+#
+# git 2.53.0 defines no pre-stash hook, so githooks(5) leaves this hook as the one
+# point that stops a stash before it writes the ref. The stash ref lives in the common
+# directory, so one worktree's stash reaches every other worktree. #305 records the
+# collision that destroyed a worker's work.
+#
+# The hook leaves the main checkout alone, because a person who stashes there holds the
+# whole repository.
+#
+# Install it with one command, from the main checkout:
+#     git config core.hooksPath .githooks
+
+[ "$1" = "prepared" ] || exit 0
+
+git_dir=$(git rev-parse --git-dir)
+common_dir=$(git rev-parse --git-common-dir)
+[ "$git_dir" != "$common_dir" ] || exit 0
+
+while read -r _old _new ref; do
+	if [ "$ref" = "refs/stash" ]; then
+		echo "refuse: this worktree must not write refs/stash." >&2
+		echo "refuse: every worktree of this repository shares that ref, so a stash here" >&2
+		echo "refuse: destroys the work of another worktree. #305 records one such loss." >&2
+		echo "refuse: copy the file with cp, or restore it with git checkout -- <file>." >&2
+		exit 1
+	fi
+done
+
+exit 0
