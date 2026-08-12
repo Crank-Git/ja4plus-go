@@ -1,1 +1,1202 @@
-[]
+[
+  {
+    "key": "tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,0033,0010,001b,000d,4469,002b,002d,0039,0000_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_4469,0033,001b,0000,002b,0039,000d,0010,002d,000a_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,0039,4469,001b,0000,000d,0033,0010,002d,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0000,0010,4469,0033,0039,000d,000a,001b,002d,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0033,001b,002d,000d,0010,0000,4469,0039,000a,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_4469,001b,002d,0033,002b,000d,0000,0010,000a,0039_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,001b,4469,000d,002b,0000,000a,0039,0010,0033_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002b,0033,000d,002d,0000,001b,4469,000a,0039,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000d,001b,002b,0039,002d,000a,4469,0010,0000,0033_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,002b,0033,0039,001b,000d,0010,0000,000a,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_a56c5b993250",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_4469,000d,002d,001b,0000,0039,0010,002b,0033,000a_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_a56c5b993250",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,4469,0039,002b,0000,000a,000d,0033,001b,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_a56c5b993250",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002b,0033,002d,001b,4469,000a,0010,0039,0000,000d_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_a56c5b993250",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,0039,4469,0033,000a,001b,0000,000d,002b,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,002b,0033,4469,001b,002d,0039,0000,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0010,4469,001b,0033,000d,002d,0039,000a,0000,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000d,0039,002d,0033,0000,4469,002b,001b,0010,000a_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_a56c5b993250",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-handshake.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0039,4469,000d,002b,002d,0000,001b,000a,0010,0033_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,0033,0010,001b,000d,4469,002b,002d,0039,0000_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_4469,0033,001b,0000,002b,0039,000d,0010,002d,000a_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,0039,4469,001b,0000,000d,0033,0010,002d,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0000,0010,4469,0033,0039,000d,000a,001b,002d,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0033,001b,002d,000d,0010,0000,4469,0039,000a,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_4469,001b,002d,0033,002b,000d,0000,0010,000a,0039_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,001b,4469,000d,002b,0000,000a,0039,0010,0033_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002b,0033,000d,002d,0000,001b,4469,000a,0039,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000d,001b,002b,0039,002d,000a,4469,0010,0000,0033_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,002b,0033,0039,001b,000d,0010,0000,000a,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_4469,000d,002d,001b,0000,0039,0010,002b,0033,000a_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,4469,0039,002b,0000,000a,000d,0033,001b,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002b,0033,002d,001b,4469,000a,0010,0039,0000,000d_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,0039,4469,0033,000a,001b,0000,000d,002b,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,002b,0033,4469,001b,002d,0039,0000,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0010,4469,001b,0033,000d,002d,0039,000a,0000,002b_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000d,0039,002d,0033,0000,4469,002b,001b,0010,000a_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls-sni.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0039,4469,000d,002b,002d,0000,001b,000a,0010,0033_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/21/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/21/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/21/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/21/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0010,4469,001b,0033,002b,000a,000d,002d,0039,0000_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/22/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/22/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/22/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/22/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002d,002b,0033,0010,0000,000a,001b,000d,4469,0039_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/23/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/23/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_a56c5b993250",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/23/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/23/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0000,001b,002d,0039,0033,000d,002b,000a,0010,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/24/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/24/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/24/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/24/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,0039,001b,0033,000d,002b,4469,0000,002d,0010_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/25/JA4",
+    "capability": false,
+    "ours": "q13d0311h3_55b375c5d22e_3512bcbbc9ec",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/25/JA4S",
+    "capability": false,
+    "ours": "q130300_1301_6bbbaf601ed8",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/25/JA4_r",
+    "capability": false,
+    "ours": "q13d0311h3_1301,1302,1303_000a,000d,001b,0029,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/25/JA4_ro",
+    "capability": false,
+    "ours": "q13d0311h3_1301,1302,1303_000a,0033,0010,000d,0000,002d,001b,0039,4469,002b,0029_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/28/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/28/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/28/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "tls3.pcapng/28/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_002b,4469,0033,002d,0010,0000,001b,0039,000a,000d_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  }
+]
