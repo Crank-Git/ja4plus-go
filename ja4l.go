@@ -174,10 +174,9 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	conn.report(srcIP, srcPort, dstIP, dstPort)
 	ts := parser.GetPacketTimestamp(packet)
 
-	// 4-point QUIC timing: A (client) -> B (server) -> C (client) -> D (server)
-	// TODO(#186): Read point C from a server packet and point D from a client packet.
-	// `ja4plus/fingerprinters/ja4l.py:589-599` fills the two points in that order, so the
-	// two points below are reversed and `tls3.pcapng` streams 22, 23 and 24 reach no value.
+	// 4-point QUIC timing: A (client) -> B (server) -> C (server) -> D (client)
+	// `ja4plus/fingerprinters/ja4l.py:589-599` fills the two client points in that order.
+	// Issue #186 holds the reading.
 	if _, ok := conn.timestamps["A"]; !ok && isClient {
 		conn.timestamps["A"] = ts
 		conn.ttls["client"] = ttl
@@ -192,15 +191,24 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 		}
 	}
 
+	// The two client points read a Handshake packet only, and every other long-header type
+	// fills neither of them.
+	// `ja4plus/fingerprinters/ja4l.py:580-581` states the rule.
+	if !parser.IsQUICHandshakePacket(udp.Payload) {
+		return nil, nil
+	}
+
+	// The server sends one to five Handshake packets. The client measurement starts at the
+	// last of them, so every server packet moves point C until point D fills.
 	if _, ok := conn.timestamps["B"]; ok {
-		if _, ok := conn.timestamps["C"]; !ok && isClient {
+		if _, ok := conn.timestamps["D"]; !ok && !isClient {
 			conn.timestamps["C"] = ts
 			return nil, nil
 		}
 	}
 
 	if _, ok := conn.timestamps["C"]; ok {
-		if _, ok := conn.timestamps["D"]; !ok && !isClient {
+		if _, ok := conn.timestamps["D"]; !ok && isClient {
 			conn.timestamps["D"] = ts
 			clientTTL := conn.ttls["client"]
 			return f.emitResult("JA4L-C", ts.Sub(conn.timestamps["C"]), clientTTL, conn, ts), nil

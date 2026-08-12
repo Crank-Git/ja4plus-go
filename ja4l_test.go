@@ -406,6 +406,13 @@ func quicLongHeaderPayload() []byte {
 	return []byte{0xc0, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}
 }
 
+// quicHandshakePayload returns the bytes of a QUIC version 1 Handshake datagram.
+// The two client measurement points read a Handshake packet only, so a test of those two
+// points supplies this payload. RFC 9000 Section 17.2 gives the type `0b10`.
+func quicHandshakePayload() []byte {
+	return []byte{0xe0, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}
+}
+
 // ntpPayload returns the bytes of an NTP client message.
 // `gre-sample.pcap` carries six such messages on port 123.
 func ntpPayload() []byte {
@@ -470,15 +477,15 @@ func TestJA4LTimesAQUICFlowThatRunsAgainstTheKeyDirection(t *testing.T) {
 		t.Fatalf("B: expected one JA4L-S result, got %v", bResults)
 	}
 
-	// Packet 3 (C): client -> server at t=100ms (no result yet)
-	c := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicLongHeaderPayload())
+	// Packet 3 (C): server -> client at t=100ms (no result yet)
+	c := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicHandshakePayload())
 	c.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
 	if results, _ := fp.ProcessPacket(c); len(results) != 0 {
 		t.Fatalf("C: expected no results, got %d", len(results))
 	}
 
-	// Packet 4 (D): server -> client at t=150ms — should emit JA4L-C
-	d := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
+	// Packet 4 (D): client -> server at t=150ms — should emit JA4L-C
+	d := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicHandshakePayload())
 	d.Metadata().Timestamp = baseTime.Add(150 * time.Millisecond)
 	dResults, err := fp.ProcessPacket(d)
 	if err != nil {
@@ -486,6 +493,170 @@ func TestJA4LTimesAQUICFlowThatRunsAgainstTheKeyDirection(t *testing.T) {
 	}
 	if len(dResults) != 1 || !strings.HasPrefix(dResults[0].Fingerprint, "JA4L-C=") {
 		t.Fatalf("D: expected one JA4L-C result, got %v", dResults)
+	}
+}
+
+// TestJA4LFillsTheQUICClientPointsInTheReferenceDirection holds the rule that the
+// reference states. `ja4plus/fingerprinters/ja4l.py:589-599` fills point C from a server
+// packet and point D from a client packet, and the client packet completes the value.
+// The three `tls3.pcapng` JA4L-C entries reach no value while the two points are
+// reversed. Issue #186 holds the reading.
+func TestJA4LFillsTheQUICClientPointsInTheReferenceDirection(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	// Point A. The client packet carries a TTL that no other packet of the flow carries,
+	// so the client value proves which TTL it reports.
+	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 55, 50000, 443, quicLongHeaderPayload())
+	a.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(a); len(results) != 0 {
+		t.Fatalf("A: expected no results, got %v", results)
+	}
+
+	// Point B. The server packet completes the server value.
+	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
+	b.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	bResults, err := fp.ProcessPacket(b)
+	if err != nil {
+		t.Fatalf("B: %v", err)
+	}
+	if len(bResults) != 1 || !strings.HasPrefix(bResults[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("B: expected one JA4L-S result, got %v", bResults)
+	}
+
+	// Point C. The server Handshake packet fills the point, and it completes no value.
+	c := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicHandshakePayload())
+	c.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(c); len(results) != 0 {
+		t.Fatalf("C: expected no results, got %v", results)
+	}
+
+	// Point D. The client Handshake packet completes the client value.
+	d := buildUDPPacketWithIPs(t, clientIP, serverIP, 55, 50000, 443, quicHandshakePayload())
+	d.Metadata().Timestamp = baseTime.Add(150 * time.Millisecond)
+	dResults, err := fp.ProcessPacket(d)
+	if err != nil {
+		t.Fatalf("D: %v", err)
+	}
+	if len(dResults) != 1 {
+		t.Fatalf("D: expected one result, got %v", dResults)
+	}
+	if dResults[0].Fingerprint != "JA4L-C=50000_55" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=50000_55")
+	}
+}
+
+// TestJA4LMovesTheQUICClientPointToTheLastServerPacket holds the rule that the reference
+// states. `ja4plus/fingerprinters/ja4l.py:591-593` writes point C for every server packet
+// that leads point D, so the last server packet supplies the point.
+// Issue #186 holds the reading.
+func TestJA4LMovesTheQUICClientPointToTheLastServerPacket(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 55, 50000, 443, quicLongHeaderPayload())
+	a.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(a); len(results) != 0 {
+		t.Fatalf("A: expected no results, got %v", results)
+	}
+
+	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
+	b.Metadata().Timestamp = baseTime.Add(10 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(b); len(results) != 1 {
+		t.Fatalf("B: expected one result, got %v", results)
+	}
+
+	// The server sends two more Handshake packets. The second of them supplies point C.
+	for _, offset := range []time.Duration{20, 30} {
+		server := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicHandshakePayload())
+		server.Metadata().Timestamp = baseTime.Add(offset * time.Millisecond)
+		if results, _ := fp.ProcessPacket(server); len(results) != 0 {
+			t.Fatalf("server packet at %dms: expected no results, got %v", offset, results)
+		}
+	}
+
+	// The client packet measures against the last server packet, at 30ms and not at 20ms.
+	d := buildUDPPacketWithIPs(t, clientIP, serverIP, 55, 50000, 443, quicHandshakePayload())
+	d.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	dResults, err := fp.ProcessPacket(d)
+	if err != nil {
+		t.Fatalf("D: %v", err)
+	}
+	if len(dResults) != 1 {
+		t.Fatalf("D: expected one result, got %v", dResults)
+	}
+	if dResults[0].Fingerprint != "JA4L-C=20000_55" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=20000_55")
+	}
+
+	// Point C stops at point D, so a later server packet moves nothing.
+	late := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicHandshakePayload())
+	late.Metadata().Timestamp = baseTime.Add(60 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(late); len(results) != 0 {
+		t.Fatalf("late server packet: expected no results, got %v", results)
+	}
+}
+
+// TestJA4LFillsTheQUICClientPointsOnlyFromAHandshakePacket holds the rule that the
+// reference states. `ja4plus/fingerprinters/ja4l.py:580-581` returns None for every
+// long-header packet type except a Handshake packet, so an Initial packet fills neither
+// client point. `tls3.pcapng` stream 25 holds a JA4L-C value that the vector does not
+// hold while the gate is absent. Issue #186 holds the reading.
+func TestJA4LFillsTheQUICClientPointsOnlyFromAHandshakePacket(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	a := buildUDPPacketWithIPs(t, clientIP, serverIP, 55, 50000, 443, quicLongHeaderPayload())
+	a.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(a); len(results) != 0 {
+		t.Fatalf("A: expected no results, got %v", results)
+	}
+
+	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
+	b.Metadata().Timestamp = baseTime.Add(10 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(b); len(results) != 1 {
+		t.Fatalf("B: expected one result, got %v", results)
+	}
+
+	// A second server Initial packet fills no point, so the client packet that follows it
+	// completes no value.
+	serverInitial := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
+	serverInitial.Metadata().Timestamp = baseTime.Add(20 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(serverInitial); len(results) != 0 {
+		t.Fatalf("server Initial: expected no results, got %v", results)
+	}
+
+	clientInitial := buildUDPPacketWithIPs(t, clientIP, serverIP, 55, 50000, 443, quicLongHeaderPayload())
+	clientInitial.Metadata().Timestamp = baseTime.Add(30 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(clientInitial); len(results) != 0 {
+		t.Fatalf("client Initial: expected no results, got %v", results)
+	}
+
+	// The two Handshake packets do fill the two points, which proves the packet type is the
+	// one thing that separates the two pairs.
+	serverHandshake := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicHandshakePayload())
+	serverHandshake.Metadata().Timestamp = baseTime.Add(40 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(serverHandshake); len(results) != 0 {
+		t.Fatalf("server Handshake: expected no results, got %v", results)
+	}
+
+	clientHandshake := buildUDPPacketWithIPs(t, clientIP, serverIP, 55, 50000, 443, quicHandshakePayload())
+	clientHandshake.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	results, err := fp.ProcessPacket(clientHandshake)
+	if err != nil {
+		t.Fatalf("client Handshake: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("client Handshake: expected one result, got %v", results)
+	}
+	if results[0].Fingerprint != "JA4L-C=10000_55" {
+		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=10000_55")
 	}
 }
 

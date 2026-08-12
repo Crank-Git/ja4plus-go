@@ -182,6 +182,23 @@ func HasQUICLongHeader(payload []byte) bool {
 	return binary.BigEndian.Uint32(payload[1:5]) != 0
 }
 
+// IsQUICHandshakePacket reports whether a UDP payload carries a QUIC Handshake packet.
+// It returns false for every payload that HasQUICLongHeader returns false for.
+// A version this parser does not know reads the version 1 type values, because RFC 9000
+// Section 17.2 states them and only RFC 9369 Section 3.2 moves them.
+func IsQUICHandshakePacket(payload []byte) bool {
+	if !HasQUICLongHeader(payload) {
+		return false
+	}
+
+	version := binary.BigEndian.Uint32(payload[1:5])
+	if version == quicV2 {
+		return payload[0]&0x30 == 0x30
+	}
+
+	return payload[0]&0x30 == 0x20
+}
+
 // ParseQUICInitial parses a QUIC Initial packet and extracts the TLS ClientHello.
 // Returns nil, nil if the payload is not a QUIC Initial packet.
 // Returns nil, error if it looks like a QUIC Initial but decryption/parsing fails.

@@ -29,6 +29,23 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **JA4L now fills the two QUIC client measurement points in the reference direction, and
+  the client value of a QUIC connection moves.** This is a breaking behaviour change under
+  `v1.0.0`. A server Handshake packet fills point C, and a client Handshake packet fills
+  point D and completes the value. Every server Handshake packet moves point C until point
+  D fills, so the last one supplies the point. A long-header packet of another type fills
+  neither point. Earlier releases read point C from a client packet and point D from a
+  server packet, and they read every long-header type, so the library reported the client
+  value on a server packet and reported no value at all on three connections of
+  `tls3.pcapng`. `ja4plus/fingerprinters/ja4l.py:580-599` states both rules, and every
+  FoxIO reference agrees, so this is a reading and not a ruling. The conformance run
+  reports 3251 deviations before the change and 3247 after it, the match count stays at
+  943, and the register key count stays at 0. Three captures move:
+  `chrome-cloudflare-quic-with-secrets.pcapng`, `ssh2.pcapng` and `tls3.pcapng`. On the
+  per-packet vector set, seven JA4L client values reach the packet the vector names, and
+  four values that sat on a server packet go away. On the per-stream vector set,
+  `tls3.pcapng` streams 22, 23 and 24 produce a JA4L-C value again, and each one is twice
+  the vector value, which #166 halves. Issue #186 holds the measurement.
 - **JA4L and JA4LS now read a UDP flow only when the flow carries QUIC, and the library
   produces no value for another UDP flow.** This is a breaking behaviour change under
   `v1.0.0`. The library reads the UDP payload for a QUIC long header, and it reads the
