@@ -18,7 +18,6 @@ type sshConnState struct {
 	serverSizes  []int
 	clientACKs   int
 	serverACKs   int
-	hasSSH       bool // whether we've seen SSH data on this connection
 	hassh        string
 	hasshServer  string
 	clientBanner string
@@ -147,14 +146,25 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	conn, exists := f.connections[connKey]
 
+	// A bare ACK carries the ACK flag alone and no payload. FoxIO PR #281 counts one only
+	// where the TCP flags equal 0x0010, which denies a SYN-ACK, a FIN-ACK and a RST-ACK.
+	isBareACK := len(payload) == 0 &&
+		tcp.ACK && !tcp.SYN && !tcp.FIN && !tcp.RST && !tcp.PSH && !tcp.URG
+
+	// The third packet of the TCP handshake is a bare ACK. It arrives before the first SSH
+	// packet, and the reference counts it. The state table therefore needs the connection
+	// before any SSH data reaches it. `wireshark/source/packet-ja4.c:1302` reads no SSH state
+	// first, and `python/ja4ssh.py:112` counts the same packet.
+	// The TCP port picks the connection this test opens. A bare ACK on every TCP connection
+	// would fill the state table with traffic that carries no SSH. The port holds the same test
+	// at `ja4plus/fingerprinters/ja4ssh.py:176`.
+	opensOnSSHPort := isBareACK && (srcPort == 22 || dstPort == 22)
+
 	// A cipher hides the length field of every SSH record after the key exchange, so the
 	// byte test denies a record the reference counts. A payload on a connection the library
 	// already reads still carries SSH. Issue #200 records the 42 comparisons that a stricter
 	// guard cost.
-	// `ja4plus/fingerprinters/ja4ssh.py:179` admits one packet more: a bare ACK on port 22
-	// opens a connection there, so the port counts the bare ACK of the TCP handshake. Issue
-	// #221 holds that rule, which reaches part c and not the SSH packet count.
-	if !hasSSHData && !exists {
+	if !hasSSHData && !opensOnSSHPort && !exists {
 		return nil, nil
 	}
 
@@ -174,16 +184,12 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// A packet that carries no payload reaches the bare ACK counter, and it advances no
 	// window.
 	if len(payload) == 0 {
-		// Bare ACK per FoxIO PR #281: flags == 0x0010 exactly (only ACK set,
-		// no SYN/FIN/RST/PSH/URG) and zero payload.
-		isBareACK := tcp.ACK && !tcp.SYN && !tcp.FIN && !tcp.RST && !tcp.PSH && !tcp.URG
 		if !isBareACK {
 			return nil, nil
 		}
 
-		if !conn.hasSSH && conn.clientBanner == "" && conn.serverBanner == "" {
-			return nil, nil
-		}
+		// The count reads no SSH state, because the handshake ACK precedes every SSH packet
+		// of the connection. `ja4plus/fingerprinters/ja4ssh.py:250` counts the same way.
 
 		// Count ACK for this direction
 		if isClientToServer {
@@ -196,7 +202,6 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort)
 	}
 
-	conn.hasSSH = true
 	conn.lastSeen = parser.GetPacketTimestamp(packet)
 
 	// The tracker reads every payload segment of the direction, and not the segments the

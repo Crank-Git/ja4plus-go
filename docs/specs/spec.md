@@ -137,6 +137,8 @@ across both repositories, because a reader moves between them.
 | freeze | noun | The `v1.0.0` commitment that exported names and signatures stay stable. | lock, stabilization |
 | window | noun | The count of packets JA4SSH reads before it produces a fingerprint. | interval, batch, sample |
 | open window | noun | One JA4SSH window that a connection holds when the packet source ends. | partial window, trailing window |
+| bare ACK | noun | One TCP packet whose flags equal `0x0010` and whose payload is empty. `ACK` names the TCP acknowledgement flag. `docs/specs/foxio/JA4SSH.md` R16 holds the reading. | bare acknowledgement, empty ACK, pure ACK |
+| part c | noun | The third part of a JA4SSH value. It holds the count of bare ACKs from each side. `docs/specs/foxio/JA4SSH.md` R15 holds the reading. | ACK part, third part |
 | raw form | noun | The unhashed form of a fingerprint, for example `JA4_r`. | expanded form, debug form |
 | zero sentinel | noun | The literal value `000000000000` that a hash field carries when its list holds no value. | zero marker, zero hash |
 | plausibility guard | noun | A check that rejects input a method reads, because its content describes no real client. | sanity check, heuristic, filter |
