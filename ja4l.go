@@ -175,6 +175,9 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	ts := parser.GetPacketTimestamp(packet)
 
 	// 4-point QUIC timing: A (client) -> B (server) -> C (client) -> D (server)
+	// TODO(#186): Read point C from a server packet and point D from a client packet.
+	// `ja4plus/fingerprinters/ja4l.py:589-599` fills the two points in that order, so the
+	// two points below are reversed and `tls3.pcapng` streams 22, 23 and 24 reach no value.
 	if _, ok := conn.timestamps["A"]; !ok && isClient {
 		conn.timestamps["A"] = ts
 		conn.ttls["client"] = ttl
