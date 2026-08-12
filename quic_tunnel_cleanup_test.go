@@ -3,7 +3,7 @@ package ja4plus
 import "testing"
 
 // Issue #193 records the defect that every test in this file holds. JA4 and JA4S key their
-// QUIC state with the grouping key, which reads the inner address pair, and each
+// QUIC state with the grouping key, which reads the inner address pair. Each
 // FingerprintResult carries the reported key, which reads the outer address pair.
 // `types.go:20-25` documents the CleanupConnection tuple as the pair a FingerprintResult
 // carries, so a caller that follows the document names the reported key. Without an index
@@ -261,34 +261,37 @@ func TestJA4SHoldsOneIndexEntryForATunneledConnectionThatTwoOuterAddressesCarry(
 	}
 }
 
-// Reset clears every table that a tunneled connection fills, for JA4 and for JA4S.
+// Reset clears every JA4 table that a tunneled connection fills.
 // A table the index does not reach is a table Reset may not clear.
-func TestResetClearsEveryTunneledTableOfJA4AndJA4S(t *testing.T) {
-	ja4 := NewJA4()
-	openTunneledJA4Connections(t, ja4)
-	ja4.Reset()
+func TestResetClearsEveryTunneledTableOfJA4(t *testing.T) {
+	fingerprinter := NewJA4()
+	openTunneledJA4Connections(t, fingerprinter)
+	fingerprinter.Reset()
 
-	if got := len(ja4.dcidToTuple); got != 0 {
-		t.Errorf("Reset leaves %d entries in the JA4 connection identifier table", got)
+	if got := len(fingerprinter.dcidToTuple); got != 0 {
+		t.Errorf("Reset leaves %d entries in the connection identifier table", got)
 	}
-	if got := len(ja4.quicFragments); got != 0 {
-		t.Errorf("Reset leaves %d entries in the JA4 fragment table", got)
+	if got := len(fingerprinter.quicFragments); got != 0 {
+		t.Errorf("Reset leaves %d entries in the fragment table", got)
 	}
-	if got := len(ja4.dcidToReported); got != 0 {
-		t.Errorf("Reset leaves %d entries in the JA4 index", got)
+	if got := len(fingerprinter.dcidToReported); got != 0 {
+		t.Errorf("Reset leaves %d entries in the index", got)
 	}
+}
 
-	ja4s := NewJA4S()
-	openTunneledJA4SConnections(t, ja4s)
-	ja4s.Reset()
+// Reset clears every JA4S table that a tunneled connection fills.
+func TestResetClearsEveryTunneledTableOfJA4S(t *testing.T) {
+	fingerprinter := NewJA4S()
+	openTunneledJA4SConnections(t, fingerprinter)
+	fingerprinter.Reset()
 
-	if got := len(ja4s.quicDCIDs); got != 0 {
-		t.Errorf("Reset leaves %d entries in the JA4S connection identifier table", got)
+	if got := len(fingerprinter.quicDCIDs); got != 0 {
+		t.Errorf("Reset leaves %d entries in the connection identifier table", got)
 	}
-	if got := len(ja4s.groupingKeys); got != 0 {
-		t.Errorf("Reset leaves %d entries in the JA4S grouping key index", got)
+	if got := len(fingerprinter.groupingKeys); got != 0 {
+		t.Errorf("Reset leaves %d entries in the grouping key index", got)
 	}
-	if got := len(ja4s.reportedKeys); got != 0 {
-		t.Errorf("Reset leaves %d entries in the JA4S reported key index", got)
+	if got := len(fingerprinter.reportedKeys); got != 0 {
+		t.Errorf("Reset leaves %d entries in the reported key index", got)
 	}
 }

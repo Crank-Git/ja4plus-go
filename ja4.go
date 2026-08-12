@@ -20,8 +20,10 @@ type JA4Fingerprinter struct {
 	// dcidToReported reads the reported key of a connection from the same DCID hex.
 	// A caller of CleanupConnection holds the address pair that a FingerprintResult carries,
 	// and a tunneled connection groups under the inner pair. Without this map the caller
-	// names a key that `dcidToTuple` never holds. FR-gaps-14d states the rule, and `ja4l.go`
-	// holds the same index under the name `groupingKeys`.
+	// names a key that `dcidToTuple` never holds. FR-gaps-14d states the rule.
+	// This map runs from the DCID hex to the reported key, and the `groupingKeys` map of
+	// `ja4l.go` runs from the reported key to the grouping key. The two directions differ
+	// because CleanupConnection reads every entry of `dcidToTuple` already.
 	dcidToReported map[string]string
 }
 

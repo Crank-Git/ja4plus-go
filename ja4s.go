@@ -20,9 +20,9 @@ type JA4SFingerprinter struct {
 	// holds the same map under the same name.
 	groupingKeys map[string]string
 	// reportedKeys reads the reported key of a connection from the grouping key.
-	// A caller that names the grouping key cannot name the reported key, so the removal reads
-	// this map to reach the index entry of the connection. `ja4l.go` reads the reported pair
-	// of the connection state for the same reason.
+	// A caller that names the grouping key cannot name the reported key. The removal reads this
+	// map to reach the index entry of the connection. `ja4l.go` reads the reported key of the
+	// connection state for the same reason.
 	reportedKeys map[string]string
 }
 
@@ -149,7 +149,8 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // reaches the grouping key from the address pair a FingerprintResult carries.
 // The reported key holds the outer address pair with the inner port pair. The two keys hold
 // one value for a connection that no tunnel carries.
-// It records nothing when the packet carries no address layer that the parser reads.
+// It records nothing when the packet carries no address layer that the parser reads. A caller
+// then removes the connection by the grouping key alone.
 func (f *JA4SFingerprinter) indexReported(packet gopacket.Packet, connKey string, srcPort, dstPort uint16) {
 	reportedSrcIP, reportedDstIP, _, held := parser.GetIPInfo(packet)
 	if !held {

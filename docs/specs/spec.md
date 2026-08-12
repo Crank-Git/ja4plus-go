@@ -145,6 +145,7 @@ across both repositories, because a reader moves between them.
 | tunnel | noun | One connection that carries another protocol inside its payload, for example a SOCKS4 proxy connection. | proxy, wrapper, encapsulation |
 | reported key | noun | The four address fields a `FingerprintResult` carries. It holds the outer address pair and the inner port pair. | output key, result key |
 | grouping key | noun | The address pair and the port pair that collect packets into one connection. Both read the inner layer. | connection key, state key |
+| index | noun | The map that pairs the reported key of a connection with the grouping key of it. `CleanupConnection` reads it. | lookup, reverse map, mapping |
 | outer layer | noun | The address layer of the tunnel. A `FingerprintResult` reports it, and the time-to-live reads it. | tunnel header, outer header |
 | inner layer | noun | The address layer of the packet the tunnel carries. The grouping key reads it. | inner header, payload header |
 | monitor | noun | The `ja4plus watch` command, which reads packets from an interface until the operator stops it. | daemon, sniffer, listener |
