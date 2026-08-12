@@ -473,8 +473,8 @@ func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, ds
 // slice for a window that holds no SSH packet. It removes the connection in both cases, so a
 // second call returns an empty slice.
 // The result names the client of the connection as the source and the server as the
-// destination, as a result of CloseOpenWindows does. No packet triggers this emission, so the
-// result reads the endpoints of the connection.
+// destination. CloseOpenWindows names the two endpoints the same way. No packet triggers
+// this emission, so the result reads the endpoints of the connection.
 // The method is opt-in. CleanupConnection still emits nothing, so a caller that only reclaims
 // memory receives no fingerprint it did not ask for.
 func (f *JA4SSHFingerprinter) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult {
