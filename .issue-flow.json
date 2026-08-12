@@ -12,7 +12,7 @@
   "devIsDefault": false,
   "concurrency": 3,
   "batchSize": 4,
-  "runLength": "4-batches",
+  "runLength": "until-backlog-empty",
   "prGranularity": "batch",
   "prAuthority": "autonomous",
   "deployTarget": null,
