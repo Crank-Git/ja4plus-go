@@ -1597,7 +1597,7 @@
     "ours": "c48s21_c6s5_c4s5",
     "theirs": "c64s64_c6s5_c4s5",
     "ruling": "#223",
-    "reason": "The project manager provisionally ruled that the part a mode reads its own window, and `python/ja4ssh.py:8` shares one payload list across the windows."
+    "reason": "The maintainer ruled on 2026-08-12 that the part a mode reads its own window, and `python/ja4ssh.py:8` shares one payload list across the windows."
   },
   {
     "key": "ssh-r.pcap/2/JA4SSH.1",
@@ -1605,7 +1605,7 @@
     "ours": "c76s76_c104s96_c19s82",
     "theirs": "c64s64_c104s96_c19s82",
     "ruling": "#223",
-    "reason": "The project manager provisionally ruled that the part a mode reads its own window, and `python/ja4ssh.py:8` shares one payload list across the windows."
+    "reason": "The maintainer ruled on 2026-08-12 that the part a mode reads its own window, and `python/ja4ssh.py:8` shares one payload list across the windows."
   },
   {
     "key": "ssh-scp-1050.pcap/0/JA4SSH.3",
@@ -1613,7 +1613,7 @@
     "ours": "c0s1460_c0s200_c36s0",
     "theirs": "c112s1460_c0s200_c36s0",
     "ruling": "#223",
-    "reason": "The project manager provisionally ruled that the part a mode reads its own window, and `JA4SSH.md` R13 bars a mode beside no SSH packet."
+    "reason": "The maintainer ruled on 2026-08-12 that the part a mode reads its own window, and `JA4SSH.md` R13 bars a mode beside no SSH packet."
   },
   {
     "key": "ssh-scp-1050.pcap/0/JA4SSH.4",
@@ -1621,6 +1621,6 @@
     "ours": "c0s1460_c0s200_c23s0",
     "theirs": "c112s1460_c0s200_c23s0",
     "ruling": "#223",
-    "reason": "The project manager provisionally ruled that the part a mode reads its own window, and `JA4SSH.md` R13 bars a mode beside no SSH packet."
+    "reason": "The maintainer ruled on 2026-08-12 that the part a mode reads its own window, and `JA4SSH.md` R13 bars a mode beside no SSH packet."
   }
 ]
