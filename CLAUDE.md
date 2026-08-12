@@ -117,10 +117,10 @@ exits 0, and that exit code reports no site build.**
   before you change it. Restore a committed file with `git checkout -- <file>`.
   `.claude/rules/worktrees.md` holds the reason, the third alternative and the git hook.
 - **The project manager runs one cross-member review at every batch gate.** Spawn it with
-  no `name`, and read the spawn response: a response that names a mailbox reached the
-  cross-session path, which can return an idle signal and no text.
-  A review that returns no text found nothing and checked nothing, and the project manager
-  then runs the five categories by hand and says so.
+  no `name`. Read the spawn response. A response that names a mailbox reached the
+  cross-session path, and that path can return an idle signal and no text. A cross-member
+  review that returns no text checked nothing. The project manager then runs the five
+  categories by hand, and it says so in the gate comment.
   `.claude/rules/cross-member-review.md` holds the measurement, the return contract and
   the procedure.
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
