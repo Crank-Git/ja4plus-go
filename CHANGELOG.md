@@ -9,8 +9,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1065
-matches, 1288 deviations, 198 accepted deviations and 198 register keys. A count that an entry
+put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1077
+matches, 1278 deviations, 198 accepted deviations and 198 register keys. A count that an entry
 below states therefore differs from a fresh run.
 
 ### Added
@@ -44,6 +44,27 @@ below states therefore differs from a fresh run.
 
 ### Fixed
 
+- JA4SSH now counts the SSH packets that FoxIO counts, so the window fills and
+  `ProcessPacket` emits a value again. `internal/parser/ssh.go:17` reads the four-byte length
+  field of an SSH record, and a cipher hides that field after the key exchange, so the library
+  counted almost no SSH packet after the key exchange. On `ssh.pcapng` stream 0 the reference
+  counted 200 SSH packets and the library counted 7, so no window of 200 ever filled and
+  `CloseOpenWindows` was the only emission path. Two changes carry the repair. A payload on a
+  connection the library already reads now counts, because the version line of either
+  direction identifies the connection. `internal/parser/ssh_tracker.go` adds
+  `parser.SSHMessageTracker`, which follows the SSH message boundary and reads the TCP
+  sequence number, so the count reads the SSH message and not the TCP segment. Two FoxIO
+  implementations state the rule and the two agree:
+  `wireshark/source/packet-ja4.c:1469` counts one packet for each `ssh.direction` field, and
+  `python/ja4ssh.py:94` counts the packet whose protocol list holds `ssh`. The port holds the
+  same rule at `ja4plus/fingerprinters/ja4ssh.py:247`. Issue #200 records the readings.
+  Measured against `batch/210-session5-followups` at `c4978ab` with the corpus present: 12
+  JA4SSH comparisons moved to a match and 2 spurious values appeared, on `gre-sample.pcap`,
+  `ssh-r.pcap`, `ssh-scp-1050.pcap`, `ssh.pcapng`, `ssh2.pcapng`, `sshv1.pcap` and `v6.pcap`.
+  The run reports 1065 matches before and 1077 after, 1288 deviations before and 1278 after,
+  and 198 register keys before and after. The JA4SSH deviation count falls from 42 to 32.
+  The base moved twice while this branch was open, and the four counts read the same on
+  `5f05554` and on `c4978ab`, because #211 moves no fingerprint of the corpus.
 - JA4L now times a second connection on one grouping key from the measurement points of that
   connection. `ja4l.go:150` wrote the initial sequence number of the endpoint before the guard
   that holds point A. A second connection therefore kept the points of the first one. It

@@ -10,7 +10,22 @@ import (
 )
 
 // buildSSHPacket creates a synthetic TCP packet with the given parameters.
+// It names the sequence number 1, so a test that sends more than one payload segment in one
+// direction calls buildSSHSegment instead.
 func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte, ack bool) gopacket.Packet {
+	return buildSSHSegment(srcIP, dstIP, srcPort, dstPort, payload, 1)
+}
+
+// buildSSHSegment returns one synthetic TCP packet at the sequence number the caller names.
+//
+// `parser.SSHMessageTracker` reads the sequence number, because it follows the SSH message
+// boundary across two segments. A direction that repeats one sequence number sends one
+// segment and then a retransmission of it, and FoxIO counts a retransmission once. A test
+// that sends more than one payload segment in one direction therefore names an advancing
+// number.
+func buildSSHSegment(
+	srcIP, dstIP string, srcPort, dstPort uint16, payload []byte, seq uint32,
+) gopacket.Packet {
 	ip := &layers.IPv4{
 		SrcIP:    net.ParseIP(srcIP),
 		DstIP:    net.ParseIP(dstIP),
@@ -22,6 +37,7 @@ func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte
 		SrcPort: layers.TCPPort(srcPort),
 		DstPort: layers.TCPPort(dstPort),
 		ACK:     true,
+		Seq:     seq,
 	}
 	_ = tcp.SetNetworkLayerForChecksum(ip)
 
@@ -54,7 +70,8 @@ func TestJA4SSH_WindowTrigger(t *testing.T) {
 
 	// Send 9 packets — should NOT trigger yet
 	for i := 0; i < 9; i++ {
-		results, err := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, sshPayload, false))
+		results, err := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, clientPort, serverPort,
+			sshPayload, sshSeqOfPacket(i, sshPayload)))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -64,7 +81,8 @@ func TestJA4SSH_WindowTrigger(t *testing.T) {
 	}
 
 	// 10th packet should trigger
-	results, err := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, sshPayload, false))
+	results, err := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, clientPort, serverPort,
+		sshPayload, sshSeqOfPacket(9, sshPayload)))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -84,21 +102,20 @@ func TestJA4SSH_DirectionPort22(t *testing.T) {
 	clientPort := uint16(54321)
 	serverPort := uint16(22)
 
-	clientPayload := make([]byte, 36)
-	copy(clientPayload, "SSH-2.0-client")
-
-	serverPayload := make([]byte, 100)
-	copy(serverPayload, "SSH-2.0-server")
+	clientPayload := sshPayloadOfSize(36)
+	serverPayload := sshPayloadOfSize(100)
 
 	// 5 client packets (size 36 each)
 	for i := 0; i < 5; i++ {
-		_, _ = fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, clientPayload, false))
+		_, _ = fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, clientPort, serverPort,
+			clientPayload, sshSeqOfPacket(i, clientPayload)))
 	}
 
 	// 5 server packets (size 100 each) — should trigger
 	var lastResults []FingerprintResult
 	for i := 0; i < 5; i++ {
-		results, _ := fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, serverPort, clientPort, serverPayload, false))
+		results, _ := fp.ProcessPacket(buildSSHSegment(serverIP, clientIP, serverPort, clientPort,
+			serverPayload, sshSeqOfPacket(i, serverPayload)))
 		if len(results) > 0 {
 			lastResults = results
 		}
@@ -167,13 +184,15 @@ func TestJA4SSH_EarlyTrigger(t *testing.T) {
 	sshPayload := []byte("SSH-2.0-OpenSSH_8.9\r\n")
 
 	for i := 0; i < 4; i++ {
-		results, _ := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+		results, _ := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, 54321, 22, sshPayload,
+			sshSeqOfPacket(i, sshPayload)))
 		if len(results) > 0 {
 			t.Fatalf("unexpected trigger at packet %d", i+1)
 		}
 	}
 
-	results, _ := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+	results, _ := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, 54321, 22, sshPayload,
+		sshSeqOfPacket(4, sshPayload)))
 	if len(results) == 0 {
 		t.Fatal("expected fingerprint at packet 5")
 	}
@@ -191,7 +210,8 @@ func TestJA4SSH_ACKCounting(t *testing.T) {
 
 	// 5 SSH data packets from client
 	for i := 0; i < 5; i++ {
-		_, _ = fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+		_, _ = fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, 54321, 22, sshPayload,
+			sshSeqOfPacket(i, sshPayload)))
 	}
 
 	// 3 pure ACKs from server
@@ -203,7 +223,8 @@ func TestJA4SSH_ACKCounting(t *testing.T) {
 	serverPayload := []byte("SSH-2.0-ServerSSH\r\n")
 	var lastResults []FingerprintResult
 	for i := 0; i < 2; i++ {
-		results, _ := fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, 22, 54321, serverPayload, false))
+		results, _ := fp.ProcessPacket(buildSSHSegment(serverIP, clientIP, 22, 54321, serverPayload,
+			sshSeqOfPacket(i, serverPayload)))
 		if len(results) > 0 {
 			lastResults = results
 		}
