@@ -34,9 +34,12 @@ var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 // headerBlockEnd returns the index of the empty line that ends the header block.
 // It returns -1 when the text holds no such line.
 //
-// A sender ends the block with `\r\n\r\n`, or with two line feeds. The function returns the
-// first of the two, because a request that mixes the two line endings ends at the earlier
-// one.
+// It reads the two terminators `\r\n\r\n` and `\n\n`, and it returns the earlier of the two.
+// `ja4plus/utils/http_utils.py:43` of the Python port holds the same two, so both
+// implementations answer alike.
+//
+// TODO(#298): Read a terminator that mixes the two line endings. A block that ends
+// `\n\r\n` matches neither literal, and it reaches no value.
 func headerBlockEnd(text string) int {
 	end := -1
 	for _, terminator := range []string{"\r\n\r\n", "\n\n"} {
@@ -87,6 +90,8 @@ func ParseHTTPRequest(payload []byte) *HTTPRequest {
 		return nil
 	}
 	// The body holds any byte, so the header parse reads the header block alone.
+	// A block that ends `\r\n\n` keeps the carriage return of the last line ending, so the
+	// last header line carries one trailing carriage return. The value trim below removes it.
 	text = text[:blockEnd]
 
 	req := &HTTPRequest{

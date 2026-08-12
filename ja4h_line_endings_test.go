@@ -161,6 +161,57 @@ func TestJA4H_ProducesNoValueBeforeTheHeaderBlockEnds(t *testing.T) {
 	}
 }
 
+// TestJA4H_ReadsAHeaderBlockThatEndsWithACarriageReturnAndTwoLineFeeds proves that the last
+// header line drops its trailing carriage return.
+//
+// The parser cuts the text at the two line feeds, so the last header line keeps the carriage
+// return of the line ending before them. The value trim removes it, and this test fails when
+// a later change drops that trim.
+func TestJA4H_ReadsAHeaderBlockThatEndsWithACarriageReturnAndTwoLineFeeds(t *testing.T) {
+	raw := "GET /p HTTP/1.1\r\n" +
+		"Host: example.com\r\n" +
+		"\n"
+
+	packet := buildTCPPacketWithPayload(t, []byte(raw))
+	results, err := NewJA4H().ProcessPacket(packet)
+	if err != nil {
+		t.Fatalf("ProcessPacket returned an error: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("ProcessPacket returned %d results, and the test expects 1", len(results))
+	}
+
+	const expectedRaw = "ge11nn010000_Host_"
+	if results[0].RawOriginalOrder != expectedRaw {
+		t.Errorf("the JA4H_ro value is %q, and the test expects %q",
+			results[0].RawOriginalOrder, expectedRaw)
+	}
+}
+
+// TestJA4H_ProducesNoValueForAHeaderBlockThatEndsWithALineFeedAndACarriageReturn holds the
+// gap that #298 states.
+//
+// The parser reads the terminator `\r\n\r\n` and the terminator `\n\n`, and it reads no
+// terminator that mixes the two line endings. `ja4plus/utils/http_utils.py:43` of the Python
+// port holds the same two, so both implementations answer alike.
+//
+// **This test holds the present answer, and it holds no ruling.** #298 states the two
+// candidate answers, and the maintainer decides. A reader who closes #298 deletes this test.
+func TestJA4H_ProducesNoValueForAHeaderBlockThatEndsWithALineFeedAndACarriageReturn(t *testing.T) {
+	raw := "GET /p HTTP/1.1\r\n" +
+		"Host: example.com\n" +
+		"\r\n"
+
+	packet := buildTCPPacketWithPayload(t, []byte(raw))
+	results, err := NewJA4H().ProcessPacket(packet)
+	if err != nil {
+		t.Fatalf("ProcessPacket returned an error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("ProcessPacket returned %d results, and the test expects 0", len(results))
+	}
+}
+
 // TestJA4H_DropsAHeaderWithAnEmptyNameFromPartAAndFromPartB proves that one filter serves
 // the header count and the header list.
 //
