@@ -9,8 +9,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 150
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1077
-matches, 1278 deviations, 198 accepted deviations and 198 register keys. A count that an entry
+put 35 more entries into it, and issue #197 put 13 more. A run on the current tree reports 1091
+matches, 1279 deviations, 198 accepted deviations and 198 register keys. A count that an entry
 below states therefore differs from a fresh run.
 
 ### Added
@@ -44,6 +44,29 @@ below states therefore differs from a fresh run.
 
 ### Fixed
 
+- `ProcessPacket` now emits the open JA4SSH window on a packet that carries the FIN flag and
+  the ACK flag. Such a packet closes the connection, and the reference writes the value on it.
+  `wireshark/source/packet-ja4.c:1400` tests the flags and
+  `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:555` tests the two
+  flags, `python/ja4.py:556` calls `finalize_ja4ssh`, and `python/ja4.py:370` defines it. The
+  port emits the window at `ja4plus/fingerprinters/ja4ssh.py:268`. Before the change
+  `CloseOpenWindows` was the one emission path, so a value the vector anchors to a FIN frame
+  reached no per-packet comparison. The emission clears the four counters of the window.
+  `python/ja4.py:377` deletes the stream from the cache, and the port clears the counters at
+  `ja4plus/fingerprinters/ja4ssh.py:439`. `wireshark/source/packet-ja4.c:1485` clears the
+  counters of a filled window alone, so Wireshark writes one value twice, at `ssh-r.pcap`
+  frame 1850 and at frame 1851. The library follows the port, and the maintainer's rule of
+  2026-08-12 states that order. An empty window still emits nothing, so the second FIN packet
+  of a close emits nothing. Issue #222 records the readings, and issue #221 recorded the
+  `ssh-r.pcap` bare ACK reading that this change completes. The measurement reads
+  `batch/236-ja4ssh-remainder` at `53e8678`, with the corpus present. 5 comparisons reach a
+  match, over `gre-sample.pcap` frame 30, `ssh-r.pcap` frames 335, 1826 and 1850, and
+  `ssh-r.pcap` stream 2 `JA4SSH.5`. 4 values move from `CloseOpenWindows` to `ProcessPacket`,
+  and part c of `ssh-r.pcap` stream 1 falls from `c5s5` to `c4s5`. `sshv1.pcap` frame 72 and
+  `v6.pcap` frame 72 now hold a value that differs, and the SSH version 1 packet boundary
+  causes that difference. The run reports 1086 matches before and 1091 after, 1284 deviations
+  before and 1279 after, and 198 register keys before and after. No register entry reads as
+  closed.
 - JA4SSH part c now counts the bare ACK of the TCP handshake. The third packet of the handshake
   carries the ACK flag alone and no payload. It arrives before the first SSH packet of the
   connection. `ProcessPacket` opened its state table on SSH data alone, so it dropped that

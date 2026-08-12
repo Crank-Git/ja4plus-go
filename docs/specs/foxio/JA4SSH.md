@@ -56,7 +56,7 @@ A citation names a file of the FoxIO repository at the pinned commit. Read
   `wireshark/source/packet-ja4.c:1485`.
 - **R9** — Zeek, Wireshark and Rust each write one value for an open window at the end of
   the connection. Zeek writes it at `zeek/ja4ssh/main.zeek:162`. Wireshark writes it on a
-  FIN-ACK at `wireshark/source/packet-ja4.c:1402`. Rust writes it at
+  FIN+ACK packet at `wireshark/source/packet-ja4.c:1402`. Rust writes it at
   `rust/ja4/src/ssh.rs:52`.
 
 ### Part a — the mode of the packet length
