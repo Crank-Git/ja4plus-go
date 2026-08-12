@@ -399,6 +399,69 @@ func TestTheReportStatesThatARunReportsNoStaleRegisterEntry(t *testing.T) {
 	}
 }
 
+// #328 makes an orphan register entry a fifth kind. The report names the key and the
+// recorded value, so a reader repairs the entry without a rerun.
+func TestTheReportNamesEveryOrphanRegisterEntry(t *testing.T) {
+	orphan := conformanceKey{Capture: "ssh2.pcapng", Stream: "15", Method: "JA4SSH.9"}
+
+	report := newConformanceReport("27f0cbf")
+	report.readCapture("ssh2.pcapng")
+	report.recordOrphans(map[conformanceKey]deviationEntry{
+		orphan: {Key: orphan.String(), Ours: "c36s36_c55s53_c14s14", Theirs: "c36s36_c55s53_c13s14", Ruling: "#19"},
+	})
+
+	text := report.render()
+
+	for _, wanted := range []string{
+		"## Orphan register entries",
+		"| Orphan register entries | 1 |",
+		"ssh2.pcapng/15/JA4SSH.9",
+		"c36s36_c55s53_c14s14",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
+// The report subtracts the keys of every comparison from the register. An entry whose key
+// one comparison reaches is no orphan entry.
+func TestTheReportNamesNoOrphanEntryForAKeyAComparisonReaches(t *testing.T) {
+	reached := conformanceKey{Capture: "tls12.pcap", Stream: "0", Method: "JA4_o.1"}
+
+	report := oneConformanceReport()
+	report.recordComparison("tls12.pcap", "per-stream", conformanceComparison{Reached: []conformanceKey{reached}})
+	report.recordOrphans(map[conformanceKey]deviationEntry{
+		reached: {Key: reached.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
+	})
+
+	text := report.render()
+
+	for _, wanted := range []string{
+		"| Orphan register entries | 0 |",
+		"The run reports no orphan register entry.",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
+// A run that reaches every register key states that result. A section a reader finds empty
+// says nothing about the register.
+func TestTheReportStatesThatARunReportsNoOrphanRegisterEntry(t *testing.T) {
+	text := oneConformanceReport().render()
+
+	for _, wanted := range []string{
+		"| Orphan register entries | 0 |",
+		"The run reports no orphan register entry.",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
 // The report is tracked, and FR-conformance-27 rewrites it on every run. This test reads
 // the tracked file and proves its path and its shape. `TestConformance` fails the run when
 // the write itself fails, and the two checks together hold FR-conformance-27.

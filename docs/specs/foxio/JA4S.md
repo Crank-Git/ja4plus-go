@@ -3,7 +3,8 @@
 This page transcribes the FoxIO image that specifies JA4S. **This page records what each
 source states, and it decides no value.** `.claude/rules/rulings.md` states who rules.
 
-`docs/specs/foxio/README.md` holds the inventory and the pinned commit.
+`docs/specs/foxio/README.md` holds the inventory, the pinned commit and the rule that
+states how to read a citation.
 
 ## The source
 
@@ -16,6 +17,11 @@ source states, and it decides no value.** `.claude/rules/rulings.md` states who 
 | Text specification at the pin | None |
 
 **This page reproduces no image.** Follow the link above to read it.
+
+A citation names a path in the FoxIO repository at the pinned commit. **Join it to
+`testdata/foxio/reference/`.** Read `python/ja4.py:188` as line 188 of
+`testdata/foxio/reference/python/ja4.py`. `docs/specs/foxio/README.md` states the rule,
+and it names each path that the rule does not cover.
 
 **FoxIO publishes no text specification for JA4S at the pinned commit.** The image is the
 only FoxIO prose, so a rule the image does not state comes from a reference

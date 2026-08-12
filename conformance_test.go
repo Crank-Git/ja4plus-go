@@ -606,6 +606,21 @@ type conformanceRunTotals struct {
 	StreamValues  int
 	Stream        conformanceSetTotals
 	Packet        conformanceSetTotals
+	// Reached names every register key that a comparison of the run reaches. #328 reads it
+	// once, after the last capture, because one comparison reads one capture and one vector
+	// set.
+	Reached map[conformanceKey]bool
+	// Orphan counts the register entries that no comparison of the run reaches. The count
+	// belongs to the run and to neither vector set, because one entry names one comparison
+	// of one set.
+	Orphan int
+}
+
+// recordReached keeps every register key that the comparison reaches.
+func (totals *conformanceRunTotals) recordReached(comparison conformanceComparison) {
+	for _, key := range comparison.Reached {
+		totals.Reached[key] = true
+	}
 }
 
 // conformanceFetchedCommit returns the FoxIO commit that `make corpus` fetched.
@@ -625,7 +640,7 @@ func TestConformance(t *testing.T) {
 	conformanceSkipWithoutCorpus(t)
 
 	register := conformanceRegisterByKey(t)
-	totals := conformanceRunTotals{}
+	totals := conformanceRunTotals{Reached: make(map[conformanceKey]bool, len(register))}
 
 	commit := conformanceFetchedCommit(t)
 	if commit != "" {
@@ -645,6 +660,14 @@ func TestConformance(t *testing.T) {
 		})
 	}
 
+	// FR-conformance-33k reads the register once the last capture has run. A key that one
+	// capture never reaches is a key another capture reaches, so the check waits for the
+	// whole run.
+	orphans := conformanceOrphanEntries(register, totals.Reached)
+	totals.Orphan = len(orphans)
+
+	report.recordOrphans(register)
+
 	// FR-conformance-27 writes the report on every run. The write comes before the
 	// deviation check below, because that check fails the test and a failed run must still
 	// leave a current report.
@@ -653,7 +676,23 @@ func TestConformance(t *testing.T) {
 	}
 
 	conformanceCheckReportTotals(t, report, totals)
+	conformanceCheckOrphans(t, orphans)
 	conformanceReportTotals(t, totals)
+}
+
+// conformanceCheckOrphans fails the run for each register entry that no comparison reaches.
+// It holds FR-conformance-33j.
+//
+// The project fails a gate rather than print a warning, as #227 and #306 do, because an
+// orphan entry accepts a difference that the run never measures. #250 already proved the
+// key case reachable, and the count of accepted deviations then falls without a failure.
+func conformanceCheckOrphans(t *testing.T, orphans []conformanceOrphanEntry) {
+	t.Helper()
+
+	for _, orphan := range orphans {
+		t.Errorf("the register names %s and records the value %q, and no comparison of the run reaches that key, so the entry accepts a difference this run never measures",
+			orphan.Key, orphan.Recorded)
+	}
 }
 
 // conformanceCheckReportTotals fails the run when the report and the suite count it
@@ -683,6 +722,7 @@ func conformanceRunTotalsAsCounts(totals conformanceRunTotals) conformanceReport
 		Deviations:    totals.Stream.Deviations + totals.Packet.Deviations,
 		Accepted:      totals.Stream.AcceptedDeviants + totals.Packet.AcceptedDeviants,
 		Stale:         totals.Stream.Stale + totals.Packet.Stale,
+		Orphan:        totals.Orphan,
 	}
 }
 
@@ -778,6 +818,7 @@ func conformanceRunStreamSet(
 
 	report.recordComparison(capture, conformanceReportStreamSet, comparison)
 	conformanceRecordComparison(t, conformanceReportStreamSet, comparison, &totals.Stream)
+	totals.recordReached(comparison)
 
 	return true
 }
@@ -814,6 +855,7 @@ func conformanceRunPacketSet(
 
 	report.recordComparison(capture, conformanceReportPacketSet, comparison)
 	conformanceRecordComparison(t, conformanceReportPacketSet, comparison, &totals.Packet)
+	totals.recordReached(comparison)
 
 	return true
 }
@@ -883,6 +925,11 @@ func conformanceReportTotals(t *testing.T, totals conformanceRunTotals) {
 	// #307 states the count on every run. A count of 0 is the measurement that proves the
 	// register records the values this run produces.
 	t.Logf("the run reports %d stale register entries", totals.Stream.Stale+totals.Packet.Stale)
+
+	// #328 states the two counts on every run. `Accepted == |register|` proved the register
+	// before this check, and the two counts below replace that identity with a measurement.
+	t.Logf("the run reaches %d register keys and reports %d orphan register entries",
+		len(totals.Reached), totals.Orphan)
 
 	if deviations > 0 {
 		t.Errorf("the run reports %d deviations that the register does not hold, and Epic 5 closes them", deviations)
