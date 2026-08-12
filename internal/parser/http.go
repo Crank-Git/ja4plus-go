@@ -22,6 +22,34 @@ type HTTPRequest struct {
 var requestLineRe = regexp.MustCompile(`^(GET|POST|PUT|DELETE|HEAD|OPTIONS|CONNECT|TRACE|PATCH)\s+(\S+)\s+(HTTP/\d+\.\d+)`)
 var headerLineRe = regexp.MustCompile(`^([^:]+):\s*(.*)$`)
 
+// lineEndingRe matches the two line endings a sender uses.
+//
+// A sender ends a line with the two bytes `\r\n`, or with one line feed. A parser that
+// reads `\r\n` alone reads a line-feed request as one line, so it finds no header.
+// `testdata/foxio/pcap/http-empty-useragent.pcap` holds such a request, and FoxIO holds a
+// JA4H value for it. #286 records the defect, and the Python port fixed the same defect in
+// its issue #193.
+var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
+
+// headerBlockEnd returns the index of the empty line that ends the header block.
+// It returns -1 when the text holds no such line.
+//
+// It reads the two terminators `\r\n\r\n` and `\n\n`, and it returns the earlier of the two.
+// `ja4plus/utils/http_utils.py:43` of the Python port holds the same two, so both
+// implementations answer alike.
+//
+// TODO(#298): Read a terminator that mixes the two line endings. A block that ends
+// `\n\r\n` matches neither literal, and it reaches no value.
+func headerBlockEnd(text string) int {
+	end := -1
+	for _, terminator := range []string{"\r\n\r\n", "\n\n"} {
+		if index := strings.Index(text, terminator); index >= 0 && (end < 0 || index < end) {
+			end = index
+		}
+	}
+	return end
+}
+
 // IsHTTPRequest returns true if payload looks like an HTTP request.
 func IsHTTPRequest(payload []byte) bool {
 	if len(payload) == 0 {
@@ -42,6 +70,8 @@ func IsHTTPRequest(payload []byte) bool {
 
 // ParseHTTPRequest parses an HTTP request from raw TCP payload bytes.
 // Returns nil if the payload is not a valid HTTP request.
+// Returns nil when the header block has not ended, because a later segment carries a header
+// that changes the fingerprint. #286 records the early answer this rule replaces.
 // Headers are preserved in their original wire order in HeaderNames.
 func ParseHTTPRequest(payload []byte) *HTTPRequest {
 	if len(payload) == 0 {
@@ -55,6 +85,15 @@ func ParseHTTPRequest(payload []byte) *HTTPRequest {
 		return nil
 	}
 
+	blockEnd := headerBlockEnd(text)
+	if blockEnd < 0 {
+		return nil
+	}
+	// The body holds any byte, so the header parse reads the header block alone.
+	// A block that ends `\r\n\n` keeps the carriage return of the last line ending, so the
+	// last header line carries one trailing carriage return. The value trim below removes it.
+	text = text[:blockEnd]
+
 	req := &HTTPRequest{
 		Method:  match[1],
 		Path:    match[2],
@@ -63,7 +102,7 @@ func ParseHTTPRequest(payload []byte) *HTTPRequest {
 		Cookies: make(map[string]string),
 	}
 
-	lines := strings.Split(text, "\r\n")
+	lines := lineEndingRe.Split(text, -1)
 
 	for _, line := range lines[1:] {
 		if line == "" || strings.TrimSpace(line) == "" {

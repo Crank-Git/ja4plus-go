@@ -218,15 +218,11 @@ func ja4hPartA(req *parser.HTTPRequest) string {
 		refererFlag = "r"
 	}
 
-	// header count: exclude Cookie, Referer, and pseudo-headers (starting with ':').
-	headerCount := 0
-	for _, h := range req.HeaderNames {
-		lower := strings.ToLower(h)
-		if lower == "cookie" || lower == "referer" || strings.HasPrefix(h, ":") {
-			continue
-		}
-		headerCount++
-	}
+	// The count names the headers that part b hashes, so one filter serves both.
+	// A second filter here counted a header with an empty name that part b dropped.
+	// #286 records the asymmetry, and `ja4plus/fingerprinters/ja4h.py:419` of the Python
+	// port counts the same filtered list.
+	headerCount := len(ja4hHeaderNames(req))
 	if headerCount > 99 {
 		headerCount = 99
 	}
