@@ -283,6 +283,10 @@ func emitSSHWindow(conn *sshConnState, srcIP, dstIP string, srcPort, dstPort uin
 // It returns the values in the order the packet source opened the connections.
 // It returns an empty slice for a window that holds no SSH packet, so a second call returns
 // an empty slice.
+// Each result names the client of the connection as the source and the server as the
+// destination. No packet triggers this emission, so the result reads the endpoints of the
+// connection. A result that ProcessPacket returns names the sender of the packet that filled
+// the window, which is the direction that every other method of this library reports.
 // The method is opt-in. A caller who never calls it loses the open window, and the library
 // forces no flush.
 func (f *JA4SSHFingerprinter) CloseOpenWindows() []FingerprintResult {
@@ -339,6 +343,9 @@ func (f *JA4SSHFingerprinter) GetHASSHFingerprints() []HASSHResult {
 // Reset clears the connection table.
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
+// It keeps the arrival counter. The counter orders the connections that CloseOpenWindows
+// publishes, and a counter that returns to zero would order a new connection against a
+// stale number.
 func (f *JA4SSHFingerprinter) Reset() {
 	f.ensure()
 
