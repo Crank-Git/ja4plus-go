@@ -61,8 +61,8 @@ that the interface declares.
   then failed. **The member changes no library file, and it moves no fingerprint value.**
   The run reports 1623 matches, 680 deviations, 409 accepted deviations and 409 register
   keys before and after. Issue #303 holds the measurement.
-- No exported name, and one check in the conformance suite that compares the recorded
-  `ours` value of a register entry against the value the run produces. `compareConformance`
+- No exported name, and one conformance check that compares the recorded `ours` value of a
+  register entry against the run. `compareConformance`
   read the presence of the key alone before this change, at
   `conformance_engine_test.go:99`. An entry therefore stayed accepted after a later change
   moved the value it records. The suite now fails with one line for each stale entry.
@@ -72,8 +72,8 @@ that the interface declares.
   of `docs/specs/spec.md` gains the row `stale entry`. **The run reports 0 stale entries
   against the 409 register keys**, so the check blocks nothing today. **The check covers
   the value half alone, and never the orphan half.** A register key that the run never
-  reaches falls outside the key loop of the engine, and issue #307 asks for no second pass
-  over the register. Seven tests hold the check, and `go vet -tags conformance ./...`
+  reaches falls outside the key loop of the engine. Issue #307 asks for no second pass over
+  the register. Seven tests hold the check, and `go vet -tags conformance ./...`
   reported `result.Stale undefined` before the engine held the field. The worker changed
   one character of the first register entry, and the run then reported `the run reports 1
   stale register entries`. **The member moves no fingerprint value.** The four counts read
