@@ -22,7 +22,7 @@ import (
 // The value sits below 64, so a hop count and an observed time-to-live separate.
 const serverMeasurementTTL uint8 = 57
 
-// serverMeasurementInterval is the time between the SYN and the SYN-ACK of these tests.
+// serverMeasurementInterval is the interval between the SYN and the SYN-ACK of these tests.
 // The value is a round number of milliseconds, so the expected microsecond count is exact.
 const serverMeasurementInterval = 100 * time.Millisecond
 
@@ -119,11 +119,11 @@ func TestTheServerResultAndTheClientResultCarryOneType(t *testing.T) {
 	}
 }
 
-// PROVISIONAL ruling of #60 — part b holds the time-to-live that the packet carries, and the
-// value subtracts it from no initial time-to-live. `docs/specs/foxio/JA4L.md` R13 at :90-92
-// and R18 at :114-116 state the unanimous reading. A hop count would write `7` here, because
-// the image states the initial time-to-live 64 for this group. The maintainer confirms this
-// ruling or reverses it, and #60 is the reversal path.
+// PROVISIONAL ruling of #60 — part b writes the time-to-live that the packet carries,
+// unchanged. `docs/specs/foxio/JA4L.md` R13 at :90-92 and R18 at :114-116 state the
+// unanimous reading. A hop count would write `7` here, because the image states the initial
+// time-to-live 64 for this group. The maintainer confirms this ruling or reverses it, and
+// #60 is the reversal path.
 func TestTheServerValueWritesTheObservedTimeToLive(t *testing.T) {
 	results := serverValueOfATCPHandshake(t)
 
@@ -142,13 +142,14 @@ func TestTheServerValueWritesTheObservedTimeToLive(t *testing.T) {
 	}
 }
 
-// PROVISIONAL ruling of #60 — part a is half of the measured time, and no propagation factor
-// reaches it. `docs/specs/foxio/JA4L.md` R6 at :57-61 states that four implementations
-// divide by 2, and R22 at :137-139 states that no implementation computes a distance. The
-// propagation factor belongs to the distance formula that R19 states, and
-// `CalculateDistance` holds it. The propagation factor 1.6 would write `62500` here. The
-// maintainer confirms this ruling or reverses it, and #60 is the reversal path.
-func TestTheServerValueHalvesTheMeasuredTime(t *testing.T) {
+// PROVISIONAL ruling of #60 — part a is half of the interval between the two measurement
+// points, and no propagation factor reaches it. `docs/specs/foxio/JA4L.md` R6 at :57-61
+// states that four implementations divide by 2, and R22 at :137-139 states that no
+// implementation computes a distance. The propagation factor belongs to the distance formula
+// that R19 states, and `CalculateDistance` holds it. The propagation factor 1.6 would write
+// `62500` here. The maintainer confirms this ruling or reverses it, and #60 is the reversal
+// path.
+func TestTheServerValueHalvesTheIntervalBetweenTheMeasurementPoints(t *testing.T) {
 	results := serverValueOfATCPHandshake(t)
 
 	if len(results) != 1 {

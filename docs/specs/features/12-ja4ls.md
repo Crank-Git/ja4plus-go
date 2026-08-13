@@ -82,7 +82,7 @@ Neither amendment changes code, and `ja4ls_emission_test.go` holds each one as a
 - **FR-ja4ls-6** — A retransmitted SYN-ACK produces no second JA4LS value, under
   FR-parity-18.
 - **FR-ja4ls-7** — The second part of the value holds the time-to-live that the server
-  SYN-ACK carries. The value subtracts that number from no initial time-to-live.
+  SYN-ACK carries. The value writes that number unchanged.
 - **FR-ja4ls-8** — The first part is half of the interval between the two measurement
   points. No propagation factor reaches the value.
 - **FR-ja4ls-9** — A connection that reaches no server measurement point produces no JA4LS
