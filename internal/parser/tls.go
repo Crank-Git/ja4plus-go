@@ -344,13 +344,27 @@ func TLSVersionString(version uint16) string {
 	}
 }
 
-// ALPNValue computes the 2-char ALPN field for JA4 from ALPN protocols.
+// ALPNValue returns the two ALPN characters that JA4 and JA4S carry.
 //
-// Per FoxIO PR #277: if the first OR last byte of the first ALPN value is not
-// ASCII alphanumeric (0x30-0x39, 0x41-0x5A, 0x61-0x7A), the result is the
-// first and last character of the lowercase hex representation of the entire
-// first ALPN string. Otherwise it is the first byte followed by the last byte
-// of the ALPN string (or that byte twice for single-byte ALPNs).
+// It returns `00` when the protocol list is empty, and when the first ALPN value is empty.
+// It returns the first byte and the last byte when both bytes fall inside the printable
+// ASCII range 0x20-0x7E. It repeats the byte when the first ALPN value holds one
+// alphanumeric byte. It returns `99` in every other case.
+//
+// The FoxIO prose states a different rule, and a measurement contradicts the prose.
+// `technical_details/JA4.md:95` states the first and last character of the hexadecimal
+// form of the whole first ALPN value. The FoxIO vector `tls-non-ascii-alpn.pcapng` holds
+// `99` for the first ALPN value `0xba 0xad`, and `.claude/rules/parity.md` rule 1 states
+// that the vector decides. `docs/specs/foxio/JA4.md` R18 and R19 record the split, and
+// Reading 5 records the tshark text form that causes it.
+//
+// The port issues `Crank-Git/ja4plus#127`, `Crank-Git/ja4plus#141` and
+// `Crank-Git/ja4plus#162` hold the ruling, and `ja4_alpn_parity_test.go` holds the
+// separating packets. Issue #50 adopted the rule here.
+//
+// Every `%c` below writes a byte of 0x7E or lower, and each guard keeps that true. `%c`
+// reads its argument as a code point, so a byte above 0x7F would reach the fingerprint as
+// two UTF-8 bytes. A guard that widens past 0x7E must build the string from a byte slice.
 func ALPNValue(protocols []string) string {
 	if len(protocols) == 0 {
 		return "00"
@@ -363,26 +377,38 @@ func ALPNValue(protocols []string) string {
 	firstByte := first[0]
 	lastByte := first[len(first)-1]
 
-	if alpnIsAlnum(firstByte) && alpnIsAlnum(lastByte) {
-		if len(first) == 1 {
+	// The two FoxIO implementations dispute every one-byte value, so this case keeps the
+	// alphanumeric test. `rust/ja4/src/tls.rs:334` writes `0` for the absent last
+	// character. `python/ja4.py:276` leaves a one-byte value at one character, because its
+	// condition `len(alpn) > 2` is false.
+	if len(first) == 1 {
+		if alpnIsAlnum(firstByte) {
 			return fmt.Sprintf("%c%c", firstByte, firstByte)
 		}
+		return "99"
+	}
+
+	// Both FoxIO implementations pass a printable ASCII byte through, whether or not that
+	// byte is alphanumeric. The range stops at 0x7E, because the two implementations agree
+	// only inside it.
+	if alpnIsPrintableASCII(firstByte) && alpnIsPrintableASCII(lastByte) {
 		return fmt.Sprintf("%c%c", firstByte, lastByte)
 	}
 
-	// Non-alphanumeric path: hex-encode the entire first ALPN string and
-	// take its first and last characters.
-	hexStr := fmt.Sprintf("%x", []byte(first))
-	if hexStr == "" {
-		return "00"
-	}
-	return fmt.Sprintf("%c%c", hexStr[0], hexStr[len(hexStr)-1])
+	return "99"
 }
 
 // alpnIsAlnum reports whether b is an ASCII alphanumeric byte:
 // 0x30-0x39 ('0'-'9'), 0x41-0x5A ('A'-'Z'), or 0x61-0x7A ('a'-'z').
 func alpnIsAlnum(b byte) bool {
 	return (b >= '0' && b <= '9') || (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
+}
+
+// alpnIsPrintableASCII reports whether b falls inside the printable ASCII range
+// 0x20-0x7E. A byte outside that range reaches the two FoxIO implementations as tshark
+// text rather than as a byte, and they then disagree.
+func alpnIsPrintableASCII(b byte) bool {
+	return b >= 0x20 && b <= 0x7E
 }
 
 // parseSNI extracts the hostname from SNI extension data.

@@ -71,12 +71,23 @@ other, and neither one needs the other installed to prove it.
 The port's issues #127, #141, #162 and #522 hold these rulings. The FoxIO references
 disagree with each other, and each one reads its own tooling rather than the packet.
 
-- **FR-parity-8** — The ALPN field writes `99` when the first byte of the first ALPN value
-  is not alphanumeric.
-- **FR-parity-9** — The ALPN field writes `99` when a byte outside `0x20-0x7E` appears in
-  a position other than the first.
-- **FR-parity-10** — The ALPN field repeats the byte and writes `hh` when the first ALPN
-  value holds one byte.
+**The maintainer ruled the condition of FR-parity-8 and FR-parity-9 on 2026-08-12.** Each
+one read `not alphanumeric` before that ruling, and the FoxIO measurement contradicts that
+test. **Both FoxIO implementations pass a printable ASCII byte through**, whether or not
+that byte is alphanumeric, so `\x20\x61` reads ` a` in each one. Parity rule 1 gives the
+behaviour to FoxIO, so the requirement was wrong and the code was right. #50 records the
+measurement, and `Crank-Git/ja4plus#601` closes the same wording on the port side.
+
+- **FR-parity-8** — When the first byte of the first ALPN value falls outside the printable
+  ASCII range `0x20-0x7E`, the ALPN field writes `99`.
+- **FR-parity-9** — When the last byte of the first ALPN value falls outside the printable
+  ASCII range `0x20-0x7E`, the ALPN field writes `99`. **The last byte is the one position
+  other than the first that the field reads.** A byte outside the range in a middle position
+  writes no character. The first ALPN value `\x30\xab\xcd\x31` writes `01`.
+- **FR-parity-10** — When the first ALPN value holds one alphanumeric byte, the ALPN field
+  repeats the byte and writes `hh`. **This requirement keeps the alphanumeric test**, because
+  the two FoxIO implementations dispute every one-byte value. When a one-byte value falls
+  outside the alphanumeric ranges, the field writes `99`.
 - **FR-parity-11** — A test builds one packet for each of FR-parity-8, FR-parity-9 and
   FR-parity-10, and asserts the value.
 - **FR-parity-12** — `docs/specs/foxio/JA4.md` records that FoxIO Python writes `U+FFFD`
@@ -314,10 +325,13 @@ what the CHANGELOG records.
 
 ## Open questions
 
-1. **What does the ALPN field write when the first ALPN value is empty?** The port ruled
-   on a one-byte value and on a non-alphanumeric byte, and no ruling covers a zero-byte
-   value. This project must not invent an answer alone. The maintainer rules once, and the
-   ruling lands in both repositories.
+1. ~~**What does the ALPN field write when the first ALPN value is empty?**~~ **Closed on
+   2026-08-12. The answer is `00`.** The port ruled on a one-byte value and on a byte
+   outside the printable ASCII range `0x20-0x7E`, and no ruling covered a zero-byte value.
+   **The question needed a reading and not a ruling.** `technical_details/JA4.md:93` states
+   the rule, and `Reading 17` of `docs/specs/foxio/JA4.md` records it. The `R9` section of
+   `docs/specs/spec.md` holds the closure and the evidence, and the question blocks nothing
+   because #50 built FR-parity-8, FR-parity-9 and FR-parity-10.
 2. **Does the drift check belong in this repository at all?** FR-parity-57 commits a copy
    of another repository's document, which will go stale. The alternative is a scheduled
    workflow that reads the port and opens an issue, which is a network call in CI rather
