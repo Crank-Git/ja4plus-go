@@ -3590,5 +3590,45 @@
     "theirs": "",
     "ruling": "#375",
     "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "tls-handshake.pcapng/38/JA4S_r.2",
+    "capability": false,
+    "ours": "t130200_1302_002b,0033",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S_r value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/41/JA4S_r.2",
+    "capability": false,
+    "ours": "t130200_1302_002b,0033",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S_r value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/42/JA4S_r.2",
+    "capability": false,
+    "ours": "t130200_1302_002b,0033",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S_r value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/44/JA4S_r.2",
+    "capability": false,
+    "ours": "t130200_1302_002b,0033",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S_r value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/45/JA4S_r.2",
+    "capability": false,
+    "ours": "t130200_1302_002b,0033",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S_r value that the per-stream vector does not hold."
   }
 ]
