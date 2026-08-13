@@ -203,14 +203,20 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 	// entry not at all, so the entry ages from the tenth retransmission. The port holds
 	// the same guard at `ja4plus/fingerprinters/ja4ts.py:161` of tag `v1.1.0`.
 	//
-	// The two references split on the packet after the cap, and #369 asks the maintainer
-	// to rule. Wireshark stores no later time at
-	// `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen last time for the
-	// RST delay at `wireshark/source/packet-ja4.c:694`, which is the behavior below. Zeek
-	// assigns `last_ts` on every SYN-ACK at `zeek/ja4t/main.zeek:183`, and it then stops
-	// setting the next packet threshold at `zeek/ja4t/main.zeek:185-189`, so it observes
-	// no later packet of the connection and writes no reset value at all. No capture of
-	// the corpus reaches an eleventh SYN-ACK, so no vector separates the two.
+	// The maintainer ruled this question on 2026-08-13, under #369 question 2. This
+	// library reads the eleventh timestamp for the reset delay, and the ruling keeps that
+	// behavior. The port reads the eleventh timestamp too, under the port's issue #246.
+	//
+	// Three implementations hold three readings. Wireshark stores no time after the tenth
+	// at `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen tenth time at
+	// `wireshark/source/packet-ja4.c:694`. This library reads the eleventh time instead.
+	// Zeek assigns `last_ts` on every SYN-ACK at `zeek/ja4t/main.zeek:183`. It then stops
+	// the next packet threshold at `zeek/ja4t/main.zeek:185-189`. So it observes no RST of
+	// such a connection, and it writes no reset value.
+	//
+	// No capture of the FoxIO corpus reaches an eleventh SYN-ACK, so
+	// `TestJA4TS_ReadsTheEleventhSynAckForTheResetDelayPastTheCap` is the one record of
+	// the ruling. #369 states the reversal path.
 	if len(conn.times) <= maxJA4TSDelays {
 		conn.times = append(conn.times, now)
 	}
