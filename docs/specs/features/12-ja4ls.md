@@ -125,10 +125,33 @@ requirement therefore states what the library does**, and FR-ja4ls-12 states the
 ### Conformance
 
 - **FR-ja4ls-21** — The conformance harness compares every published JA4LS value.
-- **FR-ja4ls-22** — A JA4LS value that the harness cannot compare, because the reference
-  file holds no key, carries a register entry under FR-parity-22.
+- **FR-ja4ls-22** — A per-stream JA4LS value that the harness cannot compare, because the
+  reference file holds no key, carries a register entry under FR-parity-22.
 - **FR-ja4ls-23** — `docs/specs/foxio/JA4L.md` states that no image specifies JA4LS, and
   names the sources that do.
+
+**FR-ja4ls-22 carries a PROVISIONAL scope decision of #63, made on 2026-08-13.** The
+requirement named both vector sets before that decision. **The decision is a scope decision
+and never a ruling.** It writes no register entry, and it states no rule about a fingerprint
+value, so it reaches nothing that `.claude/rules/rulings.md` reserves to the maintainer.
+
+**A reading explains the per-stream set, and no reading explains the per-packet set.**
+`python/ja4.py:340` at the pin holds `delete_keys(['JA4L-S', 'JA4L-C'], final)`, under the
+guard `if 'ja4l' not in output_types:` at :339. That pair states why a per-stream reference
+file publishes no JA4L key. Ruling #361 registered 24 such uncovered values on 2026-08-13,
+and each entry names #361. **No reading covers the Wireshark generator.**
+
+**#376 owns the uncovered per-packet JA4LS values, and #376 is open at `status:ready`.** Its
+body states `Write no register entry until the cause is read.` A later issue writes those
+entries once #376 reads why the Wireshark generator publishes no JA4L key. **#376 records
+that an uncovered value fails no gate.** The run of #63 counts 33 uncovered per-packet JA4LS
+values, and `testdata/deviations.json` holds no key whose method is `JA4LS`.
+
+**This slice adds no entry to `testdata/deviations.json`.** The register holds 449 entries
+before this slice, and 449 after it.
+
+**The reversal path is issue comment 5276074116 of #63.** The maintainer reverses this scope
+by a ruling, and that ruling restores the per-packet set to FR-ja4ls-22.
 
 ## User flows
 

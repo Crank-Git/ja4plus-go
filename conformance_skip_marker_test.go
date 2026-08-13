@@ -310,7 +310,10 @@ func TestTheCIWorkflowCountsTheConformanceTaggedFiles(t *testing.T) {
 	// The comment writes the count as a word, and the glob above holds the count. This
 	// sentence states no number, because a number here goes stale for the same reason the
 	// workflow comment does.
-	word := map[int]string{3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine"}
+	word := map[int]string{
+		3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
+		10: "ten", 11: "eleven", 12: "twelve",
+	}
 
 	if count[1] != word[tagged] {
 		t.Errorf("the workflow comment counts %s tagged test files, and the repository holds %d", count[1], tagged)
