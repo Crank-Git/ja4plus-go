@@ -3758,5 +3758,869 @@
     "theirs": "",
     "ruling": "#387",
     "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S value that the per-stream vector does not hold."
+  },
+  {
+    "key": "latest.pcapng/172/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_a3c882e23515_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/172/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/172/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/5/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_a3c882e23515_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/5/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/5/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/65/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_a3c882e23515_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/65/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "latest.pcapng/65/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1025/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1025/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1025/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1026/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1026/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1026/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1068/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1068/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1068/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1069/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1069/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1069/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/108/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/108/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/108/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1081/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1081/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1081/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1082/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1082/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1082/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1112/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1112/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1112/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1114/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1114/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/1114/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/117/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/117/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/117/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/15/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/15/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/15/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/17/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/17/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/17/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/32/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/32/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/32/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/416/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/416/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/416/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/422/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/422/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/422/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/43/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/43/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/43/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/445/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/445/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/445/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/451/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/451/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/451/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/464/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/464/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/464/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/478/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/478/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/478/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/499/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/499/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/499/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/510/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/510/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/510/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/525/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/525/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/525/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/537/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_a3c882e23515_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/537/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/537/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/540/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/540/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/540/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/555/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/555/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/555/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/583/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/583/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/583/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/79/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/79/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/79/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/80/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_2ba00a982a15_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/80/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "ssh2.pcapng/80/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/47/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_1ae2aaf984bf_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/47/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_Host,Content-Length,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/47/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_Host,Content-Length,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/48/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_1ae2aaf984bf_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/48/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_Host,Content-Length,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/48/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn050000_Host,Content-Length,MAN,MX,ST__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/49/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_39fc906f0f96_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/49/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,ST,MX__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/49/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,ST,MX__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/50/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_39fc906f0f96_000000000000_000000000000",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/50/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,ST,MX__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "tls3.pcapng/50/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ms11nn040000_HOST,MAN,ST,MX__",
+    "ruling": "#441",
+    "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
   }
 ]
