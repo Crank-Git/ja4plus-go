@@ -34,9 +34,8 @@ Each one reads and writes files of this worktree only. None of them writes a sha
 **`.claude/settings.json` holds `Bash(git stash:*)` in `permissions.deny`.** #355 added
 that entry, and the maintainer approved it on 2026-08-12. **This project keeps the entry,
 and it narrows it for no directory.** A permission pattern reads a command and not a
-working directory, so an entry that allows the main checkout and refuses a worktree is not
-expressible. `claude_settings_deny_test.go` holds the entry, and it fails when a later
-edit removes it.
+working directory. So no entry allows the main checkout and refuses a worktree.
+`claude_settings_deny_test.go` holds the entry, and it fails when a later edit removes it.
 
 **git tracks `.claude/settings.json`, so every worktree of this repository holds a
 checkout of it.** A measurement in a linked worktree records both facts:

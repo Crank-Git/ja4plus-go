@@ -86,14 +86,14 @@ func TestClaudeSettingsAllowsEveryOtherGitCommand(t *testing.T) {
 
 // theWorktreesRule is the file that states what an agent may run against the stash.
 //
-// The deny entry and this file must agree. #419 records the round where they did not:
-// the file instructed a reader to drop a stash from the main checkout, and the deny entry
+// The deny entry and this file must agree. #419 records the round where they did not.
+// The file instructed a reader to drop a stash from the main checkout, and the deny entry
 // refuses that command. No test read both files, so no test saw the disagreement.
 //
 // The two tests below read the file for the reconciliation, and never for the absence of
-// a command name. The file holds eleven watched measurements that name `git stash`, and
+// a command name. A watched measurement in that file names `git stash`, and
 // `.claude/rules/rulings.md` states that copied evidence stays verbatim. A test that
-// declined the command name would force a rewording of that evidence.
+// declined the command name would force a change to that evidence.
 const theWorktreesRule = ".claude/rules/worktrees.md"
 
 // theMaintainerActionSentence names the person who runs each recovery command.
