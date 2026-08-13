@@ -31,7 +31,7 @@ These are not covered by the commands above. Check each one by hand.
 | Every entry in `docs/audit/conformance-exclusions.md` carries the maintainer's acceptance, by name and by date. | Read the file. |
 | `testdata/deviations.json` holds no entry whose comparison now matches. | `make conformance` fails if one does. |
 | Every register row of `features/08-python-parity.md` is closed. | Read the feature file. |
-| No tracked document states a count of ten methods. | `go test -run TestMethodCount ./...` |
+| No tracked document applies the count of ten to methods. | `go test -run TestMethodCount ./...` |
 | Every `LIVED` mutation of the most recent sweep is settled. | Read `docs/mutation_settlements/`. |
 | The README links to the documentation site, and the link resolves. | Read and follow it. |
 

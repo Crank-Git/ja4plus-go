@@ -133,25 +133,21 @@ func TestReadmeShowsBothPatternsAsCompilingGoCode(t *testing.T) {
 	}
 }
 
-func TestConcurrencyDocumentationCountsFingerprintersAndNotMethods(t *testing.T) {
-	// `CLAUDE.md` states that the count of ten covers fingerprinters and never methods,
-	// because JA4LFingerprinter writes both JA4L and JA4LS. Ten fingerprinters carry
-	// eleven methods, so a document that applies the count of ten to methods is wrong.
-	files := []string{"processor.go", "doc.go", "README.md", "concurrency_doc_test.go"}
-	for _, file := range concurrencyFingerprinterTypes() {
-		files = append(files, file)
-	}
-
-	// The phrase is built from parts, so this test does not match itself.
-	phrase := "ten " + "methods"
-
-	for _, file := range files {
-		text := strings.ToLower(readConcurrencyFile(t, file))
-		if strings.Contains(text, phrase) {
-			t.Errorf("%s states %q; the count of ten covers fingerprinters", file, phrase)
-		}
-	}
-}
+// The method-count check of this file was removed on 2026-08-13, and
+// `method_count_test.go` holds it now. The cross-member review of the Epic 12 batch found
+// that the two checks enforced one rule with two meanings, which `.claude/rules/ste.md`
+// rule 6 bars.
+//
+// The removed check read fourteen files, reported no line number, and exempted no
+// quotation. `TestMethodCountAppliesElevenToMethodsAndTenToFingerprinters` reads every
+// tracked document, names the file and the line, and exempts a phrase that a backtick or a
+// double quotation mark delimits on both sides. So a page that quotes the forbidden form as
+// the rule passed the new check and failed the old one.
+//
+// One thing the removed check read that the new one does not: the whole text of a Go file,
+// including a string literal. The new check masks a Go file to its comments through
+// `go/parser`, which is deliberate, because a literal that carries the phrase is output text
+// rather than a statement about this project.
 
 // docCommentOf returns the text of the file up to the declaration. The doc comment of the
 // declaration is the last part of that text, so a search over it finds the statement.

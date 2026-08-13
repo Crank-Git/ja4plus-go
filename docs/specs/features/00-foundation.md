@@ -74,8 +74,8 @@ already exists, and adds only what is missing.
   30 seconds.
 - **FR-foundation-19** — The repository holds a benchmark for `Processor.ProcessPacket`.
 - **FR-foundation-20** — The repository holds one benchmark for each method the library
-  implements today, which is ten. **`features/12-ja4ls.md` adds the eleventh**, and Epic 12
-  adds its benchmark.
+  implements. `benchmark_test.go` holds ten benchmarks, and JA4LS has none. **Epic 12
+  built JA4LS, and the JA4LS benchmark stays open.**
 - **FR-foundation-21** — `CHANGELOG.md` exists and follows the Keep a Changelog format.
 - **FR-foundation-22** — `CHANGELOG.md` records `v0.1.0`, `v0.2.0` and `v0.3.0` from the
   git history.
@@ -164,8 +164,8 @@ The Go toolchain interfaces are `go build`, `go test`, `go test -bench`,
 - [ ] `make conformance` without a corpus prints a message that names `make corpus`.
 - [ ] `make cover` prints a total coverage percentage.
 - [ ] `make bench` reports a time and an allocation count for `Processor.ProcessPacket`.
-- [ ] `make bench` reports a result for each of the ten methods the library implements
-      today. Epic 12 raises the count to eleven.
+- [ ] `make bench` reports a result for each method the library implements.
+      `benchmark_test.go` holds ten benchmarks, and the JA4LS benchmark stays open.
 - [ ] `CHANGELOG.md` holds one section for each of `v0.1.0`, `v0.2.0` and `v0.3.0`.
 - [ ] A pull request that targets `dev` starts the CI workflow.
 

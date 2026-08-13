@@ -20,6 +20,7 @@ JA4H
 JA4T
 JA4TS
 JA4L
+JA4LS
 JA4X
 JA4SSH
 JA4D
@@ -37,9 +38,9 @@ different sets:
 - `README.md:293` names nine methods.
 - `LICENSE:3` names thirteen methods, and it spells the scanner `JA4SScan`.
 
-The FoxIO record at `README.md:293` names nine methods, and the list above also holds nine
-names. **The two sets are different.** The FoxIO nine holds JA4LS and JA4TScan, and it
-holds neither JA4D nor JA4D6.
+The FoxIO record at `README.md:293` names nine methods, and the list above holds ten names.
+**The two sets are different.** The FoxIO nine holds JA4TScan, and it holds neither JA4D
+nor JA4D6.
 
 Read the FoxIO records for the FoxIO list.
 

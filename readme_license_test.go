@@ -34,8 +34,8 @@ var readmeLicenseBadge = regexp.MustCompile(`\[!\[License\]\(([^)]*)\)\]\(([^)]*
 var sentenceEnd = regexp.MustCompile(`[.!?](\s|$)`)
 
 // unimplementedMethods holds the JA4+ methods this library does not implement today.
-// JA4LS joins `noticeMethods` when Epic 12 lands, and issue #60 makes that edit.
-var unimplementedMethods = []string{"JA4LS", "JA4TScan", "JA4SScan", "JA4E"}
+// Epic 12 moved JA4LS into `noticeMethods`, so this list no longer names it.
+var unimplementedMethods = []string{"JA4TScan", "JA4SScan", "JA4E"}
 
 // readmeLicenseSection returns the body of the README License section.
 // It fails the test when the README holds no License heading.

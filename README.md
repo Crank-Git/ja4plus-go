@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/logo.png" width="300"></p>
 
-A Go library and CLI for JA4+ network fingerprinting. Implements ten JA4+ methods for identifying and classifying network traffic based on TLS, TCP, HTTP, SSH, X.509, and DHCP characteristics. Supports QUIC Initial packet parsing.
+A Go library and CLI for JA4+ network fingerprinting. Implements eleven JA4+ methods for identifying and classifying network traffic based on TLS, TCP, HTTP, SSH, X.509, and DHCP characteristics. Supports QUIC Initial packet parsing.
 
 JA4+ is a set of network fingerprinting standards created by [FoxIO](https://foxio.io). This library is an independent Go implementation of the published specification. For the original spec, see the [FoxIO JA4+ repository](https://github.com/FoxIO-LLC/ja4).
 
@@ -18,6 +18,7 @@ JA4+ is a set of network fingerprinting standards created by [FoxIO](https://fox
 | JA4T | TCP | Client OS fingerprint from SYN packets |
 | JA4TS | TCP | Server fingerprint from SYN-ACK packets |
 | JA4L | TCP/QUIC | Light distance and latency estimation |
+| JA4LS | TCP/QUIC | Server light distance and latency estimation |
 | JA4X | X.509 | Certificate structure fingerprint from OID sequences |
 | JA4SSH | SSH | Session type classification from traffic patterns |
 | JA4D | DHCPv4 | Per-packet DHCPv4 fingerprint (FoxIO PR #267/#270) |
@@ -367,7 +368,7 @@ go test -v -race ./...
 ## License
 
 The BSD 3-Clause license in [LICENSE](LICENSE) covers the original Go code, and FoxIO licenses the JA4 method under [LICENSE-JA4](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE-JA4).
-[FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE) covers JA4S, JA4H, JA4T, JA4TS, JA4L, JA4X, JA4SSH, JA4D and JA4D6, and it permits non-commercial use only.
+[FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE) covers JA4S, JA4H, JA4T, JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6, and it permits non-commercial use only.
 A commercial user contacts [FoxIO](https://foxio.io) for those methods, and [NOTICE](NOTICE) holds the FoxIO terms.
 
 ## Acknowledgments
