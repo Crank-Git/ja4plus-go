@@ -10,12 +10,19 @@ count each cause reaches, measured against the corpus at the pin of `testdata/fo
 **Every count of this page comes from one run of `make conformance` in one worktree, on
 2026-08-13, against the corpus at `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.**
 
-**This page builds no candidate change, and #459 bars a Go edit.** So each yield below
-carries one of two labels. A **proved** yield reads the vector alone: the value the vector
-holds on the deviating frame is byte-identical to a value that the library already produces
-and that the vector already accepts on another frame of the same capture. An **attributed**
-yield names the deviations one cause holds, and it states what a candidate change must
-still measure. **Never read an attributed yield as a proved one.**
+**This page builds no candidate change, and #459 bars a Go edit.** So the count each cause
+closes carries one of three labels.
+
+- A **proved** count reads the vector alone. The value the vector holds on the deviating
+  frame is byte-identical to a value that the library already produces. The vector already
+  accepts that value on another frame of the same capture.
+- An **attributed** count names the deviations one cause holds. The page then states what a
+  candidate change must still measure. **Never read an attributed count as a proved one.**
+- A **register** count is zero. The cause needs an entry in `testdata/deviations.json`, and
+  it needs no code change.
+
+**The `## Terms` table of `docs/specs/spec.md` declines the word `yield`**, because the
+`emit` row names it as a synonym. So this page writes `the count it closes`.
 
 ## The gate condition
 
@@ -52,10 +59,10 @@ records 14. The JA4T pair holds at 37 and JA4SSH holds at 16.
 | JA4S_r | | 7 | 6 and 7 |
 | **Total** | **65** | **67** | |
 
-**A reading that gives one number for five methods cannot be scheduled from**, so the table
-above is the schedulable form. **Epic #421 changed JA4SSH behaviour, so the JA4SSH figure of
-the epic is stale by construction.** The two figures agree at 16, and that agreement is a
-measurement rather than a carried number.
+**Nobody schedules work from a reading that gives one number for five methods.** So the
+table above is the form that Epic #441 reads. **Epic #421 changed JA4SSH behaviour, so the
+JA4SSH figure of the epic is stale by construction.** The two figures agree at 16, and that
+agreement is a measurement rather than a carried number.
 
 ### The count per capture
 
@@ -91,7 +98,7 @@ entry that names JA4T, and no entry that names JA4TS.
 
 ## The seven causes, and the count each one reaches
 
-| N | Cause | Deviations | Yield | Kind |
+| N | Cause | Deviations | Count it closes | Label |
 |---|---|---|---|---|
 | 1 | The library reads no TCP header that an ICMP error message quotes. | 31 | 31 | Proved |
 | 2 | The library returns no JA4TS value on a reset of a connection that holds one SYN-ACK. | 6 | 6 | Proved |
@@ -134,13 +141,13 @@ none.
 the tree, and `wireshark/source/packet-ja4.c:1266` sets `syn = 1` for the flag byte `0x02`.
 `wireshark/source/packet-ja4.c:1583-1584` then writes `hf_ja4t` for that frame.
 
-### The yield is proved
+### The count is proved
 
 **The vector holds one JA4T value for the 31 deviating frames, and it is
 `64240_2-1-3-1-1-4_1460_8`.** The vector holds that same value on 43 of the 44 frames of the
 capture that the library already matches. The quoted header is a copy of the client SYN
-header, so a read of the quoted header produces the value the vector holds. **The yield is
-31.**
+header, so a read of the quoted header produces the value the vector holds. **The count it
+closes is 31.**
 
 ### This cause holds a reference split, and the maintainer rules it
 
@@ -205,12 +212,12 @@ size, the window scale and the option list from the stored connection state, and
 `hf_ja4ts`. `wireshark/source/packet-ja4.c:684` guards the delay list and the reset letter on
 `conn->syn_ack_count > 1`, and **the four-part value sits outside that guard**.
 
-### The yield is proved
+### The count is proved
 
 `https3-301-get.pcap` holds one JA4TS value, `14240_2-4-8-1-3_1436_10`. The vector holds it
 on frame 2, which is the SYN-ACK, and the library matches that frame. The vector holds the
 same string on frames 20, 21 and 23, which are the three reset frames. The same identity
-holds for `ssh2.pcapng` and for `browsers-x509.pcapng`. **The yield is 6.**
+holds for `ssh2.pcapng` and for `browsers-x509.pcapng`. **The count it closes is 6.**
 
 **One condition of the identity.** `wireshark/source/packet-ja4.c:1604-1606` appends the
 stored option list to the option list of the reset packet. Each of the 6 reset packets
@@ -275,7 +282,7 @@ ssh-r.pcap/339/JA4SSH.1  expected: "c48s21_c6s5_c4s5"  produced: ""
 library matches frame 335 and produces nothing on frame 339.
 
 **The library starts a new window at every emission.** `emitSSHWindow` of `ja4ssh.go` clears
-`clientSizes`, `serverSizes`, `clientACKs` and `serverACKs` after it builds the value, and it
+`clientSizes`, `serverSizes`, `clientACKs` and `serverACKs` after it builds the value. It
 reports false for a window that holds no SSH packet. So the second FIN+ACK packet reaches an
 empty window, and the library returns nothing.
 
@@ -302,7 +309,7 @@ the ACK flag, and `python/ja4.py:374-376` computes the value and deletes the cac
 later packet of the connection opens a new entry, and the second FIN+ACK packet then emits a
 window whose packet counts are zero.
 
-### The yield is attributed, and a candidate change must measure three things
+### The count is attributed, and a candidate change must measure three things
 
 **12 is the count this cause holds.** A candidate change that emits at every FIN+ACK packet
 and clears no counter must still measure each of these.
@@ -316,8 +323,8 @@ and clears no counter must still measure each of these.
    ruling #223, at `ssh-r.pcap/1/JA4SSH.1`, `ssh-r.pcap/2/JA4SSH.1`,
    `ssh-scp-1050.pcap/0/JA4SSH.3` and `ssh-scp-1050.pcap/0/JA4SSH.4`. A change that adds a
    per-stream value renumbers the values that follow it, so an entry can become stale.
-   **`.claude/rules/parity.md` states that a closed deviation left in the file fails the
-   suite.**
+   **`.claude/rules/parity.md` `## Every ruling carries a register entry or a test` states
+   that a closed deviation left in the file fails the suite.**
 
 ### This cause reaches a maintainer ruling
 
@@ -354,8 +361,8 @@ R8. So this reading records the evidence and decides nothing.
   **A change here that the port does not make opens a parity difference on 12 values.**
 - **The cost is one branch and one risk.** The emission path keeps the counters for a FIN+ACK
   packet and clears them for a 200-packet boundary. **A connection that never closes then
-  holds a window that no rule clears**, and `.claude/rules/concurrency.md` requires a removal
-  path for every state map.
+  holds a window that no rule clears**, and `.claude/rules/concurrency.md` `## Rules`
+  states that a new state map has a removal path.
 
 ---
 
@@ -404,7 +411,7 @@ the payload vectors at `zeek/ja4ssh/main.zeek:140`. Rust counts the SSH packet c
 `rust/ja4/src/ssh.rs:35`. Python counts a packet whose protocol list holds `ssh` at
 `python/ja4ssh.py:99`.
 
-### The yield is attributed, and this cause composes with cause 3
+### The count is attributed, and this cause composes with cause 3
 
 **2 is the count this cause holds on its own.** It also decides the value of the six
 `sshv1.pcap` and `v6.pcap` deviations of cause 3, because a republished window republishes
@@ -419,8 +426,8 @@ whatever the count holds. **Neither cause closes those six on its own.**
   `c64s64_c6s5_c4s5`. The two differ in part a alone. **A change to the packet selection can
   move part a**, so a candidate change measures the register before it lands.
 - **The cost is one test.** The library reads a rule that reproduces the `ssh.direction`
-  label. **No FoxIO source states that rule in words**, so the candidate change needs a
-  measurement across every SSH capture of the corpus and not one capture.
+  label. **No FoxIO source states that rule in words.** So the candidate change needs a
+  measurement across every SSH capture of the corpus, and never one capture.
 
 ---
 
@@ -464,8 +471,8 @@ names all three. **So the difference is a decline of a Python reference limit, a
 - **The two entries are `capability: false`**, because the library produces a value and the
   vector holds none.
 - **The count depends on cause 3.** A change that closes cause 3 renumbers the per-stream
-  values of these two captures, so the two entries are measured after cause 3 lands and never
-  before.
+  values of these two captures. So a later worker measures the two entries after cause 3
+  lands, and never before.
 
 ---
 
@@ -503,7 +510,7 @@ no surplus JA4S value in those captures, so the first segment produces none eith
 **The parser is not the cause.** The library matches 83 of the 84 `ja4.ja4s` frames of
 `tls-handshake.pcapng`.
 
-### The yield is attributed, and a candidate change opens about as many deviations as it closes
+### The count is attributed, and a candidate change opens about as many deviations as it closes
 
 **The per-stream vector holds no JA4S key for any of the 6 streams.** A measurement of the
 six per-stream entries records the JA4S key list as empty for every one.
@@ -518,8 +525,8 @@ six per-stream entries records the JA4S key list as empty for every one.
 | `browsers-x509.pcapng` | 0 | present | none |
 
 **So a candidate change closes 12 per-packet deviations and opens about 12 per-stream
-deviations**, one JA4S key and one JA4S_r key for each of the 6 streams. **The net yield is
-about zero without a register entry**, and the shape is the shape of cause 4 of
+deviations**, one JA4S key and one JA4S_r key for each of the 6 streams. **So the cause closes about nothing without a register
+entry**, and the shape is the shape of cause 4 of
 `docs/audit/ja4h-deviation-cluster.md`.
 
 **This page states about 12 and not 12**, because it builds no candidate change. The exact
@@ -581,7 +588,7 @@ reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and t
   complete. `ja4plus/fingerprinters/ja4s.py:266` writes the proto character `q`.
 - **The register needs 2 new entries**, and **#467 owns `testdata/deviations.json`**. This
   page writes none.
-- **One question must be answered before anybody writes those entries.** The
+- **A reader answers one question before anybody writes those entries.** The
   `## What this reading does not answer` section states it.
 
 ---
