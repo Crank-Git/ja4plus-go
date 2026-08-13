@@ -248,7 +248,11 @@ func TestCleanupConnection_RemovesTheStateTableEntryOfTheNamedConnection(t *test
 				_, _ = fingerprinter.ProcessPacket(
 					buildTCPPacketWithSeq(t, server, client, 443, 40013, 1, []byte("not a record")))
 
-				return fingerprinter, func() int { return len(fingerprinter.streams) }
+				// The reassembler holds its stream table in an unexported field of
+				// another package, so the reflect walk reads the count.
+				return fingerprinter, func() int {
+					return auditStateFieldLengths("JA4XFingerprinter", fingerprinter)["JA4XFingerprinter.reassembler.streams"]
+				}
 			},
 			cleanup: func(fingerprinter Fingerprinter) {
 				fingerprinter.CleanupConnection(auditStateClientIP, 40013, auditStateServerIP, 443, "tcp")

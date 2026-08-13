@@ -264,9 +264,10 @@ that FR-parity-32 adds a line to.
 | `ja4l.go` | One value per connection, the part count, the protocol marker, the retransmission guard. |
 | `ja4ssh.go` | The window threshold, the mode field, the empty-window rule, `CloseOpenWindows`, `CloseConnectionWindow`. |
 | `ja4t.go`, `ja4ts.go` | The two-digit form, part e, the RST value, the JA4TS state table. |
-| `ja4x.go` | A test only. The behaviour already matches. |
+| `ja4x.go` | The stream reader. The tunnel rule already matched, and two defects gave the SOCKS4 tunnel no value: the reader concatenated the segments in arrival order, and it read the first handshake message of a TLS record alone. |
 | `ja4d.go`, `ja4d6.go` | The repeated option 57, the BOOTP rule, the relay message. |
-| `ja4h.go` | A test only. `ja4h.go:171-173` already matches. |
+| `ja4h.go` | A test only. `ja4h.go:201-205` already reads the first two characters of the method token. |
+| `internal/parser/http.go` | The request-line pattern reads any method token, and `IsHTTPRequest` admits any method that a whole request line names. The nine-method list gave `PROPFIND` no JA4H value, so FR-parity-47 needs this file. |
 | `types.go` | `WindowCloser` declares `CloseOpenWindows`, `ConnectionWindowCloser` declares `CloseConnectionWindow`, and `Fingerprinter` does not change. |
 | `processor.go` | `Processor.CloseOpenWindows`, `Processor.CloseConnectionWindow`. |
 | `sync_processor.go` | `SyncProcessor.CloseOpenWindows`, `SyncProcessor.CloseConnectionWindow`. `features/03-concurrency.md` states the `SyncProcessor` contract. |
