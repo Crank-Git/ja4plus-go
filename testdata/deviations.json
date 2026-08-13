@@ -3630,5 +3630,45 @@
     "theirs": "",
     "ruling": "#387",
     "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S_r value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/38/JA4S.2",
+    "capability": false,
+    "ours": "t130200_1302_a56c5b993250",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/41/JA4S.2",
+    "capability": false,
+    "ours": "t130200_1302_a56c5b993250",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/42/JA4S.2",
+    "capability": false,
+    "ours": "t130200_1302_a56c5b993250",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/44/JA4S.2",
+    "capability": false,
+    "ours": "t130200_1302_a56c5b993250",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S value that the per-stream vector does not hold."
+  },
+  {
+    "key": "tls-handshake.pcapng/45/JA4S.2",
+    "capability": false,
+    "ours": "t130200_1302_a56c5b993250",
+    "theirs": "",
+    "ruling": "#387",
+    "reason": "The stream carries a HelloRetryRequest and a ServerHello, so the library emits a second JA4S value that the per-stream vector does not hold."
   }
 ]
