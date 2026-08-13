@@ -33,21 +33,37 @@ const tlsHandshakeCertificate = 0x0b
 // One JA4XFingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4XFingerprinter struct {
-	streams        map[string][]byte
+	// reassembler orders the segments of one stream by sequence number.
+	//
+	// A capture stores the segments of a stream in the order the reader saw them, and that
+	// order is not the sequence order. `testdata/foxio/pcap/socks4-https.pcap` holds one
+	// 40-byte segment before the 1360-byte segment that precedes it, so a reader that
+	// concatenates in arrival order reads a TLS record header at the wrong offset and finds
+	// no certificate. `parser.TCPStreamReassembler` is the mechanism `ja4h.go:18` already
+	// uses, so JA4X reads one reassembler and never a second mechanism.
+	reassembler    *parser.TCPStreamReassembler
 	processedCerts map[string]struct{}
 	// certsByStream names the certificate hashes that each stream produced. It is the
 	// removal path of processedCerts, whose key is the certificate hash alone. Without
 	// this index CleanupConnection leaves every hash for the life of the process.
 	certsByStream map[string]map[string]struct{}
-	lastCleanup   time.Time
+	// streamBytes counts the payload bytes that each stream has added to the reassembler.
+	//
+	// `parser.TCPStreamReassembler` bounds the run that GetStream returns, and it bounds no
+	// stored segment. The buffer this reader replaced kept the last ja4xMaxStreamBytes
+	// bytes, so a long connection held a bounded amount. This counter keeps that bound: a
+	// stream above it is dropped, and a certificate chain never reaches one megabyte.
+	streamBytes map[string]int
+	lastCleanup time.Time
 }
 
 // NewJA4X creates a new JA4XFingerprinter.
 func NewJA4X() *JA4XFingerprinter {
 	return &JA4XFingerprinter{
-		streams:        make(map[string][]byte),
+		reassembler:    parser.NewTCPStreamReassembler(ja4xMaxStreams, ja4xMaxStreamBytes),
 		processedCerts: make(map[string]struct{}),
 		certsByStream:  make(map[string]map[string]struct{}),
+		streamBytes:    make(map[string]int),
 		lastCleanup:    time.Now(),
 	}
 }
@@ -56,8 +72,8 @@ func NewJA4X() *JA4XFingerprinter {
 // A caller who writes `var f JA4XFingerprinter` reaches a nil map, and a write to a nil
 // map panics. Every entry point calls this method first.
 func (f *JA4XFingerprinter) ensure() {
-	if f.streams == nil {
-		f.streams = make(map[string][]byte)
+	if f.reassembler == nil {
+		f.reassembler = parser.NewTCPStreamReassembler(ja4xMaxStreams, ja4xMaxStreamBytes)
 	}
 
 	if f.processedCerts == nil {
@@ -66,6 +82,10 @@ func (f *JA4XFingerprinter) ensure() {
 
 	if f.certsByStream == nil {
 		f.certsByStream = make(map[string]map[string]struct{})
+	}
+
+	if f.streamBytes == nil {
+		f.streamBytes = make(map[string]int)
 	}
 
 	if f.lastCleanup.IsZero() {
@@ -96,18 +116,22 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 
 	streamID := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 
-	// Append payload to stream buffer.
-	stream := f.streams[streamID]
-	stream = append(stream, payload...)
-
-	// Enforce max stream size.
-	if len(stream) > ja4xMaxStreamBytes {
-		stream = stream[len(stream)-ja4xMaxStreamBytes:]
-	}
-	f.streams[streamID] = stream
+	// The reassembler orders the segments by sequence number and returns the contiguous
+	// run that starts at the lowest one.
+	f.reassembler.AddSegment(streamID, tcp.Seq, payload)
+	f.streamBytes[streamID] += len(payload)
+	stream := f.reassembler.GetStream(streamID)
 
 	// Search for certificates in the accumulated stream data.
 	results := f.findCertificatesInStream(streamID, stream, packet, srcIP, dstIP, srcPort, dstPort)
+
+	// A server sends the certificate chain in the first few kilobytes of the session, so a
+	// stream above the bound carries application data and no certificate. The drop bounds
+	// the memory of a long connection.
+	if f.streamBytes[streamID] > ja4xMaxStreamBytes {
+		f.reassembler.RemoveStream(streamID)
+		delete(f.streamBytes, streamID)
+	}
 
 	// Periodic cleanup.
 	now := time.Now()
@@ -128,9 +152,10 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 func (f *JA4XFingerprinter) Reset() {
 	f.ensure()
 
-	f.streams = make(map[string][]byte)
+	f.reassembler = parser.NewTCPStreamReassembler(ja4xMaxStreams, ja4xMaxStreamBytes)
 	f.processedCerts = make(map[string]struct{})
 	f.certsByStream = make(map[string]map[string]struct{})
+	f.streamBytes = make(map[string]int)
 	f.lastCleanup = time.Now()
 }
 
@@ -142,8 +167,10 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 
 	fwd := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
-	delete(f.streams, fwd)
-	delete(f.streams, rev)
+	f.reassembler.RemoveStream(fwd)
+	f.reassembler.RemoveStream(rev)
+	delete(f.streamBytes, fwd)
+	delete(f.streamBytes, rev)
 
 	// certsByStream is the reverse lookup that processedCerts needs. The key of
 	// processedCerts is the certificate hash, so that set names no connection.
@@ -156,20 +183,27 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	}
 }
 
-// cleanup prunes streams and processed certs to prevent unbounded growth.
+// cleanup prunes the certificate set and the byte counter to prevent unbounded growth.
+//
+// The reassembler bounds the count of its stream table, because it evicts the least recent
+// stream when the table reaches ja4xMaxStreams. **It bounds the bytes of one stream
+// nowhere**: `AddSegment` stores every segment, and `MaxBytes` truncates the run that
+// GetStream returns and never the stored segments. ProcessPacket holds that second bound
+// with the streamBytes counter.
 func (f *JA4XFingerprinter) cleanup() {
-	// Trim to max streams (keep most recent by deleting oldest).
-	if len(f.streams) > ja4xMaxStreams {
-		// Simple approach: clear all streams since we have no ordering info.
-		f.streams = make(map[string][]byte)
-	}
-
 	// Prune processed certs.
 	// certsByStream indexes the processedCerts set, so the reset of one resets the other.
 	// A stale index grows without a bound. It also removes a hash the set no longer holds.
 	if len(f.processedCerts) > ja4xMaxProcessedCerts {
 		f.processedCerts = make(map[string]struct{}, ja4xPrunedCerts)
 		f.certsByStream = make(map[string]map[string]struct{})
+	}
+
+	// The reassembler evicts the least recent stream on its own, and it names no evicted
+	// key. The byte counter therefore keeps an entry for a stream the reassembler dropped,
+	// and that entry leaks in a long-running monitor.
+	if len(f.streamBytes) > ja4xMaxStreams {
+		f.streamBytes = make(map[string]int)
 	}
 }
 
@@ -218,9 +252,13 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 			break // Incomplete record, wait for more data.
 		}
 
-		// Check if this is a Certificate message (handshake type 0x0b).
-		if data[i+5] == tlsHandshakeCertificate {
-			certs := extractCertificates(data[i : i+5+recordLength])
+		// One TLS record carries several handshake messages, so the reader walks every
+		// message of the record. A server that coalesces ServerHello and Certificate into
+		// one record puts the Certificate message second, and a reader of the first
+		// message alone finds no certificate.
+		// `testdata/foxio/pcap/socks4-https.pcap` holds such a record.
+		{
+			certs := ja4xCertificatesInRecord(data[i+5 : i+5+recordLength])
 			for _, certDER := range certs {
 				// Dedup by SHA-256 of DER bytes.
 				h := sha256.Sum256(certDER)
@@ -257,10 +295,9 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 		i += 5 + recordLength
 	}
 
-	// Trim consumed data from the stream.
-	if i > 1000 {
-		f.streams[streamID] = data[i:]
-	}
+	// The reassembler holds the segments, and it drops one only at RemoveStream or at an
+	// eviction. A trim of the returned run would therefore reappear at the next packet, so
+	// this reader trims nothing and the certificate set removes the repeat instead.
 
 	return results
 }
@@ -269,16 +306,46 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 // TLS Certificate handshake message (including the 5-byte TLS record header).
 func extractCertificates(data []byte) [][]byte {
 	// Skip TLS record header (5 bytes) + handshake header (4 bytes).
-	pos := 9
-	if len(data) < pos+3 {
+	if len(data) < 9 {
+		return nil
+	}
+	return ja4xCertificatesInMessage(data[9:])
+}
+
+// ja4xCertificatesInRecord returns the certificates of every Certificate message that the
+// body of one TLS handshake record holds. The body starts after the 5-byte record header.
+//
+// RFC 8446 section 5.1 lets one record carry several handshake messages, so the walk reads
+// every message and never the first alone.
+func ja4xCertificatesInRecord(body []byte) [][]byte {
+	var certs [][]byte
+	for offset := 0; offset+4 <= len(body); {
+		// Every packet is untrusted input, so the length field is bounds-checked before
+		// the slice below reads it.
+		messageLength := int(body[offset+1])<<16 | int(body[offset+2])<<8 | int(body[offset+3])
+		if messageLength < 0 || offset+4+messageLength > len(body) {
+			break
+		}
+		if body[offset] == tlsHandshakeCertificate {
+			certs = append(certs, ja4xCertificatesInMessage(body[offset+4:offset+4+messageLength])...)
+		}
+		offset += 4 + messageLength
+	}
+	return certs
+}
+
+// ja4xCertificatesInMessage returns the DER-encoded certificates that the body of one
+// Certificate handshake message holds. The body starts after the 4-byte message header.
+func ja4xCertificatesInMessage(message []byte) [][]byte {
+	if len(message) < 3 {
 		return nil
 	}
 
 	// Certificate list length (3 bytes).
-	certsLen := int(data[pos])<<16 | int(data[pos+1])<<8 | int(data[pos+2])
-	pos += 3
+	certsLen := int(message[0])<<16 | int(message[1])<<8 | int(message[2])
+	pos := 3
 
-	if certsLen <= 0 || certsLen > len(data)-pos {
+	if certsLen <= 0 || certsLen > len(message)-pos {
 		return nil
 	}
 
@@ -286,23 +353,23 @@ func extractCertificates(data []byte) [][]byte {
 	endPos := pos + certsLen
 
 	for pos < endPos-2 {
-		if pos+3 > len(data) {
+		if pos+3 > len(message) {
 			break
 		}
 
 		// Individual certificate length (3 bytes).
-		certLen := int(data[pos])<<16 | int(data[pos+1])<<8 | int(data[pos+2])
+		certLen := int(message[pos])<<16 | int(message[pos+1])<<8 | int(message[pos+2])
 		pos += 3
 
 		if certLen <= 0 || certLen > 200000 {
 			break
 		}
-		if pos+certLen > len(data) {
+		if pos+certLen > len(message) {
 			break
 		}
 
 		cert := make([]byte, certLen)
-		copy(cert, data[pos:pos+certLen])
+		copy(cert, message[pos:pos+certLen])
 		certs = append(certs, cert)
 		pos += certLen
 	}

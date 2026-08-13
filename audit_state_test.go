@@ -113,10 +113,13 @@ func auditStatePacketSet(t *testing.T) []gopacket.Packet {
 }
 
 // auditStateStatelessTypes names each fingerprinter that holds no state at all.
-// Issue #25 removed the results slice, and these four held nothing else. A field that
+// Issue #25 removed the results slice, and these three held nothing else. A field that
 // returns to one of them needs a removal path, so this list is the reader's warning.
+//
+// `JA4TSFingerprinter` left this list at issue #56, which gave it the state table
+// that part e and the RST value read.
 var auditStateStatelessTypes = []string{
-	"JA4TFingerprinter", "JA4TSFingerprinter", "JA4DFingerprinter", "JA4D6Fingerprinter",
+	"JA4TFingerprinter", "JA4DFingerprinter", "JA4D6Fingerprinter",
 }
 
 // FR-audit-18. Reset clears every field that holds state.
@@ -245,7 +248,11 @@ func TestCleanupConnection_RemovesTheStateTableEntryOfTheNamedConnection(t *test
 				_, _ = fingerprinter.ProcessPacket(
 					buildTCPPacketWithSeq(t, server, client, 443, 40013, 1, []byte("not a record")))
 
-				return fingerprinter, func() int { return len(fingerprinter.streams) }
+				// The reassembler holds its stream table in an unexported field of
+				// another package, so the reflect walk reads the count.
+				return fingerprinter, func() int {
+					return auditStateFieldLengths("JA4XFingerprinter", fingerprinter)["JA4XFingerprinter.reassembler.streams"]
+				}
 			},
 			cleanup: func(fingerprinter Fingerprinter) {
 				fingerprinter.CleanupConnection(auditStateClientIP, 40013, auditStateServerIP, 443, "tcp")
