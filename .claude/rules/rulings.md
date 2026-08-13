@@ -280,7 +280,7 @@ decision.
 
 **One more requirement carries a provisional amendment, and no delegation produced it.**
 FR-ja4ls-11 named a type filter that `Processor` does not hold, #61 measured the absence, and
-FR-ja4ls-11 of `docs/specs/features/12-ja4ls.md` names issue #61 as the reversal path.
+`docs/specs/features/12-ja4ls.md` names issue #61 as the reversal path, at FR-ja4ls-11.
 
 ### Three examples of the narrow delegation
 

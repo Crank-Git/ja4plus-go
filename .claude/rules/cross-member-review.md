@@ -155,8 +155,8 @@ and neither one fits category 3. Category 3 names one mechanism: a target that a
 member **moved, renamed or never created**. Both targets of batch #342 exist under the name
 the member wrote. The doc comment of `foxioCorpusAbsentMessage` in
 `foxio_citation_base_test.go` named `TestTheCISkipDetectorMatchesNoUntaggedSkipMessage`.
-That test exists, and its extractor read no skip of the file that named it. The second finding was a count in a pull-request
-body that the table below it contradicts.
+That test exists, and its extractor read no skip of the file that named it. The second
+finding was a count in a pull-request body that the table below it contradicts.
 
 **This file adds a category rather than widening category 3, because one category states
 one mechanism.** `.claude/rules/ste.md` rule 6 states one word, one meaning. A category 3
