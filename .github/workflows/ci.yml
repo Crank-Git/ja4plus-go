@@ -603,7 +603,10 @@ jobs:
           # two runners can differ. The program strips that suffix, so the two runs compare
           # by benchmark name.
           #
-          # A benchmark that the base does not hold is new, and it compares with nothing.
+          # A benchmark that the base does not hold is new, and it compares with nothing. A
+          # benchmark that the head does not hold is removed or renamed, and the table names
+          # it too. The program reads an order for each side, because `for (name in array)`
+          # of `awk` names no order and a table that moves between runs is unreadable.
           awk -v threshold=1.20 '
             /^Benchmark/ {
               name = $1
@@ -615,7 +618,7 @@ jobs:
               }
               if (ns == "" || ns + 0 <= 0) { next }
 
-              if (FNR == NR) { base[name] = ns + 0 }
+              if (FNR == NR) { base[name] = ns + 0; baseOrder[++baseCount] = name }
               else { head[name] = ns + 0; order[++count] = name }
             }
 
@@ -640,6 +643,17 @@ jobs:
                 # of 19.99 percent and a change of 20.00 percent as the same number.
                 printf "| `%s` | %s | %s | %+.2f percent%s |\n",
                   name, base[name], head[name], change, mark
+              }
+
+              # A benchmark the head does not hold is removed or renamed. It reaches no
+              # comparison, and a table that drops it reports a silent loss of measurement.
+              # It carries no mark, because a benchmark that no longer runs cannot be slower.
+              for (i = 1; i <= baseCount; i++) {
+                name = baseOrder[i]
+                if (name in head) { continue }
+
+                printf "| `%s` | %s | none | the head holds no such benchmark |\n",
+                  name, base[name]
               }
             }
           ' bench-base.log bench-head.log > comparison.md

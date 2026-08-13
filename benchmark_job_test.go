@@ -104,6 +104,25 @@ func TestTheBenchmarkJobReportsTheHeadWithoutABase(t *testing.T) {
 	}
 }
 
+// TestTheBenchmarkJobNamesABenchmarkThatOneSideHolds holds both halves of the comparison.
+// A benchmark that one commit holds and the other does not reaches no comparison, and a
+// table that drops it reports a silent loss of measurement.
+//
+// The correctness review of #69 found the second half absent on 2026-08-13. The program
+// read an order from the head file alone, so a benchmark that the head no longer holds
+// never reached the table.
+func TestTheBenchmarkJobNamesABenchmarkThatOneSideHolds(t *testing.T) {
+	commands := workflowJobCommands(t, ".github/workflows/ci.yml", "benchmark")
+
+	if !strings.Contains(commands, "the base branch holds no such benchmark") {
+		t.Errorf("the benchmark job drops a benchmark the head adds:\n%s", commands)
+	}
+
+	if !strings.Contains(commands, "the head holds no such benchmark") {
+		t.Errorf("the benchmark job drops a benchmark the head removes:\n%s", commands)
+	}
+}
+
 // TestTheBenchmarkJobFailsNoBuild holds FR-supply-24. Runner variance produces a false
 // regression, so a benchmark warns and it never blocks.
 //
