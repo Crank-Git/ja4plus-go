@@ -4,9 +4,11 @@ The port is the Python implementation at `Crank-Git/ja4plus`. A user who runs bo
 implementations must get one answer, so this page records what each name of the port maps
 onto in this library.
 
-**This page records a reading, and it records no ruling.** A reading concludes what a
-source states, and only the maintainer makes a ruling.
-`.claude/rules/rulings.md` holds the two words.
+**This page records a reading of each row, and it records one ruling.** A reading concludes
+what a source states, and only the maintainer makes a ruling.
+`.claude/rules/rulings.md` holds the two words. **The maintainer ruled the `generate_ja4l`
+row and the `generate_ja4ssh` row in #356 on 2026-08-13**, and the section that names each
+declined row records that ruling.
 
 ## Where the names were read
 
@@ -54,7 +56,9 @@ The two counts differ, and this page names the one it counted. `ja4plus/cli.py`,
 - **The Go equivalent** holds one exported name of package `ja4plus`, or it holds
   `` `none` `` with `applicable` or `not applicable`.
 - **`applicable`** states that a Go equivalent belongs in this library and is absent.
-- **`not applicable`** states that the name answers a Python question that Go does not ask.
+- **`not applicable`** states that no Go equivalent belongs in this library. The name
+  answers a Python question that Go does not ask, or this library answers the question with
+  a method.
 - **The reason** carries one sentence. A row that names a Go equivalent needs none.
 
 `parity_table_test.go` reads this table. It fails on each of these.
@@ -86,9 +90,9 @@ The two counts differ, and this page names the one it counted. `ja4plus/cli.py`,
 | `generate_ja4` | function | `ja4plus/fingerprinters/ja4.py:111` | `ComputeJA4` | |
 | `generate_ja4s` | function | `ja4plus/fingerprinters/ja4s.py:359` | `ComputeJA4S` | |
 | `generate_ja4h` | function | `ja4plus/fingerprinters/ja4h.py:547` | `ComputeJA4H` | |
-| `generate_ja4l` | function | `ja4plus/fingerprinters/ja4l.py:607` | `none`, applicable | JA4L reads the SYN and the SYN-ACK, so a one-packet call reaches no value, and #356 asks the maintainer which shape a Go equivalent takes. |
+| `generate_ja4l` | function | `ja4plus/fingerprinters/ja4l.py:607` | `none`, not applicable | JA4L reads the SYN and the SYN-ACK, so `JA4LFingerprinter.ProcessPacket` is the Go form, and the maintainer ruled the row `not applicable` in #356 on 2026-08-13. |
 | `generate_ja4x` | function | `ja4plus/fingerprinters/ja4x.py:46` | `ComputeJA4XFromPacket` | |
-| `generate_ja4ssh` | function | `ja4plus/fingerprinters/ja4ssh.py:670` | `none`, applicable | JA4SSH reads a window of packets, so a one-packet call reaches no value, and #356 asks the maintainer which shape a Go equivalent takes. |
+| `generate_ja4ssh` | function | `ja4plus/fingerprinters/ja4ssh.py:670` | `none`, not applicable | JA4SSH reads a window of packets, so `JA4SSHFingerprinter.ProcessPacket` is the Go form, and the maintainer ruled the row `not applicable` in #356 on 2026-08-13. |
 | `generate_ja4t` | function | `ja4plus/fingerprinters/ja4t.py:133` | `ComputeJA4T` | |
 | `generate_ja4ts` | function | `ja4plus/fingerprinters/ja4ts.py:312` | `ComputeJA4TS` | |
 | `generate_ja4d` | function | `ja4plus/fingerprinters/ja4d.py:188` | `ComputeJA4D` | |
@@ -110,17 +114,31 @@ the version attribute.
 `ComputeJA4D` and `ComputeJA4D6` each read one packet, and each matching method reads one
 packet.
 
-**`generate_ja4l` and `generate_ja4ssh` each take a second parameter that holds the
-connection state.** The port makes the caller hold that state, and this library holds it
-inside `JA4LFingerprinter` and `JA4SSHFingerprinter`. Parity rule 2 states that the port
-decides interface where this project shipped nothing. **The rule names an interface, and it
-states no shape.** **#356 records the question, and this page records no answer.**
+**`generate_ja4l` and `generate_ja4ssh` each take a second parameter for the connection
+state.** `generate_ja4l` reads that parameter, and it writes the measurement point of the
+packet back into it. `generate_ja4ssh` declares the parameter and ignores it, and the port
+states that at `ja4plus/fingerprinters/ja4ssh.py:679`:
+
+> conn: Connection tracking data (ignored in this implementation)
+
+**The port makes the caller hold the connection state, and this library holds it inside
+`JA4LFingerprinter` and `JA4SSHFingerprinter`.** Parity rule 2 states that the port decides
+interface where this project shipped nothing. **The rule names an interface, and it states
+no shape.** **The maintainer ruled the shape in #356 on 2026-08-13, and this page records
+that ruling.**
 
 **Three Go names answer one port name.** The port promises `compute_ja4x_from_der`,
 `compute_ja4x_from_pem` and `generate_ja4x`, and this library exports `ComputeJA4XFromDER`,
 `ComputeJA4XFromPEM` and `ComputeJA4XFromPacket`. Each pair reads the same input.
 
-## The one `not applicable` row, and how to reverse it
+## The three `not applicable` rows, and how to reverse one
+
+**The table records three rows as `` `none` ``, `not applicable`.** The `__version__` row
+records a reading. The `generate_ja4l` row and the `generate_ja4ssh` row record the ruling of
+#356. `parity_one_shot_not_applicable_test.go` fails when this heading states a count that
+the table does not hold.
+
+### The `__version__` row
 
 **The `__version__` row records a fact of the Go language, and it records no preference.**
 `runtime/debug.ReadBuildInfo` returns the build information that the running binary carries,
@@ -133,8 +151,29 @@ caller needs a version name in the library, and change the row to `` `none` ``,
 `applicable`. **The maintainer confirms this row, or reverses it.** Until the maintainer
 confirms it, a later reader reads it as unconfirmed.
 
-**This page states no ruling.** Parity rule 2 assigns an interface question to the
-maintainer, and #356 carries the two questions of this page that need one.
+### The `generate_ja4l` row and the `generate_ja4ssh` row
+
+**The maintainer ruled these two rows in #356 on 2026-08-13.** Parity rule 2 assigns an
+interface question to the maintainer, and this page records the answer.
+
+**`JA4LFingerprinter.ProcessPacket` and `JA4SSHFingerprinter.ProcessPacket` are the Go form
+of a method that reads more than one packet.** The port states the same fact about its own
+one-shot function at `ja4plus/fingerprinters/ja4ssh.py:674`:
+
+> Note: Real JA4SSH requires analyzing multiple packets in a session.
+
+**An exported one-shot function carries the connection state across the package boundary,
+and `.claude/rules/concurrency.md` keeps that state unexported.** One `Processor` serves one
+goroutine, and the core is lock-free by design. **`v1.0.0` freezes the exported API**, so
+the exposure would be permanent.
+
+**This library therefore exports no `ComputeJA4L` and no `ComputeJA4SSH`.**
+`parity_one_shot_not_applicable_test.go` holds the ruling. The ruling moves no fingerprint
+value, so it reaches no entry of `testdata/deviations.json`, and
+`.claude/rules/rulings.md` names a test as the other home.
+
+**A reader reverses the ruling in #356.** The freeze at `v1.0.0` makes a reversal after the
+freeze a breaking change, so a reader reverses it before the freeze.
 
 ## What this page does not record
 
