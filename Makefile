@@ -57,8 +57,8 @@ fuzz:
 		done; \
 	done
 
-# FR-supply-4 holds the command that `.github/workflows/ci.yml` runs, so the gate and the
-# desk run one command.
+# FR-supply-4 holds the command that the `vuln` job of `.github/workflows/ci.yml` runs, so
+# that job and a developer run one command.
 #
 # The exit status separates a called vulnerability from an uncalled one, and FR-supply-2
 # and FR-supply-5 need that separation. `TextHandler.Flush` in `internal/scan/text.go` of
@@ -71,8 +71,9 @@ fuzz:
 # The scanner names no uncalled vulnerability at the default setting. Run
 # `govulncheck -show verbose ./...` to read that list.
 #
-# This target installs nothing. Install the version that `.github/workflows/ci.yml` pins,
-# or the desk and the gate measure two different tools.
+# This target installs nothing, and it fails when the PATH holds no `govulncheck`. Install
+# the version that `.github/workflows/ci.yml` pins, or a developer and the job measure two
+# different tools.
 #
 # The scanner reads the Go version of the `go` command on the PATH, so a second toolchain
 # reports a second result. The `vuln` job of `.github/workflows/ci.yml` records the
@@ -81,4 +82,4 @@ vuln:
 	govulncheck ./...
 
 clean:
-	rm -rf bin/ coverage.out .golangci-cache govulncheck.log
+	rm -rf bin/ coverage.out .golangci-cache

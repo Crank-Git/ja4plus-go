@@ -240,8 +240,8 @@ jobs:
           version: v2.12.2
 
   # FR-supply-1 runs the vulnerability scanner on every pull request this workflow covers.
-  # The job runs the `vuln` target, and FR-supply-4 holds the command there, so the gate
-  # and the desk can never measure two different commands.
+  # The job runs the `vuln` target, and FR-supply-4 holds the command there, so this job
+  # and a developer can never measure two different commands.
   #
   # FR-supply-2 fails the job on a vulnerability that the library calls, and FR-supply-5
   # keeps an uncalled one out of the exit status. The scanner separates the two by itself,
@@ -263,12 +263,13 @@ jobs:
       # the standard library of that version. This job therefore names the same Go version
       # as the `test` job, so the gate measures what this workflow builds.
       #
-      # A measurement on 2026-08-13 at govulncheck v1.6.0 separates three Go versions on
-      # this module. Go 1.24.13 reports 9 called standard library vulnerabilities and exits
-      # 3. Go 1.25.13 reports 0 and exits 0. Go 1.26.5 reports 0 and exits 0. Every one of
-      # the nine names a fix in a go1.25.x release and none in a go1.24.x release, so no
-      # Go 1.24 patch clears them. Issue #65 reports that result, and the maintainer holds
-      # the Go version decision.
+      # A measurement on 2026-08-13 at govulncheck v1.6.0 separates three Go versions of
+      # this module. On go1.24.13 the scan finds 9 called vulnerabilities of the standard
+      # library, and it exits 3. On go1.25.13 and on go1.26.5 the scan finds 0, and it
+      # exits 0. Each one of the nine names a fix in a go1.25.x release, and none names a
+      # fix in a go1.24.x release. `go1.24.13` is the newest Go 1.24 patch, so no Go 1.24
+      # patch clears them. Issue #65 reports that result, and the maintainer holds the Go
+      # version decision.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: '1.24'
@@ -297,10 +298,17 @@ jobs:
       # FR-supply-5 records the note. The summary line counts every vulnerability that
       # reaches the build without a call, and the step runs after a pass and after a
       # failure.
+      #
+      # An earlier step can fail before the scan writes the log, and this step must report
+      # no second reason for that failure. So it reads the log only when the file is
+      # present.
       - name: Publish the vulnerability counts
         if: always()
         run: |
-          summary=$(sed -n '/^Your code /,$p' govulncheck.log)
+          summary=""
+          if [ -f govulncheck.log ]; then
+            summary=$(sed -n '/^Your code /,$p' govulncheck.log)
+          fi
           if [ -z "$summary" ]; then
             summary="The scanner printed no summary line."
           fi
