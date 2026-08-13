@@ -12,9 +12,9 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1664 |
-| Deviations | 621 |
+| Deviations | 571 |
 | Accepted deviations | 418 |
-| Unaccepted uncovered values | 182 |
+| Unaccepted uncovered values | 172 |
 | Accepted uncovered values | 20 |
 | Accepted comparisons | 438 |
 | Stale register entries | 0 |
@@ -26,8 +26,8 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1103 | 83 | 275 | 142 | 14 |
-| per-packet | 561 | 538 | 143 | 40 | 6 |
+| per-stream | 1103 | 63 | 275 | 132 | 14 |
+| per-packet | 561 | 508 | 143 | 40 | 6 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -35,19 +35,16 @@ The register holds one entry for each accepted comparison, so the accepted compa
 
 ## Deviations
 
-The run reports 1039 deviations in 87 groups. One group is one capture, one method and one vector set.
+The run reports 989 deviations in 86 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
 
 | Capture | Vector set | Method | Deviations | Comparison | Difference | Expected | Produced |
 |---|---|---|---|---|---|---|---|
-| `CVE-2018-6794.pcap` | per-packet | JA4H | 34 | `CVE-2018-6794.pcap/15/JA4H.1` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_6cd0fb54989b_000000000000_000000000000` |
-| `CVE-2018-6794.pcap` | per-packet | JA4H | 34 | `CVE-2018-6794.pcap/15/JA4H_r.1` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` |
-| `CVE-2018-6794.pcap` | per-packet | JA4H | 34 | `CVE-2018-6794.pcap/15/JA4H_ro.1` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 20 | `CVE-2018-6794.pcap/0/JA4H.2` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_6cd0fb54989b_000000000000_000000000000` |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 20 | `CVE-2018-6794.pcap/0/JA4H.3` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_6cd0fb54989b_000000000000_000000000000` |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 20 | `CVE-2018-6794.pcap/0/JA4H.4` | the library produces a value the vector does not hold | (none) | `ge11nn07ruru_6cd0fb54989b_000000000000_000000000000` |
+| `CVE-2018-6794.pcap` | per-packet | JA4H | 4 | `CVE-2018-6794.pcap/16/JA4H_r.1` | the two values differ (accepted) | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language__` | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language_` |
+| `CVE-2018-6794.pcap` | per-packet | JA4H | 4 | `CVE-2018-6794.pcap/16/JA4H_ro.1` | the two values differ (accepted) | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language__` | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language_` |
+| `CVE-2018-6794.pcap` | per-packet | JA4H | 4 | `CVE-2018-6794.pcap/6/JA4H_r.1` | the two values differ (accepted) | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language__` | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` |
 | `badcurveball.pcap` | per-packet | JA4L | 3 | `badcurveball.pcap/3/JA4L.1` | the library produces a value the vector does not hold | (none) | `2177_64` |
 | `badcurveball.pcap` | per-packet | JA4L | 3 | `badcurveball.pcap/4/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `2181_64` |
 | `badcurveball.pcap` | per-packet | JA4L | 3 | `badcurveball.pcap/9/JA4L.1` | the vector holds a value the library does not produce | `2177_64_114797` | (none) |
@@ -271,7 +268,7 @@ The library produces a value, and the vector file of the capture publishes no ke
 
 The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
 
-The run reports 202 uncovered values in 59 groups, and the register accepts 20 of them. One group is one capture, one method and one vector set.
+The run reports 192 uncovered values in 59 groups, and the register accepts 20 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 
@@ -283,9 +280,8 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 | `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/11/JA4LS.1` | `1513_255` | no |
 | `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/2/JA4LS.1` | `2219_255` | no |
 | `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/20/JA4LS.1` | `1948_255` | no |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 12 | `CVE-2018-6794.pcap/0/JA4H_r` | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` | no |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 12 | `CVE-2018-6794.pcap/0/JA4H_r.2` | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` | no |
-| `CVE-2018-6794.pcap` | per-stream | JA4H | 12 | `CVE-2018-6794.pcap/0/JA4H_r.3` | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` | no |
+| `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/0/JA4H_r` | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` | no |
+| `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/1/JA4H_r` | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language_` | no |
 | `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/0/JA4L-C` | `1_128` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/1/JA4L-C` | `1_128` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-C` | `1_128` | yes |
@@ -403,7 +399,7 @@ The table holds one row for each capture and each method. A row records `not app
 |---|---|---|---|---|---|---|
 | `CVE-2018-6794.pcap` | JA4 | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `CVE-2018-6794.pcap` | JA4S | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `CVE-2018-6794.pcap` | JA4H | per-packet and per-stream | deviation | 6 | 54 | — |
+| `CVE-2018-6794.pcap` | JA4H | per-packet and per-stream | deviation | 6 | 4 | — |
 | `CVE-2018-6794.pcap` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `CVE-2018-6794.pcap` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `CVE-2018-6794.pcap` | JA4L | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
