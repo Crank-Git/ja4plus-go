@@ -33,16 +33,21 @@ split S1 and split S2 of cause 4.
 `docs/audit/conformance.md` in two different measurements.
 
 **#462 moved the per-packet set alone, and it moved no per-stream count.** The per-packet
-matches rise from 561 to 577, the per-packet deviations that the register does not hold fall
-from 508 to 412, and the per-packet accepted deviations rise from 143 to 175. **96 deviations
-become 48 comparisons**, because each frame pair of cause 2 holds one value. **16 of the 48
-are matches and 32 are accepted deviations**, and the register grows from 438 keys to 470.
+counts read as follows.
+
+- The matches rise from 561 to 577.
+- The deviations that the register does not hold fall from 508 to 412.
+- The accepted deviations rise from 143 to 175.
+
+**96 deviations become 48 comparisons**, because each frame pair of cause 2 holds one value.
+**16 of the 48 are matches, and 32 are accepted deviations.** The register grows from 438
+keys to 470.
 
 ## The measurement
 
 The suite reports 635 deviations that the register does not hold. **337 of them name JA4H,
-JA4H_r or JA4H_ro.** The register held 459 entries on the day of the run, the run accepted 419
-of them, and 108 of the accepted entries named a JA4H form. **#465 re-measured all three
+JA4H_r or JA4H_ro.** The register held 459 entries on the day of the run. The run accepted
+419 of them. 108 of the accepted entries named a JA4H form. **#465 re-measured all three
 against the tree of that run**, at commit `dbbad89`.
 
 | Direction | Count |
@@ -96,8 +101,8 @@ of the per-packet set and 26 occurrences of the per-stream set carry the 337.**
 `the vector holds a value the library does not produce`.
 
 **The library holds no HTTP/2 decoder.** `ProcessPacket` of `ja4h.go` reads the TCP payload
-and passes it to `parser.ParseHTTPRequest`, which reads a request line of the form
-`<method> <path> HTTP/<digit>.<digit>` at `requestLineRe` of `internal/parser/http.go`. An HTTP/2 request
+and passes it to `parser.ParseHTTPRequest`. That function reads a request line of the form
+`<method> <path> HTTP/<digit>.<digit>`, at `requestLineRe` of `internal/parser/http.go`. An HTTP/2 request
 carries no such line, because it carries HPACK header blocks.
 
 **The reference reads both.** `testdata/foxio/reference/wireshark/source/packet-ja4.c:1152`
@@ -132,8 +137,8 @@ alone. **One frame was read byte by byte, and it is frame 15 of `http2-with-cook
 ## Cause 2 — the library emitted at the frame that ends the header block
 
 **#462 closed this cause.** The `## Two causes are closed since this reading` section above
-states what the library does today, and this section keeps the reading that earned the
-change.
+states what the library does today. **This section keeps the reading that earned the
+change.**
 
 **96 deviations, all in `http1.pcapng`, and 64 of them close.** 48 read
 `the library produces a value the vector does not hold` and 48 read the reverse. The two
@@ -207,8 +212,8 @@ so `ja4h_body_gate_test.go` records the ruling, and
 ## Cause 3 — the library emitted a second value for a repeated TCP segment
 
 **#446 closed this cause.** The `## Two causes are closed since this reading` section above
-states what the library does today, and this section keeps the reading that earned the
-change.
+states what the library does today. **This section keeps the reading that earned the
+change.**
 
 **50 deviations, all in `CVE-2018-6794.pcap`, and all 50 close.** 30 are per-packet and 20
 are per-stream. Every one reads `the library produces a value the vector does not hold`.
