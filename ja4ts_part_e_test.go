@@ -270,9 +270,9 @@ func TestJA4TS_AZeroValueFingerprinterReadsItsFirstPacketWithNoPanic(t *testing.
 // The reset delay of a connection that passed the ten-delay cap reads the eleventh
 // SYN-ACK, and never a later one.
 //
-// **The maintainer ruled this question on 2026-08-13, under #369.** This library reads the
-// eleventh timestamp, and the ruling keeps that behavior. The three implementations split.
-// Wireshark stores no time after the tenth at
+// **The maintainer ruled this question on 2026-08-13, under #369 question 2.** This library
+// reads the eleventh timestamp, and the ruling keeps that behavior. Three implementations
+// hold three readings. Wireshark stores no time after the tenth at
 // `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen tenth time at
 // `wireshark/source/packet-ja4.c:694`. Zeek stops setting the next packet threshold at
 // `zeek/ja4t/main.zeek:185-189`, so it observes no RST of such a connection and writes no
