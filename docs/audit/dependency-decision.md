@@ -34,10 +34,15 @@ returns `"Time":"2026-06-04T20:44:08Z"` and
 
 | What | Count |
 |---|---|
-| Go files that change an import path | 57 |
-| Go files that change for another reason | 1 |
+| Go files that change a quoted import path | 57 |
+| Go files that change no import path | 1 |
 | `go.mod` and `go.sum` | 2 |
 | Total | 60 |
+
+**Three Go files change a line that is not an import path**, and each one is a test file.
+They are `foundation_test.go`, `ja4t_option_byte_count_test.go` and
+`ja4t_syn_selection_test.go`. **Two of the three also change an import path**, so the 57
+above holds them and the 1 above holds `foundation_test.go` alone.
 
 **42 test files and 15 non-test files hold the import path.** The command is
 `grep -rl 'github.com/google/gopacket' --include='*.go' .`, and it reports 57. **#434
@@ -116,8 +121,8 @@ measurement runs no attribution.
 ### The exported surface keeps every name and every shape
 
 **No exported name and no exported signature changes.** Every changed line of a non-test Go
-file is an import path. Three changed lines sit outside an import block, and each one sits
-in a test file: the pattern of `TestGoModDeclaresGo124`, one comment of
+file is an import path. **Three files hold a changed line outside an import block, and each
+one is a test file**: the pattern of `TestGoModDeclaresGo124`, one comment of
 `ja4t_option_byte_count_test.go`, and one comment of `ja4t_syn_selection_test.go`.
 
 **The type that each exported signature names is the fork's type now.** `types.go` still
