@@ -1202,6 +1202,9 @@ func TestJA4LMovesTheClientPointToThePartialRequestOfHttpEmptyUseragentPcap(t *t
 // Every FoxIO reference agrees here, so this is a reading and not a ruling. The maintainer
 // ruled on 2026-08-12 in issue #196 that the conformance harness compares the last emission,
 // which is what makes a repeated server value reach the comparison.
+//
+// The test holds FR-parity-17, FR-parity-18 and FR-parity-23. It builds two SYN-ACK packets,
+// and it asserts one server value.
 func TestJA4LMovesNoServerPointForARepeatedSynAck(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -1284,6 +1287,9 @@ func TestJA4LMovesNoClientPointWhenTheCaptureHoldsNoSYN(t *testing.T) {
 // holds that delta as `1.3`, and `124 / 93` reads `1.3`. This test holds the part count,
 // so it fails when a repair writes a marker on a TCP connection. Port issue #225 holds the
 // other half.
+//
+// The test holds FR-parity-19. TestJA4LWritesNoTCPLiteralInAnyValue holds FR-parity-21, which
+// reads the same ruling over a TCP connection and a QUIC connection together.
 func TestJA4LWritesTwoPartsOnATCPConnectionInGeneve(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -1515,4 +1521,173 @@ func TestJA4LKeepsPointAWhenARepeatedSYNCarriesTheSameInitialSequenceNumber(t *t
 	if got := ja4lLastFingerprint(t, results); got != "JA4L-S=50000_64" {
 		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, "JA4L-S=50000_64")
 	}
+}
+
+// TestJA4LHoldsOneClientValueForOneConnection holds FR-parity-16.
+//
+// The connection holds one client measurement point, and a later packet replaces the value of
+// that point. Every emission carries the endpoints that `report()` fixed, so a caller that
+// keys on the connection holds one client value.
+//
+// `ja4plus/fingerprinters/ja4l.py:177-180` states the rule:
+//
+//	# The reference holds one client value for one connection and overwrites it
+//	# while the measurement point moves. A later packet therefore replaces the
+//	# value this fingerprinter already reported, and it adds no second value.
+//
+// The port keeps the index of the value it reported, and it overwrites that entry. This
+// library keeps no such index, because ProcessPacket returns each result to the caller.
+// Issue #25 removed the results slice. The maintainer ruled in issue #196 that the
+// conformance harness compares the last emission, so the last emission carries the one client
+// value of the connection.
+//
+// This test reads the count of results and the reported endpoints.
+// TestJA4LMovesTheClientPointToARepeatedBareACK reads the two values instead, through
+// ja4lLastFingerprint, which admits more than one result. Port issue #272 holds the other
+// half.
+func TestJA4LHoldsOneClientValueForOneConnection(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	syn := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, true, false)
+	syn.Metadata().Timestamp = baseTime
+	if results, _ := fp.ProcessPacket(syn); len(results) != 0 {
+		t.Fatalf("SYN: expected no results, got %v", results)
+	}
+
+	synAck := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 12345, true, true)
+	synAck.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(synAck); len(results) != 1 {
+		t.Fatalf("SYN-ACK: expected one result, got %v", results)
+	}
+
+	firstACK := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 443, false, true)
+	firstACK.Metadata().Timestamp = baseTime.Add(100 * time.Millisecond)
+	firstResults, err := fp.ProcessPacket(firstACK)
+	if err != nil {
+		t.Fatalf("first bare ACK: unexpected error: %v", err)
+	}
+	if len(firstResults) != 1 {
+		t.Fatalf("first bare ACK: expected one result, got %v", firstResults)
+	}
+
+	// The second packet runs from the server to the client. The client point moves in either
+	// direction, at `ja4l.go:288`, so this packet reports the client value of the same
+	// connection. A connection that did not fix its endpoints would name the reverse pair
+	// here, and the caller would hold two client values.
+	secondACK := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 12345, false, true)
+	secondACK.Metadata().Timestamp = baseTime.Add(150 * time.Millisecond)
+	secondResults, err := fp.ProcessPacket(secondACK)
+	if err != nil {
+		t.Fatalf("second bare ACK: unexpected error: %v", err)
+	}
+	if len(secondResults) != 1 {
+		t.Fatalf("second bare ACK: expected one result, got %v", secondResults)
+	}
+
+	// The second value replaces the first one. Two equal values would read as one value that
+	// the second packet repeated, and the point would then not have moved.
+	if firstResults[0].Fingerprint == secondResults[0].Fingerprint {
+		t.Errorf("the two emissions carry one value %q, and the client point did not move",
+			firstResults[0].Fingerprint)
+	}
+
+	// The two emissions describe one connection, so each one carries the endpoints that the
+	// first packet fixed. A second endpoint pair would name a second connection, and the
+	// caller would then hold two client values.
+	if firstResults[0].SrcIP != secondResults[0].SrcIP ||
+		firstResults[0].DstIP != secondResults[0].DstIP ||
+		firstResults[0].SrcPort != secondResults[0].SrcPort ||
+		firstResults[0].DstPort != secondResults[0].DstPort {
+		t.Errorf("the two emissions name two connections: %s:%d-%s:%d and %s:%d-%s:%d",
+			firstResults[0].SrcIP, firstResults[0].SrcPort,
+			firstResults[0].DstIP, firstResults[0].DstPort,
+			secondResults[0].SrcIP, secondResults[0].SrcPort,
+			secondResults[0].DstIP, secondResults[0].DstPort)
+	}
+
+	// The connection holds one client point, so the state map holds one entry for `C`.
+	conn, held := fp.connections["tcp_10.0.0.1:443_192.168.1.1:12345"]
+	if !held {
+		t.Fatalf("the fingerprinter holds no connection, and it holds %v", fp.connections)
+	}
+	if _, held := conn.timestamps["C"]; !held {
+		t.Errorf("the connection holds no client point, and it holds %v", conn.timestamps)
+	}
+}
+
+// TestJA4LWritesNoTCPLiteralInAnyValue holds FR-parity-21.
+//
+// `docs/specs/foxio/JA4L.md` R30 records the split that this project declines. Wireshark
+// writes the format `"%d_%d_tcp"` at `wireshark/source/packet-ja4.c:1348` and at
+// `wireshark/source/packet-ja4.c:1354`, and Zeek writes no such marker at
+// `zeek/ja4l/main.zeek:133`. The maintainer ruled on issue #247, and round 25 of the
+// `## Changelog` of `docs/specs/spec.md` records it: "The maintainer ruled on #247, and
+// `#127` stands."
+//
+// The library writes a marker for a QUIC connection alone, at `ja4l.go:487-489`. This test
+// reads a TCP connection and a QUIC connection together, so it fails when a repair writes the
+// literal `tcp` on either one. Port issue #225 holds the other half.
+func TestJA4LWritesNoTCPLiteralInAnyValue(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	syn := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, true, false)
+	syn.Metadata().Timestamp = baseTime
+	synAck := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, true, true)
+	synAck.Metadata().Timestamp = baseTime.Add(48 * time.Microsecond)
+	bareACK := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, false, true)
+	bareACK.Metadata().Timestamp = baseTime.Add(234 * time.Microsecond)
+
+	tcpValues := ja4lCollectValues(t, fp, syn, synAck, bareACK)
+	if len(tcpValues) != 2 {
+		t.Fatalf("the TCP connection reports %d values, and it must report the server value and the client value: %v",
+			len(tcpValues), tcpValues)
+	}
+
+	pointA := buildUDPPacketWithIPs(t, clientIP, serverIP, 128, 50000, 443, quicLongHeaderPayload())
+	pointA.Metadata().Timestamp = baseTime
+	pointB := buildUDPPacketWithIPs(t, serverIP, clientIP, 57, 443, 50000, quicLongHeaderPayload())
+	pointB.Metadata().Timestamp = baseTime.Add(10778 * time.Microsecond)
+	pointC := buildUDPPacketWithIPs(t, serverIP, clientIP, 57, 443, 50000, quicHandshakePayload())
+	pointC.Metadata().Timestamp = baseTime.Add(20000 * time.Microsecond)
+	pointD := buildUDPPacketWithIPs(t, clientIP, serverIP, 128, 50000, 443, quicHandshakePayload())
+	pointD.Metadata().Timestamp = baseTime.Add(20338 * time.Microsecond)
+
+	quicValues := ja4lCollectValues(t, NewJA4L(), pointA, pointB, pointC, pointD)
+	if len(quicValues) != 2 {
+		t.Fatalf("the QUIC connection reports %d values, and it must report the server value and the client value: %v",
+			len(quicValues), quicValues)
+	}
+
+	for _, value := range append(tcpValues, quicValues...) {
+		if strings.Contains(value, "tcp") {
+			t.Errorf("the value %q holds the literal tcp, and R30 records the split that this project declines", value)
+		}
+	}
+}
+
+// ja4lCollectValues returns the fingerprint of every result that the packets report, in
+// packet order. It fails the test when a packet reports an error.
+func ja4lCollectValues(t *testing.T, fp *JA4LFingerprinter, packets ...gopacket.Packet) []string {
+	t.Helper()
+
+	var values []string
+
+	for index, packet := range packets {
+		results, err := fp.ProcessPacket(packet)
+		if err != nil {
+			t.Fatalf("packet %d: unexpected error: %v", index, err)
+		}
+
+		for _, result := range results {
+			values = append(values, result.Fingerprint)
+		}
+	}
+
+	return values
 }
