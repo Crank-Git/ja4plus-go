@@ -24,7 +24,9 @@ func readRepoFile(t *testing.T, path string) string {
 	return string(content)
 }
 
-// TestGoModDeclaresGo124 holds the Go 1.24 language version that FR-foundation-2 names.
+// TestGoModDeclaresGo124 holds the Go 1.24 language version that FR-foundation-1 names.
+// The citation named FR-foundation-2 until 2026-08-13. That requirement now names the
+// toolchain of the workflow, and FR-foundation-1 names this directive.
 // `github.com/gopacket/gopacket@v1.6.1` states `go 1.24.0` in its own `go.mod`, so the
 // toolchain writes that longer form here and it refuses `go 1.24`. #438 measured it.
 // Go states that the two forms name one language version:
@@ -38,7 +40,14 @@ func TestGoModDeclaresGo124(t *testing.T) {
 	}
 }
 
-func TestCIWorkflowTestsGo124Only(t *testing.T) {
+// TestCIWorkflowTestsGo126Only holds the one Go version that FR-foundation-2 names.
+// The test named Go 1.24 until 2026-08-13, and comment 5286440152 of #65 holds the
+// amendment. Issue #65 is the reversal path.
+//
+// The range excludes go1.26.0 through go1.26.4, because GO-2026-5856 names a fix at
+// 1.26.5. `actions/setup-go` reads the tool cache of the runner before it reads the
+// release list, so a bare `1.26` can resolve to a toolchain that this gate fails.
+func TestCIWorkflowTestsGo126Only(t *testing.T) {
 	workflow := readRepoFile(t, ".github/workflows/ci.yml")
 
 	matrix := regexp.MustCompile(`(?m)^ *go-version: \[(.*)\]$`).FindStringSubmatch(workflow)
@@ -46,8 +55,27 @@ func TestCIWorkflowTestsGo124Only(t *testing.T) {
 		t.Fatalf(".github/workflows/ci.yml holds no go-version matrix")
 	}
 
-	if matrix[1] != "'1.24'" {
-		t.Errorf("the go-version matrix is [%s], and FR-foundation-2 names Go 1.24 only", matrix[1])
+	if matrix[1] != "'~1.26.5'" {
+		t.Errorf("the go-version matrix is [%s], and FR-foundation-2 names Go 1.26 only", matrix[1])
+	}
+}
+
+// TestCIWorkflowNamesOneGoVersion holds every job of the workflow at the version that
+// FR-foundation-2 names. The `vuln` job of #65 reports the standard library of the Go
+// version on the PATH, so a job that names a second version measures an artifact this
+// workflow never produces.
+func TestCIWorkflowNamesOneGoVersion(t *testing.T) {
+	workflow := readRepoFile(t, ".github/workflows/ci.yml")
+
+	versions := regexp.MustCompile(`(?m)^ *go-version: '(.*)'$`).FindAllStringSubmatch(workflow, -1)
+	if versions == nil {
+		t.Fatalf(".github/workflows/ci.yml holds no literal go-version input")
+	}
+
+	for _, version := range versions {
+		if version[1] != "~1.26.5" {
+			t.Errorf("a job names go-version %q, and FR-foundation-2 names Go 1.26 only", version[1])
+		}
 	}
 }
 

@@ -49,7 +49,15 @@ already exists, and adds only what is missing.
 ## Functional requirements
 
 - **FR-foundation-1** — `go.mod` declares `go 1.24`.
-- **FR-foundation-2** — `.github/workflows/ci.yml` builds and tests on Go 1.24 only.
+- **FR-foundation-2** — `.github/workflows/ci.yml` builds and tests on Go 1.26 only.
+
+  **The maintainer amended this requirement on 2026-08-13, and the amendment is
+  provisional.** The requirement named Go 1.24 until that date. On go1.24.13, the newest
+  Go 1.24 patch, `govulncheck` v1.6.0 reports 9 vulnerabilities of the standard library
+  that this library calls. Each one names a fix in a go1.25.x release, and none names a
+  fix in a go1.24.x release. So no Go 1.24 patch clears them. Comment 5286440152 of #65
+  holds the decision, and issue #65 is the reversal path. **FR-foundation-1 does not
+  move**, because `go.mod` states a language version and never a toolchain.
 - **FR-foundation-3** — `.golangci.yml` exists and names every enabled linter.
 - **FR-foundation-4** — `.github/workflows/ci.yml` pins the `golangci-lint` version to a
   released version number.

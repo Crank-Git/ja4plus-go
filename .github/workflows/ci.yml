@@ -29,11 +29,44 @@ on:
 permissions:
   contents: read
 
+# Every job of this workflow names the same Go version, and this block states why the
+# version is `~1.26.5`.
+#
+# **The maintainer decided on 2026-08-13 that every job moves to Go 1.26.** Comment
+# 5286440152 of #65 holds the decision. On go1.24.13, the newest Go 1.24 patch,
+# `govulncheck` v1.6.0 reports 9 called standard library vulnerabilities and exits 3. Each
+# one names a fix in a go1.25.x release, and none names a fix in a go1.24.x release. So no
+# Go 1.24 patch clears them, and a Go 1.24 build of this library calls a vulnerable
+# function.
+#
+# **`go.mod` does not move, and it states a language version rather than a toolchain.**
+# #438 established that reading, and Go states it: `The language version for a Go version
+# is the result of truncating everything after the N: 1.21, 1.21rc2, and 1.21.3 all
+# implement language version 1.21.` So the `go 1.24.0` directive and this Go 1.26 build are
+# independent, and `CLAUDE.md` still states `Go 1.24 or later`.
+#
+# **The range holds the patch at 1.26.5 or later, and it holds it below 1.27.** GO-2026-5856
+# names a fix at 1.26.5, so a go1.26.0 through go1.26.4 toolchain still carries it. A bare
+# `1.26` does not exclude those four, because `actions/setup-go` reads the tool cache of the
+# runner before it reads the release list. `installer.ts` at the pinned hash calls
+# `tc.find('go', versionSpec, arch)` first, and it returns a cached version that satisfies
+# the range. A runner that caches go1.26.3 alone would therefore resolve `1.26` to a
+# toolchain that fails this gate. `~1.26.5` excludes every one of the four, and it still
+# takes each later 1.26 patch.
+#
+# `actions/setup-go` passes this string to `semver.satisfies`, so it reads any node-semver
+# range. The README names `'^1.13.1'` and `'>=1.17.0'` as supported forms.
+#
+# **The measurement on 2026-08-13 at `govulncheck` v1.6.0**: go1.26.6 reports 0 called
+# vulnerabilities and exits 0. go1.26.6 is the newest published Go 1.26 patch.
+#
+# To reverse the decision, restore `'1.24'` here and in the three jobs below. The nine
+# called vulnerabilities return with it.
 jobs:
   test:
     strategy:
       matrix:
-        go-version: ['1.24']
+        go-version: ['~1.26.5']
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
@@ -68,9 +101,10 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      # The comment above `jobs:` states why the range reads `~1.26.5`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '1.24'
+          go-version: '~1.26.5'
 
       # The cache key and the job summary both name the pinned commit, so read it once.
       - name: Read the corpus pin
@@ -225,9 +259,10 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      # The comment above `jobs:` states why the range reads `~1.26.5`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '1.24'
+          go-version: '~1.26.5'
 
       # This step carries two pins, and they name two different things. The hash on the
       # `uses:` line names the action, and FR-supply-12 states it. The `version:` input
@@ -260,24 +295,19 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # The scanner reads the Go version of the `go` command on the PATH, and it reports
-      # the standard library of that version. This job therefore names the same Go version
-      # as the `test` job, so the gate measures what this workflow builds.
+      # the standard library of that version. **This job therefore names the range that
+      # every other job of this workflow names**, so the gate measures the Go version that
+      # builds and tests the library. A gate that reads a second Go version would describe
+      # an artifact this workflow never produces.
       #
-      # A measurement on 2026-08-13 at govulncheck v1.6.0 separates three Go versions of
-      # this module. On go1.24.13 the scan finds 9 called vulnerabilities of the standard
-      # library, and it exits 3. On go1.25.13 and on go1.26.5 the scan finds 0, and it
-      # exits 0. Each one of the nine names a fix in a go1.25.x release, and none names a
-      # fix in a go1.24.x release. `go1.24.13` is the newest Go 1.24 patch, so no Go 1.24
-      # patch clears them. Issue #65 reports that result, and the maintainer holds the Go
-      # version decision.
+      # The comment above `jobs:` states why the range reads `~1.26.5`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '1.24'
+          go-version: '~1.26.5'
 
       # FR-supply-3 pins the scanner version. `golang.org/x/vuln` v1.6.0 declares
-      # `go 1.25.0`, and the step above installs Go 1.24, so the `go` command downloads the
-      # newer toolchain for this one command. The installed program then runs the `go` of
-      # the PATH, which stays at 1.24, so the scan still reads Go 1.24.
+      # `go 1.25.0`, and the step above installs Go 1.26, so this command needs no
+      # toolchain download.
       #
       # No tool watches this pin. #66 configures Dependabot for the `gomod` and the
       # `github-actions` ecosystem, and a Go program that a step installs belongs to
@@ -285,8 +315,9 @@ jobs:
       - name: Install govulncheck
         run: go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
 
-      # The version line names the Go version, the scanner version and the age of the
-      # database. A reader of a failed run needs all three to reproduce it.
+      # The version line names the Go version, the scanner version and the date of the
+      # database. A reader of a failed run needs all three to reproduce it. **The Go version
+      # it prints is the patch that `~1.26.5` resolved to on this runner.**
       - name: Report the scanner version
         run: govulncheck -version
 
