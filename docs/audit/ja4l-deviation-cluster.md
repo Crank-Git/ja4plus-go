@@ -181,7 +181,7 @@ column. A separate candidate measures this cause, and #443 built none.
 
 **The four implementations agree on the frame.** Zeek writes the client value at
 `zeek/ja4l/main.zeek:248` inside the branch that fills `client_handshake`, and Rust reaches
-`Done` at `rust/ja4/src/time/udp.rs:185-197` on the client handshake packet. The port emits
+`Done` at `rust/ja4/src/time/udp.rs:185-202` on the client handshake packet. The port emits
 the server value earlier, at `ja4plus/fingerprinters/ja4l.py:549-551`, so **the port carries
 this gap too.**
 
@@ -221,7 +221,7 @@ rewritten.
 
 The other three implementations move the point.
 
-- Python returns early only once `D` is present. `python/common.py:108-111`:
+- Python returns early only once `D` is present. `python/common.py:109-112`:
 
   ```python
       # special requirement for ja4c when the C timestamp needs to be the
@@ -230,7 +230,7 @@ The other three implementations move the point.
           return
   ```
 
-- Rust assigns on every server handshake packet, at `rust/ja4/src/time/udp.rs:181-183`:
+- Rust assigns on every server handshake packet, at `rust/ja4/src/time/udp.rs:181-184`:
 
   ```rust
                   Timestamp::ServerHandshake(t_c) => {
@@ -255,9 +255,9 @@ row agrees with that direction.
 
 **`docs/specs/foxio/JA4L.md` R8 does not record this split.** R8 states that part a of JA4L
 measures the client handshake packet against the last server handshake packet, and it cites
-`wireshark/source/packet-ja4.c:1445` for Wireshark. Line 1445 reads the two points, and
-line 1428 fills point C. **The citation is right about the subtraction and silent about the
-point.**
+`wireshark/source/packet-ja4.c:1445` for Wireshark. Line 1445 reads the two points, line
+1428 guards point C, and line 1429 fills it. **The citation is right about the subtraction
+and silent about the point.**
 
 **This is a stop condition.** `.claude/rules/rulings.md` reserves a reference split to the
 maintainer, and this page picks no answer. The two candidate answers are:
