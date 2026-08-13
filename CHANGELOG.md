@@ -13,7 +13,8 @@ never states the count that the issue first wrote, so the enumeration is a state
 present and never a history. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
-140 more, issue #361 put 8 more, issue #375 put 12 more, and issue #387 put 10 more.
+140 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, and issue
+#441 put 108 more.
 Issue #455 wrote the last 32 entries of the ruling #285 count, because the body gate moved
 16 frames of `http1.pcapng` to a match and left the raw forms of those frames in deviation.
 Issue #409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5
@@ -22,11 +23,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1680 matches, 475
-deviations, 450 accepted deviations and 470 register keys. The run also reports 172 unaccepted
+reports 1680 matches, 367
+deviations, 558 accepted deviations and 578 register keys. The run also reports 172 unaccepted
 uncovered values and 20 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 450 and
-20 add up to the 470 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 558 and
+20 add up to the 578 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
