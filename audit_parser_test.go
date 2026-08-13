@@ -35,22 +35,26 @@ func auditParserClientHello(t *testing.T, extensions []parser.TLSExtension) []by
 	return parser.BuildClientHello(0x0303, []uint16{0x1301, 0x1302}, extensions)
 }
 
-func TestF22_1_ALPNValueHexEncodesTheWholeValueAndDisagreesWithTheFoxioVector(t *testing.T) {
+func TestF22_1_ALPNValueWritesTheValueTheFoxioVectorHolds(t *testing.T) {
+	// **F-22-1 is closed, and issue #50 closed it.** The finding recorded that the library
+	// wrote the first and last character of the hexadecimal form of the whole first ALPN
+	// value. No FoxIO implementation writes that value.
+	//
 	// The FoxIO vector for `tls-non-ascii-alpn.pcapng` stream 0 holds
-	// `t13d151699_8daaf6152771_e5627efa2ab1`, and the library produces
-	// `t13d1516bd_8daaf6152771_e5627efa2ab1`. Only the two ALPN characters differ.
-	// `docs/audit/conformance.md:410` records the pair.
+	// `t13d151699_8daaf6152771_e5627efa2ab1`. The library wrote
+	// `t13d1516bd_8daaf6152771_e5627efa2ab1` before the repair, and only the two ALPN
+	// characters differed. `docs/audit/conformance.md:410` records the pair.
 	//
 	// `docs/specs/foxio/JA4.md` R19 records a reference split of four results for a
 	// non-alphanumeric ALPN value. `.claude/rules/parity.md` rule 1 settles it, because a
-	// vector reaches the value, and the vector holds `99`.
+	// vector reaches the value, and the vector holds `99`. `python/ja4.py:279-280` and
+	// `wireshark/source/packet-ja4.c:1027-1028` both write `99`.
 	//
-	// The two values below separate the reading. `python/ja4.py:279` and
-	// `wireshark/source/packet-ja4.c:1027` both write `99`, and the library writes the
-	// first and last character of the hexadecimal form of the whole value.
+	// The `hexForm` column records the value the finding measured. This test asserts the
+	// FoxIO value, so it fails when a reader restores the hexadecimal rule.
 	cases := []struct {
 		alpn    string
-		library string
+		hexForm string
 		foxio   string
 	}{
 		{"\xbd\x99", "b9", "99"},
@@ -60,9 +64,9 @@ func TestF22_1_ALPNValueHexEncodesTheWholeValueAndDisagreesWithTheFoxioVector(t 
 
 	for _, testCase := range cases {
 		got := parser.ALPNValue([]string{testCase.alpn})
-		if got != testCase.library {
-			t.Errorf("ALPNValue(%q) = %q, and the finding F-22-1 records %q",
-				testCase.alpn, got, testCase.library)
+		if got != testCase.foxio {
+			t.Errorf("ALPNValue(%q) = %q, the FoxIO reference writes %q, and F-22-1 measured %q",
+				testCase.alpn, got, testCase.foxio, testCase.hexForm)
 		}
 	}
 }

@@ -110,12 +110,34 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
 - **R17** — No ALPN extension produces `00`. The image states it, and
   `zeek/ja4/main.zeek:84` corroborates.
 
+  **The prose also names an empty first ALPN value, and it gives the same `00`.**
+  `technical_details/JA4.md:93` covers three inputs in one sentence, and this is the
+  verbatim text. **R18 below cites the same line for a different rule**, because line 93
+  holds two sentences and the second one states the one-character rule.
+
+  > If there is no ALPN extension, no ALPN values, or the first ALPN value is empty, then we
+  > print "00" as the value in the fingerprint.
+
+  **So a FoxIO source does state the empty case.** `docs/specs/spec.md` R9 question 1 asked
+  what an empty first ALPN value writes, and the maintainer ratified `00` on 2026-08-11 from
+  the two implementations alone. This prose sentence corroborates that answer.
+  `internal/parser/tls.go` writes `00` for the input. Issue #50 records the reading and
+  changes no line of the behaviour.
+
 - **R18** — **Reference split.** An ALPN value of one character produces three different
   results. The image states no rule for it.
   - `technical_details/JA4.md:93` states that the one character serves as both the first
-    character and the last character.
+    character and the last character. **That line holds two sentences, and R17 above cites
+    the first one for the empty value.**
   - `zeek/ja4/main.zeek:86` produces the same two characters, because `[0]` and `[-1]`
     reach the same character.
+  - `wireshark/source/packet-ja4.c:552-554` produces the same two characters. It reads the
+    first character of the stored value, and it reads the character at the last index, which
+    is the same character. **That code sits in `ja4s_r`, so it renders JA4S and not JA4.**
+    Reading 2 below states that the dissector registers no JA4 field, and it corroborates a
+    JA4 rule only where it shares code with another method. **The ALPN store at
+    `wireshark/source/packet-ja4.c:1023-1034` is the shared code**, because it reads the
+    client field and the server field into one buffer.
   - `rust/ja4/src/tls.rs:625` reads no last character, and `rust/ja4/src/tls.rs:334`
     then writes `0` in its place.
   - `python/ja4.py:276` leaves the value at one character, so part a is one character
@@ -125,11 +147,27 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
   alphanumeric character produces four different results.
   - `technical_details/JA4.md:95` states the first and last characters of the hexadecimal
     form of the whole first ALPN value.
-  - `python/ja4.py:279` writes `99` when the first byte is above 127.
-  - `wireshark/source/packet-ja4.c:1027` writes `99` when the first byte is not an ASCII
-    alphanumeric character.
+  - `python/ja4.py:279-280` writes `99` when the first byte is above 127.
+  - `wireshark/source/packet-ja4.c:1027-1028` writes `99` when the first byte is not an
+    ASCII alphanumeric character.
   - `rust/ja4/src/tls.rs:616` replaces each non-ASCII character with `9`, one character at
     a time.
+
+  **The four results agree on two inputs, and Reading 5 states the measurement.** The two
+  implementations agree on every input whose first byte and last byte fall inside
+  `0x20-0x7E`. They also agree on an input whose two bytes fall outside ASCII. The FoxIO
+  vector `python/test/testdata/tls-non-ascii-alpn.pcapng.json` reaches the second case, and
+  it holds `99`.
+
+  **The prose rule and the FoxIO vector contradict each other.** `technical_details/JA4.md:95`
+  states the rule, and `technical_details/JA4.md:97-100` states four examples of it. The
+  prose states `ad` for the first ALPN value `0xAB 0xCD`. **The prose states no example for
+  `0xba 0xad`**, and its rule computes `bd` for that input. The FoxIO vector holds `99` for
+  it.
+
+  **No function of the bytes satisfies both values.** Each of the two inputs holds two bytes.
+  Every byte of each input falls outside the alphanumeric ranges. So no rule that reads the
+  bytes gives `ad` for one input and `99` for the other.
 
 - **R20** — Part b is a SHA-256 hash of the cipher suite list. The image states `Truncated
   SHA256 hash of the Cipher Suites, sorted`. `python/ja4.py:255` corroborates through
@@ -210,3 +248,30 @@ A reading is a conclusion about a source. None of these carries a rule.
   extension, which `rust/ja4/src/tls.rs:493` numbers 57. `zeek/ja4/main.zeek:66` reads the
   transport protocol and the service name. The three agree on every capture this project
   reads, so this page records no reference split for it.
+
+- **Reading 5** — **Neither implementation reads the ALPN byte the packet holds, and the
+  tshark text form is the cause.** This reading holds FR-parity-12 of
+  `docs/specs/features/08-python-parity.md`. Both implementations read the tshark field
+  `tls.handshake.extensions_alpn_str`, which carries text and not bytes.
+  `python/ja4.py:270` reads it as `alpn_list`, and `rust/ja4/src/tls.rs:188` reads it
+  through `first`. R18 and R19 above record the results, and this reading records why they
+  differ.
+
+  - **FoxIO Python writes `U+FFFD`.** tshark writes the Unicode replacement character for
+    a byte it cannot decode, and `python/ja4.py:277` copies that character into the field.
+    `python/ja4.py:279` tests `ord(alpn[0]) > 127` and therefore tests the first character
+    alone, so the replacement character reaches the fingerprint from the last position.
+  - **FoxIO Rust writes the `tshark` escape text.** `rust/ja4/src/tls.rs:615` reads the
+    field as a character sequence, so it reads a control byte as the escape text tshark
+    writes. It reads the two-byte value `h\x1f` as the five characters `h`, `\`, `x`, `1`
+    and `f`. `rust/ja4/src/tls.rs:624-625` then writes the first character and the last
+    character of those five, which is `hf`. `rust/ja4/src/tls.rs:638-645` holds the FoxIO
+    test that asserts the replacement character maps to `9`.
+  - **The measurement.** The port measured both implementations at the pinned commit
+    `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, against a capture it built for the purpose.
+    `Crank-Git/ja4plus#141` records the commands and the table, and
+    `Crank-Git/ja4plus#162` records the maintainer ruling of 2026-08-07.
+    **`U+FFFD` is no byte of the packet, and `\`, `x`, `1` and `f` are no bytes of the
+    packet.** So a byte outside `0x20-0x7E` in a position other than the first reaches no
+    reference value that reads the wire, and `.claude/rules/parity.md`
+    `## Where a difference comes from` names that shape a proven reference defect.

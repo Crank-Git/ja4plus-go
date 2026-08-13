@@ -11,8 +11,8 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1623 |
-| Deviations | 680 |
+| Matches | 1627 |
+| Deviations | 676 |
 | Accepted deviations | 409 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
@@ -23,14 +23,14 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
-| per-stream | 1089 | 106 | 266 |
+| per-stream | 1093 | 102 | 266 |
 | per-packet | 534 | 574 | 143 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 
 ## Deviations
 
-The run reports 1089 deviations in 92 groups. One group is one capture, one method and one vector set.
+The run reports 1085 deviations in 91 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -246,9 +246,6 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/34/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_7bf9a7bf7029` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/34/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2` | (none) |
 | `tls-handshake.pcapng` | per-stream | JA4X | 8 | `tls-handshake.pcapng/40/JA4X.2` | the two values differ | `7d5dbb3783b4_a373a9f83c6b_a83ffcd6e6c2` | `7d5dbb3783b4_7d5dbb3783b4_f269f029c206` |
-| `tls-non-ascii-alpn.pcapng` | per-stream | JA4 | 4 | `tls-non-ascii-alpn.pcapng/0/JA4.1` | the two values differ | `t13d151699_8daaf6152771_e5627efa2ab1` | `t13d1516bd_8daaf6152771_e5627efa2ab1` |
-| `tls-non-ascii-alpn.pcapng` | per-stream | JA4 | 4 | `tls-non-ascii-alpn.pcapng/0/JA4_o.1` | the two values differ | `t13d151699_acb858a92679_8fc3c02244b2` | `t13d1516bd_acb858a92679_8fc3c02244b2` |
-| `tls-non-ascii-alpn.pcapng` | per-stream | JA4 | 4 | `tls-non-ascii-alpn.pcapng/0/JA4_r.1` | the two values differ | `t13d151699_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0015,0017,001b,0023,002b,002d,0033,4469,ff01_0403,0804,0401,0503,0805,0501,0806,0601` | `t13d1516bd_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0015,0017,001b,0023,002b,002d,0033,4469,ff01_0403,0804,0401,0503,0805,0501,0806,0601` |
 | `tls-sni.pcapng` | per-stream | JA4 | 80 | `tls-sni.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0310h3_55b375c5d22e_cd85d2d88918` |
 | `tls-sni.pcapng` | per-stream | JA4 | 80 | `tls-sni.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4_o` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0310h3_55b375c5d22e_69d12ce3ef74` |
 | `tls-sni.pcapng` | per-stream | JA4 | 80 | `tls-sni.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4_r` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201` |
@@ -658,7 +655,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `tls-handshake.pcapng` | JA4TS | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-handshake.pcapng` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-handshake.pcapng` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
-| `tls-non-ascii-alpn.pcapng` | JA4 | per-stream | deviation | 0 | 4 | — |
+| `tls-non-ascii-alpn.pcapng` | JA4 | per-stream | match | 4 | 0 | — |
 | `tls-non-ascii-alpn.pcapng` | JA4S | per-packet and per-stream | match | 4 | 0 | — |
 | `tls-non-ascii-alpn.pcapng` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `tls-non-ascii-alpn.pcapng` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
