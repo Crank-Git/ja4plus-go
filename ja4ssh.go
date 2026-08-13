@@ -1,6 +1,7 @@
 package ja4plus
 
 import (
+	"container/list"
 	"fmt"
 	"sort"
 	"strings"
@@ -11,6 +12,26 @@ import (
 )
 
 const defaultSSHWindow = 200
+
+// The maximum count of connections the state table holds. The insert that reaches this count
+// removes the connection that received no packet for the longest time.
+// Issue #221 opens one connection for each completed TCP handshake to port 22, so a port scan
+// of that port fills the table with connections that carry no SSH.
+// `.claude/rules/parity.md` rule 2 states that the port decides the interface where this
+// project shipped nothing, and no FoxIO source addresses a state table.
+// `ja4plus/utils/state_table.py:52` sets `DEFAULT_MAX_CONNECTIONS = 10000`.
+const maxSSHConnections = 10000
+
+// The maximum age of one connection of the state table.
+// `ja4plus/utils/state_table.py:58` sets `DEFAULT_MAX_CONNECTION_AGE = 600`, and it records the
+// longest gap between two segments of one connection of the shared vector set at 320.714503
+// seconds, in `ssh-r.pcap`.
+const maxSSHConnectionAge = 600 * time.Second
+
+// The count of packets between two age passes. One pass reads every connection, so a pass on
+// each packet costs the connection count on each packet.
+// `ja4plus/utils/state_table.py:62` sets `DEFAULT_EVICTION_INTERVAL = 1000`.
+const sshEvictionInterval = 1000
 
 // sshConnState tracks SSH packet statistics for a single connection.
 type sshConnState struct {
@@ -31,6 +52,9 @@ type sshConnState struct {
 	// lastSeen holds the timestamp of the last packet of the connection. An open window
 	// carries it, because no packet triggers that emission.
 	lastSeen time.Time
+	// element names the position of the connection in the order list of the fingerprinter.
+	// The eviction reads that list, because a Go map states no order of its own.
+	element *list.Element
 	// arrival holds the count of connections the fingerprinter opened before this one.
 	// A range over a Go map orders nothing, and CloseOpenWindows publishes in capture
 	// order, so two runs of one capture agree.
@@ -64,6 +88,16 @@ type JA4SSHFingerprinter struct {
 	// arrivals counts the connections the fingerprinter opened. Each connection stores
 	// the value it read at its own start, and CloseOpenWindows publishes in that order.
 	arrivals int
+	// order holds the key of each connection of the state table, and the connection that
+	// received no packet for the longest time stands at the front. The entry bound removes
+	// the front connection, and a Go map states no order of its own.
+	// The state table and this list name one set of connections. openConnection is the one
+	// method that adds a connection, and removeConnection is the one method that removes
+	// one, so the two cannot disagree.
+	order *list.List
+	// packets counts the packets the fingerprinter reads. The age pass runs on the eviction
+	// interval, so the eviction cost stays proportional to the traffic.
+	packets int
 }
 
 // NewJA4SSH creates a new JA4SSH fingerprinter.
@@ -75,6 +109,7 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 	return &JA4SSHFingerprinter{
 		connections: make(map[string]*sshConnState),
 		packetCount: packetCount,
+		order:       list.New(),
 	}
 }
 
@@ -85,6 +120,10 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 func (f *JA4SSHFingerprinter) ensure() {
 	if f.connections == nil {
 		f.connections = make(map[string]*sshConnState)
+	}
+
+	if f.order == nil {
+		f.order = list.New()
 	}
 
 	if f.packetCount <= 0 {
@@ -107,6 +146,16 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	srcIP, dstIP, _, ok := parser.GetIPInfo(packet)
 	if !ok {
 		return nil, nil
+	}
+
+	// The age pass reads every connection, so it runs on the eviction interval and never on
+	// each packet. The port announces each packet to its state table at
+	// `ja4plus/fingerprinters/ja4ssh.py:122`.
+	// The pass precedes the connection of this packet, so it reaches no connection that this
+	// packet opens.
+	f.packets++
+	if f.packets%sshEvictionInterval == 0 {
+		f.evictAgedConnections(parser.GetPacketTimestamp(packet))
 	}
 
 	srcPort := uint16(tcp.SrcPort)
@@ -195,15 +244,7 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	// Initialize connection if needed
 	if !exists {
-		conn = &sshConnState{
-			clientIP:   clientIP,
-			serverIP:   serverIP,
-			clientPort: clientPort,
-			serverPort: serverPort,
-			arrival:    f.arrivals,
-		}
-		f.connections[connKey] = conn
-		f.arrivals++
+		conn = f.openConnection(connKey, clientIP, serverIP, clientPort, serverPort)
 	}
 
 	// A packet that carries no payload reaches the bare ACK counter, and it advances no
@@ -223,13 +264,13 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 			} else {
 				conn.serverACKs++
 			}
-			conn.lastSeen = parser.GetPacketTimestamp(packet)
+			f.touchConnection(conn, parser.GetPacketTimestamp(packet))
 		}
 
 		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort, closesConnection)
 	}
 
-	conn.lastSeen = parser.GetPacketTimestamp(packet)
+	f.touchConnection(conn, parser.GetPacketTimestamp(packet))
 
 	// The tracker reads every payload segment of the direction, and not the segments the
 	// window counts alone. It reads the sequence number too, because a retransmission
@@ -285,6 +326,98 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	}
 
 	return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort, closesConnection)
+}
+
+// openConnection returns a new connection of the state table, and it holds the entry bound.
+// The bound removes the connection that received no packet for the longest time, until the
+// state table holds space for this connection. The port applies the same bound at the insert,
+// at `ja4plus/utils/state_table.py:509`.
+// A removed connection that receives a later packet reaches this method again, and its window
+// then counts from zero.
+func (f *JA4SSHFingerprinter) openConnection(
+	connKey string, clientIP string, serverIP string, clientPort uint16, serverPort uint16,
+) *sshConnState {
+	for len(f.connections) >= maxSSHConnections {
+		front := f.order.Front()
+		if front == nil {
+			break
+		}
+
+		oldestKey, held := front.Value.(string)
+		if !held {
+			f.order.Remove(front)
+			continue
+		}
+
+		f.removeConnection(oldestKey)
+	}
+
+	conn := &sshConnState{
+		clientIP:   clientIP,
+		serverIP:   serverIP,
+		clientPort: clientPort,
+		serverPort: serverPort,
+		arrival:    f.arrivals,
+	}
+
+	f.connections[connKey] = conn
+	conn.element = f.order.PushBack(connKey)
+	f.arrivals++
+
+	return conn
+}
+
+// touchConnection records the timestamp of the packet on the connection, and it moves the
+// connection to the back of the order list.
+// The two bounds read one measure of recency, because the entry bound removes the front
+// connection and the age pass reads the same timestamp.
+func (f *JA4SSHFingerprinter) touchConnection(conn *sshConnState, timestamp time.Time) {
+	conn.lastSeen = timestamp
+
+	if conn.element != nil {
+		f.order.MoveToBack(conn.element)
+	}
+}
+
+// removeConnection removes one connection from the state table and from the order list.
+// One method serves every removal path, because a state table and an order list that disagree
+// remove the wrong connection at the entry bound.
+func (f *JA4SSHFingerprinter) removeConnection(connKey string) {
+	conn, held := f.connections[connKey]
+	if !held {
+		return
+	}
+
+	delete(f.connections, connKey)
+
+	if conn.element != nil {
+		f.order.Remove(conn.element)
+		conn.element = nil
+	}
+}
+
+// evictAgedConnections removes each connection that received no packet for the maximum age.
+//
+// The clock reads the packet timestamp, and never the wall clock. A capture replays faster
+// than the wall clock, so a wall clock removes state that the capture still needs. The port
+// reads the packet timestamp at `ja4plus/fingerprinters/ja4ssh.py:122`.
+//
+// The pass reads every connection. A capture states a timestamp of its own, so two packets
+// can arrive out of order and the order list then does not follow the age.
+func (f *JA4SSHFingerprinter) evictAgedConnections(now time.Time) {
+	for element := f.order.Front(); element != nil; {
+		next := element.Next()
+
+		connKey, held := element.Value.(string)
+		if held {
+			if conn, present := f.connections[connKey]; present &&
+				now.Sub(conn.lastSeen) > maxSSHConnectionAge {
+				f.removeConnection(connKey)
+			}
+		}
+
+		element = next
+	}
 }
 
 // checkWindow emits the window when the count of SSH packets reaches the threshold, and it
@@ -427,10 +560,13 @@ func (f *JA4SSHFingerprinter) GetHASSHFingerprints() []HASSHResult {
 // It keeps the arrival counter. The counter orders the connections that CloseOpenWindows
 // publishes, and a counter that returns to zero would order a new connection against a
 // stale number.
+// It empties the order list too, because the state table and that list name one set of
+// connections. It keeps the packet counter, which schedules the age pass alone.
 func (f *JA4SSHFingerprinter) Reset() {
 	f.ensure()
 
 	f.connections = make(map[string]*sshConnState)
+	f.order.Init()
 }
 
 // sshConnKeyOfEndpoints returns the state-table key of the connection the two endpoints
@@ -467,7 +603,7 @@ func sshConnKeyOfEndpoints(srcIP string, srcPort uint16, dstIP string, dstPort u
 func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 
-	delete(f.connections, sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort))
+	f.removeConnection(sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort))
 }
 
 // CloseConnectionWindow returns the value of the window that one connection holds open, and
@@ -505,7 +641,7 @@ func (f *JA4SSHFingerprinter) CloseConnectionWindow(srcIP string, srcPort uint16
 	// The eviction follows the emission, which is the order the ruling of issue #216 states.
 	// A window that holds no SSH packet reaches this line too, because CleanupConnection
 	// evicts such a connection and this method must not leave it behind.
-	delete(f.connections, connKey)
+	f.removeConnection(connKey)
 
 	if !held {
 		return nil
