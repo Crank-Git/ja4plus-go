@@ -11,8 +11,8 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1657 |
-| Deviations | 646 |
+| Matches | 1658 |
+| Deviations | 645 |
 | Accepted deviations | 409 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
@@ -24,13 +24,13 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
 | per-stream | 1103 | 92 | 266 |
-| per-packet | 554 | 554 | 143 |
+| per-packet | 555 | 553 | 143 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 
 ## Deviations
 
-The run reports 1055 deviations in 87 groups. One group is one capture, one method and one vector set.
+The run reports 1054 deviations in 87 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -199,9 +199,8 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `ssh2.pcapng` | per-packet | JA4T | 31 | `ssh2.pcapng/1197/JA4T.1` | the vector holds a value the library does not produce | `64240_2-1-3-1-1-4_1460_8` | (none) |
 | `ssh2.pcapng` | per-packet | JA4T | 31 | `ssh2.pcapng/1198/JA4T.1` | the vector holds a value the library does not produce | `64240_2-1-3-1-1-4_1460_8` | (none) |
 | `ssh2.pcapng` | per-packet | JA4T | 31 | `ssh2.pcapng/1244/JA4T.1` | the vector holds a value the library does not produce | `64240_2-1-3-1-1-4_1460_8` | (none) |
-| `ssh2.pcapng` | per-packet | JA4TS | 3 | `ssh2.pcapng/373/JA4TS.1` | the two values differ | `64240_2-1-1-4-1-3_1460_7_0` | `64240_2-1-1-4-1-3_1460_7` |
-| `ssh2.pcapng` | per-packet | JA4TS | 3 | `ssh2.pcapng/849/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
-| `ssh2.pcapng` | per-packet | JA4TS | 3 | `ssh2.pcapng/850/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
+| `ssh2.pcapng` | per-packet | JA4TS | 2 | `ssh2.pcapng/849/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
+| `ssh2.pcapng` | per-packet | JA4TS | 2 | `ssh2.pcapng/850/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
 | `ssh2.pcapng` | per-stream | JA4 | 8 | `ssh2.pcapng/33/JA4` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0312h3_55b375c5d22e_73e2d9e6cde6` |
 | `ssh2.pcapng` | per-stream | JA4 | 8 | `ssh2.pcapng/33/JA4_o` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0312h3_55b375c5d22e_fde15aea1603` |
 | `ssh2.pcapng` | per-stream | JA4 | 8 | `ssh2.pcapng/33/JA4_r` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0312h3_1301,1302,1303_000a,000d,001b,0029,002a,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201` |
@@ -596,7 +595,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `ssh2.pcapng` | JA4L | per-packet and per-stream | deviation | 9 | 22 | — |
 | `ssh2.pcapng` | JA4LS | per-packet and per-stream | deviation | 8 | 20 | — |
 | `ssh2.pcapng` | JA4T | per-packet | deviation | 44 | 31 | — |
-| `ssh2.pcapng` | JA4TS | per-packet | deviation | 8 | 3 | — |
+| `ssh2.pcapng` | JA4TS | per-packet | deviation | 9 | 2 | — |
 | `ssh2.pcapng` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `ssh2.pcapng` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
 | `sshv1.pcap` | JA4 | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
