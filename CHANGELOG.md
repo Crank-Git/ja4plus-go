@@ -440,8 +440,9 @@ that the interface declares.
 - **A repeated TCP segment now produces one JA4H value, and it produced two before.** Frame 6
   and frame 15 of `CVE-2018-6794.pcap` carry the same bytes on the same four-tuple, and the
   library fingerprinted both. No FoxIO implementation publishes a second value for the repeat.
-  **A caller of `v0.3.0` who upgrades reads one JA4H value where two arrived**, so a consumer
-  that counts JA4H results reads a lower count on the same capture. `JA4HFingerprinter` now
+  **A caller of `v0.3.0` who upgrades reads one JA4H value where two arrived.** A consumer
+  that counts JA4H results therefore reads a lower count on the same capture.
+  `JA4HFingerprinter` now
   holds `ranges`, which records the sequence range of each stream that the fingerprinter
   already read. The table holds an entry bound and an age bound, and `CleanupConnection` and
   `Reset` each remove from it. **The change closes 50 deviations**, and the deviations that the
@@ -453,8 +454,9 @@ that the interface declares.
 - **`JA4L-S` now reaches the frame that fills point D, and it reached the point B frame
   before.** The value is identical on the two frames, and the per-packet vector holds it at
   the point D frame. **A caller of `v0.3.0` who upgrades reads the same `JA4L-S` value on a
-  later frame**, so a consumer that pairs the value with a frame number reads a different
-  pairing. The per-stream set does not move, because it names a stream rather than a frame.
+  later frame.** A consumer that pairs the value with a frame number therefore reads a
+  different pairing. The per-stream set does not move, because it names a stream rather than a
+  frame.
   `processUDP` of `ja4l.go` holds the emission. **The change closes 14 deviations**, and the
   deviations that the register does not hold fall from 585 to 571. **The whole-corpus match
   count rises from 1658 to 1664**, which is the first rise of this session. **The register
