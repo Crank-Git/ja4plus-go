@@ -52,7 +52,27 @@ it.
 
 ### The method
 
-- **FR-ja4ls-1** — `JA4LFingerprinter` emits a result whose `Type` is `ja4ls`.
+**The maintainer ruled FR-ja4ls-1 on 2026-08-13.** The requirement was wrong, and the code
+was right. It read `JA4LFingerprinter` emits a result whose `Type` is `ja4ls` before that
+ruling. `ja4l.go:183` and `ja4l.go:381` each emit the server value today, and `ja4l.go:493`
+writes `Type: "ja4l"` for every result. `## Behaviour rules` below states that JA4LS reaches
+no type of its own, so the file contradicted itself. `ja4plus/processor.py:106` at `v1.1.0`
+registers `("ja4l", JA4LFingerprinter)`, so the port writes one type for both methods. The
+`Type` field is part of the surface that `v1.0.0` freezes. #60 records the measurement.
+
+**FR-ja4ls-7 and FR-ja4ls-8 carry a PROVISIONAL ruling of #60, made on 2026-08-13.**
+`.claude/rules/rulings.md` `## What a delegated session may rule` governs it. Each
+requirement asked for a value that no FoxIO implementation writes, and the code already
+agrees with the reference. `docs/specs/foxio/JA4L.md` R13 at :90-92 states that part b holds
+the value the packet carries. R18 at :114-116 states that no implementation writes an
+estimated hop count. R6 at :57-61 states that four implementations divide by 2, and R22 at
+:137-139 states that no implementation computes a distance. The propagation factor belongs
+to the distance formula of R19, which `CalculateDistance` holds and no fingerprint reads.
+**The maintainer confirms both rulings or reverses them, and #60 is the reversal path.**
+Neither amendment changes code, and `ja4ls_emission_test.go` holds each one as a test.
+
+- **FR-ja4ls-1** — `JA4LFingerprinter` emits the JA4LS value in a result whose `Type` is
+  `ja4l`. The `JA4L-S=` label of the fingerprint names the method.
 - **FR-ja4ls-2** — The JA4LS value measures the server side of the connection.
 - **FR-ja4ls-3** — The value holds two timing parts on a TCP connection, under
   FR-parity-19.
@@ -61,10 +81,10 @@ it.
 - **FR-ja4ls-5** — The fingerprinter reports one JA4LS value for one connection.
 - **FR-ja4ls-6** — A retransmitted SYN-ACK produces no second JA4LS value, under
   FR-parity-18.
-- **FR-ja4ls-7** — The second part of the value is the hop count, read as the initial
-  time-to-live minus the observed time-to-live.
-- **FR-ja4ls-8** — The first part is the measured time divided by the propagation factor
-  that the FoxIO hop-count table gives.
+- **FR-ja4ls-7** — The second part of the value holds the time-to-live that the server
+  SYN-ACK carries. The value subtracts that number from no initial time-to-live.
+- **FR-ja4ls-8** — The first part is half of the interval between the two measurement
+  points. No propagation factor reaches the value.
 - **FR-ja4ls-9** — A connection that reaches no server measurement point produces no JA4LS
   value.
 
