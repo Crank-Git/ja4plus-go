@@ -79,8 +79,49 @@ This feature set adds the missing gates and settles the dependency question.
 
 - **FR-supply-21** — `.github/workflows/ci.yml` runs `go test -bench=. -benchmem ./...`.
 - **FR-supply-22** — The job compares the result with the result from the base branch.
-- **FR-supply-23** — The job posts a comment when a benchmark is more than 20 percent
-  slower.
+- **FR-supply-23** — The job writes the comparison to the build summary, and it prints one
+  warning annotation when a benchmark is more than 20 percent slower.
+
+  **#69 amended this requirement on 2026-08-13, and the amendment is provisional.** The
+  requirement read `The job posts a comment when a benchmark is more than 20 percent
+  slower.` until that date. A pull-request comment needs `pull-requests: write`, and
+  FR-supply-15 gives `.github/workflows/ci.yml` `contents: read` and nothing more.
+
+  **A widening does not buy the promise.** GitHub gives a fork pull request a read-only
+  token whatever the `permissions` block states:
+
+  > if the workflow was triggered by a pull request event other than `pull_request_target`
+  > from a forked repository, and the **Send write tokens to workflows from pull requests**
+  > setting is not selected, the permissions are adjusted to change any write permissions to
+  > read only.
+
+  > You can use the `permissions` key to add and remove `read` permissions for forked
+  > repositories, but typically you can't grant `write` access.
+
+  Verified against
+  <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions>,
+  retrieved 2026-08-13. **So a requirement that promises a comment on every regression
+  cannot be met by widening**, and it stays false for every contributor who forks.
+
+  **Three options were read and each one was declined.** Option A adds
+  `pull-requests: write` at the workflow level, which breaks FR-supply-15 and gives a write
+  scope to six jobs, five of which build pull-request code, inside the epic whose purpose is
+  to reduce that exposure. Option B adds a job-level `permissions` block on the benchmark
+  job alone, which fails `TestTheCIWorkflowGrantsNoJobLevelPermission`, the guard #68
+  landed. Option C adds a second workflow file on `workflow_run` that reads an artifact and
+  posts the comment, which adds a new write-scoped surface for a warning. **Each option
+  still meets the fork limit above.**
+
+  **A build summary is not a comment, and an annotation is not a comment.** The requirement
+  now names what the job writes, and it promises no comment. `## Screens & states` below
+  already states that the CI build summary is the only reader-facing output of this project.
+
+  **#68 set the precedent on the same shape**, when it read FR-supply-19 as a rule for a
+  person rather than widening the block.
+
+  Comment 5286981123 of #69 holds the decision, and **issue #69 is the reversal path**. A
+  reversal states which of the three costs the project accepts, and it answers the fork
+  limit above.
 - **FR-supply-24** — The benchmark job does not fail the build. It warns only.
 
 ### The `gopacket` decision
@@ -139,7 +180,7 @@ The project has no user interface. The CI build summary is the only reader-facin
 |---|---|
 | Coverage passes | The measured coverage, the floor, and a per-package table. |
 | Coverage fails | The measured coverage, the floor, and the packages whose coverage fell. |
-| Benchmark regression | A table of the changed benchmarks with the base value and the head value. |
+| Benchmark regression | A table of every benchmark either commit holds, with the base value, the head value and the change. A benchmark more than 20 percent slower carries a mark, and the job prints one warning annotation. |
 
 ## Behaviour rules
 
@@ -149,6 +190,10 @@ The project has no user interface. The CI build summary is the only reader-facin
   the floor.
 - A benchmark warns and does not block, because runner variance produces false failures.
   A real regression is confirmed by hand.
+- **A benchmark warns through the build summary and through a warning annotation, and never
+  through a pull-request comment.** A comment needs a write scope that FR-supply-15 refuses
+  and that a fork pull request never receives. The FR-supply-23 amendment above states the
+  reading.
 - `govulncheck` reports by calling path, so a vulnerability in an unused function is a
   note and not a failure.
 - The dependency decision is written before the migration starts, not after.
@@ -232,7 +277,8 @@ before FR-supply-25, and cites the dates in the record.
 - [ ] The repository holds a `.coverage-floor` file.
 - [ ] The commit that creates `.coverage-floor` names the command that measured the
       value.
-- [ ] The CI benchmark job posts a comparison and does not fail the build.
+- [ ] The CI benchmark job writes a comparison to the build summary and does not fail the
+      build.
 - [ ] `docs/audit/dependency-decision.md` records the `gopacket` decision, both release
       dates, and the reason.
 - [ ] `go test -race ./...` passes after any dependency migration.

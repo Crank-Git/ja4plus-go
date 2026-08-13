@@ -12,12 +12,13 @@ import (
 // `workflowJobCommands` of `coverage_floor_test.go` reads the job without its comment
 // lines. Every phrase below therefore reads a command, and never the prose above it.
 //
-// **FR-supply-23 asks for a pull-request comment, and no test below holds one.** #69 read
-// the requirement against FR-supply-15 and reported the tension. A comment needs
-// `pull-requests: write`, `TestTheCIWorkflowGrantsNoJobLevelPermission` of
-// `coverage_floor_test.go` refuses a job-level block, and the documentation states that a
-// pull request from a fork gets a read-only token whatever the block says. The maintainer
-// decides, and issue #69 is the reversal path.
+// **FR-supply-23 promises no pull-request comment, so no test below holds one.** #69 read
+// the requirement against FR-supply-15 and amended it on 2026-08-13, and the amendment is
+// provisional. A comment needs `pull-requests: write`,
+// `TestTheCIWorkflowGrantsNoJobLevelPermission` of `coverage_floor_test.go` refuses a
+// job-level block, and the documentation states that a pull request from a fork gets a
+// read-only token whatever the block says. `docs/specs/features/07-supply-chain.md` holds
+// the amendment, and issue #69 is the reversal path.
 
 // TestTheBenchmarkJobRunsTheBenchTarget holds FR-supply-21. FR-foundation-19 and
 // FR-foundation-20 hold the command in the `bench` target, so the job and a developer
@@ -56,9 +57,8 @@ func TestTheBenchmarkJobMeasuresTheBaseBranch(t *testing.T) {
 	}
 }
 
-// TestTheBenchmarkJobWarnsAboveTwentyPercent holds FR-supply-23 as far as this workflow
-// reaches it. The job marks a benchmark more than 20 percent slower than the base branch,
-// and it prints one warning annotation.
+// TestTheBenchmarkJobWarnsAboveTwentyPercent holds FR-supply-23. The job marks a benchmark
+// more than 20 percent slower than the base branch, and it prints one warning annotation.
 //
 // A threshold of `1.20` marks a change above 20 percent, and it leaves a change of exactly
 // 20 percent alone. The measurement on 2026-08-13, against a base of 8439 ns/op: a head of

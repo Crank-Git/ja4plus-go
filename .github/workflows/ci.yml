@@ -491,11 +491,15 @@ jobs:
   # `contents: read` covers it. A run that is not a pull request reaches no base branch, and
   # the job then reports the head results alone.
   #
-  # **FR-supply-23 asks for a pull-request comment, and this job posts none.** A comment
-  # needs `pull-requests: write`, and FR-supply-15 gives this workflow `contents: read` and
-  # nothing more. The job writes the comparison to the build summary and it prints a warning
-  # annotation. **A build summary is not a comment, and an annotation is not a comment.** So
-  # FR-supply-23 is unmet, #69 records the tension, and the maintainer decides.
+  # **FR-supply-23 writes the comparison to the build summary, and it prints one warning
+  # annotation. It promises no pull-request comment.** #69 amended the requirement on
+  # 2026-08-13, and the amendment is provisional. A comment needs `pull-requests: write`,
+  # FR-supply-15 gives this workflow `contents: read` and nothing more, and a fork pull
+  # request gets a read-only token whatever the block states. So a widening buys a comment
+  # on a branch pull request alone, and it gives a write scope to six jobs.
+  # `docs/specs/features/07-supply-chain.md` holds the amendment, the quoted fork limit and
+  # the three declined options. Comment 5286981123 of #69 holds the decision, and issue #69
+  # is the reversal path.
   #
   # FR-supply-24 warns and never fails the build, because runner variance produces a false
   # regression. Every step below that measures or compares exits 0.
@@ -673,7 +677,7 @@ jobs:
             echo
             echo "A benchmark more than 20 percent slower than the base branch warns, and it fails no build. Runner variance produces a false regression, so confirm each one by hand."
             echo
-            echo "This job posts no pull-request comment. FR-supply-23 asks for one, a comment needs \`pull-requests: write\`, and FR-supply-15 gives this workflow \`contents: read\` and nothing more."
+            echo "This job posts no pull-request comment, and FR-supply-23 asks for none. A comment needs \`pull-requests: write\`, FR-supply-15 gives this workflow \`contents: read\` and nothing more, and a fork pull request gets a read-only token whatever the block states."
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$slower" -gt 0 ]; then
