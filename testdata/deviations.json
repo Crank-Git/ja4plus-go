@@ -3494,5 +3494,101 @@
     "theirs": "",
     "ruling": "#361",
     "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "socks4-https.pcap/0/JA4X",
+    "capability": false,
+    "ours": "14f85a9f494d_3f8190b6b671_80ea7ef3b044",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/0/JA4X.2",
+    "capability": false,
+    "ours": "14f85a9f494d_14f85a9f494d_be007da94c85",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/0/JA4X.3",
+    "capability": false,
+    "ours": "e7bc7ebc3d9e_14f85a9f494d_9c8ed4a87d4b",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/0/JA4X_r",
+    "capability": false,
+    "ours": "550406,55040a,55040b,55040b,550403_2b0601040182373c020103,2b0601040182373c020102,55040f,550405,550406,550411,550408,550407,550409,55040a,55040b,550403_551d13,551d20,551d1f,551d25,551d0f,551d11,551d0e,2b06010505070101,551d23",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/0/JA4X_r.2",
+    "capability": false,
+    "ours": "550406,55040a,55040b,55040b,550403_550406,55040a,55040b,55040b,550403_551d0e,551d13,551d20,551d1f,551d25,551d0f,6086480186f8420101,2b0601050507010c,551d11,2b06010505070101,551d23",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/0/JA4X_r.3",
+    "capability": false,
+    "ours": "550406,55040a,55040b_550406,55040a,55040b,55040b,550403_551d13,551d1f,551d0f,551d20,551d0e,551d25,2b0601050507010c,2b06010505070101",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/16/JA4X.1",
+    "capability": false,
+    "ours": "14f85a9f494d_3f8190b6b671_80ea7ef3b044",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/16/JA4X.2",
+    "capability": false,
+    "ours": "14f85a9f494d_14f85a9f494d_be007da94c85",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/16/JA4X.3",
+    "capability": false,
+    "ours": "e7bc7ebc3d9e_14f85a9f494d_9c8ed4a87d4b",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/16/JA4X_r.1",
+    "capability": false,
+    "ours": "550406,55040a,55040b,55040b,550403_2b0601040182373c020103,2b0601040182373c020102,55040f,550405,550406,550411,550408,550407,550409,55040a,55040b,550403_551d13,551d20,551d1f,551d25,551d0f,551d11,551d0e,2b06010505070101,551d23",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/16/JA4X_r.2",
+    "capability": false,
+    "ours": "550406,55040a,55040b,55040b,550403_550406,55040a,55040b,55040b,550403_551d0e,551d13,551d20,551d1f,551d25,551d0f,6086480186f8420101,2b0601050507010c,551d11,2b06010505070101,551d23",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
+  },
+  {
+    "key": "socks4-https.pcap/16/JA4X_r.3",
+    "capability": false,
+    "ours": "550406,55040a,55040b_550406,55040a,55040b,55040b,550403_551d13,551d1f,551d0f,551d20,551d0e,551d25,2b0601050507010c,2b06010505070101",
+    "theirs": "",
+    "ruling": "#375",
+    "reason": "`testdata/foxio/python/socks4-https.pcap.json` and `testdata/foxio/wireshark/socks4-https.pcap.json` publish no JA4X key, and the port ruled at `Crank-Git/ja4plus#138` that the three JA4X values on the SOCKS4 tunnel stay."
   }
 ]

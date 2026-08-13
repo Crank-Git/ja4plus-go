@@ -201,7 +201,13 @@ The port's issues #138, #219, #231 and #271 hold these rulings.
 - **FR-parity-49** — JA4X reads the TLS record layer without regard to the tunnel protocol
   that carries it.
 - **FR-parity-50** — A test asserts three JA4X values on the SOCKS4 tunnel of
-  `socks4-https.pcap` on port 9901, and the register holds the three as value declines.
+  `socks4-https.pcap` on port 9901, and the register holds each comparison of the three as a
+  value decline. **This requirement is closed.** `ja4x_tunnel_test.go` holds the test half,
+  and #57 built it. `testdata/deviations.json` holds twelve entries under the ruling #375,
+  and #375 wrote them. **The three values reach twelve comparisons**, because the run
+  compares `JA4X` and `JA4X_r` in the per-stream set and in the per-packet set. A key of
+  this repository names a capture, a stream and a method, and a key of the port names a
+  capture and a method.
 - **FR-parity-51** — Subfield 2 of JA4D writes the first Maximum DHCP Message Size when a
   message repeats option 57.
 - **FR-parity-52** — Part a of a JA4D value holds eleven characters.

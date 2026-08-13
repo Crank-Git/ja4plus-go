@@ -14,9 +14,9 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Matches | 1658 |
 | Deviations | 645 |
 | Accepted deviations | 409 |
-| Unaccepted uncovered values | 214 |
-| Accepted uncovered values | 28 |
-| Accepted comparisons | 437 |
+| Unaccepted uncovered values | 202 |
+| Accepted uncovered values | 40 |
+| Accepted comparisons | 449 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -26,8 +26,8 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1103 | 92 | 266 | 148 | 28 |
-| per-packet | 555 | 553 | 143 | 66 | 0 |
+| per-stream | 1103 | 92 | 266 | 142 | 34 |
+| per-packet | 555 | 553 | 143 | 60 | 6 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -272,7 +272,7 @@ The library produces a value, and the vector file of the capture publishes no ke
 
 The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
 
-The run reports 242 uncovered values in 61 groups, and the register accepts 28 of them. One group is one capture, one method and one vector set.
+The run reports 242 uncovered values in 61 groups, and the register accepts 40 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 
@@ -352,12 +352,12 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 | `socks4-https.pcap` | per-packet | JA4L | 2 | `socks4-https.pcap/3/JA4L.1` | `119349_126` | no |
 | `socks4-https.pcap` | per-packet | JA4L | 2 | `socks4-https.pcap/4/JA4L.1` | `119433_126` | no |
 | `socks4-https.pcap` | per-packet | JA4LS | 1 | `socks4-https.pcap/2/JA4LS.1` | `40155_52` | no |
-| `socks4-https.pcap` | per-packet | JA4X | 6 | `socks4-https.pcap/16/JA4X.1` | `14f85a9f494d_3f8190b6b671_80ea7ef3b044` | no |
-| `socks4-https.pcap` | per-packet | JA4X | 6 | `socks4-https.pcap/16/JA4X.2` | `14f85a9f494d_14f85a9f494d_be007da94c85` | no |
-| `socks4-https.pcap` | per-packet | JA4X | 6 | `socks4-https.pcap/16/JA4X.3` | `e7bc7ebc3d9e_14f85a9f494d_9c8ed4a87d4b` | no |
-| `socks4-https.pcap` | per-stream | JA4X | 6 | `socks4-https.pcap/0/JA4X` | `14f85a9f494d_3f8190b6b671_80ea7ef3b044` | no |
-| `socks4-https.pcap` | per-stream | JA4X | 6 | `socks4-https.pcap/0/JA4X.2` | `14f85a9f494d_14f85a9f494d_be007da94c85` | no |
-| `socks4-https.pcap` | per-stream | JA4X | 6 | `socks4-https.pcap/0/JA4X.3` | `e7bc7ebc3d9e_14f85a9f494d_9c8ed4a87d4b` | no |
+| `socks4-https.pcap` | per-packet | JA4X | 6 | `socks4-https.pcap/16/JA4X.1` | `14f85a9f494d_3f8190b6b671_80ea7ef3b044` | yes |
+| `socks4-https.pcap` | per-packet | JA4X | 6 | `socks4-https.pcap/16/JA4X.2` | `14f85a9f494d_14f85a9f494d_be007da94c85` | yes |
+| `socks4-https.pcap` | per-packet | JA4X | 6 | `socks4-https.pcap/16/JA4X.3` | `e7bc7ebc3d9e_14f85a9f494d_9c8ed4a87d4b` | yes |
+| `socks4-https.pcap` | per-stream | JA4X | 6 | `socks4-https.pcap/0/JA4X` | `14f85a9f494d_3f8190b6b671_80ea7ef3b044` | yes |
+| `socks4-https.pcap` | per-stream | JA4X | 6 | `socks4-https.pcap/0/JA4X.2` | `14f85a9f494d_14f85a9f494d_be007da94c85` | yes |
+| `socks4-https.pcap` | per-stream | JA4X | 6 | `socks4-https.pcap/0/JA4X.3` | `e7bc7ebc3d9e_14f85a9f494d_9c8ed4a87d4b` | yes |
 | `ssh2-malformed.pcap` | per-stream | JA4SSH | 1 | `ssh2-malformed.pcap/0/JA4SSH` | `c16s23_c7s6_c3s4` | no |
 | `ssh2-moloch-crash.pcap` | per-stream | JA4SSH | 1 | `ssh2-moloch-crash.pcap/0/JA4SSH` | `c16s23_c7s6_c3s4` | no |
 | `ssh2.pcapng` | per-stream | JA4H | 2 | `ssh2.pcapng/15/JA4H_r` | `ge11nn030000_Connection,User-Agent,Host_` | no |
