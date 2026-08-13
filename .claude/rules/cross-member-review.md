@@ -153,10 +153,10 @@ The cross-member review checks each category below, and it reports on every one 
 **Category 6 is new, and the batch #342 review earned it.** That review found two defects,
 and neither one fits category 3. Category 3 names one mechanism: a target that another
 member **moved, renamed or never created**. Both targets of batch #342 exist under the name
-the member wrote. `foxio_citation_base_test.go:527-529` named
-`TestTheCISkipDetectorMatchesNoUntaggedSkipMessage`, that test exists, and its extractor
-read no skip of the file that named it. The second finding was a count in a pull-request
-body that the table below it contradicts.
+the member wrote. The doc comment of `foxioCorpusAbsentMessage` in
+`foxio_citation_base_test.go` named `TestTheCISkipDetectorMatchesNoUntaggedSkipMessage`.
+That test exists, and its extractor read no skip of the file that named it. The second
+finding was a count in a pull-request body that the table below it contradicts.
 
 **This file adds a category rather than widening category 3, because one category states
 one mechanism.** `.claude/rules/ste.md` rule 6 states one word, one meaning. A category 3
