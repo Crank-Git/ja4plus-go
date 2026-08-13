@@ -2,6 +2,10 @@
 
 **No agent runs `git stash` in a worktree of this repository.**
 
+**The permission layer refuses `git stash` to an agent in every directory of this
+repository.** `## The permission layer refuses the command` below states the entry, and it
+states who holds each recovery path.
+
 This file states the reason, the alternatives, and the two readings that #305 asked for.
 It carries no `paths` list, because every session must load it.
 
@@ -24,6 +28,70 @@ an error.
 - Commit the change first, then run `git reset --hard` inside the worktree alone.
 
 Each one reads and writes files of this worktree only. None of them writes a shared ref.
+
+## The permission layer refuses the command
+
+**`.claude/settings.json` holds `Bash(git stash:*)` in `permissions.deny`.** #355 added
+that entry, and the maintainer approved it on 2026-08-12. **This project keeps the entry,
+and it narrows it for no directory.** A permission pattern reads a command and not a
+working directory, so an entry that allows the main checkout and refuses a worktree is not
+expressible. `claude_settings_deny_test.go` holds the entry, and it fails when a later
+edit removes it.
+
+**git tracks `.claude/settings.json`, so every worktree of this repository holds a
+checkout of it.** A measurement in a linked worktree records both facts:
+
+```
+$ git ls-files .claude/settings.json
+.claude/settings.json
+$ git rev-parse --git-dir
+/Users/christiancrank/Development/Personal/ja4plus-go/.git/worktrees/agent-a4b4617b5559cb1fb
+```
+
+**Claude Code enforces the entry, and it reads a deny rule before an allow rule.** So the
+entry outranks the `Bash(git:*)` allow entry of the same file. The documentation states
+the order:
+
+> Rules are evaluated in order: deny, then ask, then allow. The first match in that order determines the outcome, and rule specificity doesn't change the order.
+
+The documentation states what the pattern matches:
+
+> The `:*` suffix is an equivalent way to write a trailing wildcard, so `Bash(ls:*)` matches the same commands as `Bash(ls *)`.
+
+> When `*` appears at the end with a space before it (like `Bash(ls *)`), it enforces a word boundary, requiring the prefix to be followed by a space or end-of-string.
+
+So the entry matches `git stash`, and it matches every command that starts `git stash `.
+
+> Permission rules are enforced by Claude Code, not by the model.
+
+**This file records no live refusal of the permission layer.** The rule at the head of this
+file bars the command, so no agent of this project runs `git stash` to observe one. Every
+sentence above reads `.claude/settings.json` and the documentation.
+
+Verified against: <https://code.claude.com/docs/en/permissions.md>, retrieved 2026-08-13.
+
+### The hook and the permission layer reach different commands
+
+| Mechanism | What it refuses | What it allows |
+|---|---|---|
+| `.githooks/reference-transaction` | A write to `refs/stash` from a linked worktree. | A stash from the main checkout, and an autostash store. |
+| The deny entry of `.claude/settings.json` | Every `git stash` command of an agent, in every directory. | No command that starts `git stash`. |
+
+**Each measurement of this file records the hook, and none of them records the permission
+layer.** Where a measurement below states an allowance, it states what the hook allows.
+**The permission layer still refuses the command to an agent.**
+
+### The maintainer holds each recovery path
+
+**A recovery path that needs `git stash` is a maintainer action.** The maintainer runs each
+command of this section, and no agent runs one. Two paths need one.
+
+- A stash from the main checkout, and a later `git stash pop` of it.
+- A `git stash drop` of an autostash entry that the hook allowed.
+
+**Claude Code enforces the entry for a tool call, and a person who types a command in a
+terminal makes no tool call.** So each path survives, and this file instructs no agent to
+run one.
 
 ## Reading: a worktree holds no stash of its own
 
@@ -84,6 +152,9 @@ comes from the worktree isolation of the harness, and not from a rule of
 `.claude/settings.json`, so it measures nothing about a `deny` rule. #305 states the
 proposal, and the maintainer owns that file.
 
+**#355 landed that proposal on 2026-08-12**, and
+`## The permission layer refuses the command` above states the entry it added.
+
 ## The git hook: `.githooks/reference-transaction`
 
 git 2.53.0 defines no `pre-stash` hook. `man githooks | grep -i -c stash` reports `0`, so
@@ -128,6 +199,9 @@ A third attempt
 
 **It allows a stash from the main checkout, and it allows an ordinary commit in a linked
 worktree.** Both reported exit code 0.
+
+That result records the hook. **The permission layer refuses the same stash to an agent**,
+and `## The permission layer refuses the command` above states the entry.
 
 **It does not undo a `git stash pop`.** git applies the stash to the working tree before
 it updates the ref, so the hook aborts the ref update after the files change. A pop in a
@@ -218,6 +292,9 @@ You can run "git stash pop" or "git stash drop" at any time.
 stash@{0}: autostash
 ```
 
+**git prints that instruction, and the permission layer refuses both commands to an
+agent.** The maintainer runs `git stash pop` or `git stash drop`, from the main checkout.
+
 **It allows the rebase autostash store.** `git rebase --continue` reported exit code 0 and
 the same three lines.
 
@@ -240,6 +317,9 @@ line3
 **It still allows a stash from the main checkout.** `git stash push` there reported exit
 code 0.
 
+That result records the hook. **The permission layer refuses that command to an agent**,
+and the maintainer is the person who runs it.
+
 ### Two limits of the repaired hook
 
 **1. The hook refuses `git stash drop` on the entry it allowed.** A drop writes
@@ -256,8 +336,8 @@ fatal: ref updates aborted by hook
 === exit code: 128
 ```
 
-The line above prints the object id, so the entry stays reachable. Drop it from the main
-checkout instead.
+The line above prints the object id, so the entry stays reachable. **The maintainer drops
+the entry from the main checkout**, and no agent runs that command.
 
 **2. The hook allows a hand-written stash while a rebase autostash is pending.** git
 refuses a hand-written stash during a conflicted merge, so the merge case holds. A stopped
@@ -272,3 +352,4 @@ Saved working directory and index state WIP on (no branch): 1e64ea7 other
 
 **That case misses a refusal, and it destroys nothing.** The rule at the head of this file
 covers it, and the rule binds every agent whether or not the maintainer installs the hook.
+**The deny entry of `.claude/settings.json` covers it too, and it needs no installation.**
