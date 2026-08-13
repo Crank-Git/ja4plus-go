@@ -595,7 +595,7 @@ the two findings whose repair would change one, and the maintainer closed both a
 The maintainer ruled on three findings that no source settles. Each ruling is reversible,
 and `.claude/rules/rulings.md` states the rule that only the maintainer makes one.
 
-### F-24-10 and F-24-12 — the convenience functions return one string
+### F-24-10 and F-24-12 — the one-shot functions return one string
 
 `ComputeJA4` returns the empty string for a packet that holds no handshake and for a
 packet that holds a handshake the parser cannot read. `ComputeJA4XFromDER` returns the
@@ -603,8 +603,8 @@ empty string for a buffer that holds no certificate and for a buffer that holds 
 certificate the parser cannot read. A caller separates neither pair.
 
 **The ruling closes both as `no change needed`.** `Processor.ProcessPacket` is the API
-that carries the error, and the eight `Compute*` functions are the convenience layer that
-carries none. Neither signature changes.
+that carries the error, and the `Compute*` one-shot functions carry none. Neither
+signature changes.
 
 The port states the architecture invariant that this project follows, at commit
 `21299645366591331eb93155355b65a76a3729f3`:

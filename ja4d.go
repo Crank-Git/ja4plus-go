@@ -208,7 +208,7 @@ func ja4dFormatList(values []byte) string {
 	return strings.Join(parts, "-")
 }
 
-// ComputeJA4D is a convenience function that computes the JA4D fingerprint for a single packet.
+// ComputeJA4D is a one-shot function that computes the JA4D fingerprint for a single packet.
 func ComputeJA4D(packet gopacket.Packet) string {
 	fp := NewJA4D()
 	results, _ := fp.ProcessPacket(packet)

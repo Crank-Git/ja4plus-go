@@ -288,7 +288,7 @@ func (f *JA4TSFingerprinter) evictOldestConnection() {
 	delete(f.connections, oldestKey)
 }
 
-// ComputeJA4TS is a convenience function that computes the JA4TS fingerprint for a single packet.
+// ComputeJA4TS is a one-shot function that computes the JA4TS fingerprint for a single packet.
 //
 // It reads one packet through a new fingerprinter, so that packet is always the first
 // SYN-ACK of its connection. The value therefore carries no part e. A caller that needs

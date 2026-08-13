@@ -1,6 +1,10 @@
 package ja4plus
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -29,6 +33,11 @@ const oneShotFunctionTerm = "one-shot function"
 
 // multiPacketMethodTerm names the term that states the other side of that distinction.
 const multiPacketMethodTerm = "multi-packet method"
+
+// oneShotFunctionPrefix names the exported functions of package ja4plus that the
+// `one-shot function` row describes. The row cites `ComputeJA4T`, and every one-shot
+// function of this package carries the prefix.
+const oneShotFunctionPrefix = "Compute"
 
 // methodNamePattern matches one JA4+ method name that a term row states.
 var methodNamePattern = regexp.MustCompile(`JA4[A-Z0-9]*`)
@@ -161,6 +170,104 @@ func TestPackageJa4plusExportsNoOneShotFunctionForAMultiPacketMethod(t *testing.
 		if exported[name] {
 			t.Errorf("package ja4plus exports %q, and %s is a %s. The ruling of #356 never named %s, and open question 2 of docs/specs/features/12-ja4ls.md asks whether to add the name, so the maintainer settles it before you add it",
 				name, method, multiPacketMethodTerm, method)
+		}
+	}
+}
+
+// readOneShotFunctionDocComments returns the doc comment of each exported one-shot
+// function of package ja4plus, keyed by the function name.
+//
+// It reads the non-test Go files of the package directory alone. A file of another
+// package, a document and a data file each fall outside it.
+func readOneShotFunctionDocComments(t *testing.T) map[string]string {
+	t.Helper()
+
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatalf("read the package directory: %v", err)
+	}
+
+	docComments := map[string]string{}
+	fileSet := token.NewFileSet()
+
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+
+		file, err := parser.ParseFile(fileSet, name, nil, parser.ParseComments|parser.SkipObjectResolution)
+		if err != nil {
+			t.Fatalf("parse %s: %v", name, err)
+		}
+
+		for _, declaration := range file.Decls {
+			function, isFunction := declaration.(*ast.FuncDecl)
+			if !isFunction || function.Recv != nil || !function.Name.IsExported() {
+				continue
+			}
+
+			if !strings.HasPrefix(function.Name.Name, oneShotFunctionPrefix) {
+				continue
+			}
+
+			docComments[function.Name.Name] = function.Doc.Text()
+		}
+	}
+
+	return docComments
+}
+
+// #399 — fourteen sites of the tree wrote a declined synonym for this concept. The
+// `Do not use` column of the `one-shot function` row names that synonym. This guard holds
+// the repair of the seven sites that are doc comments.
+//
+// The guard reads the `Do not use` column rather than a list of its own, so a synonym that
+// the maintainer declines later is covered without a change here.
+//
+// **The scope is the doc comment of each exported `Compute*` function of package ja4plus,
+// and the guard reads nothing else.** The term row names that concept: it cites
+// `ComputeJA4T`, and a doc comment is where the library states the concept to a caller.
+// A wider scan reaches the generic English sense of the same words, which the row declines
+// for no concept. `internal/parser/ssh.go` carries `ParseKEXINITFromPacket`, which computes
+// no fingerprint. The term reaches no such function, and this guard reads no file of that
+// package.
+//
+// **The guard reads no file that another member of batch #402 writes.** It reads the
+// package directory of package ja4plus, and it reads `docs/specs/spec.md`.
+func TestNoOneShotFunctionDocCommentWritesADeclinedSynonym(t *testing.T) {
+	rows := readTermsTableRows(t)
+
+	row, held := rows[oneShotFunctionTerm]
+	if !held {
+		t.Fatalf("the `## Terms` table of %s holds no row for %q", termsTableFile, oneShotFunctionTerm)
+	}
+
+	declined := []string{}
+
+	for _, word := range strings.Split(row.DoNotUse, ",") {
+		if word = strings.TrimSpace(word); word != "" {
+			declined = append(declined, word)
+		}
+	}
+
+	if len(declined) == 0 {
+		t.Fatalf("the row for %q names no declined synonym, and this guard reads that column", oneShotFunctionTerm)
+	}
+
+	docComments := readOneShotFunctionDocComments(t)
+	if len(docComments) == 0 {
+		t.Fatalf("package ja4plus exports no %s* function, and this guard then reads nothing", oneShotFunctionPrefix)
+	}
+
+	for name, docComment := range docComments {
+		lowered := strings.ToLower(docComment)
+
+		for _, word := range declined {
+			if strings.Contains(lowered, strings.ToLower(word)) {
+				t.Errorf("the doc comment of %s writes %q, and the row for %q of the `## Terms` table of %s declines that word. Write %q instead",
+					name, word, oneShotFunctionTerm, termsTableFile, oneShotFunctionTerm)
+			}
 		}
 	}
 }

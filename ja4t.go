@@ -171,7 +171,7 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	}
 }
 
-// ComputeJA4T is a convenience function that computes the JA4T fingerprint for a single packet.
+// ComputeJA4T is a one-shot function that computes the JA4T fingerprint for a single packet.
 func ComputeJA4T(packet gopacket.Packet) string {
 	fp := NewJA4T()
 	results, _ := fp.ProcessPacket(packet)

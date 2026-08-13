@@ -461,7 +461,7 @@ func ComputeJA4XFromPEM(pemData []byte) string {
 	return ComputeJA4XFromDER(block.Bytes)
 }
 
-// ComputeJA4XFromPacket is a convenience function that extracts JA4X fingerprints
+// ComputeJA4XFromPacket is a one-shot function that extracts JA4X fingerprints
 // from a single packet. It creates a temporary fingerprinter, so it does not
 // support stream reassembly. For multi-packet streams, use JA4XFingerprinter.
 func ComputeJA4XFromPacket(packet gopacket.Packet) string {

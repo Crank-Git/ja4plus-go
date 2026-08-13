@@ -173,7 +173,7 @@ func TestTheLibraryHoldsNoPlausibilityGuardOnTheClientHelloBody(t *testing.T) {
 			result.Fingerprint, "t00i000000_000000000000_000000000000")
 	}
 
-	// ComputeJA4 reads the same client hello through the convenience function. A guard in
+	// ComputeJA4 reads the same client hello through the one-shot function. A guard in
 	// either entry point therefore fails this test.
 	direct := ComputeJA4(ja4PlausibilityPacket(t, 0x0000, nil, nil))
 	if direct != result.Fingerprint {
