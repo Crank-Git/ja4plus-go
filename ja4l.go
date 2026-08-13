@@ -408,7 +408,7 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 
 			// The reference writes the server value before the client value on this frame.
 			// `wireshark/source/packet-ja4.c:1443` updates `hf_ja4ls`, and
-			// `wireshark/source/packet-ja4.c:1450` updates `hf_ja4l` after it.
+			// `wireshark/source/packet-ja4.c:1449` updates `hf_ja4l` after it.
 			serverDelay := conn.timestamps["B"].Sub(conn.timestamps["A"])
 			results := f.emitResult("JA4L-S", serverDelay, conn.ttls["server"], conn, ts)
 			clientTTL := conn.ttls["client"]

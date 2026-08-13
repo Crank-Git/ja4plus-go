@@ -61,7 +61,7 @@ func TestJA4LSReachesTheClientHandshakeFrameOfAQUICConnection(t *testing.T) {
 	}
 
 	// The reference writes the server value first.
-	// `wireshark/source/packet-ja4.c:1442` updates `hf_ja4ls` before `hf_ja4l`.
+	// `wireshark/source/packet-ja4.c:1443` updates `hf_ja4ls`, and `:1449` updates `hf_ja4l`.
 	if !strings.HasPrefix(dResults[0].Fingerprint, "JA4L-S=") {
 		t.Errorf("point D reports %q first, and the reference reports the server value first",
 			dResults[0].Fingerprint)
