@@ -7,16 +7,48 @@ It reads every JA4H, JA4H_r and JA4H_ro deviation that `testdata/deviations.json
 hold. It names one cause for each one. It states the count each cause closes, measured
 against the corpus at the pin of `testdata/foxio.pin`.
 
-**Every count on this page comes from a run of `make conformance` in one worktree, on
+**Every count of the reading comes from a run of `make conformance` in one worktree, on
 2026-08-13, against the corpus at `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.** Each
 candidate change was built, measured, and then reverted with `git checkout -- .`. **No
 commit of #442 holds a Go file.**
 
+**The `## Two causes are closed since this reading` section below is the one exception.**
+#465 measured it against the batch #457 head, and it names its own counts.
+
+## Two causes are closed since this reading
+
+**#446 closed cause 3, and #462 closed cause 2.** This section states what the library does
+today. **Each cause section below keeps the count that #442 measured**, because that count
+is the record that earned the change.
+
+| Cause | Who closed it | What the library does today |
+|---|---|---|
+| 2 | #462, under the maintainer ruling of 2026-08-13 on #455 | `ProcessPacket` of `ja4h.go` produces the value at the packet that completes the request. `HTTPMessageIsComplete` of `internal/parser/http.go` holds the gate. |
+| 3 | #446 | `segmentCarriesNoNewRequest` of `ja4h.go` reads the consumed sequence range, so a repeated segment produces no second value. |
+
+**Cause 1, cause 4 and cause 5 are open, and #441 owns each one.** The maintainer rules
+split S1 and split S2 of cause 4.
+
+**#446 landed in batch #421, and #462 landed in batch #457.** So the two changes reach
+`docs/audit/conformance.md` in two different measurements.
+
+**#462 moved the per-packet set alone, and it moved no per-stream count.** The per-packet
+counts read as follows.
+
+- The matches rise from 561 to 577.
+- The deviations that the register does not hold fall from 508 to 412.
+- The accepted deviations rise from 143 to 175.
+
+**96 deviations become 48 comparisons**, because each frame pair of cause 2 holds one value.
+**16 of the 48 are matches, and 32 are accepted deviations.** The register grows from 438
+keys to 470.
+
 ## The measurement
 
 The suite reports 635 deviations that the register does not hold. **337 of them name JA4H,
-JA4H_r or JA4H_ro.** The register holds 459 entries, the run accepted 419 of
-them, and 108 of the accepted entries name a JA4H form.
+JA4H_r or JA4H_ro.** The register held 459 entries on the day of the run. The run accepted
+419 of them. 108 of the accepted entries named a JA4H form. **#465 re-measured all three
+against the tree of that run**, at commit `dbbad89`.
 
 | Direction | Count |
 |---|---|
@@ -50,8 +82,8 @@ of the per-packet set and 26 occurrences of the per-stream set carry the 337.**
 | N | Cause | Deviations | Count it closes, measured |
 |---|---|---|---|
 | 1 | The library reads no HTTP/2 request and no HTTP/3 request. | 80 | Not measured. The section states why. |
-| 2 | The library emits at the frame that ends the header block. | 96 | 64 |
-| 3 | The library emits a second value for a repeated TCP segment. | 50 | 50 |
+| 2 | The library emitted at the frame that ends the header block. **#462 closed it.** | 96 | 64 |
+| 3 | The library emitted a second value for a repeated TCP segment. **#446 closed it.** | 50 | 50 |
 | 4 | The library reads no HTTP request over UDP. | 108 | The candidate opens 36 more deviations than it closes. |
 | 5 | The request line parser rejects a path that holds a space. | 3 | 1 |
 
@@ -68,9 +100,9 @@ of the per-packet set and 26 occurrences of the per-stream set carry the 337.**
 `chrome-cloudflare-quic-with-secrets.pcapng` holds 5. Every one reads
 `the vector holds a value the library does not produce`.
 
-**The library holds no HTTP/2 decoder.** `ja4h.go:47` reads the TCP payload and passes it to
-`parser.ParseHTTPRequest`, which reads a request line of the form
-`<method> <path> HTTP/<digit>.<digit>` at `internal/parser/http.go:35`. An HTTP/2 request
+**The library holds no HTTP/2 decoder.** `ProcessPacket` of `ja4h.go` reads the TCP payload
+and passes it to `parser.ParseHTTPRequest`. That function reads a request line of the form
+`<method> <path> HTTP/<digit>.<digit>`, at `requestLineRe` of `internal/parser/http.go`. An HTTP/2 request
 carries no such line, because it carries HPACK header blocks.
 
 **The reference reads both.** `testdata/foxio/reference/wireshark/source/packet-ja4.c:1152`
@@ -102,7 +134,11 @@ alone. **One frame was read byte by byte, and it is frame 15 of `http2-with-cook
 
 ---
 
-## Cause 2 — the library emits at the frame that ends the header block
+## Cause 2 — the library emitted at the frame that ends the header block
+
+**#462 closed this cause.** The `## Two causes are closed since this reading` section above
+states what the library does today. **This section keeps the reading that earned the
+change.**
 
 **96 deviations, all in `http1.pcapng`, and 64 of them close.** 48 read
 `the library produces a value the vector does not hold` and 48 read the reverse. The two
@@ -117,9 +153,11 @@ http1.pcapng/2/JA4H.1  expected: "po11nn050000_530ceba2075f_000000000000_0000000
 the whole header block, and the first 1460 bytes of a 6419-byte body. Frame 2 holds the rest
 of that body.
 
-**The library emits when the header block ends.** `internal/parser/http.go:116-119` returns
-nil until `headerBlockEnd` finds the empty line, and it returns a request as soon as it does.
-`ja4h.go:88` then emits on that frame.
+**The library emitted when the header block ended, and #462 ended that rule.**
+`ParseHTTPRequest` of `internal/parser/http.go` returned nil until `headerBlockEnd` found the
+empty line, and `ProcessPacket` of `ja4h.go` then emitted on that frame. **Today
+`HTTPMessageIsComplete` of `internal/parser/http.go` holds the value until the payload after
+the header block reaches the byte count that `Content-Length` names.**
 
 **The reference emits when the body ends.** `packet-ja4.c:1634` guards the emission on
 `http_req != -100`, which the dissector sets at `packet-ja4.c:1149` when the frame carries
@@ -149,20 +187,33 @@ http1.pcapng/15/JA4H_r.1  expected: "po11nn050000_Host,Accept,User-Agent,Content
 names a frame that this change does not move, so the change closes no accepted deviation.
 The measurement confirms it: the accepted count held at 419.
 
+**#462 wrote those 32 entries**, and the register grew from 438 keys to 470.
+
 - **The FoxIO implementations agree that the value is one per request.** They differ on the
   frame, and only the per-packet set names a frame at all.
-- **The port carries the same gap.** `ja4plus/fingerprinters/ja4h.py:149-166` reads
-  `header_block_end(stream_data)` and emits at once. **A change here without the same change
-  there opens a parity difference on the per-packet set.**
+- **The port carries the same gap, and #462 opened a parity difference.**
+  `ja4plus/fingerprinters/ja4h.py:149-166` reads
+  `header_block_end(stream_data)` and emits at once. **`Crank-Git/ja4plus#607` carries the
+  port half**, and the `## Parity with ja4plus` section of `docs/specs/spec.md` holds the row.
 - **The cost is one guard.** The fingerprinter reads `Content-Length` and holds the value
   until the payload reaches that byte count.
 
 **One risk the reading names and does not settle.** A request whose sender never completes
-the body reaches no emission under that guard. The library emits such a request today.
+the body reaches no emission under that guard. The library emitted such a request when this
+reading was written.
+
+**The maintainer settled that risk on 2026-08-13, and the answer is the strict gate.** A
+request whose body never completes reaches no value. **No vector separates the two answers**,
+so `ja4h_body_gate_test.go` records the ruling, and
+`TestJA4H_ProducesNoValueForARequestWhoseBodyNeverCompletes` holds it.
 
 ---
 
-## Cause 3 — the library emits a second value for a repeated TCP segment
+## Cause 3 — the library emitted a second value for a repeated TCP segment
+
+**#446 closed this cause.** The `## Two causes are closed since this reading` section above
+states what the library does today. **This section keeps the reading that earned the
+change.**
 
 **50 deviations, all in `CVE-2018-6794.pcap`, and all 50 close.** 30 are per-packet and 20
 are per-stream. Every one reads `the library produces a value the vector does not hold`.
@@ -178,10 +229,11 @@ publishes `ja4.ja4h` for those two frames, and for no other frame of the capture
 per-stream vector `testdata/foxio/python/CVE-2018-6794.pcap.json` publishes one entry for
 stream 0 and one for stream 1.
 
-**The library holds no record of the segment it read.** `ja4h.go:95-96` adds every segment to
-the reassembler, and `ja4h.go:88` and `ja4h.go:125` remove the stream after each emission.
-Nothing holds the sequence number that the fingerprinter already read, so the repeat produces
-a second value.
+**The library held no record of the segment it read.** `ProcessPacket` of `ja4h.go` added
+every segment to the reassembler, and it removed the stream after each emission. Nothing held
+the sequence number that the fingerprinter had already read, so the repeat produced a second
+value. **`segmentCarriesNoNewRequest` of `ja4h.go` now holds that sequence range**, and
+`rememberTheConsumedRequest` of the same file writes it.
 
 **The reference reads the frame once.** The Python reference writes one value for each stream
 at `testdata/foxio/reference/python/common.py:117`, which overwrites the cache entry, so the
@@ -200,10 +252,12 @@ from 635 to 585. **No other capture moved, and the accepted count held at 419.**
 - **The FoxIO implementations agree.** Neither one publishes a second value for the repeat.
 - **The port does not carry this gap. It already holds the guard.**
   `ja4plus/fingerprinters/ja4h.py:172-221` holds a `consumed_seq` state table, and
-  `ja4plus/fingerprinters/ja4h.py:130` reads it before the reassembler. **This library is
-  behind the port on one rule, and closing it removes a parity difference.**
-- **No register entry closes.** The register holds 4 entries for this capture, and each one
-  names ruling #285.
+  `ja4plus/fingerprinters/ja4h.py:130` reads it before the reassembler. **This library was
+  behind the port on one rule, and #446 closed that parity difference.**
+- **No register entry closes.** The register holds 4 JA4H entries for this capture, and each
+  one names ruling #285. **The sentence read `4 entries for this capture` until #465**, and
+  the capture reaches 10 entries. The other 6 name JA4L or JA4LS under ruling #361, and this
+  page reads no JA4L deviation.
 - **The cost is one bounded state table.** The fingerprinter holds the consumed sequence range
   of each stream. `.claude/rules/concurrency.md` requires a removal path, so the entry belongs
   in `CleanupConnection` and in `Reset`, and the table needs the bound that
@@ -228,8 +282,8 @@ The per-packet vector holds `ms11nn050000_2ba00a982a15_000000000000_000000000000
 **87 JA4H deviations in a capture named for SSH are 87 SSDP requests.** The capture holds
 1391 frames, and the SSDP traffic sits beside the SSH traffic.
 
-**The library reads TCP alone.** `ja4h.go:50-53` returns at once when the packet holds no TCP
-layer.
+**The library reads TCP alone.** `ProcessPacket` of `ja4h.go` returns at once when the packet
+holds no TCP layer.
 
 ### This cause holds a reference split, and the maintainer rules it
 
@@ -263,7 +317,7 @@ stop condition, and the maintainer rules it.
 - **The Python reference reads the first two characters.**
   `testdata/foxio/reference/python/ja4h.py:10` holds `return method.lower()[:2]`, which
   answers `m-` for `M-SEARCH`, `mk` for `MKCOL` and `pr` for `PROPFIND`.
-- **The library follows the Python reference.** `ja4h.go:202-205` reads the first two
+- **The library follows the Python reference.** `ja4hPartA` of `ja4h.go` reads the first two
   characters.
 - **The port follows the Python reference too**, at
   `ja4plus/fingerprinters/ja4h.py:403`, and the port's issue #219 records that ruling.
@@ -321,12 +375,13 @@ The per-packet vector holds `ge10nn000000_e3b0c44298fc_000000000000_000000000000
 
 **Two separate rules keep the library from that value.**
 
-**Rule 5a — the path group reads no space.** `internal/parser/http.go:35` holds
+**Rule 5a — the path group reads no space.** `requestLineRe` of `internal/parser/http.go` holds
 `(\S+)` for the path, so the match reads `/Hello`, then needs `HTTP/1.0` and finds `Arkime`.
 `ParseHTTPRequest` returns nil.
 
-**Rule 5b — part b writes the zero sentinel for an empty header list.** `ja4h.go:284` calls
-`parser.TruncatedHash`, and `internal/parser/hash.go:14-16` returns `000000000000` for the
+**Rule 5b — part b writes the zero sentinel for an empty header list.**
+`computeJA4HFromRequest` of `ja4h.go` calls
+`parser.TruncatedHash`, and `TruncatedHash` of `internal/parser/hash.go` returns `000000000000` for the
 empty string. **The reference hashes the empty string.**
 `testdata/foxio/reference/python/common.py:127` holds
 `return sha256(','.join(values).encode('utf8')).hexdigest()[:12]`, and that value is
@@ -361,7 +416,8 @@ compose, and neither one closes a deviation on its own.
 > 2026-08-12 that this library follows the per-stream set.
 
 **So the trailing underscore is settled, and it is not an open question.** The register holds
-108 entries for it today, and every JA4H entry of the register names it.
+140 entries for it today, and every JA4H entry of the register names it. **The count read 108
+until #462**, which wrote the 32 entries that cause 2 predicted.
 
 **Three causes hide a #285 difference behind a larger one.** A frame that produces no value at
 all reports one deviation, and the same frame reports the #285 difference once it produces a

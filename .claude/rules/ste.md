@@ -31,13 +31,19 @@ misrepresents the person.
 ## How a citation names its target
 
 **The maintainer adopted this convention on 2026-08-13.** An internal cross-reference cites
-a section heading. An evidence citation cites `file:line`.
+a stable target. An evidence citation cites `file:line`.
 
 | Kind | What it cites | Why |
 |---|---|---|
 | **Evidence** — a FoxIO reference implementation, a FoxIO image, a deleted FoxIO text specification, the port at a tag | **`file:line`**, at the pinned commit | `testdata/foxio.pin` holds the commit, so the line never moves. |
-| **Internal** — `.claude/rules/*` and `docs/specs/*` that cite each other, and a code comment that cites a rule file | **The section heading** | A heading survives an edit above it. A line number does not. |
+| **Internal** — `.claude/rules/*` and `docs/specs/*` that cite each other, and a code comment that cites a rule file | **A stable target**: a section heading, a rule number, a requirement number, or an identifier | Each one names the text it points at, so it survives an edit above it. A line number does not. |
 | **This library's own code, named in a document** | **The identifier**, and the file | `decideEndpoints` in `ja4ssh.go` finds the method after every edit. A line number finds it until the next edit. |
+
+**A stable target is any name that the cited text carries.** `## Stop conditions` is a
+section heading. `R18` of `docs/specs/foxio/JA4T.md` is a rule number. `FR-ja4ls-11` is a
+requirement number. `decideEndpoints` is an identifier. **Pick the narrowest one the target
+carries.** `docs/specs/foxio/*.md` holds numbered rules and few headings, so a citation
+there names a rule number.
 
 **`.claude/rules/rulings.md` `## A reading cites a file and a line` governs evidence, and
 this convention does not touch it.** A reading of a FoxIO source keeps its `file:line`, and
