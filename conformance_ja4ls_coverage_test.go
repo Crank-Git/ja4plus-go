@@ -37,13 +37,13 @@ const conformancePerPacketJA4LSField = "ja4.ja4ls"
 // conformancePublishedJA4LSStreamValues counts the JA4LS values that the corpus publishes in
 // the per-stream set at the pin of `testdata/foxio.pin`.
 //
-// A pin move changes this count. Re-measure the corpus, and write the new count here.
+// A pin move changes this count. Re-measure the corpus. Write the new count here.
 const conformancePublishedJA4LSStreamValues = 58
 
 // conformancePublishedJA4LSPacketValues counts the JA4LS values that the corpus publishes in
 // the per-packet set at the pin of `testdata/foxio.pin`.
 //
-// A pin move changes this count. Re-measure the corpus, and write the new count here.
+// A pin move changes this count. Re-measure the corpus. Write the new count here.
 const conformancePublishedJA4LSPacketValues = 44
 
 // conformanceKeyNamesMethod reports whether the comparison key names the method.
@@ -217,7 +217,7 @@ func TestBothConformanceAdaptersNameJA4LS(t *testing.T) {
 //
 // `JA4LFingerprinter` writes both JA4L and JA4LS, and it reports the type `ja4l` for the two.
 // The label names which of the two the value holds. An adapter that misread the label would
-// compare a JA4LS value against a JA4L key, and the run would report two deviations for one
+// compare a JA4LS value against a JA4L key. The run would then report two deviations for one
 // correct value.
 func TestBothConformanceAdaptersReadTheJA4LSLabelOfTheLibrary(t *testing.T) {
 	result := FingerprintResult{Type: "ja4l", Fingerprint: "JA4L-S=12517_53"}
