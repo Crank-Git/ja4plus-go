@@ -225,10 +225,18 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 }
 
 // resetResults returns the results that one RST packet produces.
-// It returns no result when the connection holds no delay, because both FoxIO
-// implementations nest the RST branch inside the delay branch:
-// `wireshark/source/packet-ja4.c:693` reads `rst_time` only when `syn_ack_count > 1`, and
-// `zeek/ja4t/main.zeek:232` reads `rst_ts` only when the delay list holds a value.
+// It returns no result when the connection holds fewer than two SYN-ACK packets.
+//
+// Both FoxIO implementations write the reset letter inside the delay branch.
+// `wireshark/source/packet-ja4.c:684` opens that branch on `syn_ack_count > 1`, and
+// `wireshark/source/packet-ja4.c:693` reads `rst_time` inside it.
+// `zeek/ja4t/main.zeek:229` opens that branch on a delay list that holds a value, and
+// `zeek/ja4t/main.zeek:232` reads `rst_ts` inside it.
+//
+// Neither branch reaches the four-part value, and each implementation writes that value
+// above the branch. So a connection with one SYN-ACK still reaches a JA4TS value.
+// `ProcessPacket` writes that value on the SYN-ACK packet, and this method writes the
+// value that carries the delay list and the reset letter.
 func (f *JA4TSFingerprinter) resetResults(packet gopacket.Packet, tcp *layers.TCP, now time.Time) []FingerprintResult {
 	f.evictAgedConnections(now)
 
