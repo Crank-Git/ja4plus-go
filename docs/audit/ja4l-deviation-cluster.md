@@ -175,9 +175,28 @@ fills `timestamp_D`.
 | `tls3.pcapng` | 144 | 147 | `4213_59_quic` |
 | `tls3.pcapng` | 293 | 297 | `3051_57_quic` |
 
-**This page measured no count for this cause on its own.** The candidate of cause 1 touched
-the TCP path alone, so these 16 deviations stand in the before column and in the after
-column. A separate candidate measures this cause, and #443 built none.
+### The count this cause closes
+
+A second candidate moved the `JA4L-S` emission of `processUDP` to the point D frame, and it
+was reverted with `git checkout -- .`.
+
+| Measure | Before | After |
+|---|---|---|
+| **Deviations of this cluster** | **177** | **162** |
+| Matches of the whole corpus | 1658 | 1664 |
+| Per-stream deviations | 82 | 82 |
+| Orphan register entries | 0 | 20 |
+| Stale register entries | 0 | 1 |
+
+**The candidate closes 15, and it opens none.** The per-stream set does not move, because
+that set names a stream rather than a frame.
+
+**The shape above attributes 16 deviations to this cause, and the candidate closes 15.**
+One pair carries a second difference, so a change of the frame alone does not close it.
+**The measured count is 15, and the attributed count is 16.**
+
+**The change orphans 20 register entries.** Every accepted QUIC `JA4L-S` entry names the
+old frame.
 
 **The four implementations agree on the frame.** Zeek writes the client value at
 `zeek/ja4l/main.zeek:248` inside the branch that fills `client_handshake`, and Rust reaches
@@ -273,6 +292,27 @@ same difference from Wireshark.** A change here needs the same change there.
 The cost of answer 2 is one guard in `processUDP`. The cost of answer 1 is nothing, because
 the library writes it today.
 
+### The count answer 2 closes
+
+A third candidate added the guard that fills point C once, and it was reverted with
+`git checkout -- .`.
+
+| Measure | Before | After |
+|---|---|---|
+| **Deviations of this cluster** | **177** | **174** |
+| Matches of the whole corpus | 1658 | 1661 |
+| Per-stream deviations | 82 | 82 |
+| Orphan register entries | 0 | 0 |
+| Stale register entries | 0 | 0 |
+
+**The candidate closes 3, and it costs nothing.** It opens no deviation, it moves no
+per-stream value, and it leaves every register entry in place. **It is the cheapest change
+of this reading, and it is still a reference split that the maintainer rules.**
+
+**The shape above attributes 4 deviations to this cause, and the candidate closes 3.**
+`tls3.pcapng/153/JA4L.1` still reads `the two values differ`, so that row carries a second
+difference.
+
 ## Cause 4 — the time-to-live of a second QUIC connection on one four-tuple
 
 **This cause holds 3 deviations, all on `chrome-cloudflare-quic-with-secrets.pcapng`.**
@@ -335,15 +375,22 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 
 ## The whole attribution
 
-| Cause | Deviations | Measured | Who decides |
-|---|---|---|---|
-| 1 — the TCP emission frame and part c | 149 | **Yes. 177 falls to 128, and the per-stream set gains 98.** | The maintainer. Ruling #127 holds it. |
-| 2 — the QUIC `JA4L-S` emission frame | 16 | No. #443 built no candidate for it. | An engineer. The four implementations agree. |
-| 3 — the QUIC client measurement point | 4 | No. #443 built no candidate for it. | The maintainer. A reference split, 3 against 1. |
-| 4 — the time-to-live of a reused four-tuple | 3 | No. The vector writes `0`. | The maintainer. A reference defect. |
-| 5 — the two vector sets disagree | 2 | No. Each set holds a different value. | The maintainer. #249 holds it. |
-| Unattributed | 3 | — | — |
-| **Total** | **177** | | |
+| Cause | Attributed | Measured close | Cost | Who decides |
+|---|---|---|---|---|
+| 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | The maintainer. Ruling #127 holds it. |
+| 2 — the QUIC `JA4L-S` emission frame | 16 | **15** | Opens none. Orphans 20 entries. | An engineer. The four implementations agree. |
+| 3 — the QUIC client measurement point | 4 | **3** | None. | The maintainer. A reference split, 3 against 1. |
+| 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | — | The maintainer. A reference defect. |
+| 5 — the two vector sets disagree | 2 | Not measured. Each set holds a different value. | — | The maintainer. #249 holds it. |
+| Unattributed | 3 | — | — | — |
+| **Total** | **177** | | | |
+
+**Three causes carry a measured count, and each one was measured on its own.** Cause 3 is
+the cheapest: it closes 3, it opens none, and it leaves the register whole. Cause 2 closes
+15 and rewrites 20 register entries. Cause 1 closes 149 and opens 100.
+
+**The three counts do not add.** Each candidate ran against the same base, and no candidate
+ran beside another one. A reader who buys two causes measures the pair.
 
 **Every deviation of the cluster reaches a cause, except three.**
 
@@ -360,7 +407,10 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 ## What this page does not state
 
 - **It recommends no change.** Causes 1, 3, 4 and 5 each reach the maintainer.
-- **It measured cause 1 alone.** Causes 2, 3 and 4 carry no measured count.
+- **It measured causes 1, 2 and 3.** Causes 4 and 5 carry no measured count, because each
+  one needs a ruling before a candidate exists.
+- **It measured each cause on its own, against the same base.** It measured no pair of
+  causes together, so the three counts do not add.
 - **It ran no Python.** The port was read as text. `.claude/rules/parity.md` states the rule.
 - **It writes no register entry**, and `testdata/deviations.json` is unchanged.
 - **It states no count for the JA4H cluster.** #442 reads that cluster.
