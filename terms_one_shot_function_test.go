@@ -9,8 +9,8 @@ import (
 // These tests hold the vocabulary that the ruling of #356 needs, and issue #379 adds it.
 //
 // The maintainer ruled on 2026-08-13 that `generate_ja4l` and `generate_ja4ssh` are
-// `not applicable`, because a one-shot call reaches no value for a method that reads more
-// than one packet. `.claude/rules/ste.md` states that every domain word sits in the
+// `not applicable`. A one-shot call reaches no value for a method that reads more than one
+// packet. `.claude/rules/ste.md` states that every domain word sits in the
 // `## Terms` table of `docs/specs/spec.md`, and that table held neither word.
 //
 // `parity_one_shot_not_applicable_test.go` holds the ruling itself, against two names that
