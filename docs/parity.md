@@ -127,9 +127,11 @@ interface where this project shipped nothing. **The rule names an interface, and
 no shape.** **The maintainer ruled the shape in #356 on 2026-08-13, and this page records
 that ruling.**
 
-**Three Go names answer one port name.** The port promises `compute_ja4x_from_der`,
-`compute_ja4x_from_pem` and `generate_ja4x`, and this library exports `ComputeJA4XFromDER`,
-`ComputeJA4XFromPEM` and `ComputeJA4XFromPacket`. Each pair reads the same input.
+**Three port names and three Go names answer the one JA4X method.** The port promises
+`compute_ja4x_from_der`, `compute_ja4x_from_pem` and `generate_ja4x`, and this library
+exports `ComputeJA4XFromDER`, `ComputeJA4XFromPEM` and `ComputeJA4XFromPacket`. Each pair
+reads the same input. `parity_ja4x_name_count_test.go` fails when this paragraph states a
+count that the table does not hold.
 
 ## The three `not applicable` rows, and how to reverse one
 
