@@ -472,3 +472,190 @@ jobs:
             echo
             echo "The job fails when the coverage falls below the floor. A person raises the floor, in a commit that does nothing else."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # FR-supply-21 measures the benchmarks on every pull request this workflow covers. The
+  # job runs the `bench` target, and FR-foundation-19 with FR-foundation-20 hold the
+  # command there, so this job and a developer can never measure two different commands.
+  #
+  # **FR-supply-21 names `go test -bench=. -benchmem ./...`, and the `bench` target adds
+  # `-run '^$'`.** That pattern matches no test name, so the target measures the benchmarks
+  # and it runs no unit test. `TestMakefileBenchTargetRunsNoUnitTest` states the reason: a
+  # unit test of this package spawns `bash`, `curl` and `tar`, and one test resolves a
+  # reserved name. This job measures two commits, so the literal command would run the
+  # whole suite twice and it would report a test failure as a benchmark result.
+  #
+  # **FR-supply-22 compares the head with the base branch, and this repository stores no
+  # base result.** So the job measures the base branch itself, in a second checkout. Both
+  # runs then use one runner and one CPU, and a comparison across two runners measures the
+  # runner. The second checkout reads the repository and it writes no artifact, so
+  # `contents: read` covers it. A run that is not a pull request reaches no base branch, and
+  # the job then reports the head results alone.
+  #
+  # **FR-supply-23 asks for a pull-request comment, and this job posts none.** A comment
+  # needs `pull-requests: write`, and FR-supply-15 gives this workflow `contents: read` and
+  # nothing more. The job writes the comparison to the build summary and it prints a warning
+  # annotation. **A build summary is not a comment, and an annotation is not a comment.** So
+  # FR-supply-23 is unmet, #69 records the tension, and the maintainer decides.
+  #
+  # FR-supply-24 warns and never fails the build, because runner variance produces a false
+  # regression. Every step below that measures or compares exits 0.
+  benchmark:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads two commits of the repository.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.5`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.5'
+
+      # FR-supply-24 holds the exit status back, so a benchmark that panics warns here and
+      # it fails no build. The compare step reads the log, and an empty log reports itself.
+      - name: Measure the head benchmarks
+        run: |
+          status=0
+          make bench > bench-head.log 2>&1 || status=$?
+          echo "the head benchmark run exited with status $status"
+          cat bench-head.log
+
+      # `github.base_ref` names the target branch of the pull request, and the documentation
+      # states that the property reaches a `pull_request` event alone. So the two steps below
+      # run on a pull request and never on a push.
+      #
+      # **The author of a pull request from a fork chooses the target branch, so this value
+      # is untrusted input.** It reaches the `ref` input of the action, and it reaches no
+      # shell. The action checks out the repository this workflow belongs to, so the value
+      # names a branch of this repository and it never names the code of the fork.
+      #
+      # The default `fetch-depth` of 1 takes the tip of that branch, and the comparison needs
+      # no history.
+      #
+      # `path` places the second checkout under `base`. A nested module carries its own
+      # `go.mod`, so the `./...` pattern of the root module never reaches it. The measurement
+      # on 2026-08-13: `go list ./...` at the root named four packages, and it named no
+      # package of a nested module.
+      - name: Check out the base branch
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      # `make -C base bench` reads the `Makefile` of the base checkout, so the base commit
+      # states its own benchmark command.
+      - name: Measure the base benchmarks
+        if: github.event_name == 'pull_request'
+        run: |
+          status=0
+          make -C base bench > bench-base.log 2>&1 || status=$?
+          echo "the base benchmark run exited with status $status"
+          cat bench-base.log
+
+      # FR-supply-23 and FR-supply-24 both land here. The step writes the comparison, it
+      # warns on a regression of more than 20 percent, and it exits 0 on every path.
+      #
+      # The step runs after a failed step too, because a reader of a failed run needs the
+      # head results.
+      - name: Compare the head with the base
+        if: always()
+        run: |
+          # `awk` reads the first file as the base, and an empty first file would make it
+          # read the head as the base. So the branch below counts the base results first.
+          base_count=0
+          if [ -f bench-base.log ]; then
+            base_count=$(grep -c '^Benchmark' bench-base.log || true)
+          fi
+
+          head_count=0
+          if [ -f bench-head.log ]; then
+            head_count=$(grep -c '^Benchmark' bench-head.log || true)
+          fi
+
+          echo "## Benchmarks" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$head_count" -eq 0 ]; then
+            echo "The head run measured no benchmark. Read the log of the measure step." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # The edge case that `docs/specs/features/07-supply-chain.md` names: the comparison
+          # has no base result, so the job posts the head results and it does not warn.
+          if [ "$base_count" -eq 0 ]; then
+            {
+              echo "This run measured no base result, so it reports the head results alone."
+              echo
+              echo '```'
+              grep '^Benchmark' bench-head.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # `go test` writes the name with a `-N` suffix that names the parallelism, and the
+          # two runners can differ. The program strips that suffix, so the two runs compare
+          # by benchmark name.
+          #
+          # A benchmark that the base does not hold is new, and it compares with nothing.
+          awk -v threshold=1.20 '
+            /^Benchmark/ {
+              name = $1
+              sub(/-[0-9]+$/, "", name)
+
+              ns = ""
+              for (i = 2; i <= NF; i++) {
+                if ($i == "ns/op") { ns = $(i - 1) }
+              }
+              if (ns == "" || ns + 0 <= 0) { next }
+
+              if (FNR == NR) { base[name] = ns + 0 }
+              else { head[name] = ns + 0; order[++count] = name }
+            }
+
+            END {
+              print "| Benchmark | Base ns/op | Head ns/op | Change |"
+              print "|---|---|---|---|"
+
+              for (i = 1; i <= count; i++) {
+                name = order[i]
+
+                if (!(name in base)) {
+                  printf "| `%s` | none | %s | the base branch holds no such benchmark |\n",
+                    name, head[name]
+                  continue
+                }
+
+                change = (head[name] - base[name]) * 100 / base[name]
+                mark = ""
+                if (head[name] > base[name] * threshold) { mark = " **slower**" }
+
+                # The change carries two decimal places, because one place prints a change
+                # of 19.99 percent and a change of 20.00 percent as the same number.
+                printf "| `%s` | %s | %s | %+.2f percent%s |\n",
+                  name, base[name], head[name], change, mark
+              }
+            }
+          ' bench-base.log bench-head.log > comparison.md
+
+          cat comparison.md >> "$GITHUB_STEP_SUMMARY"
+
+          # The pattern reads the mark and never the benchmark name. A benchmark named
+          # `BenchmarkSlowerPath` would otherwise warn on every run.
+          slower=$(grep -c '\*\*slower\*\*' comparison.md || true)
+
+          {
+            echo
+            echo "The job compared $head_count head results with $base_count base results, on one runner."
+            echo
+            echo "A benchmark more than 20 percent slower than the base branch warns, and it fails no build. Runner variance produces a false regression, so confirm each one by hand."
+            echo
+            echo "This job posts no pull-request comment. FR-supply-23 asks for one, a comment needs \`pull-requests: write\`, and FR-supply-15 gives this workflow \`contents: read\` and nothing more."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$slower" -gt 0 ]; then
+            echo "::warning title=Benchmark regression::$slower benchmarks are more than 20 percent slower than the base branch. Read the build summary, and confirm each one by hand."
+          fi
+
+          exit 0
