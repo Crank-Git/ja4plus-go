@@ -82,8 +82,8 @@ For JA4TScan FoxIO publishes nothing at all, which is why `docs/specs/spec.md` `
 declines it.
 
 **Rank 3 never outranks an image, and a question that no image addresses reaches no image
-to outrank.** `### A rank 3 source, and the source ranking` below states that reconciliation
-with its measurement.
+to outrank.** `### A rank 3 source, and the source ranking` below states the reconciliation,
+and it states the measurement that supports it.
 
 ## Where a ruling is recorded
 
