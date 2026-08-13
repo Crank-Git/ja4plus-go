@@ -239,6 +239,12 @@ func (f *JA4TSFingerprinter) resetResults(packet gopacket.Packet, tcp *layers.TC
 // evictAgedConnections removes each connection that received no SYN-ACK for the timeout.
 // The pass reads the capture timestamp of the packet that arrives, and never the wall
 // clock, because a capture replays faster than real time.
+//
+// The packet carries that timestamp, so a crafted capture controls it. A SYN-ACK dated far
+// in the future gives every later packet a negative age, and this pass then removes that
+// entry never. `evictOldestConnection` is the bound that holds the memory, because it
+// reads the arrival order and no timestamp. This pass reclaims a stale entry early, and it
+// is no memory bound of its own.
 func (f *JA4TSFingerprinter) evictAgedConnections(now time.Time) {
 	for key, conn := range f.connections {
 		if len(conn.times) == 0 {

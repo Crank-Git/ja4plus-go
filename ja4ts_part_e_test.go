@@ -138,7 +138,7 @@ func ja4tsValue(t testing.TB, fingerprinter *JA4TSFingerprinter, packet gopacket
 // FR-parity-39. A connection the server answered once omits part e.
 // `docs/specs/foxio/JA4T.md` R17 states the rule, and the deleted FoxIO file states it as
 // "If no retransmissions are seen, as there shouldn't be in normal network communications,
-// the fingerprint will omit section e."
+// the fingerprint will omit section e." The port's issue #226 holds the other half.
 func TestJA4TS_OmitsPartEWhenTheServerAnswersOnce(t *testing.T) {
 	fingerprinter := NewJA4TS()
 
@@ -149,6 +149,7 @@ func TestJA4TS_OmitsPartEWhenTheServerAnswersOnce(t *testing.T) {
 
 // FR-parity-37 and FR-parity-38. A JA4TS value carries part e when the server sent two
 // SYN-ACK packets, and part e holds the delay in whole seconds.
+// The port's issue #226 holds the other half.
 func TestJA4TS_WritesOnePartEDelayWhenTheServerAnswersTwice(t *testing.T) {
 	fingerprinter := NewJA4TS()
 
@@ -164,7 +165,8 @@ func TestJA4TS_WritesOnePartEDelayWhenTheServerAnswersTwice(t *testing.T) {
 
 // The server sends three SYN-ACK packets, so part e holds two delays, joined by `-`.
 // `docs/specs/features/08-python-parity.md` holds the row as an edge case, and
-// `docs/specs/foxio/JA4T.md` R14 states the separator.
+// `docs/specs/foxio/JA4T.md` R14 states the separator. The port's issue #226 holds the
+// other half.
 func TestJA4TS_WritesTwoPartEDelaysWhenTheServerAnswersThreeTimes(t *testing.T) {
 	fingerprinter := NewJA4TS()
 
@@ -222,7 +224,8 @@ func TestJA4TS_RoundsAPartEDelayToTheNearestSecond(t *testing.T) {
 // Part e holds at most ten delays. `docs/specs/foxio/JA4T.md` R18 states the bound, Zeek
 // stops at ten at `zeek/ja4t/main.zeek:185`, and Wireshark holds
 // `#define MAX_SYN_ACK_TIMES 10` at `wireshark/source/packet-ja4.c:234`. The port holds
-// `MAX_SYN_ACK_DELAYS` at `ja4plus/fingerprinters/ja4ts.py:24` of tag `v1.1.0`.
+// `MAX_SYN_ACK_DELAYS` at `ja4plus/fingerprinters/ja4ts.py:24` of tag `v1.1.0`, under its
+// issue #226.
 func TestJA4TS_HoldsTenPartEDelaysAtMost(t *testing.T) {
 	fingerprinter := NewJA4TS()
 
@@ -257,6 +260,7 @@ func TestJA4TS_AZeroValueFingerprinterReadsItsFirstPacketWithNoPanic(t *testing.
 
 // FR-parity-45. `CleanupConnection` clears one entry of the state table.
 // The caller names either direction, so both orderings drop the connection.
+// The port's issue #246 holds the other half, at `SynAckTracker.drop`.
 func TestJA4TS_CleanupConnectionRemovesTheNamedConnection(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -345,7 +349,7 @@ func TestJA4TS_BoundsTheTrackedConnectionCount(t *testing.T) {
 // The deleted FoxIO file states both rules: "the final TCP packet, a RST packet, should be
 // appended to the last JA4TS denoted with “R” and its delay" and "Note that RST packets do
 // not contain TCP options or window sizes, as such the program will need to be aware of
-// the previous JA4TS."
+// the previous JA4TS." The port's issue #246 holds the other half.
 func TestJA4TS_AppendsTheResetDelayToPartE(t *testing.T) {
 	fingerprinter := NewJA4TS()
 
@@ -391,6 +395,7 @@ func TestJA4TS_ReadsARSTThatAlsoCarriesACK(t *testing.T) {
 // Both FoxIO implementations nest the RST branch inside the delay branch. Wireshark reads
 // `rst_time` only when `syn_ack_count > 1` at `wireshark/source/packet-ja4.c:693`, and Zeek
 // reads `rst_ts` only when the delay list holds a value at `zeek/ja4t/main.zeek:232`.
+// The port's issue #246 holds the other half.
 func TestJA4TS_ProducesNoValueForARSTOnAConnectionWithoutADelay(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -417,7 +422,8 @@ func TestJA4TS_ProducesNoValueForARSTOnAConnectionWithoutADelay(t *testing.T) {
 
 // FR-parity-44. A RST that the client sent produces no value.
 // Every SYN-ACK travels from the server, and the connection key names the server first, so
-// a client RST reverses the key and finds no connection.
+// a client RST reverses the key and finds no connection. The port's issue #246 holds the
+// other half.
 func TestJA4TS_ProducesNoValueForAClientRST(t *testing.T) {
 	fingerprinter := NewJA4TS()
 
@@ -438,7 +444,8 @@ func TestJA4TS_ProducesNoValueForAClientRST(t *testing.T) {
 //
 // No capture of the FoxIO corpus reaches the rule, so this test builds the packet list. The
 // deleted file states the six capture times, and it states the six values they produce. The
-// port builds the same capture at `tests/build_ja4ts_rst.py` of tag `v1.1.0`.
+// port builds the same capture at `tests/build_ja4ts_rst.py` of tag `v1.1.0`, under its
+// issue #246.
 func TestJA4TS_ProducesTheValueOfTheDeletedFoxIOSpecification(t *testing.T) {
 	// The five SYN-ACK times and the RST time of the third example of the deleted file.
 	synAckTimes := []float64{16.681435, 17.683799, 19.691548, 23.703045, 31.714762}
