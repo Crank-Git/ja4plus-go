@@ -3,5 +3,8 @@
 
 # `.gitignore` ignores the FoxIO corpus, because the corpus is FoxIO-licensed material.
 # A new worktree therefore holds no corpus.
-# Without the corpus, `make conformance` skips and coverage reads 2 points low.
+# Without the corpus, `make conformance` skips and `make cover` reads 0.6 points low.
+# The measurement on 2026-08-13, at commit `83f2127` and at commit `7210e80`: `make cover`
+# reports 75.0 percent with the corpus and 74.4 percent without it, at both commits.
+# This comment read `coverage reads 2 points low` until then, and no measurement held it.
 testdata/foxio/

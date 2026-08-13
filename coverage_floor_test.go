@@ -114,6 +114,37 @@ func TestTheCoverageJobRunsTheCoverTarget(t *testing.T) {
 	}
 }
 
+// TestTheCoverageJobFetchesTheCorpus holds the environment that `.coverage-floor`
+// describes. `make cover` reads the FoxIO corpus, and `.gitignore` holds the corpus out of
+// the tree, so one command reports two numbers.
+//
+// The measurement on 2026-08-13, at commit `83f2127` and at commit `7210e80`: `make cover`
+// reports 75.0 percent with the corpus and 74.4 percent without it. #68 measured 75.0 with
+// the corpus, the coverage job fetched no corpus, and the first full run of Epic 7 failed
+// on that difference.
+//
+// A later edit that drops these steps lowers the total by 0.6 points, and the floor
+// comparison then reports a defect of the tests that the tree does not hold.
+func TestTheCoverageJobFetchesTheCorpus(t *testing.T) {
+	commands := workflowJobCommands(t, ".github/workflows/ci.yml", "coverage")
+
+	if !strings.Contains(commands, "make corpus") {
+		t.Errorf("the coverage job fetches no corpus, so it measures 0.6 points low:\n%s", commands)
+	}
+
+	if !strings.Contains(commands, "testdata/foxio.pin") {
+		t.Errorf("the coverage job reads no corpus pin, so it caches no corpus:\n%s", commands)
+	}
+
+	if !strings.Contains(commands, "foxio-corpus-") {
+		t.Errorf("the coverage job names no corpus cache key, so every run downloads the archive:\n%s", commands)
+	}
+
+	if !strings.Contains(commands, "holds no capture") {
+		t.Errorf("the coverage job reports no absent corpus, so a failed fetch names the wrong repair:\n%s", commands)
+	}
+}
+
 // TestTheCoverageJobPublishesABuildSummary holds FR-supply-20. The build summary is the
 // one reader-facing output of this workflow.
 //

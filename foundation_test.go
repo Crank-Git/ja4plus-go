@@ -51,15 +51,21 @@ func TestGoModDeclaresGo124(t *testing.T) {
 // move of it. A repository variable lives outside the tree, so no test reads it and no
 // pull request reviews it. The three tests below read this constant instead, so a
 // workflow that drifts from the pair fails a test in the tree.
-const goToolchainRange = "~1.26.5"
+// **The range moved from `~1.26.5` to `~1.26.6` on 2026-08-13**, and a new advisory moved
+// it. The `vuln` job passed on go1.26.5 at commit `83f2127`, and it failed on the same
+// toolchain at commit `7210e80` about one hour later. No line of this repository changed
+// between the two runs. The comment above the `vuln` job of `.github/workflows/ci.yml`
+// states that property, and it states why a red `vuln` job is not a regression by default.
+const goToolchainRange = "~1.26.6"
 
 // TestCIWorkflowTestsGo126Only holds the one Go version that FR-foundation-2 names.
 // The test named Go 1.24 until 2026-08-13, and comment 5286440152 of #65 holds the
 // amendment. Issue #65 is the reversal path.
 //
-// The range excludes go1.26.0 through go1.26.4, because GO-2026-5856 names a fix at
-// 1.26.5. `actions/setup-go` reads the tool cache of the runner before it reads the
-// release list, so a bare `1.26` can resolve to a toolchain that this gate fails.
+// The range excludes go1.26.0 through go1.26.5, because GO-2026-5856 names a fix at
+// 1.26.5 and four later advisories each name a fix at 1.26.6. `actions/setup-go` reads the
+// tool cache of the runner before it reads the release list, so a bare `1.26` can resolve
+// to a toolchain that this gate fails.
 func TestCIWorkflowTestsGo126Only(t *testing.T) {
 	workflow := readRepoFile(t, ".github/workflows/ci.yml")
 

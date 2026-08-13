@@ -30,7 +30,7 @@ permissions:
   contents: read
 
 # Every job of this workflow names the same Go version, and this block states why the
-# version is `~1.26.5`.
+# version is `~1.26.6`.
 #
 # **The maintainer decided on 2026-08-13 that every job moves to Go 1.26.** Comment
 # 5286440152 of #65 holds the decision. On go1.24.13, the newest Go 1.24 patch,
@@ -45,28 +45,50 @@ permissions:
 # implement language version 1.21.` So the `go 1.24.0` directive and this Go 1.26 build are
 # independent, and `CLAUDE.md` still states `Go 1.24 or later`.
 #
-# **The range holds the patch at 1.26.5 or later, and it holds it below 1.27.** GO-2026-5856
-# names a fix at 1.26.5, so a go1.26.0 through go1.26.4 toolchain still carries it. A bare
-# `1.26` does not exclude those four, because `actions/setup-go` reads the tool cache of the
-# runner before it reads the release list. `installer.ts` at the pinned hash calls
-# `tc.find('go', versionSpec, arch)` first, and it returns a cached version that satisfies
-# the range. A runner that caches go1.26.3 alone would therefore resolve `1.26` to a
-# toolchain that fails this gate. `~1.26.5` excludes every one of the four, and it still
+# **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.** GO-2026-5856
+# names a fix at 1.26.5. GO-2026-6218, GO-2026-6090, GO-2026-5972 and GO-2026-5026 each name
+# a fix at 1.26.6. So a go1.26.0 through go1.26.5 toolchain still calls a vulnerable
+# function. A bare `1.26` does not exclude those six, because `actions/setup-go` reads the
+# tool cache of the runner before it reads the release list. `installer.ts` at the pinned
+# hash calls `tc.find('go', versionSpec, arch)` first, and it returns a cached version that
+# satisfies the range. A runner that caches go1.26.3 alone would therefore resolve `1.26` to
+# a toolchain that fails this gate. `~1.26.6` excludes every one of the six, and it still
 # takes each later 1.26 patch.
 #
 # `actions/setup-go` passes this string to `semver.satisfies`, so it reads any node-semver
 # range. The README names `'^1.13.1'` and `'>=1.17.0'` as supported forms.
 #
-# **The measurement on 2026-08-13 at `govulncheck` v1.6.0**: go1.26.6 reports 0 called
-# vulnerabilities and exits 0. go1.26.6 is the newest published Go 1.26 patch.
+# **The measurement on 2026-08-13 at `govulncheck` v1.6.0**: go1.26.5 reports 4 called
+# standard library vulnerabilities and exits 3, and go1.26.6 reports 0 and exits 0. Each of
+# the four names a fix at go1.26.6. go1.26.6 is the newest published Go 1.26 patch, and
+# <https://go.dev/dl/?mode=json&include=all> names it, retrieved 2026-08-13.
 #
-# To reverse the decision, restore `'1.24'` here and in the three jobs below. The nine
-# called vulnerabilities return with it.
+# **This range moved once already, and a new advisory moved it.** The `vuln` job passed at
+# `~1.26.5` on go1.26.5 at commit `83f2127`, and it failed on the same toolchain at commit
+# `7210e80` about one hour later. No line of this repository changed between the two runs.
+# The comment above the `vuln` job below states that property in full.
+#
+# **`foundation_test.go` holds `goToolchainRange`, and that constant is the one source for
+# this range.** To move the range, or to reverse the decision and restore `'1.24'`, edit
+# these three places together:
+#
+#   1. The `goToolchainRange` constant in `foundation_test.go`.
+#   2. Every `go-version` input of this file, and the `go-version` matrix of the `test` job.
+#   3. The `go-version` input of `.github/workflows/release.yml`.
+#
+# **Count no jobs here, because a later issue adds one.** #68 and #69 each added a job after
+# #65 wrote this block, and the instruction that named three jobs then named the wrong
+# number. `TestCIWorkflowNamesOneGoVersion` reads every site of this file against the
+# constant, and `TestReleaseWorkflowNamesTheGoToolchainRange` reads the release workflow. So
+# a site left behind fails a test in the tree.
+#
+# A reversal to Go 1.24 returns the nine called vulnerabilities that comment 5286440152 of
+# #65 measured.
 jobs:
   test:
     strategy:
       matrix:
-        go-version: ['~1.26.5']
+        go-version: ['~1.26.6']
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
@@ -101,10 +123,10 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # The comment above `jobs:` states why the range reads `~1.26.5`.
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '~1.26.5'
+          go-version: '~1.26.6'
 
       # The cache key and the job summary both name the pinned commit, so read it once.
       - name: Read the corpus pin
@@ -259,10 +281,10 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # The comment above `jobs:` states why the range reads `~1.26.5`.
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '~1.26.5'
+          go-version: '~1.26.6'
 
       # This step carries two pins, and they name two different things. The hash on the
       # `uses:` line names the action, and FR-supply-12 states it. The `version:` input
@@ -286,6 +308,25 @@ jobs:
   # The scan reads the public vulnerability database at https://vuln.go.dev over the
   # network. A database outage fails this job, and it reports a defect of neither the
   # library nor the pull request.
+  #
+  # **This gate goes red with no change to the tree, and that is a property of the gate.**
+  # The database is live, so a new advisory fails this job on a commit that passed one hour
+  # earlier. The measurement on 2026-08-13: the `vuln` job passed at commit `83f2127`, and
+  # it failed at commit `7210e80` about one hour later. Both runs installed go1.26.5 from
+  # the same `~1.26.5` range, and no line of this repository changed between them. Four
+  # advisories arrived in that hour.
+  #
+  # **So never read a red `vuln` job as a regression of the pull request by default.** Read
+  # the advisory list first, and take one of these three actions.
+  #
+  #   1. Every advisory names a fix in a later Go patch. Move `goToolchainRange` in
+  #      `foundation_test.go`, and move both workflows with it.
+  #   2. An advisory names a fix in a dependency. Raise that dependency.
+  #   3. No fix exists yet. The maintainer rules, because a decline needs a person.
+  #
+  # **The base branch separates the two causes.** A scan of the base branch that reports the
+  # same advisory names a change of the database. A scan that reports it on the head alone
+  # names a change of the pull request.
   vuln:
     runs-on: ubuntu-latest
     # This job declares no `permissions` block of its own. The workflow-level block above
@@ -300,10 +341,10 @@ jobs:
       # builds and tests the library. A gate that reads a second Go version would describe
       # an artifact this workflow never produces.
       #
-      # The comment above `jobs:` states why the range reads `~1.26.5`.
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '~1.26.5'
+          go-version: '~1.26.6'
 
       # FR-supply-3 pins the scanner version. `golang.org/x/vuln` v1.6.0 declares
       # `go 1.25.0`, and the step above installs Go 1.26, so this command needs no
@@ -317,7 +358,7 @@ jobs:
 
       # The version line names the Go version, the scanner version and the date of the
       # database. A reader of a failed run needs all three to reproduce it. **The Go version
-      # it prints is the patch that `~1.26.5` resolved to on this runner.**
+      # it prints is the patch that `~1.26.6` resolved to on this runner.**
       - name: Report the scanner version
         run: govulncheck -version
 
@@ -365,6 +406,24 @@ jobs:
   # mechanism that raises the tracked floor from a run needs `contents: write`, and
   # FR-supply-15 gives this workflow `contents: read` and nothing more. So the job prints
   # the instruction, and the contributor writes the new value.
+  #
+  # **`.coverage-floor` describes the whole suite, so this job fetches the corpus.** The
+  # corpus is FoxIO-licensed material, `.gitignore` holds it out of the tree, and the root
+  # package covers 93.2 percent with it and 92.0 percent without it. The measurement on
+  # 2026-08-13, at commit `83f2127` and at commit `7210e80`: `make cover` reports 75.0
+  # percent with the corpus and 74.4 percent without it, at both commits.
+  #
+  # **#68 measured 75.0 with the corpus, and this job ran without it, so the floor was
+  # unmeetable on the day it was written.** The first full run of the epic failed on that
+  # difference. The repair fetches the corpus here, and it leaves the floor at the number
+  # that the whole suite reaches.
+  #
+  # **The corpus-free floor of 74.4 was the other candidate, and this job declines it** for
+  # three reasons. It leaves the 0.6 points that the corpus reaches outside every gate.
+  # `CLAUDE.md` tells a contributor to run `make corpus` before `make conformance`, so that
+  # contributor reads 75.0 while this job reads 74.4. FR-supply-19 then tells the contributor
+  # to write the number they measured, and the value they write fails this job at once. A
+  # floor that two environments read as two numbers regenerates this defect.
   coverage:
     runs-on: ubuntu-latest
     # This job declares no `permissions` block of its own. The workflow-level block above
@@ -372,10 +431,45 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # The comment above `jobs:` states why the range reads `~1.26.5`.
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '~1.26.5'
+          go-version: '~1.26.6'
+
+      # The four steps below match the corpus steps of the `conformance` job, and they read
+      # the same cache key. The two jobs therefore share one entry, and one runner downloads
+      # the archive once. `actions/cache` writes no entry when the key matches an entry that
+      # already exists, so the second job to finish saves nothing and it fails nothing.
+      - name: Read the corpus pin
+        id: pin
+        run: echo "commit=$(tr -d '[:space:]' < testdata/foxio.pin)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the corpus
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: testdata/foxio
+          key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
+
+      # `make corpus` reads the FoxIO repository over the network, and it downloads nothing
+      # when the cache restored the corpus. The default job bound is 360 minutes, so this
+      # step carries its own bound and a stalled download cannot hold the runner.
+      - name: Fetch the corpus
+        timeout-minutes: 10
+        run: make corpus
+
+      # **An absent corpus must name itself here.** Without this step it lowers the total by
+      # 0.6 points, the comparison below fails, and that failure tells the reader to add a
+      # test that the tree already holds. A gate that names the wrong repair is worse than a
+      # gate that names none.
+      - name: Verify the corpus is present
+        run: |
+          captures=$(find testdata/foxio/pcap -type f | wc -l | tr -d '[:space:]')
+          if [ "$captures" -eq 0 ]; then
+            echo "testdata/foxio/pcap holds no capture, so the coverage total reads 0.6 points low" >&2
+            echo "this job measures nothing about the tests, and the floor describes the whole suite" >&2
+            exit 1
+          fi
+          echo "testdata/foxio/pcap holds $captures captures."
 
       # `make cover` writes `coverage.out` and it prints one line for each package. The
       # per-package summary below reads those lines, so the step keeps the output.
@@ -510,10 +604,10 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # The comment above `jobs:` states why the range reads `~1.26.5`.
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '~1.26.5'
+          go-version: '~1.26.6'
 
       # FR-supply-24 holds the exit status back, so a benchmark that panics warns here and
       # it fails no build. The compare step reads the log, and an empty log reports itself.
@@ -551,6 +645,19 @@ jobs:
         with:
           ref: ${{ github.base_ref }}
           path: base
+          # `actions/checkout` writes the job token into `base/.git/config` by default, and
+          # no step of this job removes it. The one step that reads this checkout runs
+          # `make -C base bench`, which reaches no remote, so the credential serves nothing
+          # after the fetch. The input holds the credential out of the config file, and it
+          # does not change the fetch: the README states that the input decides
+          # `Whether to configure the token or SSH key with the local git config`.
+          #
+          # The cross-member review of Epic 7 recorded this on 2026-08-13, and it recorded
+          # no finding. The token carries `contents: read` and the runner is ephemeral, so
+          # this line is a hardening rather than a repair.
+          #
+          # Verified against <https://github.com/actions/checkout>, retrieved 2026-08-13.
+          persist-credentials: false
 
       # `make -C base bench` reads the `Makefile` of the base checkout, so the base commit
       # states its own benchmark command.

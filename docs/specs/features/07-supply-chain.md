@@ -147,6 +147,34 @@ numbers of this list, so no citation of an earlier requirement breaks.
 - **FR-supply-32** — The commit that creates `.coverage-floor` names the command that
   measured the value.
 
+**The three requirements above name a command, and none of them names an environment.**
+That silence produced the first failure of the gate, and this reading closes it. **No
+requirement text changes here, because none of the three is false.**
+
+`make cover` reads the FoxIO corpus, and `.gitignore` holds the corpus out of the tree. So
+the same command reports two numbers. The measurement on 2026-08-13, at commit `83f2127`
+and at commit `7210e80`:
+
+| Corpus | Root package | Total |
+|---|---|---|
+| Present | 93.2 percent | 75.0 percent |
+| Absent | 92.0 percent | 74.4 percent |
+
+**#68 measured 75.0 with the corpus, and the coverage job fetched no corpus, so the floor
+was unmeetable on the day it was written.** The `conformance` job read the corpus pin and
+cached the corpus, and no step of the `coverage` job did.
+
+**`.coverage-floor` describes the whole suite, and the coverage job fetches the corpus.**
+The repair of the Epic 7 batch gate added the four corpus steps to that job on 2026-08-13,
+and it left the floor at 75.0. `.coverage-floor` holds one number and no comment, because
+`TestTheCoverageFloorIsOneNumber` fails on a second value. So the comment above the
+`coverage` job of `.github/workflows/ci.yml` states the environment, and it states the
+declined alternative.
+
+**A person who measures a new floor under FR-supply-19 runs `make corpus` first.** A
+measurement without the corpus reads 0.6 points low, and it writes a floor that the job
+meets on a tree with fewer tests.
+
 ## User flows
 
 ### A vulnerability appears in a dependency

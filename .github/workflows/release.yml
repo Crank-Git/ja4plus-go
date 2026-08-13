@@ -40,9 +40,10 @@ jobs:
       # `govulncheck` v1.6.0 reports 9 called standard library vulnerabilities. Each one
       # names a fix in a go1.25.x release or later, so no Go 1.24 patch clears them.
       #
-      # **The range holds the patch at 1.26.5 or later, and it holds it below 1.27.**
-      # GO-2026-5856 names a fix at 1.26.5. A bare `1.26` accepts go1.26.0 through
-      # go1.26.4, because `actions/setup-go` reads the tool cache of the runner before it
+      # **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.**
+      # GO-2026-5856 names a fix at 1.26.5, and GO-2026-6218, GO-2026-6090, GO-2026-5972
+      # and GO-2026-5026 each name a fix at 1.26.6. A bare `1.26` accepts go1.26.0 through
+      # go1.26.5, because `actions/setup-go` reads the tool cache of the runner before it
       # reads the release list. The comment above `jobs:` of `.github/workflows/ci.yml`
       # states the full reading, and `foundation_test.go` holds both files at one range.
       #
@@ -53,12 +54,19 @@ jobs:
       # proves nothing about this version, and the first tag after this commit is the
       # first run that reads it.
       #
+      # **That trigger makes a stale range here more expensive than a stale range in CI.**
+      # The cross-member review of Epic 7 measured the case on 2026-08-13. `~1.26.5` reached
+      # this file, the `vuln` job of CI failed on go1.26.5, and no run reported this file at
+      # all. Every released binary would carry four called standard library vulnerabilities,
+      # and the tag that builds it is the first reader. So a move of the range in
+      # `foundation_test.go` reads this file too.
+      #
       # Verified against <https://github.com/actions/setup-go>, retrieved 2026-08-13. The
       # README states the range syntax: `SemVer version range syntax: ^1.25.1, ~1.24.1,
       # >=1.25.0-rc.1, <1.25.0, >=1.22.0 <1.24.0`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '~1.26.5'
+          go-version: '~1.26.6'
 
       - name: Run tests
         run: go test -v -race ./...
