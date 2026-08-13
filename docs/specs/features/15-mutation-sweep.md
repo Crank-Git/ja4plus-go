@@ -158,5 +158,5 @@ not archived.
    if `gremlins` cannot complete a run over `internal/parser` within the CI job limit, the
    choice is reconsidered before Epic 15 closes.**
 2. **Which package set does FR-mutation-4 name?** `internal/parser` holds the code that a
-   crafted packet reaches, so it is the highest-value target. The eleven fingerprinters
+   crafted packet reaches, so it is the highest-value target. The ten fingerprinters
    are the second. The set is fixed after the first sweep measures the runtime.

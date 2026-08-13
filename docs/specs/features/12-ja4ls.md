@@ -116,9 +116,10 @@ requirement therefore states what the library does**, and FR-ja4ls-12 states the
 - **FR-ja4ls-15** — Every document that states a method count states eleven methods.
 - **FR-ja4ls-16** — Every document that states a fingerprinter count states ten
   fingerprinters.
-- **FR-ja4ls-17** — No document states a count of ten methods.
-- **FR-ja4ls-18** — A test reads every tracked Markdown file and every Go doc comment, and
-  fails when one states a count that FR-ja4ls-15 through FR-ja4ls-17 forbid.
+- **FR-ja4ls-17** — No document applies the count of ten to methods.
+- **FR-ja4ls-18** — A test reads every tracked Markdown file, every tracked HTML file and
+  every Go comment. It fails when one applies the count of ten to methods, or the count of
+  eleven to fingerprinters.
 - **FR-ja4ls-19** — The test names the file and the line of each violation.
 - **FR-ja4ls-20** — `CLAUDE.md` states eleven methods and ten fingerprinters.
 
@@ -228,8 +229,8 @@ values, under the rule that the port's `.claude/rules/external-apis.md` states.
    that the register does not hold.
 3. A capture with two SYN-ACK packets produces one JA4LS value.
 4. A QUIC capture produces a JA4LS value whose third part is `quic`.
-5. `go test -run TestMethodCount ./...` passes, and no tracked document states ten
-   methods.
+5. `go test -run TestMethodCount ./...` passes, and no tracked document applies the count
+   of ten to methods.
 6. `CLAUDE.md` states eleven methods and ten fingerprinters.
 7. `docs/specs/foxio/JA4L.md` states that no FoxIO image specifies JA4LS.
 

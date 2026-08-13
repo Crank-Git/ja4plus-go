@@ -69,6 +69,13 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- No exported name, and one test that holds the method count. `TestMethodCount` reads every
+  tracked Markdown file, every tracked HTML file and every Go comment. It fails when one
+  applies the count of ten to methods, or the count of eleven to fingerprinters, and it
+  names the file and the line. It reported nine violations on the tree that Epic 12 started
+  from, and `method_count_test.go` holds it. `NOTICE`, `README.md` and `doc.go` now name
+  JA4LS, so FoxIO License 1.1 covers ten of the eleven methods this project implements.
+  Issue #62 holds the measurement, and no fingerprint value moved.
 - No exported name, and twelve register entries that close FR-parity-50. The SOCKS4 tunnel
   of `socks4-https.pcap` produces three JA4X values, and no vector file of the corpus
   publishes a JA4X key for that capture. `testdata/foxio/python/socks4-https.pcap.json` and
@@ -860,8 +867,8 @@ that the interface declares.
   holds the same value.
 - The license correction. The repository states two licenses, and it names which material
   each one covers. The original Go code carries the BSD 3-Clause license.
-  FoxIO License 1.1 covers nine of the methods that this project implements, and that
-  license permits non-commercial use only. `NOTICE` names those nine methods, and it holds
+  FoxIO License 1.1 covers ten of the eleven methods that this project implements, and
+  that license permits non-commercial use only. `NOTICE` names those ten, and it holds
   the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
   user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
   records the decision behind the correction.

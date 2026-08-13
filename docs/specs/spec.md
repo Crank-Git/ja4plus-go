@@ -222,8 +222,8 @@ implementation to achieve, stays out.
 
 - **JA4TScan is out of scope, because FoxIO publishes nothing to implement.** A read of
   `FoxIO-LLC/ja4` on 2026-08-11 reports that `technical_details/` holds material for ten
-  methods and holds no file for JA4TScan. FoxIO ships no Python, no Rust, no Zeek and no
-  Wireshark implementation of it. The name appears in `License FAQ.md:5`, in
+  of the methods FoxIO names, and holds no file for JA4TScan. FoxIO ships no Python, no
+  Rust, no Zeek and no Wireshark implementation of it. The name appears in `License FAQ.md:5`, in
   `LICENSE:3` and in the FoxIO `README.md:293`, which describes it as an Active TCP
   Fingerprint Scanner. **A goal of one-to-one with FoxIO cannot be met for a method that
   FoxIO does not define**, so no amount of Go capability closes this. The ruling is
