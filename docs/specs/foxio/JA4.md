@@ -130,7 +130,12 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
   - `zeek/ja4/main.zeek:86` produces the same two characters, because `[0]` and `[-1]`
     reach the same character.
   - `wireshark/source/packet-ja4.c:552-554` produces the same two characters. It reads the
-    first character of the stored value, and it reads the character at the last index.
+    first character of the stored value, and it reads the character at the last index, which
+    is the same character. **That code sits in `ja4s_r`, so it renders JA4S and not JA4.**
+    Reading 2 below states that the dissector registers no JA4 field, and it corroborates a
+    JA4 rule only where it shares code with another method. **The ALPN store at
+    `wireshark/source/packet-ja4.c:1023-1034` is the shared code**, because it reads the
+    client field and the server field into one buffer.
   - `rust/ja4/src/tls.rs:625` reads no last character, and `rust/ja4/src/tls.rs:334`
     then writes `0` in its place.
   - `python/ja4.py:276` leaves the value at one character, so part a is one character

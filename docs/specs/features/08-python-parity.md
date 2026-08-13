@@ -71,12 +71,23 @@ other, and neither one needs the other installed to prove it.
 The port's issues #127, #141, #162 and #522 hold these rulings. The FoxIO references
 disagree with each other, and each one reads its own tooling rather than the packet.
 
+**The maintainer ruled the condition of FR-parity-8 and FR-parity-9 on 2026-08-12.** Each
+one read `not alphanumeric` before that ruling, and the FoxIO measurement contradicts that
+test. **Both FoxIO implementations pass a printable ASCII byte through**, whether or not
+that byte is alphanumeric, so `\x20\x61` reads ` a` in each one. Parity rule 1 gives the
+behaviour to FoxIO, so the requirement was wrong and the code was right. #50 records the
+measurement, and `Crank-Git/ja4plus#601` closes the same wording on the port side.
+
 - **FR-parity-8** — The ALPN field writes `99` when the first byte of the first ALPN value
-  is not alphanumeric.
-- **FR-parity-9** — The ALPN field writes `99` when a byte outside `0x20-0x7E` appears in
-  a position other than the first.
+  falls outside the printable ASCII range `0x20-0x7E`.
+- **FR-parity-9** — The ALPN field writes `99` when the last byte of the first ALPN value
+  falls outside the printable ASCII range `0x20-0x7E`. **The last byte is the one position
+  other than the first that the field reads.** A byte outside the range in a middle position
+  writes no character of the field, and `\x30\xab\xcd\x31` writes `01`.
 - **FR-parity-10** — The ALPN field repeats the byte and writes `hh` when the first ALPN
-  value holds one byte.
+  value holds one alphanumeric byte. **This requirement keeps the alphanumeric test**,
+  because the two FoxIO implementations dispute every one-byte value. A one-byte value
+  outside the alphanumeric ranges writes `99`.
 - **FR-parity-11** — A test builds one packet for each of FR-parity-8, FR-parity-9 and
   FR-parity-10, and asserts the value.
 - **FR-parity-12** — `docs/specs/foxio/JA4.md` records that FoxIO Python writes `U+FFFD`

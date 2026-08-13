@@ -163,7 +163,8 @@ func TestTheALPNFieldRepeatsTheByteWhenTheFirstALPNValueHoldsOneAlphanumericByte
 	// produces the same two characters because `[0]` and `[-1]` reach it.
 	// `rust/ja4/src/tls.rs:334` writes `0` for the absent last character, and
 	// `python/ja4.py:276` leaves the value at one character, which cannot fill a
-	// two-character field. `wireshark/source/packet-ja4.c:552-554` repeats the byte as well.
+	// two-character field. `wireshark/source/packet-ja4.c:552-554` repeats the byte as well,
+	// and that code renders JA4S through the shared ALPN store.
 	cases := []struct {
 		name string
 		alpn string
