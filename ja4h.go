@@ -80,6 +80,9 @@ func (f *JA4HFingerprinter) ensure() {
 
 // ProcessPacket processes a packet and returns JA4H fingerprints if the packet
 // contains an HTTP request (possibly reassembled from multiple segments).
+// It produces the value at the packet that completes the request, and never at the packet
+// that ends the header block. The maintainer ruled that emission frame at #455, and
+// `parser.HTTPMessageIsComplete` holds the rule.
 func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
 	f.ensure()
 
@@ -116,7 +119,9 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	// Try single-packet parse first (fast path)
 	if parser.IsHTTPRequest(payload) {
 		req := parser.ParseHTTPRequest(payload)
-		if req != nil {
+		// The body gate holds the value until the request completes, so a packet that carries
+		// a header block and a part of the body reaches the reassembler below.
+		if req != nil && parser.HTTPMessageIsComplete(payload, req) {
 			fingerprint := computeJA4HFromRequest(req)
 			if fingerprint != "" {
 				// The two vector sets disagree about the raw sorted form. The per-stream
@@ -155,6 +160,12 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 
 	req := parser.ParseHTTPRequest(assembled)
 	if req == nil {
+		return nil, nil
+	}
+
+	// The stream stays in the reassembler until the request completes, so a later segment of
+	// the body reaches this parse with the whole request.
+	if !parser.HTTPMessageIsComplete(assembled, req) {
 		return nil, nil
 	}
 
@@ -336,6 +347,9 @@ func (f *JA4HFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 // ComputeJA4H extracts the TCP payload from a packet, parses it as an HTTP
 // request, and returns the JA4H fingerprint string. Returns "" if the packet
 // does not contain an HTTP request.
+// It returns "" for a request whose body the packet does not complete, because the ruling of
+// #455 states that such a request reaches no value. One rule governs every path that
+// produces a JA4H value.
 func ComputeJA4H(packet gopacket.Packet) string {
 	payload := parser.GetTCPPayload(packet)
 	if payload == nil {
@@ -343,6 +357,9 @@ func ComputeJA4H(packet gopacket.Packet) string {
 	}
 	req := parser.ParseHTTPRequest(payload)
 	if req == nil {
+		return ""
+	}
+	if !parser.HTTPMessageIsComplete(payload, req) {
 		return ""
 	}
 	return computeJA4HFromRequest(req)
