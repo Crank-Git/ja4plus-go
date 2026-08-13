@@ -504,18 +504,25 @@ rule 3. A count that moves reports that a re-read is due.</p>
 </div>
 
 <div class="box risk">
-<h3>R9 — Three rulings the port never made <em>(open — each blocks a requirement)</em></h3>
-<p><strong>FoxIO settles none of these three, and the port settled none of them either.</strong>
-Each is the maintainer's to rule on, and the maintainer confirmed on 2026-08-11 that all
-three need a ruling. <strong>An engineer who reaches one of these stops and asks.</strong> A
-guess produces two answers across the two repositories, which is the one outcome parity
-exists to prevent. A ruling lands in both repositories together.</p>
+<h3>R9 — Three questions the port never settled <em>(question 1 is closed)</em></h3>
+<p><strong>This heading read <code>Three rulings the port never made</code> until
+2026-08-12.</strong> Question 1 needed a reading and not a ruling, so the heading now names
+three questions. The maintainer confirmed on 2026-08-11 that all three needed a ruling.
+<strong>The maintainer closed question 1 on 2026-08-12</strong>, and
+<code>technical_details/JA4.md:93</code> states the answer. Question 2 and question 3 stay
+open in this table. <strong>Question 2 is ruled, and this table does not record it</strong>:
+the maintainer ruled it on 2026-08-11, and #279 owns the repair of that row.</p>
+<p><strong>FoxIO settles neither of the two open questions, and the port settled
+neither.</strong> Each one is the maintainer's to rule on. <strong>An engineer who reaches one
+of them stops and asks.</strong> A guess produces two answers across the two repositories,
+which is the one outcome parity exists to prevent. A ruling lands in both repositories
+together.</p>
 <div class="scroll"><table>
 <tr><th>Question</th><th>Already settled</th><th>Not settled</th><th>Blocks</th></tr>
-<tr><td>What does the ALPN field write when the first ALPN value is <strong>empty</strong>?</td>
-    <td>A one-byte value repeats the byte (<code>hh</code>). A non-alphanumeric first byte writes <code>99</code>.</td>
-    <td>The zero-byte case. No FoxIO source states a rule, no vector carries the input, and the port's #141, #162 and #522 never reached it.</td>
-    <td>FR-parity-8 · 9 · 10</td></tr>
+<tr><td><s>What does the ALPN field write when the first ALPN value is <strong>empty</strong>?</s> <strong>Closed on 2026-08-12. The answer is <code>00</code>.</strong></td>
+    <td>Every part of the question. A one-byte first value repeats the byte and writes <code>hh</code>. A first byte outside <code>0x20-0x7E</code> writes <code>99</code>. An empty first value writes <code>00</code>.</td>
+    <td>Nothing. <code>technical_details/JA4.md:93</code> states the rule, so the question needed a reading and not a ruling.</td>
+    <td>Nothing. #50 built all three requirements.</td></tr>
 <tr><td>Does <code>CloseOpenWindows</code> belong on the <code>Fingerprinter</code> interface?</td>
     <td>The method exists, and the port's name decides the word under parity rule 2.</td>
     <td>Where it sits. On <code>Fingerprinter</code> it matches the port and breaks every third-party implementation. On a second optional interface it breaks nothing and is more idiomatic Go.</td>
