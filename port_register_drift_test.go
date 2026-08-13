@@ -87,7 +87,8 @@ func readPortRegisterCopy(t *testing.T) string {
 //     not a body row.
 //   - A separator row, which starts with `|---`, is not a body row.
 //   - The port writes a blank line inside the table, and a row after a blank line is still
-//     a body row. The copy holds five such breaks, and each one carries no second header.
+//     a body row. Four blank lines of the copy stand between two rows, and none of the four
+//     carries a second header. A fifth blank line closes the table, and it precedes no row.
 //
 // It performs no network input and no network output.
 func readPortRegisterRows(t *testing.T) []string {

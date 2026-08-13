@@ -44,7 +44,7 @@ reports a drift the copy does not hold.
 - A row is one line that starts with `|` under that heading.
 - The header row and a separator row are not body rows.
 - The port writes a blank line inside the table, and a row after a blank line is still a
-  body row.
+  body row. Four blank lines of the copy stand between two rows.
 
 `port_register_drift_test.go` holds the rule and the comparison. FR-parity-58 and
 FR-parity-60 of `docs/specs/features/08-python-parity.md` state the requirement.
