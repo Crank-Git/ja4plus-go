@@ -77,10 +77,15 @@ the before-and-after pair of one tree.
 571 deviations that the register does not hold, and it reports no regression of this
 migration.
 
-**No comparison moved, and the two logs prove it.** Each log holds 1254 deviation lines and
-uncovered value lines, and a sorted comparison of the two finds no difference. A sorted
-comparison of the whole output of the two runs also finds no difference, after each run
-duration is removed.
+**No comparison moved, and the two logs prove it.** Each log holds 1181 lines that report a
+deviation or an uncovered value, and a sorted comparison of the two finds no difference. A
+sorted comparison of the whole output of the two runs also finds no difference, after each
+run duration is removed.
+
+**The 1181 lines decompose into the counts of the table above.** 989 lines report a
+deviation, being 571 unaccepted and 418 accepted. 192 lines report an uncovered value,
+being 172 unaccepted and 20 accepted. The pattern is
+`conformance_test\.go:[0-9]+: (accepted )?(per-stream|per-packet) (deviation|uncovered value)`.
 
 ### The Go directive moves its text, and it keeps its language version
 
