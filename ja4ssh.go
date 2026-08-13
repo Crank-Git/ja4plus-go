@@ -124,8 +124,8 @@ type JA4SSHFingerprinter struct {
 	// handshakeOrder holds the key of each entry of the handshake table. The entry that
 	// received no packet for the longest time stands at the front, and the entry bound removes
 	// that one.
-	// recordHandshake is the one method that adds an entry, and removeHandshake is the one
-	// method that removes one, so the table and this list cannot disagree.
+	// recordHandshake is the one method that adds an entry. removeHandshake is the one method
+	// that removes one, so the table and this list cannot disagree.
 	handshakeOrder *list.List
 }
 
@@ -230,8 +230,8 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	// The entry bound of the handshake table can remove the entry of a connection that lives.
 	// A later packet of that pair then reaches step 3, which names the other endpoint as the
-	// client, and the connection splits into a second entry. The connection keeps the endpoints
-	// it started with. The port holds the same guard at
+	// client. The connection splits into a second entry. The connection keeps the endpoints it
+	// started with. The port holds the same guard at
 	// `ja4plus/fingerprinters/ja4ssh.py:159-165`.
 	reversedKey := fmt.Sprintf("%s:%d-%s:%d", serverIP, serverPort, clientIP, clientPort)
 	if _, held := f.connections[connKey]; !held {
@@ -642,9 +642,9 @@ func (f *JA4SSHFingerprinter) Reset() {
 // the port together.
 //
 // One method serves the packet path and sshConnKeyOfEndpoints. A second copy of the three
-// steps would answer differently after a later change to one copy, and the two answers would
-// then name two keys for one connection.
-// The port holds the same three steps at `ja4plus/fingerprinters/ja4ssh.py:320-363`.
+// steps answers differently after a later change to one copy. The two answers then name two
+// keys for one connection.
+// The port holds the same three steps at `ja4plus/fingerprinters/ja4ssh.py:321-365`.
 func (f *JA4SSHFingerprinter) decideEndpoints(
 	srcIP string, srcPort uint16, dstIP string, dstPort uint16,
 ) (clientIP string, clientPort uint16, serverIP string, serverPort uint16) {
@@ -676,7 +676,7 @@ func (f *JA4SSHFingerprinter) decideEndpoints(
 // sshHandshakeKey returns the key of one endpoint pair, in either order.
 //
 // The key encodes no direction. The state-table key names the client first, and step 2 decides
-// which endpoint that is, so a key of that shape would miss the entry that decides it. The
+// which endpoint that is. A key of that shape therefore misses the entry that decides it. The
 // port holds the same rule at `ja4plus/fingerprinters/ja4ssh.py:281-287`.
 func sshHandshakeKey(srcIP string, srcPort uint16, dstIP string, dstPort uint16) string {
 	if srcIP > dstIP || (srcIP == dstIP && srcPort > dstPort) {
@@ -772,8 +772,8 @@ func (f *JA4SSHFingerprinter) removeHandshake(key string) {
 // JA4SSH normalizes the key by the three steps of decideEndpoints, so a caller names the two
 // endpoints in either order and reaches one key.
 // CleanupConnection and CloseConnectionWindow both read it. Neither one holds a packet, and
-// step 2 reads the handshake table rather than the packet, so both reach the answer that the
-// packet path reached.
+// step 2 reads the handshake table rather than the packet. Both therefore reach the answer
+// that the packet path reached.
 func (f *JA4SSHFingerprinter) sshConnKeyOfEndpoints(
 	srcIP string, srcPort uint16, dstIP string, dstPort uint16,
 ) string {

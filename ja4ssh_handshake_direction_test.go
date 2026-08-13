@@ -352,8 +352,9 @@ func TestJA4SSHResetEmptiesTheHandshakeTable(t *testing.T) {
 }
 
 // TestJA4SSHHandshakeKeyReadsTheTwoDirectionsAsOneKey holds the rule that solves the second
-// site. The state-table key encodes the direction, and the handshake key encodes none, so a
-// caller that holds four endpoint values and no packet reaches the entry the packet path wrote.
+// site. The state-table key encodes the direction, and the handshake key encodes none. A
+// caller that holds four endpoint values and no packet therefore reaches the entry the packet
+// path wrote.
 func TestJA4SSHHandshakeKeyReadsTheTwoDirectionsAsOneKey(t *testing.T) {
 	forward := sshHandshakeKey(
 		sshStep2ClientIP, sshStep2ClientPort, sshStep2ServerIP, sshStep2ServerPort)
