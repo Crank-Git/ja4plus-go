@@ -3,8 +3,8 @@ package ja4plus
 import (
 	"testing"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // Part b of JA4T and JA4TS holds one entry for each option byte the packet carries. The
@@ -14,6 +14,8 @@ import (
 // the first End-of-Option-List byte, assigns the rest of the header to `tcp.Padding`, and
 // runs `break OPTIONS`. A reader of `tcp.Options` therefore counts one entry, whatever the
 // packet carries. The library reads `tcp.Contents` instead.
+// #438 moved this project to `github.com/gopacket/gopacket@v1.6.1`, and that fork keeps
+// this reading at `layers/tcp.go:338-344`. So the library still reads `tcp.Contents`.
 //
 // Four sources write one entry for each byte, and one source writes none.
 // `wireshark/source/packet-ja4.c:1456` appends one entry for each `tcp.option_kind` field

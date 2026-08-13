@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // The FIN+ACK rules of issue #222. A connection that closes emits the window it holds open,

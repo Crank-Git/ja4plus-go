@@ -12,8 +12,8 @@ import (
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // These tests hold the checks of issue #24 of the correctness audit.

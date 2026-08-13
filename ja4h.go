@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // JA4HFingerprinter generates JA4H fingerprints from HTTP request packets.

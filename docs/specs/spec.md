@@ -324,7 +324,7 @@ Round 2 held three non-goals that round 3 removes, because Go can achieve each o
 
 | Choice | Alternative | Why this choice wins |
 |---|---|---|
-| `github.com/google/gopacket` v1.1.19 | `gopacket/gopacket` fork | The repository already depends on it. `features/07-supply-chain.md` decides whether the fork is a better home before the freeze. |
+| `github.com/gopacket/gopacket` v1.6.1 | `google/gopacket` v1.1.19 | The original published no release since 2020-10-19. The maintainer decided the move on 2026-08-13, and #438 carried it. No fingerprint value moved. `docs/audit/dependency-decision.md` records the decision. |
 | Pure-Go capture reading through `pcapgo` | `libpcap` through cgo for every build | Commit `e32e49e` removed the cgo dependency. The default build cross-compiles to five platforms with no C toolchain. |
 | A `libpcap` build tag for the macOS monitor | No macOS monitor, or cgo in every build | `pcapgo/capture.go` carries the build constraint `linux,go1.9`, so the pure-Go handle reaches Linux alone. The tag keeps cgo off the default build and off every released binary. `features/13-live-capture.md` states the containment. |
 | Go 1.24 as the module floor | Go 1.22, Go 1.23 | Go 1.22 has left upstream security support. `go.mod` still declares `go 1.22`, so Epic 0 moves it. |
@@ -947,9 +947,15 @@ and acts only on its own side.
 
 `github.com/google/gopacket` has had no release since v1.1.19 on 2020-10-19. **The gap is
 five years, nine months and 25 days on 2026-08-13.** The community fork is
-`github.com/gopacket/gopacket`. Epic 7 decides whether to migrate before the freeze.
+`github.com/gopacket/gopacket`. Epic 7 held the decision, and the maintainer made it.
 **This paragraph read `no release since v1.1.19 in 2022` until 2026-08-13**, and the Go
 module proxy reports `{"Version":"v1.1.19","Time":"2020-10-19T16:12:32Z"}`.
+
+**The maintainer settled this risk on 2026-08-13, and #438 carried the migration.** The
+library depends on `github.com/gopacket/gopacket` v1.6.1 today, and no fingerprint value
+moved. `docs/audit/dependency-decision.md` records the decision and the reversal path.
+**The heading of this risk still reads `(open)`, and the `## Changelog` round owns that
+status.**
 `docs/audit/dependency-decision.md` holds that measurement, and #434 recorded it.
 
 **Round 3 raises the cost of this question.** `features/13-live-capture.md` builds on

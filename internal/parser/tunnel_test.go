@@ -5,8 +5,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // tunnelTestOptions fills the length fields and the checksums, so each builder below

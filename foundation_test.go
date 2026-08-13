@@ -24,11 +24,17 @@ func readRepoFile(t *testing.T, path string) string {
 	return string(content)
 }
 
+// TestGoModDeclaresGo124 holds the Go 1.24 language version that FR-foundation-2 names.
+// `github.com/gopacket/gopacket@v1.6.1` states `go 1.24.0` in its own `go.mod`, so the
+// toolchain writes that longer form here and it refuses `go 1.24`. #438 measured it.
+// Go states that the two forms name one language version:
+// `1.21, 1.21rc2, and 1.21.3 all implement language version 1.21`.
+// The pattern accepts each 1.24 release, and it still fails for `go 1.25`.
 func TestGoModDeclaresGo124(t *testing.T) {
 	goMod := readRepoFile(t, "go.mod")
 
-	if !regexp.MustCompile(`(?m)^go 1\.24$`).MatchString(goMod) {
-		t.Errorf("go.mod does not declare `go 1.24`:\n%s", goMod)
+	if !regexp.MustCompile(`(?m)^go 1\.24(\.\d+)?$`).MatchString(goMod) {
+		t.Errorf("go.mod does not declare the Go 1.24 language version:\n%s", goMod)
 	}
 }
 

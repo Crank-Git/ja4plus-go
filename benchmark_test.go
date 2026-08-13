@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // Every benchmark in this file builds its own packet. The corpus is optional and it

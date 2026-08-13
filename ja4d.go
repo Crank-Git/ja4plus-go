@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // DHCP message type to JA4D abbreviation mapping (DHCPv4).

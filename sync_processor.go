@@ -3,7 +3,7 @@ package ja4plus
 import (
 	"sync"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // SyncProcessor wraps a Processor and serializes every call with one mutex.

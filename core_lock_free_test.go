@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // buildShardKeyUDPPacket builds one IPv4 UDP packet that carries the given payload.

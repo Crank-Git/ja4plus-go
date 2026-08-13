@@ -14,10 +14,12 @@ library. This one has three gaps. No job scans for a known vulnerability. No too
 the dependencies for an update. Every GitHub Action reference is a moving tag, so a
 compromised action would run with the release token.
 
-The library also depends on `github.com/google/gopacket`, which has published no release
-since v1.1.19 in 2022. The community maintains `github.com/gopacket/gopacket`. A
-dependency change after an API freeze is harder than one before it, so the decision
-belongs here.
+The library depended on `github.com/google/gopacket`, which has published no release since
+v1.1.19 on 2020-10-19. The community maintains `github.com/gopacket/gopacket`. A dependency
+change after an API freeze is harder than one before it, so the decision belonged here.
+**The maintainer decided the move on 2026-08-13, and #438 carried it**, so the library
+depends on `github.com/gopacket/gopacket` v1.6.1 today.
+`docs/audit/dependency-decision.md` records the decision.
 
 This feature set adds the missing gates and settles the dependency question.
 

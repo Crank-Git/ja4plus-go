@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
+	"github.com/gopacket/gopacket/pcapgo"
 )
 
 const ja4PlusMappingURL = "https://github.com/FoxIO-LLC/ja4/raw/main/ja4plus-mapping.csv"

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // The state bound of issue #239. `JA4SSHFingerprinter` holds one entry for each connection,

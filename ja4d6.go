@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // DHCPv6 message type to JA4D6 abbreviation mapping (RFC 8415 + extensions).

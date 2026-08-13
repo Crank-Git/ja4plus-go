@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // dhcpv6ClientDUID is the 14-byte DUID that the inner Client Identifier carries.

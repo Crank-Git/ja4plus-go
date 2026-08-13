@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // The race detector reports only a race that it observes. Goroutines that each touch a

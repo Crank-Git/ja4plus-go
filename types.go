@@ -10,7 +10,7 @@ import (
 
 	"github.com/Crank-Git/ja4plus-go/internal/keylog"
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // Fingerprinter is the interface that all JA4+ fingerprinters implement.

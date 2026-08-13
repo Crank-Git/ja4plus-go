@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // The maintainer ruled the JA4T packet selection on 2026-08-13, under #126. JA4T reads any
@@ -50,6 +50,9 @@ type synFlags struct {
 // `github.com/google/gopacket@v1.1.19/layers/tcp.go:241-248`, so a test that asserts the
 // byte proves which packet it built. `layers/tcp.go:270` assigns the whole header to
 // `tcp.Contents`.
+// #438 moved this project to `github.com/gopacket/gopacket@v1.6.1`, and that fork keeps
+// both readings. It assigns the eight flag fields at `layers/tcp.go:303-311`, and it
+// assigns `tcp.Contents` at `layers/tcp.go:332`.
 // The parameter takes `*testing.T` rather than `testing.TB`. `staticcheck` reads
 // `testing.T.Fatalf` as a call that ends the function, and it reads no method of an
 // interface that way. No benchmark of this package calls this helper.

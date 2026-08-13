@@ -79,8 +79,8 @@ import (
     "os"
 
     ja4plus "github.com/Crank-Git/ja4plus-go"
-    "github.com/google/gopacket"
-    "github.com/google/gopacket/pcapgo"
+    "github.com/gopacket/gopacket"
+    "github.com/gopacket/gopacket/pcapgo"
 )
 
 func main() {
@@ -358,7 +358,7 @@ every packet of the connection, and `ComputeJA4TS` reads one packet and writes f
 
 ## Dependencies
 
-- [gopacket](https://github.com/google/gopacket) for packet capture and dissection
+- [gopacket](https://github.com/gopacket/gopacket) for packet capture and dissection
 - [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto) for QUIC HKDF key derivation
 - No cgo required for PCAP file analysis (uses pure Go `pcapgo`)
 
