@@ -87,11 +87,13 @@ func alpnParityCharacters(t *testing.T, partA string) string {
 
 func TestTheALPNFieldWrites99WhenTheFirstByteFallsOutsideThePrintableASCIIRange(t *testing.T) {
 	// FR-parity-8. `0xba 0xad` is the first ALPN value of the FoxIO vector
-	// `tls-non-ascii-alpn.pcapng`, and the vector holds `99`. The three FoxIO sources
-	// agree on that input: `python/ja4.py:279` writes `99` because the first byte is above
-	// 127, `wireshark/source/packet-ja4.c:1027` writes `99` because the first byte is not
-	// alphanumeric, and `rust/ja4/src/tls.rs:616` writes `9` for each of the two non-ASCII
-	// characters.
+	// `tls-non-ascii-alpn.pcapng`, and the vector holds `99`. Three FoxIO sources agree on
+	// that input, and each one reaches `99` by its own rule.
+	//
+	//   - `python/ja4.py:279-280` writes `99`, because the first byte is above 127.
+	//   - `wireshark/source/packet-ja4.c:1027-1028` writes `99`, because the first byte is
+	//     not alphanumeric.
+	//   - `rust/ja4/src/tls.rs:616` writes `9` for each of the two non-ASCII characters.
 	cases := []struct {
 		name string
 		alpn string
@@ -115,9 +117,9 @@ func TestTheALPNFieldWrites99WhenTheFirstByteFallsOutsideThePrintableASCIIRange(
 func TestTheALPNFieldWrites99WhenTheLastByteFallsOutsideThePrintableASCIIRange(t *testing.T) {
 	// FR-parity-9. The two FoxIO implementations dispute this input, and neither value
 	// reads a byte the packet holds. `python/ja4.py:277` reduces `0x30 0xab` to two
-	// characters and then tests the first byte alone, so it writes `0` and the tshark
-	// replacement character. `rust/ja4/src/tls.rs:616` writes `09`.
-	// `Crank-Git/ja4plus#162` holds `99` for the case.
+	// characters, and `python/ja4.py:279` then tests the first byte alone. So FoxIO Python
+	// writes `0` and the tshark replacement character. `rust/ja4/src/tls.rs:616` writes
+	// `09`. `Crank-Git/ja4plus#162` holds `99` for the case.
 	cases := []struct {
 		name string
 		alpn string
@@ -160,7 +162,8 @@ func TestTheALPNFieldRepeatsTheByteWhenTheFirstALPNValueHoldsOneAlphanumericByte
 	// that the one character serves as both characters, and `zeek/ja4/main.zeek:86`
 	// produces the same two characters because `[0]` and `[-1]` reach it.
 	// `rust/ja4/src/tls.rs:334` writes `0` for the absent last character, and
-	// `python/ja4.py:276` writes one character, which cannot fill a two-character field.
+	// `python/ja4.py:276` leaves the value at one character, which cannot fill a
+	// two-character field. `wireshark/source/packet-ja4.c:552-554` repeats the byte as well.
 	cases := []struct {
 		name string
 		alpn string
@@ -188,7 +191,7 @@ func TestTheALPNFieldWrites99WhenAOneByteFirstALPNValueIsNotAlphanumeric(t *test
 	//
 	// `Crank-Git/ja4plus#141` records the reason. The two FoxIO implementations dispute
 	// every one-byte value, so the port holds the value it wrote before the measurement.
-	// `python/ja4.py:276` writes one character for `\x20`, and `rust/ja4/src/tls.rs:334`
+	// `python/ja4.py:276` leaves `\x20` at one character, and `rust/ja4/src/tls.rs:334`
 	// writes ` 0`.
 	cases := []struct {
 		name string

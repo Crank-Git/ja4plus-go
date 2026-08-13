@@ -95,7 +95,7 @@ func TestJA4_EmptyCiphers(t *testing.T) {
 	}
 }
 
-// TestJA4_ALPNPR277ExamplesAgainstTheMeasurement holds the eight example inputs of FoxIO
+// TestJA4WritesTheMeasuredValueForEachPR277Example holds the eight example inputs of FoxIO
 // PR #277 at the unit level, and it asserts the measured value of each one.
 //
 // The prose of the pull request states the first and last character of the hexadecimal
@@ -106,7 +106,7 @@ func TestJA4_EmptyCiphers(t *testing.T) {
 //
 // `ja4_alpn_parity_test.go` holds FR-parity-8, FR-parity-9 and FR-parity-10 at the packet
 // level. This test reads `ALPNValue` directly, so it separates the rule from the parser.
-func TestJA4_ALPNPR277ExamplesAgainstTheMeasurement(t *testing.T) {
+func TestJA4WritesTheMeasuredValueForEachPR277Example(t *testing.T) {
 	tests := []struct {
 		name string
 		in   []string

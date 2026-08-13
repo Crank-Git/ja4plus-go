@@ -379,7 +379,8 @@ func ALPNValue(protocols []string) string {
 
 	// The two FoxIO implementations dispute every one-byte value, so this case keeps the
 	// alphanumeric test. `rust/ja4/src/tls.rs:334` writes `0` for the absent last
-	// character, and `python/ja4.py:276` writes one character.
+	// character. `python/ja4.py:276` leaves a one-byte value at one character, because its
+	// condition `len(alpn) > 2` is false.
 	if len(first) == 1 {
 		if alpnIsAlnum(firstByte) {
 			return fmt.Sprintf("%c%c", firstByte, firstByte)
