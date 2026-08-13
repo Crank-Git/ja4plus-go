@@ -190,7 +190,7 @@ func TestJA4TS_WritesTwoPartEDelaysWhenTheServerAnswersThreeTimes(t *testing.T) 
 // shipped rule on 2026-08-13. The port holds `_delay_seconds` at
 // `ja4plus/fingerprinters/ja4ts.py:43` of tag `v1.1.0`, the register row
 // `Part e of JA4TS, the time since the last SYN-ACK` at
-// `docs/specs/foxio/port-register.md:87` carries the port half, and the port issue is
+// `docs/specs/foxio/port-register.md:112` carries the port half, and the port issue is
 // `Crank-Git/ja4plus#226`. A reversal changes both repositories.
 func TestJA4TS_RoundsAPartEDelayToTheNearestSecond(t *testing.T) {
 	cases := []struct {
@@ -406,7 +406,7 @@ func TestJA4TS_AppendsTheResetDelayToPartE(t *testing.T) {
 // `tcp_flags == 0x004` for equality at `wireshark/source/packet-ja4.c:1296`. The maintainer
 // read the port's shipped rule on 2026-08-13, at issue #126, and this library follows Zeek.
 // The register row `The JA4TS value that a RST produces` at
-// `docs/specs/foxio/port-register.md:89` carries the port half, and the port issue is
+// `docs/specs/foxio/port-register.md:114` carries the port half, and the port issue is
 // `Crank-Git/ja4plus#246`. A reversal changes both repositories.
 func TestJA4TS_ReadsARSTThatAlsoCarriesACK(t *testing.T) {
 	fingerprinter := NewJA4TS()
