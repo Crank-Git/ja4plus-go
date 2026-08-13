@@ -109,7 +109,8 @@ The project has no user interface. This section does not apply.
 - `make conformance` fails with a clear message when the corpus is absent. The message
   names `make corpus`.
 - The coverage floor is recorded as a number in a file, not as a hard-coded value in the
-  workflow. The floor starts at the coverage that the repository has when Epic 0 lands.
+  workflow. **Epic 7 creates that file, under issue #68.** Epic 7 sets the first value.
+  **Epic 0 created no such file at any time.**
 - A benchmark takes its input from a packet that the test builds, not from the corpus.
   Benchmarks must run without a network.
 
@@ -126,7 +127,6 @@ No entity changes. The following files change.
 | `Makefile` | The `corpus`, `conformance`, `cover` and `fuzz` targets are added. |
 | `CHANGELOG.md` | New. |
 | `benchmark_test.go` | New. |
-| `.coverage-floor` | New. |
 
 ## Interfaces
 
