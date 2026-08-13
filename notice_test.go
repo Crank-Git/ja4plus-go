@@ -30,14 +30,16 @@ const (
 // `testdata/foxio.pin` holds the same value.
 const foxioPinnedCommit = "27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8"
 
-// noticeMethods holds the nine methods this library implements under FoxIO License 1.1.
-// FR-licensing-5 adds JA4LS when Epic 12 lands. Until then the list names nine.
+// noticeMethods holds the methods this library implements under FoxIO License 1.1.
+// FR-licensing-5 names them, and the list holds ten of the eleven methods this library
+// implements. JA4 is the eleventh, and the BSD 3-Clause license covers it.
 var noticeMethods = []string{
 	"JA4S",
 	"JA4H",
 	"JA4T",
 	"JA4TS",
 	"JA4L",
+	"JA4LS",
 	"JA4X",
 	"JA4SSH",
 	"JA4D",
@@ -110,7 +112,7 @@ func TestNoticeHoldsTheFoxIOLicenseTextWithoutAChange(t *testing.T) {
 }
 
 // FR-licensing-5.
-func TestNoticeNamesTheNineMethodsThisLibraryImplements(t *testing.T) {
+func TestNoticeNamesEveryMethodThatFoxIOLicense11Covers(t *testing.T) {
 	names := noticeMethodList(t)
 
 	if len(names) != len(noticeMethods) {
@@ -125,12 +127,12 @@ func TestNoticeNamesTheNineMethodsThisLibraryImplements(t *testing.T) {
 }
 
 // FR-licensing-5 bars a method the library does not implement from this project's list.
-// JA4LS joins the list when Epic 12 lands, and the FoxIO records name four more methods
-// that this library does not implement.
+// Epic 12 added JA4LS, and the FoxIO records name four more methods that this library
+// does not implement.
 func TestNoticeMethodListExcludesEveryUnimplementedMethod(t *testing.T) {
 	names := noticeMethodList(t)
 
-	absent := []string{"JA4LS", "JA4TScan", "JA4SScan", "JA4Scan", "JA4E"}
+	absent := []string{"JA4TScan", "JA4SScan", "JA4Scan", "JA4E"}
 	for _, name := range names {
 		for _, unimplemented := range absent {
 			if name == unimplemented {
@@ -154,8 +156,8 @@ func TestNoticeAssertsNoEqualityWithTheFoxIOList(t *testing.T) {
 		"LICENSE:3",
 		"thirteen",
 		"JA4SScan",
-		// The FoxIO README names nine methods, and this library also names nine. The two
-		// sets are different, and a reader must not read the two counts as one set.
+		// The FoxIO README names nine methods, and this library names ten. The two sets
+		// are different, and a reader must not read one count as the other set.
 		"The two sets are different.",
 		foxioPinnedCommit,
 	} {

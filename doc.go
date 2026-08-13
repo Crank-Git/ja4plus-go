@@ -29,7 +29,7 @@
 // publishes that text as LICENSE-JA4.
 //
 // FoxIO License 1.1 covers the other methods that this package implements: JA4S, JA4H,
-// JA4T, JA4TS, JA4L, JA4X, JA4SSH, JA4D and JA4D6. FoxIO License 1.1 permits
+// JA4T, JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6. FoxIO License 1.1 permits
 // non-commercial use only. A commercial user contacts FoxIO for those methods, and this
 // project gives no legal advice.
 //
