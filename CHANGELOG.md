@@ -10,11 +10,12 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Every measurement in this section names the base of the run that produced it. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, issue #285 put
-108 more, and issue #361 put 28 more. A run on the current tree reports 1658 matches, 645
-deviations, 409 accepted deviations and 437 register keys. The run also reports 214 unaccepted
-uncovered values and 28 accepted uncovered values, and #361 states what an uncovered value is.
+108 more, issue #361 put 28 more, and issue #375 put 12 more. A run on the current tree
+reports 1658 matches, 645
+deviations, 409 accepted deviations and 449 register keys. The run also reports 202 unaccepted
+uncovered values and 40 accepted uncovered values, and #361 states what an uncovered value is.
 An accepted deviation and an accepted uncovered value each name one register entry, so 409 and
-28 add up to the 437 register keys. A count that an entry below states therefore differs from
+40 add up to the 449 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
@@ -50,6 +51,20 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- No exported name, and twelve register entries that close FR-parity-50. The SOCKS4 tunnel
+  of `socks4-https.pcap` produces three JA4X values, and no vector file of the corpus
+  publishes a JA4X key for that capture. `testdata/foxio/python/socks4-https.pcap.json` and
+  `testdata/foxio/wireshark/socks4-https.pcap.json` each publish none, so the run reports
+  each value as an uncovered value. **The port ruled at `Crank-Git/ja4plus#138` on
+  2026-08-07 that the three values stay.** The maintainer ruled on 2026-08-13 that a ruling
+  the port's register records lands here as a reading. **The three values reach
+  twelve comparisons**, because the run compares `JA4X` and `JA4X_r` in the per-stream set
+  and in the per-packet set. **The change moves no fingerprint value.** The run reports 1658
+  matches, 645 deviations and 409 accepted deviations before and after. **The register key
+  count moves from 437 to 449.** The unaccepted uncovered values fall from 214 to 202, and
+  the accepted uncovered values rise from 28 to 40. The run reports 0 stale register entries
+  and 0 orphan register entries. Issue #57 carries the test half, and `ja4x_tunnel_test.go`
+  holds it.
 - No exported name, and one conformance category that records a value the reference file
   does not cover. The harness dropped a value whose vector file publishes no key for its
   method. The run reported nothing for it, and the report read as full coverage of every

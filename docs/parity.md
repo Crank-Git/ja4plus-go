@@ -186,6 +186,12 @@ port's own register, and `docs/specs/foxio/port-register.md` holds the copy it r
 each accepted difference from a FoxIO value, and the `## Parity with ja4plus` section of
 `docs/specs/spec.md` holds the divergence register.
 
+**FR-parity-50 is closed, and this page holds no part of it.** The requirement covers the
+three JA4X values that the SOCKS4 tunnel of `socks4-https.pcap` produces.
+`ja4x_tunnel_test.go` holds the test half, and `testdata/deviations.json` holds the twelve
+register entries. `docs/specs/features/08-python-parity.md` states the requirement, and the
+register row `JA4X on a stream that a proxy tunnel carries` records the closure.
+
 **This page records no Go name that the port does not promise.** `Fingerprinter`,
 `WindowCloser`, `SyncProcessor`, `GetShardKey`, `CloseOpenWindows`, `LookupFingerprint` and
 the key log names each answer a Go question, and no row of the table reaches them.
