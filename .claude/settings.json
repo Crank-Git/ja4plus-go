@@ -36,6 +36,9 @@
       "Bash(gh pr checks:*)",
       "Bash(gh label list:*)",
       "Bash(git:*)"
+    ],
+    "deny": [
+      "Bash(git stash:*)"
     ]
   },
   "hooks": {
