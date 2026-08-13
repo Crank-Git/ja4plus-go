@@ -19,9 +19,9 @@ import (
 // `docs/specs/features/08-python-parity.md`.
 //
 // The port is the Python implementation at `Crank-Git/ja4plus`. The port's issue #533
-// settled the words "reading" and "ruling" that this file uses, and the port's own parity
-// rule 3 bars a test that builds, runs or imports the port. `.claude/rules/parity.md`
-// holds the same rule for this repository.
+// settled the words "reading" and "ruling" that this file uses. The port's own parity rule 3
+// bars a test that builds, runs or imports the port. `.claude/rules/parity.md` holds the
+// same rule for this repository.
 //
 // No test here reaches the network, and no test here reads the port. Each recorded fact
 // names the port commit that a reader re-reads it at.
@@ -104,6 +104,10 @@ var parityGoNamePattern = regexp.MustCompile("^`([A-Za-z0-9]+)`$")
 // states that a reading cites a file and a line, so a row that names a module alone fails.
 var parityPortLocationPattern = regexp.MustCompile(`^ja4plus/[A-Za-z0-9_/]+\.py:[0-9]+$`)
 
+// parityStatedCountPattern matches the `Promised names` row of the record table. The page
+// states its own count, and a reader must not trust a stale number.
+var parityStatedCountPattern = regexp.MustCompile(`\|\s*Promised names\s*\|\s*(\d+)\s*\|`)
+
 // readParityTableRows returns the rows between the two markers.
 func readParityTableRows(t *testing.T) []parityRow {
 	t.Helper()
@@ -172,9 +176,8 @@ func TestGitTracksTheParityTable(t *testing.T) {
 	}
 }
 
-// FR-parity-5 — the page names the port version each row was read from. It names the
-// commit and the blob as well, because a tag moves and a version string does not locate
-// the file that the names were counted in.
+// FR-parity-5 — the page names the port version that a reader reads each row at. It names
+// the commit and the blob as well. A tag moves, and a version string locates no file.
 func TestTheParityTableNamesThePortVersionAndTheReadCommit(t *testing.T) {
 	page := readRepoFile(t, parityTableFile)
 
@@ -205,9 +208,13 @@ func TestTheParityTableNamesTheListItCounted(t *testing.T) {
 func TestTheParityTableHoldsOneRowForEachExportedPortName(t *testing.T) {
 	rows := readParityTableRows(t)
 
+	// #307 states the count on every run, and this check follows that habit. A reader of
+	// the log reads the recorded count without a re-read of the page.
+	t.Logf("the table holds %d rows, and the port promises %d names at %s", len(rows), len(portExportedNames), portReadCommit)
+
 	if len(rows) != len(portExportedNames) {
-		t.Fatalf("%s holds %d rows, and the port promises %d names at %s. Re-read `ja4plus/__init__.py` at the port tag %s and update the table and %s together",
-			parityTableFile, len(rows), len(portExportedNames), portReadCommit, portReadVersion, "parity_table_test.go")
+		t.Fatalf("%s holds %d rows, and the port promises %d names at the port tag %s. Re-read `ja4plus/__init__.py` at that tag, and update the table and parity_table_test.go together",
+			parityTableFile, len(rows), len(portExportedNames), portReadVersion)
 	}
 
 	seen := map[string]bool{}
@@ -224,10 +231,6 @@ func TestTheParityTableHoldsOneRowForEachExportedPortName(t *testing.T) {
 		}
 	}
 
-	// #307 states the count on every run, and this check follows that habit. A reader of
-	// the log reads the recorded count without a re-read of the page.
-	t.Logf("the table holds %d rows, and the port promises %d names at %s", len(rows), len(portExportedNames), portReadCommit)
-
 	for _, row := range rows {
 		if !slices.Contains(portExportedNames, row.PortName) {
 			t.Errorf("%s holds a row for %q, and `__all__` at the port commit %s does not promise that name. Re-read the promised names", parityTableFile, row.PortName, portReadCommit)
@@ -241,7 +244,7 @@ func TestTheParityTableStatesTheRowCountThatItHolds(t *testing.T) {
 	page := readRepoFile(t, parityTableFile)
 	rows := readParityTableRows(t)
 
-	match := regexp.MustCompile(`\|\s*Promised names\s*\|\s*(\d+)\s*\|`).FindStringSubmatch(page)
+	match := parityStatedCountPattern.FindStringSubmatch(page)
 	if match == nil {
 		t.Fatalf("%s records no `Promised names` row, and FR-parity-6 needs the recorded count", parityTableFile)
 	}
@@ -351,17 +354,21 @@ func readExportedPackageNames(t *testing.T) map[string]bool {
 }
 
 // portRunPatterns match a test that runs the port. A Go test reaches the port through an
-// interpreter or through a Python tool, so each pattern reads the call and not the word
-// "python" alone. Many tests name a vector path under `testdata/foxio/python/`, and the
-// bare word therefore reports no defect.
+// interpreter or through a Python tool. Each pattern therefore reads the call, and not the
+// word "python" alone. Many tests name a vector path under `testdata/foxio/python/`, so the
+// bare word reports no defect.
+//
+// The check reads literal text, and indirection defeats it. A call that holds the
+// interpreter name in a variable passes. FR-parity-4 bars a rig that an author writes
+// deliberately, and a call-graph analysis would still read no intent.
 var portRunPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`exec\.Command(Context)?\([^)]*(python|pytest|pip|poetry|uv)`),
 	regexp.MustCompile(`(?m)^\s*(from|import)\s+ja4plus`),
 }
 
-// FR-parity-4 — the port and this repository move at different speeds, so a
-// cross-language rig fails for reasons that have nothing to do with the change under
-// test. The port's parity rule 3 states the rule, and `.claude/rules/parity.md` adopts it.
+// FR-parity-4 — the port and this repository move at different speeds. A cross-language rig
+// therefore fails for a reason that the change under test did not cause. The port's parity
+// rule 3 states the rule, and `.claude/rules/parity.md` adopts it.
 func TestNoTestBuildsRunsOrImportsThePort(t *testing.T) {
 	scanned := 0
 

@@ -21,8 +21,8 @@ source states, and only the maintainer makes a ruling.
 | Promised names | 25 |
 
 **Read the port at the tag, and never at the tip.** The tip carried five commits past
-`v1.1.0` on the read date, and a reading of a moving branch is a reading of something the
-next reader cannot see.
+`v1.1.0` on the read date. A reading of a moving branch is a reading of something the next
+reader cannot see.
 
 Reproduce the record with these commands, from a clone of the port:
 
@@ -37,10 +37,12 @@ git -C ja4plus show v1.1.0:ja4plus/__init__.py
 **This page counts the `__all__` list of `ja4plus/__init__.py`, and it counts nothing
 else.** That list holds 25 names.
 
-The port states the reason in its own comment on that list: the list names what a caller
-may import from `ja4plus`, and a name absent from the list is not promised. The port also
-states that a module declares its own public names in its own `__all__`. **A public name of
-a submodule therefore reaches no row here**, because the port promises no submodule name.
+**A promised name is a name of that list.** This page uses the word for that meaning alone.
+
+The port states the reason in its own comment on the list. The list names what a caller may
+import from `ja4plus`. **A name absent from the list is not promised.** The port also states
+that a module declares its own public names in its own `__all__`. **A public name of a
+submodule therefore reaches no row here**, because the port promises no submodule name.
 
 The two counts differ, and this page names the one it counted. `ja4plus/cli.py`,
 `ja4plus/watch.py`, `ja4plus/output.py`, `ja4plus/ja4db.py` and the ten modules of
@@ -55,9 +57,13 @@ The two counts differ, and this page names the one it counted. `ja4plus/cli.py`,
 - **`not applicable`** states that the name answers a Python question that Go does not ask.
 - **The reason** carries one sentence. A row that names a Go equivalent needs none.
 
-`parity_table_test.go` reads this table. It fails when a row disappears, when two rows name
-one port name, when a row names a name the port does not promise, and when a row names a Go
-name that the package does not export.
+`parity_table_test.go` reads this table. It fails on each of these.
+
+- A row disappears, or two rows name one port name.
+- A row names a name that the port does not promise.
+- The `Promised names` count differs from the count of rows.
+- A row names a Go name that package `ja4plus` does not export.
+- A row cites a port module without a line number.
 
 ## The table
 
@@ -89,14 +95,15 @@ name that the package does not export.
 | `generate_ja4d6` | function | `ja4plus/fingerprinters/ja4d6.py:257` | `ComputeJA4D6` | |
 | `compute_ja4x_from_der` | function | `ja4plus/__init__.py:51` | `ComputeJA4XFromDER` | |
 | `compute_ja4x_from_pem` | function | `ja4plus/__init__.py:64` | `ComputeJA4XFromPEM` | |
-| `__version__` | attribute | `ja4plus/__init__.py:101` | `none`, not applicable | The Go module system carries the version of a library, and `cmd/ja4plus/main.go:35` holds the `Version` variable that the linker sets for the command. |
+| `__version__` | attribute | `ja4plus/__init__.py:101` | `none`, not applicable | `runtime/debug.ReadBuildInfo` reads the version of a Go module from the running binary, so a library needs no version name of its own. |
 
 <!-- parity-table:end -->
 
 ## What the table shows
 
-**Twenty-three of the 25 promised names reach a Go name, and two reach none.** Both of the
-two are one-shot functions for a method that reads more than one packet.
+**Twenty-two of the 25 promised names reach a Go name, and three reach none.** Two of the
+three are one-shot functions for a method that reads more than one packet, and the third is
+the version attribute.
 
 **Eight `Compute*` functions answer ten `generate_*` functions.** `ComputeJA4`,
 `ComputeJA4S`, `ComputeJA4H`, `ComputeJA4XFromPacket`, `ComputeJA4T`, `ComputeJA4TS`,
@@ -106,12 +113,28 @@ packet.
 **`generate_ja4l` and `generate_ja4ssh` each take a second parameter that holds the
 connection state.** The port makes the caller hold that state, and this library holds it
 inside `JA4LFingerprinter` and `JA4SSHFingerprinter`. Parity rule 2 states that the port
-decides interface where this project shipped nothing, and the rule names an interface
-without naming a shape. **#356 records the question, and this page records no answer.**
+decides interface where this project shipped nothing. **The rule names an interface, and it
+states no shape.** **#356 records the question, and this page records no answer.**
 
 **Three Go names answer one port name.** The port promises `compute_ja4x_from_der`,
 `compute_ja4x_from_pem` and `generate_ja4x`, and this library exports `ComputeJA4XFromDER`,
 `ComputeJA4XFromPEM` and `ComputeJA4XFromPacket`. Each pair reads the same input.
+
+## The one `not applicable` row, and how to reverse it
+
+**The `__version__` row records a fact of the Go language, and it records no preference.**
+`runtime/debug.ReadBuildInfo` returns the build information that the running binary carries,
+and that information holds the module version. A Python module carries no such mechanism, so
+the port declares the version as an attribute. `cmd/ja4plus/main.go:35` holds
+`var Version = "dev"`, which the linker sets for the command and not for the library.
+
+**A reader who disagrees reverses the row with one action.** Open an issue that states which
+caller needs a version name in the library, and change the row to `` `none` ``,
+`applicable`. **The maintainer confirms this row, or reverses it.** Until the maintainer
+confirms it, a later reader reads it as unconfirmed.
+
+**This page states no ruling.** Parity rule 2 assigns an interface question to the
+maintainer, and #356 carries the two questions of this page that need one.
 
 ## What this page does not record
 
