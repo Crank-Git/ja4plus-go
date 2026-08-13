@@ -138,7 +138,11 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		// sshConnKeyOfEndpoints repeats step 1 and step 3, so a change carries two sites.
 		// A connection whose SYN sender holds the lower port separates step 2 from step 3, and
 		// no capture of the corpus reaches that shape.
-		// #346 holds the open question, and the maintainer decides it.
+		// The project manager ruled #346 on 2026-08-13, under the widened delegation that
+		// `.claude/rules/rulings.md` holds. The ruling is provisional, and the maintainer
+		// confirms it or reverses it.
+		// The ruling carries step 2 into the library, and #413 builds it.
+		// A reversal records the decline instead, in this repository and in the port together.
 		// Non-standard port: higher port is client, lower port is server
 		// (fixed from Python where this was reversed)
 		if srcPort > dstPort {
