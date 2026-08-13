@@ -124,6 +124,23 @@ exits 0, and that exit code reports no site build.**
   categories by hand, and it says so in the gate comment.
   `.claude/rules/cross-member-review.md` holds the measurement, the return contract and
   the procedure.
+- **A finding earns a tracker issue in five cases, and never otherwise.** The maintainer
+  adopted this policy on 2026-08-13. A finding earns an issue when it touches one of these.
+  - Behaviour.
+  - A fingerprint value.
+  - A guard that guards nothing.
+  - A blocked epic.
+  - A question the maintainer must rule.
+
+  **The batch documentation round repairs every other finding, in the batch that found it,
+  and it files no issue.** A falsified sentence, a moved citation, a missing term and a
+  stale count each reach the round. **The round reports a finding that turns out to touch
+  behaviour**, and that finding then becomes an issue under the five cases above.
+
+  The measurement that earned the policy: of 42 loose open issues, about twenty repaired a
+  sentence, a citation, a term or a stale count. **Each repair produced more issues.** #410
+  exists because #398 edited a file. #419 exists because #355 edited a file. #436 exists
+  because #70 measured something. **The backlog regenerated at about the rate it closed.**
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
   the reference is wrong. Never change a FoxIO vector to make a test pass.
 - **Where the FoxIO implementations disagree, a person decides.** That is a ruling, not a

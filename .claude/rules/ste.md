@@ -28,6 +28,27 @@ misrepresents the person.
 - Third-party product names and API field names.
 - Text copied from a specification, including a FoxIO fingerprint value.
 
+## How a citation names its target
+
+**The maintainer adopted this convention on 2026-08-13.** An internal cross-reference cites
+a section heading. An evidence citation cites `file:line`.
+
+| Kind | What it cites | Why |
+|---|---|---|
+| **Evidence** — a FoxIO reference implementation, a FoxIO image, a deleted FoxIO text specification, the port at a tag | **`file:line`**, at the pinned commit | `testdata/foxio.pin` holds the commit, so the line never moves. |
+| **Internal** — `.claude/rules/*` and `docs/specs/*` that cite each other, and a code comment that cites a rule file | **The section heading** | A heading survives an edit above it. A line number does not. |
+| **This library's own code, named in a document** | **The identifier**, and the file | `decideEndpoints` in `ja4ssh.go` finds the method after every edit. A line number finds it until the next edit. |
+
+**`.claude/rules/rulings.md` `## A reading cites a file and a line` governs evidence, and
+this convention does not touch it.** A reading of a FoxIO source keeps its `file:line`, and
+`## What is verbatim, and never rewritten` above holds that citation verbatim.
+
+The measurement that earned the convention: batch #421 found three stale line citations, and
+each one named a line that the same batch moved. `docs/specs/spec.html` cited `ja4l.go:381`
+for a `JA4L-S` write that now sits at `:413`. It cited `ja4ssh.go:176-180` for a cap that no
+line holds. Its `Three defects` box named three defects that the code does not hold. **Each
+of those three citations is the defect, and never a citation this file makes.**
+
 ## The rules
 
 ### Sentences
