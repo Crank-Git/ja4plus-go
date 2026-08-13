@@ -14,6 +14,7 @@ reader checks a parity row without a clone of the port.
 | Retrieved | 2026-08-11 |
 | Bytes | 36445 |
 | SHA-256 | `f5ec7502b46cea632ac8d291f32acf3b97fcf3471a5ee8a4a8ea0ac6aba45f4b` |
+| Rows | 31 |
 
 **The copy below is verbatim, and no reader edits it.** `.claude/rules/ste.md` bars a
 rewording of copied text, because a reworded quotation is no longer evidence.
@@ -31,6 +32,30 @@ The command below reproduces the copy and the hash.
 ```console
 gh api "repos/Crank-Git/ja4plus/contents/docs/specs/spec.md?ref=21299645366591331eb93155355b65a76a3729f3" \
   --jq '.content' | base64 -d | sed -n '255,320p' | shasum -a 256
+```
+
+**The `Rows` record counts the body rows of the `### Divergence register` table of the
+copy.** The port adds a row when it records a new divergence, so a count that differs
+reports a stale copy. The counting rule is this, and a reader who counts differently
+reports a drift the copy does not hold.
+
+- The count starts at the heading `### Divergence register`, and it ends at the end of the
+  copy.
+- A row is one line that starts with `|` under that heading.
+- The header row and a separator row are not body rows.
+- The port writes a blank line inside the table, and a row after a blank line is still a
+  body row.
+
+`port_register_drift_test.go` holds the rule and the comparison. FR-parity-58 and
+FR-parity-60 of `docs/specs/features/08-python-parity.md` state the requirement.
+
+**The command below writes no end marker, because a second copy of that marker would stop
+the marker search of `deviations_test.go` at the wrong line.** It reads to the end of the
+file instead, and the trailer of the copy holds no table row.
+
+```console
+sed -n '/^### Divergence register/,$p' docs/specs/foxio/port-register.md \
+  | grep '^|' | grep -v -e '^| Item |' -e '^|---' | wc -l
 ```
 
 <!-- port-register:begin -->
