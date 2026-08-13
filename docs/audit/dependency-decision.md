@@ -8,8 +8,10 @@ Risk R5 of `docs/specs/spec.md` holds the open question. FR-supply-25 through FR
 of `docs/specs/features/07-supply-chain.md` state what this file must hold. Issue #70
 produced it.
 
-**Every measurement below carries the date 2026-08-13, and the branch
-`issue/70-gopacket-dependency-decision`.** A reader who repeats a measurement runs the
+**Every measurement below carries the date 2026-08-13. Two branches produced them.** Issue
+#70 measured on `issue/70-gopacket-dependency-decision`, and issue #434 measured on
+`issue/434-gopacket-fork-measurement`. Each section of #434 names its branch, and every
+other section carries the branch of #70. A reader who repeats a measurement runs the
 command that the same section names.
 
 ## The question the maintainer answers
@@ -93,7 +95,8 @@ A migration costs the surface, and never the dependency count. The command is
 `grep -rl 'github.com/google/gopacket' --include='*.go' .`
 
 - **54 files hold an import path of `gopacket`.** 39 of them are a test file, and 15 are
-  not.
+  not. **The tree has moved since, and #434 counts 55.**
+  `### The count of files a migration changes` below holds the later count.
 - **The tree names three import paths.** `github.com/google/gopacket`,
   `github.com/google/gopacket/layers` and `github.com/google/gopacket/pcapgo`.
 - **Two files reach `pcapgo`**: `cmd/ja4plus/main.go:20` and `integration_test.go:12`. Each
@@ -191,8 +194,8 @@ Each candidate holds a separate `pcap` package that links libpcap, and this proj
 no `pcap` package.
 
 **A build measurement of `CGO_ENABLED=0 go build ./...` against the fork needs a migration
-branch, and nobody has run one.** `## What FR-supply-27 asks for, and what is unmeasured`
-states the cost of that branch.
+branch. Issue #434 built one on 2026-08-13, and the command succeeds.**
+`### The migration builds, and one test of this tree fails` holds that result.
 
 ## The security record of each candidate
 
@@ -218,14 +221,16 @@ states that the Diameter layer belongs to the fork alone:
 no advisory and no fix, so an empty result reports no audit. It reports that nobody has
 published one.
 
-## What FR-supply-27 asks for, and what is unmeasured
+## What FR-supply-27 asks for, and what a source comparison reveals
 
 **FR-supply-27 asks for every behaviour difference that the conformance suite reveals
 between the candidates. That measurement needs a migration branch, and issue #70 changes no
-dependency. So the conformance comparison is unmeasured.**
+dependency. So issue #70 left the conformance comparison unmeasured.**
 
-This section states what a source comparison reveals instead, and it states the cost of the
-measurement that FR-supply-27 names.
+**Issue #434 built that branch on 2026-08-13, and
+`## The conformance measurement against the fork at v1.6.1` below holds the result.** This
+section states what a source comparison reveals, and it states the cost that the
+measurement carried.
 
 ### The cost of the conformance measurement
 
@@ -325,12 +330,243 @@ fields. The six are `ja4t_two_digit_test.go`, `ja4t_test.go`,
 **A move therefore offers a later issue the option to delete a file of this project.** That
 option is not part of the question this file records, and no requirement asks for it.
 
+## The conformance measurement against the fork at v1.6.1
+
+**The maintainer authorized a throwaway migration branch on 2026-08-13, and issue #434 ran
+it.** Every measurement of this section carries that date and the branch
+`issue/434-gopacket-fork-measurement`. **Nothing of the migration merges. The branch holds
+this file and no other change.**
+
+**The measurement reads `github.com/gopacket/gopacket` v1.6.1, and it reads no later
+version.** v1.6.1 states `go 1.24.0` in its own `go.mod`, so it holds the Go floor that
+Assumption 1 of `docs/specs/spec.md` accepts. The command is
+`curl -s https://proxy.golang.org/github.com/gopacket/gopacket/@v/v1.6.1.mod`, and it
+returns:
+
+```
+module github.com/gopacket/gopacket
+
+go 1.24.0
+```
+
+### The count of files a migration changes
+
+The command is `grep -rl 'github.com/google/gopacket' --include='*.go' .`
+
+- **55 Go files hold an import path of `gopacket`.** 40 of them are a test file, and 15 are
+  not. **Issue #70 counted 54 on its own branch, and the tree has gained one test file
+  since.**
+- **`go.mod` and `go.sum` change too, so a build migration changes 57 files.**
+- **11 more tracked files name the import path in prose.** The command is
+  `git grep -l 'github.com/google/gopacket'`, which reports 68 files in total.
+- **The tree names three import paths**, and the count of each name is 54, 41 and 2. The
+  command is `grep -rhoE 'github\.com/google/gopacket(/[a-z0-9]+)?' --include='*.go' .`
+
+**`rtk` filters the output of a `git` command, and a count taken through it is wrong.**
+`git diff --name-only | wc -l` reported 58 for a diff of 55 files, and
+`git status --porcelain | wc -l` reported 54 for the same diff. `rtk proxy git ...` reports
+55 for each one. **Read a file count through `rtk proxy`, or from `git diff --numstat`.**
+
+### The migration builds, and one test of this tree fails
+
+**`go build ./...` succeeds, and `CGO_ENABLED=0 go build ./...` succeeds.** So the fork
+holds the cgo constraint that `CLAUDE.md` states. **Issue #70 named that build an open
+question, and this measurement answers it**, so `## What this file does not answer` no
+longer carries it.
+
+**`go test -race ./...` fails one test, and that test reads `go.mod`.**
+`foundation_test.go:27` declares `TestGoModDeclaresGo124`, and `foundation_test.go:30`
+holds the pattern:
+
+```go
+	if !regexp.MustCompile(`(?m)^go 1\.24$`).MatchString(goMod) {
+```
+
+**The migration writes `go 1.24.0` in `go.mod`, and the pattern accepts `go 1.24` alone.**
+The toolchain writes the longer form, and it refuses the shorter one. `go mod tidy -diff`
+reports:
+
+```
+-go 1.24
++go 1.24.0
+```
+
+**`go build ./...` then refuses the shorter form**, and it prints
+``go: updates to go.mod needed; to update it:``. **`github.com/gopacket/gopacket@v1.6.1`
+states `go@1.24.0` in the module graph**, and no other module of the graph states a higher
+one. So the fork causes the longer form.
+
+**The Go floor does not move.** `go 1.24.0` and `go 1.24` name one language version, and
+`CLAUDE.md` states `Go 1.24 or later`. **The guard reads the literal text, and the literal
+text moves.** A migration therefore changes `foundation_test.go` as well, and no fingerprint
+value is involved.
+
+**No other test fails.** The command `go test -race ./...` reports one failing test in the
+root package, and it reports `ok` for `cmd/ja4plus`, for `internal/keylog` and for
+`internal/parser`.
+
+### The migration moves three more modules, so it is not a one-variable change
+
+**`go get github.com/gopacket/gopacket@v1.6.1` upgraded three `golang.org/x` modules**, and
+it reported:
+
+```
+go: upgraded golang.org/x/crypto v0.28.0 => v0.37.0
+go: upgraded golang.org/x/net v0.30.0 => v0.39.0
+go: upgraded golang.org/x/sys v0.26.0 => v0.32.0
+```
+
+**The fork requires `golang.org/x/net@v0.39.0`, and that module requires
+`golang.org/x/crypto@v0.37.0`.** The command is `go mod graph`, and it reports
+`golang.org/x/net@v0.39.0 golang.org/x/crypto@v0.37.0`. **`golang.org/x/crypto` decodes the
+SSH handshake that JA4SSH reads**, so the upgrade is a second variable and it is not
+optional.
+
+**No fingerprint value moved under both changes together, so this measurement needs no
+attribution run.** A later measurement that finds a moved value must separate the two
+modules first.
+
+### The four counts, before and after
+
+The command is `make conformance`, which runs `go test -tags conformance -count=1 -v ./...`
+with the corpus present.
+
+| Count | Before | After |
+|---|---|---|
+| Matches | 1658 | 1658 |
+| Deviations | 635 | 635 |
+| Accepted deviations | 419 | 419 |
+| Register keys | 459 | 459 |
+| Stale register entries | 0 | 0 |
+| Unaccepted uncovered values | 202 | 202 |
+| Accepted uncovered values | 40 | 40 |
+
+The per-set counts hold as well. Each run reports:
+
+```
+the per-stream set reports 1103 matches, 82 deviations and 276 accepted deviations
+the per-packet set reports 555 matches, 553 deviations and 143 accepted deviations
+the run reports 1658 matches, 635 deviations and 419 accepted deviations
+```
+
+**The register key count reads `testdata/deviations.json`, which the migration does not
+edit.** The file holds 459 entries and 459 distinct keys before and after.
+
+### No comparison moved, and this is how the measurement proves it
+
+**A count that holds can still hide two values that swap, so the measurement compares the
+two logs line by line.** It removes each run duration, and it compares the rest.
+
+- **The two logs hold 1054 deviation lines each**, 635 unaccepted and 419 accepted, and the
+  two key sets are equal.
+- **The one substantive difference between the two logs is `TestGoModDeclaresGo124`.** Every
+  other difference is the order of a subtest name, which Go map iteration decides.
+- **The run reports 0 stale register entries under the fork.** `conformance_test.go:925`
+  calls `t.Errorf` for each entry of the loop that `conformance_test.go:924` opens, so a
+  register entry that records a value the run no longer produces fails the suite. A moved
+  value inside an accepted deviation would reach that call, and none did.
+
+**So no comparison moved, and the list of moved comparisons is empty.**
+
+### The Geneve difference, which the corpus does not reach
+
+**`layers/geneve.go:68` of the fork at v1.6.1 states:**
+
+```go
+	opt.Flags = data[3] >> 5
+	opt.Length = (data[3]&0x1f)*4 + 4
+```
+
+**`layers/geneve.go:62` of `google/gopacket` v1.1.19 states:**
+
+```go
+	opt.Flags = data[3] >> 4
+	opt.Length = (data[3]&0xf)*4 + 4
+```
+
+**The corpus reaches that decoder.** A probe read every capture under `testdata/foxio/` and
+counted each Geneve layer and each Geneve option. It reports:
+
+```
+HIT testdata/foxio/pcap/tcpdump-geneve.pcap geneveLayers=39 geneveOptions=19 tcpKind30=0
+TOTAL geneveLayers=39 geneveOptions=19 tcpKind30=0 tcpLayers=7163 decodeErrors=0
+```
+
+**The two candidates decode those 19 options to one value.** The probe ran once under each
+candidate, and each run printed the same line 19 times:
+
+```
+GENEVEOPT testdata/foxio/pcap/tcpdump-geneve.pcap class=0 type=128 flags=0 length=8 data=0000000c
+```
+
+**One option byte explains the agreement.** A length of 8 needs `data[3]&0x1f` to be 1 under
+the fork, and it needs `data[3]&0xf` to be 1 under v1.1.19. A flags value of 0 needs the top
+three bits to be 0. So `data[3]` is `0x01`, and the two readings agree on that byte.
+
+**A capture whose option byte sets bit 4 separates the two candidates, and the corpus holds
+none.** So the corpus reaches the decoder, and it does not reach the difference.
+
+### The TCP option difference: the corpus reaches neither
+
+**`layers/tcp.go:59` of the fork at v1.6.1 declares
+`TCPOptionKindMultipathTCP                    = 30`, and `layers/tcp.go:347` opens a case
+for it.** The case returns an error for a malformed option, for example at
+`layers/tcp.go:357`:
+
+```go
+					return fmt.Errorf("MP_CAPABLE bad option length %d", opt.OptionLength)
+```
+
+**`layers/tcp.go` of `google/gopacket` v1.1.19 names no case for kind 30.** The option
+reaches the `default:` branch at `layers/tcp.go:285`, which records `opt.OptionData` and
+continues.
+
+**The corpus holds no TCP option of kind 30.** The probe above read 7163 TCP layers and it
+counted 0 options of kind 30. **It also counted 0 packets with an error layer**, so no
+capture produced a decode error under either candidate.
+
+**So the corpus reaches neither half of this difference.** A capture that holds a malformed
+option of kind 30 separates the two candidates, and a later measurement needs one.
+
+### How to repeat the measurement
+
+1. Copy the corpus into the worktree with
+   `cp -R <checkout>/testdata/foxio testdata/foxio`. **Never symlink it**, because
+   `method_count_test.go` reads that path as a file.
+2. Run `make conformance` and keep the log.
+3. Rewrite the import path with
+   `grep -rl 'github.com/google/gopacket' --include='*.go' . | xargs sed -i '' 's|github.com/google/gopacket|github.com/gopacket/gopacket|g'`.
+4. Run `go mod edit -droprequire=github.com/google/gopacket`, then
+   `go get github.com/gopacket/gopacket@v1.6.1`, then `go mod tidy`.
+5. Run `make conformance` again, and compare the two logs.
+6. Revert with `git checkout -- .`. **Never run `git stash`**, because
+   `.claude/rules/worktrees.md` bars it and the permission layer refuses it.
+
+### What FR-supply-27 asks for, and the answer
+
+**FR-supply-27 asks the record to name every behaviour difference that the conformance
+suite reveals between the candidates. The suite reveals none.** Every count holds, every
+deviation key holds, and no register entry goes stale.
+
+**That answer reads the corpus, and it reads no other input.** The two source differences
+above are real, and the corpus separates neither one. **A behaviour difference that no
+capture reaches stays a behaviour difference**, and this measurement bounds the risk rather
+than removes it.
+
+### What this measurement does not change
+
+**`## The recommendation, which decides nothing` below keeps every sentence that issue #70
+wrote.** That section states that the conformance result is unmeasured, and issue #70 wrote
+the sentence before this branch existed. **Issue #434 changes no sentence of that section,
+because the maintainer has chosen no candidate.** A reader reads the two sections together,
+and the maintainer decides what the measurement means.
+
 ## The candidates, and the cost of each
 
 | Candidate | What it costs | What it risks |
 |---|---|---|
 | **A. Keep `google/gopacket` v1.1.19.** | No work. | The dependency reaches six years without a release. No defect of it is ever repaired. The library keeps its own decryption secrets block reader. |
-| **B. Move to `gopacket/gopacket` v1.6.1.** | 54 files, plus a conformance measurement. Both published advisories are fixed at this version. The Go floor stays 1.24.0, so Assumption 1 holds. | Every caller breaks. The conformance result is unmeasured, and `layers/tcp.go` and `layers/geneve.go` each hold a difference that reaches a value. |
+| **B. Move to `gopacket/gopacket` v1.6.1.** | 57 files, plus `foundation_test.go`. Both published advisories are fixed at this version. The Go floor stays 1.24.0, so Assumption 1 holds. | Every caller breaks. The corpus separates neither the `layers/tcp.go` difference nor the `layers/geneve.go` difference, so each one stays an unbounded risk on a capture the corpus does not hold. The move also upgrades three `golang.org/x` modules. |
 | **C. Move to `gopacket/gopacket` v1.7.1.** | The cost of B, plus a Go floor of 1.25.0. | The cost of B, plus a contradiction with Assumption 1 of `docs/specs/spec.md` and with `CLAUDE.md`. |
 | **D. Answer after Epic 13.** | The cost of B or C, plus the capture backend that Epic 13 builds. | Epic 10 freezes the API, so a move after Epic 10 needs a `v2` path. |
 
@@ -407,9 +643,13 @@ depends on Epic 2 and on Epic 3, and both of those epics are closed. **So the or
 
 ## What this file does not answer
 
-- **The conformance result of a migration branch.** Nobody has built one.
-- **Whether `CGO_ENABLED=0 go build ./...` succeeds against the fork.** That measurement
-  needs the same branch.
+- **Whether a capture that the corpus does not hold moves a fingerprint value.**
+  `### The Geneve difference, which the corpus does not reach` and
+  `### The TCP option difference: the corpus reaches neither` each name the capture that
+  separates the two candidates, and the corpus holds neither one.
+- **Which of the four upgraded modules a later moved value comes from.** The measurement
+  moved `github.com/gopacket/gopacket`, `golang.org/x/crypto`, `golang.org/x/net` and
+  `golang.org/x/sys` together, and it found no moved value, so it ran no attribution.
 - **Whether a third candidate exists.** The measurement read `github.com/tsg/gopacket`,
   which publishes `v0.0.0-20200626092518-2ab8e397a786` at 2020-06-26, and it read no other
   candidate.
