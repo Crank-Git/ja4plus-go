@@ -97,8 +97,12 @@ Neither amendment changes code, and `ja4ls_emission_test.go` holds each one as a
 
 ### The interface
 
-- **FR-ja4ls-10** — `ComputeJA4LS` computes the JA4LS value for one connection, matching
-  the shape of the existing `ComputeJA4L`.
+- **FR-ja4ls-10** — `ComputeJA4LS` computes the JA4LS value for one connection. It matches
+  the shape of `ComputeJA4T`, which is a one-shot function. **This library exports no
+  `ComputeJA4L`.** The maintainer ruled #356 on 2026-08-13, and
+  `parity_one_shot_not_applicable_test.go:32-35` holds that ruling as a test. **Open
+  question 2 below asks whether this requirement is worth building, and the maintainer
+  answers it.**
 - **FR-ja4ls-11** — **Provisional, and the reversal path is issue #61.** #61 measured that
   `Processor` holds no type filter at all, so the requirement as written named a surface that
   does not exist. `Processor` returns the result of every method, and the caller selects
@@ -261,5 +265,9 @@ values, under the rule that the port's `.claude/rules/external-apis.md` states.
    the JA4LS value. `--types ja4ls` prints the JA4LS value alone. **The ruling is a superset
    over the port, and no fingerprint value moves.** `Crank-Git/ja4plus#605` proposes the
    same token for the port. R9 question 3 of `docs/specs/spec.md` records the closure.
-2. **Does the freeze make FR-ja4ls-10 worth adding?** `ComputeJA4LS` matches the existing
-   convenience functions, and every exported name added now is frozen at `v1.0.0`.
+2. **Does the freeze make FR-ja4ls-10 worth adding?** `ComputeJA4LS` matches the shape of
+   the one-shot functions this library exports, and every exported name added now is frozen
+   at `v1.0.0`. **The ruling of #356 bears on the answer.** #356 declined a one-shot
+   function for JA4L, because JA4L reads the SYN and the SYN-ACK. JA4LS reads the same
+   connection state. **The maintainer rules this question, and #373 records the connection
+   alone.**
