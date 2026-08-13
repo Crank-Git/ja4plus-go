@@ -92,6 +92,18 @@ This feature set adds the missing gates and settles the dependency question.
 - **FR-supply-29** — A migration keeps every exported signature of this library
   unchanged, or Epic 10 records the change.
 
+### The coverage floor file
+
+**FR-supply-17 reads `.coverage-floor` and FR-supply-19 raises the value, so neither one
+creates the file.** The three requirements below create it. They carry the last three
+numbers of this list, so no citation of an earlier requirement breaks.
+
+- **FR-supply-30** — The repository holds a `.coverage-floor` file.
+- **FR-supply-31** — The first value of `.coverage-floor` is the total statement coverage
+  that `make cover` reports at the commit that creates the file.
+- **FR-supply-32** — The commit that creates `.coverage-floor` names the command that
+  measured the value.
+
 ## User flows
 
 ### A vulnerability appears in a dependency
@@ -138,6 +150,9 @@ The project has no user interface. The CI build summary is the only reader-facin
 - `govulncheck` reports by calling path, so a vulnerability in an unused function is a
   note and not a failure.
 - The dependency decision is written before the migration starts, not after.
+- FR-supply-12, FR-supply-13 and FR-supply-14 bind every workflow file, and never a named
+  list of them. A workflow that a later epic creates arrives with every action pinned, and
+  this feature set gains no requirement for it.
 
 ## Data touched
 
@@ -148,11 +163,32 @@ No entity changes. The following files change.
 | `.github/dependabot.yml` | New. |
 | `.github/workflows/ci.yml` | Gains the vulnerability, coverage and benchmark jobs. Pins every action. |
 | `.github/workflows/release.yml` | Pins every action. Declares least permissions. |
-| `.github/workflows/fuzz.yml` | Pins every action. |
-| `.coverage-floor` | Read by the coverage job. |
+| `.github/workflows/fuzz.yml` | Pins every action. Epic 6 creates the file. |
+| `.coverage-floor` | New. The coverage job reads it. Issue #68 creates the file. |
 | `Makefile` | Gains the `vuln` target. |
 | `docs/audit/dependency-decision.md` | New. |
 | `go.mod`, `go.sum` | Change if the `gopacket` decision is a migration. |
+
+**Three rows above name a file that the tree does not hold on 2026-08-13.** They name
+`.github/dependabot.yml`, `.github/workflows/fuzz.yml` and `.coverage-floor`. **This
+feature set creates two of the three, and it creates no workflow file.** FR-supply-6
+creates `.github/dependabot.yml`, and the two bullets below carry the other two rows.
+
+- `.github/workflows/fuzz.yml`. `features/06-fuzz-testing.md:132` names it `New.`, and
+  FR-fuzz-27 states the nightly run that it holds. Issue #47 creates it. FR-supply-12,
+  FR-supply-13 and FR-supply-14 bind it when it arrives.
+- `.coverage-floor`. **This feature set creates it, and FR-supply-30 states that.** Two
+  records named a different creator. The Epic 0 file table named Epic 0, `CLAUDE.md` names
+  issue #68, and Epic 0 carries `status: built` while the tree holds no such file. **Epic
+  0 created the file at no point, and no later change removed it.**
+  `git log --all -- .coverage-floor` returns no commit, measured on 2026-08-13 at
+  `8c3e0ae`. The project manager settled the question on 2026-08-13, and issue #429
+  records that scope decision.
+  `features/00-foundation.md` `## Behaviour rules` records the other half.
+
+`git ls-tree -r --name-only origin/dev -- .github` returns `.github/workflows/ci.yml` and
+`.github/workflows/release.yml` alone, measured on 2026-08-13 at `76659bb`. Issue #426
+records the reading, and it moved no requirement between two epics.
 
 ## Interfaces
 
@@ -191,6 +227,9 @@ before FR-supply-25, and cites the dates in the record.
 - [ ] `.github/workflows/ci.yml` declares `permissions: contents: read`.
 - [ ] The CI coverage job prints the measured coverage and the floor.
 - [ ] The CI coverage job fails when a test file is deleted.
+- [ ] The repository holds a `.coverage-floor` file.
+- [ ] The commit that creates `.coverage-floor` names the command that measured the
+      value.
 - [ ] The CI benchmark job posts a comparison and does not fail the build.
 - [ ] `docs/audit/dependency-decision.md` records the `gopacket` decision, both release
       dates, and the reason.

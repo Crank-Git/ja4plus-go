@@ -1,6 +1,7 @@
 package ja4plus
 
 import (
+	"container/list"
 	"fmt"
 	"sort"
 	"strings"
@@ -11,6 +12,44 @@ import (
 )
 
 const defaultSSHWindow = 200
+
+// The maximum count of connections the state table holds. The insert that reaches this count
+// removes the connection that received no packet for the longest time.
+// Issue #221 opens one connection for each completed TCP handshake to port 22. A port scan of
+// that port therefore fills the table with connections that carry no SSH.
+// `.claude/rules/parity.md` rule 2 states that the port decides the interface where this
+// project shipped nothing, and no FoxIO source addresses a state table.
+// `ja4plus/utils/state_table.py:52` sets `DEFAULT_MAX_CONNECTIONS = 10000`.
+const maxSSHConnections = 10000
+
+// The maximum age of one connection of the state table.
+// `ja4plus/utils/state_table.py:58` sets `DEFAULT_MAX_CONNECTION_AGE = 600`. The same file
+// records the longest gap of the shared vector set at 320.714503 seconds, in `ssh-r.pcap`.
+const maxSSHConnectionAge = 600 * time.Second
+
+// The count of packets between two age passes. One pass reads every connection, so a pass on
+// each packet costs the connection count on each packet.
+// `ja4plus/utils/state_table.py:62` sets `DEFAULT_EVICTION_INTERVAL = 1000`.
+const sshEvictionInterval = 1000
+
+// The maximum count of entries the handshake table holds.
+// A SYN on a non-standard port carries no SSH data, so it opens no connection and the state
+// table bound above reaches no such packet. The handshake table therefore holds a bound of its
+// own. `ja4plus/fingerprinters/ja4ssh.py:53` sets `MAX_HANDSHAKE_CONNECTIONS = 1000`.
+const maxSSHHandshakes = 1000
+
+// sshHandshakeClient names the client endpoint that the TCP handshake of one connection states.
+// The SYN sender is the client, and the SYN+ACK sender is the server.
+type sshHandshakeClient struct {
+	ip   string
+	port uint16
+	// lastSeen holds the timestamp of the last handshake packet of the pair. The age pass
+	// reads it, and the pass reads the packet clock rather than the wall clock.
+	lastSeen time.Time
+	// element names the position of the entry in the handshake order list. A Go map states no
+	// order, so the entry bound reads the list to name the least recent entry.
+	element *list.Element
+}
 
 // sshConnState tracks SSH packet statistics for a single connection.
 type sshConnState struct {
@@ -31,6 +70,9 @@ type sshConnState struct {
 	// lastSeen holds the timestamp of the last packet of the connection. An open window
 	// carries it, because no packet triggers that emission.
 	lastSeen time.Time
+	// element names the position of the connection in the order list of the fingerprinter.
+	// The eviction reads that list, because a Go map states no order of its own.
+	element *list.Element
 	// arrival holds the count of connections the fingerprinter opened before this one.
 	// A range over a Go map orders nothing, and CloseOpenWindows publishes in capture
 	// order, so two runs of one capture agree.
@@ -64,6 +106,27 @@ type JA4SSHFingerprinter struct {
 	// arrivals counts the connections the fingerprinter opened. Each connection stores
 	// the value it read at its own start, and CloseOpenWindows publishes in that order.
 	arrivals int
+	// order holds the key of each connection of the state table. The connection that received
+	// no packet for the longest time stands at the front, and the entry bound removes that
+	// one. A Go map states no order of its own.
+	// The state table and this list name one set of connections. openConnection is the one
+	// method that adds a connection, and removeConnection is the one method that removes
+	// one, so the two cannot disagree.
+	order *list.List
+	// packets counts the packets the fingerprinter reads. The age pass runs on the eviction
+	// interval, so the eviction cost stays proportional to the traffic.
+	packets int
+	// handshakes holds the client endpoint that the TCP handshake of one endpoint pair states.
+	// Step 2 of the client direction reads it, and #413 builds that step.
+	// The key encodes no direction, so a caller that holds four endpoint values and no packet
+	// reaches the entry the packet path wrote.
+	handshakes map[string]*sshHandshakeClient
+	// handshakeOrder holds the key of each entry of the handshake table. The entry that
+	// received no packet for the longest time stands at the front, and the entry bound removes
+	// that one.
+	// recordHandshake is the one method that adds an entry. removeHandshake is the one method
+	// that removes one, so the table and this list cannot disagree.
+	handshakeOrder *list.List
 }
 
 // NewJA4SSH creates a new JA4SSH fingerprinter.
@@ -73,8 +136,11 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 		packetCount = defaultSSHWindow
 	}
 	return &JA4SSHFingerprinter{
-		connections: make(map[string]*sshConnState),
-		packetCount: packetCount,
+		connections:    make(map[string]*sshConnState),
+		packetCount:    packetCount,
+		order:          list.New(),
+		handshakes:     make(map[string]*sshHandshakeClient),
+		handshakeOrder: list.New(),
 	}
 }
 
@@ -85,6 +151,18 @@ func NewJA4SSH(packetCount int) *JA4SSHFingerprinter {
 func (f *JA4SSHFingerprinter) ensure() {
 	if f.connections == nil {
 		f.connections = make(map[string]*sshConnState)
+	}
+
+	if f.order == nil {
+		f.order = list.New()
+	}
+
+	if f.handshakes == nil {
+		f.handshakes = make(map[string]*sshHandshakeClient)
+	}
+
+	if f.handshakeOrder == nil {
+		f.handshakeOrder = list.New()
 	}
 
 	if f.packetCount <= 0 {
@@ -109,6 +187,18 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		return nil, nil
 	}
 
+	// The age pass reads every connection, so it runs on the eviction interval.
+	// The port announces each packet to its state table at
+	// `ja4plus/fingerprinters/ja4ssh.py:122`, and it runs the pass on the same schedule.
+	// The pass precedes the connection of this packet, so it can remove the connection that
+	// this packet continues. The packet then opens that connection again, and the new window
+	// counts from zero. The port holds the same order, and it counts such a connection as a
+	// returned connection at `ja4plus/utils/state_table.py:95`.
+	f.packets++
+	if f.packets%sshEvictionInterval == 0 {
+		f.evictAgedConnections(parser.GetPacketTimestamp(packet))
+	}
+
 	srcPort := uint16(tcp.SrcPort)
 	dstPort := uint16(tcp.DstPort)
 
@@ -117,46 +207,40 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// Check if this is an SSH data packet
 	hasSSHData := len(payload) > 0 && parser.IsSSHPacket(payload)
 
-	// Determine client/server direction
-	var clientIP, serverIP string
-	var clientPort, serverPort uint16
-	var isClientToServer bool
+	// The TCP handshake names the two endpoints, and it arrives before any SSH data. The
+	// record precedes the admission guard below, because a SYN on a non-standard port carries
+	// no SSH data and opens no connection. The guard would otherwise discard the one packet
+	// that states the direction. The port holds the same order at
+	// `ja4plus/fingerprinters/ja4ssh.py:152`, and its guard sits at
+	// `ja4plus/fingerprinters/ja4ssh.py:179`.
+	//
+	// A packet that carries the RST flag opens no connection and accepts none.
+	// `ja4plus/utils/packet_utils.py:40-42` denies the same packet.
+	opensConnection := tcp.SYN && !tcp.ACK && !tcp.RST
+	acceptsConnection := tcp.SYN && tcp.ACK && !tcp.RST
 
-	if dstPort == 22 {
-		clientIP, serverIP = srcIP, dstIP
-		clientPort, serverPort = srcPort, dstPort
-		isClientToServer = true
-	} else if srcPort == 22 {
-		clientIP, serverIP = dstIP, srcIP
-		clientPort, serverPort = dstPort, srcPort
-		isClientToServer = false
-	} else {
-		// The maintainer ruled a three-step order for the client direction on 2026-08-11, in
-		// the second comment of #129. Step 1 reads port 22, step 2 reads the TCP handshake
-		// originator, and step 3 reads the lower port.
-		// This block carries step 3, and no line of this repository carries step 2.
-		// sshConnKeyOfEndpoints repeats step 1 and step 3, so a change carries two sites.
-		// A connection whose SYN sender holds the lower port separates step 2 from step 3, and
-		// no capture of the corpus reaches that shape.
-		// The project manager ruled #346 on 2026-08-13, under the widened delegation that
-		// `.claude/rules/rulings.md` holds. The ruling is provisional, and the maintainer
-		// confirms it or reverses it.
-		// The ruling carries step 2 into the library, and #413 builds it.
-		// A reversal records the decline instead, in this repository and in the port together.
-		// Non-standard port: higher port is client, lower port is server
-		// (fixed from Python where this was reversed)
-		if srcPort > dstPort {
-			clientIP, serverIP = srcIP, dstIP
-			clientPort, serverPort = srcPort, dstPort
-			isClientToServer = true
-		} else {
-			clientIP, serverIP = dstIP, srcIP
-			clientPort, serverPort = dstPort, srcPort
-			isClientToServer = false
-		}
-	}
+	f.recordHandshake(
+		opensConnection, acceptsConnection,
+		srcIP, srcPort, dstIP, dstPort, parser.GetPacketTimestamp(packet))
+
+	clientIP, clientPort, serverIP, serverPort := f.decideEndpoints(srcIP, srcPort, dstIP, dstPort)
+	isClientToServer := clientIP == srcIP && clientPort == srcPort
 
 	connKey := fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
+
+	// The entry bound of the handshake table can remove the entry of a connection that lives.
+	// A later packet of that pair then reaches step 3, which names the other endpoint as the
+	// client. The connection splits into a second entry. The connection keeps the endpoints it
+	// started with. The port holds the same guard at
+	// `ja4plus/fingerprinters/ja4ssh.py:159-165`.
+	reversedKey := fmt.Sprintf("%s:%d-%s:%d", serverIP, serverPort, clientIP, clientPort)
+	if _, held := f.connections[connKey]; !held {
+		if _, reversed := f.connections[reversedKey]; reversed {
+			connKey = reversedKey
+			clientIP, clientPort, serverIP, serverPort = serverIP, serverPort, clientIP, clientPort
+			isClientToServer = !isClientToServer
+		}
+	}
 
 	conn, exists := f.connections[connKey]
 
@@ -195,15 +279,7 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 
 	// Initialize connection if needed
 	if !exists {
-		conn = &sshConnState{
-			clientIP:   clientIP,
-			serverIP:   serverIP,
-			clientPort: clientPort,
-			serverPort: serverPort,
-			arrival:    f.arrivals,
-		}
-		f.connections[connKey] = conn
-		f.arrivals++
+		conn = f.openConnection(connKey, clientIP, serverIP, clientPort, serverPort)
 	}
 
 	// A packet that carries no payload reaches the bare ACK counter, and it advances no
@@ -223,13 +299,13 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 			} else {
 				conn.serverACKs++
 			}
-			conn.lastSeen = parser.GetPacketTimestamp(packet)
+			f.touchConnection(conn, parser.GetPacketTimestamp(packet))
 		}
 
 		return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort, closesConnection)
 	}
 
-	conn.lastSeen = parser.GetPacketTimestamp(packet)
+	f.touchConnection(conn, parser.GetPacketTimestamp(packet))
 
 	// The tracker reads every payload segment of the direction, and not the segments the
 	// window counts alone. It reads the sequence number too, because a retransmission
@@ -285,6 +361,115 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	}
 
 	return f.checkWindow(conn, packet, srcIP, dstIP, srcPort, dstPort, closesConnection)
+}
+
+// openConnection returns a new connection of the state table, and it holds the entry bound.
+// The bound removes the connection that received no packet for the longest time, until the
+// state table holds space for this connection. The port applies the same bound at the insert,
+// at `ja4plus/utils/state_table.py:509`.
+// A removed connection that receives a later packet reaches this method again, and its window
+// then counts from zero.
+func (f *JA4SSHFingerprinter) openConnection(
+	connKey string, clientIP string, serverIP string, clientPort uint16, serverPort uint16,
+) *sshConnState {
+	for len(f.connections) >= maxSSHConnections {
+		front := f.order.Front()
+		if front == nil {
+			break
+		}
+
+		oldestKey, held := front.Value.(string)
+		if !held {
+			f.order.Remove(front)
+			continue
+		}
+
+		f.removeConnection(oldestKey)
+	}
+
+	conn := &sshConnState{
+		clientIP:   clientIP,
+		serverIP:   serverIP,
+		clientPort: clientPort,
+		serverPort: serverPort,
+		arrival:    f.arrivals,
+	}
+
+	f.connections[connKey] = conn
+	conn.element = f.order.PushBack(connKey)
+	f.arrivals++
+
+	return conn
+}
+
+// touchConnection records the timestamp of the packet on the connection, and it moves the
+// connection to the back of the order list.
+// The two bounds read one measure of recency, because the entry bound removes the front
+// connection and the age pass reads the same timestamp.
+func (f *JA4SSHFingerprinter) touchConnection(conn *sshConnState, timestamp time.Time) {
+	conn.lastSeen = timestamp
+
+	if conn.element != nil {
+		f.order.MoveToBack(conn.element)
+	}
+}
+
+// removeConnection removes one connection from the state table and from the order list.
+// One method serves every removal path, because a state table and an order list that disagree
+// remove the wrong connection at the entry bound.
+func (f *JA4SSHFingerprinter) removeConnection(connKey string) {
+	conn, held := f.connections[connKey]
+	if !held {
+		return
+	}
+
+	delete(f.connections, connKey)
+
+	if conn.element != nil {
+		f.order.Remove(conn.element)
+		conn.element = nil
+	}
+}
+
+// evictAgedConnections removes each connection and each handshake entry that received no
+// packet for the maximum age.
+//
+// The clock reads the packet timestamp, and never the wall clock. A capture replays faster
+// than the wall clock, so a wall clock removes state that the capture still needs. The port
+// reads the packet timestamp at `ja4plus/fingerprinters/ja4ssh.py:122`.
+//
+// The pass reads every connection. A capture states a timestamp of its own, so two packets can
+// arrive out of order. The order list then does not follow the age.
+func (f *JA4SSHFingerprinter) evictAgedConnections(now time.Time) {
+	for element := f.order.Front(); element != nil; {
+		next := element.Next()
+
+		connKey, held := element.Value.(string)
+		if held {
+			if conn, present := f.connections[connKey]; present &&
+				now.Sub(conn.lastSeen) > maxSSHConnectionAge {
+				f.removeConnection(connKey)
+			}
+		}
+
+		element = next
+	}
+
+	// The handshake table reads the same age, because one age serves the two tables and the
+	// port reads one class for both.
+	for element := f.handshakeOrder.Front(); element != nil; {
+		next := element.Next()
+
+		key, held := element.Value.(string)
+		if held {
+			if entry, present := f.handshakes[key]; present &&
+				now.Sub(entry.lastSeen) > maxSSHConnectionAge {
+				f.removeHandshake(key)
+			}
+		}
+
+		element = next
+	}
 }
 
 // checkWindow emits the window when the count of SSH packets reaches the threshold, and it
@@ -427,47 +612,188 @@ func (f *JA4SSHFingerprinter) GetHASSHFingerprints() []HASSHResult {
 // It keeps the arrival counter. The counter orders the connections that CloseOpenWindows
 // publishes, and a counter that returns to zero would order a new connection against a
 // stale number.
+// It empties the order list too, because the state table and that list name one set of
+// connections. It keeps the packet counter, which schedules the age pass alone.
+// It empties the handshake table and the handshake order list, which step 2 of the client
+// direction reads. `.claude/rules/concurrency.md` states that a new state map reaches
+// CleanupConnection and Reset.
 func (f *JA4SSHFingerprinter) Reset() {
 	f.ensure()
 
 	f.connections = make(map[string]*sshConnState)
+	f.order.Init()
+	f.handshakes = make(map[string]*sshHandshakeClient)
+	f.handshakeOrder.Init()
+}
+
+// decideEndpoints returns the client endpoint and the server endpoint of one packet.
+//
+// The maintainer ruled a three-step order for the client direction on 2026-08-11, in the
+// second comment of #129. Three steps decide, in this order.
+//
+//  1. An endpoint on port 22 is the server.
+//  2. The TCP handshake names the client, because the SYN sender opens the connection.
+//  3. The lower port is the server. That answer is a guess, because two ephemeral ports carry
+//     no meaning of their own.
+//
+// The project manager ruled #346 on 2026-08-13, under the widened delegation that
+// `.claude/rules/rulings.md` holds. That ruling is provisional, and the maintainer confirms it
+// or reverses it. A reversal deletes step 2 and records the decline, in this repository and in
+// the port together.
+//
+// One method serves the packet path and sshConnKeyOfEndpoints. A second copy of the three
+// steps answers differently after a later change to one copy. The two answers then name two
+// keys for one connection.
+// The port holds the same three steps at `ja4plus/fingerprinters/ja4ssh.py:321-365`.
+func (f *JA4SSHFingerprinter) decideEndpoints(
+	srcIP string, srcPort uint16, dstIP string, dstPort uint16,
+) (clientIP string, clientPort uint16, serverIP string, serverPort uint16) {
+	if dstPort == 22 {
+		return srcIP, srcPort, dstIP, dstPort
+	}
+
+	if srcPort == 22 {
+		return dstIP, dstPort, srcIP, srcPort
+	}
+
+	if client, held := f.handshakes[sshHandshakeKey(srcIP, srcPort, dstIP, dstPort)]; held {
+		if client.ip == srcIP && client.port == srcPort {
+			return srcIP, srcPort, dstIP, dstPort
+		}
+
+		if client.ip == dstIP && client.port == dstPort {
+			return dstIP, dstPort, srcIP, srcPort
+		}
+	}
+
+	if srcPort > dstPort {
+		return srcIP, srcPort, dstIP, dstPort
+	}
+
+	return dstIP, dstPort, srcIP, srcPort
+}
+
+// sshHandshakeKey returns the key of one endpoint pair, in either order.
+//
+// The key encodes no direction. The state-table key names the client first, and step 2 decides
+// which endpoint that is. A key of that shape therefore misses the entry that decides it. The
+// port holds the same rule at `ja4plus/fingerprinters/ja4ssh.py:281-287`.
+func sshHandshakeKey(srcIP string, srcPort uint16, dstIP string, dstPort uint16) string {
+	if srcIP > dstIP || (srcIP == dstIP && srcPort > dstPort) {
+		srcIP, srcPort, dstIP, dstPort = dstIP, dstPort, srcIP, srcPort
+	}
+
+	return fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+}
+
+// recordHandshake records the client endpoint that the TCP handshake of one pair names.
+//
+// The SYN sender is the client. The SYN+ACK sender is the server, so the destination of that
+// packet is the client. A capture that starts after the SYN still holds the SYN+ACK.
+//
+// It records nothing when one endpoint holds port 22, because step 1 decides that connection
+// and the entry would hold state that nothing reads. Every SSH capture of the corpus holds
+// port 22 on one side. The port returns on the same test at
+// `ja4plus/fingerprinters/ja4ssh.py:308-309`.
+//
+// The entry bound removes the entry that received no packet for the longest time, until the
+// table holds space for this entry.
+func (f *JA4SSHFingerprinter) recordHandshake(
+	opens bool, accepts bool,
+	srcIP string, srcPort uint16, dstIP string, dstPort uint16, timestamp time.Time,
+) {
+	if srcPort == 22 || dstPort == 22 {
+		return
+	}
+
+	var clientIP string
+	var clientPort uint16
+
+	switch {
+	case opens:
+		clientIP, clientPort = srcIP, srcPort
+	case accepts:
+		clientIP, clientPort = dstIP, dstPort
+	default:
+		return
+	}
+
+	key := sshHandshakeKey(srcIP, srcPort, dstIP, dstPort)
+
+	if entry, held := f.handshakes[key]; held {
+		entry.ip = clientIP
+		entry.port = clientPort
+		entry.lastSeen = timestamp
+		f.handshakeOrder.MoveToBack(entry.element)
+
+		return
+	}
+
+	for len(f.handshakes) >= maxSSHHandshakes {
+		front := f.handshakeOrder.Front()
+		if front == nil {
+			break
+		}
+
+		oldestKey, held := front.Value.(string)
+		if !held {
+			f.handshakeOrder.Remove(front)
+			continue
+		}
+
+		f.removeHandshake(oldestKey)
+	}
+
+	entry := &sshHandshakeClient{ip: clientIP, port: clientPort, lastSeen: timestamp}
+	f.handshakes[key] = entry
+	entry.element = f.handshakeOrder.PushBack(key)
+}
+
+// removeHandshake removes one entry from the handshake table and from the handshake order
+// list.
+// One method serves every removal path, because a table and an order list that disagree remove
+// the wrong entry at the entry bound.
+func (f *JA4SSHFingerprinter) removeHandshake(key string) {
+	entry, held := f.handshakes[key]
+	if !held {
+		return
+	}
+
+	delete(f.handshakes, key)
+
+	if entry.element != nil {
+		f.handshakeOrder.Remove(entry.element)
+		entry.element = nil
+	}
 }
 
 // sshConnKeyOfEndpoints returns the state-table key of the connection the two endpoints
 // name, in either order.
-// JA4SSH normalizes the key by port 22 or by the higher-port direction, so a caller names
-// the two endpoints in either order and reaches one key.
-// CleanupConnection and CloseConnectionWindow both read it. One rule serves the two, because
-// a second copy of the rule would answer differently after a later change to one copy.
-func sshConnKeyOfEndpoints(srcIP string, srcPort uint16, dstIP string, dstPort uint16) string {
-	var clientIP, serverIP string
-	var clientPort, serverPort uint16
-
-	if dstPort == 22 {
-		clientIP, serverIP = srcIP, dstIP
-		clientPort, serverPort = srcPort, dstPort
-	} else if srcPort == 22 {
-		clientIP, serverIP = dstIP, srcIP
-		clientPort, serverPort = dstPort, srcPort
-	} else if srcPort > dstPort {
-		clientIP, serverIP = srcIP, dstIP
-		clientPort, serverPort = srcPort, dstPort
-	} else {
-		clientIP, serverIP = dstIP, srcIP
-		clientPort, serverPort = dstPort, srcPort
-	}
+// JA4SSH normalizes the key by the three steps of decideEndpoints, so a caller names the two
+// endpoints in either order and reaches one key.
+// CleanupConnection and CloseConnectionWindow both read it. Neither one holds a packet, and
+// step 2 reads the handshake table rather than the packet. Both therefore reach the answer
+// that the packet path reached.
+func (f *JA4SSHFingerprinter) sshConnKeyOfEndpoints(
+	srcIP string, srcPort uint16, dstIP string, dstPort uint16,
+) string {
+	clientIP, clientPort, serverIP, serverPort := f.decideEndpoints(srcIP, srcPort, dstIP, dstPort)
 
 	return fmt.Sprintf("%s:%d-%s:%d", clientIP, clientPort, serverIP, serverPort)
 }
 
 // CleanupConnection removes internal state for the given connection.
-// JA4SSH normalizes keys by port 22 or higher-port direction.
+// JA4SSH normalizes keys by the three steps of decideEndpoints.
+// It removes the handshake entry of the pair too. That entry would otherwise outlive the
+// connection, because the caller states that the connection ended. The port removes the same
+// entry at `ja4plus/fingerprinters/ja4ssh.py:541-544`.
 // It emits no fingerprint. A caller that wants the open window of the connection calls
 // CloseConnectionWindow instead, and issue #216 records that ruling.
 func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 	f.ensure()
 
-	delete(f.connections, sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort))
+	f.removeConnection(f.sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort))
+	f.removeHandshake(sshHandshakeKey(srcIP, srcPort, dstIP, dstPort))
 }
 
 // CloseConnectionWindow returns the value of the window that one connection holds open, and
@@ -492,7 +818,12 @@ func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, ds
 func (f *JA4SSHFingerprinter) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult {
 	f.ensure()
 
-	connKey := sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort)
+	connKey := f.sshConnKeyOfEndpoints(srcIP, srcPort, dstIP, dstPort)
+
+	// The caller states that the connection ended, so the handshake entry of the pair goes with
+	// it. The removal precedes the two returns below, because a connection the state table does
+	// not hold still carries an entry that a SYN wrote.
+	f.removeHandshake(sshHandshakeKey(srcIP, srcPort, dstIP, dstPort))
 
 	conn, exists := f.connections[connKey]
 	if !exists {
@@ -505,7 +836,7 @@ func (f *JA4SSHFingerprinter) CloseConnectionWindow(srcIP string, srcPort uint16
 	// The eviction follows the emission, which is the order the ruling of issue #216 states.
 	// A window that holds no SSH packet reaches this line too, because CleanupConnection
 	// evicts such a connection and this method must not leave it behind.
-	delete(f.connections, connKey)
+	f.removeConnection(connKey)
 
 	if !held {
 		return nil

@@ -161,20 +161,31 @@ never as a count of methods.</p>
 <p>None of the four is true today.</p>
 
 <div class="box q">
-<h3>Three defects this repository holds today, confirmed against the code</h3>
+<h3>Three defects this box named, and the code holds none of them today</h3>
+<p>Every bullet below named a line number, and a later change moved each target. This box now
+names a function and a file, which is the citation convention the maintainer adopted on
+2026-08-13. Issue #440 holds it.</p>
 <ul>
-  <li><code>ja4ssh.go:176-180</code> caps the JA4SSH window threshold at
-      <code>min(packetCount, 10)</code>. The port names this a defect of this repository and
-      fixed the same shape on its own side in its issue #28.</li>
+  <li><strong>Repaired before 2026-08-13.</strong> This entry read that
+      <code>ja4ssh.go:176-180</code> caps the JA4SSH window threshold at
+      <code>min(packetCount, 10)</code>. <code>checkWindow</code> of <code>ja4ssh.go</code> reads
+      <code>f.packetCount</code> and it holds no upper cap, so the default window of 200 emits at
+      200 packets. The port names the cap a defect of this repository and fixed the same shape on
+      its own side in its issue #28. This is no longer a defect.</li>
   <li><strong>Repaired on 2026-08-13.</strong> This entry read <code>ja4l.go:198</code> sets
-      <code>Type: "ja4l"</code> and writes no JA4LS value. <code>ja4l.go:183</code> and
-      <code>ja4l.go:381</code> each write a <code>JA4L-S=</code> value, and the maintainer ruled
-      in issue #60 that the result keeps <code>Type: "ja4l"</code>. This is no longer a defect.</li>
-  <li><code>ja4t.go:68</code>, <code>:73</code> and <code>:87</code> write <code>%d</code>
-      with no padding and no <code>00</code> sentinel, where two FoxIO implementations write
-      a two-digit form.</li>
+      <code>Type: "ja4l"</code> and writes no JA4LS value. <code>processTCP</code> and
+      <code>processUDP</code> of <code>ja4l.go</code> each write a <code>JA4L-S=</code> value, and
+      the maintainer ruled in issue #60 that the result keeps <code>Type: "ja4l"</code>. This is no
+      longer a defect.</li>
+  <li><strong>Repaired on 2026-08-13.</strong> This entry read that <code>ja4t.go:68</code>,
+      <code>:73</code> and <code>:87</code> write <code>%d</code> with no padding and no
+      <code>00</code> sentinel. <code>generateTCPFingerprint</code> of <code>ja4t.go</code> writes
+      the <code>%02d</code> form and the <code>00</code> sentinel, which is the form that ruling
+      #297 delivers. This is no longer a defect.</li>
 </ul>
-<p><code>ja4h.go:171-173</code> is already at parity, and Epic 8 adds a test that keeps it there.</p>
+<p>JA4H is already at parity on the header order, and Epic 8 adds a test that keeps it there.
+This sentence cited <code>ja4h.go:171-173</code> until 2026-08-13, and issue #446 then moved
+those lines.</p>
 </div>
 
 <h2 id="goals">Goals and non-goals</h2>
@@ -473,7 +484,10 @@ all three; the library appears not to. Epic 5 is sized after Epic 4 finishes.</p
 
 <div class="box q">
 <h3>R5 — <code>gopacket</code> upstream is unmaintained <em>(open)</em></h3>
-<p>No release since v1.1.19 in 2022. The community fork is <code>gopacket/gopacket</code>.
+<p>No release since v1.1.19 on 2020-10-19, which is a gap of five years, nine months and 25
+days on 2026-08-13. The community fork is <code>gopacket/gopacket</code>. This sentence read
+<em>in 2022</em> until 2026-08-13, and the Go module proxy reports
+<code>{"Version":"v1.1.19","Time":"2020-10-19T16:12:32Z"}</code>.
 <strong>Round 3 raises the cost of this question:</strong> Epic 13 builds on
 <code>pcapgo.NewEthernetHandle</code>, so a migration now moves the monitor as well as the
 parser. Deciding after Epic 13 is more expensive than deciding before it.</p>

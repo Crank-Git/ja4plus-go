@@ -84,6 +84,51 @@ func TestClaudeSettingsAllowsEveryOtherGitCommand(t *testing.T) {
 	}
 }
 
+// theWorktreesRule is the file that states what an agent may run against the stash.
+//
+// The deny entry and this file must agree. #419 records the round where they did not.
+// The file instructed a reader to drop a stash from the main checkout, and the deny entry
+// refuses that command. No test read both files, so no test saw the disagreement.
+//
+// The two tests below read the file for the reconciliation, and never for the absence of
+// a command name. A watched measurement in that file names `git stash`, and
+// `.claude/rules/rulings.md` states that copied evidence stays verbatim. A test that
+// declined the command name would force a change to that evidence.
+const theWorktreesRule = ".claude/rules/worktrees.md"
+
+// theMaintainerActionSentence names the person who runs each recovery command.
+//
+// The recovery path survives the deny entry because the maintainer types the command, and
+// a person who types a command makes no tool call. This sentence is where the file states
+// that, so a later edit that drops it restores the defect of #419.
+const theMaintainerActionSentence = "The maintainer runs each command of this section, and no agent runs one."
+
+// collapseWhitespace returns the text with each run of whitespace replaced by one space.
+// A rule file wraps a sentence over two lines, so a match against the raw bytes fails
+// after a rewrap that changes no word.
+func collapseWhitespace(text string) string {
+	return strings.Join(strings.Fields(text), " ")
+}
+
+func TestWorktreesRuleNamesTheGitStashDenyEntry(t *testing.T) {
+	rule := collapseWhitespace(readRepoFile(t, theWorktreesRule))
+
+	for _, want := range []string{theGitStashDenyEntry, ".claude/settings.json", "#355"} {
+		if !strings.Contains(rule, want) {
+			t.Errorf("%s names no %q, so it states no reason for the refusal of #419", theWorktreesRule, want)
+		}
+	}
+}
+
+func TestWorktreesRuleNamesTheMaintainerRecoveryPath(t *testing.T) {
+	rule := collapseWhitespace(readRepoFile(t, theWorktreesRule))
+
+	if !strings.Contains(rule, theMaintainerActionSentence) {
+		t.Errorf("%s holds no %q, so a recovery path reads as an instruction to an agent",
+			theWorktreesRule, theMaintainerActionSentence)
+	}
+}
+
 func TestClaudeSettingsKeepsTheGofmtHook(t *testing.T) {
 	settings := readClaudeSettings(t)
 
