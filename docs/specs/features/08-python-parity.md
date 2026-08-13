@@ -325,10 +325,13 @@ what the CHANGELOG records.
 
 ## Open questions
 
-1. **What does the ALPN field write when the first ALPN value is empty?** The port ruled
-   on a one-byte value and on a non-alphanumeric byte, and no ruling covers a zero-byte
-   value. This project must not invent an answer alone. The maintainer rules once, and the
-   ruling lands in both repositories.
+1. ~~**What does the ALPN field write when the first ALPN value is empty?**~~ **Closed on
+   2026-08-12. The answer is `00`.** The port ruled on a one-byte value and on a byte
+   outside the printable ASCII range `0x20-0x7E`, and no ruling covered a zero-byte value.
+   **The question needed a reading and not a ruling.** `technical_details/JA4.md:93` states
+   the rule, and `Reading 17` of `docs/specs/foxio/JA4.md` records it. The `R9` section of
+   `docs/specs/spec.md` holds the closure and the evidence, and the question blocks nothing
+   because #50 built FR-parity-8, FR-parity-9 and FR-parity-10.
 2. **Does the drift check belong in this repository at all?** FR-parity-57 commits a copy
    of another repository's document, which will go stale. The alternative is a scheduled
    workflow that reads the port and opens an issue, which is a network call in CI rather
