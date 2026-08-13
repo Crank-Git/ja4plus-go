@@ -173,7 +173,9 @@ fp := ja4plus.ComputeJA4XFromDER(certBytes)
 fp := ja4plus.ComputeJA4XFromPEM(pemBytes)
 ```
 
-Note: JA4L and JA4SSH require multi-packet state and have no one-shot function. Use their fingerprinter constructors instead.
+Note: JA4L, JA4LS and JA4SSH are multi-packet methods, and none of them reaches a one-shot
+function. Use `NewJA4L` and `NewJA4SSH` instead. `NewJA4L` serves JA4L and JA4LS, and the
+library exports no `NewJA4LS`.
 
 ### Fingerprint Lookup
 
