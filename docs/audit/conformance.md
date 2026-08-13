@@ -14,7 +14,7 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Matches | 1627 |
 | Deviations | 676 |
 | Accepted deviations | 409 |
-| Uncovered values | 192 |
+| Unaccepted uncovered values | 192 |
 | Accepted uncovered values | 28 |
 | Accepted comparisons | 437 |
 | Stale register entries | 0 |
@@ -24,7 +24,7 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 
 The two vector sets cover different methods, so the report counts each one on its own.
 
-| Vector set | Matches | Deviations | Accepted deviations | Uncovered values | Accepted uncovered values |
+| Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
 | per-stream | 1093 | 102 | 266 | 132 | 28 |
 | per-packet | 534 | 574 | 143 | 60 | 0 |
@@ -281,9 +281,11 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 
 ## Uncovered values
 
-The library produces a value, and the vector file of the capture publishes no key for its method. Such a file states nothing about the method, so the run counts the value apart from a match and apart from a deviation. The maintainer ruled the third category on 2026-08-13 in #361.
+The library produces a value, and the vector file of the capture publishes no key for its method. Such a file states nothing about the method. The run therefore counts the value apart from a match, and apart from a deviation. The maintainer ruled the third category on 2026-08-13 in #361.
 
-The run reports 220 uncovered values in 59 groups. One group is one capture, one method and one vector set.
+The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
+
+The run reports 220 uncovered values in 59 groups, and the register accepts 28 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 

@@ -404,7 +404,7 @@ requirement and holds the acceptance criteria.
 | The part count | Not measured. | Write two timing parts on a TCP connection. This is a reference split: the image and two implementations write three parts, and two implementations write two. All 114 JA4L values of the port's vector set hold two. | 1 | #225 |
 | The protocol marker on a QUIC connection | Not measured. | Write `quic` as the third part of both values on a QUIC connection. **Follow the Wireshark spelling.** The Zeek package appends `q`, and the port's rule declines the Zeek spelling. Do not write the `tcp` literal that the dissector writes on an HTTP connection. | 1 | #225 |
 | The server value on a retransmitted SYN-ACK | Not measured. | Emit one server value for one connection. A retransmitted SYN-ACK finds the measurement point set, and it gives no value. | 1 | #272 |
-| A reference file that holds no JA4L key | Not measured. | Record five value declines. The FoxIO generating run deleted the key, so the comparison is unreachable and not failed. This row changes no fingerprint. | 1 | #200, #272 |
+| A reference file that holds no JA4L key | **Records 28 value declines.** #361 built the comparison that reaches them, and the maintainer ruled the category on 2026-08-13. | Done. **The row read `Record five value declines` until #361.** The FoxIO run deleted the key, so the reference file publishes no value to compare. The harness now reports such a value as an uncovered value, which is neither a match nor a deviation. **The port writes five keys, and this repository writes 28.** A port key names a capture and a method, and a key here names a capture, a stream and a method. This row changes no fingerprint. | 1 | #200, #272 |
 
 #### JA4SSH
 

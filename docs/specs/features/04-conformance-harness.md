@@ -138,11 +138,13 @@ deviation list that Epic 5 closes.
   when the count is 0.
 - **FR-conformance-33p** — A value that the library produces, and whose vector file publishes
   no key for the method, is an uncovered value.
-- **FR-conformance-33q** — The summary names the count of uncovered values.
+- **FR-conformance-33q** — The summary names the count of unaccepted uncovered values, and
+  the count of accepted uncovered values.
 - **FR-conformance-33r** — The summary counts an accepted uncovered value apart from an
   accepted deviation.
-- **FR-conformance-33s** — The report holds an `## Uncovered values` section on every run,
-  with one row for each uncovered value.
+- **FR-conformance-33s** — The report holds an `## Uncovered values` section on every run.
+  The section states the count of each capture, each vector set and each method. It holds at
+  most `conformanceReportSampleLimit` rows of each group, as the deviation table does.
 - **FR-conformance-33t** — The section states that the run reports no uncovered value when
   the count is 0.
 - **FR-conformance-33u** — An uncovered value fails no gate.
@@ -314,8 +316,9 @@ Read from `wireshark/test/testdata/dhcp.pcapng.json` at commit `27f0cbf`:
 - [ ] Every deviation row holds the expected value and the produced value.
 - [ ] The suite reports a deviation when a fingerprint is deliberately changed by one
       character in a test.
-- [ ] The report states the count of uncovered values, and the `## Uncovered values` section
-      names the capture, the vector set and the method of each one.
+- [ ] The report states the count of unaccepted uncovered values and the count of accepted
+      ones. The `## Uncovered values` section names the capture, the vector set and the
+      method of each group.
 - [ ] The report counts an accepted uncovered value apart from an accepted deviation.
 - [ ] The accepted comparison count equals the register key count.
 - [ ] The CI conformance job fails when the suite reports a deviation.

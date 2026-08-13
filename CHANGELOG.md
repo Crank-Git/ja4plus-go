@@ -11,11 +11,11 @@ Every measurement in this section names the base of the run that produced it. Is
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, issue #285 put
 108 more, and issue #361 put 28 more. A run on the current tree reports 1627 matches, 676
-deviations, 409 accepted deviations and 437 register keys. The run also reports 192 uncovered
-values and 28 accepted uncovered values, and #361 states what an uncovered value is. An
-accepted deviation and an accepted uncovered value each name one register entry, so 409 and 28
-add up to the 437 register keys. A count that an entry below states therefore differs from a
-fresh run.
+deviations, 409 accepted deviations and 437 register keys. The run also reports 192 unaccepted
+uncovered values and 28 accepted uncovered values, and #361 states what an uncovered value is.
+An accepted deviation and an accepted uncovered value each name one register entry, so 409 and
+28 add up to the 437 register keys. A count that an entry below states therefore differs from
+a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against
@@ -52,24 +52,24 @@ that the interface declares.
 
 - No exported name, and one conformance category that records a value the reference file
   does not cover. The harness dropped a value whose vector file publishes no key for its
-  method, so the run reported nothing for it and the report read as full coverage of every
-  value the library emits. The maintainer ruled on 2026-08-13 in #361 that the run compares
+  method. The run reported nothing for it, and the report read as full coverage of every
+  value the library emits. **The maintainer ruled on 2026-08-13 in #361.** The run compares
   such a value and reports it as an **uncovered value**, which is neither a match nor a
   deviation. `conformance_engine_test.go` gains `conformanceUncoveredValue` and
-  `conformanceSplitUncovered`, and the two producers of `conformance_test.go` now build the
-  whole produced map. `docs/audit/conformance.md` gains the summary rows `Uncovered values`,
-  `Accepted uncovered values` and `Accepted comparisons`, and the section
-  `## Uncovered values`. The run reports 1627 matches, 676 deviations and 409 accepted
-  deviations before and after, so **the change moves no fingerprint value**. It reports 220
+  `conformanceSplitUncovered`. The two producers of `conformance_test.go` now build the whole
+  produced map. `docs/audit/conformance.md` gains the section `## Uncovered values`, and the
+  summary rows `Unaccepted uncovered values`, `Accepted uncovered values` and
+  `Accepted comparisons`. **The change moves no fingerprint value.** The run reports 1627
+  matches, 676 deviations and 409 accepted deviations before and after. It reports 220
   uncovered values, and the register accepts 28 of them. **The register key count moves from
   409 to 437, and the port holds the same ruling in five rows.** The port names a capture and
-  a method in one key, and this repository names a capture, a stream and a method, so five
-  port rows cover 28 entries here. `python/ja4.py:340` at the pinned commit runs
-  `delete_keys(['JA4L-S', 'JA4L-C'], final)` when the run names another method, which is why
-  `CVE-2018-6794.pcap`, `https-connect.pcap` and `tls-handshake.pcapng` publish no JA4L key.
-  `ja4l_test.go` reverses the guard of #52, which named #361 as its reversal path.
+  a method in one key. This repository names a capture, a stream and a method, so five port
+  rows cover 28 entries here. `python/ja4.py:340` at the pinned commit runs
+  `delete_keys(['JA4L-S', 'JA4L-C'], final)` when the run names another method. That filter
+  is why `CVE-2018-6794.pcap`, `https-connect.pcap` and `tls-handshake.pcapng` publish no
+  JA4L key. `ja4l_test.go` reverses the guard of #52, which named #361 as its reversal path.
   `docs/specs/features/04-conformance-harness.md` numbers the category as FR-conformance-33p
-  through FR-conformance-33t. Issues #52 and #57 carry the parity half.
+  through FR-conformance-33v. Issues #52 and #57 carry the parity half.
 - No exported name, and one guard that holds every citation of `docs/specs/foxio/`.
   `foxio_citation_base_test.go` holds 849 lines and seven tests. It reads every
   path-shaped code span of the directory against the seven bases of the table at

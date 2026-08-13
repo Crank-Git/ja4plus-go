@@ -249,10 +249,10 @@ func conformanceMethodOccurrence(method string, occurrence int) string {
 // goroutine, so this function creates the Processor and never shares it.
 //
 // The map holds every value the library produces, and never the values of the covered
-// methods alone. The maintainer ruled on 2026-08-13 in #361 that a value whose vector file
-// names no key for its method reaches a comparison, which reports it as an uncovered value.
-// A filter here would drop that value before the comparison, and the run would then report
-// nothing for it. `conformanceSplitUncovered` reads the covered set instead.
+// methods alone. The maintainer ruled on 2026-08-13 in #361. A value whose vector file names
+// no key for its method reaches a comparison, and that comparison reports it as an uncovered
+// value. A filter here would drop the value first, and the run would then report nothing for
+// it. `conformanceSplitUncovered` reads the covered set instead.
 func conformanceProducedByFrame(
 	t *testing.T,
 	capture string,
@@ -948,9 +948,9 @@ func conformanceReportTotals(t *testing.T, totals conformanceRunTotals) {
 		matches, deviations, totals.Stream.AcceptedDeviants+totals.Packet.AcceptedDeviants)
 
 	// #361 states the two counts on every run. An uncovered value is neither a match nor a
-	// deviation, so a reader who reads the two counts above alone reads fewer values than the
+	// deviation. A reader of the two counts above alone therefore reads fewer values than the
 	// library produces.
-	t.Logf("the run reports %d uncovered values and %d accepted uncovered values",
+	t.Logf("the run reports %d unaccepted uncovered values and %d accepted uncovered values",
 		totals.Stream.Uncovered+totals.Packet.Uncovered,
 		totals.Stream.AcceptedUncovered+totals.Packet.AcceptedUncovered)
 

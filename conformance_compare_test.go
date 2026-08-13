@@ -547,7 +547,7 @@ func TestTheOrphanEntriesSortTheEntriesByKey(t *testing.T) {
 	}
 }
 
-// The maintainer ruled on 2026-08-13 in #361 that the run reports a value whose vector file
+// The maintainer ruled on 2026-08-13 in #361. The run reports a value whose vector file
 // publishes no key for its method as an uncovered value. Such a value reaches a third
 // category, which is neither a match nor a deviation.
 func TestTheRunReportsAnUncoveredValueWhenTheVectorFileNamesNoKeyForItsMethod(t *testing.T) {
@@ -585,9 +585,9 @@ func TestTheRunReportsAnUncoveredValueWhenTheVectorFileNamesNoKeyForItsMethod(t 
 	}
 }
 
-// A vector file that names the method states an expected value for it, so a surplus value of
-// that method stays the deviation kind of FR-conformance-17. The key carries an occurrence
-// number, and the split reads the method without it.
+// A vector file that names the method states an expected value for it. A surplus value of
+// that method therefore stays the deviation kind of FR-conformance-17. The key carries an
+// occurrence number, and the split reads the method without it.
 func TestTheRunReportsADeviationWhenTheVectorFileNamesTheMethodAndHoldsNoValueForTheKey(t *testing.T) {
 	key := oneConformanceKey("JA4T.1")
 

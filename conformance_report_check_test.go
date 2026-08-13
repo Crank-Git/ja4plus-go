@@ -482,9 +482,9 @@ func TestTheTrackedConformanceReportHoldsTheReportShape(t *testing.T) {
 	}
 }
 
-// FR-conformance-33q names the count of uncovered values, and FR-conformance-33s holds one
-// row for each one. The row names the capture, the vector set and the method, so a reader
-// reads the count of each method without a rerun.
+// FR-conformance-33q names the count of uncovered values, and FR-conformance-33s states the
+// count of each capture, each vector set and each method. A reader therefore reads the count
+// of one method without a rerun.
 func TestTheReportStatesTheUncoveredValueCountOfEachMethod(t *testing.T) {
 	report := newConformanceReport("27f0cbf")
 	report.readCapture("https-connect.pcap")
@@ -503,7 +503,7 @@ func TestTheReportStatesTheUncoveredValueCountOfEachMethod(t *testing.T) {
 
 	for _, wanted := range []string{
 		"## Uncovered values",
-		"| Uncovered values | 1 |",
+		"| Unaccepted uncovered values | 1 |",
 		"| Accepted uncovered values | 1 |",
 		"https-connect.pcap/3/JA4L.1",
 		"https-connect.pcap/5/JA4LS.1",
@@ -522,7 +522,7 @@ func TestTheReportStatesThatARunReportsNoUncoveredValue(t *testing.T) {
 	text := oneConformanceReport().render()
 
 	for _, wanted := range []string{
-		"| Uncovered values | 0 |",
+		"| Unaccepted uncovered values | 0 |",
 		"| Accepted uncovered values | 0 |",
 		"The run reports no uncovered value.",
 	} {
@@ -566,8 +566,8 @@ func TestTheReportCountsAnAcceptedUncoveredValueApartFromAnAcceptedDeviation(t *
 	}
 }
 
-// An uncovered value reaches no row of the result table, because the vector file holds no
-// value for the method and FR-conformance-33 records `not applicable` for that cell.
+// An uncovered value reaches no row of the result table. The vector file holds no value for
+// the method, and FR-conformance-33 records `not applicable` for that cell.
 func TestTheReportRecordsNotApplicableForAMethodThatReachesUncoveredValuesAlone(t *testing.T) {
 	report := newConformanceReport("27f0cbf")
 	report.readCapture("https-connect.pcap")

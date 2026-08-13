@@ -1676,7 +1676,7 @@ func TestJA4LWritesNoTCPLiteralInAnyValue(t *testing.T) {
 // ruling of 2026-08-13 on #361, and it reverses the guard that #52 wrote on 2026-08-12.
 //
 // #52 held that the register could hold no such decline. The harness dropped a value whose
-// vector file names no key for its method, so no comparison reached the key and
+// vector file names no key for its method. No comparison reached the key, and
 // `conformanceCheckOrphans` failed the run for the entry. That doc comment named #361 as the
 // reversal path, and this is that reversal.
 //
@@ -1687,8 +1687,8 @@ func TestJA4LWritesNoTCPLiteralInAnyValue(t *testing.T) {
 // The port declines the same values. `Crank-Git/ja4plus` holds five rows in
 // `tests/foxio_deviations.json` at the tag `v1.1.0`, on lines 2, 8, 452, 458 and 674. Each row
 // carries `"issue": 272`, `"decided": true` and `"capability": false`, and the port's issue
-// #272 decided them on 2026-08-08. **The port names a capture and a method in one key, and this
-// repository names a capture, a stream and a method**, so one port row covers more than one
+// #272 decided them on 2026-08-08. **The port names a capture and a method in one key.** This
+// repository names a capture, a stream and a method, so one port row covers more than one
 // entry here.
 //
 // The two libraries now agree on the bookkeeping as well as on the observable behavior.
