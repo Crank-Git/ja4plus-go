@@ -238,3 +238,78 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: v2.12.2
+
+  # FR-supply-1 runs the vulnerability scanner on every pull request this workflow covers.
+  # The job runs the `vuln` target, and FR-supply-4 holds the command there, so the gate
+  # and the desk can never measure two different commands.
+  #
+  # FR-supply-2 fails the job on a vulnerability that the library calls, and FR-supply-5
+  # keeps an uncalled one out of the exit status. The scanner separates the two by itself,
+  # and the `vuln` target of `Makefile` cites the source that states the rule. So one run
+  # meets both requirements, and no second run is needed.
+  #
+  # The scan reads the public vulnerability database at https://vuln.go.dev over the
+  # network. A database outage fails this job, and it reports a defect of neither the
+  # library nor the pull request.
+  vuln:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads the repository and a public database
+    # alone.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The scanner reads the Go version of the `go` command on the PATH, and it reports
+      # the standard library of that version. This job therefore names the same Go version
+      # as the `test` job, so the gate measures what this workflow builds.
+      #
+      # A measurement on 2026-08-13 at govulncheck v1.6.0 separates three Go versions on
+      # this module. Go 1.24.13 reports 9 called standard library vulnerabilities and exits
+      # 3. Go 1.25.13 reports 0 and exits 0. Go 1.26.5 reports 0 and exits 0. Every one of
+      # the nine names a fix in a go1.25.x release and none in a go1.24.x release, so no
+      # Go 1.24 patch clears them. Issue #65 reports that result, and the maintainer holds
+      # the Go version decision.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '1.24'
+
+      # FR-supply-3 pins the scanner version. `golang.org/x/vuln` v1.6.0 declares
+      # `go 1.25.0`, and the step above installs Go 1.24, so the `go` command downloads the
+      # newer toolchain for this one command. The installed program then runs the `go` of
+      # the PATH, which stays at 1.24, so the scan still reads Go 1.24.
+      #
+      # No tool watches this pin. #66 configures Dependabot for the `gomod` and the
+      # `github-actions` ecosystem, and a Go program that a step installs belongs to
+      # neither. A person moves this version.
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
+
+      # The version line names the Go version, the scanner version and the age of the
+      # database. A reader of a failed run needs all three to reproduce it.
+      - name: Report the scanner version
+        run: govulncheck -version
+
+      - name: Scan for a vulnerability
+        run: |
+          set -o pipefail
+          make vuln 2>&1 | tee govulncheck.log
+
+      # FR-supply-5 records the note. The summary line counts every vulnerability that
+      # reaches the build without a call, and the step runs after a pass and after a
+      # failure.
+      - name: Publish the vulnerability counts
+        if: always()
+        run: |
+          summary=$(sed -n '/^Your code /,$p' govulncheck.log)
+          if [ -z "$summary" ]; then
+            summary="The scanner printed no summary line."
+          fi
+          {
+            echo "## Vulnerabilities"
+            echo
+            echo '```'
+            echo "$summary"
+            echo '```'
+            echo
+            echo "A called vulnerability fails this job. A vulnerability that reaches the build without a call is a note."
+          } >> "$GITHUB_STEP_SUMMARY"
