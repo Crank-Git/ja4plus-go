@@ -19,8 +19,26 @@ type HTTPRequest struct {
 	Referer     string            // Referer value
 }
 
-var requestLineRe = regexp.MustCompile(`^(GET|POST|PUT|DELETE|HEAD|OPTIONS|CONNECT|TRACE|PATCH)\s+(\S+)\s+(HTTP/\d+\.\d+)`)
+// methodTokenCharacters holds the characters of a method token. RFC 9110 section 5.6.2
+// names the set, and it omits `/`, so a response line such as `HTTP/1.1 200 OK` never
+// reads as a request line.
+const methodTokenCharacters = "!#$%&'*+\\-.^_`|~0-9A-Za-z"
+
+// requestLineRe reads the method of any request line, and it names no method.
+//
+// A closed list of nine methods produced no JA4H value for a request that carries a
+// method such as `PROPFIND`. FR-parity-47 of `docs/specs/features/08-python-parity.md`
+// states the rule, and the port's register row `The JA4H method code for a method outside
+// the nine the Rust reference names` holds the reading. The port decided it at its issue
+// #219 on 2026-08-08, and `python/ja4h.py:9` reads `method.lower()[:2]` and names no
+// method.
+var requestLineRe = regexp.MustCompile(`^([` + methodTokenCharacters + `]+)\s+(\S+)\s+(HTTP/\d+\.\d+)`)
 var headerLineRe = regexp.MustCompile(`^([^:]+):\s*(.*)$`)
+
+// requestLineLimit bounds the text that IsHTTPRequest matches the request line against.
+// IsHTTPRequest reads every TCP payload, and an unbounded match costs the whole stream.
+// `ja4plus/utils/http_utils.py:182` of the port holds the same value.
+const requestLineLimit = 8192
 
 // lineEndingRe matches the two line endings a sender uses.
 //
@@ -65,7 +83,17 @@ func IsHTTPRequest(payload []byte) bool {
 			return true
 		}
 	}
-	return false
+
+	// A method the nine prefixes omit reaches this line, and the payload must then hold a
+	// whole request line. The nine-prefix test admits `GET ` on its own, and a wider test
+	// of the same shape would admit an SSH banner, which starts with method characters and
+	// one space. `ja4l.go:270` reads this function, so a payload it admits by mistake moves
+	// a JA4L measurement point. `ja4plus/utils/http_utils.py:202-207` of the port holds the
+	// same two-step test.
+	if len(s) > requestLineLimit {
+		s = s[:requestLineLimit]
+	}
+	return requestLineRe.MatchString(s)
 }
 
 // ParseHTTPRequest parses an HTTP request from raw TCP payload bytes.

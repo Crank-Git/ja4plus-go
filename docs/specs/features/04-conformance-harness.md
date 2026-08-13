@@ -136,6 +136,20 @@ deviation list that Epic 5 closes.
 - **FR-conformance-33n** — The section holds one row for each orphan entry.
 - **FR-conformance-33o** — The section states that the run reports no orphan register entry
   when the count is 0.
+- **FR-conformance-33p** — A value that the library produces, and whose vector file publishes
+  no key for the method, is an uncovered value.
+- **FR-conformance-33q** — The summary names the count of unaccepted uncovered values, and
+  the count of accepted uncovered values.
+- **FR-conformance-33r** — The summary counts an accepted uncovered value apart from an
+  accepted deviation.
+- **FR-conformance-33s** — The report holds an `## Uncovered values` section on every run.
+  The section states the count of each capture, each vector set and each method. It holds at
+  most `conformanceReportSampleLimit` rows of each group, as the deviation table does.
+- **FR-conformance-33t** — The section states that the run reports no uncovered value when
+  the count is 0.
+- **FR-conformance-33u** — An uncovered value fails no gate.
+- **FR-conformance-33v** — The register holds one entry for each accepted comparison, so the
+  accepted comparison count equals the register key count.
 
 ### The gate
 
@@ -189,8 +203,18 @@ shows its intended shape as a rendered page.
 
 - The comparison is an exact string match. A case difference is a deviation. A whitespace
   difference is a deviation.
-- The suite compares only the methods that a vector holds. A capture with no JA4H vector
-  produces no JA4H row.
+- The suite compares every value the library produces. A value whose vector file publishes
+  no key for the method is an uncovered value, and the run counts it apart from a match and
+  apart from a deviation.
+- A vector file that publishes no key for a method states nothing about that method. The
+  difference therefore measures the coverage of the reference file, and it measures nothing
+  about the library, so an uncovered value fails no gate.
+- The result table records `not applicable` for a method that reaches uncovered values
+  alone. The vector file holds no value for the method, and FR-conformance-33 names that
+  result. The `## Uncovered values` section states the count.
+- The register may hold a decline for an uncovered value. The maintainer ruled the category
+  on 2026-08-13 in #361, and `.claude/rules/parity.md` rule 2 gives the port the interface
+  where this repository shipped nothing.
 - The suite does not sort the library output before it compares. Order is part of the
   result for the per-packet vectors.
 - The suite runs one `Processor` per capture, and calls `Reset` between captures.
@@ -292,6 +316,11 @@ Read from `wireshark/test/testdata/dhcp.pcapng.json` at commit `27f0cbf`:
 - [ ] Every deviation row holds the expected value and the produced value.
 - [ ] The suite reports a deviation when a fingerprint is deliberately changed by one
       character in a test.
+- [ ] The report states the count of unaccepted uncovered values and the count of accepted
+      ones. The `## Uncovered values` section names the capture, the vector set and the
+      method of each group.
+- [ ] The report counts an accepted uncovered value apart from an accepted deviation.
+- [ ] The accepted comparison count equals the register key count.
 - [ ] The CI conformance job fails when the suite reports a deviation.
 - [ ] The CI conformance job fails when the corpus is absent.
 - [ ] `scripts/gen_expected.py` is removed.

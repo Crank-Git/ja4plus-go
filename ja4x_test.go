@@ -150,19 +150,22 @@ func TestJA4XFingerprinter_Dedup(t *testing.T) {
 	if f == nil {
 		t.Fatal("NewJA4X returned nil")
 	}
-	if len(f.streams) != 0 {
-		t.Errorf("new fingerprinter should have empty streams, got %d", len(f.streams))
+	if f.reassembler == nil {
+		t.Error("new fingerprinter should hold a reassembler")
+	}
+	if got := f.reassembler.GetStream("test"); got != nil {
+		t.Errorf("new fingerprinter should hold no stream, got %d bytes", len(got))
 	}
 }
 
 func TestJA4XFingerprinter_Reset(t *testing.T) {
 	f := NewJA4X()
-	f.streams["test"] = []byte{1, 2, 3}
+	f.reassembler.AddSegment("test", 1, []byte{1, 2, 3})
 	f.processedCerts["abc"] = struct{}{}
 
 	f.Reset()
 
-	if len(f.streams) != 0 {
+	if got := f.reassembler.GetStream("test"); got != nil {
 		t.Errorf("Reset did not clear streams")
 	}
 	if len(f.processedCerts) != 0 {
