@@ -115,8 +115,10 @@ builds the method itself.
 - **FR-parity-20** — A JA4L value and a JA4LS value on a QUIC connection hold `quic` as a
   third part.
 - **FR-parity-21** — No JA4L value and no JA4LS value holds the literal `tcp`.
-- **FR-parity-22** — The register holds five value declines for the three reference files
-  that publish no JA4L key.
+- **FR-parity-22** — The register holds one value decline for each JA4L comparison of the
+  three reference files that publish no JA4L key. The port writes five keys, because a port
+  key names a capture and a method. A key of this repository names a capture, a stream and a
+  method, so the five port keys cover 28 entries here. #361 makes each comparison reachable.
 - **FR-parity-23** — A test builds a connection with two SYN-ACK packets and asserts one
   server value.
 - **FR-parity-24** — A test builds a QUIC connection and asserts the protocol marker.
@@ -199,7 +201,13 @@ The port's issues #138, #219, #231 and #271 hold these rulings.
 - **FR-parity-49** — JA4X reads the TLS record layer without regard to the tunnel protocol
   that carries it.
 - **FR-parity-50** — A test asserts three JA4X values on the SOCKS4 tunnel of
-  `socks4-https.pcap` on port 9901, and the register holds the three as value declines.
+  `socks4-https.pcap` on port 9901. The register holds each comparison of the three as a
+  value decline. **This requirement is closed.** `ja4x_tunnel_test.go` holds the test half,
+  and #57 built it. `testdata/deviations.json` holds twelve entries under the ruling #375,
+  and #375 wrote them. **The three values reach twelve comparisons**, because the run
+  compares `JA4X` and `JA4X_r` in the per-stream set and in the per-packet set. A key of
+  this repository names a capture, a stream and a method, and a key of the port names a
+  capture and a method.
 - **FR-parity-51** — Subfield 2 of JA4D writes the first Maximum DHCP Message Size when a
   message repeats option 57.
 - **FR-parity-52** — Part a of a JA4D value holds eleven characters.
@@ -264,9 +272,10 @@ that FR-parity-32 adds a line to.
 | `ja4l.go` | One value per connection, the part count, the protocol marker, the retransmission guard. |
 | `ja4ssh.go` | The window threshold, the mode field, the empty-window rule, `CloseOpenWindows`, `CloseConnectionWindow`. |
 | `ja4t.go`, `ja4ts.go` | The two-digit form, part e, the RST value, the JA4TS state table. |
-| `ja4x.go` | A test only. The behaviour already matches. |
+| `ja4x.go` | The stream reader. The tunnel rule already matched, and two defects gave the SOCKS4 tunnel no value: the reader concatenated the segments in arrival order, and it read the first handshake message of a TLS record alone. |
 | `ja4d.go`, `ja4d6.go` | The repeated option 57, the BOOTP rule, the relay message. |
-| `ja4h.go` | A test only. `ja4h.go:171-173` already matches. |
+| `ja4h.go` | A test only. `ja4h.go:201-205` already reads the first two characters of the method token. |
+| `internal/parser/http.go` | The request-line pattern reads any method token, and `IsHTTPRequest` admits any method that a whole request line names. The nine-method list gave `PROPFIND` no JA4H value, so FR-parity-47 needs this file. |
 | `types.go` | `WindowCloser` declares `CloseOpenWindows`, `ConnectionWindowCloser` declares `CloseConnectionWindow`, and `Fingerprinter` does not change. |
 | `processor.go` | `Processor.CloseOpenWindows`, `Processor.CloseConnectionWindow`. |
 | `sync_processor.go` | `SyncProcessor.CloseOpenWindows`, `SyncProcessor.CloseConnectionWindow`. `features/03-concurrency.md` states the `SyncProcessor` contract. |

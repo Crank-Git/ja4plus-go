@@ -2,6 +2,7 @@ package ja4plus
 
 import (
 	"net"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -1671,45 +1672,46 @@ func TestJA4LWritesNoTCPLiteralInAnyValue(t *testing.T) {
 	}
 }
 
-// TestTheRegisterHoldsNoJA4LDeclineForAFileThatPublishesNoJA4LKey holds the maintainer's
-// ruling of 2026-08-12 on FR-parity-22.
+// TestTheRegisterHoldsAJA4LDeclineForEveryFileThatPublishesNoJA4LKey holds the maintainer's
+// ruling of 2026-08-13 on #361, and it reverses the guard that #52 wrote on 2026-08-12.
 //
-// FR-parity-22 asks the register to hold five value declines for the three reference files that
-// publish no JA4L key. The maintainer declined the requirement in this repository. The Go
-// conformance harness never compares a method that the reference file does not cover, so the
-// decline is unreachable here rather than absent.
+// #52 held that the register could hold no such decline. The harness dropped a value whose
+// vector file names no key for its method. No comparison reached the key, and
+// `conformanceCheckOrphans` failed the run for the entry. That doc comment named #361 as the
+// reversal path, and this is that reversal.
 //
-// `conformance_test.go:450` reads `if !shape.Covered[value.Method] { continue }`, and
-// `conformanceCoveredMethods` at `conformance_test.go:394` builds `Covered` from the keys the
-// expected map holds. `conformanceCheckOrphans` at `conformance_test.go:689` then fails the run
-// for each register entry that no comparison reaches. Each of the five entries would be an
-// orphan, so the register cannot hold one.
+// The harness now compares the value and reports it as an uncovered value, which is neither a
+// match nor a deviation. `conformance_engine_test.go` holds `conformanceSplitUncovered`, and
+// the register therefore holds one decline for each such comparison.
 //
-// The port compares those keys and declines them. `Crank-Git/ja4plus` holds the five rows in
+// The port declines the same values. `Crank-Git/ja4plus` holds five rows in
 // `tests/foxio_deviations.json` at the tag `v1.1.0`, on lines 2, 8, 452, 458 and 674. Each row
-// carries `"issue": 272`, `"decided": true` and `"capability": false`, and the port's issue #272
-// decided them on 2026-08-08.
+// carries `"issue": 272`, `"decided": true` and `"capability": false`, and the port's issue
+// #272 decided them on 2026-08-08. **The port names a capture and a method in one key.** This
+// repository names a capture, a stream and a method, so one port row covers more than one
+// entry here.
 //
-// The two libraries agree on observable behavior, and they differ in bookkeeping. Neither one
-// claims a JA4L value is correct for those three files. The port compares and declines, and
-// this library never compares.
+// The two libraries now agree on the bookkeeping as well as on the observable behavior.
 //
-// Issue #361 owns the harness question, under `docs/specs/features/01-spec-conformance.md`.
-// That issue is the reversal path. This test fails when a change adds one of the five entries
-// before #361 makes the comparison reachable.
-//
-// The mechanism is not specific to JA4L. The same ruling declined the register half of
-// FR-parity-50, because `testdata/foxio/python/socks4-https.pcap.json` publishes no JA4X key.
-// Issue #57 owns FR-parity-50, and it carries the constraint.
-func TestTheRegisterHoldsNoJA4LDeclineForAFileThatPublishesNoJA4LKey(t *testing.T) {
-	// The three reference files that publish no JA4L key. `python/ja4.py:339` runs
-	// `delete_keys(['JA4L-S','JA4L-C'], final)` when the generating run names another method,
-	// so the method filter removed the key from each file.
+// The mechanism is not specific to JA4L. `testdata/foxio/python/socks4-https.pcap.json`
+// publishes no JA4X key, and issue #57 owns FR-parity-50 and the JA4X entries.
+func TestTheRegisterHoldsAJA4LDeclineForEveryFileThatPublishesNoJA4LKey(t *testing.T) {
+	// The three reference files that publish no JA4L key. `python/ja4.py:340` runs
+	// `delete_keys(['JA4L-S', 'JA4L-C'], final)` when the run names another method, so the
+	// method filter removed the key from each file.
 	captures := []string{"CVE-2018-6794.pcap", "https-connect.pcap", "tls-handshake.pcapng"}
 
+	declines := make(map[string]int, len(captures))
+
 	for _, entry := range readDeviationRegister(t) {
+		if entry.Ruling != "#361" {
+			continue
+		}
+
 		capture, rest, held := strings.Cut(entry.Key, "/")
 		if !held {
+			t.Errorf("the entry %q names no stream and no method", entry.Key)
+
 			continue
 		}
 
@@ -1718,17 +1720,25 @@ func TestTheRegisterHoldsNoJA4LDeclineForAFileThatPublishesNoJA4LKey(t *testing.
 			method = tail
 		}
 
-		// The key names the method last, and the per-packet form appends an occurrence
-		// number. Both the `JA4L` spelling and the `JA4L-C` spelling start with `JA4L`.
+		// Both the `JA4L` spelling and the `JA4L-C` spelling start with `JA4L`.
 		if !strings.HasPrefix(method, "JA4L") {
+			t.Errorf("the entry %q names the method %q, and #361 declines a JA4L value alone", entry.Key, method)
+
 			continue
 		}
 
-		for _, named := range captures {
-			if capture == named {
-				t.Errorf("the register holds %q, and the maintainer declined FR-parity-22 on 2026-08-12 because no comparison of the run reaches a JA4L key of %s; issue #361 owns the harness change that would make it reachable",
-					entry.Key, named)
-			}
+		if !slices.Contains(captures, capture) {
+			t.Errorf("the entry %q names the capture %q, and that file publishes a JA4L key", entry.Key, capture)
+
+			continue
+		}
+
+		declines[capture]++
+	}
+
+	for _, capture := range captures {
+		if declines[capture] == 0 {
+			t.Errorf("the register holds no #361 decline for %s, and that file publishes no JA4L key", capture)
 		}
 	}
 }

@@ -9,16 +9,38 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, and issue #285 put
-108 more. A run on the current tree reports 1627 matches, 676 deviations, 409 accepted
-deviations and 409 register keys. A count that an entry below states therefore differs from a
-fresh run.
+put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, issue #285 put
+108 more, issue #361 put 28 more, and issue #375 put 12 more. A run on the current tree
+reports 1658 matches, 645
+deviations, 409 accepted deviations and 449 register keys. The run also reports 202 unaccepted
+uncovered values and 40 accepted uncovered values, and #361 states what an uncovered value is.
+An accepted deviation and an accepted uncovered value each name one register entry, so 409 and
+40 add up to the 449 register keys. A count that an entry below states therefore differs from
+a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against
 `docs/audit/conformance.md` and against `testdata/deviations.json`. A member that moves a
 count and leaves this paragraph fails `go test ./...`. Issue #306 built the guard, after the
 paragraph was false at the end of three consecutive batches.
+
+**Batch Epic 8b closed the parity rows of the TCP, HTTP, certificate and DHCP methods, and
+this paragraph records the measurement of the whole batch.** Issue #58 wrote the drift check
+for the port register copy. Issue #56 wrote JA4TS part e and the JA4TS value that a RST
+produces, under three bounds on the state it added. Issue #57 widened the request-line pattern
+so that a method outside a closed list of nine reaches a JA4H value, and it made JA4X read a
+reassembled stream, and it kept the first Maximum DHCP Message Size on a repeated option 57.
+Issue #361 built the uncovered value, and it put 28 entries into the register. Issue #126 held
+the JA4T SYN selection in a test, and it changed no behaviour. Issue #356 recorded the two
+one-shot names as `not applicable`. Issue #375 put 12 entries into the register and closed
+FR-parity-50. The batch ran from `5010de7` to the merge of `epic/54-parity-tcp-http-cert-dhcp`.
+The run reports 1627 matches, 676 deviations and 409 accepted deviations before, and 1658
+matches, 645 deviations and 409 accepted deviations after. The register holds 409 keys before
+and 449 after. **Thirty-one values moved, and every one moved from a deviation to a match.**
+**The run reported no uncovered value before this batch, because the suite compared no value
+whose reference file publishes no key for its method.** It reports 202 unaccepted and 40
+accepted after. Round 38 of the `## Changelog` of `docs/specs/spec.md` records the seven
+rulings of 2026-08-13 and the six findings of the cross-member review.
 
 **Batch #293 repaired four fingerprint paths, and this paragraph records the measurement of
 the whole batch.** Issue #55 wrote the two-digit form for a zero JA4T value and a zero JA4TS
@@ -47,6 +69,40 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- No exported name, and twelve register entries that close FR-parity-50. The SOCKS4 tunnel
+  of `socks4-https.pcap` produces three JA4X values, and no vector file of the corpus
+  publishes a JA4X key for that capture. `testdata/foxio/python/socks4-https.pcap.json` and
+  `testdata/foxio/wireshark/socks4-https.pcap.json` each publish none, so the run reports
+  each value as an uncovered value. **The port ruled at `Crank-Git/ja4plus#138` on
+  2026-08-07 that the three values stay.** The maintainer ruled on 2026-08-13 that a ruling
+  the port's register records lands here as a reading. **The three values reach
+  twelve comparisons**, because the run compares `JA4X` and `JA4X_r` in the per-stream set
+  and in the per-packet set. **The change moves no fingerprint value.** The run reports 1658
+  matches, 645 deviations and 409 accepted deviations before and after. **The register key
+  count moves from 437 to 449.** The unaccepted uncovered values fall from 214 to 202, and
+  the accepted uncovered values rise from 28 to 40. The run reports 0 stale register entries
+  and 0 orphan register entries. Issue #57 carries the test half, and `ja4x_tunnel_test.go`
+  holds it.
+- No exported name, and one conformance category that records a value the reference file
+  does not cover. The harness dropped a value whose vector file publishes no key for its
+  method. The run reported nothing for it, and the report read as full coverage of every
+  value the library emits. **The maintainer ruled on 2026-08-13 in #361.** The run compares
+  such a value and reports it as an **uncovered value**, which is neither a match nor a
+  deviation. `conformance_engine_test.go` gains `conformanceUncoveredValue` and
+  `conformanceSplitUncovered`. The two producers of `conformance_test.go` now build the whole
+  produced map. `docs/audit/conformance.md` gains the section `## Uncovered values`, and the
+  summary rows `Unaccepted uncovered values`, `Accepted uncovered values` and
+  `Accepted comparisons`. **The change moves no fingerprint value.** The run reports 1627
+  matches, 676 deviations and 409 accepted deviations before and after. It reports 220
+  uncovered values, and the register accepts 28 of them. **The register key count moves from
+  409 to 437, and the port holds the same ruling in five rows.** The port names a capture and
+  a method in one key. This repository names a capture, a stream and a method, so five port
+  rows cover 28 entries here. `python/ja4.py:340` at the pinned commit runs
+  `delete_keys(['JA4L-S', 'JA4L-C'], final)` when the run names another method. That filter
+  is why `CVE-2018-6794.pcap`, `https-connect.pcap` and `tls-handshake.pcapng` publish no
+  JA4L key. `ja4l_test.go` reverses the guard of #52, which named #361 as its reversal path.
+  `docs/specs/features/04-conformance-harness.md` numbers the category as FR-conformance-33p
+  through FR-conformance-33v. Issues #52 and #57 carry the parity half.
 - No exported name, and one guard that holds every citation of `docs/specs/foxio/`.
   `foxio_citation_base_test.go` holds 849 lines and seven tests. It reads every
   path-shaped code span of the directory against the seven bases of the table at
