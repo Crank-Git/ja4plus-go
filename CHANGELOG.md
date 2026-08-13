@@ -24,6 +24,24 @@ It reads the four counts and the enumeration above, and it compares each one aga
 count and leaves this paragraph fails `go test ./...`. Issue #306 built the guard, after the
 paragraph was false at the end of three consecutive batches.
 
+**Batch Epic 8b closed the parity rows of the TCP, HTTP, certificate and DHCP methods, and
+this paragraph records the measurement of the whole batch.** Issue #58 wrote the drift check
+for the port register copy. Issue #56 wrote JA4TS part e and the JA4TS value that a RST
+produces, under three bounds on the state it added. Issue #57 widened the request-line pattern
+so that a method outside a closed list of nine reaches a JA4H value, and it made JA4X read a
+reassembled stream, and it kept the first Maximum DHCP Message Size on a repeated option 57.
+Issue #361 built the uncovered value, and it put 28 entries into the register. Issue #126 held
+the JA4T SYN selection in a test, and it changed no behaviour. Issue #356 recorded the two
+one-shot names as `not applicable`. Issue #375 put 12 entries into the register and closed
+FR-parity-50. The batch ran from `5010de7` to the merge of `epic/54-parity-tcp-http-cert-dhcp`.
+The run reports 1627 matches, 676 deviations and 409 accepted deviations before, and 1658
+matches, 645 deviations and 409 accepted deviations after. The register holds 409 keys before
+and 449 after. **Thirty-one values moved, and every one moved from a deviation to a match.**
+**The run reported no uncovered value before this batch, because the suite compared no value
+whose reference file publishes no key for its method.** It reports 202 unaccepted and 40
+accepted after. Round 38 of the `## Changelog` of `docs/specs/spec.md` records the seven
+rulings of 2026-08-13 and the six findings of the cross-member review.
+
 **Batch #293 repaired four fingerprint paths, and this paragraph records the measurement of
 the whole batch.** Issue #55 wrote the two-digit form for a zero JA4T value and a zero JA4TS
 value. Issue #286 repaired three defects in the JA4H path. Issue #295 stepped

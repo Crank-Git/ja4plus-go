@@ -197,8 +197,12 @@ type conformanceStreamShape struct {
 	// HTTP request, so `http2-with-cookies.pcapng` holds 16 entries for stream 0 that each
 	// carry the bare key `JA4H`, and `tls12.pcap` holds one entry that carries `JA4.1`.
 	UsesOccurrence map[conformanceKey]bool
-	// Covered names every method the vector holds. The suite compares no method that the
-	// vector never names.
+	// Covered names every method the vector holds.
+	//
+	// It filtered the comparison before #361, and it names the split instead. The suite
+	// compares every value the library produces, and `conformanceSplitUncovered` reads this
+	// map to decide which of them the vector covers. A value of a method this map does not
+	// name is an uncovered value, which is neither a match nor a deviation.
 	Covered map[string]bool
 }
 

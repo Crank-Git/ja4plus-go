@@ -609,8 +609,10 @@ func (r *conformanceReport) renderSummary(out *strings.Builder) {
 	fmt.Fprintf(out, "| Matches | %d |\n", totals.Matches)
 	fmt.Fprintf(out, "| Deviations | %d |\n", totals.Deviations)
 	fmt.Fprintf(out, "| Accepted deviations | %d |\n", totals.Accepted)
-	// The row names the unaccepted count in full. `Uncovered values` alone would name 192
-	// here and 220 in the section below, and one phrase must carry one meaning.
+	// The row names the unaccepted count in full, because `Uncovered values` alone would
+	// name the unaccepted count here and the whole count in the section below. One phrase
+	// carries one meaning. The two numbers differ on every tree that holds an accepted
+	// uncovered value, and the section states the whole count with the accepted part of it.
 	fmt.Fprintf(out, "| Unaccepted uncovered values | %d |\n", totals.Uncovered)
 	fmt.Fprintf(out, "| Accepted uncovered values | %d |\n", totals.AcceptedUncovered)
 	fmt.Fprintf(out, "| Accepted comparisons | %d |\n", totals.Accepted+totals.AcceptedUncovered)
@@ -675,8 +677,9 @@ func (r *conformanceReport) renderDeviations(out *strings.Builder) {
 	out.WriteString("\n")
 }
 
-// renderUncovered writes the uncovered values. It holds FR-conformance-33r,
-// FR-conformance-33s and FR-conformance-33t, and #361 states the rule it reports.
+// renderUncovered writes the uncovered values. It holds FR-conformance-33s and
+// FR-conformance-33t, and #361 states the rule it reports. FR-conformance-33r names the
+// summary rather than this section, and `renderSummary` above holds it.
 //
 // The section states the result of every run, and never of a run with an uncovered value
 // alone. A reader who finds no section cannot tell full coverage from a renderer that dropped

@@ -228,7 +228,7 @@ rule set governs both repositories.</strong></p>
 <tr><td>JA4, JA4S</td><td>Keep producing a fingerprint for a structurally valid ClientHello whose body describes no real client. Add no plausibility guard; add tests a guard would fail.</td><td>#338 #343</td></tr>
 <tr><td>JA4L, JA4LS</td><td>Implement JA4LS. One client value and one server value per connection. Two timing parts on TCP. <code>quic</code> as a third part on QUIC, spelled as Wireshark spells it. No second server value on a retransmitted SYN-ACK.</td><td>#156 #200 #225 #272</td></tr>
 <tr><td>JA4SSH</td><td>Remove the <code>min(packetCount, 10)</code> cap. Read the mode field from the window alone. Emit nothing for a window with no SSH packet. Add <code>CloseOpenWindows</code>.</td><td>#28 #96 #97 #105 #199 #214</td></tr>
-<tr><td>JA4T, JA4TS</td><td>Write the two-digit form. Add part e — the delay of each SYN-ACK after the first. Append <code>-R</code> and the RST delay, testing the RST bit rather than the whole flag byte.</td><td>#215 #226 #246</td></tr>
+<tr><td>JA4T, JA4TS</td><td>Write the two-digit form. <strong>Part e and the RST value are closed, and issue #56 of this repository wrote them.</strong> Part e holds the delay of each SYN-ACK after the first, rounded to the nearest second; the RST value appends <code>-R</code> and the RST delay, and it tests the RST bit rather than the whole flag byte. <strong>The maintainer ruled the rounding and the RST bit on 2026-08-13</strong>, over the two reference splits that <code>docs/specs/foxio/JA4T.md</code> records as R24, R25 and R30. Issue #126 of this repository holds the SYN half of the same reading, and <code>ja4t.go:32</code> already carried it.</td><td>#215 #226 #246</td></tr>
 <tr><td>JA4X</td><td>Read the TLS record layer regardless of the tunnel carrying it. <strong>The three SOCKS4 value declines are closed, and issue #375 of this repository wrote them.</strong> <code>testdata/foxio/python/socks4-https.pcap.json</code> publishes no JA4X key, so the run reports each value as an uncovered value. Issue #57 of this repository carries the test half of FR-parity-50, and issue #361 built the machinery that makes the decline reachable. <strong>The three values reach twelve register entries</strong>, because the run compares <code>JA4X</code> and <code>JA4X_r</code> in the per-stream set and in the per-packet set.</td><td>#138</td></tr>
 <tr><td>JA4D, JA4D6</td><td>Keep the first Maximum DHCP Message Size on a repeated option 57. Emit nothing for a BOOTP message with no option 53. Write the outer DHCPv6 type alone in subfield 1.</td><td>#231 #271</td></tr>
 <tr><td>JA4H</td><td>Read the first two characters of any method token. <strong>The nine-method list at <code>internal/parser/http.go:22</code> gave a <code>PROPFIND</code> request and a <code>MKCOL</code> request no JA4H value at all, so this row was not at parity.</strong> Issue #57 widened the request-line pattern to the method token character set that RFC 9110 section 5.6.2 names, and it holds <code>PROPFIND</code> → <code>pr</code> and <code>MKCOL</code> → <code>mk</code> in a test.</td><td>#219</td></tr>
@@ -276,8 +276,10 @@ closed deviation cannot sit in the file unnoticed.</p>
 </div>
 
 <h3>State that round 3 adds</h3>
-<p><code>JA4TSFingerprinter</code> gains a state table keyed by the five-tuple, because
-part e and the RST value both need the first SYN-ACK of the connection. Every fingerprinter
+<p><code>JA4TSFingerprinter</code> holds a state table keyed by the five-tuple, because
+part e and the RST value both need the first SYN-ACK of the connection. <strong>Issue #56 of
+this repository built it</strong>, under three bounds: ten delays for one connection, a
+timeout on a SYN-ACK, and a cap on the tracked connections. Every fingerprinter
 still appends to <code>results</code> and never truncates it, which
 <a href="features/02-correctness-audit.md">the correctness audit</a> treats as a suspected
 defect — and <strong>the monitor makes that defect reachable</strong>, so Epic 13 depends on
