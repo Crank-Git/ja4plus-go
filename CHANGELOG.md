@@ -9,16 +9,17 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Every measurement in this section names the base of the run that produced it. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, issue #285 put
-108 more, issue #361 put 28 more, issue #375 put 12 more, and issue #387 put 10 more.
+put 35 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
+108 more, issue #361 put 8 more, issue #375 put 12 more, and issue #387 put 10 more.
 Issue #409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5
-of those 10 entries. A run on
+of those 10 entries. Issue #447 removed 21 entries, because the library no longer produces
+the value each one records. A run on
 the current tree
-reports 1658 matches, 635
-deviations, 419 accepted deviations and 459 register keys. The run also reports 202 unaccepted
-uncovered values and 40 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 419 and
-40 add up to the 459 register keys. A count that an entry below states therefore differs from
+reports 1664 matches, 621
+deviations, 418 accepted deviations and 438 register keys. The run also reports 182 unaccepted
+uncovered values and 20 accepted uncovered values, and #361 states what an uncovered value is.
+An accepted deviation and an accepted uncovered value each name one register entry, so 418 and
+20 add up to the 438 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
