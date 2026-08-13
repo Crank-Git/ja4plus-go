@@ -111,8 +111,9 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
   `zeek/ja4/main.zeek:84` corroborates.
 
   **The prose also names an empty first ALPN value, and it gives the same `00`.**
-  `technical_details/JA4.md:92` covers three inputs in one sentence, and this is the
-  verbatim text:
+  `technical_details/JA4.md:93` covers three inputs in one sentence, and this is the
+  verbatim text. **R18 below cites the same line for a different rule**, because line 93
+  holds two sentences and the second one states the one-character rule.
 
   > If there is no ALPN extension, no ALPN values, or the first ALPN value is empty, then we
   > print "00" as the value in the fingerprint.
@@ -126,7 +127,8 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
 - **R18** — **Reference split.** An ALPN value of one character produces three different
   results. The image states no rule for it.
   - `technical_details/JA4.md:93` states that the one character serves as both the first
-    character and the last character.
+    character and the last character. **That line holds two sentences, and R17 above cites
+    the first one for the empty value.**
   - `zeek/ja4/main.zeek:86` produces the same two characters, because `[0]` and `[-1]`
     reach the same character.
   - `wireshark/source/packet-ja4.c:552-554` produces the same two characters. It reads the
