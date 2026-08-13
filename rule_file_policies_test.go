@@ -61,10 +61,23 @@ var theFilingPolicyCases = []string{
 // The last one names `.claude/rules/rulings.md`. That file governs an evidence citation,
 // and policy 2 does not touch it. A later edit that drops the sentence lets a reader read
 // policy 2 as a change to the evidence rule.
+//
+// The second one read `cites a section heading` until #465. The cross-member review of
+// batch #457 found that the narrow wording made the work of #440 non-conformant, because
+// #440 cited a rule number and a requirement number. Neither one is a section heading.
 var theCitationConventionSentences = []string{
 	"The maintainer adopted this convention on 2026-08-13.",
-	"An internal cross-reference cites a section heading. An evidence citation cites `file:line`.",
+	"An internal cross-reference cites a stable target. An evidence citation cites `file:line`.",
 	"`.claude/rules/rulings.md` `## A reading cites a file and a line` governs evidence, and this convention does not touch it.",
+}
+
+// theStableTargetForms are the four forms that an internal citation may name.
+//
+// The row names every one of them. A later edit that drops a form leaves a reader of
+// `docs/specs/foxio/*.md` with no permitted citation, because those pages hold numbered
+// rules and few headings.
+var theStableTargetForms = []string{
+	"a section heading, a rule number, a requirement number, or an identifier",
 }
 
 func TestCLAUDEmdStatesTheFilingPolicy(t *testing.T) {
@@ -93,6 +106,16 @@ func TestTheWritingStandardStatesTheCitationConvention(t *testing.T) {
 	for _, want := range theCitationConventionSentences {
 		if !strings.Contains(convention, collapseWhitespace(want)) {
 			t.Errorf("%s holds no %q, so #454 leaves the citation convention unstated", theCitationConventionFile, want)
+		}
+	}
+}
+
+func TestTheInternalCitationRowNamesEveryStableTarget(t *testing.T) {
+	convention := collapseWhitespace(readRepoFile(t, theCitationConventionFile))
+
+	for _, want := range theStableTargetForms {
+		if !strings.Contains(convention, collapseWhitespace(want)) {
+			t.Errorf("%s names no %q, so an internal citation of a rule number reaches no permitted form", theCitationConventionFile, want)
 		}
 	}
 }
