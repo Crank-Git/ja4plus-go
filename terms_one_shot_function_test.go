@@ -126,6 +126,10 @@ func TestTheTermsTableDefinesTheOneShotFunctionAndTheMultiPacketMethod(t *testin
 //
 // This test reads the method names from the term row, so a method the row later names is
 // covered without a change here. `ComputeJA4LS` is the name no other test rejects.
+//
+// **The ruling of #356 names JA4L and JA4SSH, and it never named JA4LS.** Open question 2
+// of `docs/specs/features/12-ja4ls.md` asks whether `ComputeJA4LS` is worth adding, and the
+// maintainer answers it. This test blocks the name until then, and it settles nothing.
 func TestPackageJa4plusExportsNoOneShotFunctionForAMultiPacketMethod(t *testing.T) {
 	rows := readTermsTableRows(t)
 
@@ -144,7 +148,7 @@ func TestPackageJa4plusExportsNoOneShotFunctionForAMultiPacketMethod(t *testing.
 	for _, method := range named {
 		name := "Compute" + method
 		if exported[name] {
-			t.Errorf("package ja4plus exports %q, and %s is a %s. Reverse the ruling of #356 before you add it",
+			t.Errorf("package ja4plus exports %q, and %s is a %s. The ruling of #356 and open question 2 of docs/specs/features/12-ja4ls.md govern that name, and the maintainer settles it before you add it",
 				name, method, multiPacketMethodTerm)
 		}
 	}
