@@ -37,7 +37,7 @@ publishes the version and the time of each release. The command is
 | `github.com/gopacket/gopacket` | `v1.7.1` | 2026-08-09 | `{"Version":"v1.7.1","Time":"2026-08-09T04:45:16Z"}` |
 
 **Risk R5 of `docs/specs/spec.md` states the wrong year, and this measurement refutes it.**
-R5 at :938 states:
+R5 at :935 states:
 
 > `github.com/google/gopacket` has had no release since v1.1.19 in 2022.
 
@@ -103,9 +103,9 @@ The code outside a test file names six identifiers of `gopacket` and 37 identifi
 `layers`. The six are `CaptureInfo`, `Default`, `Layer`, `LayerType`, `NewPacket` and
 `Packet`.
 
-**The candidate fork at `v1.7.1` declares every one of those 43 identifiers.** The
-measurement unpacked the published archive of `v1.7.1` and read the declaration site of
-each name. Four examples:
+**The measurement unpacked the published archive of `v1.7.1`, and it searched for the
+declaration site of each of those 43 names. It found all 43.** This file reproduces four
+of the 43 sites, and a reader who wants the other 39 repeats the search:
 
 - `layers/layertypes.go:24` declares `LayerTypeIPv4`.
 - `layers/tcp.go:45` declares `TCPOptionKindMSS`.
@@ -135,8 +135,8 @@ name the same type.
 
 > A named type is always different from any other type.
 
-So the `Layer` of one candidate is not the `Layer` of the other, the two `Packet`
-interfaces hold different method sets, and a caller cannot pass one where the other is
+So the `Layer` of one candidate is not the `Layer` of the other. The two `Packet`
+interfaces then hold different method sets. A caller cannot pass one where the other is
 expected. **A move is therefore a breaking change for every caller of this library, and the
 text of no signature moves.** FR-supply-29 offers two answers, and its second answer covers
 this case: Epic 10 records the change.
@@ -287,7 +287,7 @@ states:
 	opt.Length = (data[3]&0x1f)*4 + 4
 ```
 
-`internal/parser/packet.go:31` names `LayerTypeGeneve` in `isTunnelLayerType`, and the
+`internal/parser/packet.go:33` names `LayerTypeGeneve` inside `isTunnelLayerType`, and the
 corpus holds `tcpdump-geneve.pcap`. **A different option length moves the inner layer that
 `TunnelDepth` and `CheckTunnel` read.**
 
@@ -306,8 +306,10 @@ capture that holds a malformed option of kind 30 produces no JA4T value under th
 **3. `TCP` and `TCPOption` gain fields.** `TCP` gains `Multipath bool`, and `TCPOption`
 gains ten fields. **No file of this tree builds a `layers.TCPOption` with unkeyed fields**,
 so the added fields break no build here. The command
-`grep -rn 'layers.TCPOption{' --include='*.go' .` reads `ja4t_two_digit_test.go`, and each
-site names its fields.
+`grep -rln 'layers.TCPOption{' --include='*.go' .` names six files, and each site names its
+fields. The six are `ja4t_two_digit_test.go`, `ja4t_test.go`,
+`ja4t_option_byte_count_test.go`, `ja4ts_part_e_test.go`, `ja4ts_test.go` and
+`benchmark_test.go`.
 
 **4. The checksum computation changes.** `v1.7.1` wraps the result of
 `computeChecksum` in `gopacket.FoldChecksum`. The tests of this tree build packets with
@@ -338,9 +340,8 @@ option is not part of the question this file records, and no requirement asks fo
 
 **The reading recommends candidate B, under one condition.** The condition is a measurement:
 one branch migrates, `make conformance` runs, and no fingerprint value moves without a
-FoxIO reason. **If a value moves, the reading recommends candidate A**, because
-`.claude/rules/parity.md` rule 1 states that FoxIO decides behaviour, and a dependency does
-not.
+FoxIO reason. **If a value moves, the reading recommends candidate A.** `.claude/rules/parity.md` rule 1
+states that FoxIO decides behaviour. A dependency decides none of it.
 
 Three facts support B over A.
 
@@ -372,7 +373,7 @@ requirement.
 
 `docs/specs/spec.md:848` states the dependency of Epic 10:
 
-> **Depends on.** Every epic that changes behaviour.
+> **Depends on.** Every other epic.
 
 **Eight epics are open today.** The command
 `gh issue list --repo Crank-Git/ja4plus-go --state all` reports that #43, #64, #71, #76,
@@ -380,12 +381,23 @@ requirement.
 are Epic 6, Epic 7, Epic 9, Epic 13, Epic 14, Epic 15, Epic 16 and Epic 10.
 
 **`docs/specs/spec.md` states the order of the open epics as a document order, and it
-states no schedule.** The section of each one sits at these lines: Epic 6 at :714, Epic 7
-at :726, Epic 9 at :779, Epic 13 at :792, Epic 14 at :806, Epic 15 at :818, Epic 16 at :830
-and Epic 10 at :842.
+states no schedule.** The section of each open epic sits at one of these lines.
 
-- **Two epics stand between the epic that runs today and Epic 13.** Epic 7 runs now, and
-  Epic 6 and Epic 9 stand before Epic 13 in the document order.
+| Epic | Line |
+|---|---|
+| Epic 6 | :714 |
+| Epic 7 | :726 |
+| Epic 9 | :779 |
+| Epic 13 | :792 |
+| Epic 14 | :806 |
+| Epic 15 | :818 |
+| Epic 16 | :830 |
+| Epic 10 | :842 |
+
+- **One open epic stands between the epic that runs today and Epic 13, and it is Epic 9.**
+  Epic 7 runs now, and the document order puts Epic 9 alone between Epic 7 and Epic 13.
+- **Epic 6 is open, and the document order puts it before Epic 7.** So Epic 6 runs at a
+  time the maintainer chooses, and the document order states nothing about that time.
 - **Three epics stand between Epic 13 and Epic 10.** They are Epic 14, Epic 15 and Epic 16.
 - **A count of batches is not measurable, because one epic runs as one or more batches.**
 
