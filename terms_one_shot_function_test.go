@@ -218,6 +218,93 @@ func readOneShotFunctionDocComments(t *testing.T) map[string]string {
 	return docComments
 }
 
+// readmeFile names the page that presents the library to a first reader.
+const readmeFile = "README.md"
+
+// readmeOneShotHeading opens the section that holds the one-shot function code block.
+const readmeOneShotHeading = "\n### One-Shot Functions\n"
+
+// readmeCallPattern matches one call of package ja4plus in a code block.
+var readmeCallPattern = regexp.MustCompile(`ja4plus\.([A-Za-z0-9]+)\(`)
+
+// readReadmeOneShotBlockNames returns the function name of each call of the code block
+// under the `### One-Shot Functions` heading of `README.md`.
+//
+// It reads the first fenced block of that section, and it reads no later section.
+func readReadmeOneShotBlockNames(t *testing.T) map[string]bool {
+	t.Helper()
+
+	page := readRepoFile(t, readmeFile)
+
+	start := strings.Index(page, readmeOneShotHeading)
+	if start < 0 {
+		t.Fatalf("%s holds no %q heading, and the code block sits under it", readmeFile, "### One-Shot Functions")
+	}
+
+	section := page[start+len(readmeOneShotHeading):]
+	if end := strings.Index(section, "\n### "); end >= 0 {
+		section = section[:end]
+	}
+
+	open := strings.Index(section, "```go\n")
+	if open < 0 {
+		t.Fatalf("the %q section of %s holds no Go code block", "### One-Shot Functions", readmeFile)
+	}
+
+	block := section[open+len("```go\n"):]
+	if end := strings.Index(block, "```"); end >= 0 {
+		block = block[:end]
+	}
+
+	names := map[string]bool{}
+
+	for _, match := range readmeCallPattern.FindAllStringSubmatch(block, -1) {
+		names[match[1]] = true
+	}
+
+	if len(names) == 0 {
+		t.Fatalf("the code block of the %q section of %s names no call of package ja4plus", "### One-Shot Functions", readmeFile)
+	}
+
+	return names
+}
+
+// #403 — the code block listed seven names, and package ja4plus exported ten one-shot
+// functions. A reader of the block found no one-shot function for JA4D and for JA4D6, and
+// each one exists.
+//
+// This guard compares the block against the exported set, so a one-shot function that a
+// later issue adds or removes fails here until the block states it. It reads the exported
+// set that the other guards of this file read, and it holds no list of its own. **Reverse
+// it by deleting this test alone**, because no other test of the tree reads the code block.
+//
+// It states no rule about which method reaches a one-shot function. The ruling of #356
+// states that rule, `parity_one_shot_not_applicable_test.go` holds it for JA4L and JA4SSH,
+// and `TestPackageJa4plusExportsNoOneShotFunctionForAMultiPacketMethod` above holds it for
+// JA4LS.
+func TestTheReadmeOneShotBlockNamesEveryExportedOneShotFunction(t *testing.T) {
+	exported := readOneShotFunctionDocComments(t)
+	if len(exported) == 0 {
+		t.Fatalf("package ja4plus exports no %s* function, and this guard then reads nothing", oneShotFunctionPrefix)
+	}
+
+	block := readReadmeOneShotBlockNames(t)
+
+	for name := range exported {
+		if !block[name] {
+			t.Errorf("package ja4plus exports %q, and the code block of the %q section of %s names it nowhere. Add the call to the block",
+				name, "### One-Shot Functions", readmeFile)
+		}
+	}
+
+	for name := range block {
+		if _, held := exported[name]; !held {
+			t.Errorf("the code block of the %q section of %s names %q, and package ja4plus exports no such %s* function. Remove the call from the block",
+				"### One-Shot Functions", readmeFile, name, oneShotFunctionPrefix)
+		}
+	}
+}
+
 // #399 — fourteen sites of the tree wrote a declined synonym for this concept. The
 // `Do not use` column of the `one-shot function` row names that synonym. This guard holds
 // the repair of the seven sites that are doc comments.

@@ -169,8 +169,11 @@ fp := ja4plus.ComputeJA4S(packet)
 fp := ja4plus.ComputeJA4H(packet)
 fp := ja4plus.ComputeJA4T(packet)
 fp := ja4plus.ComputeJA4TS(packet)
+fp := ja4plus.ComputeJA4D(packet)
+fp := ja4plus.ComputeJA4D6(packet)
 fp := ja4plus.ComputeJA4XFromDER(certBytes)
 fp := ja4plus.ComputeJA4XFromPEM(pemBytes)
+fp := ja4plus.ComputeJA4XFromPacket(packet)
 ```
 
 Note: JA4L, JA4LS and JA4SSH are multi-packet methods, and none of them reaches a one-shot
