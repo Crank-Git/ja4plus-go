@@ -100,9 +100,13 @@ A candidate change adopted the Wireshark rule on the TCP path. It moved the emis
 | Stale register entries | 0 | 2 |
 | Orphan register entries | 0 | 41 |
 
-**The candidate closes 149 deviations of this cluster, and it opens 100.** It closes every
-TCP deviation of the per-packet set. It opens 98 per-stream deviations, because the
-per-stream set holds two parts and names a different frame.
+**The candidate closes 149 deviations of this cluster, and it opens 100.** It opens 98
+per-stream deviations, because the per-stream set holds two parts and names a different
+frame.
+
+**28 per-packet deviations remain, and 27 of them carry the marker `quic`.** Causes 2, 3
+and 4 below hold those 27. **One TCP deviation remains**, and
+`## The three unattributed deviations` below names it.
 
 ### Does the change move a value the register already accepts
 
