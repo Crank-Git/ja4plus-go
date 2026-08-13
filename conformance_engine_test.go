@@ -95,6 +95,25 @@ type conformanceOrphanEntry struct {
 	Recorded string
 }
 
+// conformanceUncoveredValue is one value that the library produces where the vector file
+// publishes no key for its method. The maintainer ruled it on 2026-08-13 in #361.
+//
+// A vector file that publishes no key for a method states nothing about that method, so the
+// comparison holds no expected value. The difference measures the coverage of the reference
+// file, and it measures nothing about the library. The run therefore counts such a value in a
+// third category, which is neither a match nor a deviation.
+//
+// The register may hold a decline for an uncovered value. The comparison reaches the key, so
+// `conformanceCheckOrphans` reaches the entry.
+type conformanceUncoveredValue struct {
+	// Key names the comparison.
+	Key conformanceKey
+	// Produced is the value the library produces.
+	Produced string
+	// Accepted is true when the register names this comparison.
+	Accepted bool
+}
+
 // conformanceComparison holds the outcome of one comparison run.
 type conformanceComparison struct {
 	// Matches counts the comparisons where the two values are equal and the register
@@ -105,6 +124,9 @@ type conformanceComparison struct {
 	Matched []conformanceKey
 	// Deviations holds every difference, sorted by key.
 	Deviations []conformanceDeviation
+	// Uncovered holds every value whose method the vector file never names, sorted by key. It
+	// holds FR-conformance-33p, and `conformanceSplitUncovered` fills it.
+	Uncovered []conformanceUncoveredValue
 	// Closed names every comparison that the register names and that now matches.
 	// FR-reference-26 fails the suite for each one.
 	Closed []conformanceKey
@@ -199,6 +221,62 @@ func compareConformance(
 	}
 
 	return result
+}
+
+// conformanceMethodOfComparisonKey returns the method that the comparison key names, without
+// the occurrence number.
+//
+// `conformanceCoveredMethods` builds the covered set from the same form, so the two agree on
+// the key `JA4X.1` and on the bare key `JA4S`.
+func conformanceMethodOfComparisonKey(key conformanceKey) string {
+	method, _, held := strings.Cut(key.Method, ".")
+	if !held {
+		return key.Method
+	}
+
+	return method
+}
+
+// conformanceSplitUncovered returns the comparison with every uncovered value under
+// `Uncovered` and out of `Deviations`. It holds FR-conformance-33p.
+//
+// The covered set names every method that the vector file publishes a key for.
+// `conformanceCoveredMethods` builds it for the per-packet set, and
+// `conformanceStreamShape.Covered` holds it for the per-stream set.
+//
+// The split reads the deviation kind first, and never the covered set alone. An absent value
+// and a changed value each carry an expected value, so the vector file names the method of
+// each one. An extra value is the one kind that a method with no key can reach.
+//
+// The maintainer ruled the third category on 2026-08-13 in #361. The register entries that
+// ruling admits each name #361, so one reader reverses the whole set.
+func conformanceSplitUncovered(
+	comparison conformanceComparison,
+	covered map[string]bool,
+) conformanceComparison {
+	kept := make([]conformanceDeviation, 0, len(comparison.Deviations))
+
+	for _, deviation := range comparison.Deviations {
+		if deviation.Kind != conformanceExtraValue || covered[conformanceMethodOfComparisonKey(deviation.Key)] {
+			kept = append(kept, deviation)
+
+			continue
+		}
+
+		comparison.Uncovered = append(comparison.Uncovered, conformanceUncoveredValue{
+			Key:      deviation.Key,
+			Produced: deviation.Produced,
+			Accepted: deviation.Accepted,
+		})
+	}
+
+	// A comparison that reports no uncovered value keeps the slice the engine built, so the
+	// split allocates nothing that the caller reads.
+	if len(comparison.Uncovered) > 0 {
+		comparison.Deviations = kept
+	}
+
+	return comparison
 }
 
 // conformanceOrphanEntries returns one entry for each register key that the reached set does

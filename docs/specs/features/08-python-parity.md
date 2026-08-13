@@ -115,8 +115,10 @@ builds the method itself.
 - **FR-parity-20** — A JA4L value and a JA4LS value on a QUIC connection hold `quic` as a
   third part.
 - **FR-parity-21** — No JA4L value and no JA4LS value holds the literal `tcp`.
-- **FR-parity-22** — The register holds five value declines for the three reference files
-  that publish no JA4L key.
+- **FR-parity-22** — The register holds one value decline for each JA4L comparison of the
+  three reference files that publish no JA4L key. The port writes five keys, because a port
+  key names a capture and a method. A key of this repository names a capture, a stream and a
+  method, so the five port keys cover 28 entries here. #361 makes each comparison reachable.
 - **FR-parity-23** — A test builds a connection with two SYN-ACK packets and asserts one
   server value.
 - **FR-parity-24** — A test builds a QUIC connection and asserts the protocol marker.

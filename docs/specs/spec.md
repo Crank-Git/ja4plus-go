@@ -195,6 +195,7 @@ across both repositories, because a reader moves between them.
 | mailbox | noun | The destination that one session addresses a cross-session agent at. A spawn response that names a mailbox reached the cross-session path. | inbox, message queue, channel |
 | idle signal | noun | The message a cross-session agent returns in place of text, to report that it holds no work. | idle notification, heartbeat, ping |
 | spawn path | noun | The mechanism a spawned agent returns its result through. This project measures two: the in-process path, which delivers a result to the spawner without a request, and the cross-session path, which delivers a result to the session that addresses the agent, and which can return an idle signal and no text instead. Row `mailbox` above declines the word `channel`, and this project uses that word for no meaning. | spawn mode, return path |
+| uncovered value | noun | One value that the library produces, and whose vector file publishes no key for the method. The conformance run counts it apart from a match and apart from a deviation, and it fails no gate. The register may hold a decline for one. | unmatched value, unreached value, skipped value |
 
 ## Goals
 
@@ -403,7 +404,7 @@ requirement and holds the acceptance criteria.
 | The part count | Not measured. | Write two timing parts on a TCP connection. This is a reference split: the image and two implementations write three parts, and two implementations write two. All 114 JA4L values of the port's vector set hold two. | 1 | #225 |
 | The protocol marker on a QUIC connection | Not measured. | Write `quic` as the third part of both values on a QUIC connection. **Follow the Wireshark spelling.** The Zeek package appends `q`, and the port's rule declines the Zeek spelling. Do not write the `tcp` literal that the dissector writes on an HTTP connection. | 1 | #225 |
 | The server value on a retransmitted SYN-ACK | Not measured. | Emit one server value for one connection. A retransmitted SYN-ACK finds the measurement point set, and it gives no value. | 1 | #272 |
-| A reference file that holds no JA4L key | Not measured. | Record five value declines. The FoxIO generating run deleted the key, so the comparison is unreachable and not failed. This row changes no fingerprint. | 1 | #200, #272 |
+| A reference file that holds no JA4L key | **Records 28 value declines.** #361 built the comparison that reaches them, and the maintainer ruled the category on 2026-08-13. | Done. **The row read `Record five value declines` until #361.** The FoxIO run deleted the key, so the reference file publishes no value to compare. The harness now reports such a value as an uncovered value, which is neither a match nor a deviation. **The port writes five keys, and this repository writes 28.** A port key names a capture and a method, and a key here names a capture, a stream and a method. This row changes no fingerprint. | 1 | #200, #272 |
 
 #### JA4SSH
 
