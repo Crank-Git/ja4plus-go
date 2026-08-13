@@ -96,7 +96,7 @@ This feature set adds the missing gates and settles the dependency question.
 
 **FR-supply-17 reads `.coverage-floor` and FR-supply-19 raises the value, so neither one
 creates the file.** The three requirements below create it. They carry the last three
-numbers of this list, because a renumbering breaks every citation of an earlier one.
+numbers of this list, so no citation of an earlier requirement breaks.
 
 - **FR-supply-30** — The repository holds a `.coverage-floor` file.
 - **FR-supply-31** — The first value of `.coverage-floor` is the total statement coverage
@@ -169,8 +169,10 @@ No entity changes. The following files change.
 | `docs/audit/dependency-decision.md` | New. |
 | `go.mod`, `go.sum` | Change if the `gopacket` decision is a migration. |
 
-**Two rows above name a file that the tree does not hold on 2026-08-13.** This feature set
-creates `.coverage-floor`, and it creates no workflow file.
+**Three rows above name a file that the tree does not hold on 2026-08-13.** They name
+`.github/dependabot.yml`, `.github/workflows/fuzz.yml` and `.coverage-floor`. **This
+feature set creates two of the three, and it creates no workflow file.** FR-supply-6
+creates `.github/dependabot.yml`, and the two bullets below carry the other two rows.
 
 - `.github/workflows/fuzz.yml`. `features/06-fuzz-testing.md:132` names it `New.`, and
   FR-fuzz-27 states the nightly run that it holds. Issue #47 creates it. FR-supply-12,
@@ -182,7 +184,7 @@ creates `.coverage-floor`, and it creates no workflow file.
   `git log --all -- .coverage-floor` returns no commit, measured on 2026-08-13 at
   `8c3e0ae`. The project manager settled the question on 2026-08-13, and issue #429
   records that scope decision.
-  `features/00-foundation.md` `## Out of scope` records the other half.
+  `features/00-foundation.md` `## Behaviour rules` records the other half.
 
 `git ls-tree -r --name-only origin/dev -- .github` returns `.github/workflows/ci.yml` and
 `.github/workflows/release.yml` alone, measured on 2026-08-13 at `76659bb`. Issue #426
