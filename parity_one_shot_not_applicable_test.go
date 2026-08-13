@@ -83,10 +83,10 @@ func TestTheParityTableRecordsTheTwoOneShotRowsAsNotApplicable(t *testing.T) {
 	}
 }
 
-// The ruling of #356 — an exported one-shot function for a multi-packet method would export
-// the connection state that `JA4LFingerprinter` and `JA4SSHFingerprinter` hold, and
-// `v1.0.0` freezes the exported API.
-func TestPackageJa4plusExportsNoOneShotFunctionForAMultiPacketMethod(t *testing.T) {
+// The ruling of #356 — an exported one-shot function exports the connection state that
+// `JA4LFingerprinter` and `JA4SSHFingerprinter` hold. `v1.0.0` freezes the exported API, so
+// the exposure would be permanent.
+func TestPackageJa4plusExportsNoOneShotFunctionForJA4LOrJA4SSH(t *testing.T) {
 	exported := readExportedPackageNames(t)
 
 	for _, declined := range oneShotDeclinedGoNames {

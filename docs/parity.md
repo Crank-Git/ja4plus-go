@@ -7,7 +7,7 @@ onto in this library.
 **This page records a reading of each row, and it records one ruling.** A reading concludes
 what a source states, and only the maintainer makes a ruling.
 `.claude/rules/rulings.md` holds the two words. **The maintainer ruled the `generate_ja4l`
-row and the `generate_ja4ssh` row in #356 on 2026-08-13**, and the section that names each
+row and the `generate_ja4ssh` row in #356 on 2026-08-13.** The section that names each
 declined row records that ruling.
 
 ## Where the names were read
