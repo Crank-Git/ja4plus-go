@@ -21,9 +21,9 @@ import (
 //
 // Claude Code evaluates a deny rule before an allow rule, so this entry narrows the
 // broader `Bash(git:*)` entry of the allow list below. The trailing `:*` is a wildcard
-// that matches a space or the end of the command, so the entry covers `git stash` and
-// every subcommand of it. Claude Code reads a shell separator, so the entry also refuses
-// the `git stash` half of a compound command.
+// that matches a space or the end of the command. The entry therefore covers `git stash`
+// and every subcommand of it. Claude Code reads a shell separator, so the entry also
+// refuses the `git stash` half of a compound command.
 //
 // The entry matches one command prefix, and a caller that writes another prefix reaches
 // the stash. `git -C . stash push` is one such command, and the rule at the head of
