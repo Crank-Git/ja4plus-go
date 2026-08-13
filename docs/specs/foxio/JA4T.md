@@ -111,10 +111,26 @@ that method.
 - **R17** — Part e appears only when the connection carries more than one SYN-ACK. Zeek
   tests `|c$fp$ja4t$synack_delays| > 0` at `zeek/ja4t/main.zeek:229`. Wireshark tests
   `conn->syn_ack_count > 1` at `wireshark/source/packet-ja4.c:684`.
-- **R18** — Part e holds at most ten timings. Zeek stops at ten at
-  `zeek/ja4t/main.zeek:185`. Wireshark holds `#define MAX_SYN_ACK_TIMES 10` at
-  `wireshark/source/packet-ja4.c:234` and bounds the array at
-  `wireshark/source/packet-ja4.c:1290`.
+- **R18** — **Zeek writes at most ten delays, and Wireshark writes at most nine.** The two
+  counts differ, and each implementation bounds a different thing.
+  - **Zeek bounds the list of delays.** `zeek/ja4t/main.zeek:28` declares
+    `synack_delays: vector of count &default=vector();`, and `zeek/ja4t/main.zeek:180`
+    appends one delay for each SYN-ACK after the first. `zeek/ja4t/main.zeek:185` reads
+    `if (|c$fp$ja4t$synack_delays| == 10) {` and returns, so the list stops at ten
+    delays. Eleven SYN-ACK packets reach that bound.
+  - **Wireshark bounds the array of timestamps.** `wireshark/source/packet-ja4.c:234`
+    holds `#define MAX_SYN_ACK_TIMES 10`, and `wireshark/source/packet-ja4.c:1290` stores
+    a timestamp only while `conn->syn_ack_count < MAX_SYN_ACK_TIMES`. So the array holds
+    ten timestamps at most. `wireshark/source/packet-ja4.c:686` then reads
+    `for (int i = 1; i < conn->syn_ack_count; i++)` and writes one delay for each pass,
+    which is nine delays from ten timestamps.
+  - **The two counts differ by one, because one delay needs two timestamps.** Zeek counts
+    the delays it appends, and Wireshark counts the timestamps it stores. A reader
+    reproduces each count from the two loops alone.
+  - **This page records the difference, and it settles no count.** The image states no
+    count, which R13 records. #369 applied ten delays on 2026-08-13, from
+    `docs/specs/foxio/deleted-text-specifications.md:788`, and that ruling is provisional.
+    **#369 holds the reversal path, and it also holds the reset value past the bound.**
 
 ### Which packet each method reads
 
