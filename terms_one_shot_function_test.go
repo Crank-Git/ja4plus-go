@@ -109,7 +109,7 @@ func TestTheTermsTableDefinesTheOneShotFunctionAndTheMultiPacketMethod(t *testin
 		}
 
 		if row.DoNotUse == "" {
-			t.Errorf("the row for %q names no declined synonym, and `.claude/rules/ste.md` rule 7 needs one", term)
+			t.Errorf("the row for %q names no declined synonym, and every one of the other rows of the `## Terms` table names at least one", term)
 		}
 	}
 
@@ -145,11 +145,22 @@ func TestPackageJa4plusExportsNoOneShotFunctionForAMultiPacketMethod(t *testing.
 
 	exported := readExportedPackageNames(t)
 
+	// This test guards the one name that the ruling of #356 never reached, and
+	// `parity_one_shot_not_applicable_test.go` guards the two that it did. One name has one
+	// home and one reversal instruction, which the cross-member review of this batch asked
+	// for. #356 named `generate_ja4l` and `generate_ja4ssh`, so it named JA4L and JA4SSH and
+	// it named no JA4LS.
+	ruled := map[string]bool{"JA4L": true, "JA4SSH": true}
+
 	for _, method := range named {
+		if ruled[method] {
+			continue
+		}
+
 		name := "Compute" + method
 		if exported[name] {
-			t.Errorf("package ja4plus exports %q, and %s is a %s. The ruling of #356 and open question 2 of docs/specs/features/12-ja4ls.md govern that name, and the maintainer settles it before you add it",
-				name, method, multiPacketMethodTerm)
+			t.Errorf("package ja4plus exports %q, and %s is a %s. The ruling of #356 never named %s, and open question 2 of docs/specs/features/12-ja4ls.md asks whether to add the name, so the maintainer settles it before you add it",
+				name, method, multiPacketMethodTerm, method)
 		}
 	}
 }

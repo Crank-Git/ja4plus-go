@@ -130,9 +130,14 @@ that method.
   - **This page records the difference, and it settles no count.** The image states no
     count of its own. R13, R14 and R15 hold what the image states about part e, and no one
     of them states a count.
-    **#369 applied ten delays on 2026-08-13, under the delegation that
-    `.claude/rules/rulings.md` states.** The maintainer has not confirmed that ruling, so
-    it is provisional. **#369 holds the reversal path, and it also holds the reset value
+    **#369 applied ten delays on 2026-08-13, under a delegation the maintainer widened on
+    that date and recorded on issue #108.** **`.claude/rules/rulings.md` does not state that
+    widening**, and its own delegation conditions do not reach this question: the deciding
+    source ranks at 3, and one implementation departs, which that file names a reference
+    split. **The widened grant admits a rank 3 FoxIO text specification that no image
+    contradicts**, and the maintainer granted it in writing. **#398 lands the widening in
+    `.claude/rules/rulings.md`**, so a later reader finds the rule in the tree rather than in
+    an issue. The maintainer has not confirmed the ruling, so it is provisional. **#369 holds the reversal path, and it also holds the reset value
     past the bound.**
 
 ### Which packet each method reads
