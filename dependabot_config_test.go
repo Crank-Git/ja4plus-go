@@ -14,19 +14,39 @@ import (
 // one. Each test below reads the configuration, and it reads no result of Dependabot.
 
 // dependabotUpdateBlocks returns the text of each entry under the `updates` key.
-// It splits on the `- package-ecosystem:` line, which opens every entry.
+//
+// It removes every comment line first. A comment of one entry sits above the opening line
+// of the next entry, so a split of the raw file gives each block the prose of its
+// successor. A comment that quotes a key at the indent of a key would then satisfy an
+// assertion that the entry itself fails, and the test would pass with the key absent.
+//
+// It splits the remainder on the `- package-ecosystem:` line, which opens every entry.
 // It fails the test when the file holds no entry.
 func dependabotUpdateBlocks(t *testing.T) []string {
 	t.Helper()
 
 	config := readRepoFile(t, ".github/dependabot.yml")
 
-	parts := regexp.MustCompile(`(?m)^  - package-ecosystem:`).Split(config, -1)
+	var keyLines []string
+	for _, line := range strings.Split(config, "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		keyLines = append(keyLines, line)
+	}
+	keys := strings.Join(keyLines, "\n") + "\n"
+
+	parts := regexp.MustCompile(`(?m)^  - package-ecosystem:`).Split(keys, -1)
 	if len(parts) < 2 {
-		t.Fatalf(".github/dependabot.yml holds no update entry:\n%s", config)
+		t.Fatalf(".github/dependabot.yml holds no update entry:\n%s", keys)
 	}
 
 	return parts[1:]
+}
+
+// dependabotEcosystem returns the ecosystem value that opens one update block.
+func dependabotEcosystem(block string) string {
+	return strings.TrimSpace(strings.SplitN(block, "\n", 2)[0])
 }
 
 // FR-supply-6 creates the file, and the version key states the configuration syntax.
@@ -51,7 +71,7 @@ func TestTheDependabotConfigurationWatchesTwoEcosystems(t *testing.T) {
 	for _, want := range []string{`"gomod"`, `"github-actions"`} {
 		found := false
 		for _, block := range blocks {
-			if strings.HasPrefix(strings.TrimSpace(block), want) {
+			if dependabotEcosystem(block) == want {
 				found = true
 			}
 		}
@@ -61,21 +81,34 @@ func TestTheDependabotConfigurationWatchesTwoEcosystems(t *testing.T) {
 	}
 }
 
-// FR-supply-10 states the interval. FR-supply-9 states the target branch, and the
-// documentation states `Specify the branch to target for version updates.`
-// The `directory` value reaches `go.mod` at the root, and it reaches `.github/workflows`.
-func TestEveryDependabotUpdateRunsWeeklyAgainstDev(t *testing.T) {
+// FR-supply-7 names the repository root. The documentation states
+// `For GitHub Actions, use the value /.`, and the same value reaches `go.mod` at the root.
+func TestEveryDependabotUpdateReadsTheRepositoryRoot(t *testing.T) {
 	for _, block := range dependabotUpdateBlocks(t) {
-		ecosystem := strings.TrimSpace(strings.SplitN(block, "\n", 2)[0])
+		if !strings.Contains(block, "\n    directory: \"/\"\n") {
+			t.Errorf("the %s entry reads no directory of \"/\"", dependabotEcosystem(block))
+		}
+	}
+}
 
-		for _, want := range []string{
-			"\n    directory: \"/\"\n",
-			"\n      interval: \"weekly\"\n",
-			"\n    target-branch: \"dev\"\n",
-		} {
-			if !strings.Contains(block, want) {
-				t.Errorf("the %s entry holds no %s", ecosystem, strings.TrimSpace(want))
-			}
+// FR-supply-10 states the interval. The documentation states
+// `Define whether to look for version updates: daily, weekly, monthly, quarterly,
+// semiannually, yearly, or cron.`
+func TestEveryDependabotUpdateRunsWeekly(t *testing.T) {
+	for _, block := range dependabotUpdateBlocks(t) {
+		if !strings.Contains(block, "\n      interval: \"weekly\"\n") {
+			t.Errorf("the %s entry runs at no weekly interval", dependabotEcosystem(block))
+		}
+	}
+}
+
+// FR-supply-9 states the target branch. The documentation states
+// `Specify the branch to target for version updates.`
+// A security update targets the default branch, and the file records that limit.
+func TestEveryDependabotUpdateTargetsDev(t *testing.T) {
+	for _, block := range dependabotUpdateBlocks(t) {
+		if !strings.Contains(block, "\n    target-branch: \"dev\"\n") {
+			t.Errorf("the %s entry targets no branch named dev", dependabotEcosystem(block))
 		}
 	}
 }
