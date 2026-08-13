@@ -32,11 +32,15 @@ already exists, and adds only what is missing.
 |---|---|
 | `.golangci.yml` | CI uses `version: latest`, so a linter release can fail the build with no code change. |
 | A benchmark | `make bench` runs `go test -bench=.`, and the repository holds no benchmark. |
-| A coverage floor | CI writes `coverage.out` and never reads it. |
+| A coverage floor | CI writes `coverage.out` and never reads it. **Epic 7 closed this row on 2026-08-13.** |
 | A corpus command | Epic 4 needs `make corpus` and `make conformance`. |
 | The `dev` branch | The chosen branch model is dev-and-live. |
 | Tracked agent configuration | `.gitignore` ignores `CLAUDE.md` and `.claude/`, so worktree workers cannot read them. |
 | A CHANGELOG | The release notes are generated, and `v1.0.0` needs a written history. |
+
+**The table above records the state at the first draft, and it is not a reading of the tree
+today.** Read a row as a start state, and never as a claim about the present tree.
+`## Behaviour rules` below states what the tree holds for the coverage floor row.
 
 ## User stories
 
@@ -117,8 +121,13 @@ The project has no user interface. This section does not apply.
 - `make conformance` fails with a clear message when the corpus is absent. The message
   names `make corpus`.
 - The coverage floor is recorded as a number in a file, not as a hard-coded value in the
-  workflow. **Epic 7 creates that file, under issue #68.** Epic 7 sets the first value.
-  **Epic 0 created no such file at any time.**
+  workflow. **Epic 7 created that file on 2026-08-13, under issue #68**, and Epic 7 set the
+  first value. **Epic 0 created no such file at any time.** `git ls-files .coverage-floor`
+  returns the path, and the file holds `75.0`, measured on 2026-08-13 at commit `6681d3e`.
+  **`make cover` reads the FoxIO corpus, so the same command reports two numbers**: 75.0
+  with the corpus and 74.4 without it. `features/07-supply-chain.md`
+  `### The coverage floor file` holds the measurement and the environment rule. **A person
+  who raises the floor under FR-supply-19 runs `make corpus` first.**
 - A benchmark takes its input from a packet that the test builds, not from the corpus.
   Benchmarks must run without a network.
 
@@ -129,12 +138,17 @@ No entity changes. The following files change.
 | File | Change |
 |---|---|
 | `go.mod` | The `go` directive moves to `1.24`. |
-| `.github/workflows/ci.yml` | The matrix reduces to Go 1.24. The linter version pins. The `dev` branch joins the triggers. |
+| `.github/workflows/ci.yml` | The matrix reduces to one Go version. The linter version pins. The `dev` branch joins the triggers. |
 | `.golangci.yml` | New. |
 | `.gitignore` | The `CLAUDE.md` and `.claude/` lines are removed. The Claude Code block is appended. |
 | `Makefile` | The `corpus`, `conformance`, `cover` and `fuzz` targets are added. |
 | `CHANGELOG.md` | New. |
 | `benchmark_test.go` | New. |
+
+**The `.github/workflows/ci.yml` row read `The matrix reduces to Go 1.24.` until
+2026-08-13.** The FR-foundation-2 amendment above moved every job to Go 1.26, and the
+workflow states the range `~1.26.6`. **The row now names no version**, so the amendment is
+the one place that carries it.
 
 ## Interfaces
 
