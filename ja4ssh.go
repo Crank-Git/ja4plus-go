@@ -15,17 +15,16 @@ const defaultSSHWindow = 200
 
 // The maximum count of connections the state table holds. The insert that reaches this count
 // removes the connection that received no packet for the longest time.
-// Issue #221 opens one connection for each completed TCP handshake to port 22, so a port scan
-// of that port fills the table with connections that carry no SSH.
+// Issue #221 opens one connection for each completed TCP handshake to port 22. A port scan of
+// that port therefore fills the table with connections that carry no SSH.
 // `.claude/rules/parity.md` rule 2 states that the port decides the interface where this
 // project shipped nothing, and no FoxIO source addresses a state table.
 // `ja4plus/utils/state_table.py:52` sets `DEFAULT_MAX_CONNECTIONS = 10000`.
 const maxSSHConnections = 10000
 
 // The maximum age of one connection of the state table.
-// `ja4plus/utils/state_table.py:58` sets `DEFAULT_MAX_CONNECTION_AGE = 600`, and it records the
-// longest gap between two segments of one connection of the shared vector set at 320.714503
-// seconds, in `ssh-r.pcap`.
+// `ja4plus/utils/state_table.py:58` sets `DEFAULT_MAX_CONNECTION_AGE = 600`. The same file
+// records the longest gap of the shared vector set at 320.714503 seconds, in `ssh-r.pcap`.
 const maxSSHConnectionAge = 600 * time.Second
 
 // The count of packets between two age passes. One pass reads every connection, so a pass on
@@ -88,9 +87,9 @@ type JA4SSHFingerprinter struct {
 	// arrivals counts the connections the fingerprinter opened. Each connection stores
 	// the value it read at its own start, and CloseOpenWindows publishes in that order.
 	arrivals int
-	// order holds the key of each connection of the state table, and the connection that
-	// received no packet for the longest time stands at the front. The entry bound removes
-	// the front connection, and a Go map states no order of its own.
+	// order holds the key of each connection of the state table. The connection that received
+	// no packet for the longest time stands at the front, and the entry bound removes that
+	// one. A Go map states no order of its own.
 	// The state table and this list name one set of connections. openConnection is the one
 	// method that adds a connection, and removeConnection is the one method that removes
 	// one, so the two cannot disagree.
@@ -148,11 +147,13 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 		return nil, nil
 	}
 
-	// The age pass reads every connection, so it runs on the eviction interval and never on
-	// each packet. The port announces each packet to its state table at
-	// `ja4plus/fingerprinters/ja4ssh.py:122`.
-	// The pass precedes the connection of this packet, so it reaches no connection that this
-	// packet opens.
+	// The age pass reads every connection, so it runs on the eviction interval.
+	// The port announces each packet to its state table at
+	// `ja4plus/fingerprinters/ja4ssh.py:122`, and it runs the pass on the same schedule.
+	// The pass precedes the connection of this packet, so it can remove the connection that
+	// this packet continues. The packet then opens that connection again, and the new window
+	// counts from zero. The port holds the same order, and it counts such a connection as a
+	// returned connection at `ja4plus/utils/state_table.py:95`.
 	f.packets++
 	if f.packets%sshEvictionInterval == 0 {
 		f.evictAgedConnections(parser.GetPacketTimestamp(packet))
@@ -402,8 +403,8 @@ func (f *JA4SSHFingerprinter) removeConnection(connKey string) {
 // than the wall clock, so a wall clock removes state that the capture still needs. The port
 // reads the packet timestamp at `ja4plus/fingerprinters/ja4ssh.py:122`.
 //
-// The pass reads every connection. A capture states a timestamp of its own, so two packets
-// can arrive out of order and the order list then does not follow the age.
+// The pass reads every connection. A capture states a timestamp of its own, so two packets can
+// arrive out of order. The order list then does not follow the age.
 func (f *JA4SSHFingerprinter) evictAgedConnections(now time.Time) {
 	for element := f.order.Front(); element != nil; {
 		next := element.Next()

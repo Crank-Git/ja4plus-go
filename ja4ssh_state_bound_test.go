@@ -47,8 +47,8 @@ func sshBoundConnKey(clientPort uint16) string {
 }
 
 // TestJA4SSHHoldsThePortValuesOfTheStateBound reads the three values against the port.
-// `.claude/rules/parity.md` rule 2 states that the port decides the interface, so a change to
-// one of the three values is a parity change and it carries a register row.
+// `.claude/rules/parity.md` rule 2 states that the port decides the interface. A change to one
+// of the three values is therefore a parity change.
 func TestJA4SSHHoldsThePortValuesOfTheStateBound(t *testing.T) {
 	if maxSSHConnections != 10000 {
 		t.Errorf("the entry bound is %d, and `ja4plus/utils/state_table.py:52` states 10000", maxSSHConnections)
@@ -120,9 +120,9 @@ func TestJA4SSHKeepsAConnectionInsideTheAgeBound(t *testing.T) {
 	}
 }
 
-// sshBoundFingerprinterOfTwoConnections returns a fingerprinter that read one packet of the
-// first connection at the start time, and the eviction interval of packets of a second
-// connection at the later time.
+// sshBoundFingerprinterOfTwoConnections returns a fingerprinter of two connections.
+// The first connection reads one packet at the start time. The second connection reads the
+// eviction interval of packets at the later time.
 // The last packet reaches the age pass, because the fingerprinter runs that pass on the
 // eviction interval.
 func sshBoundFingerprinterOfTwoConnections(
@@ -145,10 +145,48 @@ func sshBoundFingerprinterOfTwoConnections(
 	return fingerprinter
 }
 
-// TestJA4SSHResetEmptiesTheEvictionOrder holds the removal path of Reset.
+// TestJA4SSHCountsANewWindowForAConnectionThatReturnsAfterTheAgeBound states what an eviction
+// costs. The age pass precedes the connection of the packet, so it can remove the connection
+// that the packet continues. The packet then opens that connection again, and the window
+// counts from zero.
+// The port counts such a connection as a returned connection, at
+// `ja4plus/utils/state_table.py:95`.
+func TestJA4SSHCountsANewWindowForAConnectionThatReturnsAfterTheAgeBound(t *testing.T) {
+	fingerprinter := NewJA4SSH(2)
+	start := time.Unix(1700000000, 0)
+	later := start.Add(601 * time.Second)
+
+	if _, err := fingerprinter.ProcessPacket(sshBoundPacketAt(1024, start)); err != nil {
+		t.Fatalf("the fingerprinter returns the error %v for the first packet", err)
+	}
+
+	// The pass runs on the packet that completes the eviction interval, so the second
+	// connection carries every packet up to that one.
+	for index := 2; index < sshEvictionInterval; index++ {
+		if _, err := fingerprinter.ProcessPacket(sshBoundPacketAt(1025, later)); err != nil {
+			t.Fatalf("the fingerprinter returns the error %v for packet %d", err, index)
+		}
+	}
+
+	if _, err := fingerprinter.ProcessPacket(sshBoundPacketAt(1024, later)); err != nil {
+		t.Fatalf("the fingerprinter returns the error %v for the packet that returns", err)
+	}
+
+	conn, held := fingerprinter.connections[sshBoundConnKey(1024)]
+	if !held {
+		t.Fatalf("the state table holds no connection, and the packet that returns opens one")
+	}
+
+	if conn.clientACKs != 1 {
+		t.Errorf("the connection counts %d client bare ACKs, and a connection that returns counts 1",
+			conn.clientACKs)
+	}
+}
+
+// TestJA4SSHResetEmptiesTheOrderList holds the removal path of Reset.
 // An order list that keeps a removed connection removes the wrong connection at the entry
 // bound.
-func TestJA4SSHResetEmptiesTheEvictionOrder(t *testing.T) {
+func TestJA4SSHResetEmptiesTheOrderList(t *testing.T) {
 	fingerprinter := NewJA4SSH(2)
 	timestamp := time.Unix(1700000000, 0)
 
@@ -164,10 +202,10 @@ func TestJA4SSHResetEmptiesTheEvictionOrder(t *testing.T) {
 	}
 }
 
-// TestJA4SSHCleanupConnectionEmptiesTheEvictionOrder holds the removal path of
+// TestJA4SSHCleanupConnectionEmptiesTheOrderList holds the removal path of
 // CleanupConnection. It reads the order list, because the state table and the order list name
 // one set of connections.
-func TestJA4SSHCleanupConnectionEmptiesTheEvictionOrder(t *testing.T) {
+func TestJA4SSHCleanupConnectionEmptiesTheOrderList(t *testing.T) {
 	fingerprinter := NewJA4SSH(2)
 	timestamp := time.Unix(1700000000, 0)
 
@@ -183,9 +221,9 @@ func TestJA4SSHCleanupConnectionEmptiesTheEvictionOrder(t *testing.T) {
 	}
 }
 
-// TestJA4SSHCloseConnectionWindowEmptiesTheEvictionOrder holds the removal path of
+// TestJA4SSHCloseConnectionWindowEmptiesTheOrderList holds the removal path of
 // CloseConnectionWindow. That method removes the connection after it emits the open window.
-func TestJA4SSHCloseConnectionWindowEmptiesTheEvictionOrder(t *testing.T) {
+func TestJA4SSHCloseConnectionWindowEmptiesTheOrderList(t *testing.T) {
 	fingerprinter := NewJA4SSH(2)
 	timestamp := time.Unix(1700000000, 0)
 
