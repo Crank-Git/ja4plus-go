@@ -7,10 +7,13 @@ It reads every JA4H, JA4H_r and JA4H_ro deviation that `testdata/deviations.json
 hold. It names one cause for each one. It states the count each cause closes, measured
 against the corpus at the pin of `testdata/foxio.pin`.
 
-**Every count on this page comes from a run of `make conformance` in one worktree, on
+**Every count of the reading comes from a run of `make conformance` in one worktree, on
 2026-08-13, against the corpus at `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.** Each
 candidate change was built, measured, and then reverted with `git checkout -- .`. **No
 commit of #442 holds a Go file.**
+
+**The `## Two causes are closed since this reading` section below is the one exception.**
+#465 measured it against the batch #457 head, and it names its own counts.
 
 ## Two causes are closed since this reading
 
@@ -74,8 +77,8 @@ of the per-packet set and 26 occurrences of the per-stream set carry the 337.**
 | N | Cause | Deviations | Count it closes, measured |
 |---|---|---|---|
 | 1 | The library reads no HTTP/2 request and no HTTP/3 request. | 80 | Not measured. The section states why. |
-| 2 | The library emits at the frame that ends the header block. | 96 | 64 |
-| 3 | The library emits a second value for a repeated TCP segment. | 50 | 50 |
+| 2 | The library emitted at the frame that ends the header block. **#462 closed it.** | 96 | 64 |
+| 3 | The library emitted a second value for a repeated TCP segment. **#446 closed it.** | 50 | 50 |
 | 4 | The library reads no HTTP request over UDP. | 108 | The candidate opens 36 more deviations than it closes. |
 | 5 | The request line parser rejects a path that holds a space. | 3 | 1 |
 
