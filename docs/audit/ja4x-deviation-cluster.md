@@ -272,10 +272,10 @@ cause 1 does. `http2-with-cookies.pcapng` stream 0 gains 3, and
   `tls.values("tls.handshake.certificate")`, and
   `testdata/foxio/reference/python/ja4.py:517` reads the `x509af` layer of the tshark output.
   **Neither one decrypts anything of its own.**
-- **The port carries the same gap.** `ja4plus/fingerprinters/ja4x.py:166` returns at once for
-  a packet that holds no TCP layer and no `Raw` layer, and `:279` breaks the scan on a byte
-  that is not `TLS_HANDSHAKE_CONTENT_TYPE`, which `:26` sets to `0x16`. **A change here that
-  the port does not make opens a parity difference on 11 values.**
+- **The port carries the same gap.** `ja4plus/fingerprinters/ja4x.py:166-167` returns at once
+  for a packet that holds no TCP layer and no `Raw` layer, and `:279-280` breaks the scan on
+  a byte that is not `TLS_HANDSHAKE_CONTENT_TYPE`, which `:26` sets to `0x16`. **A change
+  here that the port does not make opens a parity difference on 11 values.**
 - **The cost is high, and the library already holds part of it.** `types.go` exports
   `ParseKeyLog`, `ReadKeyLogFromCapture`, `KeyLog.Secret` and `DecryptQUICPacket`, so the key
   material and one decryptor exist. **A TLS record decryptor for TCP does not.** The JA4X
@@ -416,15 +416,16 @@ reference split, and it invents no rule.**
 - **The per-stream vector set publishes no JA4X_r key**, which the
   `## The uncovered JA4X values` section above states.
 
-## One finding this page reports and does not repair
+## One sentence this page reports and does not repair
 
 **The `JA4XFingerprinter` row of the fingerprinter state table in `docs/specs/spec.md` reads
 `guarded by mu`, and `ja4x.go` holds no such field.** `JA4XFingerprinter` holds
 `reassembler`, `processedCerts`, `certsByStream`, `streamBytes` and `lastCleanup`, and no
 mutex. `.claude/rules/concurrency.md` bars a mutex in a fingerprinter, and no other row of
 that table names one. **#458 owns no file of `docs/specs/`, so this page reports the sentence
-and repairs nothing.** The finding falsifies a sentence and it touches no behaviour, so
-`CLAUDE.md` sends it to the batch documentation round.
+and repairs nothing.** The sentence states no behaviour, so `CLAUDE.md` sends it to the batch
+documentation round. **This page is a reading and it is no audit**, so it reports a sentence
+where an audit reports a finding.
 
 ## What this reading does not answer
 
