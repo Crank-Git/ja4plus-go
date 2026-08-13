@@ -248,7 +248,7 @@ func ja4d6FormatU16List(values []uint16) string {
 	return strings.Join(parts, "-")
 }
 
-// ComputeJA4D6 is a convenience function that computes the JA4D6 fingerprint for a single packet.
+// ComputeJA4D6 is a one-shot function that computes the JA4D6 fingerprint for a single packet.
 func ComputeJA4D6(packet gopacket.Packet) string {
 	fp := NewJA4D6()
 	results, _ := fp.ProcessPacket(packet)

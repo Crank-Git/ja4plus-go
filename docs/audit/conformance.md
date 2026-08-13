@@ -12,11 +12,11 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1658 |
-| Deviations | 645 |
-| Accepted deviations | 409 |
+| Deviations | 635 |
+| Accepted deviations | 419 |
 | Unaccepted uncovered values | 202 |
 | Accepted uncovered values | 40 |
-| Accepted comparisons | 449 |
+| Accepted comparisons | 459 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -26,7 +26,7 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1103 | 92 | 266 | 142 | 34 |
+| per-stream | 1103 | 82 | 276 | 142 | 34 |
 | per-packet | 555 | 553 | 143 | 60 | 6 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.

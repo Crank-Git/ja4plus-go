@@ -830,7 +830,7 @@ func TestComputeJA4XFromDERReturnsTheEmptyStringForACertificateItCannotRead(t *t
 	// The maintainer ruled on 2026-08-11 that this shape is correct. The port states the
 	// invariant at commit `21299645366591331eb93155355b65a76a3729f3`: a fingerprinter that
 	// cannot parse a packet returns nothing, and it does not raise. `ComputeJA4XFromDER` is
-	// the convenience layer, and `Processor.ProcessPacket` is the API that carries the
+	// the one-shot function, and `Processor.ProcessPacket` is the API that carries the
 	// error. The signature therefore stays as it is, and Epic 10 freezes it.
 	//
 	// This test holds the ruling. A later change that returns an error fails here.
@@ -913,7 +913,7 @@ func TestComputeJA4DiscardsTheClientHelloParseError(t *testing.T) {
 		t.Fatal("F-24-10 no longer reproduces, and the unreadable handshake produces a value")
 	}
 
-	// The processor separates the two, and the convenience function does not.
+	// The processor separates the two, and the one-shot function does not.
 	_, errs := NewProcessor().ProcessPacket(unreadable)
 	if len(errs) == 0 {
 		t.Error("the processor reads the same packet and reports no error")

@@ -300,7 +300,10 @@ func TestJA4S_Reset(t *testing.T) {
 	}
 }
 
-func TestComputeJA4S_Convenience(t *testing.T) {
+// The one-shot function reaches a fingerprint of three parts. #399 renamed this test from
+// `TestComputeJA4S_Convenience`, because the `## Terms` table of `docs/specs/spec.md`
+// declines that word for this concept.
+func TestComputeJA4SReturnsAThreePartFingerprintForAServerHello(t *testing.T) {
 	extensions := []uint16{parser.ExtSupportedVersions, 0x0033}
 	payload := buildServerHelloPayload(0x1301, extensions, "")
 	packet := buildTCPPayloadPacket(t, payload)

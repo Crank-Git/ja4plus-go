@@ -130,15 +130,28 @@ that method.
   - **This page records the difference, and it settles no count.** The image states no
     count of its own. R13, R14 and R15 hold what the image states about part e, and no one
     of them states a count.
-    **#369 applied ten delays on 2026-08-13, under a delegation the maintainer widened on
-    that date and recorded on issue #108.** **`.claude/rules/rulings.md` does not state that
-    widening**, and its own delegation conditions do not reach this question: the deciding
-    source ranks at 3, and one implementation departs, which that file names a reference
-    split. **The widened grant admits a rank 3 FoxIO text specification that no image
-    contradicts**, and the maintainer granted it in writing. **#398 lands the widening in
-    `.claude/rules/rulings.md`**, so a later reader finds the rule in the tree rather than in
-    an issue. The maintainer has not confirmed the ruling, so it is provisional. **#369 holds the reversal path, and it also holds the reset value
-    past the bound.**
+  - **#369 applied ten delays on 2026-08-13, under a delegation the maintainer widened on
+    that date.** **`.claude/rules/rulings.md` now holds the widened delegation, under
+    `### The widened delegation of 2026-08-13`.** That section admits a FoxIO text
+    specification that ranks at 3, where no image contradicts it. It names that decisive
+    case 2. #398 landed the section on 2026-08-13, so a later reader finds the rule in the
+    tree rather than in an issue.
+  - **The maintainer has not confirmed the ruling, so it is provisional.** **#369 holds the
+    reversal path, and it also holds the reset value past the bound.**
+  - **This question leaves the narrow delegation of 2026-08-12.** The deciding source ranks
+    at 3, so narrow condition 1 fails. One implementation departs, so narrow condition 2
+    fails. That condition names a reference split.
+    `### How the two delegations relate` states the separation. It names #369 question 1 as
+    the question that fails the narrow conditions and meets decisive case 2.
+  - **No image addresses the part e count, so the rank 3 source outranks no image.**
+    `.claude/rules/rulings.md` `### A rank 3 source, and the source ranking` states why the
+    source ranking and decisive case 2 agree. It cites R13, R14, R15 and this rule as the
+    measurement.
+  - **This rule cites `.claude/rules/rulings.md` and the grant comment, because each one
+    records a different thing.** `.claude/rules/rulings.md` records what the project
+    applies. Comment 5276145707 of #108 records what the maintainer granted, in the
+    maintainer's own words. **`### The widened delegation of 2026-08-13` names that comment
+    as the location of the grant**, so the two citations agree.
 
 ### Which packet each method reads
 

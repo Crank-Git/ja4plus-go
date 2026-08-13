@@ -183,8 +183,9 @@ func ComputeHASSH(info *KEXINITInfo, isServer bool) string {
 	return fmt.Sprintf("%x", hash)
 }
 
-// ParseKEXINITFromPacket is a convenience function that extracts KEXINIT info
-// from an SSH binary packet payload (starting from the 4-byte packet length).
+// ParseKEXINITFromPacket returns the KEXINIT fields of one SSH binary packet payload.
+// The payload starts at the 4-byte packet length.
+// It returns nil when the payload holds no KEXINIT that this parser reads.
 func ParseKEXINITFromPacket(data []byte) *KEXINITInfo {
 	if len(data) < 6 {
 		return nil
