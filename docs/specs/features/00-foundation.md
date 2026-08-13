@@ -109,7 +109,7 @@ The project has no user interface. This section does not apply.
 - `make conformance` fails with a clear message when the corpus is absent. The message
   names `make corpus`.
 - The coverage floor is recorded as a number in a file, not as a hard-coded value in the
-  workflow. The floor starts at the coverage that the repository has when Epic 0 lands.
+  workflow. Epic 7 creates that file, and Epic 7 sets the first value.
 - A benchmark takes its input from a packet that the test builds, not from the corpus.
   Benchmarks must run without a network.
 
@@ -126,7 +126,6 @@ No entity changes. The following files change.
 | `Makefile` | The `corpus`, `conformance`, `cover` and `fuzz` targets are added. |
 | `CHANGELOG.md` | New. |
 | `benchmark_test.go` | New. |
-| `.coverage-floor` | New. |
 
 ## Interfaces
 
@@ -176,6 +175,7 @@ The Go toolchain interfaces are `go build`, `go test`, `go test -bench`,
 - This feature set does not add the fuzz targets. Epic 6 does that. Epic 0 adds only the
   `fuzz` target that calls them.
 - This feature set does not add `govulncheck` or Dependabot. Epic 7 does that.
+- This feature set creates no `.coverage-floor` file. Epic 7 does that, under issue #68.
 - This feature set does not change any fingerprinter.
 
 ## Open questions
