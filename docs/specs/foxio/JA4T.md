@@ -131,20 +131,22 @@ that method.
     count of its own. R13, R14 and R15 hold what the image states about part e, and no one
     of them states a count.
   - **#369 applied ten delays on 2026-08-13, under a delegation the maintainer widened on
-    that date.** **`.claude/rules/rulings.md` states that widening, under
-    `### The widened delegation of 2026-08-13`.** That section admits a rank 3 FoxIO text
-    specification that no image contradicts, and it names that decisive case 2. #398 landed
-    the section on 2026-08-13, so a later reader finds the rule in the tree rather than in
-    an issue. The maintainer has not confirmed the ruling, so it is provisional. **#369
-    holds the reversal path, and it also holds the reset value past the bound.**
+    that date.** **`.claude/rules/rulings.md` now holds the widened delegation, under
+    `### The widened delegation of 2026-08-13`.** That section admits a FoxIO text
+    specification that ranks at 3, where no image contradicts it. It names that decisive
+    case 2. #398 landed the section on 2026-08-13, so a later reader finds the rule in the
+    tree rather than in an issue.
+  - **The maintainer has not confirmed the ruling, so it is provisional.** **#369 holds the
+    reversal path, and it also holds the reset value past the bound.**
   - **This question leaves the narrow delegation of 2026-08-12.** The deciding source ranks
     at 3, so narrow condition 1 fails. One implementation departs, so narrow condition 2
-    fails, and that condition names a reference split.
+    fails. That condition names a reference split.
     `### How the two delegations relate` states the separation. It names #369 question 1 as
     the question that fails the narrow conditions and meets decisive case 2.
   - **No image addresses the part e count, so the rank 3 source outranks no image.**
-    `.claude/rules/rulings.md` `### A rank 3 source, and the source ranking` states that
-    reconciliation, and it cites R13, R14, R15 and this rule as the measurement.
+    `.claude/rules/rulings.md` `### A rank 3 source, and the source ranking` states why the
+    source ranking and decisive case 2 agree. It cites R13, R14, R15 and this rule as the
+    measurement.
   - **This rule cites `.claude/rules/rulings.md` and the grant comment, because each one
     records a different thing.** `.claude/rules/rulings.md` records what the project
     applies. Comment 5276145707 of #108 records what the maintainer granted, in the
