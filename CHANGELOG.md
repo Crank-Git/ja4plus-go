@@ -10,9 +10,9 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Every measurement in this section names the base of the run that produced it. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, issue #285 put
-108 more, issue #361 put 28 more, issue #375 put 12 more, and issue #387 put 10 more. Issue
-#409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5 of those
-10 entries. A run on
+108 more, issue #361 put 28 more, issue #375 put 12 more, and issue #387 put 10 more.
+Issue #409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5
+of those 10 entries. A run on
 the current tree
 reports 1658 matches, 635
 deviations, 419 accepted deviations and 459 register keys. The run also reports 202 unaccepted
