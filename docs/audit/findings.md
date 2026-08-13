@@ -101,10 +101,12 @@ Issue #162 states this classification, and the project manager decided it on iss
 | File | Added by |
 |---|---|
 | `internal/parser/ssh_tracker.go` | #200 |
+| `cmd/ja4plus/types.go` | #61 |
 <!-- added-files:end -->
 
-The table holds one row. Issue #200 added `internal/parser/ssh_tracker.go` after the audit
-of Epic 2, so no audit reads that file.
+The table holds two rows. Issue #200 added `internal/parser/ssh_tracker.go` after the audit
+of Epic 2, and issue #61 added `cmd/ja4plus/types.go` after it, so no audit reads either
+file.
 
 ## The record
 
