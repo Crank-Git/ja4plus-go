@@ -58,13 +58,21 @@ var methodCountForbiddenForms = []methodCountForm{
 // `testdata` holds the fetched FoxIO corpus and the verbatim FoxIO license copy, which are
 // evidence rather than documents of this project. `.golangci-cache` holds the linter cache
 // that #257 moved inside the checkout, and `bin` holds a built artifact.
+//
+// `.claude/worktrees` holds one checkout for each issue worker of a batch, and `.gitignore`
+// holds it. A run from the main checkout would otherwise read the documents of every
+// worker at once, and report a violation that belongs to another issue.
+//
+// The scan reads the rest of `.claude`, because `.claude/skills/release/SKILL.md` states
+// the count as a release gate.
 var methodCountSkipDirs = map[string]bool{
-	".git":            true,
-	".golangci-cache": true,
-	"bin":             true,
-	"node_modules":    true,
-	"testdata":        true,
-	"assets":          true,
+	".git":              true,
+	".golangci-cache":   true,
+	".claude/worktrees": true,
+	"bin":               true,
+	"node_modules":      true,
+	"testdata":          true,
+	"assets":            true,
 }
 
 // methodCountExtensions holds the file kinds the scan reads.
@@ -334,6 +342,14 @@ func TestMethodCountScanReadsEveryDocumentThatCarriesTheDoctrine(t *testing.T) {
 	} {
 		if _, found := documents[path]; !found {
 			t.Errorf("the scan reads no %s, and that document states a count", path)
+		}
+	}
+
+	// A run from the main checkout reaches the worktree of every issue worker of the
+	// batch. Those documents belong to another issue, and this scan reports none of them.
+	for path := range documents {
+		if strings.HasPrefix(path, ".claude/worktrees/") {
+			t.Errorf("the scan reads %s, and that document belongs to the worktree of another issue", path)
 		}
 	}
 }
