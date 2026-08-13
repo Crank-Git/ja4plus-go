@@ -80,21 +80,25 @@ packet belongs in `cmd/`.
 | `make fuzz` | Run each fuzz target for 30 seconds. |
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
-| `make vuln` | **Not built yet.** #65 adds the target. It runs `govulncheck`. |
+| `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
 | `make mutate` | **Not built yet.** #90 adds the target, under Epic #89. It runs the mutation sweep over the named package set. Slow. Gates nothing. |
 | `make prerelease` | **Not built yet.** #95 through #99 add the target, under Epic #94. It installs the built artifact into a clean environment and runs it. |
 | `make docs` | **Not built yet.** #84 configures MkDocs and adds the target. It builds the documentation site with `mkdocs build --strict`. |
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
 
-**The `Makefile` defines the first nine rows of this table, and none of the last four.**
+**The `Makefile` defines the first ten rows of this table, and none of the last three.**
 An absent target is work a later issue does, and never a broken target. **`make docs`
 exits 0, and that exit code reports no site build.**
 
-- `make vuln`, `make mutate` and `make prerelease` each exit 2. Each one prints one line
-  that names the target: ``make: *** No rule to make target `vuln'.  Stop.``
+- `make mutate` and `make prerelease` each exit 2. Each one prints one line
+  that names the target: ``make: *** No rule to make target `mutate'.  Stop.``
 - `make docs` prints ``make: Nothing to be done for `docs'.``, because `docs/` is a
   directory and the name holds no recipe.
+- `make vuln` exits 3 when the library calls a vulnerable function. It exits 0 when a
+  vulnerable module reaches the build and no call reaches it, and it prints a count of
+  that second kind. **The scanner reads the Go version of the `go` command on the PATH**,
+  so a second toolchain reports a second result.
 
 ## A change is done when
 
@@ -106,8 +110,9 @@ exits 0, and that exit code reports no site build.**
    it produces.
 4. `make conformance` reports no deviation that `testdata/deviations.json` does not hold,
    and the register holds no entry whose comparison now matches.
-5. **This step is unrunnable today, because the repository holds no `.coverage-floor` file.
-   #68 builds it.** Coverage does not fall below the value in `.coverage-floor`.
+5. Coverage does not fall below the value in `.coverage-floor`. **#68 created that file on
+   2026-08-13, and this step is runnable today.** Run `make cover`, and read the total
+   against the value in the file. The CI coverage job fails on a total below it.
 6. **This step is unrunnable today, because the `Makefile` defines no `docs` target. #84
    builds it.** `make docs` succeeds, when the change touches a page.
 

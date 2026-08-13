@@ -24,7 +24,9 @@ func readRepoFile(t *testing.T, path string) string {
 	return string(content)
 }
 
-// TestGoModDeclaresGo124 holds the Go 1.24 language version that FR-foundation-2 names.
+// TestGoModDeclaresGo124 holds the Go 1.24 language version that FR-foundation-1 names.
+// The citation named FR-foundation-2 until 2026-08-13. That requirement now names the
+// toolchain of the workflow, and FR-foundation-1 names this directive.
 // `github.com/gopacket/gopacket@v1.6.1` states `go 1.24.0` in its own `go.mod`, so the
 // toolchain writes that longer form here and it refuses `go 1.24`. #438 measured it.
 // Go states that the two forms name one language version:
@@ -38,7 +40,33 @@ func TestGoModDeclaresGo124(t *testing.T) {
 	}
 }
 
-func TestCIWorkflowTestsGo124Only(t *testing.T) {
+// goToolchainRange is the Go version range that every workflow of this repository names.
+// FR-foundation-2 states the range, and the comment above `jobs:` of
+// `.github/workflows/ci.yml` states why it is a range rather than a bare major version.
+//
+// **This constant is the one source of truth for the pair of workflows.** #473 read the
+// alternatives and declined each one. `actions/setup-go` names `go.mod`, `go.work`,
+// `.go-version` and `.tool-versions` for its `go-version-file` input, and its README
+// states no range support for a file. `go.mod` states a language version, and #438 bars a
+// move of it. A repository variable lives outside the tree, so no test reads it and no
+// pull request reviews it. The three tests below read this constant instead, so a
+// workflow that drifts from the pair fails a test in the tree.
+// **The range moved from `~1.26.5` to `~1.26.6` on 2026-08-13**, and a new advisory moved
+// it. The `vuln` job passed on go1.26.5 at commit `83f2127`, and it failed on the same
+// toolchain at commit `7210e80` about one hour later. No line of this repository changed
+// between the two runs. The comment above the `vuln` job of `.github/workflows/ci.yml`
+// states that property, and it states why a red `vuln` job is not a regression by default.
+const goToolchainRange = "~1.26.6"
+
+// TestCIWorkflowTestsGo126Only holds the one Go version that FR-foundation-2 names.
+// The test named Go 1.24 until 2026-08-13, and comment 5286440152 of #65 holds the
+// amendment. Issue #65 is the reversal path.
+//
+// The range excludes go1.26.0 through go1.26.5, because GO-2026-5856 names a fix at
+// 1.26.5 and four later advisories each name a fix at 1.26.6. `actions/setup-go` reads the
+// tool cache of the runner before it reads the release list, so a bare `1.26` can resolve
+// to a toolchain that this gate fails.
+func TestCIWorkflowTestsGo126Only(t *testing.T) {
 	workflow := readRepoFile(t, ".github/workflows/ci.yml")
 
 	matrix := regexp.MustCompile(`(?m)^ *go-version: \[(.*)\]$`).FindStringSubmatch(workflow)
@@ -46,8 +74,27 @@ func TestCIWorkflowTestsGo124Only(t *testing.T) {
 		t.Fatalf(".github/workflows/ci.yml holds no go-version matrix")
 	}
 
-	if matrix[1] != "'1.24'" {
-		t.Errorf("the go-version matrix is [%s], and FR-foundation-2 names Go 1.24 only", matrix[1])
+	if matrix[1] != "'"+goToolchainRange+"'" {
+		t.Errorf("the go-version matrix is [%s], and FR-foundation-2 names Go 1.26 only", matrix[1])
+	}
+}
+
+// TestCIWorkflowNamesOneGoVersion holds every job of the workflow at the version that
+// FR-foundation-2 names. The `vuln` job of #65 reports the standard library of the Go
+// version on the PATH, so a job that names a second version measures an artifact this
+// workflow never produces.
+func TestCIWorkflowNamesOneGoVersion(t *testing.T) {
+	workflow := readRepoFile(t, ".github/workflows/ci.yml")
+
+	versions := regexp.MustCompile(`(?m)^ *go-version: '(.*)'$`).FindAllStringSubmatch(workflow, -1)
+	if versions == nil {
+		t.Fatalf(".github/workflows/ci.yml holds no literal go-version input")
+	}
+
+	for _, version := range versions {
+		if version[1] != goToolchainRange {
+			t.Errorf("a job names go-version %q, and FR-foundation-2 names Go 1.26 only", version[1])
+		}
 	}
 }
 
@@ -234,17 +281,31 @@ func TestGolangciConfigNamesEveryEnabledLinter(t *testing.T) {
 	}
 }
 
-// The release workflow builds every artifact, so it must hold the same Go version as the
-// module floor. A lower version fails the release and not the pull request.
-func TestReleaseWorkflowBuildsOnGo124(t *testing.T) {
+// TestReleaseWorkflowNamesTheGoToolchainRange holds the release workflow at the range that
+// every job of `.github/workflows/ci.yml` names. This test owns
+// `.github/workflows/release.yml`, and `TestCIWorkflowNamesOneGoVersion` above owns
+// `.github/workflows/ci.yml`. Neither test reads the file of the other.
+//
+// The test named Go 1.24 until 2026-08-13, and it cited the module floor. #473 measured
+// that the two files then held different Go versions: CI proved that the library calls no
+// vulnerable function, and this workflow built the artifact that calls nine of them.
+// `go.mod` states a language version rather than a toolchain, so the module floor decides
+// no toolchain here. Issue #473 is the reversal path.
+//
+// **No pull request runs the release workflow**, because a tag push is its only trigger.
+// So this test is the one check that reads the version before a tag does.
+func TestReleaseWorkflowNamesTheGoToolchainRange(t *testing.T) {
 	workflow := readRepoFile(t, ".github/workflows/release.yml")
 
-	version := regexp.MustCompile(`(?m)^ *go-version: '(.*)'$`).FindStringSubmatch(workflow)
-	if version == nil {
+	versions := regexp.MustCompile(`(?m)^ *go-version: '(.*)'$`).FindAllStringSubmatch(workflow, -1)
+	if versions == nil {
 		t.Fatalf(".github/workflows/release.yml names no Go version")
 	}
 
-	if version[1] != "1.24" {
-		t.Errorf("the release workflow builds on Go %s, and the module floor is 1.24", version[1])
+	for _, version := range versions {
+		if version[1] != goToolchainRange {
+			t.Errorf("the release workflow builds on Go %q, and the workflows name %q",
+				version[1], goToolchainRange)
+		}
 	}
 }

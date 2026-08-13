@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-cache-check bench clean corpus conformance cover fuzz
+.PHONY: build test lint lint-cache-check bench clean corpus conformance cover fuzz vuln
 
 build:
 	go build -o bin/ja4plus ./cmd/ja4plus
@@ -56,6 +56,34 @@ fuzz:
 			go test -run '^$$' -fuzz "^$$target$$" -fuzztime 30s $$package || exit 1; \
 		done; \
 	done
+
+# FR-supply-4 holds the command that the `vuln` job of `.github/workflows/ci.yml` runs, so
+# that job and a developer run one command.
+#
+# The exit status separates a called vulnerability from an uncalled one, and FR-supply-2
+# and FR-supply-5 need that separation. Three sources of `golang.org/x/vuln` v1.6.0 state
+# the rule.
+#
+#   1. `TextHandler.Flush` in `internal/scan/text.go` returns `errVulnerabilitiesFound`
+#      only when a finding reaches the scan level.
+#   2. `errVulnerabilitiesFound` in `internal/scan/errors.go` carries exit status 3.
+#   3. `parseFlags` in `internal/scan/flags.go` sets the default scan level to `symbol`.
+#
+# So a called vulnerability exits 3. A vulnerability that reaches the build without a call
+# exits 0, and the scanner prints a count of that second kind.
+#
+# The scanner names no uncalled vulnerability at the default setting. Run
+# `govulncheck -show verbose ./...` to read that list.
+#
+# This target installs nothing, and it fails when the PATH holds no `govulncheck`. Install
+# the version that `.github/workflows/ci.yml` pins, or a developer and the job measure two
+# different tools.
+#
+# The scanner reads the Go version of the `go` command on the PATH, so a second toolchain
+# reports a second result. The `vuln` job of `.github/workflows/ci.yml` records the
+# measurement that separates three Go versions.
+vuln:
+	govulncheck ./...
 
 clean:
 	rm -rf bin/ coverage.out .golangci-cache

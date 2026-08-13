@@ -1,10 +1,27 @@
 name: Release
 
+# FR-supply-12 pins every `uses:` reference to a 40-character commit hash, because a tag
+# moves and a hash does not. FR-supply-13 gives each one a trailing comment that names the
+# version the hash carries.
+#
+# #67 resolved each hash from the GitHub API on 2026-08-13, and never from memory. The
+# trailing comment names the semantic version tag that points at the same commit.
+#
+# No pull request runs this workflow, because a tag push is its only trigger. So CI proves
+# nothing about these three pins, and the first tag after this commit is the first run
+# that reads them.
 on:
   push:
     tags:
       - 'v*'
 
+# FR-supply-14 gives this workflow the least permission set that it needs.
+# `contents: write` is that set, and the `Create Release` step is the one step that needs
+# it. The README of `softprops/action-gh-release` states `contents: write`, and it states
+# that `discussions: write` is needed for the `discussion_category_name` input. This
+# workflow passes no such input, so `discussions: write` stays absent.
+#
+# Verified against <https://github.com/softprops/action-gh-release>, retrieved 2026-08-13.
 permissions:
   contents: write
 
@@ -12,13 +29,44 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v5
+      # This workflow builds every released binary, so it names the Go version that
+      # `.github/workflows/ci.yml` names. The two files held different versions until
+      # 2026-08-13: CI proved that the library calls no vulnerable function, and this
+      # workflow built the artifact that does. On go1.24.13, the newest Go 1.24 patch,
+      # `govulncheck` v1.6.0 reports 9 called standard library vulnerabilities. Each one
+      # names a fix in a go1.25.x release or later, so no Go 1.24 patch clears them.
+      #
+      # **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.**
+      # GO-2026-5856 names a fix at 1.26.5, and GO-2026-6218, GO-2026-6090, GO-2026-5972
+      # and GO-2026-5026 each name a fix at 1.26.6. A bare `1.26` accepts go1.26.0 through
+      # go1.26.5, because `actions/setup-go` reads the tool cache of the runner before it
+      # reads the release list. The comment above `jobs:` of `.github/workflows/ci.yml`
+      # states the full reading, and `foundation_test.go` holds both files at one range.
+      #
+      # **`go.mod` does not move.** Its `go 1.24.0` directive states a language version
+      # rather than a toolchain, and #438 established that reading.
+      #
+      # No pull request runs this workflow, because a tag push is its only trigger. So CI
+      # proves nothing about this version, and the first tag after this commit is the
+      # first run that reads it.
+      #
+      # **That trigger makes a stale range here more expensive than a stale range in CI.**
+      # The cross-member review of Epic 7 measured the case on 2026-08-13. `~1.26.5` reached
+      # this file, the `vuln` job of CI failed on go1.26.5, and no run reported this file at
+      # all. Every released binary would carry four called standard library vulnerabilities,
+      # and the tag that builds it is the first reader. So a move of the range in
+      # `foundation_test.go` reads this file too.
+      #
+      # Verified against <https://github.com/actions/setup-go>, retrieved 2026-08-13. The
+      # README states the range syntax: `SemVer version range syntax: ^1.25.1, ~1.24.1,
+      # >=1.25.0-rc.1, <1.25.0, >=1.22.0 <1.24.0`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '1.24'
+          go-version: '~1.26.6'
 
       - name: Run tests
         run: go test -v -race ./...
@@ -45,7 +93,7 @@ jobs:
           sha256sum * > checksums.txt
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           generate_release_notes: true
           files: |
