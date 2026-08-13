@@ -426,7 +426,7 @@ requirement and holds the acceptance criteria.
 
 | Item | This project today | What must change | Rule | Ruling |
 |---|---|---|---|---|
-| The JA4H method code | `ja4h.go:171-173` reads the first two characters of any method token. | **No change. Already at parity.** Keep a test that holds the reading against a constructed `PROPFIND` request and a constructed `MKCOL` request. | 1 | #219 |
+| The JA4H method code | `ja4h.go:201-205` reads the first two characters of the method token, and `internal/parser/http.go:22` named nine methods before #57. A `PROPFIND` request and a `MKCOL` request therefore reached no JA4H value at all. | Read the first two characters of any method token. #57 widened the request-line pattern to the method token character set that RFC 9110 section 5.6.2 names, and `ja4h_method_code_test.go` holds the reading. | 1 | #219 |
 | JA4X on a stream that a proxy tunnel carries | Not measured. | Read the record layer without regard to the tunnel protocol that carries it. No FoxIO implementation holds the SOCKS4 values, and the same behaviour produces the `https-connect.pcap` values that two FoxIO references do hold. | 1 | #138 |
 | Subfield 2 of JA4D when a message repeats option 57 | Not measured. | Write the first Maximum DHCP Message Size, in four digits. The dissector appends each occurrence to one buffer, which gives a part a of fifteen characters where the image gives eleven. | 1 | #231 |
 | JA4D on a BOOTP message that carries no option 53 | Not measured. | Emit no value. Two FoxIO references against one, and the Zeek author recorded their own doubt in a comment. | 1 | #231 |
