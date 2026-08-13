@@ -87,11 +87,12 @@ func headerBlockTerminator(text string) (int, int) {
 // payload after the header block reaches that count. A request that names no count is
 // complete at the end of the header block.
 //
-// The maintainer ruled this gate on 2026-08-13, at issue #455, and the port's issue
-// Crank-Git/ja4plus#607 carries the other half. `zeek/ja4h/main.zeek:186` computes the JA4H
-// value in `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`,
-// and that file holds no handler that flushes a partial request. This gate follows that
-// shape, so a request whose body never completes reaches no value.
+// The maintainer ruled this gate on 2026-08-13, at issue #455.
+// The port's issue Crank-Git/ja4plus#607 carries the other half.
+// `zeek/ja4h/main.zeek:186` computes the JA4H value in
+// `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`.
+// That file holds no handler that flushes a partial request.
+// This gate follows that shape, so a request whose body never completes reaches no value.
 //
 // A `Content-Length` value that is not a byte count names no count, so the request is
 // complete at the end of the header block. That reading keeps a malformed header from

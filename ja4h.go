@@ -119,8 +119,9 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	// Try single-packet parse first (fast path)
 	if parser.IsHTTPRequest(payload) {
 		req := parser.ParseHTTPRequest(payload)
-		// The body gate holds the value until the request completes, so a packet that carries
-		// a header block and a part of the body reaches the reassembler below.
+		// The body gate holds the value until the request completes.
+		// A packet that carries a header block and a part of the body therefore reaches the
+		// reassembler below.
 		if req != nil && parser.HTTPMessageIsComplete(payload, req) {
 			fingerprint := computeJA4HFromRequest(req)
 			if fingerprint != "" {

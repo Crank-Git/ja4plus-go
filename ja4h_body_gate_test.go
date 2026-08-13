@@ -49,7 +49,8 @@ func TestJA4H_ProducesNoValueForARequestWhoseBodyNeverCompletes(t *testing.T) {
 // TestJA4H_ProducesTheValueAtThePacketThatCompletesTheBody holds the emission frame of #455.
 //
 // The library produced the value at the packet that ends the header block, and the reference
-// produces it later. `docs/audit/ja4h-deviation-cluster.md` `## Cause 2` measures the
+// produces it later. `docs/audit/ja4h-deviation-cluster.md`
+// `## Cause 2 — the library emits at the frame that ends the header block` measures the
 // difference on `http1.pcapng`.
 //
 // The test fails when the emission frame moves back, because the first segment then carries

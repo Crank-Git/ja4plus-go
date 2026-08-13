@@ -447,8 +447,8 @@ that the interface declares.
   reaches a value at a later packet, and that result carries the timestamp of that packet. **A
   request whose body never completes now reaches no value, and it produced one before.**
   `zeek/ja4h/main.zeek:186` computes the value in
-  `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`, and that
-  file holds no handler that flushes a partial request. The ruling follows that shape.
+  `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`.
+  That file holds no handler that flushes a partial request. The ruling follows that shape.
   `parser.HTTPMessageIsComplete` holds the gate, and every path that produces a JA4H value
   reads it. **The change closes 64 deviations**, and the deviations that the register does not
   hold fall from 571 to 507 with the register unchanged. **16 values moved, all of them on
