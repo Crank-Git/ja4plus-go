@@ -10,9 +10,11 @@ import (
 // no reason to obey it. #454 wrote them into `CLAUDE.md` and into `.claude/rules/ste.md`.
 //
 // These tests read for the presence of each policy, and never for the conformance of a
-// citation. A guard that reads a citation form belongs to #440 and to #351, and
-// `.claude/rules/ste.md` rule 7 bars two guards that forbid one thing. Deletion and
-// non-conformance are two failures, and each one carries one reversal instruction.
+// citation. A guard that reads a citation form belongs to #440 and to #351. The review of
+// batch #59 found two guards that forbid one thing with two reversal instructions, and
+// round 40 of the `## Changelog` of `docs/specs/spec.md` records that shape. Deletion and
+// non-conformance are two failures, and each one carries one reversal instruction, so this
+// pair is not that shape.
 //
 // These tests fail when a later edit removes a policy from the file that owns it.
 
