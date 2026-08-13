@@ -106,7 +106,7 @@ func assertWellFormedJA4(t *testing.T, value string) {
 //
 // The client hello carries the version `0x0303`, no cipher suite and no extension. The
 // cipher count and the extension count each read `00`, and each hash reaches the zero
-// sentinel that `internal/parser/hash.go:14` writes for an empty list.
+// sentinel that `internal/parser/hash.go:15` returns for an empty list.
 //
 // The port holds the same case at `tests/fuzz/test_structural_validity.py`, and the port's
 // issue #343 records the ruling. A reader who reverses the ruling reverses both halves.
