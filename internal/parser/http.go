@@ -2,6 +2,7 @@ package parser
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -59,13 +60,77 @@ var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 // TODO(#298): Read a terminator that mixes the two line endings. A block that ends
 // `\n\r\n` matches neither literal, and it reaches no value.
 func headerBlockEnd(text string) int {
+	end, _ := headerBlockTerminator(text)
+	return end
+}
+
+// headerBlockTerminator returns the index of the empty line that ends the header block, and
+// the byte count of the terminator it reads.
+// It returns -1 and 0 when the text holds no such line.
+//
+// The body starts at the sum of the two, so a caller that measures the body needs both.
+func headerBlockTerminator(text string) (int, int) {
 	end := -1
+	length := 0
 	for _, terminator := range []string{"\r\n\r\n", "\n\n"} {
 		if index := strings.Index(text, terminator); index >= 0 && (end < 0 || index < end) {
 			end = index
+			length = len(terminator)
 		}
 	}
-	return end
+	return end, length
+}
+
+// HTTPMessageIsComplete reports whether the payload holds the whole HTTP request.
+//
+// A request that names a byte count in its `Content-Length` header is complete when the
+// payload after the header block reaches that count. A request that names no count is
+// complete at the end of the header block.
+//
+// The maintainer ruled this gate on 2026-08-13, at issue #455.
+// The port's issue Crank-Git/ja4plus#607 carries the other half.
+// `zeek/ja4h/main.zeek:186` computes the JA4H value in
+// `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`.
+// That file holds no handler that flushes a partial request.
+// This gate follows that shape, so a request whose body never completes reaches no value.
+//
+// A `Content-Length` value that is not a byte count names no count, so the request is
+// complete at the end of the header block. That reading keeps a malformed header from
+// holding a value for the life of the stream.
+func HTTPMessageIsComplete(payload []byte, req *HTTPRequest) bool {
+	if req == nil {
+		return false
+	}
+
+	blockEnd, terminatorLength := headerBlockTerminator(string(payload))
+	if blockEnd < 0 {
+		return false
+	}
+
+	declared, present := httpDeclaredBodyLength(req)
+	if !present {
+		return true
+	}
+
+	return len(payload)-(blockEnd+terminatorLength) >= declared
+}
+
+// httpDeclaredBodyLength returns the byte count that the `Content-Length` header of the
+// request names.
+// It returns false when the request holds no such header, and when the value is not a byte
+// count.
+func httpDeclaredBodyLength(req *HTTPRequest) (int, bool) {
+	value, present := req.Headers["content-length"]
+	if !present {
+		return 0, false
+	}
+
+	count, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil || count < 0 {
+		return 0, false
+	}
+
+	return count, true
 }
 
 // IsHTTPRequest returns true if payload looks like an HTTP request.

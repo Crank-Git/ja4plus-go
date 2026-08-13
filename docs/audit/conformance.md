@@ -11,12 +11,12 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1664 |
-| Deviations | 571 |
-| Accepted deviations | 418 |
+| Matches | 1680 |
+| Deviations | 475 |
+| Accepted deviations | 450 |
 | Unaccepted uncovered values | 172 |
 | Accepted uncovered values | 20 |
-| Accepted comparisons | 438 |
+| Accepted comparisons | 470 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -27,7 +27,7 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
 | per-stream | 1103 | 63 | 275 | 132 | 14 |
-| per-packet | 561 | 508 | 143 | 40 | 6 |
+| per-packet | 577 | 412 | 175 | 40 | 6 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -35,7 +35,7 @@ The register holds one entry for each accepted comparison, so the accepted compa
 
 ## Deviations
 
-The run reports 989 deviations in 86 groups. One group is one capture, one method and one vector set.
+The run reports 925 deviations in 86 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -88,9 +88,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `http-empty-useragent.pcap` | per-packet | JA4H | 2 | `http-empty-useragent.pcap/9/JA4H_r.1` | the two values differ (accepted) | `ge10nn010000_User-Agent__` | `ge10nn010000_User-Agent_` |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 2 | `http-empty-useragent.pcap/9/JA4H_ro.1` | the two values differ (accepted) | `ge10nn010000_User-Agent__` | `ge10nn010000_User-Agent_` |
 | `http1-with-cookies.pcapng` | per-packet | JA4H | 1 | `http1-with-cookies.pcapng/5/JA4H_ro.1` | the two values differ (accepted) | `ge11cr04da00_Host,User-Agent,Accept,Accept-Language_yummy_cookie,tasty_cookie_yummy_cookie=choco,tasty_cookie=strawberry,` | `ge11cr04da00_Host,User-Agent,Accept,Accept-Language_yummy_cookie,tasty_cookie_yummy_cookie=choco,tasty_cookie=strawberry` |
-| `http1.pcapng` | per-packet | JA4H | 176 | `http1.pcapng/1/JA4H.1` | the library produces a value the vector does not hold | (none) | `po11nn050000_530ceba2075f_000000000000_000000000000` |
-| `http1.pcapng` | per-packet | JA4H | 176 | `http1.pcapng/1/JA4H_r.1` | the library produces a value the vector does not hold | (none) | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_` |
-| `http1.pcapng` | per-packet | JA4H | 176 | `http1.pcapng/1/JA4H_ro.1` | the library produces a value the vector does not hold | (none) | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_` |
+| `http1.pcapng` | per-packet | JA4H | 112 | `http1.pcapng/10/JA4H_r.1` | the two values differ (accepted) | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__` | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_` |
+| `http1.pcapng` | per-packet | JA4H | 112 | `http1.pcapng/10/JA4H_ro.1` | the two values differ (accepted) | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__` | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_` |
+| `http1.pcapng` | per-packet | JA4H | 112 | `http1.pcapng/100/JA4H_r.1` | the two values differ (accepted) | `ge11nn050000_Host,Date,User-Agent,X-AV-Physical-Unit-Info,X-AV-Client-Info__` | `ge11nn050000_Host,Date,User-Agent,X-AV-Physical-Unit-Info,X-AV-Client-Info_` |
 | `http2-with-cookies.pcapng` | per-packet | JA4H | 45 | `http2-with-cookies.pcapng/15/JA4H.1` | the vector holds a value the library does not produce | `ge20cn19enus_cb83bf27b7a9_c7713052b7e4_348cad68b6fb` | (none) |
 | `http2-with-cookies.pcapng` | per-packet | JA4H | 45 | `http2-with-cookies.pcapng/15/JA4H_r.1` | the vector holds a value the library does not produce | `ge20cn19enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-ch-ua-arch,sec-ch-ua-platform-version,sec-ch-ua-model,sec-ch-ua-bitness,sec-ch-ua-wow64,sec-ch-ua-full-version-list,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SSID,VISITOR_INFO1_LIVE,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W80ReNqY71qp2I8hZk8BsmVmWk_ejh3LtS-HuboNyHI73aZAnaQhqTWkTHUiz45rCPv,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA` | (none) |
 | `http2-with-cookies.pcapng` | per-packet | JA4H | 45 | `http2-with-cookies.pcapng/15/JA4H_ro.1` | the vector holds a value the library does not produce | `ge20cn19enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-ch-ua-arch,sec-ch-ua-platform-version,sec-ch-ua-model,sec-ch-ua-bitness,sec-ch-ua-wow64,sec-ch-ua-full-version-list,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSIDCC=APoG2W80ReNqY71qp2I8hZk8BsmVmWk_ejh3LtS-HuboNyHI73aZAnaQhqTWkTHUiz45rCPv,` | (none) |
@@ -520,7 +520,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `http1-with-cookies.pcapng` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
 | `http1.pcapng` | JA4 | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `http1.pcapng` | JA4S | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `http1.pcapng` | JA4H | per-packet and per-stream | deviation | 152 | 176 | — |
+| `http1.pcapng` | JA4H | per-packet and per-stream | deviation | 168 | 112 | — |
 | `http1.pcapng` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `http1.pcapng` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `http1.pcapng` | JA4L | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
