@@ -361,6 +361,10 @@ func TLSVersionString(version uint16) string {
 // The port issues `Crank-Git/ja4plus#127`, `Crank-Git/ja4plus#141` and
 // `Crank-Git/ja4plus#162` hold the ruling, and `ja4_alpn_parity_test.go` holds the
 // separating packets. Issue #50 adopted the rule here.
+//
+// Every `%c` below writes a byte of 0x7E or lower, and each guard keeps that true. `%c`
+// reads its argument as a code point, so a byte above 0x7F would reach the fingerprint as
+// two UTF-8 bytes. A guard that widens past 0x7E must build the string from a byte slice.
 func ALPNValue(protocols []string) string {
 	if len(protocols) == 0 {
 		return "00"

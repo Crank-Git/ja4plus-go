@@ -112,34 +112,45 @@ func TestTheALPNFieldWrites99WhenTheFirstByteFallsOutsideThePrintableASCIIRange(
 	}
 }
 
-func TestTheALPNFieldWrites99WhenAByteOutsideThePrintableASCIIRangeSitsAfterTheFirst(t *testing.T) {
+func TestTheALPNFieldWrites99WhenTheLastByteFallsOutsideThePrintableASCIIRange(t *testing.T) {
 	// FR-parity-9. The two FoxIO implementations dispute this input, and neither value
 	// reads a byte the packet holds. `python/ja4.py:277` reduces `0x30 0xab` to two
 	// characters and then tests the first byte alone, so it writes `0` and the tshark
 	// replacement character. `rust/ja4/src/tls.rs:616` writes `09`.
 	// `Crank-Git/ja4plus#162` holds `99` for the case.
-	//
-	// The rule reads the first byte and the last byte alone, so a byte outside the range
-	// in a middle position reaches no character of the field. The third case holds that,
-	// and the FoxIO measurement of `Crank-Git/ja4plus#141` records `01` for it.
 	cases := []struct {
 		name string
 		alpn string
-		want string
 	}{
-		{"a non-ASCII last byte", "\x30\xab", "99"},
-		{"two non-ASCII bytes at the end", "\x30\x31\xab\xcd", "99"},
-		{"two non-ASCII bytes in the middle", "\x30\xab\xcd\x31", "01"},
+		{"a non-ASCII last byte", "\x30\xab"},
+		{"two non-ASCII bytes at the end", "\x30\x31\xab\xcd"},
 	}
 
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			got := alpnParityCharacters(t, alpnParityJA4PartA(t, testCase.alpn))
-			if got != testCase.want {
+			if got != "99" {
 				t.Errorf("the ALPN characters of %q are %q, and FR-parity-9 states %q",
-					testCase.alpn, got, testCase.want)
+					testCase.alpn, got, "99")
 			}
 		})
+	}
+}
+
+func TestTheALPNFieldReadsNoByteBetweenTheFirstByteAndTheLastByte(t *testing.T) {
+	// FR-parity-9 states the position rule, and this test states its limit. The rule reads
+	// the first byte and the last byte alone, so a byte outside `0x20-0x7E` in a middle
+	// position reaches no character of the field.
+	//
+	// The FoxIO measurement of `Crank-Git/ja4plus#141` records `01` for this input, in both
+	// FoxIO implementations. FR-parity-9 reads as `99` for it, and issue #50 asks the
+	// maintainer to reword the requirement.
+	const alpn = "\x30\xab\xcd\x31"
+
+	got := alpnParityCharacters(t, alpnParityJA4PartA(t, alpn))
+	if got != "01" {
+		t.Errorf("the ALPN characters of %q are %q, and the port measurement states %q",
+			alpn, got, "01")
 	}
 }
 
@@ -150,11 +161,6 @@ func TestTheALPNFieldRepeatsTheByteWhenTheFirstALPNValueHoldsOneAlphanumericByte
 	// produces the same two characters because `[0]` and `[-1]` reach it.
 	// `rust/ja4/src/tls.rs:334` writes `0` for the absent last character, and
 	// `python/ja4.py:276` writes one character, which cannot fill a two-character field.
-	//
-	// The one-byte case tests the alphanumeric range, and the longer case tests
-	// `0x20-0x7E`. `Crank-Git/ja4plus#141` records the reason: the two implementations
-	// dispute every one-byte value, so the port holds the value it wrote before the
-	// measurement.
 	cases := []struct {
 		name string
 		alpn string
@@ -162,8 +168,6 @@ func TestTheALPNFieldRepeatsTheByteWhenTheFirstALPNValueHoldsOneAlphanumericByte
 	}{
 		{"the letter h", "h", "hh"},
 		{"the digit 3", "3", "33"},
-		{"one byte that is printable and not alphanumeric", "\x20", "99"},
-		{"one byte outside the printable range", "\xab", "99"},
 	}
 
 	for _, testCase := range cases {
@@ -172,6 +176,34 @@ func TestTheALPNFieldRepeatsTheByteWhenTheFirstALPNValueHoldsOneAlphanumericByte
 			if got != testCase.want {
 				t.Errorf("the ALPN characters of %q are %q, and FR-parity-10 states %q",
 					testCase.alpn, got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestTheALPNFieldWrites99WhenAOneByteFirstALPNValueIsNotAlphanumeric(t *testing.T) {
+	// FR-parity-10 repeats an alphanumeric byte, and this test states what a one-byte value
+	// outside the alphanumeric ranges writes. The one-byte case is the one case that tests
+	// the alphanumeric ranges rather than `0x20-0x7E`.
+	//
+	// `Crank-Git/ja4plus#141` records the reason. The two FoxIO implementations dispute
+	// every one-byte value, so the port holds the value it wrote before the measurement.
+	// `python/ja4.py:276` writes one character for `\x20`, and `rust/ja4/src/tls.rs:334`
+	// writes ` 0`.
+	cases := []struct {
+		name string
+		alpn string
+	}{
+		{"one byte that is printable and not alphanumeric", "\x20"},
+		{"one byte outside the printable range", "\xab"},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := alpnParityCharacters(t, alpnParityJA4PartA(t, testCase.alpn))
+			if got != "99" {
+				t.Errorf("the ALPN characters of %q are %q, and the port writes %q",
+					testCase.alpn, got, "99")
 			}
 		})
 	}
