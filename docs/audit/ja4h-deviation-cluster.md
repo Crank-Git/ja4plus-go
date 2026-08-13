@@ -254,8 +254,10 @@ from 635 to 585. **No other capture moved, and the accepted count held at 419.**
   `ja4plus/fingerprinters/ja4h.py:172-221` holds a `consumed_seq` state table, and
   `ja4plus/fingerprinters/ja4h.py:130` reads it before the reassembler. **This library was
   behind the port on one rule, and #446 closed that parity difference.**
-- **No register entry closes.** The register holds 4 entries for this capture, and each one
-  names ruling #285.
+- **No register entry closes.** The register holds 4 JA4H entries for this capture, and each
+  one names ruling #285. **The sentence read `4 entries for this capture` until #465**, and
+  the capture reaches 10 entries. The other 6 name JA4L or JA4LS under ruling #361, and this
+  page reads no JA4L deviation.
 - **The cost is one bounded state table.** The fingerprinter holds the consumed sequence range
   of each stream. `.claude/rules/concurrency.md` requires a removal path, so the entry belongs
   in `CleanupConnection` and in `Reset`, and the table needs the bound that
