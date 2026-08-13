@@ -419,8 +419,8 @@ requirement and holds the acceptance criteria.
 | Item | This project today | What must change | Rule | Ruling |
 |---|---|---|---|---|
 | The empty option list, the absent maximum segment size and the zero window scale | `ja4t.go:68`, `ja4t.go:73` and `ja4t.go:87` write `%d` with no padding and no sentinel. | Write the two-digit form. An empty option list writes `00`, part c writes two digits, and a window scale of zero writes `00`. The Wireshark dissector and the Zeek package both write it, and the deleted `technical_details/JA4T.md` corroborates it in prose. | 1 | #215 |
-| Part e of JA4TS | Not implemented. | Write part e. A connection the server answered twice or more carries the delay of each SYN-ACK after the first, in whole seconds. A connection the server answered once omits part e. | 1 | #226 |
-| The JA4TS value that a RST produces | Not implemented. | Append `-R` and the delay of the RST to part e, on a connection that already holds a delay. Read part a through part d from the first SYN-ACK. **Test the RST bit rather than the whole flag byte**, so a RST that also carries ACK reaches the rule. A RST on a connection with no delay produces no value, and a client RST produces no value. | 1 | #246 |
+| Part e of JA4TS | `ja4ts.go` writes it. **Closed by #56.** | Write part e. A connection the server answered twice or more carries the delay of each SYN-ACK after the first, in whole seconds. A connection the server answered once omits part e. | 1 | #226 |
+| The JA4TS value that a RST produces | `ja4ts.go` writes it. **Closed by #56.** | Append `-R` and the delay of the RST to part e, on a connection that already holds a delay. Read part a through part d from the first SYN-ACK. **Test the RST bit rather than the whole flag byte**, so a RST that also carries ACK reaches the rule. A RST on a connection with no delay produces no value, and a client RST produces no value. | 1 | #246 |
 
 #### JA4H, JA4X, JA4D and JA4D6
 
@@ -481,7 +481,7 @@ lookup table, and one tracked register.
 | `JA4SFingerprinter` | `quicDCIDs`, `results` | QUIC connection identifier | `Reset`, `CleanupConnection` |
 | `JA4HFingerprinter` | `reassembler`, `results` | Five-tuple | `Reset`, `CleanupConnection` |
 | `JA4TFingerprinter` | `results` | — | `Reset` |
-| `JA4TSFingerprinter` | `connections`, `results` | Five-tuple. **New. Part e and the RST value need the first SYN-ACK of the connection.** | `Reset`, `CleanupConnection` |
+| `JA4TSFingerprinter` | `connections`, `results` | Five-tuple. **Built by #56. Part e and the RST value need the first SYN-ACK of the connection.** | `Reset`, `CleanupConnection` |
 | `JA4LFingerprinter` | `connections`, `results` | Five-tuple | `Reset`, `CleanupConnection` |
 | `JA4XFingerprinter` | `streams`, `processedCerts`, `results`, `lastCleanup`, guarded by `mu` | Five-tuple, certificate hash | `Reset`, `CleanupConnection`, an interval sweep |
 | `JA4SSHFingerprinter` | `connections`, `packetCount`, `results` | Five-tuple | `Reset`, `CleanupConnection`, `CloseOpenWindows`, `CloseConnectionWindow` |
