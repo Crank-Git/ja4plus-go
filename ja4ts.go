@@ -25,7 +25,7 @@ const maxJA4TSDelays = 10
 // `ja4plus/fingerprinters/ja4ts.py:25` of tag `v1.1.0`.
 const ja4tsSynAckTimeout = 120 * time.Second
 
-// maxJA4TSConnections bounds the connection table.
+// maxJA4TSConnections bounds the state table.
 // FoxIO bounds the delay list and states no bound on the connection count. A monitor reads
 // a SYN-ACK for every connection on the wire, so this table needs one of its own. The port
 // holds `MAX_TRACKED_CONNECTIONS` at `ja4plus/fingerprinters/ja4ts.py:31` of tag `v1.1.0`.
@@ -54,10 +54,10 @@ type ja4tsConnState struct {
 // One JA4TSFingerprinter serves one goroutine. It holds state that no lock guards.
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4TSFingerprinter struct {
-	// connections holds one entry for each connection that sent a SYN-ACK, keyed by the
-	// source address, the source port, the destination address and the destination port
-	// of that packet. Every SYN-ACK travels from the server, so the key names the server
-	// first and a client packet reverses it.
+	// connections holds one entry for each connection that sent a SYN-ACK. The key names
+	// four fields of that packet: the source address, the source port, the destination
+	// address and the destination port. Every SYN-ACK travels from the server, so the key
+	// names the server first. A client packet reverses it.
 	connections map[string]*ja4tsConnState
 	// arrivals counts the connections the fingerprinter opened. Each entry stores the
 	// value it read at its own start.
@@ -69,7 +69,7 @@ func NewJA4TS() *JA4TSFingerprinter {
 	return &JA4TSFingerprinter{connections: map[string]*ja4tsConnState{}}
 }
 
-// ensure fills the connection table that the constructor fills.
+// ensure fills the state table that the constructor fills.
 // A caller who writes `var f JA4TSFingerprinter` reaches a nil map, and a write to a nil
 // map panics. F-24-4 through F-24-9 record the same defect on six other types, and every
 // entry point of this type calls this method first.
@@ -80,8 +80,8 @@ func (f *JA4TSFingerprinter) ensure() {
 }
 
 // ProcessPacket processes a packet and returns JA4TS fingerprint results for SYN-ACK packets.
-// It returns one result for a RST packet that ends a connection which already holds a
-// delay, and it returns no result for any other packet.
+// It returns one result for a RST packet that ends a connection with a delay. It returns
+// no result for any other packet.
 func (f *JA4TSFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
 	f.ensure()
 
@@ -146,9 +146,10 @@ func ja4tsConnKey(srcIP string, srcPort uint16, dstIP string, dstPort uint16) st
 // It rounds to the nearest second, half away from zero, which is the Wireshark reading of
 // the reference split that `docs/specs/foxio/JA4T.md` R24 records. Wireshark calls the C
 // `round` at `wireshark/source/packet-ja4.c:277`, and Zeek truncates at
-// `zeek/ja4t/main.zeek:180`. The maintainer read the port's shipped rule on 2026-08-13, at
-// issue #56, and the port holds `_delay_seconds` at `ja4plus/fingerprinters/ja4ts.py:43`
-// of tag `v1.1.0`.
+// `zeek/ja4t/main.zeek:180`. R24 names issue #18, which recorded the split. **Issue #56
+// holds the reading this library follows**, and the maintainer read the port's shipped
+// rule on 2026-08-13. The port holds `_delay_seconds` at
+// `ja4plus/fingerprinters/ja4ts.py:43` of tag `v1.1.0`.
 //
 // A capture that holds a SYN-ACK out of order produces a negative delay, so this function
 // reads the sign apart from the magnitude.
@@ -199,7 +200,17 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 
 	// FoxIO counts ten retransmissions and no more, so the eleventh timestamp is the last
 	// one this entry stores. A later SYN-ACK changes no fingerprint, and it renews the
-	// entry not at all, so the entry ages from the tenth retransmission.
+	// entry not at all, so the entry ages from the tenth retransmission. The port holds
+	// the same guard at `ja4plus/fingerprinters/ja4ts.py:161` of tag `v1.1.0`.
+	//
+	// The two references split on the packet after the cap, and #369 asks the maintainer
+	// to rule. Wireshark stores no later time at
+	// `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen last time for the
+	// RST delay at `wireshark/source/packet-ja4.c:694`, which is the behavior below. Zeek
+	// assigns `last_ts` on every SYN-ACK at `zeek/ja4t/main.zeek:183`, and it then stops
+	// setting the next packet threshold at `zeek/ja4t/main.zeek:185-189`, so it observes
+	// no later packet of the connection and writes no reset value at all. No capture of
+	// the corpus reaches an eleventh SYN-ACK, so no vector separates the two.
 	if len(conn.times) <= maxJA4TSDelays {
 		conn.times = append(conn.times, now)
 	}
@@ -279,9 +290,9 @@ func (f *JA4TSFingerprinter) evictOldestConnection() {
 
 // ComputeJA4TS is a convenience function that computes the JA4TS fingerprint for a single packet.
 //
-// It reads one packet through a new fingerprinter, so the packet is always the first
-// SYN-ACK of its connection and the value carries no part e. A caller that needs part e
-// keeps one JA4TSFingerprinter across the packets of the connection.
+// It reads one packet through a new fingerprinter, so that packet is always the first
+// SYN-ACK of its connection. The value therefore carries no part e. A caller that needs
+// part e keeps one JA4TSFingerprinter across the packets of the connection.
 func ComputeJA4TS(packet gopacket.Packet) string {
 	fp := NewJA4TS()
 	results, _ := fp.ProcessPacket(packet)

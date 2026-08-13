@@ -48,7 +48,7 @@ func TestJA4TS_ACKOnly(t *testing.T) {
 }
 
 func TestJA4TS_Reset(t *testing.T) {
-	// Reset drops the connection table, so the second read sees the packet as the first
+	// Reset drops the state table, so the second read sees the packet as the first
 	// SYN-ACK of a new connection and writes no part e. Without Reset the second read
 	// writes the delay `0`, which `TestJA4TS_WritesOnePartEDelayWhenTheServerAnswersTwice`
 	// holds.

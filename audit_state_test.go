@@ -116,7 +116,7 @@ func auditStatePacketSet(t *testing.T) []gopacket.Packet {
 // Issue #25 removed the results slice, and these three held nothing else. A field that
 // returns to one of them needs a removal path, so this list is the reader's warning.
 //
-// `JA4TSFingerprinter` left this list at issue #56, which gave it the connection table
+// `JA4TSFingerprinter` left this list at issue #56, which gave it the state table
 // that part e and the RST value read.
 var auditStateStatelessTypes = []string{
 	"JA4TFingerprinter", "JA4DFingerprinter", "JA4D6Fingerprinter",

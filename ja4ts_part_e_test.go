@@ -185,8 +185,9 @@ func TestJA4TS_WritesTwoPartEDelaysWhenTheServerAnswersThreeTimes(t *testing.T) 
 //
 // `docs/specs/foxio/JA4T.md` R24 records a reference split. Zeek truncates each delay at
 // `zeek/ja4t/main.zeek:180`, and Wireshark rounds each delay at
-// `wireshark/source/packet-ja4.c:277`. The maintainer read the port's shipped rule on
-// 2026-08-13 and this library follows Wireshark. The port holds `_delay_seconds` at
+// `wireshark/source/packet-ja4.c:277`. R24 names issue #18, which recorded the split.
+// Issue #56 holds the reading this library follows, and the maintainer read the port's
+// shipped rule on 2026-08-13. The port holds `_delay_seconds` at
 // `ja4plus/fingerprinters/ja4ts.py:43` of tag `v1.1.0`, the register row
 // `Part e of JA4TS, the time since the last SYN-ACK` at
 // `docs/specs/foxio/port-register.md:87` carries the port half, and the port issue is
@@ -241,7 +242,7 @@ func TestJA4TS_HoldsTenPartEDelaysAtMost(t *testing.T) {
 	}
 }
 
-// The connection table of #56 is a map, and a write to a nil map panics. A caller who
+// The state table of #56 is a map, and a write to a nil map panics. A caller who
 // writes `var f JA4TSFingerprinter` reaches that nil map, so `ensure` fills it on the first
 // call. F-24-4 through F-24-9 of `docs/audit/findings.md` record the same defect on six
 // other types, and `audit_panic_test.go` holds the six.
@@ -256,6 +257,39 @@ func TestJA4TS_AZeroValueFingerprinterReadsItsFirstPacketWithNoPanic(t *testing.
 
 	cleaner.CleanupConnection(ja4tsServerIP.String(), ja4tsServerPort,
 		ja4tsClientIP.String(), ja4tsClientPort, "tcp")
+}
+
+// The reset delay of a connection that passed the ten-delay cap reads the eleventh
+// SYN-ACK, and never a later one.
+//
+// **This test pins a reading, and #369 asks the maintainer to rule the question.** The two
+// references split. Wireshark stores no time after the tenth at
+// `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen last time at
+// `wireshark/source/packet-ja4.c:694`. Zeek stops setting the next packet threshold at
+// `zeek/ja4t/main.zeek:185-189`, so it observes no RST of such a connection and writes no
+// reset value. This library follows Wireshark, which is the behavior the port ships at
+// `ja4plus/fingerprinters/ja4ts.py:161` of tag `v1.1.0`, under its issue #246.
+//
+// No capture of the FoxIO corpus reaches an eleventh SYN-ACK, so this test is the one
+// record of the behavior. It fails when a later change reverses the reading.
+func TestJA4TS_ReadsTheEleventhSynAckForTheResetDelayPastTheCap(t *testing.T) {
+	fingerprinter := NewJA4TS()
+
+	// Eleven SYN-ACK packets, one second apart, fill the ten-delay cap.
+	for index := 0; index < 11; index++ {
+		_ = ja4tsValue(t, fingerprinter, ja4tsSynAck(t, ja4tsAt(float64(index))))
+	}
+
+	// A twelfth SYN-ACK stores no time, so it moves the reset delay not at all.
+	_ = ja4tsValue(t, fingerprinter, ja4tsSynAck(t, ja4tsAt(15)))
+
+	// The RST sits 7 seconds after the eleventh SYN-ACK, and 2 seconds after the twelfth.
+	got := ja4tsValue(t, fingerprinter, ja4tsServerReset(t, ja4tsAt(17)))
+	want := ja4tsPrefix + "_1-1-1-1-1-1-1-1-1-1-R7"
+
+	if got != want {
+		t.Errorf("the RST packet produces %q, want %q", got, want)
+	}
 }
 
 // FR-parity-45. `CleanupConnection` clears one entry of the state table.
@@ -321,7 +355,7 @@ func TestJA4TS_DropsAConnectionThatReceivesNoSynAckForTheTimeout(t *testing.T) {
 	}
 }
 
-// The connection table holds at most `maxJA4TSConnections` connections.
+// The state table holds at most `maxJA4TSConnections` connections.
 // FoxIO bounds the delay list and states no bound on the connection count, and a monitor
 // reads a SYN-ACK for every connection on the wire. The port holds
 // `MAX_TRACKED_CONNECTIONS` at `ja4plus/fingerprinters/ja4ts.py:31` of tag `v1.1.0`.
