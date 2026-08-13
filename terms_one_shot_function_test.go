@@ -1,0 +1,151 @@
+package ja4plus
+
+import (
+	"regexp"
+	"strings"
+	"testing"
+)
+
+// These tests hold the vocabulary that the ruling of #356 needs, and issue #379 adds it.
+//
+// The maintainer ruled on 2026-08-13 that `generate_ja4l` and `generate_ja4ssh` are
+// `not applicable`, because a one-shot call reaches no value for a method that reads more
+// than one packet. `.claude/rules/ste.md` states that every domain word sits in the
+// `## Terms` table of `docs/specs/spec.md`, and that table held neither word.
+//
+// `parity_one_shot_not_applicable_test.go` holds the ruling itself, against two names that
+// it writes as literals. These tests read the term row instead, so they cover every method
+// the row names. `ComputeJA4LS` is the name that separates them: FR-ja4ls-10 of
+// `docs/specs/features/12-ja4ls.md` proposes it, and no other test rejects it.
+
+// termsTableFile names the document that holds the controlled vocabulary.
+const termsTableFile = "docs/specs/spec.md"
+
+// termsTableHeading opens the section that holds the table.
+const termsTableHeading = "\n## Terms\n"
+
+// oneShotFunctionTerm names the term that a reader of the ruling of #356 looks up.
+const oneShotFunctionTerm = "one-shot function"
+
+// multiPacketMethodTerm names the term that states the other side of that distinction.
+const multiPacketMethodTerm = "multi-packet method"
+
+// methodNamePattern matches one JA4+ method name that a term row states.
+var methodNamePattern = regexp.MustCompile(`JA4[A-Z0-9]*`)
+
+// termsRow holds the four columns of one row of the `## Terms` table.
+type termsRow struct {
+	Term         string
+	PartOfSpeech string
+	Meaning      string
+	DoNotUse     string
+}
+
+// readTermsTableRows returns one entry for each term row of the `## Terms` table.
+//
+// The table sits between its own heading and the next second-level heading, so a later
+// table of the document reaches no row of this map.
+func readTermsTableRows(t *testing.T) map[string]termsRow {
+	t.Helper()
+
+	page := readRepoFile(t, termsTableFile)
+
+	start := strings.Index(page, termsTableHeading)
+	if start < 0 {
+		t.Fatalf("%s holds no %q heading, and the controlled vocabulary sits under it", termsTableFile, "## Terms")
+	}
+
+	section := page[start+len(termsTableHeading):]
+	if end := strings.Index(section, "\n## "); end >= 0 {
+		section = section[:end]
+	}
+
+	rows := map[string]termsRow{}
+
+	for _, line := range strings.Split(section, "\n") {
+		if !strings.HasPrefix(line, "| ") {
+			continue
+		}
+
+		cells := strings.Split(strings.Trim(line, "|"), "|")
+		if len(cells) != 4 {
+			continue
+		}
+
+		term := strings.TrimSpace(cells[0])
+		if term == "Term" || strings.HasPrefix(term, "---") {
+			continue
+		}
+
+		rows[term] = termsRow{
+			Term:         term,
+			PartOfSpeech: strings.TrimSpace(cells[1]),
+			Meaning:      strings.TrimSpace(cells[2]),
+			DoNotUse:     strings.TrimSpace(cells[3]),
+		}
+	}
+
+	if len(rows) == 0 {
+		t.Fatalf("%s holds no term row under the %q heading", termsTableFile, "## Terms")
+	}
+
+	return rows
+}
+
+// The word that carries a ruling belongs in the controlled vocabulary, and #379 adds these
+// two. A reader of FR-ja4ls-10 looks the words up here.
+func TestTheTermsTableDefinesTheOneShotFunctionAndTheMultiPacketMethod(t *testing.T) {
+	rows := readTermsTableRows(t)
+
+	for _, term := range []string{oneShotFunctionTerm, multiPacketMethodTerm} {
+		row, held := rows[term]
+		if !held {
+			t.Errorf("the `## Terms` table of %s holds no row for %q, and the ruling of #356 turns on that word", termsTableFile, term)
+			continue
+		}
+
+		if row.PartOfSpeech != "noun" {
+			t.Errorf("the row for %q states the part of speech %q, and both terms are nouns", term, row.PartOfSpeech)
+		}
+
+		if row.DoNotUse == "" {
+			t.Errorf("the row for %q names no declined synonym, and `.claude/rules/ste.md` rule 7 needs one", term)
+		}
+	}
+
+	if row, held := rows[multiPacketMethodTerm]; held {
+		if !strings.Contains(row.Meaning, oneShotFunctionTerm) {
+			t.Errorf("the row for %q states the meaning %q, and it must name the term %q that it stands against",
+				multiPacketMethodTerm, row.Meaning, oneShotFunctionTerm)
+		}
+	}
+}
+
+// The ruling of #356 — a multi-packet method holds connection state, and an exported
+// one-shot function for it would carry that state across the package boundary.
+//
+// This test reads the method names from the term row, so a method the row later names is
+// covered without a change here. `ComputeJA4LS` is the name no other test rejects.
+func TestPackageJa4plusExportsNoOneShotFunctionForAMultiPacketMethod(t *testing.T) {
+	rows := readTermsTableRows(t)
+
+	row, held := rows[multiPacketMethodTerm]
+	if !held {
+		t.Fatalf("the `## Terms` table of %s holds no row for %q", termsTableFile, multiPacketMethodTerm)
+	}
+
+	named := methodNamePattern.FindAllString(row.Meaning, -1)
+	if len(named) == 0 {
+		t.Fatalf("the row for %q names no method, and this test reads the method names from it", multiPacketMethodTerm)
+	}
+
+	exported := readExportedPackageNames(t)
+
+	for _, method := range named {
+		name := "Compute" + method
+		if exported[name] {
+			t.Errorf("package ja4plus exports %q, and %s is a %s. Reverse the ruling of #356 before you add it",
+				name, method, multiPacketMethodTerm)
+		}
+	}
+}

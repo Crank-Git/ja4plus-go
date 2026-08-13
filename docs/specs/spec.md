@@ -196,6 +196,8 @@ across both repositories, because a reader moves between them.
 | idle signal | noun | The message a cross-session agent returns in place of text, to report that it holds no work. | idle notification, heartbeat, ping |
 | spawn path | noun | The mechanism a spawned agent returns its result through. This project measures two: the in-process path, which delivers a result to the spawner without a request, and the cross-session path, which delivers a result to the session that addresses the agent, and which can return an idle signal and no text instead. Row `mailbox` above declines the word `channel`, and this project uses that word for no meaning. | spawn mode, return path |
 | uncovered value | noun | One value that the library produces, and whose vector file publishes no key for the method. The conformance run counts it apart from a match and apart from a deviation, and it fails no gate. The register may hold a decline for one. | unmatched value, unreached value, skipped value |
+| one-shot function | noun | The exported function that computes one fingerprint from one packet and holds no connection state. `ComputeJA4T` is one. A multi-packet method reaches no one-shot function. | convenience function, helper, single-packet API, stateless function |
+| multi-packet method | noun | One method that reads more than one packet of a connection and holds connection state between them. JA4L, JA4LS and JA4SSH are the three, and each one reaches no one-shot function. A method that reassembles one message from more than one packet is not one. The word `multi-packet` also describes such a message, and that meaning names no method. | stateful method, multi-packet state, connection-state method |
 
 ## Goals
 
