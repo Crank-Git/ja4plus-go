@@ -18,8 +18,8 @@ commit of #442 holds a Go file.**
 
 **Two sections below carry a count that a later run measured, and each one names its own
 run.** #465 measured `## Two causes are closed since this reading` against the batch #457
-head. #467 measured `### The maintainer ruled split S1 on 2026-08-13` against the batch
-#478 head.
+head. #467 measured `### The maintainer ruled split S1 on 2026-08-13` against the
+batch #478 head.
 
 ## Two causes are closed since this reading
 
@@ -472,8 +472,8 @@ compose, and neither one closes a deviation on its own.
 140 entries for it today. **The count read 108 until #462**, which wrote the 32 entries that
 cause 2 predicted.
 
-**#285 no longer names every JA4H entry of the register.** #467 added 108 entries that name
-#441, so the register holds 248 JA4H entries across the two rulings.
+**#285 no longer names every JA4H entry of the register.** #467 added 108 entries under
+ruling #441, so the register holds 248 JA4H entries across the two rulings.
 
 **Three causes hide a #285 difference behind a larger one.** A frame that produces no value at
 all reports one deviation, and the same frame reports the #285 difference once it produces a
