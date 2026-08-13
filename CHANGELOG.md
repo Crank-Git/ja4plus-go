@@ -660,6 +660,18 @@ that the interface declares.
 
 ### Changed
 
+- **`--types` returns an error for a token that names no method, and the command exits 1.** It
+  exited 0 and printed an empty table before, so a caller that misspelled a token read the
+  absence of output as the absence of fingerprints. `cmd/ja4plus/types.go` holds the eleven
+  tokens, and the error names every one of them. **The shape follows the port**, at
+  `ja4plus/cli.py:82-92` of tag `v1.1.0`. **A script that passes an unknown token changes
+  behaviour**, and `--types` with an empty list still selects nothing and exits 0, which the
+  port also does. Issue #61 built it.
+- **`--types ja4ls` selects the JA4LS values alone, and `--types ja4l` still selects both.**
+  The token is a superset over the port, which rejects `ja4ls` today, and
+  `Crank-Git/ja4plus#605` proposes it there so the two converge. The filter reads the
+  `JA4L-S=` label of the value, because a JA4LS result carries `Type: "ja4l"`. Issue #61 built
+  it, and it closes R9 question 3.
 - **The register declines 108 per-packet JA4H raw values, and the library keeps the per-stream
   shape.** The keys name 57 `JA4H_ro` comparisons and 51 `JA4H_r` comparisons, on 9 captures.
   **The maintainer ruled on 2026-08-12 in issue #285.** The two FoxIO vector sets disagree, and

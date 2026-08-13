@@ -166,7 +166,10 @@ never as a count of methods.</p>
   <li><code>ja4ssh.go:176-180</code> caps the JA4SSH window threshold at
       <code>min(packetCount, 10)</code>. The port names this a defect of this repository and
       fixed the same shape on its own side in its issue #28.</li>
-  <li><code>ja4l.go:198</code> sets <code>Type: "ja4l"</code> and writes no JA4LS value.</li>
+  <li><strong>Repaired on 2026-08-13.</strong> This entry read <code>ja4l.go:198</code> sets
+      <code>Type: "ja4l"</code> and writes no JA4LS value. <code>ja4l.go:183</code> and
+      <code>ja4l.go:381</code> each write a <code>JA4L-S=</code> value, and the maintainer ruled
+      in issue #60 that the result keeps <code>Type: "ja4l"</code>. This is no longer a defect.</li>
   <li><code>ja4t.go:68</code>, <code>:73</code> and <code>:87</code> write <code>%d</code>
       with no padding and no <code>00</code> sentinel, where two FoxIO implementations write
       a two-digit form.</li>

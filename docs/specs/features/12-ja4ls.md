@@ -9,9 +9,14 @@ mockups: []
 
 ## Purpose
 
-JA4LS is the server form of the JA4L latency method. **This project does not implement
-it.** `ja4l.go:198` sets `Type: "ja4l"` and the fingerprinter writes no second method
-name.
+JA4LS is the server form of the JA4L latency method. **This project emits the value, and
+it emits no second type.** `ja4l.go:183` and `ja4l.go:381` each write a `JA4L-S=` label, and
+`ja4l.go:493` writes `Type: "ja4l"` for every result of the fingerprinter.
+
+**This section read `This project does not implement it` and cited `ja4l.go:198` until
+2026-08-13, and both statements were wrong.** `ja4l.go:198` holds `return nil, nil`. The
+maintainer ruled on 2026-08-13, in issue #60, that the result keeps `Type: "ja4l"`, and
+`## Behaviour rules` below states the label rule the reader uses to tell the two apart.
 
 Round 2 of this spec listed JA4LS as a non-goal, under a bullet that grouped it with JA4E,
 JA4SScan and JA4TScan. **That grouping was wrong.** JA4LS is a defined method with
@@ -52,7 +57,9 @@ it.
 
 ### The method
 
-**The maintainer ruled FR-ja4ls-1 on 2026-08-13.** The requirement was wrong, and the code
+**The maintainer ruled FR-ja4ls-1 on 2026-08-13**, and the ruling is recorded at
+https://github.com/Crank-Git/ja4plus-go/issues/60#issuecomment-5275948279. The requirement was
+wrong, and the code
 was right. It read `JA4LFingerprinter` emits a result whose `Type` is `ja4ls` before that
 ruling. `ja4l.go:183` and `ja4l.go:381` each emit the server value today, and `ja4l.go:493`
 writes `Type: "ja4l"` for every result. `## Behaviour rules` below states that JA4LS reaches
@@ -92,7 +99,9 @@ Neither amendment changes code, and `ja4ls_emission_test.go` holds each one as a
 
 - **FR-ja4ls-10** — `ComputeJA4LS` computes the JA4LS value for one connection, matching
   the shape of the existing `ComputeJA4L`.
-- **FR-ja4ls-11** — `Processor` returns the result of every method, and the caller selects
+- **FR-ja4ls-11** — **Provisional, and the reversal path is issue #61.** #61 measured that
+  `Processor` holds no type filter at all, so the requirement as written named a surface that
+  does not exist. `Processor` returns the result of every method, and the caller selects
   the methods it reads.
 - **FR-ja4ls-12** — `cmd/ja4plus` accepts `ja4ls` in `--types`, and that token selects the
   JA4LS value alone.
@@ -146,7 +155,10 @@ and each entry names #361. **No reading covers the Wireshark generator.**
 body states `Write no register entry until the cause is read.` A later issue writes those
 entries once #376 reads why the Wireshark generator publishes no JA4L key. **#376 records
 that an uncovered value fails no gate.** The run of #63 counts 33 uncovered per-packet JA4LS
-values, and `testdata/deviations.json` holds no key whose method is `JA4LS`.
+values, and the register accepts none of them. **Read that sentence with the two spellings in
+mind.** The register spells the method `JA4L-S`, and it holds 24 such per-stream keys under
+ruling #361. **It holds no per-packet key for the method under either spelling**, and those 33
+values are the ones #376 owns.
 
 **This slice adds no entry to `testdata/deviations.json`.** The register holds 449 entries
 before this slice, and 449 after it.
@@ -160,7 +172,7 @@ by a ruling, and that ruling restores the per-packet set to FR-ja4ls-22.
 
 1. The analyst runs `ja4plus --types ja4l,ja4ls capture.pcap`.
 2. The program prints one JA4L value and one JA4LS value per connection.
-3. The analyst compares the two hop counts to tell which endpoint is distant.
+3. The analyst compares the two time-to-live values to tell which endpoint is distant.
 
 ### An engineer implements the method
 
@@ -172,7 +184,8 @@ by a ruling, and that ruling restores the per-packet set to FR-ja4ls-22.
 
 ## Screens & states
 
-The command-line output gains one line per connection. `mockups/02-cli-output.html` shows
+The command-line output gains one line per connection. **`mockups/02-cli-output.html` holds a
+`JA4L-S=` row from 2026-08-13.** It shows
 the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 
 ## Behaviour rules
@@ -216,7 +229,7 @@ values, under the rule that the port's `.claude/rules/external-apis.md` states.
 | Case | Expected behaviour |
 |---|---|
 | The connection carries no SYN-ACK. | No JA4LS value. FR-ja4ls-9 covers it. |
-| The observed time-to-live exceeds the initial time-to-live. | The hop count is zero. The packet crossed no router the reader can count. |
+| The observed time-to-live carries any value the packet holds. | The value writes that number unchanged. **No branch computes a hop count**, which amended FR-ja4ls-7 states and which `docs/specs/foxio/JA4L.md` R13 and R18 record. |
 | The server measurement point is set and the client one is not. | The JA4LS value is emitted and the JA4L value is not. The two are independent. |
 | A QUIC connection reaches a server measurement point. | The value carries `quic` as a third part. |
 | A document states "ten JA4+ methods". | FR-ja4ls-18 fails and names the file and the line. |
