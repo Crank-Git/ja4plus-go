@@ -248,14 +248,15 @@ func conformanceMethodOccurrence(method string, occurrence int) string {
 // concurrency contract of `.claude/rules/concurrency.md` gives one Processor to one
 // goroutine, so this function creates the Processor and never shares it.
 //
-// The `covered` set names the methods the vector holds. A method the vector never names
-// produces no key, because the behavior rules of the feature file compare only the
-// methods a vector holds. The per-packet set names neither JA4 nor JA4D6.
+// The map holds every value the library produces, and never the values of the covered
+// methods alone. The maintainer ruled on 2026-08-13 in #361 that a value whose vector file
+// names no key for its method reaches a comparison, which reports it as an uncovered value.
+// A filter here would drop that value before the comparison, and the run would then report
+// nothing for it. `conformanceSplitUncovered` reads the covered set instead.
 func conformanceProducedByFrame(
 	t *testing.T,
 	capture string,
 	packets []gopacket.Packet,
-	covered map[string]bool,
 ) map[conformanceKey]string {
 	t.Helper()
 
@@ -276,10 +277,6 @@ func conformanceProducedByFrame(
 
 		for _, result := range results {
 			for _, value := range conformanceValuesOfResult(result) {
-				if !covered[value.Method] {
-					continue
-				}
-
 				occurrences[value.Method]++
 
 				key := conformanceKey{
@@ -419,6 +416,10 @@ func conformanceCoveredMethods(expected map[conformanceKey]string) map[string]bo
 // reads 131 SSH packets and reaches no window of 200. The per-packet vector holds no such
 // value, so `conformanceProducedByFrame` makes no such call.
 //
+// The map holds every value the library produces, and never the values of the covered
+// methods alone. #361 states the reason, and `conformanceProducedByFrame` carries the same
+// rule for the per-packet set.
+//
 // FR-conformance-22 names the connection by the four address fields. The shape maps the
 // endpoint key of each vector entry to the stream name of that connection. A value whose
 // endpoint key reaches no entry keeps the endpoint key as its stream name, so the deviation
@@ -447,10 +448,6 @@ func conformanceProducedByStream(
 			}
 
 			for _, value := range conformanceStreamValuesOfResult(result) {
-				if !shape.Covered[value.Method] {
-					continue
-				}
-
 				counter := conformanceKey{Capture: capture, Stream: stream, Method: value.Method}
 
 				// A method whose measurement point moves reports more than once for one
@@ -596,6 +593,12 @@ type conformanceSetTotals struct {
 	AcceptedDeviants int
 	Closed           int
 	Stale            int
+	// Uncovered counts the uncovered values that the register does not name, and
+	// AcceptedUncovered counts the uncovered values that the register names. #361 makes an
+	// uncovered value a third category, so the two counts stand apart from Deviations and
+	// from AcceptedDeviants.
+	Uncovered         int
+	AcceptedUncovered int
 }
 
 // conformanceRunTotals counts the outcome of the whole run.
@@ -723,6 +726,9 @@ func conformanceRunTotalsAsCounts(totals conformanceRunTotals) conformanceReport
 		Accepted:      totals.Stream.AcceptedDeviants + totals.Packet.AcceptedDeviants,
 		Stale:         totals.Stream.Stale + totals.Packet.Stale,
 		Orphan:        totals.Orphan,
+
+		Uncovered:         totals.Stream.Uncovered + totals.Packet.Uncovered,
+		AcceptedUncovered: totals.Stream.AcceptedUncovered + totals.Packet.AcceptedUncovered,
 	}
 }
 
@@ -761,7 +767,7 @@ func conformanceRunOneCapture(
 		t.Logf("FoxIO marks this capture `%s`, so the suite records it as not applicable",
 			strings.Trim(conformanceNotestMarker, "."))
 
-		conformanceProducedByFrame(t, capture, packets, map[string]bool{})
+		conformanceProducedByFrame(t, capture, packets)
 
 		return
 	}
@@ -814,7 +820,7 @@ func conformanceRunStreamSet(
 	}
 
 	produced := conformanceProducedByStream(t, capture, packets, shape)
-	comparison := compareConformance(produced, shape.Expected, register)
+	comparison := conformanceSplitUncovered(compareConformance(produced, shape.Expected, register), shape.Covered)
 
 	report.recordComparison(capture, conformanceReportStreamSet, comparison)
 	conformanceRecordComparison(t, conformanceReportStreamSet, comparison, &totals.Stream)
@@ -850,8 +856,9 @@ func conformanceRunPacketSet(
 		return false
 	}
 
-	produced := conformanceProducedByFrame(t, capture, packets, conformanceCoveredMethods(expected))
-	comparison := compareConformance(produced, expected, register)
+	produced := conformanceProducedByFrame(t, capture, packets)
+	comparison := conformanceSplitUncovered(
+		compareConformance(produced, expected, register), conformanceCoveredMethods(expected))
 
 	report.recordComparison(capture, conformanceReportPacketSet, comparison)
 	conformanceRecordComparison(t, conformanceReportPacketSet, comparison, &totals.Packet)
@@ -872,6 +879,24 @@ func conformanceRecordComparison(
 	totals.Matches += comparison.Matches
 	totals.Closed += len(comparison.Closed)
 	totals.Stale += len(comparison.Stale)
+
+	// #361 counts an uncovered value apart from a deviation. An unaccepted uncovered value
+	// fails no gate, because the difference measures the coverage of the reference file.
+	for _, uncovered := range comparison.Uncovered {
+		if uncovered.Accepted {
+			totals.AcceptedUncovered++
+
+			t.Logf("accepted %s uncovered value %s: %q (the register names it)",
+				set, uncovered.Key, uncovered.Produced)
+
+			continue
+		}
+
+		totals.Uncovered++
+
+		t.Logf("%s uncovered value %s: the vector file names no key for the method\n  produced: %q",
+			set, uncovered.Key, uncovered.Produced)
+	}
 
 	for _, deviation := range comparison.Deviations {
 		if deviation.Accepted {
@@ -921,6 +946,13 @@ func conformanceReportTotals(t *testing.T, totals conformanceRunTotals) {
 
 	t.Logf("the run reports %d matches, %d deviations and %d accepted deviations",
 		matches, deviations, totals.Stream.AcceptedDeviants+totals.Packet.AcceptedDeviants)
+
+	// #361 states the two counts on every run. An uncovered value is neither a match nor a
+	// deviation, so a reader who reads the two counts above alone reads fewer values than the
+	// library produces.
+	t.Logf("the run reports %d uncovered values and %d accepted uncovered values",
+		totals.Stream.Uncovered+totals.Packet.Uncovered,
+		totals.Stream.AcceptedUncovered+totals.Packet.AcceptedUncovered)
 
 	// #307 states the count on every run. A count of 0 is the measurement that proves the
 	// register records the values this run produces.

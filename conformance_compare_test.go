@@ -546,3 +546,168 @@ func TestTheOrphanEntriesSortTheEntriesByKey(t *testing.T) {
 			entries[0].Key, entries[1].Key)
 	}
 }
+
+// The maintainer ruled on 2026-08-13 in #361 that the run reports a value whose vector file
+// publishes no key for its method as an uncovered value. Such a value reaches a third
+// category, which is neither a match nor a deviation.
+func TestTheRunReportsAnUncoveredValueWhenTheVectorFileNamesNoKeyForItsMethod(t *testing.T) {
+	key := oneConformanceKey("JA4L-C")
+
+	comparison := conformanceSplitUncovered(
+		compareConformance(
+			map[conformanceKey]string{key: "45_64"},
+			map[conformanceKey]string{},
+			nil,
+		),
+		map[string]bool{"JA4": true},
+	)
+
+	if len(comparison.Deviations) != 0 {
+		t.Errorf("the run reports %d deviations, and the vector file names no key for the method",
+			len(comparison.Deviations))
+	}
+
+	if len(comparison.Uncovered) != 1 {
+		t.Fatalf("the run reports %d uncovered values, and the library produces one", len(comparison.Uncovered))
+	}
+
+	if comparison.Uncovered[0].Key != key {
+		t.Errorf("the run names the key %q, and the library produces the value for %q", comparison.Uncovered[0].Key, key)
+	}
+
+	if comparison.Uncovered[0].Produced != "45_64" {
+		t.Errorf("the run records the produced value %q, and the library produces `45_64`",
+			comparison.Uncovered[0].Produced)
+	}
+
+	if comparison.Uncovered[0].Accepted {
+		t.Error("the run accepts the uncovered value, and the register names no entry for it")
+	}
+}
+
+// A vector file that names the method states an expected value for it, so a surplus value of
+// that method stays the deviation kind of FR-conformance-17. The key carries an occurrence
+// number, and the split reads the method without it.
+func TestTheRunReportsADeviationWhenTheVectorFileNamesTheMethodAndHoldsNoValueForTheKey(t *testing.T) {
+	key := oneConformanceKey("JA4T.1")
+
+	comparison := conformanceSplitUncovered(
+		compareConformance(
+			map[conformanceKey]string{key: "8192_2-1-3-1-1-4_1460_8"},
+			map[conformanceKey]string{},
+			nil,
+		),
+		map[string]bool{"JA4T": true},
+	)
+
+	if len(comparison.Uncovered) != 0 {
+		t.Errorf("the run reports %d uncovered values, and the vector file names the method",
+			len(comparison.Uncovered))
+	}
+
+	if len(comparison.Deviations) != 1 {
+		t.Fatalf("the run reports %d deviations, and FR-conformance-17 names one", len(comparison.Deviations))
+	}
+
+	if comparison.Deviations[0].Kind != conformanceExtraValue {
+		t.Errorf("the run reports the kind %q, and FR-conformance-17 names %q",
+			comparison.Deviations[0].Kind, conformanceExtraValue)
+	}
+}
+
+// #361 admits a register entry for an uncovered value. The orphan gate of #328 reads the
+// reached keys, so the entry must reach that set.
+func TestTheRunAcceptsAnUncoveredValueTheRegisterNames(t *testing.T) {
+	key := oneConformanceKey("JA4L-S")
+
+	comparison := conformanceSplitUncovered(
+		compareConformance(
+			map[conformanceKey]string{key: "13532_57"},
+			map[conformanceKey]string{},
+			map[conformanceKey]deviationEntry{key: {Key: key.String(), Ours: "13532_57", Ruling: "#361"}},
+		),
+		map[string]bool{},
+	)
+
+	if len(comparison.Uncovered) != 1 {
+		t.Fatalf("the run reports %d uncovered values, and the library produces one", len(comparison.Uncovered))
+	}
+
+	if !comparison.Uncovered[0].Accepted {
+		t.Error("the run reports the uncovered value as unaccepted, and the register names the comparison")
+	}
+
+	if len(comparison.Reached) != 1 || comparison.Reached[0] != key {
+		t.Errorf("the run reaches %d register keys, and the entry names one comparison the run makes",
+			len(comparison.Reached))
+	}
+
+	if len(comparison.Stale) != 0 {
+		t.Errorf("the run reports %d stale entries, and the entry records the value the run produces",
+			len(comparison.Stale))
+	}
+}
+
+// An absent value and a changed value each hold an expected value, so neither one can name a
+// method that the vector file never publishes. The split reads the deviation kind for that
+// reason, and it never reads the covered set alone.
+func TestTheRunReportsNoUncoveredValueForAnAbsentValueOrAChangedValue(t *testing.T) {
+	absent := oneConformanceKey("JA4X.1")
+	changed := oneConformanceKey("JA4X.2")
+
+	comparison := conformanceSplitUncovered(
+		compareConformance(
+			map[conformanceKey]string{changed: "2e9214a636bc_2e9214a636bc_795797892f9c"},
+			map[conformanceKey]string{
+				absent:  "795797892f9c_2e9214a636bc_2e9214a636bc",
+				changed: "795797892f9c_2e9214a636bc_2e9214a636bc",
+			},
+			nil,
+		),
+		map[string]bool{},
+	)
+
+	if len(comparison.Uncovered) != 0 {
+		t.Errorf("the run reports %d uncovered values, and the vector holds a value for each key",
+			len(comparison.Uncovered))
+	}
+
+	if len(comparison.Deviations) != 2 {
+		t.Fatalf("the run reports %d deviations, and the fixture holds an absent value and a changed value",
+			len(comparison.Deviations))
+	}
+}
+
+// The split moves a deviation, and it moves nothing else. A match of a covered method stands
+// beside an uncovered value of another method on one capture.
+func TestTheRunKeepsEveryMatchWhenItSplitsTheUncoveredValues(t *testing.T) {
+	matched := oneConformanceKey("JA4")
+	uncovered := oneConformanceKey("JA4LS")
+	value := "t13d1715h2_5b57614c22b0_3d5424432f57"
+
+	comparison := conformanceSplitUncovered(
+		compareConformance(
+			map[conformanceKey]string{matched: value, uncovered: "781_238"},
+			map[conformanceKey]string{matched: value},
+			nil,
+		),
+		map[string]bool{"JA4": true},
+	)
+
+	if comparison.Matches != 1 {
+		t.Errorf("the run reports %d matches, and the two values of the covered method are equal", comparison.Matches)
+	}
+
+	if len(comparison.Matched) != 1 {
+		t.Errorf("the run names %d matched keys, and it reports one match", len(comparison.Matched))
+	}
+
+	if len(comparison.Deviations) != 0 {
+		t.Errorf("the run reports %d deviations, and the fixture holds a match and an uncovered value",
+			len(comparison.Deviations))
+	}
+
+	if len(comparison.Uncovered) != 1 {
+		t.Fatalf("the run reports %d uncovered values, and the library produces one", len(comparison.Uncovered))
+	}
+}
