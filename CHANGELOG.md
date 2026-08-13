@@ -7,13 +7,18 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Every measurement in this section names the base of the run that produced it. Issue #42 put 248
+Every measurement in this section names the base of the run that produced it. **The
+enumeration below states the count that the register holds today under each ruling.** It
+never states the count that the issue first wrote, so the enumeration is a statement of the
+present and never a history. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 108 more, issue #361 put 8 more, issue #375 put 12 more, and issue #387 put 10 more.
 Issue #409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5
 of those 10 entries. Issue #447 removed 21 entries, because the library no longer produces
-the value each one records. A run on
+the value each one records. **The enumeration above already subtracts that removal, so a
+reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
+#361 from 28 entries to 8. A run on
 the current tree
 reports 1664 matches, 571
 deviations, 418 accepted deviations and 438 register keys. The run also reports 172 unaccepted
@@ -432,6 +437,31 @@ that the interface declares.
 
 ### Fixed
 
+- **A repeated TCP segment now produces one JA4H value, and it produced two before.** Frame 6
+  and frame 15 of `CVE-2018-6794.pcap` carry the same bytes on the same four-tuple, and the
+  library fingerprinted both. No FoxIO implementation publishes a second value for the repeat.
+  **A caller of `v0.3.0` who upgrades reads one JA4H value where two arrived.** A consumer
+  that counts JA4H results therefore reads a lower count on the same capture.
+  `JA4HFingerprinter` now
+  holds `ranges`, which records the sequence range of each stream that the fingerprinter
+  already read. The table holds an entry bound and an age bound, and `CleanupConnection` and
+  `Reset` each remove from it. **The change closes 50 deviations**, and the deviations that the
+  register does not hold fall from 635 to 585. The register gains no entry, because
+  `.claude/rules/parity.md` `## Where a difference comes from` row 1 governs a unanimous
+  reference. **The port already holds this rule**, at the `consumed_seq` table of
+  `ja4plus/fingerprinters/ja4h.py`, so the change closes a parity difference and opens none.
+  Issue #446 built it, and no exported name moved.
+- **`JA4L-S` now reaches the frame that fills point D, and it reached the point B frame
+  before.** The value is identical on the two frames, and the per-packet vector holds it at
+  the point D frame. **A caller of `v0.3.0` who upgrades reads the same `JA4L-S` value on a
+  later frame.** A consumer that pairs the value with a frame number therefore reads a
+  different pairing. The per-stream set does not move, because it names a stream rather than a
+  frame.
+  `processUDP` of `ja4l.go` holds the emission. **The change closes 14 deviations**, and the
+  deviations that the register does not hold fall from 585 to 571. **The whole-corpus match
+  count rises from 1658 to 1664**, which is the first rise of this session. **The register
+  falls from 459 keys to 438**, because 20 entries became orphan entries and 1 became a stale
+  entry, and the change removed all 21. Issue #447 built it, and no exported name moved.
 - The `Maintainer` row of the `## Users & personas` table of `docs/specs/spec.md` now cites
   the `## Terms` row instead of restating it. `docs/specs/spec.md:262` reads `The person
   that row maintainer of ## Terms names.`, and the cell stated a second meaning before.
