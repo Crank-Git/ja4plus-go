@@ -525,9 +525,14 @@ jobs:
       # run on a pull request and never on a push.
       #
       # **The author of a pull request from a fork chooses the target branch, so this value
-      # is untrusted input.** It reaches the `ref` input of the action, and it reaches no
-      # shell. The action checks out the repository this workflow belongs to, so the value
-      # names a branch of this repository and it never names the code of the fork.
+      # is untrusted input.** Three things bound it. It reaches the `ref` input of the
+      # action, and it reaches no shell. The action checks out the repository this workflow
+      # belongs to, so the value names a branch of this repository and it never names the
+      # code of the fork. The `branches` filter of the `pull_request` trigger above reads
+      # the target branch, so the value is `main`, `master` or `dev` and never another name.
+      # The documentation states the filter: `You can use the branches or branches-ignore
+      # filter to configure your workflow to only run on pull requests that target specific
+      # branches.`
       #
       # The default `fetch-depth` of 1 takes the tip of that branch, and the comparison needs
       # no history.
@@ -647,7 +652,10 @@ jobs:
 
           {
             echo
-            echo "The job compared $head_count head results with $base_count base results, on one runner."
+            # The sentence states two measurements, and it states no count of comparisons.
+            # A benchmark that the base branch does not hold reaches the head count and it
+            # compares with nothing, so one number would misreport the table above.
+            echo "The job measured $head_count benchmarks on the head and $base_count on the base branch, on one runner."
             echo
             echo "A benchmark more than 20 percent slower than the base branch warns, and it fails no build. Runner variance produces a false regression, so confirm each one by hand."
             echo
@@ -655,7 +663,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$slower" -gt 0 ]; then
-            echo "::warning title=Benchmark regression::$slower benchmarks are more than 20 percent slower than the base branch. Read the build summary, and confirm each one by hand."
+            # The count opens a noun phrase, because a count of 1 makes a plural verb wrong.
+            echo "::warning title=Benchmark regression::Benchmarks more than 20 percent slower than the base branch: $slower. Read the build summary, and confirm each one by hand."
           fi
 
           exit 0
