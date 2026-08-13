@@ -68,6 +68,8 @@ func main() {
 }
 
 func printUsage() {
+	// The usage names every token, because `--types` refuses a token that names no method
+	// and the user needs the list before the refusal.
 	fmt.Fprintf(os.Stderr, `ja4plus - JA4+ network fingerprinting tool
 
 Usage:
@@ -81,12 +83,15 @@ Analyze options:
   --json          Output as JSON
   --csv           Output as CSV
   --types <list>  Comma-separated fingerprint types (e.g. ja4,ja4t)
+                  Types: %s
+                  ja4l prints the client value and the server value.
+                  ja4ls prints the server value alone.
   --lookup        Include application lookup for each fingerprint
 
 Database commands:
   db update       Download the latest ja4plus-mapping.csv from FoxIO
   db info         Print info about the active database (embedded vs cached)
-`)
+`, strings.Join(methodTokens, ", "))
 }
 
 // packetReader abstracts over pcap and pcapng readers.
@@ -120,13 +125,11 @@ func runAnalyze(args []string) error {
 			if i >= len(args) {
 				return fmt.Errorf("--types requires a comma-separated list")
 			}
-			typesFilter = make(map[string]bool)
-			for _, t := range strings.Split(args[i], ",") {
-				t = strings.TrimSpace(strings.ToLower(t))
-				if t != "" {
-					typesFilter[t] = true
-				}
+			filter, err := parseTypes(args[i])
+			if err != nil {
+				return err
 			}
+			typesFilter = filter
 		case "--lookup":
 			doLookup = true
 		default:
@@ -186,7 +189,7 @@ func runAnalyze(args []string) error {
 		packetFails += len(errs)
 
 		for _, r := range fpResults {
-			if typesFilter != nil && !typesFilter[strings.ToLower(r.Type)] {
+			if !admitsResult(typesFilter, r) {
 				continue
 			}
 			results = append(results, r)
@@ -196,7 +199,7 @@ func runAnalyze(args []string) error {
 	// The capture ends, so a connection whose last JA4SSH window never reached the threshold
 	// holds that window open. FR-parity-32 emits it here, because no packet triggers it.
 	for _, r := range proc.CloseOpenWindows() {
-		if typesFilter != nil && !typesFilter[strings.ToLower(r.Type)] {
+		if !admitsResult(typesFilter, r) {
 			continue
 		}
 
