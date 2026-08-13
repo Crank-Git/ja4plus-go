@@ -195,6 +195,7 @@ across both repositories, because a reader moves between them.
 | mailbox | noun | The destination that one session addresses a cross-session agent at. A spawn response that names a mailbox reached the cross-session path. | inbox, message queue, channel |
 | idle signal | noun | The message a cross-session agent returns in place of text, to report that it holds no work. | idle notification, heartbeat, ping |
 | spawn path | noun | The mechanism a spawned agent returns its result through. This project measures two: the in-process path, which delivers a result to the spawner without a request, and the cross-session path, which delivers a result to the session that addresses the agent, and which can return an idle signal and no text instead. Row `mailbox` above declines the word `channel`, and this project uses that word for no meaning. | spawn mode, return path |
+| uncovered value | noun | One value that the library produces, and whose vector file publishes no key for the method. The conformance run counts it apart from a match and apart from a deviation, and it fails no gate. The register may hold a decline for one. | unmatched value, unreached value, skipped value |
 
 ## Goals
 
