@@ -138,6 +138,9 @@ The project has no user interface. The CI build summary is the only reader-facin
 - `govulncheck` reports by calling path, so a vulnerability in an unused function is a
   note and not a failure.
 - The dependency decision is written before the migration starts, not after.
+- FR-supply-12, FR-supply-13 and FR-supply-14 bind every workflow file, and never a named
+  list of them. A workflow that a later epic creates arrives with every action pinned, and
+  this feature set gains no requirement for it.
 
 ## Data touched
 
@@ -148,11 +151,27 @@ No entity changes. The following files change.
 | `.github/dependabot.yml` | New. |
 | `.github/workflows/ci.yml` | Gains the vulnerability, coverage and benchmark jobs. Pins every action. |
 | `.github/workflows/release.yml` | Pins every action. Declares least permissions. |
-| `.github/workflows/fuzz.yml` | Pins every action. |
-| `.coverage-floor` | Read by the coverage job. |
+| `.github/workflows/fuzz.yml` | Pins every action. Epic 6 creates the file. |
+| `.coverage-floor` | The coverage job reads it. Epic 0 creates the file. |
 | `Makefile` | Gains the `vuln` target. |
 | `docs/audit/dependency-decision.md` | New. |
 | `go.mod`, `go.sum` | Change if the `gopacket` decision is a migration. |
+
+**Two rows above name a file that the tree does not hold on 2026-08-13.** This feature set
+creates neither one, and FR-supply-12, FR-supply-13 and FR-supply-14 bind each one when it
+arrives.
+
+- `.github/workflows/fuzz.yml`. `features/06-fuzz-testing.md:132` names it `New.`, and
+  FR-fuzz-27 states the nightly run that it holds. Issue #47 creates it.
+- `.coverage-floor`. `features/00-foundation.md:129` names it `New.`, and that is the one
+  requirements record that names a creator. Epic 0 carries `status: built`, and the tree
+  holds no `.coverage-floor`. `CLAUDE.md` names issue #68 as the builder instead, so the
+  two records disagree. Issue #429 records that disagreement. FR-supply-17 reads the file
+  and FR-supply-19 raises the value, so no requirement of this feature set creates it.
+
+`git ls-tree -r --name-only origin/dev -- .github` returns `.github/workflows/ci.yml` and
+`.github/workflows/release.yml` alone, measured on 2026-08-13 at `76659bb`. Issue #426
+records the reading, and it moved no requirement between two epics.
 
 ## Interfaces
 
