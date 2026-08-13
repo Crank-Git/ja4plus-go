@@ -1538,7 +1538,7 @@ func TestJA4LKeepsPointAWhenARepeatedSYNCarriesTheSameInitialSequenceNumber(t *t
 // The port keeps the index of the value it reported, and it overwrites that entry. This
 // library keeps no such index, because ProcessPacket returns each result to the caller.
 // Issue #25 removed the results slice. The maintainer ruled in issue #196 that the
-// conformance harness compares the last emission, so the last emission carries the one client
+// conformance harness compares the last emission. That last emission carries the one client
 // value of the connection.
 //
 // This test reads the count of results and the reported endpoints.
