@@ -112,7 +112,19 @@ file that did not exist.
 - **FR-release-35k** — Every action reference in the workflow is pinned to a commit hash.
 - **FR-release-36** — The release workflow fails when the conformance suite reports a
   deviation.
-- **FR-release-37** — The release workflow builds on Go 1.24.
+- **FR-release-37** — The release workflow builds on the Go version range that
+  `.github/workflows/ci.yml` names.
+
+  **#473 amended this requirement on 2026-08-13, and the amendment is provisional.** The
+  requirement named Go 1.24 until that date, and the release workflow built every artifact
+  on that toolchain. On go1.24.13, the newest Go 1.24 patch, `govulncheck` v1.6.0 reports 9
+  vulnerabilities of the standard library that this library calls. Each one names a fix in a
+  go1.25.x release or later. Comment 5286440152 of #65 holds the maintainer's Go 1.26
+  decision, and **that decision named `.github/workflows/ci.yml` alone**. Issue #473 carried
+  the range to the release workflow, and issue #473 is the reversal path.
+  `TestReleaseWorkflowNamesTheGoToolchainRange` holds the value, and `goToolchainRange` in
+  `foundation_test.go` states it once for both workflows. **FR-foundation-1 does not move**,
+  because `go.mod` states a language version and never a toolchain.
 - **FR-release-38** — The release workflow attaches `LICENSE` and `NOTICE` to the
   release.
 - **FR-release-39** — The release workflow reads the release notes from `CHANGELOG.md`.

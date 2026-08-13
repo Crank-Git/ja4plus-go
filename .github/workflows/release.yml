@@ -33,9 +33,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      # This workflow builds every released binary, so it names the Go version that
+      # `.github/workflows/ci.yml` names. The two files held different versions until
+      # 2026-08-13: CI proved that the library calls no vulnerable function, and this
+      # workflow built the artifact that does. On go1.24.13, the newest Go 1.24 patch,
+      # `govulncheck` v1.6.0 reports 9 called standard library vulnerabilities. Each one
+      # names a fix in a go1.25.x release or later, so no Go 1.24 patch clears them.
+      #
+      # **The range holds the patch at 1.26.5 or later, and it holds it below 1.27.**
+      # GO-2026-5856 names a fix at 1.26.5. A bare `1.26` accepts go1.26.0 through
+      # go1.26.4, because `actions/setup-go` reads the tool cache of the runner before it
+      # reads the release list. The comment above `jobs:` of `.github/workflows/ci.yml`
+      # states the full reading, and `foundation_test.go` holds both files at one range.
+      #
+      # **`go.mod` does not move.** Its `go 1.24.0` directive states a language version
+      # rather than a toolchain, and #438 established that reading.
+      #
+      # No pull request runs this workflow, because a tag push is its only trigger. So CI
+      # proves nothing about this version, and the first tag after this commit is the
+      # first run that reads it.
+      #
+      # Verified against <https://github.com/actions/setup-go>, retrieved 2026-08-13. The
+      # README states the range syntax: `SemVer version range syntax: ^1.25.1, ~1.24.1,
+      # >=1.25.0-rc.1, <1.25.0, >=1.22.0 <1.24.0`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '1.24'
+          go-version: '~1.26.5'
 
       - name: Run tests
         run: go test -v -race ./...
