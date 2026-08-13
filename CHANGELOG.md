@@ -56,12 +56,12 @@ that the interface declares.
   publishes a JA4X key for that capture. `testdata/foxio/python/socks4-https.pcap.json` and
   `testdata/foxio/wireshark/socks4-https.pcap.json` each publish none, so the run reports
   each value as an uncovered value. **The port ruled at `Crank-Git/ja4plus#138` on
-  2026-08-07 that the three values stay**, and the maintainer ruled on 2026-08-13 that a
-  ruling the port's register records lands here as a reading. **The three values reach
+  2026-08-07 that the three values stay.** The maintainer ruled on 2026-08-13 that a ruling
+  the port's register records lands here as a reading. **The three values reach
   twelve comparisons**, because the run compares `JA4X` and `JA4X_r` in the per-stream set
   and in the per-packet set. **The change moves no fingerprint value.** The run reports 1658
   matches, 645 deviations and 409 accepted deviations before and after. **The register key
-  count moves from 437 to 449**, the unaccepted uncovered values fall from 214 to 202, and
+  count moves from 437 to 449.** The unaccepted uncovered values fall from 214 to 202, and
   the accepted uncovered values rise from 28 to 40. The run reports 0 stale register entries
   and 0 orphan register entries. Issue #57 carries the test half, and `ja4x_tunnel_test.go`
   holds it.
