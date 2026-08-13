@@ -246,9 +246,17 @@ protected record opens no surplus value anywhere else in the corpus.**
 
 ### The count it closes
 
-**All 11 close.** Each expected value reads the certificate that tshark already extracts
-from the same bytes, so a reader that reaches the plaintext produces the value the vector
-names.
+**All 11 close, and the two captures carry two grades of evidence.**
+
+**The 9 of `http2-with-cookies.pcapng` close on a direct reading.** The tshark of this
+measurement extracts the three certificates of frame 10 from the same bytes the library
+reads, so a reader that reaches the plaintext produces the three values the vector names.
+
+**The 2 of `chrome-cloudflare-quic-with-secrets.pcapng` close on the vector alone.** The
+tshark of this measurement reports the compressed message and no certificate inside it, so
+this page reads the two expected values from the vector file and it extracts no certificate.
+**A reader that also decompresses the message produces them**, and this page measures no
+capture that proves it.
 
 **The change closes no accepted deviation.** No register entry names a JA4X key of either
 capture.
@@ -432,7 +440,7 @@ and repairs nothing.** The finding falsifies a sentence and it touches no behavi
   measurement reports the compressed message and no certificate inside it, so this page
   reads the expected values of
   `chrome-cloudflare-quic-with-secrets.pcapng` from the vector file alone.
-- **Whether the record joining rule of the port closes a deviation here.**
+- **Whether the rule of the port that joins two records closes a deviation here.**
   `ja4plus/fingerprinters/ja4x.py:255` joins consecutive handshake records before it reads
   the messages, and `ja4xCertificatesInRecord` of `ja4x.go` reads one record at a time. **No
   deviation of the 50 needs that rule**, and this page measures no capture outside the corpus.
