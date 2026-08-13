@@ -10,7 +10,7 @@
   "devBranch": "dev",
   "liveBranch": "master",
   "devIsDefault": false,
-  "concurrency": 3,
+  "concurrency": 4,
   "batchSize": 4,
   "runLength": "until-backlog-empty",
   "prGranularity": "batch",
@@ -51,7 +51,7 @@
     53
   ],
   "promotion": "declined 2026-08-11; keep accumulating on dev until the Epic 10 freeze is closer",
-  "maxBackgroundWorkers": 3,
+  "maxBackgroundWorkers": 4,
   "rulingsEscalation": "interrupt the maintainer immediately; never park a ruling",
   "portRepo": "Crank-Git/ja4plus",
   "portParity": {
