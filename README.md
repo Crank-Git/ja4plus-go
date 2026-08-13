@@ -161,7 +161,7 @@ trailing := proc.CloseOpenWindows()
 
 ### One-Shot Functions
 
-For stateless fingerprinting without maintaining state:
+Each one-shot function below computes one fingerprint, and it holds no connection state:
 
 ```go
 fp := ja4plus.ComputeJA4(packet)

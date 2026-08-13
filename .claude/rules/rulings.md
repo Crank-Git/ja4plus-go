@@ -268,7 +268,7 @@ The `Case` column names the decisive case of the grant.
 
 | What was applied | Case | Where it is recorded | Reversal path |
 |---|---|---|---|
-| #346 — the library carries step 2 of the JA4SSH client direction. | 3 | Issue #346, comment 5276173568. The work is scheduled on #346, and no line of the tree carries step 2 today. | Issue #346. A reversal records the decline of step 2, with the reason. |
+| #346 — the library carries step 2 of the JA4SSH client direction. | 3 | Issue #346, comment 5281493518. **#413 builds the work**, and no line of the tree carries step 2 today. | Issue #346. A reversal records the decline of step 2, with the reason. |
 | #369 question 1 — JA4TS part e holds ten delays. | 2 | `docs/specs/foxio/JA4T.md` R18, and issue #369, comment 5276169622. | Issue #369. |
 | The FR-ja4ls-7 amendment — part b writes the observed time-to-live, and no branch computes a hop count. | 1 | `docs/specs/features/12-ja4ls.md:70-79` and :91-92, and `ja4ls_emission_test.go`. | Issue #60. |
 | The FR-ja4ls-8 amendment — no propagation factor reaches the value. | 1 | `docs/specs/features/12-ja4ls.md:70-79` and :93-94, and `ja4ls_emission_test.go`. | Issue #60. |
