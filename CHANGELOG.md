@@ -10,8 +10,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Every measurement in this section names the base of the run that produced it. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, issue #285 put
-108 more, and issue #361 put 28 more. A run on the current tree reports 1627 matches, 676
-deviations, 409 accepted deviations and 437 register keys. The run also reports 192 unaccepted
+108 more, and issue #361 put 28 more. A run on the current tree reports 1658 matches, 645
+deviations, 409 accepted deviations and 437 register keys. The run also reports 214 unaccepted
 uncovered values and 28 accepted uncovered values, and #361 states what an uncovered value is.
 An accepted deviation and an accepted uncovered value each name one register entry, so 409 and
 28 add up to the 437 register keys. A count that an entry below states therefore differs from
