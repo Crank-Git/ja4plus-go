@@ -38,7 +38,7 @@ const (
 	ja4hMaxStreamBytes = 1048576
 )
 
-// The maximum age of one entry of the range table.
+// ja4hMaxStreamAge is the maximum age of one entry of the range table.
 // One entry describes one stream of the reassembler, so the two hold one age.
 // `ja4plus/utils/tcp_stream.py:50` sets `DEFAULT_MAX_STREAM_AGE = 600`.
 const ja4hMaxStreamAge = 600 * time.Second
@@ -176,8 +176,8 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	}
 	f.reassembler.RemoveStream(streamKey)
 	// The range covers the whole buffer, and not the header block alone. A request that
-	// carries a body reaches the fingerprinter in a segment that ends past the header block,
-	// so a range that ends at the header block leaves that segment outside itself.
+	// carries a body ends past the header block in its last segment. A range that ends at
+	// the header block therefore leaves that segment outside itself.
 	// `ja4plus/fingerprinters/ja4h.py:180-183` states the same reason.
 	if entry, present := f.ranges[streamKey]; present && entry.holdsBuffer {
 		f.rememberTheConsumedRequest(streamKey, entry.bufferStart, len(assembled), now)
@@ -190,7 +190,8 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // The two numbers lie within 2**31 of each other, because one stream holds
 // ja4hMaxStreamBytes bytes at most. The signed conversion of the difference therefore holds
 // across a wrap of the 32-bit sequence number.
-// `ja4plus/utils/tcp_stream.py:38` states the same test.
+// `ja4plus/utils/tcp_stream.py:38` answers the same question. The two answers differ at a
+// difference of exactly 2**31, and no caller reaches that difference.
 func ja4hSeqBefore(a, b uint32) bool {
 	return int32(a-b) < 0
 }
@@ -207,12 +208,13 @@ func (f *JA4HFingerprinter) segmentCarriesNoNewRequest(key string, seq uint32, l
 	}
 
 	if ja4hSeqBefore(seq, entry.consumedStart) {
-		// A second connection reuses the address pair and the port pair, and it starts at
-		// its own initial sequence number. That number sits below the stored one about half
-		// the time, so a rule that reads the end alone loses the first request of the second
-		// connection. A repeated segment carries bytes the request already held, so it
-		// starts at or after the request.
-		delete(f.ranges, key)
+		// A second connection reuses the address pair and the port pair, and it starts at its
+		// own initial sequence number. That number sits below the stored one about half the
+		// time. So a rule that reads the end alone loses the first request of the second
+		// connection. A repeated segment carries bytes the request already held, so it starts
+		// at or after the request. The buffer of the first connection leaves with the entry,
+		// because the second connection numbers its bytes on its own.
+		f.removeRange(key)
 		return false
 	}
 
@@ -280,7 +282,7 @@ func (f *JA4HFingerprinter) removeTheLeastRecentRange() {
 	}
 
 	if found {
-		delete(f.ranges, oldestKey)
+		f.removeRange(oldestKey)
 	}
 }
 
@@ -291,9 +293,21 @@ func (f *JA4HFingerprinter) removeTheLeastRecentRange() {
 func (f *JA4HFingerprinter) evictAgedRanges(now time.Time) {
 	for key, entry := range f.ranges {
 		if now.Sub(entry.lastSeen) > ja4hMaxStreamAge {
-			delete(f.ranges, key)
+			f.removeRange(key)
 		}
 	}
+}
+
+// removeRange removes the range entry of the stream, and it removes the buffer of that stream.
+//
+// The two tables hold a bound of their own, and the fast path writes an entry and no buffer.
+// So the range table reaches its bound first, and an entry that leaves alone would leave a
+// buffer that no entry describes. `recordTheBufferStart` would then read the later segment as
+// the start of that buffer, and the consumed range would miss the bytes below it.
+// One removal path therefore serves the two tables.
+func (f *JA4HFingerprinter) removeRange(key string) {
+	delete(f.ranges, key)
+	f.reassembler.RemoveStream(key)
 }
 
 // Reset clears the TCP stream reassembler.

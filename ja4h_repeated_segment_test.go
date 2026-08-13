@@ -119,7 +119,7 @@ func TestJA4H_ReadsASecondRequestOfTheSameStream(t *testing.T) {
 // TestJA4H_ReadsTheFirstRequestOfAReusedFourTuple holds the second limit of the guard.
 //
 // A second connection reuses the address pair and the port pair, and it starts at its own
-// initial sequence number. That number sits below the stored one about half the time, so a
+// initial sequence number. That number sits below the stored one about half the time. So a
 // guard that reads the end alone loses the first request of the second connection.
 // `ja4plus/fingerprinters/ja4h.py:213-220` states the same limit.
 func TestJA4H_ReadsTheFirstRequestOfAReusedFourTuple(t *testing.T) {
@@ -199,6 +199,53 @@ func TestJA4H_HoldsTheRangeTableAtTheStreamBound(t *testing.T) {
 	if length := len(fingerprinter.ranges); length > ja4hMaxStreams {
 		t.Fatalf("the range table holds %d entries, and the bound states %d at most",
 			length, ja4hMaxStreams)
+	}
+}
+
+// TestJA4H_ProducesOneValueForARepeatThatTheStreamBoundSeparates holds the second repair of
+// #446.
+//
+// The range table and the reassembler each hold a bound of their own, and the fast path
+// fills the range table alone. So the range table can reach its bound while the reassembler
+// still holds the buffer of an earlier stream. The entry that leaves therefore takes the
+// buffer with it, and the two tables name one set of streams.
+func TestJA4H_ProducesOneValueForARepeatThatTheStreamBoundSeparates(t *testing.T) {
+	fingerprinter := NewJA4H()
+
+	head := ja4hRepeatedRequest[:10]
+	tail := ja4hRepeatedRequest[10:]
+	values := 0
+
+	sendToTheSlowStream := func(offsetSeconds int, seq uint32, payload string) {
+		t.Helper()
+
+		results, err := fingerprinter.ProcessPacket(ja4hSegmentAt(t, seq, offsetSeconds, payload))
+		if err != nil {
+			t.Fatalf("the slow stream returned an error: %v", err)
+		}
+		values += len(results)
+	}
+
+	sendToTheSlowStream(0, 1000, head)
+
+	// Each of these streams reaches the fast path, so each one writes a range entry and no
+	// buffer. The count passes the entry bound, so the entry of the slow stream leaves.
+	for index := 0; index < ja4hMaxStreams+10; index++ {
+		packet := buildTCPPacketWithSeq(t, net.IP{192, 168, 235, 137}, net.IP{192, 168, 235, 136},
+			uint16(30000+index), 8089, 1000, []byte(ja4hRepeatedRequest))
+		packet.Metadata().Timestamp = time.Unix(int64(1500000001+index), 0)
+		if _, err := fingerprinter.ProcessPacket(packet); err != nil {
+			t.Fatalf("stream %d returned an error: %v", index, err)
+		}
+	}
+
+	sendToTheSlowStream(2000, uint32(1000+len(head)), tail)
+	sendToTheSlowStream(2001, 1000, head)
+	sendToTheSlowStream(2002, uint32(1000+len(head)), tail)
+
+	if values > 1 {
+		t.Fatalf("the slow stream produced %d values for one request, and the reference holds 1 at most",
+			values)
 	}
 }
 
