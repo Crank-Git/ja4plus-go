@@ -48,7 +48,7 @@ model that FoxIO recommends.
   covers: JA4S, JA4H, JA4T, JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6. The list
   holds ten of the eleven methods this library implements, and JA4 is the eleventh.
   **`features/12-ja4ls.md` added JA4LS to the list**, and Epic 12 made that edit.
-  Until then `NOTICE` names nine, and it names no method the library does not implement.
+  `NOTICE` names no method the library does not implement.
 - **FR-licensing-5a** — `NOTICE` states that this list is the set of methods this library
   implements under the license. **It asserts no equality with FoxIO's own list.** Three
   FoxIO records at the pinned commit name three different sets: `License FAQ.md:5` names
