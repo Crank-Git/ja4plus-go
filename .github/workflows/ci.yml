@@ -352,3 +352,123 @@ jobs:
             echo
             echo "A called vulnerability fails this job. A vulnerability that reaches the build without a call is a note."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # FR-supply-16 measures total statement coverage on every pull request this workflow
+  # covers. The job runs the `cover` target. FR-foundation-17 holds the command there, so
+  # this job and a developer can never measure two different commands.
+  #
+  # FR-supply-17 fails the job when the measured coverage falls below `.coverage-floor`.
+  # #68 created that file on 2026-08-13, and FR-supply-31 states that the first value is
+  # the coverage `make cover` reported at the creating commit.
+  #
+  # **FR-supply-19 is a rule for a person, and this job builds no mechanism for it.** A
+  # mechanism that raises the tracked floor from a run needs `contents: write`, and
+  # FR-supply-15 gives this workflow `contents: read` and nothing more. So the job prints
+  # the instruction, and the contributor writes the new value.
+  coverage:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads the repository and writes no ref.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.5`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.5'
+
+      # `make cover` writes `coverage.out` and it prints one line for each package. The
+      # per-package summary below reads those lines, so the step keeps the output.
+      - name: Measure the coverage
+        run: |
+          set -o pipefail
+          make cover 2>&1 | tee coverage.log
+
+      # FR-supply-18 prints the measured coverage and the floor, and this step prints both
+      # on a pass and on a failure.
+      #
+      # `go tool cover -func` writes the total as a percentage, so the comparison strips
+      # the sign and reads both values as numbers. The shell compares integers alone, and
+      # a coverage total carries one decimal place, so `awk` makes the comparison.
+      #
+      # The step reads each value into a variable and it tests both for the empty string,
+      # because `awk` reads an empty value as `0`. An absent `.coverage-floor` would then
+      # compare against a floor of zero, and the gate would pass on every total. This step
+      # needs no `set -o pipefail` for that reason: an empty value fails the step here.
+      - name: Compare the coverage with the floor
+        run: |
+          floor=$(tr -d '[:space:]' < .coverage-floor)
+          measured=$(go tool cover -func=coverage.out |
+            awk '/^total:/ { print $NF }' | tr -d '%')
+
+          if [ -z "$floor" ]; then
+            echo ".coverage-floor is absent or holds no value, so this gate measures nothing" >&2
+            exit 1
+          fi
+
+          if [ -z "$measured" ]; then
+            echo "go tool cover printed no total line" >&2
+            exit 1
+          fi
+
+          echo "the coverage is $measured percent, and the floor is $floor percent"
+
+          if awk -v m="$measured" -v f="$floor" 'BEGIN { exit (m + 0 < f + 0) ? 0 : 1 }'; then
+            echo "the coverage fell below the floor in .coverage-floor" >&2
+            echo "add the missing tests, and never lower the floor" >&2
+            exit 1
+          fi
+
+          # FR-supply-19 raises the floor in a commit that does nothing else. A person
+          # writes that commit, so the job names the new value here.
+          if awk -v m="$measured" -v f="$floor" 'BEGIN { exit (m + 0 > f + 0) ? 0 : 1 }'; then
+            echo "the coverage rose above the floor, so write $measured into .coverage-floor"
+            echo "raise the floor in a commit that does nothing else"
+          fi
+
+      # FR-supply-20 reports per-package coverage as a build summary. A reader of the pull
+      # request reaches the summary from the checks tab.
+      #
+      # The step runs after a pass and after a failure, because a reader of a failed run
+      # needs the package that fell. An earlier step can fail before `make cover` writes
+      # the log, so the step reads the log only when the file is present.
+      #
+      # This step needs no `set -o pipefail`, and it must not fail the job. An earlier step
+      # already reported the reason for a failed run, and a second reason hides the first.
+      # The `-f` tests hold each read, so a missing file writes a summary that says so.
+      - name: Publish the coverage counts
+        if: always()
+        run: |
+          floor=$(tr -d '[:space:]' < .coverage-floor)
+          measured=""
+          if [ -f coverage.out ]; then
+            measured=$(go tool cover -func=coverage.out |
+              awk '/^total:/ { print $NF }' | tr -d '%')
+          fi
+          if [ -z "$measured" ]; then
+            measured="none"
+          fi
+
+          {
+            echo "## Coverage"
+            echo
+            echo "The total statement coverage is $measured percent, and the floor is $floor percent."
+            echo
+            echo "| Package | Coverage |"
+            echo "|---|---|"
+            if [ -f coverage.log ]; then
+              awk '
+                $1 == "ok" && $0 ~ /coverage:/ {
+                  for (i = 1; i <= NF; i++) {
+                    if ($i == "coverage:") {
+                      print "| `" $2 "` | " $(i + 1) " |"
+                    }
+                  }
+                }
+                $1 == "?" { print "| `" $2 "` | no test file |" }
+                $1 == "FAIL" { print "| `" $2 "` | the tests failed |" }
+              ' coverage.log
+            fi
+            echo
+            echo "The job fails when the coverage falls below the floor. A person raises the floor, in a commit that does nothing else."
+          } >> "$GITHUB_STEP_SUMMARY"

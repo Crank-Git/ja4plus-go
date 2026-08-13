@@ -110,8 +110,9 @@ exits 0, and that exit code reports no site build.**
    it produces.
 4. `make conformance` reports no deviation that `testdata/deviations.json` does not hold,
    and the register holds no entry whose comparison now matches.
-5. **This step is unrunnable today, because the repository holds no `.coverage-floor` file.
-   #68 builds it.** Coverage does not fall below the value in `.coverage-floor`.
+5. Coverage does not fall below the value in `.coverage-floor`. **#68 created that file on
+   2026-08-13, and this step is runnable today.** Run `make cover`, and read the total
+   against the value in the file. The CI coverage job fails on a total below it.
 6. **This step is unrunnable today, because the `Makefile` defines no `docs` target. #84
    builds it.** `make docs` succeeds, when the change touches a page.
 
