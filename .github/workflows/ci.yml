@@ -1,10 +1,33 @@
 name: CI
 
+# FR-supply-12 pins every `uses:` reference to a 40-character commit hash, because a tag
+# moves and a hash does not. FR-supply-13 gives each one a trailing comment that names the
+# version the hash carries.
+#
+# #67 resolved each hash from the GitHub API on 2026-08-13, and never from memory. The
+# trailing comment names the semantic version tag that points at the same commit. Read a
+# hash as the truth and the comment as a label, because a later release moves the label.
+#
+# To move a pin, resolve the tag again and write both the new hash and the new version.
+
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master, dev]
+
+# FR-supply-15 gives this workflow `contents: read` and no other permission. Every job
+# here reads the repository, and no job writes to it. A pull request from a fork controls
+# the code these jobs run, so the token gets no write scope.
+#
+# The block sits at the workflow level, so a job that a later issue adds inherits the
+# floor rather than restating it. #65, #68 and #69 each add a job to this file.
+#
+# `actions/upload-artifact` needs no entry of its own. Its README states no permission
+# requirement, and run 31740846163 uploaded the conformance log under this same
+# `contents: read` scope.
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -15,9 +38,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -40,14 +63,12 @@ jobs:
   # red job teaches every reader to ignore it. Epic 5 makes the job fail on a deviation.
   conformance:
     runs-on: ubuntu-latest
-    # The job reads the repository and uploads an artifact. A pull request from a fork
-    # controls the code this job runs, so the token gets no write scope.
-    permissions:
-      contents: read
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and FR-supply-15 permits no other permission here.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: '1.24'
 
@@ -71,7 +92,7 @@ jobs:
       #
       # `corpus_fetch_test.go` holds both halves of the key.
       - name: Restore the corpus
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: testdata/foxio
           key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
@@ -193,7 +214,7 @@ jobs:
       # The log names every deviation, and Epic 5 reads it to size the work.
       - name: Upload the conformance log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: conformance-log
           path: conformance.log
@@ -202,15 +223,18 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: '1.24'
 
-      # The pin holds the linter result steady. A linter release must never fail a pull
-      # request that changes no code. Move this version and `.golangci.yml` together.
+      # This step carries two pins, and they name two different things. The hash on the
+      # `uses:` line names the action, and FR-supply-12 states it. The `version:` input
+      # names the linter binary, and it holds the linter result steady. A linter release
+      # must never fail a pull request that changes no code. Move the `version:` input and
+      # `.golangci.yml` together, and leave the hash alone.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: v2.12.2
