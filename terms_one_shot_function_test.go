@@ -224,13 +224,15 @@ const readmeFile = "README.md"
 // readmeOneShotHeading opens the section that holds the one-shot function code block.
 const readmeOneShotHeading = "\n### One-Shot Functions\n"
 
-// readmeCallPattern matches one call of package ja4plus in a code block.
-var readmeCallPattern = regexp.MustCompile(`ja4plus\.([A-Za-z0-9]+)\(`)
+// readmeCallPattern matches one call of an exported one-shot function of package ja4plus.
+var readmeCallPattern = regexp.MustCompile(`ja4plus\.(` + oneShotFunctionPrefix + `[A-Za-z0-9]*)\(`)
 
-// readReadmeOneShotBlockNames returns the function name of each call of the code block
-// under the `### One-Shot Functions` heading of `README.md`.
+// readReadmeOneShotBlockNames returns the one-shot function name of each call of the code
+// block under the `### One-Shot Functions` heading of `README.md`.
 //
-// It reads the first fenced block of that section, and it reads no later section.
+// It reads the first fenced block of that section, and it reads no later section. It reads
+// a call of a function that carries the one-shot function prefix, so a call of another
+// exported function reaches no name of the result.
 func readReadmeOneShotBlockNames(t *testing.T) map[string]bool {
 	t.Helper()
 
