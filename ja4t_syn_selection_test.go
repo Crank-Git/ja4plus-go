@@ -10,8 +10,15 @@ import (
 
 // The maintainer ruled the JA4T packet selection on 2026-08-13, under #126. JA4T reads any
 // SYN whose ACK bit is clear, and it reads no other flag. The port holds the same rule at
-// `ja4plus/fingerprinters/ja4t.py:159`, and `Crank-Git/ja4plus#603` records the register
-// row. A reversal of the ruling changes both repositories.
+// `ja4plus/fingerprinters/ja4t.py:159`. `Crank-Git/ja4plus#603` is open, and it adds the row
+// of the `## Parity with ja4plus` section on the port side. A reversal of the ruling changes
+// both repositories.
+//
+// `.claude/rules/rulings.md` records a ruling in a register entry, in a test, or in a row of
+// the register table. This test is that record. The ruling writes no entry in
+// `testdata/deviations.json`, because the suite compares no value that the rule moves. The
+// `## Parity with ja4plus` section of `docs/specs/spec.md` names no row for the rule, and
+// #126 writes none.
 //
 // The rule separates two readings of the reference. `rust/ja4/src/tcp.rs:146` tests the SYN
 // bit and the ACK bit, and `rust/ja4/src/tcp.rs:154` asserts `is_initial_syn(0xC2)`.
@@ -23,10 +30,11 @@ import (
 // line holds the comment above the assertion. This file cites `:154`, which holds the
 // assertion at the commit in `testdata/foxio.pin`.
 //
-// The two tests below build the packet that separates the readings, because the flag byte
-// of the FoxIO corpus reaches no comparison for it. The per-packet vector of
-// `gre-sample.pcap` and of `macos_tcp_flags.pcap` names no `ja4.ja4t` field, and
-// `conformance_test.go:279` compares a method that the vector of the capture names.
+// The two tests below build the packet that separates the two readings. The corpus holds
+// two such SYN packets, and the suite compares neither one. The per-packet vector of
+// `gre-sample.pcap` and of `macos_tcp_flags.pcap` names no `ja4.ja4t` field.
+// `conformance_test.go:279` drops a value whose method the vector of the capture never
+// names.
 
 // synFlags holds the four TCP flags that the JA4T packet selection reads.
 type synFlags struct {
@@ -42,8 +50,8 @@ type synFlags struct {
 // `github.com/google/gopacket@v1.1.19/layers/tcp.go:241-248`, so a test that asserts the
 // byte proves which packet it built. `layers/tcp.go:270` assigns the whole header to
 // `tcp.Contents`.
-// The parameter takes `*testing.T` rather than `testing.TB`, because `staticcheck` reads
-// `testing.T.Fatalf` as a call that ends the function and it reads no method of the
+// The parameter takes `*testing.T` rather than `testing.TB`. `staticcheck` reads
+// `testing.T.Fatalf` as a call that ends the function, and it reads no method of an
 // interface that way. No benchmark of this package calls this helper.
 func synFlagByte(t *testing.T, packet gopacket.Packet) byte {
 	t.Helper()

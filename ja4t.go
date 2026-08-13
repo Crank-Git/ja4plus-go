@@ -34,8 +34,9 @@ func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	// value. `rust/ja4/src/tcp.rs:146` tests the same two bits, and
 	// `zeek/ja4t/main.zeek:126` and `wireshark/source/packet-ja4.c:1266` each test the whole
 	// flag byte against `0x02`. The port holds the bit test at
-	// `ja4plus/fingerprinters/ja4t.py:159`, and `Crank-Git/ja4plus#603` records the register
-	// row. `ja4t_syn_selection_test.go` holds the ruling, and a reversal changes both
+	// `ja4plus/fingerprinters/ja4t.py:159`. `Crank-Git/ja4plus#603` is open, and it adds the
+	// row of the `## Parity with ja4plus` section on the port side.
+	// `ja4t_syn_selection_test.go` holds the ruling, and a reversal changes both
 	// repositories.
 	if !tcp.SYN || tcp.ACK {
 		return nil, nil
