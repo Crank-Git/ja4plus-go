@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // keyLogTestRandom is one client random of the tests.

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // This file holds the evidence of issue #23. The audit checks FR-audit-15 through

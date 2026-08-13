@@ -35,7 +35,8 @@ of that register name a change to this repository. Read
 ## Stack
 
 - Go 1.24 or later.
-- `github.com/google/gopacket` for packet decoding.
+- `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
+  `github.com/google/gopacket` on 2026-08-13, and #438 carried it.
 - `golang.org/x/crypto` for SSH and hashing.
 - **The default build holds no cgo, and it cross-compiles to five platforms.** Every
   released binary is built with `CGO_ENABLED=0`.

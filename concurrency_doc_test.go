@@ -12,8 +12,8 @@ import (
 	"time"
 
 	ja4plus "github.com/Crank-Git/ja4plus-go"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // These tests hold FR-concurrency-1 through FR-concurrency-6, which issue #27 carries.

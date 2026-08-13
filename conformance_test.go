@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // The conformance suite. It holds FR-conformance-10 through FR-conformance-19, and it

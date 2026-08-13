@@ -3,7 +3,7 @@ package ja4plus
 import (
 	"testing"
 
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // The two-digit form of JA4T and JA4TS. Ruling #125 adopted it from `Crank-Git/ja4plus`,

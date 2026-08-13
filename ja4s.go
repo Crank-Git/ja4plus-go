@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // JA4SFingerprinter computes JA4S TLS Server Hello fingerprints.

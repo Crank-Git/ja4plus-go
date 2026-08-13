@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // This file holds the negative control for the concurrency contract. The test below

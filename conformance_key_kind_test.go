@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // The guard on the register key namespace. It holds FR-reference-29 and FR-reference-30.

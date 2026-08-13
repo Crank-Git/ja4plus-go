@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 const defaultSSHWindow = 200

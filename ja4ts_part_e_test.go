@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // This file holds part e of JA4TS and the JA4TS value that a RST produces. Issue #56 of

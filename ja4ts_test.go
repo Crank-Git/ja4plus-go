@@ -3,7 +3,7 @@ package ja4plus
 import (
 	"testing"
 
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket/layers"
 )
 
 func TestJA4TS_SYNACKWithOptions(t *testing.T) {

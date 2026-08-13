@@ -3,7 +3,7 @@ package ja4plus
 import (
 	"testing"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // openWindowOnlyFingerprinter implements Fingerprinter and CloseOpenWindows alone.

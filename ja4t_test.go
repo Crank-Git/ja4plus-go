@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 func buildTCPPacket(t testing.TB, srcPort, dstPort uint16, syn, ack bool, window uint16, options []layers.TCPOption) gopacket.Packet {

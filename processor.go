@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // Processor runs all JA4+ fingerprinters on each packet and aggregates results.

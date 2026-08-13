@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // The bytes of frame 6 and frame 15 of `CVE-2018-6794.pcap`. The two frames carry the same

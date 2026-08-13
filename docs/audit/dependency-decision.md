@@ -1,18 +1,176 @@
 # The dependency decision
 
-**This file records a reading. It records no decision, and it makes none.** The maintainer
-decides whether this project moves from `github.com/google/gopacket` to another candidate.
+**The maintainer decided on 2026-08-13, and `## The decision` below records it.** Every
+other section of this file records a reading, and a reading decides nothing.
 `.claude/rules/rulings.md` states that rule.
 
-Risk R5 of `docs/specs/spec.md` holds the open question. FR-supply-25 through FR-supply-29
-of `docs/specs/features/07-supply-chain.md` state what this file must hold. Issue #70
-produced it.
+Risk R5 of `docs/specs/spec.md` held the open question, and the decision closes it.
+FR-supply-25 through FR-supply-29 of `docs/specs/features/07-supply-chain.md` state what
+this file must hold. Issue #70 produced it.
 
 **Every measurement below carries the date 2026-08-13. Two branches produced them.** Issue
 #70 measured on `issue/70-gopacket-dependency-decision`, and issue #434 measured on
 `issue/434-gopacket-fork-measurement`. Each section of #434 names its branch, and every
 other section carries the branch of #70. A reader who repeats a measurement runs the
 command that the same section names.
+
+## The decision
+
+**The maintainer decided on 2026-08-13 that this project moves to
+`github.com/gopacket/gopacket` v1.6.1.** The decision lives in comment 5283186177 of issue
+#70. **#438 carried the migration on 2026-08-13**, on branch
+`issue/438-gopacket-migration`, and this section records what that migration measured.
+
+**The decision takes candidate B of `## The candidates, and the cost of each` below.** It
+declines candidate C, because `v1.7.0` and `v1.7.1` each state `go 1.25.0` and Assumption 1
+of `docs/specs/spec.md` accepts a Go 1.24 floor.
+
+**The Go module proxy confirms the version.** The command is
+`curl -s https://proxy.golang.org/github.com/gopacket/gopacket/@v/v1.6.1.info`, and it
+returns `"Time":"2026-06-04T20:44:08Z"` and
+`"Hash":"76119086f5936aacd7088bdf97d565501bb6c4cc"`.
+
+### What the migration changed
+
+| What | Count |
+|---|---|
+| Go files that change an import path | 57 |
+| Go files that change for another reason | 1 |
+| `go.mod` and `go.sum` | 2 |
+| Total | 60 |
+
+**42 test files and 15 non-test files hold the import path.** The command is
+`grep -rl 'github.com/google/gopacket' --include='*.go' .`, and it reports 57. **#434
+counted 55, being 40 test files and 15 non-test files, and batch #421 added two test files
+between the two measurements.**
+
+**The one other Go file is `foundation_test.go`.**
+`### The Go directive moves its text, and it keeps its language version` below states why.
+
+### The four counts, before and after the migration
+
+**#438 measured both runs on its own branch, with the corpus present.** The command is
+`make conformance`.
+
+| Count | Before | After |
+|---|---|---|
+| Matches | 1664 | 1664 |
+| Deviations | 571 | 571 |
+| Accepted deviations | 418 | 418 |
+| Register keys | 438 | 438 |
+| Stale register entries | 0 | 0 |
+| Orphan register entries | 0 | 0 |
+| Unaccepted uncovered values | 172 | 172 |
+| Accepted uncovered values | 20 | 20 |
+
+**Every count differs from the count of #434, and batch #421 moved each one.** #434
+measured 1658 matches, 635 deviations, 419 accepted deviations and 459 register keys.
+**A reader who compares #438 against #434 compares two different trees.** The gate reads
+the before-and-after pair of one tree.
+
+**`make conformance` exits 2 in each run, and Epic #441 owns that exit.** The exit reports
+571 deviations that the register does not hold, and it reports no regression of this
+migration.
+
+**No comparison moved, and the two logs prove it.** Each log holds 1254 deviation lines and
+uncovered value lines, and a sorted comparison of the two finds no difference. A sorted
+comparison of the whole output of the two runs also finds no difference, after each run
+duration is removed.
+
+### The Go directive moves its text, and it keeps its language version
+
+**`go.mod` states `go 1.24.0` after the migration, and it stated `go 1.24` before it.**
+`github.com/gopacket/gopacket@v1.6.1` states `go 1.24.0` in its own `go.mod`, so the
+toolchain writes the longer form. `go build ./...` refuses the shorter form, and it prints:
+
+```
+go: updates to go.mod needed; to update it:
+	go mod tidy
+```
+
+**The Go floor does not move.** Go states that the two forms name one language version:
+
+> The language version for a Go version is the result of truncating everything after the _N_: 1.21, 1.21rc2, and 1.21.3 all implement language version 1.21.
+
+**So Assumption 1 of `docs/specs/spec.md` holds, and `CLAUDE.md` needs no amendment.**
+`foundation_test.go` declares `TestGoModDeclaresGo124`, and its pattern accepted the shorter
+form alone. **#438 widened that pattern to `(?m)^go 1\.24(\.\d+)?$`**, so the guard accepts
+each 1.24 release and it still fails for `go 1.25`.
+
+Verified against <https://go.dev/doc/toolchain>, retrieved 2026-08-13.
+
+### The migration moves three more modules
+
+**The migration upgraded three `golang.org/x` modules**, as #434 measured. `go get` reported:
+
+```
+go: upgraded golang.org/x/crypto v0.28.0 => v0.37.0
+go: upgraded golang.org/x/net v0.30.0 => v0.39.0
+go: upgraded golang.org/x/sys v0.26.0 => v0.32.0
+```
+
+**`golang.org/x/crypto` decodes the SSH handshake that JA4SSH reads**, so the upgrade is a
+second variable. **No fingerprint value moved under both changes together**, so this
+measurement runs no attribution.
+
+### The exported surface keeps every name and every shape
+
+**No exported name and no exported signature changes.** Every changed line of a non-test Go
+file is an import path. Three changed lines sit outside an import block, and each one sits
+in a test file: the pattern of `TestGoModDeclaresGo124`, one comment of
+`ja4t_option_byte_count_test.go`, and one comment of `ja4t_syn_selection_test.go`.
+
+**The type that each exported signature names is the fork's type now.** `types.go` still
+states `ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error)`, and the
+package name `gopacket` names `github.com/gopacket/gopacket` after the migration.
+**`### Every exported signature of this library names a type of the dependency` below states
+the consequence**: a caller that passes the original's `gopacket.Packet` no longer compiles.
+Epic 10 records the change.
+
+### Two comments of this tree read the dependency source, and the fork keeps both readings
+
+**`ja4t_option_byte_count_test.go` and `ja4t_syn_selection_test.go` each cite
+`github.com/google/gopacket@v1.1.19`.** Each citation is evidence, and
+`.claude/rules/ste.md` bars a rewording of evidence, so #438 keeps each one and it adds the
+fork's line numbers beside it.
+
+- **The fork appends one option for the first End-of-Option-List byte.**
+  `layers/tcp.go:338-344` appends the option, assigns the rest of the header to
+  `tcp.Padding`, and runs `break OPTIONS`. So the library still reads `tcp.Contents`.
+- **The fork reads each TCP flag into a field of its own** at `layers/tcp.go:303-311`, and
+  it assigns `tcp.Contents` at `layers/tcp.go:332`.
+
+### What the gate measured
+
+| Check | Result |
+|---|---|
+| `go build ./...` | Succeeds. |
+| `CGO_ENABLED=0 go build ./...` | Succeeds. |
+| `go build -tags libpcap ./...` | Succeeds. |
+| `go test -race ./...` | Passes in each of the four packages. |
+| `make lint` | Reports `0 issues.` |
+| `CGO_ENABLED=0` cross-compilation | Succeeds for each of the five release platforms. |
+
+**`.github/workflows/release.yml` names the five platforms.** They are `linux/amd64`,
+`linux/arm64`, `darwin/amd64`, `darwin/arm64` and `windows/amd64`.
+
+**The `libpcap` build tag selects no file of this tree today.** `internal/capture/` does not
+exist, and Epic 13 builds it. So that build proves the tag breaks no build, and it proves
+nothing about a cgo backend that no file holds.
+
+### The reversal path
+
+**Reverse the decision by restoring `github.com/google/gopacket` v1.1.19.** The reversal is
+mechanical, and it moves no fingerprint value on this corpus.
+
+1. Rewrite each quoted import path back, in the 57 Go files.
+2. Run `go mod edit -droprequire=github.com/gopacket/gopacket`, then
+   `go get github.com/google/gopacket@v1.1.19`, then `go mod tidy`.
+3. Restore the pattern of `TestGoModDeclaresGo124`, after `go.mod` states `go 1.24` again.
+4. Restore the row of `.claude/rules/external-apis.md`, the `## Stack` line of `CLAUDE.md`,
+   and the two mentions of `README.md`.
+
+**Issue #438 records this path**, and the maintainer reverses the decision with a new fact.
 
 ## The question the maintainer answers
 
@@ -555,11 +713,13 @@ than removes it.
 
 ### What this measurement does not change
 
-**`## The recommendation, which decides nothing` below keeps every sentence that issue #70
-wrote.** That section states that the conformance result is unmeasured, and issue #70 wrote
-the sentence before this branch existed. **Issue #434 changes no sentence of that section,
-because the maintainer has chosen no candidate.** A reader reads the two sections together,
-and the maintainer decides what the measurement means.
+**Issue #434 changed no sentence of `## The recommendation, which decides nothing` below,
+because the maintainer had chosen no candidate on the day it measured.** A reader reads the
+two sections together.
+
+**#438 repaired one sentence of that section on 2026-08-13**, because the maintainer had
+decided by then and the sentence stated that the conformance result is unmeasured. The
+sentence now names the measurement, and `## The decision` above holds the result.
 
 ## The candidates, and the cost of each
 
@@ -573,6 +733,11 @@ and the maintainer decides what the measurement means.
 ## The recommendation, which decides nothing
 
 **A recommendation is a reading. The maintainer rules.**
+
+**The maintainer ruled on 2026-08-13, and `## The decision` above records that ruling.**
+This section keeps the reading that issue #70 wrote, because a reader compares the
+recommendation against the decision. **The condition below is met: #438 migrated one
+branch, `make conformance` ran, and no fingerprint value moved.**
 
 **The reading recommends candidate B, under one condition.** The condition is a measurement:
 one branch migrates, `make conformance` runs, and no fingerprint value moves without a
@@ -592,8 +757,11 @@ Three facts support B over A.
 
 Two facts support A over B.
 
-1. **The conformance result is unmeasured**, and `layers/tcp.go` and `layers/geneve.go`
-   each hold a difference that a fingerprint value can read.
+1. **`layers/tcp.go` and `layers/geneve.go` each hold a difference that a fingerprint value
+   can read.** Issue #70 wrote `The conformance result is unmeasured` here, and #434
+   measured it on 2026-08-13. **The suite reveals no behaviour difference, and the corpus
+   separates neither source difference**, so each one stays a risk on a capture the corpus
+   does not hold.
 2. **The fork carries two published advisories, and the original carries none.** Each fork
    advisory names a decoder that the fork added.
 

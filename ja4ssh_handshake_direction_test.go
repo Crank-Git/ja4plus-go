@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
+	"github.com/gopacket/gopacket"
 )
 
 // Step 2 of the JA4SSH client direction, which issue #413 builds.
