@@ -95,11 +95,18 @@ func TestJA4_EmptyCiphers(t *testing.T) {
 	}
 }
 
-// TestJA4_ALPNNonAlphanumeric verifies FoxIO PR #277 spec: when the first or
-// last byte of the first ALPN value is not ASCII alphanumeric, the ALPN field
-// is the first and last character of the lowercase hex representation of the
-// entire first ALPN string.
-func TestJA4_ALPNNonAlphanumeric(t *testing.T) {
+// TestJA4_ALPNPR277ExamplesAgainstTheMeasurement holds the eight example inputs of FoxIO
+// PR #277 at the unit level, and it asserts the measured value of each one.
+//
+// The prose of the pull request states the first and last character of the hexadecimal
+// form of the whole first ALPN value. Issue #50 withdrew that rule, because no FoxIO
+// implementation produces it and the FoxIO vector `tls-non-ascii-alpn.pcapng` contradicts
+// it. `internal/parser/tls.go` states the rule the library follows, and
+// `docs/specs/foxio/JA4.md` R18, R19 and Reading 5 record the evidence.
+//
+// `ja4_alpn_parity_test.go` holds FR-parity-8, FR-parity-9 and FR-parity-10 at the packet
+// level. This test reads `ALPNValue` directly, so it separates the rule from the parser.
+func TestJA4_ALPNPR277ExamplesAgainstTheMeasurement(t *testing.T) {
 	tests := []struct {
 		name string
 		in   []string
@@ -112,14 +119,15 @@ func TestJA4_ALPNNonAlphanumeric(t *testing.T) {
 		{"two-alnum-bytes", []string{"h2"}, "h2"},
 		{"http/1.1-alnum-ends", []string{"http/1.1"}, "h1"},
 
-		// Non-alphanumeric: byte sequences from FoxIO PR #277 examples.
-		{"0xAB", []string{"\xab"}, "ab"},
-		{"0x20", []string{"\x20"}, "20"},
-		{"0xAB 0xCD", []string{"\xab\xcd"}, "ad"},
-		{"0x20 0x61", []string{"\x20\x61"}, "21"},
-		{"0x30 0xAB", []string{"\x30\xab"}, "3b"},
-		{"0x61 0x20", []string{"\x61\x20"}, "60"},
-		{"0x30 0x31 0xAB 0xCD", []string{"\x30\x31\xab\xcd"}, "3d"},
+		// The eight FoxIO PR #277 examples. The `want` value of each row is the value the
+		// port measured, and the prose value of the pull request follows it in a comment.
+		{"0xAB", []string{"\xab"}, "99"},                            // the prose states `ab`
+		{"0x20", []string{"\x20"}, "99"},                            // the prose states `20`
+		{"0xAB 0xCD", []string{"\xab\xcd"}, "99"},                   // the prose states `ad`
+		{"0x20 0x61", []string{"\x20\x61"}, "\x20a"},                // the prose states `21`
+		{"0x30 0xAB", []string{"\x30\xab"}, "99"},                   // the prose states `3b`
+		{"0x61 0x20", []string{"\x61\x20"}, "a\x20"},                // the prose states `60`
+		{"0x30 0x31 0xAB 0xCD", []string{"\x30\x31\xab\xcd"}, "99"}, // the prose states `3d`
 		{"0x30 0xAB 0xCD 0x31", []string{"\x30\xab\xcd\x31"}, "01"},
 	}
 	for _, tt := range tests {

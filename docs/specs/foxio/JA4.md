@@ -131,6 +131,18 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
   - `rust/ja4/src/tls.rs:616` replaces each non-ASCII character with `9`, one character at
     a time.
 
+  **The four results agree on two inputs, and Reading 5 states the measurement.** The two
+  implementations agree on every input whose first byte and last byte fall inside
+  `0x20-0x7E`, and they agree on an input whose two bytes fall outside ASCII. The FoxIO
+  vector `python/test/testdata/tls-non-ascii-alpn.pcapng.json` reaches the second case, and
+  it holds `99`.
+
+  **No rule produces the value that `technical_details/JA4.md:95` states.** The prose gives
+  `ad` for the first ALPN value `0xab 0xcd` and `bd` for `0xba 0xad`. Both inputs hold two
+  bytes, and both bytes of each fall outside the alphanumeric ranges, so a function of the
+  bytes cannot give `ad` for one and `99` for the other. The FoxIO vector holds `99` for
+  `0xba 0xad`, so the prose and the vector contradict each other.
+
 - **R20** — Part b is a SHA-256 hash of the cipher suite list. The image states `Truncated
   SHA256 hash of the Cipher Suites, sorted`. `python/ja4.py:255` corroborates through
   `python/common.py:149`, and `rust/ja4/src/tls.rs:362` corroborates.
@@ -210,3 +222,30 @@ A reading is a conclusion about a source. None of these carries a rule.
   extension, which `rust/ja4/src/tls.rs:493` numbers 57. `zeek/ja4/main.zeek:66` reads the
   transport protocol and the service name. The three agree on every capture this project
   reads, so this page records no reference split for it.
+
+- **Reading 5** — **Neither implementation reads the ALPN byte the packet holds, and the
+  tshark text form is the cause.** This reading holds FR-parity-12 of
+  `docs/specs/features/08-python-parity.md`. Both implementations read the tshark field
+  `tls.handshake.extensions_alpn_str`, which carries text and not bytes.
+  `python/ja4.py:270` reads it as `alpn_list`, and `rust/ja4/src/tls.rs:188` reads it
+  through `first`. R18 and R19 above record the results, and this reading records why they
+  differ.
+
+  - **FoxIO Python writes `U+FFFD`.** tshark writes the Unicode replacement character for
+    a byte it cannot decode, and `python/ja4.py:277` copies that character into the field.
+    `python/ja4.py:279` tests `ord(alpn[0]) > 127` and therefore tests the first character
+    alone, so the replacement character reaches the fingerprint from the last position.
+  - **FoxIO Rust writes the `tshark` escape text.** `rust/ja4/src/tls.rs:615` reads the
+    field as a character sequence, so it reads a control byte as the escape text tshark
+    writes. It reads the two-byte value `h\x1f` as the five characters `h`, `\`, `x`, `1`
+    and `f`, and `rust/ja4/src/tls.rs:624-625` then writes the first and the last of them,
+    which is `hf`. `rust/ja4/src/tls.rs:638-645` holds the FoxIO test that asserts the
+    replacement character maps to `9`.
+  - **The measurement.** The port measured both implementations at the pinned commit
+    `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, against a capture it built for the purpose.
+    `Crank-Git/ja4plus#141` records the commands and the table, and
+    `Crank-Git/ja4plus#162` records the maintainer ruling of 2026-08-07.
+    **`U+FFFD` is no byte of the packet, and `\`, `x`, `1` and `f` are no bytes of the
+    packet.** So a byte outside `0x20-0x7E` in a position other than the first reaches no
+    reference value that reads the wire, and `.claude/rules/parity.md`
+    `## Where a difference comes from` names that shape a proven reference defect.
