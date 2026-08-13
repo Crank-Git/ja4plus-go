@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/google/gopacket"
@@ -16,12 +17,16 @@ import (
 // Give each goroutine its own instance, or share one SyncProcessor.
 type JA4HFingerprinter struct {
 	reassembler *parser.TCPStreamReassembler
+	// ranges holds the sequence range of each stream. The reassembler drops a stream after
+	// each value, so nothing else records the bytes the fingerprinter already read.
+	ranges map[string]*ja4hStreamRange
 }
 
 // NewJA4H creates a new JA4H HTTP fingerprinter.
 func NewJA4H() *JA4HFingerprinter {
 	return &JA4HFingerprinter{
 		reassembler: parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes),
+		ranges:      make(map[string]*ja4hStreamRange),
 	}
 }
 
@@ -33,12 +38,43 @@ const (
 	ja4hMaxStreamBytes = 1048576
 )
 
-// ensure fills the reassembler that the constructor fills.
+// The maximum age of one entry of the range table.
+// One entry describes one stream of the reassembler, so the two hold one age.
+// `ja4plus/utils/tcp_stream.py:50` sets `DEFAULT_MAX_STREAM_AGE = 600`.
+const ja4hMaxStreamAge = 600 * time.Second
+
+// ja4hStreamRange holds the sequence range of one stream.
+//
+// The reassembler drops the stream after each value, so a repeated segment rebuilds the
+// same request and produces a second value. The reference holds one value for one request,
+// and this range tells the two apart. Issue #446 records the defect, and
+// `ja4plus/fingerprinters/ja4h.py:172-221` holds the same guard.
+type ja4hStreamRange struct {
+	// bufferStart holds the lowest sequence number of the segments the reassembler holds.
+	// `GetStream` reassembles from that number, so the consumed range starts there.
+	bufferStart uint32
+	// holdsBuffer reports whether bufferStart names a live buffer. A stream that produced a
+	// value holds no buffer, because the emission removes it.
+	holdsBuffer bool
+	// consumedStart and consumedEnd name the sequence range that already produced a value.
+	consumedStart uint32
+	consumedEnd   uint32
+	// holdsConsumed reports whether the stream produced a value.
+	holdsConsumed bool
+	// lastSeen holds the timestamp of the last segment of the stream. The age pass reads the
+	// packet clock, because a capture replays faster than the wall clock.
+	lastSeen time.Time
+}
+
+// ensure fills the reassembler and the range table that the constructor fills.
 // A caller who writes `var f JA4HFingerprinter` reaches a nil pointer, and a method call
 // on it panics. Every entry point calls this method first.
 func (f *JA4HFingerprinter) ensure() {
 	if f.reassembler == nil {
 		f.reassembler = parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes)
+	}
+	if f.ranges == nil {
+		f.ranges = make(map[string]*ja4hStreamRange)
 	}
 }
 
@@ -64,6 +100,19 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	// Build stream key from connection tuple (forward direction)
 	streamKey := fmt.Sprintf("%s:%d->%s:%d", srcIP, srcPort, dstIP, dstPort)
 
+	// The range table ages against the capture clock, so every packet announces its own
+	// timestamp. The table holds ja4hMaxStreams entries at most, so the pass runs on each
+	// packet. `ja4plus/fingerprinters/ja4h.py:81` runs the same pass on the same schedule.
+	now := parser.GetPacketTimestamp(packet)
+	f.evictAgedRanges(now)
+
+	seq := tcp.Seq
+
+	// The guard precedes the two parse paths, because each one produces a value.
+	if f.segmentCarriesNoNewRequest(streamKey, seq, len(payload)) {
+		return nil, nil
+	}
+
 	// Try single-packet parse first (fast path)
 	if parser.IsHTTPRequest(payload) {
 		req := parser.ParseHTTPRequest(payload)
@@ -86,13 +135,16 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 					Timestamp:        parser.GetPacketTimestamp(packet),
 				}
 				f.reassembler.RemoveStream(streamKey)
+				// The fast path reads this packet alone, so its range starts at this
+				// sequence number.
+				f.rememberTheConsumedRequest(streamKey, seq, len(payload), now)
 				return []FingerprintResult{result}, nil
 			}
 		}
 	}
 
 	// Add to reassembler for multi-segment reassembly
-	seq := tcp.Seq
+	f.recordTheBufferStart(streamKey, seq, now)
 	f.reassembler.AddSegment(streamKey, seq, payload)
 
 	// Try to parse reassembled stream
@@ -123,7 +175,125 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		Timestamp:        parser.GetPacketTimestamp(packet),
 	}
 	f.reassembler.RemoveStream(streamKey)
+	// The range covers the whole buffer, and not the header block alone. A request that
+	// carries a body reaches the fingerprinter in a segment that ends past the header block,
+	// so a range that ends at the header block leaves that segment outside itself.
+	// `ja4plus/fingerprinters/ja4h.py:180-183` states the same reason.
+	if entry, present := f.ranges[streamKey]; present && entry.holdsBuffer {
+		f.rememberTheConsumedRequest(streamKey, entry.bufferStart, len(assembled), now)
+	}
 	return []FingerprintResult{result}, nil
+}
+
+// ja4hSeqBefore reports whether sequence number a comes before sequence number b.
+//
+// The two numbers lie within 2**31 of each other, because one stream holds
+// ja4hMaxStreamBytes bytes at most. The signed conversion of the difference therefore holds
+// across a wrap of the 32-bit sequence number.
+// `ja4plus/utils/tcp_stream.py:38` states the same test.
+func ja4hSeqBefore(a, b uint32) bool {
+	return int32(a-b) < 0
+}
+
+// segmentCarriesNoNewRequest reports whether the stream already produced a value for these
+// bytes.
+//
+// It returns true when the segment lies inside the sequence range of a request that already
+// produced a value. `ja4plus/fingerprinters/ja4h.py:196-221` states the same rule.
+func (f *JA4HFingerprinter) segmentCarriesNoNewRequest(key string, seq uint32, length int) bool {
+	entry, present := f.ranges[key]
+	if !present || !entry.holdsConsumed {
+		return false
+	}
+
+	if ja4hSeqBefore(seq, entry.consumedStart) {
+		// A second connection reuses the address pair and the port pair, and it starts at
+		// its own initial sequence number. That number sits below the stored one about half
+		// the time, so a rule that reads the end alone loses the first request of the second
+		// connection. A repeated segment carries bytes the request already held, so it
+		// starts at or after the request.
+		delete(f.ranges, key)
+		return false
+	}
+
+	return !ja4hSeqBefore(entry.consumedEnd, seq+uint32(length))
+}
+
+// rememberTheConsumedRequest stores the sequence range the stream read to produce its value.
+func (f *JA4HFingerprinter) rememberTheConsumedRequest(key string, start uint32, length int, now time.Time) {
+	entry := f.rangeEntry(key, now)
+	entry.consumedStart = start
+	entry.consumedEnd = start + uint32(length)
+	entry.holdsConsumed = true
+	// The emission removes the stream, so the next segment opens a buffer of its own.
+	entry.holdsBuffer = false
+}
+
+// recordTheBufferStart stores the lowest sequence number the reassembler holds for the
+// stream.
+//
+// `GetStream` reassembles from the lowest sequence number, and a segment that arrives late
+// moves that number down. The consumed range reads this value, so it follows each move.
+func (f *JA4HFingerprinter) recordTheBufferStart(key string, seq uint32, now time.Time) {
+	entry := f.rangeEntry(key, now)
+	if !entry.holdsBuffer || ja4hSeqBefore(seq, entry.bufferStart) {
+		entry.bufferStart = seq
+		entry.holdsBuffer = true
+	}
+}
+
+// rangeEntry returns the range entry of the stream, and it creates one when the table holds
+// none.
+//
+// The insert that reaches ja4hMaxStreams removes the entry that received no segment for the
+// longest time. One entry describes one stream of the reassembler, so one bound serves the
+// two. `ja4plus/fingerprinters/ja4h.py:97-101` reads the reassembler for the same bound.
+func (f *JA4HFingerprinter) rangeEntry(key string, now time.Time) *ja4hStreamRange {
+	if entry, present := f.ranges[key]; present {
+		entry.lastSeen = now
+		return entry
+	}
+
+	if len(f.ranges) >= ja4hMaxStreams {
+		f.removeTheLeastRecentRange()
+	}
+
+	entry := &ja4hStreamRange{lastSeen: now}
+	f.ranges[key] = entry
+	return entry
+}
+
+// removeTheLeastRecentRange removes the entry that received no segment for the longest time.
+//
+// The table holds ja4hMaxStreams entries at most, so the scan reads 100 entries at most.
+func (f *JA4HFingerprinter) removeTheLeastRecentRange() {
+	oldestKey := ""
+	var oldest time.Time
+	found := false
+
+	for key, entry := range f.ranges {
+		if !found || entry.lastSeen.Before(oldest) {
+			oldestKey = key
+			oldest = entry.lastSeen
+			found = true
+		}
+	}
+
+	if found {
+		delete(f.ranges, oldestKey)
+	}
+}
+
+// evictAgedRanges removes each entry that received no segment for ja4hMaxStreamAge.
+//
+// The clock reads the packet timestamp, and never the wall clock. A capture replays faster
+// than the wall clock, so a wall clock removes state that the capture still needs.
+func (f *JA4HFingerprinter) evictAgedRanges(now time.Time) {
+	for key, entry := range f.ranges {
+		if now.Sub(entry.lastSeen) > ja4hMaxStreamAge {
+			delete(f.ranges, key)
+		}
+	}
 }
 
 // Reset clears the TCP stream reassembler.
@@ -133,6 +303,7 @@ func (f *JA4HFingerprinter) Reset() {
 	f.ensure()
 
 	f.reassembler = parser.NewTCPStreamReassembler(ja4hMaxStreams, ja4hMaxStreamBytes)
+	f.ranges = make(map[string]*ja4hStreamRange)
 }
 
 // CleanupConnection removes internal state for the given connection.
@@ -144,6 +315,8 @@ func (f *JA4HFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	rev := fmt.Sprintf("%s:%d->%s:%d", dstIP, dstPort, srcIP, srcPort)
 	f.reassembler.RemoveStream(fwd)
 	f.reassembler.RemoveStream(rev)
+	delete(f.ranges, fwd)
+	delete(f.ranges, rev)
 }
 
 // ComputeJA4H extracts the TCP payload from a packet, parses it as an HTTP

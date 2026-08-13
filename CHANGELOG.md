@@ -14,8 +14,8 @@ put 35 more entries into it, issue #197 put 14 more, issue #223 put 4 more, issu
 Issue #409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5
 of those 10 entries. A run on
 the current tree
-reports 1658 matches, 635
-deviations, 419 accepted deviations and 459 register keys. The run also reports 202 unaccepted
+reports 1658 matches, 585
+deviations, 419 accepted deviations and 459 register keys. The run also reports 192 unaccepted
 uncovered values and 40 accepted uncovered values, and #361 states what an uncovered value is.
 An accepted deviation and an accepted uncovered value each name one register entry, so 419 and
 40 add up to the 459 register keys. A count that an entry below states therefore differs from
