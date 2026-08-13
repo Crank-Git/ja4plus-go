@@ -481,3 +481,109 @@ func TestTheTrackedConformanceReportHoldsTheReportShape(t *testing.T) {
 		}
 	}
 }
+
+// FR-conformance-33q names the count of uncovered values, and FR-conformance-33s states the
+// count of each capture, each vector set and each method. A reader therefore reads the count
+// of one method without a rerun.
+func TestTheReportStatesTheUncoveredValueCountOfEachMethod(t *testing.T) {
+	report := newConformanceReport("27f0cbf")
+	report.readCapture("https-connect.pcap")
+	report.recordComparison("https-connect.pcap", conformanceReportPacketSet, conformanceComparison{
+		Uncovered: []conformanceUncoveredValue{
+			{Key: conformanceKey{Capture: "https-connect.pcap", Stream: "3", Method: "JA4L.1"}, Produced: "45_64"},
+			{
+				Key:      conformanceKey{Capture: "https-connect.pcap", Stream: "5", Method: "JA4LS.1"},
+				Produced: "13532_57",
+				Accepted: true,
+			},
+		},
+	})
+
+	text := report.render()
+
+	for _, wanted := range []string{
+		"## Uncovered values",
+		"| Unaccepted uncovered values | 1 |",
+		"| Accepted uncovered values | 1 |",
+		"https-connect.pcap/3/JA4L.1",
+		"https-connect.pcap/5/JA4LS.1",
+		"45_64",
+		"13532_57",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
+// FR-conformance-33t states the result of every run. A section a reader finds empty says
+// nothing about the coverage of the corpus.
+func TestTheReportStatesThatARunReportsNoUncoveredValue(t *testing.T) {
+	text := oneConformanceReport().render()
+
+	for _, wanted := range []string{
+		"| Unaccepted uncovered values | 0 |",
+		"| Accepted uncovered values | 0 |",
+		"The run reports no uncovered value.",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
+// FR-conformance-33r counts an accepted uncovered value apart from an accepted deviation,
+// because an uncovered value is neither a match nor a deviation. The register holds one entry
+// for each accepted comparison, so the two counts add up to the register key count.
+func TestTheReportCountsAnAcceptedUncoveredValueApartFromAnAcceptedDeviation(t *testing.T) {
+	report := newConformanceReport("27f0cbf")
+	report.readCapture("tls-handshake.pcapng")
+	report.recordComparison("tls-handshake.pcapng", conformanceReportStreamSet, conformanceComparison{
+		Deviations: []conformanceDeviation{{
+			Key:      conformanceKey{Capture: "tls-handshake.pcapng", Stream: "0", Method: "JA4S"},
+			Kind:     conformanceChangedValue,
+			Expected: "t120300_c030_4e8089b5d0f3",
+			Produced: "t120300_c030_4e8089b5d0f4",
+			Accepted: true,
+		}},
+		Uncovered: []conformanceUncoveredValue{{
+			Key:      conformanceKey{Capture: "tls-handshake.pcapng", Stream: "0", Method: "JA4L-S"},
+			Produced: "13532_57",
+			Accepted: true,
+		}},
+	})
+
+	text := report.render()
+
+	for _, wanted := range []string{
+		"| Accepted deviations | 1 |",
+		"| Accepted uncovered values | 1 |",
+		"| Accepted comparisons | 2 |",
+	} {
+		if !strings.Contains(text, wanted) {
+			t.Errorf("the report does not hold %q", wanted)
+		}
+	}
+}
+
+// An uncovered value reaches no row of the result table. The vector file holds no value for
+// the method, and FR-conformance-33 records `not applicable` for that cell.
+func TestTheReportRecordsNotApplicableForAMethodThatReachesUncoveredValuesAlone(t *testing.T) {
+	report := newConformanceReport("27f0cbf")
+	report.readCapture("https-connect.pcap")
+	report.recordComparison("https-connect.pcap", conformanceReportPacketSet, conformanceComparison{
+		Uncovered: []conformanceUncoveredValue{
+			{Key: conformanceKey{Capture: "https-connect.pcap", Stream: "3", Method: "JA4L.1"}, Produced: "45_64"},
+		},
+	})
+
+	row := conformanceRowOf(t, report, "https-connect.pcap", "JA4L")
+
+	if row.Result != conformanceReportNotApplicable {
+		t.Errorf("the row records %q, and the vector file holds no value for the method", row.Result)
+	}
+
+	if row.Deviations != 0 {
+		t.Errorf("the row counts %d deviations, and an uncovered value is no deviation", row.Deviations)
+	}
+}

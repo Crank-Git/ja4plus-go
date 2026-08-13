@@ -144,6 +144,25 @@ type conformanceReportSetTotals struct {
 	Deviations int
 	Accepted   int
 	Stale      int
+	// Uncovered counts the uncovered values that the register does not name, and
+	// AcceptedUncovered counts the uncovered values that the register names. #361 makes an
+	// uncovered value a third category.
+	Uncovered         int
+	AcceptedUncovered int
+}
+
+// conformanceReportUncoveredGroup holds the uncovered values of one capture, one method and
+// one vector set. It holds FR-conformance-33s.
+type conformanceReportUncoveredGroup struct {
+	// Capture, Method and Set name the group.
+	Capture string
+	Method  string
+	Set     string
+	// Count is the number of uncovered values of the group.
+	Count int
+	// Samples holds at most `conformanceReportSampleLimit` of them, in the key order the
+	// engine writes.
+	Samples []conformanceUncoveredValue
 }
 
 // conformanceReport collects the outcome of one conformance run and renders it.
@@ -161,6 +180,10 @@ type conformanceReport struct {
 	counts map[conformanceReportCell]conformanceReportCount
 	// groups maps a capture, a method and a vector set to its deviations.
 	groups map[conformanceReportGroupKey]*conformanceReportGroup
+	// uncovered maps a capture, a method and a vector set to its uncovered values. #361 keeps
+	// them apart from the deviations, because an uncovered value is neither a match nor a
+	// deviation.
+	uncovered map[conformanceReportGroupKey]*conformanceReportUncoveredGroup
 	// sets counts the outcome of each vector set.
 	sets map[string]conformanceReportSetTotals
 	// stale holds every register entry the run no longer reaches, in the key order the
@@ -185,6 +208,8 @@ func newConformanceReport(commit string) *conformanceReport {
 		groups:   make(map[conformanceReportGroupKey]*conformanceReportGroup),
 		sets:     make(map[string]conformanceReportSetTotals),
 		reached:  make(map[conformanceKey]bool),
+
+		uncovered: make(map[conformanceReportGroupKey]*conformanceReportUncoveredGroup),
 	}
 }
 
@@ -247,6 +272,41 @@ func (r *conformanceReport) recordComparison(capture, set string, comparison con
 
 		r.counts[conformanceReportCell{Capture: capture, Method: method}] = count
 		r.addDeviation(capture, method, set, deviation)
+	}
+
+	// An uncovered value reaches no row of the result table. The vector file holds no value
+	// for the method, and FR-conformance-33 records `not applicable` for that cell. #361
+	// gives the value a section of its own.
+	//
+	// The loop therefore calls no `r.count`, and `totals` reads `r.counts` to count the
+	// captures the suite compared. **A capture whose every value is uncovered would reach no
+	// cell, and the report would then count it as a capture the suite compared nothing on
+	// while `conformance_test.go` counts it as compared.** `conformanceCheckReportTotals`
+	// would fail on that pair.
+	//
+	// **That capture is unreachable.** `conformanceRunStreamSet` at `conformance_test.go:815`
+	// and `conformanceRunPacketSet` at `conformance_test.go:853` each report that the suite
+	// compared nothing when the expected map is empty. A set that reports a comparison
+	// therefore holds one expected key or more, and an expected key produces a match, an
+	// absent value or a changed value. An uncovered value needs `!vectorHolds`, so no
+	// expected key reaches this loop.
+	//
+	// A change that lets a comparison run over an empty expected map breaks that reasoning.
+	for _, value := range comparison.Uncovered {
+		method, err := conformanceReportMethodOf(value.Key.Method)
+		if err != nil {
+			r.hold(err)
+
+			continue
+		}
+
+		if value.Accepted {
+			setTotals.AcceptedUncovered++
+		} else {
+			setTotals.Uncovered++
+		}
+
+		r.addUncovered(capture, method, set, value)
 	}
 
 	// A stale entry names a register entry rather than a comparison, so it reaches no row
@@ -313,6 +373,23 @@ func (r *conformanceReport) addDeviation(capture, method, set string, deviation 
 
 	if len(group.Samples) < conformanceReportSampleLimit {
 		group.Samples = append(group.Samples, deviation)
+	}
+}
+
+// addUncovered adds one uncovered value to its group, and keeps at most the sample limit.
+func (r *conformanceReport) addUncovered(capture, method, set string, value conformanceUncoveredValue) {
+	key := conformanceReportGroupKey{Capture: capture, Method: method, Set: set}
+
+	group, held := r.uncovered[key]
+	if !held {
+		group = &conformanceReportUncoveredGroup{Capture: capture, Method: method, Set: set}
+		r.uncovered[key] = group
+	}
+
+	group.Count++
+
+	if len(group.Samples) < conformanceReportSampleLimit {
+		group.Samples = append(group.Samples, value)
 	}
 }
 
@@ -434,6 +511,24 @@ func (r *conformanceReport) deviationGroups() []conformanceReportGroup {
 	return groups
 }
 
+// uncoveredGroups returns every uncovered group, sorted by capture, then vector set, then
+// method.
+func (r *conformanceReport) uncoveredGroups() []conformanceReportUncoveredGroup {
+	groups := make([]conformanceReportUncoveredGroup, 0, len(r.uncovered))
+	for _, group := range r.uncovered {
+		groups = append(groups, *group)
+	}
+
+	slices.SortFunc(groups, func(first, second conformanceReportUncoveredGroup) int {
+		return strings.Compare(
+			first.Capture+"\x00"+first.Set+"\x00"+first.Method,
+			second.Capture+"\x00"+second.Set+"\x00"+second.Method,
+		)
+	})
+
+	return groups
+}
+
 // conformanceReportCounts counts the whole run.
 type conformanceReportCounts struct {
 	Captures      int
@@ -444,6 +539,10 @@ type conformanceReportCounts struct {
 	Accepted      int
 	Stale         int
 	Orphan        int
+	// Uncovered counts the uncovered values that the register does not name, and
+	// AcceptedUncovered counts the uncovered values that the register names. #361.
+	Uncovered         int
+	AcceptedUncovered int
 }
 
 // totals counts the whole run from the comparisons the report holds.
@@ -459,6 +558,8 @@ func (r *conformanceReport) totals() conformanceReportCounts {
 		totals.Deviations += set.Deviations
 		totals.Accepted += set.Accepted
 		totals.Stale += set.Stale
+		totals.Uncovered += set.Uncovered
+		totals.AcceptedUncovered += set.AcceptedUncovered
 	}
 
 	compared := make(map[string]bool, len(r.captures))
@@ -482,6 +583,7 @@ func (r *conformanceReport) render() string {
 	r.renderHead(&out)
 	r.renderSummary(&out)
 	r.renderDeviations(&out)
+	r.renderUncovered(&out)
 	r.renderStale(&out)
 	r.renderOrphans(&out)
 	r.renderResults(&out)
@@ -507,20 +609,31 @@ func (r *conformanceReport) renderSummary(out *strings.Builder) {
 	fmt.Fprintf(out, "| Matches | %d |\n", totals.Matches)
 	fmt.Fprintf(out, "| Deviations | %d |\n", totals.Deviations)
 	fmt.Fprintf(out, "| Accepted deviations | %d |\n", totals.Accepted)
+	// The row names the unaccepted count in full. `Uncovered values` alone would name 192
+	// here and 220 in the section below, and one phrase must carry one meaning.
+	fmt.Fprintf(out, "| Unaccepted uncovered values | %d |\n", totals.Uncovered)
+	fmt.Fprintf(out, "| Accepted uncovered values | %d |\n", totals.AcceptedUncovered)
+	fmt.Fprintf(out, "| Accepted comparisons | %d |\n", totals.Accepted+totals.AcceptedUncovered)
 	fmt.Fprintf(out, "| Stale register entries | %d |\n", totals.Stale)
 	fmt.Fprintf(out, "| Orphan register entries | %d |\n", totals.Orphan)
 	fmt.Fprintf(out, "| Captures the suite compared | %d |\n", totals.Compared)
 	fmt.Fprintf(out, "| Captures the suite compared nothing on | %d |\n\n", totals.NotApplicable)
 
 	out.WriteString("The two vector sets cover different methods, so the report counts each one on its own.\n\n")
-	out.WriteString("| Vector set | Matches | Deviations | Accepted deviations |\n|---|---|---|---|\n")
+	out.WriteString("| Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | " +
+		"Accepted uncovered values |\n|---|---|---|---|---|---|\n")
 
 	for _, set := range []string{conformanceReportStreamSet, conformanceReportPacketSet} {
 		counts := r.sets[set]
-		fmt.Fprintf(out, "| %s | %d | %d | %d |\n", set, counts.Matches, counts.Deviations, counts.Accepted)
+		fmt.Fprintf(out, "| %s | %d | %d | %d | %d | %d |\n",
+			set, counts.Matches, counts.Deviations, counts.Accepted, counts.Uncovered, counts.AcceptedUncovered)
 	}
 
-	out.WriteString("\nAn accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.\n\n")
+	out.WriteString("\nAn accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.\n")
+	out.WriteString("An accepted uncovered value is an entry of that file too, and `## Uncovered values` below " +
+		"states what an uncovered value is.\n")
+	out.WriteString("The register holds one entry for each accepted comparison, so the accepted comparison count " +
+		"equals the register key count.\n\n")
 }
 
 // renderDeviations writes the deviation table. It holds FR-conformance-32.
@@ -556,6 +669,61 @@ func (r *conformanceReport) renderDeviations(out *strings.Builder) {
 				group.Capture, group.Set, group.Method, group.Count, deviation.Key,
 				deviation.Kind, accepted,
 				conformanceReportValue(deviation.Expected), conformanceReportValue(deviation.Produced))
+		}
+	}
+
+	out.WriteString("\n")
+}
+
+// renderUncovered writes the uncovered values. It holds FR-conformance-33r,
+// FR-conformance-33s and FR-conformance-33t, and #361 states the rule it reports.
+//
+// The section states the result of every run, and never of a run with an uncovered value
+// alone. A reader who finds no section cannot tell full coverage from a renderer that dropped
+// the count.
+//
+// The row holds no expected value. The vector file names no key for the method, so the
+// comparison reads no value to print.
+func (r *conformanceReport) renderUncovered(out *strings.Builder) {
+	groups := r.uncoveredGroups()
+
+	out.WriteString("## Uncovered values\n\n")
+	out.WriteString("The library produces a value, and the vector file of the capture publishes no key for its " +
+		"method. Such a file states nothing about the method. The run therefore counts the value apart from a " +
+		"match, and apart from a deviation. The maintainer ruled the third category on 2026-08-13 in #361.\n\n")
+	out.WriteString("The count below holds the accepted values and the unaccepted ones. The summary above counts " +
+		"the two apart.\n\n")
+
+	if len(groups) == 0 {
+		out.WriteString("The run reports no uncovered value.\n\n")
+
+		return
+	}
+
+	totals := r.totals()
+
+	// The sentence states the whole count and the accepted count. The summary row
+	// `Uncovered values` counts the unaccepted ones alone, as the row `Deviations` does, so a
+	// reader who meets one number without the other reads two counts as one.
+	fmt.Fprintf(out, "The run reports %d uncovered values in %d groups, and the register accepts %d of them. "+
+		"One group is one capture, one method and one vector set.\n\n",
+		totals.Uncovered+totals.AcceptedUncovered, len(groups), totals.AcceptedUncovered)
+	fmt.Fprintf(out, "This file is tracked in git, so the table holds at most %d uncovered values of each group. "+
+		"The `Uncovered` column counts the whole group.\n\n", conformanceReportSampleLimit)
+
+	out.WriteString("| Capture | Vector set | Method | Uncovered | Comparison | Produced | Accepted |\n")
+	out.WriteString("|---|---|---|---|---|---|---|\n")
+
+	for _, group := range groups {
+		for _, value := range group.Samples {
+			accepted := "no"
+			if value.Accepted {
+				accepted = "yes"
+			}
+
+			fmt.Fprintf(out, "| `%s` | %s | %s | %d | `%s` | %s | %s |\n",
+				group.Capture, group.Set, group.Method, group.Count, value.Key,
+				conformanceReportValue(value.Produced), accepted)
 		}
 	}
 

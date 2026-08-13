@@ -115,7 +115,13 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 				msgTypeSet = true
 			}
 		case layers.DHCPOptMaxMessageSize: // 57
-			if len(opt.Data) >= 2 {
+			// R2 of `docs/specs/foxio/JA4D.md` gives subfield 2 four characters, so one
+			// occurrence decides it. `wireshark/source/packet-ja4.c:1508-1512` appends
+			// every occurrence and reaches a part a of fifteen characters, and this
+			// project declines that defect. FR-parity-51 states the rule, and the port's
+			// register row `Subfield 2 of JA4D when a message repeats option 57` holds the
+			// reading. The port decided it as D4 of its issue #231 on 2026-08-08.
+			if len(opt.Data) >= 2 && !maxMsgSizeSet {
 				maxMsgSize = uint16(opt.Data[0])<<8 | uint16(opt.Data[1])
 				maxMsgSizeSet = true
 			}

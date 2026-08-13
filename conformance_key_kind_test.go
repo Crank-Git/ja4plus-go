@@ -213,5 +213,5 @@ func conformancePacketKeySpace(t *testing.T, capture string, packets []gopacket.
 		return nil
 	}
 
-	return conformanceComparedKeys(conformanceProducedByFrame(t, capture, packets, conformanceCoveredMethods(expected)), expected)
+	return conformanceComparedKeys(conformanceProducedByFrame(t, capture, packets), expected)
 }

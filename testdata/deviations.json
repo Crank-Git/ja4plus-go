@@ -3270,5 +3270,229 @@
     "theirs": "ge11nn07enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language,If-None-Match,If-Modified-Since__",
     "ruling": "#285",
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/0/JA4L-C",
+    "capability": false,
+    "ours": "1_128",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/0/JA4L-S",
+    "capability": false,
+    "ours": "2219_255",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/1/JA4L-C",
+    "capability": false,
+    "ours": "1_128",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/1/JA4L-S",
+    "capability": false,
+    "ours": "1513_255",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-C",
+    "capability": false,
+    "ours": "1_128",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-S",
+    "capability": false,
+    "ours": "1948_255",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "https-connect.pcap/0/JA4L-C",
+    "capability": false,
+    "ours": "45_64",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "https-connect.pcap/0/JA4L-S",
+    "capability": false,
+    "ours": "13532_57",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4L-S",
+    "capability": false,
+    "ours": "2282_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:61836/JA4L-S",
+    "capability": false,
+    "ours": "2286_61_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.100:443-192.168.1.168:55906/JA4L-S",
+    "capability": false,
+    "ours": "2462_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.16.95:443-192.168.1.168:55945/JA4L-S",
+    "capability": false,
+    "ours": "2647_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.102:443-192.168.1.168:57662/JA4L-S",
+    "capability": false,
+    "ours": "2728_61_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.132:443-192.168.1.168:57188/JA4L-S",
+    "capability": false,
+    "ours": "2449_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.138:443-192.168.1.168:51905/JA4L-S",
+    "capability": false,
+    "ours": "2429_61_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.147:443-192.168.1.168:59102/JA4L-S",
+    "capability": false,
+    "ours": "3379_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.94:443-192.168.1.168:49333/JA4L-S",
+    "capability": false,
+    "ours": "2386_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:50053/JA4L-S",
+    "capability": false,
+    "ours": "2380_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:51782/JA4L-S",
+    "capability": false,
+    "ours": "2124_61_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/142.251.163.95:443-192.168.1.168:55309/JA4L-S",
+    "capability": false,
+    "ours": "2338_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:54980/JA4L-S",
+    "capability": false,
+    "ours": "2771_87_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:59444/JA4L-S",
+    "capability": false,
+    "ours": "2870_87_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.1:443-192.168.1.168:61730/JA4L-S",
+    "capability": false,
+    "ours": "2714_87_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/157.240.229.2:443-192.168.1.168:60374/JA4L-S",
+    "capability": false,
+    "ours": "3649_87_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.84:443-192.168.1.168:57816/JA4L-S",
+    "capability": false,
+    "ours": "2842_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.122.94:443-192.168.1.168:60845/JA4L-S",
+    "capability": false,
+    "ours": "2682_60_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/172.253.63.95:443-192.168.1.168:59221/JA4L-S",
+    "capability": false,
+    "ours": "2479_61_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
+  },
+  {
+    "key": "tls-handshake.pcapng/192.168.1.168:52166-31.13.66.35:443/JA4L-S",
+    "capability": false,
+    "ours": "3450_87_quic",
+    "theirs": "",
+    "ruling": "#361",
+    "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
   }
 ]
