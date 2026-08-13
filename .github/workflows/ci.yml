@@ -354,8 +354,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # FR-supply-16 measures total statement coverage on every pull request this workflow
-  # covers. The job runs the `cover` target, and FR-foundation-17 holds the command there,
-  # so this job and a developer can never measure two different commands.
+  # covers. The job runs the `cover` target. FR-foundation-17 holds the command there, so
+  # this job and a developer can never measure two different commands.
   #
   # FR-supply-17 fails the job when the measured coverage falls below `.coverage-floor`.
   # #68 created that file on 2026-08-13, and FR-supply-31 states that the first value is
@@ -390,11 +390,21 @@ jobs:
       # `go tool cover -func` writes the total as a percentage, so the comparison strips
       # the sign and reads both values as numbers. The shell compares integers alone, and
       # a coverage total carries one decimal place, so `awk` makes the comparison.
+      #
+      # The step reads each value into a variable and it tests both for the empty string,
+      # because `awk` reads an empty value as `0`. An absent `.coverage-floor` would then
+      # compare against a floor of zero, and the gate would pass on every total. This step
+      # needs no `set -o pipefail` for that reason: an empty value fails the step here.
       - name: Compare the coverage with the floor
         run: |
           floor=$(tr -d '[:space:]' < .coverage-floor)
           measured=$(go tool cover -func=coverage.out |
             awk '/^total:/ { print $NF }' | tr -d '%')
+
+          if [ -z "$floor" ]; then
+            echo ".coverage-floor is absent or holds no value, so this gate measures nothing" >&2
+            exit 1
+          fi
 
           if [ -z "$measured" ]; then
             echo "go tool cover printed no total line" >&2
@@ -422,6 +432,10 @@ jobs:
       # The step runs after a pass and after a failure, because a reader of a failed run
       # needs the package that fell. An earlier step can fail before `make cover` writes
       # the log, so the step reads the log only when the file is present.
+      #
+      # This step needs no `set -o pipefail`, and it must not fail the job. An earlier step
+      # already reported the reason for a failed run, and a second reason hides the first.
+      # The `-f` tests hold each read, so a missing file writes a summary that says so.
       - name: Publish the coverage counts
         if: always()
         run: |
@@ -452,6 +466,7 @@ jobs:
                   }
                 }
                 $1 == "?" { print "| `" $2 "` | no test file |" }
+                $1 == "FAIL" { print "| `" $2 "` | the tests failed |" }
               ' coverage.log
             fi
             echo

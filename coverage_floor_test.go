@@ -11,7 +11,7 @@ import (
 // hold the gate, so that a later edit cannot drop it without a failure.
 
 // TestTheRepositoryHoldsACoverageFloorFile holds FR-supply-30. The tree held no such file
-// until #68 created it on 2026-08-13, and step 5 of the `## A change is done when` list in
+// until #68 created it on 2026-08-13. Step 5 of the `## A change is done when` list in
 // `CLAUDE.md` was unrunnable until then.
 func TestTheRepositoryHoldsACoverageFloorFile(t *testing.T) {
 	floor := strings.TrimSpace(readRepoFile(t, ".coverage-floor"))
@@ -22,8 +22,8 @@ func TestTheRepositoryHoldsACoverageFloorFile(t *testing.T) {
 }
 
 // TestTheCoverageFloorIsOneNumber holds the shape that the CI coverage job reads.
-// The job passes the value to `awk` as a number, and a second line or a unit sign makes
-// that comparison read something the file never states.
+// The job passes the value to `awk` as a number. A second line or a unit sign makes that
+// comparison read something the file never states.
 func TestTheCoverageFloorIsOneNumber(t *testing.T) {
 	content := readRepoFile(t, ".coverage-floor")
 	floor := strings.TrimSpace(content)
@@ -42,17 +42,64 @@ func TestTheCoverageFloorIsOneNumber(t *testing.T) {
 	}
 }
 
-// TestTheCoverageJobReadsTheFloorFile holds FR-supply-17. A job that measures the coverage
-// and reads no floor gates nothing.
-func TestTheCoverageJobReadsTheFloorFile(t *testing.T) {
-	workflow := readRepoFile(t, ".github/workflows/ci.yml")
+// workflowJobCommands returns the lines of one job of a workflow, without a comment line
+// and without a blank line.
+//
+// A test that reads the whole file passes on a comment that holds the phrase, and a
+// comment runs no command. Each phrase this file holds appears in a comment of the
+// coverage job too, so a test that reads the file measures the prose rather than the job.
+//
+// The job ends at the next key of the same indent, and the last job of the file ends at
+// the end of the file.
+func workflowJobCommands(t *testing.T, path string, job string) string {
+	t.Helper()
 
-	if !strings.Contains(workflow, "\n  coverage:\n") {
-		t.Fatalf(".github/workflows/ci.yml holds no coverage job")
+	commands := []string{}
+	found := false
+
+	for _, line := range strings.Split(readRepoFile(t, path), "\n") {
+		if !found {
+			found = line == "  "+job+":"
+			continue
+		}
+
+		if regexp.MustCompile(`^  \S`).MatchString(line) && !strings.HasPrefix(line, "  #") {
+			break
+		}
+
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+
+		commands = append(commands, line)
 	}
 
-	if !strings.Contains(workflow, "< .coverage-floor") {
-		t.Errorf("the coverage job reads no value from .coverage-floor")
+	if !found {
+		t.Fatalf("%s holds no %s job", path, job)
+	}
+
+	return strings.Join(commands, "\n")
+}
+
+// TestTheCoverageJobReadsTheFloorFile holds FR-supply-17. A job that measures the coverage
+// and reads no floor gates nothing.
+//
+// The test reads the failing branch too. A job that reads the file and never exits on a
+// low total reports a number, and it gates nothing.
+func TestTheCoverageJobReadsTheFloorFile(t *testing.T) {
+	commands := workflowJobCommands(t, ".github/workflows/ci.yml", "coverage")
+
+	if !strings.Contains(commands, "< .coverage-floor") {
+		t.Errorf("the coverage job reads no value from .coverage-floor:\n%s", commands)
+	}
+
+	if !strings.Contains(commands, "the coverage fell below the floor") {
+		t.Errorf("the coverage job names no total below the floor:\n%s", commands)
+	}
+
+	if !strings.Contains(commands, "exit 1") {
+		t.Errorf("the coverage job exits 0 on every total, so it gates nothing:\n%s", commands)
 	}
 }
 
@@ -60,20 +107,27 @@ func TestTheCoverageJobReadsTheFloorFile(t *testing.T) {
 // measurement command in the `cover` target, so the job and a developer measure one
 // command.
 func TestTheCoverageJobRunsTheCoverTarget(t *testing.T) {
-	workflow := readRepoFile(t, ".github/workflows/ci.yml")
+	commands := workflowJobCommands(t, ".github/workflows/ci.yml", "coverage")
 
-	if !strings.Contains(workflow, "make cover") {
-		t.Errorf("the coverage job does not run the cover target")
+	if !strings.Contains(commands, "make cover") {
+		t.Errorf("the coverage job does not run the cover target:\n%s", commands)
 	}
 }
 
 // TestTheCoverageJobPublishesABuildSummary holds FR-supply-20. The build summary is the
 // one reader-facing output of this workflow.
+//
+// The test reads the redirection too. A step that writes the heading to standard output
+// reaches no reader of the pull request.
 func TestTheCoverageJobPublishesABuildSummary(t *testing.T) {
-	workflow := readRepoFile(t, ".github/workflows/ci.yml")
+	commands := workflowJobCommands(t, ".github/workflows/ci.yml", "coverage")
 
-	if !strings.Contains(workflow, `echo "## Coverage"`) {
-		t.Errorf("the coverage job writes no Coverage section to the build summary")
+	if !strings.Contains(commands, `echo "## Coverage"`) {
+		t.Errorf("the coverage job writes no Coverage heading:\n%s", commands)
+	}
+
+	if !strings.Contains(commands, `>> "$GITHUB_STEP_SUMMARY"`) {
+		t.Errorf("the coverage job writes no build summary:\n%s", commands)
 	}
 }
 
