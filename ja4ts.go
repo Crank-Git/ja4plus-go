@@ -69,10 +69,22 @@ func NewJA4TS() *JA4TSFingerprinter {
 	return &JA4TSFingerprinter{connections: map[string]*ja4tsConnState{}}
 }
 
+// ensure fills the connection table that the constructor fills.
+// A caller who writes `var f JA4TSFingerprinter` reaches a nil map, and a write to a nil
+// map panics. F-24-4 through F-24-9 record the same defect on six other types, and every
+// entry point of this type calls this method first.
+func (f *JA4TSFingerprinter) ensure() {
+	if f.connections == nil {
+		f.connections = make(map[string]*ja4tsConnState)
+	}
+}
+
 // ProcessPacket processes a packet and returns JA4TS fingerprint results for SYN-ACK packets.
 // It returns one result for a RST packet that ends a connection which already holds a
 // delay, and it returns no result for any other packet.
 func (f *JA4TSFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
 		return nil, nil
@@ -115,6 +127,8 @@ func (f *JA4TSFingerprinter) Reset() {
 // The key names the server first, because every SYN-ACK travels from the server. The
 // caller names either direction, so this method drops both orderings.
 func (f *JA4TSFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
+	f.ensure()
+
 	delete(f.connections, ja4tsConnKey(srcIP, srcPort, dstIP, dstPort))
 	delete(f.connections, ja4tsConnKey(dstIP, dstPort, srcIP, srcPort))
 }

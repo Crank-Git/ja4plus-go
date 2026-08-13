@@ -333,12 +333,18 @@ code that this section shows compiles.
 | JA4S | `{proto}{ver}{exts}{alpn}_{cipher}_{hash}` | `t130200_1301_a56c5b993250` |
 | JA4H | `{method}{ver}{cookie}{ref}{cnt}{lang}_{h}_{h}_{h}` | `ge11cr0800_edb4461d7a83_...` |
 | JA4T | `{window}_{options}_{mss}_{wscale}` | `65535_2-4-8-1-3_1460_7` |
-| JA4TS | `{window}_{options}_{mss}_{wscale}` | `14600_2-4-8-1-3_1460_0` |
+| JA4TS | `{window}_{options}_{mss}_{wscale}[_{synack_delays}]` | `14600_2-4-8-1-3_1460_0` |
 | JA4L | `JA4L-{C\|S}={latency_us}_{ttl}` | `JA4L-S=2500_56` |
 | JA4X | `{issuer}_{subject}_{extensions}` | `a37f49ba31e2_a37f49ba31e2_dd4f1a0ef8b2` |
 | JA4SSH | `c{mode}s{mode}_c{pkts}s{pkts}_c{acks}s{acks}` | `c36s36_c51s80_c69s0` |
 | JA4D | `{type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}` | `disco0000in_61-55_1-3-6-42` |
 | JA4D6 | `{type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}` | `solct0014nn_1-6-8-25_23-24` |
+
+A JA4TS value carries `synack_delays` only when the server sent two SYN-ACK packets or
+more. That part holds the delay of each SYN-ACK after the first, in whole seconds, joined
+by `-`. A RST that the server sends on such a connection appends `-R` and the delay of the
+RST, which gives `65535_2-1-3-1-1-4_65495_8_1-2-4-8-R6`. One `JA4TSFingerprinter` reads
+every packet of the connection, and `ComputeJA4TS` reads one packet and writes four parts.
 
 ## Known Limitations
 

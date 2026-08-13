@@ -238,6 +238,23 @@ func TestJA4TS_HoldsTenPartEDelaysAtMost(t *testing.T) {
 	}
 }
 
+// The connection table of #56 is a map, and a write to a nil map panics. A caller who
+// writes `var f JA4TSFingerprinter` reaches that nil map, so `ensure` fills it on the first
+// call. F-24-4 through F-24-9 of `docs/audit/findings.md` record the same defect on six
+// other types, and `audit_panic_test.go` holds the six.
+func TestJA4TS_AZeroValueFingerprinterReadsItsFirstPacketWithNoPanic(t *testing.T) {
+	var fingerprinter JA4TSFingerprinter
+
+	if got := ja4tsValue(t, &fingerprinter, ja4tsSynAck(t, ja4tsAt(0))); got != ja4tsPrefix {
+		t.Errorf("the zero value produces %q, want %q", got, ja4tsPrefix)
+	}
+
+	var cleaner JA4TSFingerprinter
+
+	cleaner.CleanupConnection(ja4tsServerIP.String(), ja4tsServerPort,
+		ja4tsClientIP.String(), ja4tsClientPort, "tcp")
+}
+
 // FR-parity-45. `CleanupConnection` clears one entry of the state table.
 // The caller names either direction, so both orderings drop the connection.
 func TestJA4TS_CleanupConnectionRemovesTheNamedConnection(t *testing.T) {
