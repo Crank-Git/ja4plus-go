@@ -11,8 +11,11 @@ import (
 // FR-parity-3 states that rule.
 //
 // The maintainer ruled on 2026-08-13 that the JA4LS result keeps `Type: "ja4l"`.
-// `docs/specs/features/12-ja4ls.md:143-144` states that one fingerprinter writes two
-// methods, and a reader tells the two apart by the `JA4L-S=` label.
+// The rules section of `docs/specs/features/12-ja4ls.md` states that one fingerprinter writes
+// two methods and that JA4LS gets no type of its own, and a reader tells the two apart by the
+// `JA4L-S=` label. The rule is cited by its section rather than by a line number, because a
+// sibling member of this batch moved that line twice. The heading is not quoted here, because
+// it carries a spelling that `misspell` rejects in a Go file, and #388 holds that cleanup.
 //
 // The two value rulings below are PROVISIONAL, under
 // `.claude/rules/rulings.md` `## What a delegated session may rule`. The maintainer confirms
