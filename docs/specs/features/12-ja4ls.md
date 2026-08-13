@@ -52,7 +52,27 @@ it.
 
 ### The method
 
-- **FR-ja4ls-1** — `JA4LFingerprinter` emits a result whose `Type` is `ja4ls`.
+**The maintainer ruled FR-ja4ls-1 on 2026-08-13.** The requirement was wrong, and the code
+was right. It read `JA4LFingerprinter` emits a result whose `Type` is `ja4ls` before that
+ruling. `ja4l.go:183` and `ja4l.go:381` each emit the server value today, and `ja4l.go:493`
+writes `Type: "ja4l"` for every result. `## Behaviour rules` below states that JA4LS reaches
+no type of its own, so the file contradicted itself. `ja4plus/processor.py:106` at `v1.1.0`
+registers `("ja4l", JA4LFingerprinter)`, so the port writes one type for both methods. The
+`Type` field is part of the surface that `v1.0.0` freezes. #60 records the measurement.
+
+**FR-ja4ls-7 and FR-ja4ls-8 carry a PROVISIONAL ruling of #60, made on 2026-08-13.**
+`.claude/rules/rulings.md` `## What a delegated session may rule` governs it. Each
+requirement asked for a value that no FoxIO implementation writes, and the code already
+agrees with the reference. `docs/specs/foxio/JA4L.md` R13 at :90-92 states that part b holds
+the value the packet carries. R18 at :114-116 states that no implementation writes an
+estimated hop count. R6 at :57-61 states that four implementations divide by 2, and R22 at
+:137-139 states that no implementation computes a distance. The propagation factor belongs
+to the distance formula of R19, which `CalculateDistance` holds and no fingerprint reads.
+**The maintainer confirms both rulings or reverses them, and #60 is the reversal path.**
+Neither amendment changes code, and `ja4ls_emission_test.go` holds each one as a test.
+
+- **FR-ja4ls-1** — `JA4LFingerprinter` emits the JA4LS value in a result whose `Type` is
+  `ja4l`. The `JA4L-S=` label of the fingerprint names the method.
 - **FR-ja4ls-2** — The JA4LS value measures the server side of the connection.
 - **FR-ja4ls-3** — The value holds two timing parts on a TCP connection, under
   FR-parity-19.
@@ -61,10 +81,10 @@ it.
 - **FR-ja4ls-5** — The fingerprinter reports one JA4LS value for one connection.
 - **FR-ja4ls-6** — A retransmitted SYN-ACK produces no second JA4LS value, under
   FR-parity-18.
-- **FR-ja4ls-7** — The second part of the value is the hop count, read as the initial
-  time-to-live minus the observed time-to-live.
-- **FR-ja4ls-8** — The first part is the measured time divided by the propagation factor
-  that the FoxIO hop-count table gives.
+- **FR-ja4ls-7** — The second part of the value holds the time-to-live that the server
+  SYN-ACK carries. The value writes that number unchanged.
+- **FR-ja4ls-8** — The first part is half of the interval between the two measurement
+  points. No propagation factor reaches the value.
 - **FR-ja4ls-9** — A connection that reaches no server measurement point produces no JA4LS
   value.
 
@@ -72,11 +92,24 @@ it.
 
 - **FR-ja4ls-10** — `ComputeJA4LS` computes the JA4LS value for one connection, matching
   the shape of the existing `ComputeJA4L`.
-- **FR-ja4ls-11** — `Processor` accepts `ja4ls` as a method name in its type filter.
-- **FR-ja4ls-12** — `cmd/ja4plus` accepts `ja4ls` in `--types`.
+- **FR-ja4ls-11** — `Processor` returns the result of every method, and the caller selects
+  the methods it reads.
+- **FR-ja4ls-12** — `cmd/ja4plus` accepts `ja4ls` in `--types`, and that token selects the
+  JA4LS value alone.
+- **FR-ja4ls-12a** — `cmd/ja4plus` accepts `ja4l` in `--types`, and that token selects the
+  JA4L value and the JA4LS value.
+- **FR-ja4ls-12b** — `cmd/ja4plus` returns an error for a `--types` token that names no
+  method, and the error names every token the command accepts.
 - **FR-ja4ls-13** — `JA4LFingerprinter.CleanupConnection` clears the state that both
   methods read.
 - **FR-ja4ls-14** — `JA4LFingerprinter.Reset` clears the results of both methods.
+
+**FR-ja4ls-11 read that `Processor` accepts `ja4ls` in its type filter, and #61 measured
+that `Processor` holds no type filter.** `processor.go` runs every fingerprinter and returns
+every result, and `cmd/ja4plus/main.go` holds the one filter of this repository. A filter on
+`Processor` would add an exported method, which `v1.0.0` then freezes, and
+`sync_processor_test.go:59` holds the signature set that such a method changes. **The
+requirement therefore states what the library does**, and FR-ja4ls-12 states the filter.
 
 ### The count
 
@@ -93,10 +126,33 @@ it.
 ### Conformance
 
 - **FR-ja4ls-21** — The conformance harness compares every published JA4LS value.
-- **FR-ja4ls-22** — A JA4LS value that the harness cannot compare, because the reference
-  file holds no key, carries a register entry under FR-parity-22.
+- **FR-ja4ls-22** — A per-stream JA4LS value that the harness cannot compare, because the
+  reference file holds no key, carries a register entry under FR-parity-22.
 - **FR-ja4ls-23** — `docs/specs/foxio/JA4L.md` states that no image specifies JA4LS, and
   names the sources that do.
+
+**FR-ja4ls-22 carries a PROVISIONAL scope decision of #63, made on 2026-08-13.** The
+requirement named both vector sets before that decision. **The decision is a scope decision
+and never a ruling.** It writes no register entry, and it states no rule about a fingerprint
+value, so it reaches nothing that `.claude/rules/rulings.md` reserves to the maintainer.
+
+**A reading explains the per-stream set, and no reading explains the per-packet set.**
+`python/ja4.py:340` at the pin holds `delete_keys(['JA4L-S', 'JA4L-C'], final)`, under the
+guard `if 'ja4l' not in output_types:` at :339. That pair states why a per-stream reference
+file publishes no JA4L key. Ruling #361 registered 24 such uncovered values on 2026-08-13,
+and each entry names #361. **No reading covers the Wireshark generator.**
+
+**#376 owns the uncovered per-packet JA4LS values, and #376 is open at `status:ready`.** Its
+body states `Write no register entry until the cause is read.` A later issue writes those
+entries once #376 reads why the Wireshark generator publishes no JA4L key. **#376 records
+that an uncovered value fails no gate.** The run of #63 counts 33 uncovered per-packet JA4LS
+values, and `testdata/deviations.json` holds no key whose method is `JA4LS`.
+
+**This slice adds no entry to `testdata/deviations.json`.** The register holds 449 entries
+before this slice, and 449 after it.
+
+**The reversal path is issue comment 5276074116 of #63.** The maintainer reverses this scope
+by a ruling, and that ruling restores the per-packet set to FR-ja4ls-22.
 
 ## User flows
 
@@ -135,8 +191,9 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 |---|---|
 | `ja4l.go` | Emits a second result. New `ComputeJA4LS`. |
 | `ja4l_test.go` | New cases for the server value. |
-| `processor.go` | `ja4ls` joins the type filter. |
-| `cmd/ja4plus/main.go` | `ja4ls` joins `--types`. |
+| `processor.go` | No change. It holds no type filter. |
+| `cmd/ja4plus/types.go` | New. The token list, the parse and the selection. |
+| `cmd/ja4plus/main.go` | `--types` reads the token list, and it refuses an unknown token. |
 | `conformance_test.go` | The JA4LS comparison. |
 | `docs/specs/foxio/JA4L.md` | Records that no image specifies JA4LS. |
 | `README.md`, `CLAUDE.md`, `docs/` | The method count. |
@@ -186,10 +243,10 @@ values, under the rule that the port's `.claude/rules/external-apis.md` states.
 
 ## Open questions
 
-1. **Does `--types ja4l` alone print the JA4LS value?** The port emits both from one
-   fingerprinter, and its type filter names ten fingerprinters rather than eleven methods.
-   FR-ja4ls-11 and FR-ja4ls-12 make `ja4ls` its own filter token here, which is the more
-   useful behaviour and the one that differs from the port. **The maintainer rules, and
-   the ruling lands in both repositories.**
+1. ~~**Does `--types ja4l` alone print the JA4LS value?**~~ **Closed. The maintainer ruled
+   it on 2026-08-13, and #61 records the ruling.** `--types ja4l` prints the JA4L value and
+   the JA4LS value. `--types ja4ls` prints the JA4LS value alone. **The ruling is a superset
+   over the port, and no fingerprint value moves.** `Crank-Git/ja4plus#605` proposes the
+   same token for the port. R9 question 3 of `docs/specs/spec.md` records the closure.
 2. **Does the freeze make FR-ja4ls-10 worth adding?** `ComputeJA4LS` matches the existing
    convenience functions, and every exported name added now is frozen at `v1.0.0`.
