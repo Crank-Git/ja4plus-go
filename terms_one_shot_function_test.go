@@ -218,7 +218,7 @@ func readOneShotFunctionDocComments(t *testing.T) map[string]string {
 	return docComments
 }
 
-// #399 — fourteen sites of the tree wrote a declined synonym for this concept, and the
+// #399 — fourteen sites of the tree wrote a declined synonym for this concept. The
 // `Do not use` column of the `one-shot function` row names that synonym. This guard holds
 // the repair of the seven sites that are doc comments.
 //
