@@ -48,8 +48,10 @@ func TestJA4TS_ACKOnly(t *testing.T) {
 }
 
 func TestJA4TS_Reset(t *testing.T) {
-	// JA4TS holds no state, so Reset changes no result. Issue #25 removed the results
-	// slice, which grew without a bound and which no exported method read.
+	// Reset drops the connection table, so the second read sees the packet as the first
+	// SYN-ACK of a new connection and writes no part e. Without Reset the second read
+	// writes the delay `0`, which `TestJA4TS_WritesOnePartEDelayWhenTheServerAnswersTwice`
+	// holds.
 	fp := NewJA4TS()
 	pkt := buildTCPPacket(t, 443, 12345, true, true, 29200, nil)
 
