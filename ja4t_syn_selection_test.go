@@ -14,9 +14,14 @@ import (
 // row. A reversal of the ruling changes both repositories.
 //
 // The rule separates two readings of the reference. `rust/ja4/src/tcp.rs:146` tests the SYN
-// bit and the ACK bit, and `rust/ja4/src/tcp.rs:153` asserts `is_initial_syn(0xC2)`.
+// bit and the ACK bit, and `rust/ja4/src/tcp.rs:154` asserts `is_initial_syn(0xC2)`.
+// `rust/ja4/src/tcp.rs:157` asserts that `0x12` reaches no value, which is the SYN-ACK half.
 // `zeek/ja4t/main.zeek:126` and `wireshark/source/packet-ja4.c:1266` each test the whole
 // flag byte against `0x02`, so each one declines a SYN that carries the ECN flags.
+//
+// The ruling of 2026-08-13 cites the `0xC2` assertion at `rust/ja4/src/tcp.rs:153`, and that
+// line holds the comment above the assertion. This file cites `:154`, which holds the
+// assertion at the commit in `testdata/foxio.pin`.
 //
 // The two tests below build the packet that separates the readings, because the flag byte
 // of the FoxIO corpus reaches no comparison for it. The per-packet vector of
@@ -98,7 +103,7 @@ func buildFlaggedTCPPacket(t *testing.T, flags synFlags, window uint16) gopacket
 
 // TestJA4TReadsASYNThatCarriesTheECNFlags holds the ruling of #126.
 //
-// The flag byte reads `0xC2`, which is the value `rust/ja4/src/tcp.rs:153` asserts. An
+// The flag byte reads `0xC2`, which is the value `rust/ja4/src/tcp.rs:154` asserts. An
 // equality test against `0x02` declines this packet, and the bit test reads it.
 func TestJA4TReadsASYNThatCarriesTheECNFlags(t *testing.T) {
 	packet := buildFlaggedTCPPacket(t, synFlags{SYN: true, ECE: true, CWR: true}, 29200)
