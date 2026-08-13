@@ -211,7 +211,7 @@ func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP
 	}
 }
 
-// ComputeJA4 is a convenience function that extracts a JA4 fingerprint from a packet.
+// ComputeJA4 is a one-shot function that extracts a JA4 fingerprint from a packet.
 // Returns an empty string if the packet is not a TLS ClientHello.
 func ComputeJA4(packet gopacket.Packet) string {
 	payload := parser.GetTCPPayload(packet)
