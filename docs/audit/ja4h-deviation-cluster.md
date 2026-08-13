@@ -86,8 +86,9 @@ adds QUIC and QPACK.
 **This page measures no count for cause 1.** A candidate change costs a TLS record decryptor,
 an HPACK decoder and a QPACK decoder, which no reading builds to take one measurement. **The
 80 deviations are attributed by exclusion**: every one of the two captures' JA4H deviations
-reads `the vector holds a value the library does not produce`, and every frame the vector
-names carries an encrypted HTTP/2 or HTTP/3 request.
+reads `the vector holds a value the library does not produce`, and every value the vector
+names holds the version code `20`, which `packet-ja4.c:1152` writes for an HTTP/2 request
+alone. **One frame was read byte by byte, and it is frame 15 of `http2-with-cookies.pcapng`.**
 
 - **The FoxIO implementations agree.** The Wireshark dissector computes the value at
   `packet-ja4.c:1197`. The Python reference computes it at
@@ -122,8 +123,13 @@ nil until `headerBlockEnd` finds the empty line, and it returns a request as soo
 
 **The reference emits when the body ends.** `packet-ja4.c:1634` guards the emission on
 `http_req != -100`, which the dissector sets at `packet-ja4.c:1149` when the frame carries
-`http.request.method`. The Wireshark HTTP dissector exposes that field on the frame that
-completes the reassembled request, so the vector names frame 2.
+`http.request.method`.
+
+**The Wireshark HTTP dissector is not in this corpus, so this page reads its behaviour from
+the vector.** `testdata/foxio/wireshark/http1.pcapng.json` names frame 2 and names no frame 1,
+and frame 2 holds no request line. So the dissector exposed `http.request.method` on the
+frame that completes the reassembled request. **A reader who needs the dissector's own rule
+must read the Wireshark source, which the pin does not hold.**
 
 **The measurement.** A candidate change held the value until the payload after the header
 block reached the byte count that `Content-Length` names. The JA4H count moved from 337 to
@@ -177,10 +183,15 @@ the reassembler, and `ja4h.go:88` and `ja4h.go:125` remove the stream after each
 Nothing holds the sequence number that the fingerprinter already read, so the repeat produces
 a second value.
 
-**The reference reads the frame once.** The Wireshark HTTP dissector marks a retransmission
-and exposes no `http.request.method` field for it, so `packet-ja4.c:1634` never fires. The
-Python reference writes one value for each stream at
-`testdata/foxio/reference/python/common.py:117`, which overwrites the cache entry.
+**The reference reads the frame once.** The Python reference writes one value for each stream
+at `testdata/foxio/reference/python/common.py:117`, which overwrites the cache entry, so the
+per-stream vector holds one entry for each stream.
+
+**The Wireshark HTTP dissector is not in this corpus, so this page reads its behaviour from
+the vector.** `packet-ja4.c:1634` fires only when the frame carries `http.request.method`, and
+the vector names frame 6 and frame 16 alone. So the dissector exposed no such field for the
+repeat. **A reader who needs the dissector's own rule must read the Wireshark source, which
+the pin does not hold.**
 
 **The measurement.** A candidate change held the sequence number of each emitted segment and
 returned no value for a repeat. The JA4H count moved from 337 to 287, and the total moved
