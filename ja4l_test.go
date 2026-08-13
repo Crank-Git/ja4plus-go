@@ -497,15 +497,16 @@ func TestJA4LTimesAQUICFlowThatRunsAgainstTheKeyDirection(t *testing.T) {
 		t.Fatalf("A: expected no results, got %d (%q)", len(results), results[0].Fingerprint)
 	}
 
-	// Packet 2 (B): server -> client at t=50ms — should emit JA4L-S
+	// Packet 2 (B): server -> client at t=50ms — the frame carries no value, because
+	// issue #447 moved the server emission to the point D frame.
 	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	b.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
 	bResults, err := fp.ProcessPacket(b)
 	if err != nil {
 		t.Fatalf("B: %v", err)
 	}
-	if len(bResults) != 1 || !strings.HasPrefix(bResults[0].Fingerprint, "JA4L-S=") {
-		t.Fatalf("B: expected one JA4L-S result, got %v", bResults)
+	if len(bResults) != 0 {
+		t.Fatalf("B: expected no results, got %v", bResults)
 	}
 
 	// Packet 3 (C): server -> client at t=100ms (no result yet)
@@ -515,15 +516,21 @@ func TestJA4LTimesAQUICFlowThatRunsAgainstTheKeyDirection(t *testing.T) {
 		t.Fatalf("C: expected no results, got %d", len(results))
 	}
 
-	// Packet 4 (D): client -> server at t=150ms — should emit JA4L-C
+	// Packet 4 (D): client -> server at t=150ms — should emit JA4L-S and JA4L-C
 	d := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicHandshakePayload())
 	d.Metadata().Timestamp = baseTime.Add(150 * time.Millisecond)
 	dResults, err := fp.ProcessPacket(d)
 	if err != nil {
 		t.Fatalf("D: %v", err)
 	}
-	if len(dResults) != 1 || !strings.HasPrefix(dResults[0].Fingerprint, "JA4L-C=") {
-		t.Fatalf("D: expected one JA4L-C result, got %v", dResults)
+	if len(dResults) != 2 {
+		t.Fatalf("D: expected two results, got %v", dResults)
+	}
+	if !strings.HasPrefix(dResults[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("D: expected the JA4L-S result first, got %v", dResults)
+	}
+	if !strings.HasPrefix(dResults[1].Fingerprint, "JA4L-C=") {
+		t.Fatalf("D: expected the JA4L-C result second, got %v", dResults)
 	}
 }
 
@@ -546,15 +553,16 @@ func TestJA4LFillsTheQUICClientPointsInTheReferenceDirection(t *testing.T) {
 		t.Fatalf("A: expected no results, got %v", results)
 	}
 
-	// Point B. The server packet completes the server value.
+	// Point B. The server packet fills the server point, and the point D frame carries the
+	// server value. Issue #447 holds that frame.
 	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	b.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
 	bResults, err := fp.ProcessPacket(b)
 	if err != nil {
 		t.Fatalf("B: %v", err)
 	}
-	if len(bResults) != 1 || !strings.HasPrefix(bResults[0].Fingerprint, "JA4L-S=") {
-		t.Fatalf("B: expected one JA4L-S result, got %v", bResults)
+	if len(bResults) != 0 {
+		t.Fatalf("B: expected no results, got %v", bResults)
 	}
 
 	// Point C. The server Handshake packet fills the point, and it completes no value.
@@ -571,11 +579,11 @@ func TestJA4LFillsTheQUICClientPointsInTheReferenceDirection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("D: %v", err)
 	}
-	if len(dResults) != 1 {
-		t.Fatalf("D: expected one result, got %v", dResults)
+	if len(dResults) != 2 {
+		t.Fatalf("D: expected two results, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=25000_55_quic" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=25000_55_quic")
+	if dResults[1].Fingerprint != "JA4L-C=25000_55_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[1].Fingerprint, "JA4L-C=25000_55_quic")
 	}
 }
 
@@ -597,8 +605,8 @@ func TestJA4LMovesTheQUICClientPointToTheLastServerPacket(t *testing.T) {
 
 	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	b.Metadata().Timestamp = baseTime.Add(10 * time.Millisecond)
-	if results, _ := fp.ProcessPacket(b); len(results) != 1 {
-		t.Fatalf("B: expected one result, got %v", results)
+	if results, _ := fp.ProcessPacket(b); len(results) != 0 {
+		t.Fatalf("B: expected no results, got %v", results)
 	}
 
 	// The server sends two more Handshake packets. The second of them supplies point C.
@@ -617,11 +625,11 @@ func TestJA4LMovesTheQUICClientPointToTheLastServerPacket(t *testing.T) {
 	if err != nil {
 		t.Fatalf("D: %v", err)
 	}
-	if len(dResults) != 1 {
-		t.Fatalf("D: expected one result, got %v", dResults)
+	if len(dResults) != 2 {
+		t.Fatalf("D: expected two results, got %v", dResults)
 	}
-	if dResults[0].Fingerprint != "JA4L-C=10000_55_quic" {
-		t.Errorf("D: Fingerprint = %q, want %q", dResults[0].Fingerprint, "JA4L-C=10000_55_quic")
+	if dResults[1].Fingerprint != "JA4L-C=10000_55_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", dResults[1].Fingerprint, "JA4L-C=10000_55_quic")
 	}
 
 	// Point C stops at point D, so a later server packet moves nothing.
@@ -651,8 +659,8 @@ func TestJA4LFillsTheQUICClientPointsOnlyFromAHandshakePacket(t *testing.T) {
 
 	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	b.Metadata().Timestamp = baseTime.Add(10 * time.Millisecond)
-	if results, _ := fp.ProcessPacket(b); len(results) != 1 {
-		t.Fatalf("B: expected one result, got %v", results)
+	if results, _ := fp.ProcessPacket(b); len(results) != 0 {
+		t.Fatalf("B: expected no results, got %v", results)
 	}
 
 	// A second server Initial packet fills no point, so the client packet that follows it
@@ -683,11 +691,11 @@ func TestJA4LFillsTheQUICClientPointsOnlyFromAHandshakePacket(t *testing.T) {
 	if err != nil {
 		t.Fatalf("client Handshake: %v", err)
 	}
-	if len(results) != 1 {
-		t.Fatalf("client Handshake: expected one result, got %v", results)
+	if len(results) != 2 {
+		t.Fatalf("client Handshake: expected two results, got %v", results)
 	}
-	if results[0].Fingerprint != "JA4L-C=5000_55_quic" {
-		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[0].Fingerprint, "JA4L-C=5000_55_quic")
+	if results[1].Fingerprint != "JA4L-C=5000_55_quic" {
+		t.Errorf("client Handshake: Fingerprint = %q, want %q", results[1].Fingerprint, "JA4L-C=5000_55_quic")
 	}
 }
 
@@ -715,12 +723,32 @@ func TestJA4LReadsTheDirectionOfAUDPFlowFromThePort(t *testing.T) {
 		t.Fatalf("p2: expected no results, got %v", results)
 	}
 
-	// The next server packet completes the server value.
+	// The next server packet fills the server point.
 	p3 := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	p3.Metadata().Timestamp = baseTime.Add(40 * time.Millisecond)
-	r3, _ := fp.ProcessPacket(p3)
-	if len(r3) != 1 || !strings.HasPrefix(r3[0].Fingerprint, "JA4L-S=") {
-		t.Fatalf("p3: expected JA4L-S, got %v", r3)
+	if r3, _ := fp.ProcessPacket(p3); len(r3) != 0 {
+		t.Fatalf("p3: expected no results, got %v", r3)
+	}
+
+	// The two Handshake packets complete the connection, and the point D frame carries the
+	// server value. Issue #447 holds that frame.
+	p4 := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicHandshakePayload())
+	p4.Metadata().Timestamp = baseTime.Add(60 * time.Millisecond)
+	if r4, _ := fp.ProcessPacket(p4); len(r4) != 0 {
+		t.Fatalf("p4: expected no results, got %v", r4)
+	}
+
+	p5 := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicHandshakePayload())
+	p5.Metadata().Timestamp = baseTime.Add(80 * time.Millisecond)
+	r5, _ := fp.ProcessPacket(p5)
+	if len(r5) != 2 || !strings.HasPrefix(r5[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("p5: expected JA4L-S, got %v", r5)
+	}
+
+	// The server value measures the client packet against the server packet that follows
+	// it, and never the server packet that leads it. 20 milliseconds halve to 10000.
+	if r5[0].Fingerprint != "JA4L-S=10000_64_quic" {
+		t.Errorf("p5: Fingerprint = %q, want %q", r5[0].Fingerprint, "JA4L-S=10000_64_quic")
 	}
 }
 
@@ -778,7 +806,8 @@ func TestJA4LProducesNoValueForANonQUICPayloadOnPort443(t *testing.T) {
 	}
 
 	// The same two ports with a QUIC long header do produce a value, which proves the
-	// payload is the one thing that separates the two runs.
+	// payload is the one thing that separates the two runs. The point D frame carries the
+	// server value, and issue #447 holds that frame.
 	fp = NewJA4L()
 	c := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicLongHeaderPayload())
 	c.Metadata().Timestamp = baseTime
@@ -787,9 +816,21 @@ func TestJA4LProducesNoValueForANonQUICPayloadOnPort443(t *testing.T) {
 	}
 	d := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicLongHeaderPayload())
 	d.Metadata().Timestamp = baseTime.Add(50 * time.Millisecond)
-	dResults, _ := fp.ProcessPacket(d)
-	if len(dResults) != 1 || !strings.HasPrefix(dResults[0].Fingerprint, "JA4L-S=") {
-		t.Fatalf("d: expected one JA4L-S result, got %v", dResults)
+	if dResults, _ := fp.ProcessPacket(d); len(dResults) != 0 {
+		t.Fatalf("d: expected no results, got %v", dResults)
+	}
+
+	e := buildUDPPacketWithIPs(t, serverIP, clientIP, 64, 443, 50000, quicHandshakePayload())
+	e.Metadata().Timestamp = baseTime.Add(70 * time.Millisecond)
+	if results, _ := fp.ProcessPacket(e); len(results) != 0 {
+		t.Fatalf("e: expected no results, got %v", results)
+	}
+
+	f := buildUDPPacketWithIPs(t, clientIP, serverIP, 64, 50000, 443, quicHandshakePayload())
+	f.Metadata().Timestamp = baseTime.Add(90 * time.Millisecond)
+	fResults, _ := fp.ProcessPacket(f)
+	if len(fResults) != 2 || !strings.HasPrefix(fResults[0].Fingerprint, "JA4L-S=") {
+		t.Fatalf("f: expected the JA4L-S result first, got %v", fResults)
 	}
 }
 
@@ -1356,19 +1397,17 @@ func TestJA4LWritesThreePartsOnAQUICConnectionInSsh2Pcapng(t *testing.T) {
 		t.Fatalf("A: expected no results, got %v", results)
 	}
 
-	// Point B. The server Initial packet completes the server value, and 10778 microseconds
-	// halve to the 5389 that the vector holds.
+	// Point B. The server Initial packet fills the server point, and 10778 microseconds
+	// halve to the 5389 that the vector holds. The point D frame carries that value, and
+	// issue #447 holds the frame.
 	b := buildUDPPacketWithIPs(t, serverIP, clientIP, 57, 443, 50000, quicLongHeaderPayload())
 	b.Metadata().Timestamp = baseTime.Add(10778 * time.Microsecond)
 	serverResults, err := fp.ProcessPacket(b)
 	if err != nil {
 		t.Fatalf("B: %v", err)
 	}
-	if len(serverResults) != 1 {
-		t.Fatalf("B: expected one result, got %v", serverResults)
-	}
-	if serverResults[0].Fingerprint != "JA4L-S=5389_57_quic" {
-		t.Errorf("B: Fingerprint = %q, want %q", serverResults[0].Fingerprint, "JA4L-S=5389_57_quic")
+	if len(serverResults) != 0 {
+		t.Fatalf("B: expected no results, got %v", serverResults)
 	}
 
 	// Point C. The server Handshake packet fills the point, and it completes no value.
@@ -1386,11 +1425,14 @@ func TestJA4LWritesThreePartsOnAQUICConnectionInSsh2Pcapng(t *testing.T) {
 	if err != nil {
 		t.Fatalf("D: %v", err)
 	}
-	if len(clientResults) != 1 {
-		t.Fatalf("D: expected one result, got %v", clientResults)
+	if len(clientResults) != 2 {
+		t.Fatalf("D: expected two results, got %v", clientResults)
 	}
-	if clientResults[0].Fingerprint != "JA4L-C=169_128_quic" {
-		t.Errorf("D: Fingerprint = %q, want %q", clientResults[0].Fingerprint, "JA4L-C=169_128_quic")
+	if clientResults[0].Fingerprint != "JA4L-S=5389_57_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", clientResults[0].Fingerprint, "JA4L-S=5389_57_quic")
+	}
+	if clientResults[1].Fingerprint != "JA4L-C=169_128_quic" {
+		t.Errorf("D: Fingerprint = %q, want %q", clientResults[1].Fingerprint, "JA4L-C=169_128_quic")
 	}
 }
 
@@ -1701,6 +1743,13 @@ func TestTheRegisterHoldsAJA4LDeclineForEveryFileThatPublishesNoJA4LKey(t *testi
 	// method filter removed the key from each file.
 	captures := []string{"CVE-2018-6794.pcap", "https-connect.pcap", "tls-handshake.pcapng"}
 
+	// A decline records a value the library produces, so a capture where the library
+	// produces no JA4L value needs none. `tls-handshake.pcapng` holds QUIC Initial packets
+	// alone, so no connection of it fills point C or point D, and issue #447 moved the
+	// server emission to the point D frame. Issue #447 therefore removed the 20 entries of
+	// that capture, and the run now reaches no JA4L comparison for it.
+	declineCaptures := []string{"CVE-2018-6794.pcap", "https-connect.pcap"}
+
 	declines := make(map[string]int, len(captures))
 
 	for _, entry := range readDeviationRegister(t) {
@@ -1736,10 +1785,15 @@ func TestTheRegisterHoldsAJA4LDeclineForEveryFileThatPublishesNoJA4LKey(t *testi
 		declines[capture]++
 	}
 
-	for _, capture := range captures {
+	for _, capture := range declineCaptures {
 		if declines[capture] == 0 {
-			t.Errorf("the register holds no #361 decline for %s, and that file publishes no JA4L key", capture)
+			t.Errorf("the register holds no #361 decline for %s, and the library produces a JA4L value for it", capture)
 		}
+	}
+
+	if declines["tls-handshake.pcapng"] != 0 {
+		t.Errorf("the register holds %d #361 declines for tls-handshake.pcapng, and the library produces no JA4L value for it",
+			declines["tls-handshake.pcapng"])
 	}
 }
 

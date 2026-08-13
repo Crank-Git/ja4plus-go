@@ -374,11 +374,15 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 		return nil, nil
 	}
 
+	// Point B fills here, and the server value reaches the caller at point D below.
+	// `wireshark/source/packet-ja4.c:1432-1451` writes `hf_ja4ls` and `hf_ja4l` inside the
+	// branch that fills `timestamp_D`, so one frame carries both values. Issue #447 holds
+	// the measurement, and `ja4ls_point_d_emission_test.go` holds the frame.
 	if _, ok := conn.timestamps["A"]; ok {
 		if _, ok := conn.timestamps["B"]; !ok && !isClient {
 			conn.timestamps["B"] = ts
 			conn.ttls["server"] = ttl
-			return f.emitResult("JA4L-S", ts.Sub(conn.timestamps["A"]), ttl, conn, ts), nil
+			return nil, nil
 		}
 	}
 
@@ -401,8 +405,14 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	if _, ok := conn.timestamps["C"]; ok {
 		if _, ok := conn.timestamps["D"]; !ok && isClient {
 			conn.timestamps["D"] = ts
+
+			// The reference writes the server value before the client value on this frame.
+			// `wireshark/source/packet-ja4.c:1443` updates `hf_ja4ls`, and
+			// `wireshark/source/packet-ja4.c:1449` updates `hf_ja4l` after it.
+			serverDelay := conn.timestamps["B"].Sub(conn.timestamps["A"])
+			results := f.emitResult("JA4L-S", serverDelay, conn.ttls["server"], conn, ts)
 			clientTTL := conn.ttls["client"]
-			return f.emitResult("JA4L-C", ts.Sub(conn.timestamps["C"]), clientTTL, conn, ts), nil
+			return append(results, f.emitResult("JA4L-C", ts.Sub(conn.timestamps["C"]), clientTTL, conn, ts)...), nil
 		}
 	}
 
