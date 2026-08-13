@@ -1,6 +1,7 @@
 package ja4plus
 
 import (
+	"net"
 	"os"
 	"testing"
 )
@@ -65,5 +66,36 @@ func TestJA4XReadsTheTLSRecordLayerOfASOCKS4Tunnel(t *testing.T) {
 		if got[index] != want {
 			t.Errorf("JA4X value %d is %q, want %q", index, got[index], want)
 		}
+	}
+}
+
+// TestJA4XDropsAStreamAboveTheByteBound holds the memory bound of the reader.
+//
+// The buffer that `parser.TCPStreamReassembler` replaced kept the last ja4xMaxStreamBytes
+// bytes of one stream. The reassembler bounds the run that GetStream returns, and it
+// bounds no stored segment, so the reader counts the bytes it adds and drops a stream
+// above the bound. A server sends the certificate chain in the first few kilobytes of the
+// session, so a stream above one megabyte carries application data and no certificate.
+func TestJA4XDropsAStreamAboveTheByteBound(t *testing.T) {
+	client := net.IP{192, 168, 1, 20}
+	server := net.IP{10, 0, 0, 20}
+
+	fingerprinter := NewJA4X()
+	segment := make([]byte, 1400)
+	var sequence uint32 = 1
+	for sent := 0; sent <= ja4xMaxStreamBytes; sent += len(segment) {
+		packet := buildTCPPacketWithSeq(t, server, client, 443, 40020, sequence, segment)
+		if _, err := fingerprinter.ProcessPacket(packet); err != nil {
+			t.Fatalf("ProcessPacket returned the error %v", err)
+		}
+		sequence += uint32(len(segment))
+	}
+
+	streams := auditStateFieldLengths("JA4XFingerprinter", fingerprinter)["JA4XFingerprinter.reassembler.streams"]
+	if streams != 0 {
+		t.Errorf("the reassembler holds %d streams above the bound, want 0", streams)
+	}
+	if len(fingerprinter.streamBytes) != 0 {
+		t.Errorf("the byte counter holds %d streams above the bound, want 0", len(fingerprinter.streamBytes))
 	}
 }

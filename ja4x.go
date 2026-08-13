@@ -47,7 +47,14 @@ type JA4XFingerprinter struct {
 	// removal path of processedCerts, whose key is the certificate hash alone. Without
 	// this index CleanupConnection leaves every hash for the life of the process.
 	certsByStream map[string]map[string]struct{}
-	lastCleanup   time.Time
+	// streamBytes counts the payload bytes that each stream has added to the reassembler.
+	//
+	// `parser.TCPStreamReassembler` bounds the run that GetStream returns, and it bounds no
+	// stored segment. The buffer this reader replaced kept the last ja4xMaxStreamBytes
+	// bytes, so a long connection held a bounded amount. This counter keeps that bound: a
+	// stream above it is dropped, and a certificate chain never reaches one megabyte.
+	streamBytes map[string]int
+	lastCleanup time.Time
 }
 
 // NewJA4X creates a new JA4XFingerprinter.
@@ -56,6 +63,7 @@ func NewJA4X() *JA4XFingerprinter {
 		reassembler:    parser.NewTCPStreamReassembler(ja4xMaxStreams, ja4xMaxStreamBytes),
 		processedCerts: make(map[string]struct{}),
 		certsByStream:  make(map[string]map[string]struct{}),
+		streamBytes:    make(map[string]int),
 		lastCleanup:    time.Now(),
 	}
 }
@@ -74,6 +82,10 @@ func (f *JA4XFingerprinter) ensure() {
 
 	if f.certsByStream == nil {
 		f.certsByStream = make(map[string]map[string]struct{})
+	}
+
+	if f.streamBytes == nil {
+		f.streamBytes = make(map[string]int)
 	}
 
 	if f.lastCleanup.IsZero() {
@@ -107,10 +119,19 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	// The reassembler orders the segments by sequence number and returns the contiguous
 	// run that starts at the lowest one.
 	f.reassembler.AddSegment(streamID, tcp.Seq, payload)
+	f.streamBytes[streamID] += len(payload)
 	stream := f.reassembler.GetStream(streamID)
 
 	// Search for certificates in the accumulated stream data.
 	results := f.findCertificatesInStream(streamID, stream, packet, srcIP, dstIP, srcPort, dstPort)
+
+	// A server sends the certificate chain in the first few kilobytes of the session, so a
+	// stream above the bound carries application data and no certificate. The drop bounds
+	// the memory of a long connection.
+	if f.streamBytes[streamID] > ja4xMaxStreamBytes {
+		f.reassembler.RemoveStream(streamID)
+		delete(f.streamBytes, streamID)
+	}
 
 	// Periodic cleanup.
 	now := time.Now()
@@ -134,6 +155,7 @@ func (f *JA4XFingerprinter) Reset() {
 	f.reassembler = parser.NewTCPStreamReassembler(ja4xMaxStreams, ja4xMaxStreamBytes)
 	f.processedCerts = make(map[string]struct{})
 	f.certsByStream = make(map[string]map[string]struct{})
+	f.streamBytes = make(map[string]int)
 	f.lastCleanup = time.Now()
 }
 
@@ -147,6 +169,8 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	rev := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
 	f.reassembler.RemoveStream(fwd)
 	f.reassembler.RemoveStream(rev)
+	delete(f.streamBytes, fwd)
+	delete(f.streamBytes, rev)
 
 	// certsByStream is the reverse lookup that processedCerts needs. The key of
 	// processedCerts is the certificate hash, so that set names no connection.
@@ -159,9 +183,13 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	}
 }
 
-// cleanup prunes processed certs to prevent unbounded growth.
-// The reassembler bounds its own stream table, because it evicts the least recent stream
-// when the table reaches ja4xMaxStreams.
+// cleanup prunes the certificate set and the byte counter to prevent unbounded growth.
+//
+// The reassembler bounds the count of its stream table, because it evicts the least recent
+// stream when the table reaches ja4xMaxStreams. **It bounds the bytes of one stream
+// nowhere**: `AddSegment` stores every segment, and `MaxBytes` truncates the run that
+// GetStream returns and never the stored segments. ProcessPacket holds that second bound
+// with the streamBytes counter.
 func (f *JA4XFingerprinter) cleanup() {
 	// Prune processed certs.
 	// certsByStream indexes the processedCerts set, so the reset of one resets the other.
@@ -169,6 +197,13 @@ func (f *JA4XFingerprinter) cleanup() {
 	if len(f.processedCerts) > ja4xMaxProcessedCerts {
 		f.processedCerts = make(map[string]struct{}, ja4xPrunedCerts)
 		f.certsByStream = make(map[string]map[string]struct{})
+	}
+
+	// The reassembler evicts the least recent stream on its own, and it names no evicted
+	// key. The byte counter therefore keeps an entry for a stream the reassembler dropped,
+	// and that entry leaks in a long-running monitor.
+	if len(f.streamBytes) > ja4xMaxStreams {
+		f.streamBytes = make(map[string]int)
 	}
 }
 
