@@ -13,8 +13,8 @@ import (
 // `docs/specs/features/08-python-parity.md`.
 //
 // `docs/specs/foxio/port-register.md` copies one section of the port's specification. The
-// port adds a row to that section when it records a new divergence, and this repository
-// reads a stale copy until a reader replaces it. The row count is the cheapest signal of
+// port adds a row to that section when it records a new divergence. This repository then
+// reads a stale copy, until a reader replaces it. The row count is the cheapest signal of
 // that drift, so the record table of the page states the count and this file compares it.
 //
 // FR-parity-57 already holds, and `deviations_test.go:484` and `deviations_test.go:500`
@@ -44,8 +44,12 @@ const portRegisterTableHeading = "### Divergence register"
 var portRegisterStatedRowsPattern = regexp.MustCompile(`\|\s*Rows\s*\|\s*(\d+)\s*\|`)
 
 // portRegisterDriftAllowedImports holds every package this file may import. A network call
-// needs a package that reaches the network, so a whitelist bars one call and every
-// indirect one. FR-parity-59 states the requirement.
+// needs a package that reaches the network, so the list bars a direct call from this file.
+// FR-parity-59 states the requirement.
+//
+// The list reads this file alone, and it reads no other file of the package. This file
+// calls `readRepoFile` at `foundation_test.go:16`, and a network call added there reaches
+// no check here. FR-parity-59 names the drift check, and that is the scope of the list.
 var portRegisterDriftAllowedImports = []string{
 	"go/parser",
 	"go/token",
@@ -159,7 +163,8 @@ func TestThePortRegisterCopyHoldsTheRowCountTheRecordTableStates(t *testing.T) {
 // this repository to the availability of another one.
 //
 // The check reads the imports of this file, because a Go test reaches the network through
-// a package. `TestNoTestBuildsRunsOrImportsThePort` holds FR-parity-4, which is a separate
+// a package. It reads no other file, so `portRegisterDriftAllowedImports` states that
+// limit. `TestNoTestBuildsRunsOrImportsThePort` holds FR-parity-4, which is a separate
 // rule: it bars a test that builds, runs or imports the port in any language.
 func TestThePortRegisterDriftCheckImportsNoPackageThatReachesTheNetwork(t *testing.T) {
 	fileSet := token.NewFileSet()
