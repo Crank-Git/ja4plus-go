@@ -210,9 +210,9 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 	// Three implementations hold three readings. Wireshark stores no time after the tenth
 	// at `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen tenth time at
 	// `wireshark/source/packet-ja4.c:694`. This library reads the eleventh time instead.
-	// Zeek assigns `last_ts` on every SYN-ACK at `zeek/ja4t/main.zeek:183`. It then stops
-	// the next packet threshold at `zeek/ja4t/main.zeek:185-189`. So it observes no RST of
-	// such a connection, and it writes no reset value.
+	// Zeek assigns `last_ts` on every SYN-ACK at `zeek/ja4t/main.zeek:183`. Zeek stops
+	// setting the next packet threshold at `zeek/ja4t/main.zeek:185-189`, so it observes
+	// no RST of such a connection and writes no reset value.
 	//
 	// No capture of the FoxIO corpus reaches an eleventh SYN-ACK, so
 	// `TestJA4TS_ReadsTheEleventhSynAckForTheResetDelayPastTheCap` is the one record of
