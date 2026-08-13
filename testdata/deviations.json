@@ -2456,6 +2456,38 @@
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },
   {
+    "key": "http1.pcapng/2/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/2/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/6/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/6/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
     "key": "http1.pcapng/8/JA4H_r.1",
     "capability": false,
     "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
@@ -2500,6 +2532,86 @@
     "capability": false,
     "ours": "he11nn05enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language_",
     "theirs": "he11nn05enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/15/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/15/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/19/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/19/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/22/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/22/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/26/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/26/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/29/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/29/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
     "ruling": "#285",
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },
@@ -2552,6 +2664,54 @@
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },
   {
+    "key": "http1.pcapng/39/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/39/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/42/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/42/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/47/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/47/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
     "key": "http1.pcapng/49/JA4H_r.1",
     "capability": false,
     "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
@@ -2584,6 +2744,38 @@
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },
   {
+    "key": "http1.pcapng/55/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/55/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/59/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/59/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
     "key": "http1.pcapng/61/JA4H_r.1",
     "capability": false,
     "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
@@ -2593,6 +2785,22 @@
   },
   {
     "key": "http1.pcapng/61/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/64/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/64/JA4H_ro.1",
     "capability": false,
     "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
     "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
@@ -2904,6 +3112,22 @@
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },
   {
+    "key": "http1.pcapng/147/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/147/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
     "key": "http1.pcapng/149/JA4H_r.1",
     "capability": false,
     "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
@@ -2929,6 +3153,22 @@
   },
   {
     "key": "http1.pcapng/151/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/153/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/153/JA4H_ro.1",
     "capability": false,
     "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
     "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
@@ -3028,6 +3268,22 @@
     "capability": false,
     "ours": "po11nn080000_Host,User-Agent,Content-Length,Content-Type,SOAPAction,Connection,Cache-Control,Pragma_",
     "theirs": "po11nn080000_Host,User-Agent,Content-Length,Content-Type,SOAPAction,Connection,Cache-Control,Pragma__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/173/JA4H_r.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "http1.pcapng/173/JA4H_ro.1",
+    "capability": false,
+    "ours": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_",
+    "theirs": "po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length__",
     "ruling": "#285",
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },

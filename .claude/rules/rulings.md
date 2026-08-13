@@ -250,12 +250,11 @@ image, because no image states an answer.
 above sends that question to the maintainer.
 
 **The JA4TS part e count is the measured case.** `JA4T.png` addresses part e in three rules
-of `docs/specs/foxio/JA4T.md`, and no one of them states a count. R13 at :99-100 records the
-image label `TCP Retransmission Timings (only on JA4TScan)`. R14 at :101-102 records the
-separator. R15 at :103-104 records the reset letter. R18 at :130-132 states
-`The image states no count of its own.` The deciding source is
-`docs/specs/foxio/deleted-text-specifications.md:788`, under the `### JA4T.md` heading at
-:676. It states
+of `docs/specs/foxio/JA4T.md`, and no one of them states a count. R13 records the image
+label `TCP Retransmission Timings (only on JA4TScan)`. R14 records the separator. R15
+records the reset letter. R18 states `The image states no count of its own.` The deciding
+source is `docs/specs/foxio/deleted-text-specifications.md`, under the `### JA4T.md`
+heading. It states
 `The max is 10 retransmissions counted and the timeout is 2 minutes after the last SYNACK.`
 **Each of the three tests above holds, so the rank 3 source states the count and it outranks
 no image.**
@@ -270,17 +269,18 @@ The `Case` column names the decisive case of the grant.
 |---|---|---|---|
 | #346 — the library carries step 2 of the JA4SSH client direction. | 3 | Issue #346, comment 5281493518. **#413 builds the work**, and no line of the tree carries step 2 today. | Issue #346. A reversal records the decline of step 2, with the reason. |
 | #369 question 1 — JA4TS part e holds ten delays. | 2 | `docs/specs/foxio/JA4T.md` R18, and issue #369, comment 5276169622. | Issue #369. |
-| The FR-ja4ls-7 amendment — part b writes the observed time-to-live, and no branch computes a hop count. | 1 | `docs/specs/features/12-ja4ls.md:70-79` and :91-92, and `ja4ls_emission_test.go`. | Issue #60. |
-| The FR-ja4ls-8 amendment — no propagation factor reaches the value. | 1 | `docs/specs/features/12-ja4ls.md:70-79` and :93-94, and `ja4ls_emission_test.go`. | Issue #60. |
-| The FR-ja4ls-22 amendment — the requirement names the per-stream vector set alone. | None. **This is a scope decision, and never a ruling.** | `docs/specs/features/12-ja4ls.md:152-176`. | Comment 5276074116 of #63. |
+| The FR-ja4ls-7 amendment — part b writes the observed time-to-live, and no branch computes a hop count. | 1 | `docs/specs/features/12-ja4ls.md` `### The method` and FR-ja4ls-7, and `ja4ls_emission_test.go`. | Issue #60. |
+| The FR-ja4ls-8 amendment — no propagation factor reaches the value. | 1 | `docs/specs/features/12-ja4ls.md` `### The method` and FR-ja4ls-8, and `ja4ls_emission_test.go`. | Issue #60. |
+| The FR-ja4ls-22 amendment — the requirement names the per-stream vector set alone. | None. **This is a scope decision, and never a ruling.** | `docs/specs/features/12-ja4ls.md` `### Conformance`. | Comment 5276074116 of #63. |
 
 **The FR-ja4ls-22 amendment writes no register entry, and it states no rule about a
-fingerprint value.** `docs/specs/features/12-ja4ls.md:152-155` states that reading, and the
-table holds the row because the reader needs one list of every provisional decision.
+fingerprint value.** `docs/specs/features/12-ja4ls.md` `### Conformance` states that
+reading, and the table holds the row because the reader needs one list of every provisional
+decision.
 
 **One more requirement carries a provisional amendment, and no delegation produced it.**
 FR-ja4ls-11 named a type filter that `Processor` does not hold, #61 measured the absence, and
-`docs/specs/features/12-ja4ls.md:111-114` names issue #61 as the reversal path.
+`docs/specs/features/12-ja4ls.md` names issue #61 as the reversal path, at FR-ja4ls-11.
 
 ### Three examples of the narrow delegation
 
