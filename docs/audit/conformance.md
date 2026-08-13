@@ -11,8 +11,8 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1627 |
-| Deviations | 676 |
+| Matches | 1628 |
+| Deviations | 675 |
 | Accepted deviations | 409 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
@@ -24,13 +24,13 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations |
 |---|---|---|---|
 | per-stream | 1093 | 102 | 266 |
-| per-packet | 534 | 574 | 143 |
+| per-packet | 535 | 573 | 143 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 
 ## Deviations
 
-The run reports 1085 deviations in 91 groups. One group is one capture, one method and one vector set.
+The run reports 1084 deviations in 91 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -205,9 +205,8 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `ssh2.pcapng` | per-packet | JA4T | 31 | `ssh2.pcapng/1197/JA4T.1` | the vector holds a value the library does not produce | `64240_2-1-3-1-1-4_1460_8` | (none) |
 | `ssh2.pcapng` | per-packet | JA4T | 31 | `ssh2.pcapng/1198/JA4T.1` | the vector holds a value the library does not produce | `64240_2-1-3-1-1-4_1460_8` | (none) |
 | `ssh2.pcapng` | per-packet | JA4T | 31 | `ssh2.pcapng/1244/JA4T.1` | the vector holds a value the library does not produce | `64240_2-1-3-1-1-4_1460_8` | (none) |
-| `ssh2.pcapng` | per-packet | JA4TS | 3 | `ssh2.pcapng/373/JA4TS.1` | the two values differ | `64240_2-1-1-4-1-3_1460_7_0` | `64240_2-1-1-4-1-3_1460_7` |
-| `ssh2.pcapng` | per-packet | JA4TS | 3 | `ssh2.pcapng/849/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
-| `ssh2.pcapng` | per-packet | JA4TS | 3 | `ssh2.pcapng/850/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
+| `ssh2.pcapng` | per-packet | JA4TS | 2 | `ssh2.pcapng/849/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
+| `ssh2.pcapng` | per-packet | JA4TS | 2 | `ssh2.pcapng/850/JA4TS.1` | the vector holds a value the library does not produce | `42600_2-1-1-4-1-3_1300_9` | (none) |
 | `ssh2.pcapng` | per-packet | JA4X | 8 | `ssh2.pcapng/237/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_0f2217ba412e` | (none) |
 | `ssh2.pcapng` | per-packet | JA4X | 8 | `ssh2.pcapng/237/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_c34b04c10969` | (none) |
 | `ssh2.pcapng` | per-packet | JA4X | 8 | `ssh2.pcapng/237/JA4X_r.1` | the vector holds a value the library does not produce | `550406,55040a,550403_550406,550408,550407,55040a,550403_2b06010401d679020402,2b060104018237150a,2b0601040182371507,2b06010505070101,551d0e,551d0f,551d11,551d13,551d1f,551d20,551d23,551d25` | (none) |
@@ -608,7 +607,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `ssh2.pcapng` | JA4L | per-packet and per-stream | deviation | 9 | 22 | — |
 | `ssh2.pcapng` | JA4LS | per-packet and per-stream | deviation | 8 | 20 | — |
 | `ssh2.pcapng` | JA4T | per-packet | deviation | 44 | 31 | — |
-| `ssh2.pcapng` | JA4TS | per-packet | deviation | 8 | 3 | — |
+| `ssh2.pcapng` | JA4TS | per-packet | deviation | 9 | 2 | — |
 | `ssh2.pcapng` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `ssh2.pcapng` | JA4D6 | — | not applicable | 0 | 0 | FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, and FR-conformance-25 compares the two under JA4D. |
 | `sshv1.pcap` | JA4 | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
