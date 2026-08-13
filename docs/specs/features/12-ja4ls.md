@@ -72,11 +72,24 @@ it.
 
 - **FR-ja4ls-10** — `ComputeJA4LS` computes the JA4LS value for one connection, matching
   the shape of the existing `ComputeJA4L`.
-- **FR-ja4ls-11** — `Processor` accepts `ja4ls` as a method name in its type filter.
-- **FR-ja4ls-12** — `cmd/ja4plus` accepts `ja4ls` in `--types`.
+- **FR-ja4ls-11** — `Processor` returns the result of every method, and the caller selects
+  the methods it reads.
+- **FR-ja4ls-12** — `cmd/ja4plus` accepts `ja4ls` in `--types`, and that token selects the
+  JA4LS value alone.
+- **FR-ja4ls-12a** — `cmd/ja4plus` accepts `ja4l` in `--types`, and that token selects the
+  JA4L value and the JA4LS value.
+- **FR-ja4ls-12b** — `cmd/ja4plus` returns an error for a `--types` token that names no
+  method, and the error names every token the command accepts.
 - **FR-ja4ls-13** — `JA4LFingerprinter.CleanupConnection` clears the state that both
   methods read.
 - **FR-ja4ls-14** — `JA4LFingerprinter.Reset` clears the results of both methods.
+
+**FR-ja4ls-11 read that `Processor` accepts `ja4ls` in its type filter, and #61 measured
+that `Processor` holds no type filter.** `processor.go` runs every fingerprinter and returns
+every result, and `cmd/ja4plus/main.go` holds the one filter of this repository. A filter on
+`Processor` would add an exported method, which `v1.0.0` then freezes, and
+`sync_processor_test.go:59` holds the signature set that such a method changes. **The
+requirement therefore states what the library does**, and FR-ja4ls-12 states the filter.
 
 ### The count
 
@@ -134,8 +147,9 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 |---|---|
 | `ja4l.go` | Emits a second result. New `ComputeJA4LS`. |
 | `ja4l_test.go` | New cases for the server value. |
-| `processor.go` | `ja4ls` joins the type filter. |
-| `cmd/ja4plus/main.go` | `ja4ls` joins `--types`. |
+| `processor.go` | No change. It holds no type filter. |
+| `cmd/ja4plus/types.go` | New. The token list, the parse and the selection. |
+| `cmd/ja4plus/main.go` | `--types` reads the token list, and it refuses an unknown token. |
 | `conformance_test.go` | The JA4LS comparison. |
 | `docs/specs/foxio/JA4L.md` | Records that no image specifies JA4LS. |
 | `README.md`, `CLAUDE.md`, `docs/` | The method count. |
@@ -185,10 +199,10 @@ values, under the rule that the port's `.claude/rules/external-apis.md` states.
 
 ## Open questions
 
-1. **Does `--types ja4l` alone print the JA4LS value?** The port emits both from one
-   fingerprinter, and its type filter names ten fingerprinters rather than eleven methods.
-   FR-ja4ls-11 and FR-ja4ls-12 make `ja4ls` its own filter token here, which is the more
-   useful behaviour and the one that differs from the port. **The maintainer rules, and
-   the ruling lands in both repositories.**
+1. ~~**Does `--types ja4l` alone print the JA4LS value?**~~ **Closed. The maintainer ruled
+   it on 2026-08-13, and #61 records the ruling.** `--types ja4l` prints the JA4L value and
+   the JA4LS value. `--types ja4ls` prints the JA4LS value alone. **The ruling is a superset
+   over the port, and no fingerprint value moves.** `Crank-Git/ja4plus#605` proposes the
+   same token for the port. R9 question 3 of `docs/specs/spec.md` records the closure.
 2. **Does the freeze make FR-ja4ls-10 worth adding?** `ComputeJA4LS` matches the existing
    convenience functions, and every exported name added now is frozen at `v1.0.0`.

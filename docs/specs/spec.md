@@ -975,7 +975,7 @@ a pinned commit and compares its row count against the register here. **The test
 committed copy under `docs/specs/foxio/port-register.md` and performs no network call**,
 so it obeys rule 3. A count that moves reports that a re-read is due.
 
-### R9 — Three questions the port never settled (question 1 is closed)
+### R9 — Three questions the port never settled (question 1 and question 3 are closed)
 
 **This heading read `Three rulings the port never made` until 2026-08-12.** Question 1 needed
 a reading and not a ruling, so the heading now names three questions.
@@ -983,13 +983,17 @@ a reading and not a ruling, so the heading now names three questions.
 **The maintainer confirmed on 2026-08-11 that all three needed a ruling.** **Question 1 is
 closed, and the maintainer closed it on 2026-08-12.** The subsection
 `R9 question 1 is closed, and a FoxIO source states the answer` below records that closure and
-the evidence. Question 2 and question 3 stay open in this table.
+the evidence.
+
+**Question 3 is closed, and the maintainer ruled it on 2026-08-13.** The subsection
+`R9 question 3 is closed, and the maintainer ruled the filter token` below records the ruling.
+**Question 2 stays open in this table.**
 
 **Question 2 is ruled, and this table does not yet record it.** The maintainer ruled it on
 2026-08-11, round 17 of the `## Changelog` holds the ruling, and #53 is closed. **#279 owns
 the repair of that row**, and #50 changed no part of it.
 
-**FoxIO settles neither of the two open questions, and the port settled neither.** Each one
+**FoxIO settles no open question of this table, and the port settled none.** Each one
 is the maintainer's to rule on. **An engineer who reaches one of these stops and asks.** A
 requirement below is not built until the ruling exists, because a guess here produces two
 answers across the two repositories, which is the one outcome parity exists to prevent.
@@ -1000,7 +1004,7 @@ answers across the two repositories, which is the one outcome parity exists to p
 |---|---|---|---|
 | ~~**What does the ALPN field write when the first ALPN value is empty?**~~ **Closed on 2026-08-12. The answer is `00`.** | Every part of the question. A one-byte first value repeats the byte and writes `hh`. A first byte outside `0x20-0x7E` writes `99`. An empty first value writes `00`. | Nothing. **The FoxIO text specification states the answer, so the question needed a reading and not a ruling.** | Nothing. #50 built all three requirements. |
 | **Does `CloseOpenWindows` belong on the `Fingerprinter` interface?** | The method exists, and the port's name decides the word under parity rule 2. | Where it sits. On `Fingerprinter` it matches the port and breaks every third-party implementation of an exported interface. On a second optional interface it breaks nothing and is the more idiomatic Go shape. **The freeze makes this the last chance to choose.** | FR-parity-30, FR-parity-31 |
-| **Does `--types ja4l` alone print the JA4LS value?** | `JA4LFingerprinter` writes both methods. | The filter token. The port's filter names ten fingerprinters, so `ja4l` there reaches both values. FR-ja4ls-11 and FR-ja4ls-12 propose `ja4ls` as its own token here, which is more useful and which differs from the port. | FR-ja4ls-11, FR-ja4ls-12 |
+| ~~**Does `--types ja4l` alone print the JA4LS value?**~~ **Closed on 2026-08-13. The answer is yes, and `ja4ls` is a second token.** | Every part of the question. `--types ja4l` prints the client value and the server value. `--types ja4ls` prints the server value alone. | Nothing. **The maintainer ruled the token, and the ruling moves no fingerprint value.** | Nothing. #61 built FR-ja4ls-12. |
 
 #### R9 question 1 is closed, and a FoxIO source states the answer
 
@@ -1040,6 +1044,25 @@ for the input, so the two implementations already agree.
 exported interface. Adding a method to it is a breaking change that `v0.3.0` permits and
 that `v1.0.0` forbids for the whole `v1` series. If the ruling arrives after the freeze,
 the only remaining answer is the optional interface.
+
+#### R9 question 3 is closed, and the maintainer ruled the filter token
+
+**The maintainer ruled question 3 on 2026-08-13.** `--types ja4l` prints the JA4L value and
+the JA4LS value. `--types ja4ls` prints the JA4LS value alone. The plan comment of #61
+records the ruling.
+
+**The ruling is a superset over the port, and it is not a divergence.** The port reaches both
+values through `ja4l`, and this library reaches them the same way. The second token adds a
+filter the port does not offer, and no fingerprint value moves.
+`Crank-Git/ja4plus#605` proposes the same token for the port.
+
+**The result carries the type `ja4l` for both methods, so the filter reads the label of the
+fingerprint.** #60 rules that the type stays `ja4l`. `cmd/ja4plus/types.go` therefore selects
+the JA4LS value on the prefix `JA4L-S=`, which is the discriminator that
+`conformance_test.go:347-362` and `ja4plus/fingerprinters/ja4l.py:182` each read.
+
+**The reversal path is #61 and this subsection.** A reversal removes the `ja4ls` token before
+the `v1.0.0` freeze.
 
 ## Issue map
 
@@ -1081,12 +1104,12 @@ and Epic 8b carries the TCP, HTTP, certificate and DHCP methods. Both point at
 `status:needs-feedback`, and it listed #50, #53, #61, #70 and #72. #50 measured the label on
 2026-08-12. **Not one of those five carries the label today**, and #53 is closed. Six other
 issues carry it: #126, #129, #289, #298, #300 and #346. #279 reconciles the rows and the
-count. **#50 removed its own row alone, because its question is closed.**
+count. **#50 removed its own row alone, because its question is closed.** **#61 removed its
+own row alone, on 2026-08-13, for the same reason.**
 
 | Issue | Question | Recorded as |
 |---|---|---|
 | #53 | Whether `CloseOpenWindows` sits on `Fingerprinter` or on a second optional interface. **This one expires at the API freeze.** | R9 question 2 |
-| #61 | Whether `--types ja4l` alone prints the JA4LS value. | R9 question 3 |
 | #70 | Whether the project moves to the `gopacket` fork before the freeze. | R5 |
 | #72 | Where the remote database lookup belongs. | FR-lookup-2 |
 

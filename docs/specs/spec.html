@@ -506,16 +506,17 @@ rule 3. A count that moves reports that a re-read is due.</p>
 </div>
 
 <div class="box risk">
-<h3>R9 — Three questions the port never settled <em>(question 1 is closed)</em></h3>
+<h3>R9 — Three questions the port never settled <em>(question 1 and question 3 are closed)</em></h3>
 <p><strong>This heading read <code>Three rulings the port never made</code> until
 2026-08-12.</strong> Question 1 needed a reading and not a ruling, so the heading now names
 three questions. The maintainer confirmed on 2026-08-11 that all three needed a ruling.
 <strong>The maintainer closed question 1 on 2026-08-12</strong>, and
-<code>technical_details/JA4.md:93</code> states the answer. Question 2 and question 3 stay
+<code>technical_details/JA4.md:93</code> states the answer. <strong>The maintainer ruled question
+3 on 2026-08-13</strong>, and #61 records the ruling. Question 2 stays
 open in this table. <strong>Question 2 is ruled, and this table does not record it</strong>:
 the maintainer ruled it on 2026-08-11, and #279 owns the repair of that row.</p>
-<p><strong>FoxIO settles neither of the two open questions, and the port settled
-neither.</strong> Each one is the maintainer's to rule on. <strong>An engineer who reaches one
+<p><strong>FoxIO settles no open question of this table, and the port settled
+none.</strong> Each one is the maintainer's to rule on. <strong>An engineer who reaches one
 of them stops and asks.</strong> A guess produces two answers across the two repositories,
 which is the one outcome parity exists to prevent. A ruling lands in both repositories
 together.</p>
@@ -529,10 +530,10 @@ together.</p>
     <td>The method exists, and the port's name decides the word under parity rule 2.</td>
     <td>Where it sits. On <code>Fingerprinter</code> it matches the port and breaks every third-party implementation. On a second optional interface it breaks nothing and is more idiomatic Go.</td>
     <td>FR-parity-30 · 31</td></tr>
-<tr><td>Does <code>--types ja4l</code> alone print the JA4LS value?</td>
-    <td><code>JA4LFingerprinter</code> writes both methods.</td>
-    <td>The filter token. The port's filter names fingerprinters, so <code>ja4l</code> reaches both there. FR-ja4ls-11 proposes <code>ja4ls</code> as its own token here.</td>
-    <td>FR-ja4ls-11 · 12</td></tr>
+<tr><td><s>Does <code>--types ja4l</code> alone print the JA4LS value?</s> <strong>Closed on 2026-08-13. The answer is yes, and <code>ja4ls</code> is a second token.</strong></td>
+    <td>Every part of the question. <code>--types ja4l</code> prints the client value and the server value. <code>--types ja4ls</code> prints the server value alone.</td>
+    <td>Nothing. <strong>The maintainer ruled the token, and the ruling moves no fingerprint value.</strong></td>
+    <td>Nothing. #61 built FR-ja4ls-12.</td></tr>
 </table></div>
 <p><strong>The second question has a deadline the other two do not.</strong>
 <code>Fingerprinter</code> is an exported interface. Adding a method is a breaking change
