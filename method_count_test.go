@@ -41,6 +41,12 @@ type methodCountForm struct {
 // would report each one, and a reader who silences a true report stops reading the
 // reports.
 //
+// **A word between the count and the noun escapes the scan.** The self-review of #62
+// measured it, and a sentence such as `ten total methods` reports nothing. **A pattern that
+// admits one word between them reports the doctrine itself**, because
+// `ten fingerprinters, eleven methods` then matches. So the scan holds the adjacent form,
+// and a reader reads a green run as a report about the adjacent form alone.
+//
 // Each pattern is built from parts, so this file does not report itself.
 var methodCountForbiddenForms = []methodCountForm{
 	{
@@ -55,9 +61,12 @@ var methodCountForbiddenForms = []methodCountForm{
 
 // methodCountSkipDirs holds the directories the scan does not read.
 //
-// `testdata` holds the fetched FoxIO corpus and the verbatim FoxIO license copy, which are
-// evidence rather than documents of this project. `.golangci-cache` holds the linter cache
-// that #257 moved inside the checkout, and `bin` holds a built artifact.
+// `testdata/foxio` holds the fetched FoxIO corpus, which is evidence rather than a
+// document of this project. **The scan reads the rest of `testdata`**, because
+// `testdata/README.md` states the conventions of the register and this project wrote it.
+//
+// `.golangci-cache` holds the linter cache that #257 moved inside the checkout, and `bin`
+// holds a built artifact.
 //
 // `.claude/worktrees` holds one checkout for each issue worker of a batch, and `.gitignore`
 // holds it. A run from the main checkout would otherwise read the documents of every
@@ -71,7 +80,7 @@ var methodCountSkipDirs = map[string]bool{
 	".claude/worktrees": true,
 	"bin":               true,
 	"node_modules":      true,
-	"testdata":          true,
+	"testdata/foxio":    true,
 	"assets":            true,
 }
 
@@ -84,9 +93,9 @@ var methodCountExtensions = map[string]bool{
 	".go":   true,
 }
 
-// methodCountExemptSpanLimit bounds the length of the span the scan exempts.
-// An unmatched delimiter would otherwise exempt the rest of the file.
-const methodCountExemptSpanLimit = 40
+// methodCountExemptDelimiters holds the marks that quote a count form.
+// A code span takes the first one, and a quotation takes the second one.
+const methodCountExemptDelimiters = "`\""
 
 // methodCountHistoryFile names the one document whose history section the scan skips.
 const methodCountHistoryFile = "docs/specs/spec.md"
@@ -102,47 +111,29 @@ type methodCountViolation struct {
 	reason string
 }
 
-// methodCountMaskQuotations returns the text with the interior of each short quotation
-// replaced by a space. It preserves the length of the text, so every offset survives.
+// methodCountIsQuoted reports whether one delimiter sits against each end of the phrase
+// that the text holds between start and end.
 //
-// The scan exempts a quotation, because a writer who quotes a wrong form states a rule
+// The scan exempts a quoted phrase, because a writer who quotes a wrong form states a rule
 // about that form and never states the count. `CLAUDE.md:10` and FR-ja4ls-17 each quote
 // the form the doctrine declares wrong.
 //
-// The exemption is narrow in three ways. It reads a code span and a double quotation and
-// no other mark. It ends the span at the first line break. It ends the span at
-// methodCountExemptSpanLimit bytes, so an unmatched delimiter exempts no sentence.
-func methodCountMaskQuotations(text string) string {
-	masked := []byte(text)
-
-	for _, delimiter := range []byte{'`', '"'} {
-		for i := 0; i < len(masked); i++ {
-			if masked[i] != delimiter {
-				continue
-			}
-
-			end := -1
-			for j := i + 1; j < len(masked) && j-i <= methodCountExemptSpanLimit; j++ {
-				if masked[j] == '\n' {
-					break
-				}
-				if masked[j] == delimiter {
-					end = j
-					break
-				}
-			}
-			if end < 0 {
-				continue
-			}
-
-			for j := i + 1; j < end; j++ {
-				masked[j] = ' '
-			}
-			i = end
-		}
+// **The exemption reads the two bytes that touch the phrase, and no other byte.** An
+// earlier form paired each delimiter with the next one and blanked the text between them.
+// A stray delimiter then paired with an unrelated one, and the pair hid a real violation
+// that sat between the two. `TestMethodCountScanReportsAFormThatAStrayDelimiterPrecedes`
+// holds the repair.
+func methodCountIsQuoted(text string, start, end int) bool {
+	if start == 0 || end >= len(text) {
+		return false
 	}
 
-	return string(masked)
+	opener := text[start-1]
+	if !strings.ContainsRune(methodCountExemptDelimiters, rune(opener)) {
+		return false
+	}
+
+	return text[end] == opener
 }
 
 // methodCountMaskHistory returns the text with the history section replaced by a space for
@@ -208,12 +199,15 @@ func isMethodCountSpace(b byte) bool {
 // methodCountScan returns one violation for each forbidden count form in the text.
 // It reports the line of the text that holds the first byte of the phrase.
 func methodCountScan(path, text string) []methodCountViolation {
-	scannable := methodCountMaskHistory(path, methodCountMaskQuotations(text))
-	normal, offsets := methodCountNormalize(scannable)
+	normal, offsets := methodCountNormalize(methodCountMaskHistory(path, text))
 
 	var violations []methodCountViolation
 	for _, form := range methodCountForbiddenForms {
 		for _, match := range form.pattern.FindAllStringIndex(normal, -1) {
+			if methodCountIsQuoted(normal, match[0], match[1]) {
+				continue
+			}
+
 			offset := offsets[match[0]]
 
 			violations = append(violations, methodCountViolation{
@@ -339,6 +333,7 @@ func TestMethodCountScanReadsEveryDocumentThatCarriesTheDoctrine(t *testing.T) {
 		"docs/specs/spec.html",
 		"docs/specs/features/12-ja4ls.md",
 		".claude/skills/release/SKILL.md",
+		"testdata/README.md",
 	} {
 		if _, found := documents[path]; !found {
 			t.Errorf("the scan reads no %s, and that document states a count", path)
@@ -398,10 +393,28 @@ func TestMethodCountScanExemptsAQuotationOfAForbiddenForm(t *testing.T) {
 		t.Errorf("the scan reports %v for a code span, and a code span states no count", violations)
 	}
 
-	// An unmatched delimiter exempts nothing, because the span ends at the line break.
+	// A delimiter that touches one end of the phrase alone exempts nothing.
 	unmatched := "A document \" that states " + "ten " + "methods" + " is wrong.\n"
 	if violations := methodCountScan("example.md", unmatched); len(violations) != 1 {
 		t.Errorf("the scan reports %d violations after an unmatched quotation mark, and the line holds one", len(violations))
+	}
+}
+
+// A stray delimiter earlier in the line exempts nothing.
+//
+// An earlier form of the exemption paired each delimiter with the next one, and it blanked
+// the text between them. The pair then hid a real violation that sat between the two, and
+// the scan reported nothing. The self-review of #62 measured this input.
+func TestMethodCountScanReportsAFormThatAStrayDelimiterPrecedes(t *testing.T) {
+	document := "Stray ` states " + "ten " + "methods" + " here ` and `z` follows.\n"
+
+	if violations := methodCountScan("example.md", document); len(violations) != 1 {
+		t.Errorf("the scan reports %d violations, and the line states the count outside a quotation", len(violations))
+	}
+
+	attribute := "<img alt=\"the library implements " + "ten " + "methods" + " here\">\n"
+	if violations := methodCountScan("example.html", attribute); len(violations) != 1 {
+		t.Errorf("the scan reports %d violations, and the attribute states the count", len(violations))
 	}
 }
 
