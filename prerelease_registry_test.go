@@ -64,7 +64,7 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the binaries",
 		requirements: []string{"FR-prerelease-18", "FR-prerelease-19", "FR-prerelease-20", "FR-prerelease-21", "FR-prerelease-22"},
 		issue:        98,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the documentation site",
@@ -132,6 +132,11 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // The list below is a shared surface of Epic 16. Four members build a case each, so each
 // member appends its own name and it moves no other name. The order is the registry order,
 // and a merge takes the union in that order.
+//
+// **The project manager resolved the first such merge on 2026-08-14**, between #97 and #98.
+// Each member appended one name, and the union holds both in the order of the registry
+// above. **#95 built the clean environment, #97 built the published module contents, and
+// #98 built the binaries.**
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
@@ -140,8 +145,8 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 		}
 	}
 
-	if !slices.Equal(built, []string{"the clean environment", "the published module contents"}) {
-		t.Errorf("the registry reports %v as built, and the tree holds the clean environment and the published module contents", built)
+	if !slices.Equal(built, []string{"the clean environment", "the published module contents", "the binaries"}) {
+		t.Errorf("the registry reports %v as built, and the tree holds the clean environment, the published module contents and the binaries", built)
 	}
 }
 
