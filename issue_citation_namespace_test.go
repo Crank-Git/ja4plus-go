@@ -63,7 +63,10 @@ import (
 // The batch #536 round re-measured the mark on 2026-08-14 and it read 552. The round cites
 // #544, #547, #548, #549, #550, #551 and #552, and each number sits above the inherited
 // mark of 543. Every one names an issue or a pull request of this repository.
-const issueCitationHighWaterMark = 552
+// Issue #565 re-measured the mark on 2026-08-14 and it read 572. That issue bounds the eight
+// fingerprinter state maps, and its code comments cite #565 and #193. #565 sits above the
+// inherited mark of 552, and it names an issue of this repository.
+const issueCitationHighWaterMark = 572
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
