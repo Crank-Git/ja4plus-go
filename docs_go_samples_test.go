@@ -63,10 +63,10 @@ import (
 //
 // # The mapping is one to one
 //
-// Each fenced block matches exactly one example program and exactly one example function,
-// and each example program and each example function matches exactly one fenced block.
-// **A one-way rule lets a deleted page leave an orphan mirror behind**, and the next
-// reader cannot tell an orphan from a sample whose page moved.
+// Each fenced block matches exactly one example program and exactly one example function.
+// Each example program and each example function matches exactly one fenced block.
+// **A one-way rule lets a deleted page leave an orphan mirror behind.** The next reader
+// then cannot tell an orphan from a sample whose page moved.
 
 const (
 	// exampleTestFile holds one testable example for each fenced Go block of `docs/`.
@@ -196,9 +196,11 @@ func functionBodyTokens(t *testing.T, path, source string, body *ast.BlockStmt, 
 // TestEveryGoSampleOfTheSiteIsARunnableProgram holds FR-documentation-26 and the first
 // half of FR-documentation-29.
 //
-// It proves that each fenced Go block parses as a whole Go file, that the file declares
-// `package main` and `func main`, and that `examples/` holds exactly one program whose
-// token sequence equals the block.
+// It proves each of these.
+//
+//   - Each fenced Go block parses as a whole Go file.
+//   - That file declares `package main` and `func main`.
+//   - `examples/` holds exactly one program whose token sequence equals the block.
 func TestEveryGoSampleOfTheSiteIsARunnableProgram(t *testing.T) {
 	samples := collectGoSamples(t)
 	if len(samples) == 0 {
@@ -269,7 +271,7 @@ func TestEveryGoSampleOfTheSiteIsARunnableProgram(t *testing.T) {
 // half of FR-documentation-29.
 //
 // It proves that `example_test.go` holds exactly one testable example for each fenced Go
-// block, and that the body of the example equals the body of `main` in the block.
+// block. The body of that example equals the body of `main` in the block.
 func TestEveryGoSampleOfTheSiteIsATestableExample(t *testing.T) {
 	samples := collectGoSamples(t)
 	if len(samples) == 0 {

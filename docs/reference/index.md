@@ -55,10 +55,15 @@ by an anchor.** The anchor is the identifier for a top-level name, and it is
 | A method or a field | `#Type.Member` | [`Processor.ProcessPacket`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#Processor.ProcessPacket) |
 
 **The anchor form was confirmed against a live page and never from memory**, which
-`.claude/rules/external-apis.md` requires. `https://pkg.go.dev/github.com/gopacket/gopacket@v1.6.1`
-was read on 2026-08-14, and its markup holds `id="NewPacket"` for a function,
-`id="CaptureInfo"` for a type, `id="PacketSource.NextPacket"` for a method and
-`id="CaptureInfo.Timestamp"` for a field.
+`.claude/rules/external-apis.md` requires.
+`https://pkg.go.dev/github.com/gopacket/gopacket@v1.6.1` was read on 2026-08-14. Its markup
+holds each of these.
+
+- `id="NewPacket"`, for a function.
+- `id="CaptureInfo"`, for a type.
+- `id="PacketSource.NextPacket"`, for a method.
+- `id="CaptureInfo.Timestamp"`, for a struct field.
+- `id="DecodingLayer.CanDecode"`, for an interface method.
 
 ## The generated page serves no documentation today, and this states why
 
