@@ -174,23 +174,36 @@ func nativeBinary(t *testing.T, directory string, tag string) (releasedBinary, s
 //
 // The clean environment of FR-prerelease-1 gives the program an empty HOME, so the run
 // reads no cached database and no configuration of the person who runs the case. It fails
-// the case when the program reports a non-zero status, and the message holds the output.
+// the case when the program reports a non-zero status.
+//
+// The message of that failure holds the standard error stream of the program. A released
+// binary that refuses its input writes the reason there, and `exit status 1` alone sends the
+// reader back to the machine that ran the case.
 func runBinary(t *testing.T, path string, arg ...string) string {
 	t.Helper()
 
 	output := ""
 	err := runInCleanEnvironment(t.TempDir(), func(environment *cleanEnvironment) error {
+		// `exec.Cmd.Output` reports the standard error stream inside an `*exec.ExitError`, and
+		// it reports that stream for no other error. The case collects both streams itself, so
+		// one message holds the reason whatever the program did.
+		results := &strings.Builder{}
+		diagnostics := &strings.Builder{}
 		command := environment.command(path, arg...)
-		raw, runErr := command.Output()
-		output = string(raw)
+		command.Stdout = results
+		command.Stderr = diagnostics
+
+		runErr := command.Run()
+		output = results.String()
 		if runErr != nil {
-			return fmt.Errorf("run %s %s: %w", filepath.Base(path), strings.Join(arg, " "), runErr)
+			return fmt.Errorf("run %s %s: %w\nstandard error: %s",
+				filepath.Base(path), strings.Join(arg, " "), runErr, diagnostics.String())
 		}
 
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("%v\noutput: %s", err, output)
+		t.Fatalf("%v\nstandard output: %s", err, output)
 	}
 
 	return output
@@ -430,6 +443,13 @@ func dynamicLibraries(path string) ([]string, bool, error) {
 // The release publishes `checksums.txt`, which the `Create checksums` step writes with
 // `sha256sum`. The case computes the digest of each artifact and compares it against the
 // published line, so a truncated download and a replaced artifact both fail here.
+//
+// **This case verifies the digest of a released binary, and it verifies no module hash.**
+// The Go module proxy publishes a hash of the module zip, which is a different artifact and
+// a different digest. FR-prerelease-12 through FR-prerelease-17 read the module, and #97
+// measured it at `v0.3.0` on 2026-08-14: 56 files, 2253962 bytes and the hash
+// `h1:TdhICjAT96tKBBTNPCArJCzuOhZ5LmbtMmLj50gAdIA=`. A reader who compares that hash against
+// a line of `checksums.txt` compares two unrelated values.
 //
 // The case reads the file rather than the machine, so it reaches every artifact on one
 // runner.
