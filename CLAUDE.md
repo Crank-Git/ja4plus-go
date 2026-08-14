@@ -68,7 +68,7 @@ of that register name a change to this repository. Read
 | `internal/dbcache/` | The validation of a downloaded database, the 16 MB bound and the atomic cache write. |
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
-| `internal/capture/` | Opening a live interface. Holds the pure-Go backend and the libpcap backend. |
+| `internal/capture/` | Opening a live interface. Holds the pure-Go backend, the libpcap backend, the unsupported-platform fallback, and one permission probe for each of Linux, macOS and every other platform. |
 | `internal/keylog/` | Reading a pcapng Decryption Secrets Block and a key log in the NSS key log format. |
 | `testdata/foxio/` | The fetched FoxIO corpus. Not tracked in git. |
 | `testdata/deviations.json` | The register: one entry per accepted difference from a FoxIO value. Tracked. |

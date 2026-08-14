@@ -4,12 +4,27 @@ package capture
 
 import "syscall"
 
-// packetSocketProtocol holds `ETH_P_ALL` in network byte order, which is the protocol that
-// a packet socket takes.
+// packetSocketProtocol is the protocol number that the probe below passes to `socket(2)`.
 //
-// `pcapgo.NewEthernetHandle` passes `endian.Htons(unix.ETH_P_ALL)`, and this constant
-// states the same value. A constant costs no call, and the probe below opens the socket
-// that the backend opens.
+// It computes `0x0300` on every host, because it swaps the two bytes of `ETH_P_ALL`
+// unconditionally. `gopacket@v1.6.1/endian/endian.go:13-18` swaps on a little-endian host
+// alone, so `endian.Htons(unix.ETH_P_ALL)` reads `0x0003` on a big-endian host. **So this
+// constant and the value that `pcapgo.NewEthernetHandle` passes differ on `s390x`,
+// `ppc64` and `mips`.**
+//
+// **The probe needs no particular protocol number, so that difference costs nothing.**
+// `packet(7)` states the field: `protocol is the IEEE 802.3 protocol number in network
+// byte order.` It states what a value other than `ETH_P_ALL` selects: `All incoming
+// packets of that protocol type will be passed to the packet socket before they are
+// passed to the protocols implemented in the kernel.` So `0x0300` selects a packet set,
+// and `captureRefusal` reads the errno of `socket(2)` and never a packet.
+// Verified against: <https://man7.org/linux/man-pages/man7/packet.7.html>, retrieved
+// 2026-08-14.
+//
+// An earlier comment stated that this constant and `endian.Htons(unix.ETH_P_ALL)` hold one
+// value. **The Epic 13 documentation round measured the difference on 2026-08-14**, and
+// issue #76 holds that measurement. The round repaired this comment and it changed no
+// arithmetic, because a change of the value is a change of behavior.
 const packetSocketProtocol = int(syscall.ETH_P_ALL>>8) | int(syscall.ETH_P_ALL&0xff)<<8
 
 // captureRefusal returns the errno that the kernel states when it refuses a packet socket,
