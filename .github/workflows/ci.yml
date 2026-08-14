@@ -109,6 +109,18 @@ jobs:
       - name: Build
         run: go build ./...
 
+      # FR-documentation-27 of #87 states that this command gates every pull request.
+      #
+      # The `Build` step above already reaches `examples/`, because `./...` names every
+      # package of the module. **This step is not that step, and it is not decoration.**
+      # It names the command the requirement names, so a reader of a red run reads which
+      # requirement failed, and a later edit of the `Build` step cannot silently drop the
+      # gate.
+      #
+      # #88 owns `docs.yml` and `docs-build.yml`, and it owns no step of this file.
+      - name: Build the examples
+        run: go build ./examples/...
+
       - name: Test
         run: go test -v -race -coverprofile=coverage.out ./...
 
