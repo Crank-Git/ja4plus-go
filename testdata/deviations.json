@@ -4774,5 +4774,29 @@
     "theirs": "",
     "ruling": "#503",
     "reason": "FR-parity-42 makes this library read the reset bit alone, and `wireshark/source/packet-ja4.c:1296` tests the flag byte of frame 119 for equality."
+  },
+  {
+    "key": "https3-301-get.pcap/20/JA4TS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14240_2-4-8-1-3_1436_10",
+    "ruling": "#502",
+    "reason": "The maintainer ruled in issue #502 on 2026-08-14 that a reset the client sent produces no value, because `ja4tsConnKey` keys the connection by the server endpoint and `wireshark/source/packet-ja4.c:1600` keys it by the stream."
+  },
+  {
+    "key": "https3-301-get.pcap/21/JA4TS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14240_2-4-8-1-3_1436_10",
+    "ruling": "#502",
+    "reason": "The maintainer ruled in issue #502 on 2026-08-14 that a reset the client sent produces no value, because `ja4tsConnKey` keys the connection by the server endpoint and `wireshark/source/packet-ja4.c:1600` keys it by the stream."
+  },
+  {
+    "key": "https3-301-get.pcap/23/JA4TS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14240_2-4-8-1-3_1436_10",
+    "ruling": "#502",
+    "reason": "The maintainer ruled in issue #502 on 2026-08-14 that a reset the client sent produces no value, because `ja4tsConnKey` keys the connection by the server endpoint and `wireshark/source/packet-ja4.c:1600` keys it by the stream."
   }
 ]
