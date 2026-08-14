@@ -63,9 +63,22 @@ import (
 // The batch #536 round re-measured the mark on 2026-08-14 and it read 552. The round cites
 // #544, #547, #548, #549, #550, #551 and #552, and each number sits above the inherited
 // mark of 543. Every one names an issue or a pull request of this repository.
+// The #556 hotfix re-measured the mark on 2026-08-14 and it read 568. That hotfix cites
+// `#556` in a code comment and in a test, and 556 sits above the inherited mark of 552. **A
+// hotfix pays this maintenance cost exactly as a batch round does**, because the guard reads
+// the number and never the shape of the change that carries it.
+//
+// The hotfix read 560 before it filed #568, and it read 568 after. **A mark that a later
+// allocation passes stays safe**, because the mark is a lower bound and this repository only
+// allocates upward.
+//
 // The batch #555 round re-measured the mark on 2026-08-14 and it read 583. The round cites
 // #555, #557, #559, #560, #561, #563 and #575, and each number sits above the inherited
 // mark of 552. Every one names an issue or a pull request of this repository.
+//
+// **The merge of `dev` into batch #555 met two marks, and it keeps the higher one.** The
+// hotfix read 568 and the round read 583. **A mark is a lower bound, so the higher reading
+// covers the lower one** and no citation of either change falls outside it.
 const issueCitationHighWaterMark = 583
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
