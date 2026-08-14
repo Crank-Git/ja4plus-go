@@ -258,6 +258,13 @@ func closeConnectionWindow(fingerprinters []Fingerprinter, srcIP string, srcPort
 // It returns an empty string for a packet that carries neither TCP nor UDP.
 // The caller decides what to do with an empty key.
 // GetShardKey acquires no lock and holds no state.
+//
+// **`monitorConnectionKey` in `cmd/ja4plus/watch.go` holds a second copy of this grouping
+// rule.** #80 wrote it for the connection table of `ja4plus watch`, and it returns a
+// `connectionKey` where this method returns a formatted string. **A change to the rule
+// below changes that function too.** This method is exported and it decides the rule; that
+// function follows it. The Epic 13 cross-member review found the pair, and issue #614 holds
+// the reading.
 func (p *Processor) GetShardKey(packet gopacket.Packet) string {
 	// The shard key follows the grouping pair, so every packet of one connection reaches
 	// one shard. A mirror sends both directions of one session from one outer address

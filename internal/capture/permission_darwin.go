@@ -15,7 +15,10 @@ import (
 // errno: `A separate device file is required for each minor device.  If a file is in use,
 // the open will fail and errno will be set to EBUSY.` So the probe reads more than one
 // device, and it stops at the first device that states an answer of its own.
-// Verified against `man 4 bpf` on macOS 15, read on 2026-08-14.
+// Verified against `man 4 bpf` on macOS 26.6.1, build 25G76, read on 2026-08-14. **The two
+// quotations above are verbatim, and the platform number is the part an earlier comment
+// stated wrong.** It read `macOS 15`, and `sw_vers` on the host reports
+// `ProductVersion: 26.6.1`. Darwin 25 is macOS 26.
 //
 // A host that already runs 4 capture programs reports EBUSY on each of these devices. The
 // probe then answers nothing, and `captureRefusal` returns nil. **That answer states no

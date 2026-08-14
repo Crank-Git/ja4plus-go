@@ -18,6 +18,20 @@ import (
 
 // stubHandle is a capture handle that opens nothing. A test that reaches the monitor needs
 // a handle, and no test of this file holds the privilege that a live interface needs.
+//
+// **`stubCaptureHandle` in `monitor_test.go` is the second stub of `capture.Handle` in this
+// package, and the two stay separate.** The Epic 13 cross-member review found the pair, and
+// the Epic 13 documentation round declined the fold. Two facts separate them.
+//
+//  1. This stub records the close, and `TestWatchInterfaceClosesTheHandleThatItOpens` reads
+//     the `closed` field. `stubCaptureHandle.Close` records nothing.
+//  2. This stub fails the first read with an error that is not `io.EOF`, and
+//     `newStubCaptureHandle` ends a packet list with `io.EOF`. The monitor loop separates
+//     the two errors.
+//
+// **A change to one stub reads the other first.** A fold needs a `closed` field on
+// `stubCaptureHandle` and a second end error, so it rewrites a type that every monitor test
+// drives. Issue #614 holds the reading.
 type stubHandle struct {
 	closed bool
 }

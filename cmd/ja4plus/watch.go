@@ -538,6 +538,19 @@ func (t *connectionTable) len() int {
 // It reads the grouping address pair, which is the pair that `Processor.GetShardKey`
 // reads. A mirror sends both directions of one session from one outer pair, and the
 // grouping pair separates the two connections.
+//
+// **This function and `Processor.GetShardKey` in `processor.go` hold one grouping rule in
+// two copies, and they differ in the return shape alone.** Each one reads
+// `parser.GetGroupingIPInfo`, each one takes the same TCP branch and the same UDP branch,
+// and each one applies the sort below. This function returns a `connectionKey`, and
+// `GetShardKey` returns a formatted string.
+//
+// **A change to the grouping rule changes both, and a change to one alone splits them.**
+// `GetShardKey` is exported and `.claude/rules/concurrency.md` names it, so the exported
+// rule decides and this function follows it. The Epic 13 cross-member review found the
+// pair, and issue #614 holds the reading. **The round wrote this comment and it moved no
+// code.** A shared helper changes the exported package, and the freeze of #100 reaches that
+// surface.
 // Every packet is untrusted input, so this function reads the decoded layers and it
 // slices no byte of its own.
 func monitorConnectionKey(packet gopacket.Packet) (connectionKey, bool) {

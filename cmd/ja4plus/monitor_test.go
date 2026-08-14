@@ -34,6 +34,10 @@ const monitorTestServerIP = "10.0.0.1"
 //
 // The stub satisfies `capture.Handle`, so the loop under test is the loop that a live
 // interface drives. #77 wrote the same compile-time check in `capture_test.go`.
+//
+// **`stubHandle` in `watch_test.go` is the second stub of `capture.Handle` in this
+// package, and its doc comment states why the two stay separate.** Read that comment before
+// you change this type. Issue #614 holds the reading.
 type stubCaptureHandle struct {
 	// packets holds the bytes the handle returns, in order.
 	packets [][]byte
