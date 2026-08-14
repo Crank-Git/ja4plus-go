@@ -270,7 +270,7 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 		{
 			certs := ja4xCertificatesInRecord(data[i+5 : i+5+recordLength])
 			for _, certDER := range certs {
-				// Dedup by SHA-256 of DER bytes, on this stream alone.
+				// The key names the SHA-256 hash of the DER bytes and the stream.
 				h := sha256.Sum256(certDER)
 				certHash := hex.EncodeToString(h[:])
 				setKey := ja4xCertSetKey(streamID, certHash)

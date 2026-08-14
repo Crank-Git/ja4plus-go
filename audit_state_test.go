@@ -324,9 +324,9 @@ func TestJA4CleanupConnectionReadsBothDirectionsOfTheTuple(t *testing.T) {
 	}
 }
 
-// F-23-12 is closed. JA4X keyed the deduplication set by the hash of the certificate, so
-// CleanupConnection reached no entry of it and a certificate that two connections carried
-// produced one fingerprint. The fingerprinter now holds a stream index of the hashes it
+// F-23-12 is closed. JA4X keyed the deduplication set by the hash of the certificate.
+// CleanupConnection therefore reached no entry of it, and a certificate that two connections
+// carried produced one fingerprint. The fingerprinter now holds a stream index of the hashes it
 // wrote, and CleanupConnection removes the hashes of the connection the caller names.
 // #489 then gave the set key the stream beside the certificate hash.
 func TestJA4XCleanupConnectionRemovesTheCertificateHashOfTheConnection(t *testing.T) {
