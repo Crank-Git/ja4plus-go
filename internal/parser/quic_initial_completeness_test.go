@@ -24,8 +24,13 @@ func quicClientHelloHandshakeMessage() []byte {
 
 // quicCipherSuitesOffset names the first cipher suite byte of the handshake message that
 // `BuildClientHello` writes.
-// The message holds the type, the 24-bit length, the version, 32 random bytes, the session
-// identifier length and the 16-bit cipher suites length in front of it.
+// Six fields sit in front of it, and the sum below writes one term for each one.
+//   - The handshake type, of 1 byte.
+//   - The handshake length, of 3 bytes.
+//   - The version, of 2 bytes.
+//   - The random, of 32 bytes.
+//   - The session identifier length, of 1 byte.
+//   - The cipher suites length, of 2 bytes.
 const quicCipherSuitesOffset = 1 + 3 + 2 + 32 + 1 + 2
 
 // TestParseQUICInitialProducesNoClientHelloFromAGapInTheHandshakeMessage holds the
@@ -96,5 +101,33 @@ func TestParseQUICInitialReadsAHandshakeMessageThatTwoFragmentsCover(t *testing.
 	}
 	if !ch.IsQUIC {
 		t.Error("the reader returns a ClientHello whose IsQUIC field is false")
+	}
+}
+
+// TestParseQUICInitialProducesNoErrorForAHandshakeMessageOfThreeBytes pins the one
+// behavior difference of #532 that the completeness rule does not name.
+// #532 replaced an inline reader, and that reader wrapped a handshake message of 1 to 3
+// bytes in a TLS record and passed it to `ParseClientHello`. `ParseClientHello` reports
+// `ClientHello truncated: too short for version` for such a record, so `ParseQUICInitial`
+// returned that error. It now returns no client hello and no error, because a message of
+// 3 bytes carries no 24-bit length that a reader can test.
+// A reversal of this decision reverses #532.
+func TestParseQUICInitialProducesNoErrorForAHandshakeMessageOfThreeBytes(t *testing.T) {
+	dcid := []byte{0xde, 0xad, 0xbe, 0xef, 0x01, 0x02, 0x03, 0x04}
+
+	key, iv, hpKey, err := DeriveInitialKeys(dcid, 1)
+	if err != nil {
+		t.Fatalf("the test does not derive the client Initial keys: %v", err)
+	}
+
+	frames := quicCryptoFrameAtOffset(0, []byte{TLSHandshakeClientHello, 0x00, 0x00})
+	packet := quicInitialPacket(t, key, iv, hpKey, dcid, frames)
+
+	ch, err := ParseQUICInitial(packet)
+	if err != nil {
+		t.Fatalf("the reader reports the error %v for a handshake message of 3 bytes", err)
+	}
+	if ch != nil {
+		t.Fatal("the reader returns a ClientHello for a handshake message of 3 bytes")
 	}
 }
