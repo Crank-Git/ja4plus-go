@@ -3,8 +3,14 @@
 // A downloaded database is untrusted input, and this package is the validation boundary of
 // the library. No caller writes the cache file by another path.
 //
-// The package holds one bound and one column set for the whole repository. The library and
-// the command-line program each read them here, so the two never state two values.
+// The package holds one bound and one CSV column set for the whole repository. The library
+// and the command-line program each read them here, so the two never state two values.
+//
+// The CSV column set and the ja4db.com JSON field set are two keyspaces, and this package
+// holds the CSV one alone. `ja4db/lookup.go` names `application`, `library`, `device` and
+// `os` as JSON field names of the remote response, and that literal is no second copy of
+// this column set. The names read alike because ja4db.com publishes one record shape in two
+// encodings.
 //
 // `docs/specs/features/09-database-lookup.md` states FR-lookup-23 through FR-lookup-26.
 package dbcache

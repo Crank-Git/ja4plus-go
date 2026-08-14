@@ -95,7 +95,8 @@ file that did not exist.
 - **FR-release-35** — `.github/workflows/release.yml` runs the conformance suite before
   it builds.
 - **FR-release-35a** — GoReleaser builds the release. `.goreleaser.yaml` holds the
-  configuration, and the workflow holds no inline build matrix.
+  configuration, and the workflow holds no inline build matrix. **This requirement is
+  unbuilt**, and the reading below states the measurement.
 - **FR-release-35b** — GoReleaser builds five artifacts: Linux amd64, Linux arm64, Darwin
   amd64, Darwin arm64 and Windows amd64.
 - **FR-release-35c** — Every artifact is built with `CGO_ENABLED=0`.
@@ -110,6 +111,12 @@ file that did not exist.
   publishes nothing.
 - **FR-release-35j** — The GoReleaser version is pinned in the workflow.
 - **FR-release-35k** — Every action reference in the workflow is pinned to a commit hash.
+
+**FR-release-35a is unbuilt at this head, and #105 is the issue that builds it.** Measured on
+2026-08-14: `ls .goreleaser.yaml` reports no such file, and
+`.github/workflows/release.yml:121-129` holds an inline build matrix of five `go build`
+commands. **The defect predates batch #617**, and the batch #617 cross-member review recorded
+it rather than filing an issue, because #105 already holds the work.
 - **FR-release-36** — The release workflow fails when the conformance suite reports a
   deviation.
 - **FR-release-37** — The release workflow builds on the Go version range that

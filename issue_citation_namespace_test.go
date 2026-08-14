@@ -159,7 +159,20 @@ import (
 // #609 through #613 are the five findings of the Epic 13 cross-member review that earned a
 // tracker issue. **A round that runs after its review allocates six numbers rather than
 // one**, which is the maintenance cost that #351 named.
-const issueCitationHighWaterMark = 614
+//
+// The batch #617 round re-measured the mark on 2026-08-14 and it read 622. That round cites
+// #594, #596, #617 and #619 through #622, and each number sits above the inherited mark of
+// 614. Every one names an issue or a pull request of this repository.
+//
+// **This round names four numbers that both repositories allocated, and the two sets differ.**
+// This repository holds #619 through #622, and the port holds `Crank-Git/ja4plus#619` through
+// `Crank-Git/ja4plus#622`. `Crank-Git/ja4plus#619` and this repository's #619 each concern the
+// JA4X empty list, and `Crank-Git/ja4plus#620` and this repository's #620 concern two
+// different questions. **So a bare number in that range is ambiguous**, and
+// `.claude/rules/rulings.md` `## A citation names its repository` already bars it. This guard
+// enforces the bare form for this repository, and
+// `TestEveryPortIssueCitationCarriesARecordedForm` reads the qualified form.
+const issueCitationHighWaterMark = 622
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

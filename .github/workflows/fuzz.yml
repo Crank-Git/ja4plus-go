@@ -338,6 +338,14 @@ jobs:
             echo
             echo "FR-fuzz-24 states that a crashing input joins the seed corpus. Commit the file above with the repair."
             echo
+            echo "**Rename the file before you commit it.** The engine writes a hex name, and"
+            echo "\`seedCorpusHoldsNoOtherFile\` of \`internal/parser/fuzz_seed_corpus_test.go\`"
+            echo "fails on a seed file that no test builds. It prints"
+            echo "\`the seed corpus holds <path>, and no test builds it\`."
+            echo "The guard admits a name that starts \`issue-\`, so name the file"
+            echo "\`issue-<n>-<what-it-crashes>\` and keep it in the same directory."
+            echo "\`testdata/fuzz/README.md\` states the naming rule."
+            echo
             echo "The run log sits in the artifact \`fuzz-$TARGET\` of $RUN_URL, and the artifact expires before this issue does."
           } > body.md
 

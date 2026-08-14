@@ -251,14 +251,29 @@ Seven fingerprinters carry a bound of their own, and no bound replaces the call.
 packet. None of the three needs a bound. The
 [implementation notes](implementation-notes.md) state the eviction rule of each bound.
 
+**JA4H and JA4X each hold one TCP stream reassembler, and it carries two bounds of its own:
+1 MB of stored bytes, and 4096 stored segments for one stream.** The two bounds refuse
+independently. The [implementation notes](implementation-notes.md) state both.
+
 `Reset` drops every connection at once. It suits the end of a capture file, and it does
 not suit a monitor that must keep the connections that are still live.
 
-## One packet dated far in the future empties a bounded table
+## One packet dated far in the future ages a whole bounded table
 
-**The idle limit above reads the capture timestamp of the packet that arrives.** The pass
-compares that one timestamp against the last packet time of every key of the table. **So one
-packet dated far in the future ages every key at once, and the pass removes all of them.**
+**Six of the seven idle limits above read the capture timestamp of the packet that arrives.**
+They are JA4, JA4L, JA4S, JA4SSH, JA4H and JA4TS. **The JA4X sweep reads the wall clock**,
+because `ProcessPacket` in `ja4x.go` calls `time.Now()`. So this section names the six, and it
+names JA4X for the wall clock alone.
+
+The pass compares that one timestamp against the last packet time of every key of the table.
+**So one packet dated far in the future ages every key at once, and the pass removes every key
+it ages.**
+
+**One key survives the pass, and it is the key of the packet that carries the crafted
+timestamp.** The fingerprinter records that key with the same crafted timestamp after the pass,
+so a later packet of the same key reads an age of zero. **So one crafted packet leaves the
+table holding one key, and never zero.** `age_clock_ruling_test.go` asserts that count of 1 at
+each of the four sites.
 
 **Every packet is untrusted input, and the packet carries the timestamp.** A sender that dates
 one packet in the year 9999 therefore costs one packet for the whole table, rather than one

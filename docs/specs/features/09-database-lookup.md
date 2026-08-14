@@ -74,7 +74,7 @@ and the atomic cache write of `internal/dbcache`.
   URL.
 - **FR-lookup-16** — A remote lookup sends a `User-Agent` header that names the library
   and its version.
-- **FR-lookup-17** — A remote lookup honours the context that the caller supplies.
+- **FR-lookup-17** — A remote lookup honors the context that the caller supplies.
 
 ### The cache and the reload
 
@@ -98,7 +98,12 @@ and the atomic cache write of `internal/dbcache`.
 **#74 replaced the package-level variables `dbSource` and `dbCachePath` with fields of the
 unexported `lookupTable` type.** A reader loads one immutable snapshot through
 `activeTable` of `lookup.go`, so FR-lookup-20 and FR-lookup-21 hold with no lock on the
-read path.
+steady-state read path.
+
+**A reader that finds a changed cache file calls `rebuildTable`, and `rebuildTable` takes a
+mutex.** So the read path is lock-free in the steady state, and it is not lock-free at every
+call. `.claude/rules/concurrency.md` `## Rules` states the same property, and
+`docs/concurrency.md` `## The database lookup holds one snapshot` states it for a user.
 
 ## User flows
 
@@ -116,8 +121,15 @@ read path.
 2. The program downloads the database with a timeout and a size bound.
 3. The program validates the file.
 4. The program writes the cache atomically.
-5. The program marks the table for reload.
-6. The next lookup in the same process reads the new table.
+5. The program ends. It marks no table, because `ja4plus db update` runs in its own
+   process.
+6. A running process stats the cache file at its next lookup, and `activeTable` of
+   `lookup.go` rebuilds the table from the new file.
+
+**`runDBUpdate` of `cmd/ja4plus` writes the cache file and it prints. It marks nothing.**
+`invalidateLookupTable` of `lookup.go` is unexported, and no package outside the root
+package reaches it, because #100 freezes the exported surface. **The stat of the cache file
+is the mechanism that reloads the table**, and it is not a mark.
 
 ### A caller opts in to a remote lookup
 

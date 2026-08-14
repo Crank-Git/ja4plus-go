@@ -123,7 +123,7 @@ the repair to the epic that owns that page.**
 
 **One helper package carries all five, and #45 built it.** `internal/fuzzprop` exports
 `ExactInput` and `Check`, and every one of the 13 targets calls both. Thirteen copies of one
-assertion drift apart, and the two packages cannot share a `_test.go` file.
+property drift apart, and the two packages cannot share a `_test.go` file.
 `internal/fuzzprop/fuzzprop_test.go` holds ten tests that prove each property fires.
 
 **`internal/fuzzprop` sits under `internal/`, so the `v1.0.0` freeze binds no name it
@@ -149,10 +149,20 @@ FR-fuzz-14 catches one of the two, and it does not catch the other.
 2. **`input[:n]` above the length and at or below the capacity panics for nothing.** It
    returns the bytes that follow the input in memory, and the target reads them as input.
 
-**The second read is reachable, so FR-fuzz-15 is not fully subsumed.** The fuzz engine hands
-the target the mutator's scratch slice at `internal/fuzz/mutator.go:113`, and
-`internal/fuzz/mutator.go:106` gives that slice a capacity of `maxPerVal` bytes. One measured
-seed replay reported `len=5 cap=8`.
+**The second read is reachable, so FR-fuzz-15 is not fully subsumed.** `mutateBytes` writes
+into a scratch slice at `internal/fuzz/mutator.go:112`, and `internal/fuzz/mutator.go:113`
+assigns that scratch slice to the value the target receives.
+**`internal/fuzz/mutator.go:107` is the assignment that gives the slice a capacity of
+`maxPerVal` bytes**, and `internal/fuzz/mutator.go:106` is the test above it.
+`internal/fuzz/mutator.go:56` computes `maxPerVal` from the whole byte budget. **Each line
+above was measured at go1.26.5 on 2026-08-14**, and `internal/fuzzprop/fuzzprop.go` cites the
+same four lines.
+
+**One measured seed replay reported `len=5 cap=8` at go1.26.5.** **That measurement reads a
+seed replay, and a seed replay reaches no mutator.** So it proves that the engine hands the
+target a slice whose capacity is above its length, and it proves nothing about the four lines
+above. **The conclusion holds under either path**, because FR-fuzz-15 needs one slice whose
+capacity is above its length.
 
 **`ExactInput` returns a copy whose capacity equals its length**, so the second read panics
 and FR-fuzz-14 then reports it. #45 measured both sides: the same expression returns 6 bytes

@@ -22,8 +22,8 @@ values, so a later run can report other counts.**
 |---|---|---|
 | 1 | Is the cluster one cause or several? | **Four causes.** Every one of the thirty falls into one of four groups, and each group names one condition of the dissector. |
 | 2 | Which line bars the emission? | `wireshark/source/packet-ja4.c:1324` for group A, `wireshark/source/packet-ja4.c:1266` and `wireshark/source/packet-ja4.c:1279` for group B, and `wireshark/source/packet-ja4.c:1362` for group C and group D. |
-| 3 | Does each group earn a value decline, and under which ruling? | **Ruling #196 reaches none of the thirty.** Group A declines under ruling #128, and group C and group D decline under ruling #127. **Group B needs one answer from the maintainer.** |
-| 4 | Do the FoxIO implementations disagree? | **Yes, in every group, and the maintainer has already ruled three of the four splits.** `## The one question for the maintainer` below states the fourth. |
+| 3 | Does each group earn a value decline, and under which ruling? | **Ruling #196 reaches none of the thirty.** Group A declines under ruling #128, and group C and group D decline under ruling #127. **Group B declines under ruling #126**, which the maintainer ruled for JA4L on 2026-08-14. |
+| 4 | Do the FoxIO implementations disagree? | **Yes, in every group, and the maintainer has ruled all four splits.** `## The question this page asked, and the ruling of 2026-08-14` below states the fourth ruling, and it keeps the reading that earned it. |
 
 ## The re-measurement
 
@@ -378,7 +378,32 @@ implementations therefore write a value on no common frame, and the vector file 
 key at all. **The 8 values of the two groups earn a value decline under ruling #127**, and
 this page writes none of them.
 
-## The one question for the maintainer
+## The question this page asked, and the ruling of 2026-08-14
+
+**The maintainer ruled the question on 2026-08-14, and issue #543 holds the ruling and the
+reversal path.** **The SYN bit test of ruling #126 reaches JA4L, and not JA4T alone.** That
+is candidate 1 of the table below.
+
+**#543 built the answer in the same batch that wrote this page**, so the register holds the
+six entries under ruling `#126`. **`docs/specs/foxio/JA4L.md` R36 is the rule that records
+the JA4L half**, and it names the two captures.
+
+**This section keeps the reading below**, because the reading is the evidence that earned
+the ruling. **Four sentences of this page stated an open question, and this table names
+each one.**
+
+| Where | What it stated | What the ruling states |
+|---|---|---|
+| This section | The question is open, and the page recommends no answer. | The maintainer ruled candidate 1 on 2026-08-14. |
+| This section | `docs/specs/foxio/JA4L.md` records no rule for the JA4L half of `wireshark/source/packet-ja4.c:1266`. | R36 of that file is the rule, and #543 wrote it. |
+| `## The four answers, in one table`, row 3 | Group B needs one answer from the maintainer. | The register holds 6 entries under ruling `#126` for group B. |
+| `## The four answers, in one table`, row 4 | The maintainer has ruled three of the four splits. | The maintainer has ruled all four. |
+
+**The register count is measured, and it is not adopted.** A read of
+`testdata/deviations.json` on 2026-08-14 reports 6 entries whose `ruling` is `#126`, and
+every one carries a JA4L key or a JA4LS key.
+
+### The reading that earned the ruling
 
 **Does the bit test that ruling #126 states for JA4T also reach JA4L?**
 
@@ -389,8 +414,9 @@ JA4T:
 
 **`wireshark/source/packet-ja4.c:1266` is one line, and JA4T and JA4L both read it.**
 `docs/specs/foxio/JA4T.md` R29 records the split for JA4T and names issue #126.
-**`docs/specs/foxio/JA4L.md` records no rule for the JA4L half of the same line.** So the
-register cannot cite a ruling for the six values of group B without an answer here.
+**`docs/specs/foxio/JA4L.md` recorded no rule for the JA4L half of the same line when this
+reading ran.** So the register could cite no ruling for the six values of group B without an
+answer. **R36 of that file is now the rule**, and #543 wrote it.
 
 **Three candidate answers, each with the yield this run measures.**
 
@@ -411,9 +437,10 @@ then publish a three-part value on a frame that the library does not write.**
 
 **So candidate 1 and candidate 3 reach the same six values and cite different rulings.**
 Candidate 1 records the reference split of the SYN flags for JA4L, and candidate 3 records
-the part count alone. **This page recommends no one of the three**, because
+the part count alone. **This reading recommended no one of the three**, because
 `.claude/rules/rulings.md` `## Stop conditions` reserves a reference split to the
-maintainer.
+maintainer. **The maintainer ruled candidate 1 on 2026-08-14**, and
+`## The question this page asked, and the ruling of 2026-08-14` above states the ruling.
 
 ## Twenty of the thirty equal a FoxIO reference Python value
 

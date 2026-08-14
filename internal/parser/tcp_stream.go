@@ -33,6 +33,19 @@ type TCPStreamReassembler struct {
 	MaxSegments int
 }
 
+// This type bounds the stream count, the stored bytes and the stored segments. It bounds the
+// age of a stream with nothing, and the Python port bounds it.
+//
+// The port holds `DEFAULT_MAX_STREAM_AGE = 600` at `ja4plus/utils/tcp_stream.py:50` of tag
+// v1.1.0, and this type holds no equivalent field. So a stream that receives no further
+// segment leaves this table only when MaxStreams evicts it, and the port drops it on age
+// alone. Measured at that tag on 2026-08-14.
+//
+// **That is a separate rule, and it is not the segment bound that #596 ruled.** Issue #596
+// measured the difference on 2026-08-14, and the batch #617 cross-member review recorded it
+// so that a later reader finds it rather than measures it again. **No issue holds the work
+// today**, and this comment states the divergence and never a plan.
+
 // DefaultMaxSegments is the segment count that one stream stores at most.
 //
 // The Python port ships this rule and this value. `ja4plus/utils/tcp_stream.py:45` at tag
@@ -49,7 +62,9 @@ type TCPStreamReassembler struct {
 // The port attributes its 788 to `http2-with-cookies.pcapng`, and this library measures its
 // 788 on the SSH stream `192.168.1.197:22->192.168.1.169:49237`. The largest stream on port
 // 443 reaches 750 here. The count agrees and the attribution does not, and issue #596
-// reports that difference.
+// reports that difference. `Crank-Git/ja4plus#620` carries the port half of the question.
+//
+// This comment states the attribution that this library measured, and never the port's.
 const DefaultMaxSegments = 4096
 
 type tcpStream struct {

@@ -124,8 +124,12 @@ func (b *boundedKeys) admit(
 //
 // The packet carries that timestamp, so a crafted capture controls it, and one timestamp
 // decides the age of every key. A packet dated far in the future ages the whole table at once,
-// and this pass then removes every entry. `ja4ssh.go`, `ja4ts.go` and `ja4h.go` hold the same
-// rule, and the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
+// and this pass then removes every key it ages. `ja4ssh.go`, `ja4ts.go` and `ja4h.go` hold the
+// same rule, and the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
+//
+// One key survives the pass, and it is the key of the packet that carries the crafted timestamp.
+// `admit` calls `touch` for that key after the pass, so a later packet of the same key reads an
+// age of zero. So one crafted packet leaves the table holding one key, and never zero.
 //
 // **The maintainer ruled that property on 2026-08-14, and the library accepts it.** Issue #577
 // holds the ruling and the reversal path. The ruling declined a clamp, a monotonic clock and a

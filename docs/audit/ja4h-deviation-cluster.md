@@ -17,20 +17,26 @@ candidate change was built, measured, and then reverted with `git checkout -- .`
 commit of #442 holds a Go file.**
 
 **Two sections below carry a count that a later run measured, and each one names its own
-run.** #465 measured `## Two causes are closed since this reading` against the batch #457
+run.** #465 measured `## Three causes are closed since this reading` against the batch #457
 head. #467 measured `### The maintainer ruled split S1 on 2026-08-13` against the
 batch #478 head.
 
-## Two causes are closed since this reading
+## Three causes are closed since this reading
 
-**#446 closed cause 3, and #462 closed cause 2.** This section states what the library does
-today. **Each cause section below keeps the count that #442 measured**, because that count
-is the record that earned the change.
+**#446 closed cause 3, #462 closed cause 2, and #527 closed cause 5.** This section states
+what the library does today. **Each cause section below keeps the count that #442
+measured**, because that count is the record that earned the change.
 
 | Cause | Who closed it | What the library does today |
 |---|---|---|
 | 2 | #462, under the maintainer ruling of 2026-08-13 on #455 | `ProcessPacket` of `ja4h.go` produces the value at the packet that completes the request. `HTTPMessageIsComplete` of `internal/parser/http.go` holds the gate. |
 | 3 | #446 | `segmentCarriesNoNewRequest` of `ja4h.go` reads the consumed sequence range, so a repeated segment produces no second value. |
+| 5 | #527, under the maintainer ruling of 2026-08-14 on rule 5b | `requestLineRe` of `internal/parser/http.go` reads a request path that holds a space, and `computeJA4HFromRequest` of `ja4h.go` hashes an empty header list. |
+
+**This section carried the name `## Two causes are closed since this reading` until batch
+#617.** #465 created it with two rows, #527 closed cause 5 on 2026-08-14, and the batch #555
+cross-member review measured the disagreement. **Round 43 of the `## Changelog` of
+`docs/specs/spec.md` names the old heading**, because that round records what #465 wrote.
 
 **Cause 1 is open, and #441 owns it.** **The maintainer ruled split S1
 of cause 4 on 2026-08-13**, and #467 recorded that ruling in `testdata/deviations.json`.
@@ -98,7 +104,7 @@ of the per-packet set and 26 occurrences of the per-stream set carry the 337.**
 | 2 | The library emitted at the frame that ends the header block. **#462 closed it.** | 96 | 64 |
 | 3 | The library emitted a second value for a repeated TCP segment. **#446 closed it.** | 50 | 50 |
 | 4 | The library reads no HTTP request over UDP. | 108 | The candidate opens 36 more deviations than it closes. |
-| 5 | The request line parser rejects a path that holds a space. | 3 | 1 |
+| 5 | The request line parser rejected a path that holds a space. **#527 closed it.** | 3 | 1 |
 
 **The five causes attribute all 337.** 80 + 96 + 50 + 108 + 3 = 337.
 
@@ -149,7 +155,7 @@ alone. **One frame was read byte by byte, and it is frame 15 of `http2-with-cook
 
 ## Cause 2 — the library emitted at the frame that ends the header block
 
-**#462 closed this cause.** The `## Two causes are closed since this reading` section above
+**#462 closed this cause.** The `## Three causes are closed since this reading` section above
 states what the library does today. **This section keeps the reading that earned the
 change.**
 
@@ -224,7 +230,7 @@ so `ja4h_body_gate_test.go` records the ruling, and
 
 ## Cause 3 — the library emitted a second value for a repeated TCP segment
 
-**#446 closed this cause.** The `## Two causes are closed since this reading` section above
+**#446 closed this cause.** The `## Three causes are closed since this reading` section above
 states what the library does today. **This section keeps the reading that earned the
 change.**
 

@@ -72,9 +72,17 @@ of them on 2026-08-14.
 | JA4TS | 1000 connections | 120 seconds | The oldest connection leaves when the table is full. |
 | JA4X | 50 streams, and 1000 certificates | A sweep every 30 seconds | The oldest stream leaves when the table is full, and the sweep drops the certificate record. |
 
-**The TCP stream reassembler bounds the stored bytes of one stream at 1 MB.** JA4H and JA4X
-each hold one reassembler, and each one refuses a further segment of a stream that reaches
-that bound.
+**The TCP stream reassembler holds two bounds for one stream: 1 MB of stored bytes, and 4096
+stored segments.** JA4H and JA4X each hold one reassembler, and each one refuses a further
+segment of a stream that reaches either bound.
+
+**The two bounds refuse independently, and neither one masks the other.** A sender of one-byte
+segments reaches the segment bound at 4096 stored bytes. A sender of one large segment reaches
+the byte bound with one stored segment. A refused segment leaves no trace, so the stream stores
+it again after a removal frees the room.
+
+**The maintainer ruled the segment bound on 2026-08-14**, and issue #596 holds the ruling and
+the reversal path. `DefaultMaxSegments` in `internal/parser/tcp_stream.go` states the value.
 
 **JA4T, JA4D and JA4D6 hold no per-connection state**, because each one reads a single
 packet. None of the three needs a bound.
