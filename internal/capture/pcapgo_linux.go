@@ -17,6 +17,8 @@ import (
 // C. So this backend reaches Linux alone, and the default build holds no cgo.
 type ethernetHandle struct {
 	handle *pcapgo.EthernetHandle
+	// drops holds the total drop count, because the packet socket reports a delta.
+	drops dropAccumulator
 }
 
 // open returns the pure-Go capture handle for the interface that the options name.
@@ -70,6 +72,29 @@ func (e *ethernetHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, error) 
 // constructor states the link layer the backend reads.
 func (e *ethernetHandle) LinkType() layers.LinkType {
 	return layers.LinkTypeEthernet
+}
+
+// DropCount returns the count of packets the packet socket dropped since the handle
+// opened. FR-capture-34 states that the pure-Go backend reads the count from the packet
+// socket.
+//
+// It returns false when the socket option reports no value. That answer covers one sample
+// alone, and a later sample reports a count again. FR-capture-33 writes `unknown` for it.
+//
+// `EthernetHandle.Stats` reads `PACKET_STATISTICS` with `getsockopt`, and it returns
+// `*unix.TpacketStats`. The doc comment of `gopacket@v1.6.1/pcapgo/capture.go:273` states
+// the delta: `This will be the number of packets/dropped packets since the last call to
+// stats (not the cummulative sum!)`. So this method accumulates each delta, and the
+// accumulator holds the total that the statistics line reports.
+// Verified against: <https://pkg.go.dev/github.com/gopacket/gopacket/pcapgo>, read from
+// the module cache at `github.com/gopacket/gopacket@v1.6.1` on 2026-08-14.
+func (e *ethernetHandle) DropCount() (uint64, bool) {
+	stats, err := e.handle.Stats()
+	if err != nil {
+		return 0, false
+	}
+
+	return e.drops.add(stats.Drops), true
 }
 
 // Close releases the packet socket.

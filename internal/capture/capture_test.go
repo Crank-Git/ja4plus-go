@@ -18,6 +18,8 @@ func (stubHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, error) {
 
 func (stubHandle) LinkType() layers.LinkType { return layers.LinkTypeEthernet }
 
+func (stubHandle) DropCount() (uint64, bool) { return 0, true }
+
 func (stubHandle) Close() error { return nil }
 
 var _ Handle = stubHandle{}
