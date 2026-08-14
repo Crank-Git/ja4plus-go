@@ -50,6 +50,15 @@ func FuzzProcessPacketReadsAnyFrame(f *testing.F) {
 			// Each call decodes one packet and builds one processor. A `gopacket` packet
 			// caches the layer it decodes, and a processor holds per-connection state, so a
 			// shared value would make the second call read state rather than the frame.
+			//
+			// FR-fuzz-18 depends on one more property of this line, and the property is not
+			// obvious. `FingerprintResult` carries a `Timestamp`, and every fingerprinter
+			// reads that field through `GetPacketTimestamp` in `internal/parser/packet.go`.
+			// That function returns `packet.Metadata().Timestamp`, and `NewPacket` sets no
+			// capture information here, so the field holds the zero time on both calls. A
+			// later change that gives this target a `CaptureInfo`, or a fingerprinter that
+			// reads the wall clock, makes every result of this target differ between two
+			// calls.
 			packet := gopacket.NewPacket(input, layers.LayerTypeEthernet, gopacket.Default)
 
 			results, errs := NewProcessor().ProcessPacket(packet)
