@@ -103,6 +103,12 @@ the deviation list exists, not before.
   QUIC Initial packet.
 - **FR-gaps-23** — The library bounds the accumulated fragment buffer for one QUIC
   connection, and drops the connection when the bound is exceeded.
+- **FR-gaps-30** — `ReassembleCryptoFrames` drops a CRYPTO fragment that reaches past
+  `MaxCryptoBufferBytes`, so every reassembly path holds one bound. FR-gaps-23 names the
+  accumulated buffer of one connection, and `ParseQUICInitial` and
+  `ParseQUICServerInitial` each reassemble the fragments of one datagram without that
+  accumulation. Issue #168 measured an amplification of about 10000 to 1 on the second
+  path.
 
 ### The hashed wire-order form
 
