@@ -29,7 +29,7 @@ strict: true
 # `docs/audit/` holds the audit findings. Each one is design material, each one links
 # outside `docs_dir`, and neither one is published.
 #
-# `exclude_docs` is the mechanism, and the two neighboring mechanisms are wrong here.
+# `exclude_docs` is the mechanism, and the two mechanisms beside it are wrong here.
 #
 #   - `not_in_nav` keeps the file in the built site and silences the nav warning alone.
 #     The pages would publish, and their links outside `docs_dir` would still warn.
@@ -124,6 +124,7 @@ markdown_extensions:
   # `A` to `Z` alone, so it writes `École-normale` where GitHub writes `école-normale`.
   # The deprecated `pymdownx.slugs.gfm` alias calls `lower-ascii`, so its name misreports
   # what it does. Never adopt that alias.
+  #
   # The key below is `kwds`, and `kwargs` is silently wrong. PyYAML reads `args`, `kwds`,
   # `state`, `listitems` and `dictitems`, and it drops every other key without a message.
   # A file that writes `kwargs` therefore builds, and it writes `Parity-with-the-port`
@@ -133,17 +134,20 @@ markdown_extensions:
       slugify: !!python/object/apply:pymdownx.slugs.slugify
         kwds:
           case: lower
+  # The list below is short on purpose, and #85, #86 and #87 each add what a page needs.
+  # Every entry here already serves a page of this branch or the code samples that every
+  # later page carries.
+  #
+  # **`pymdownx.snippets` is absent, and no member adds it.** It embeds a file that a page
+  # names, and its base path reaches outside `docs_dir`. So one `--8<--` line publishes
+  # `docs/specs/` and defeats FR-documentation-6 without a warning.
   - admonition
   - attr_list
-  - def_list
-  - footnotes
-  - md_in_html
   - tables
   - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
   - pymdownx.superfences
 
 # The navigation.
@@ -153,8 +157,9 @@ markdown_extensions:
 # reference and the examples. Each one appends its own entries under its own heading, and
 # it edits no entry of a sibling.
 #
-# A nav section with no page is a configuration error, so each section names one page
-# today and each later issue adds to the list beside it.
+# `strict: true` accepts a section with an empty list, measured on 2026-08-14. So
+# `Methods` and `Reference` hold no page today and the build still succeeds. Three members
+# that append to an existing list conflict less than three members that create it.
 nav:
   # #85 adds `- Home: index.md` above this line, and it adds its prose pages to `Guides`.
   # The site root serves no page until it does.
