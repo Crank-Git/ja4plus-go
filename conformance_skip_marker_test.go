@@ -23,10 +23,10 @@ import (
 //
 // The count above reads six on 2026-08-14, and the argument holds at any count. Round 51
 // of the `## Changelog` of `docs/specs/spec.md` records the repair of a count that read
-// three. Re-measure the count with one command, and count the file that carries no
-// `conformance` build constraint:
-//
-//	grep -rln 'is absent, so run `make corpus` to fetch the FoxIO corpus' --include='*.go' .
+// three, and it states the command that measures it. To re-measure the count, count the
+// `.go` files that hold the skip sentence, and subtract the one file that carries the
+// `conformance` build constraint. A comment that quotes that sentence joins the count, so
+// this comment quotes it nowhere.
 //
 // The constant sits in an untagged file, because the tests below read it and the
 // `conformance` build tag hides the suite from them. The tagged build compiles this file
