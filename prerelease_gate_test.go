@@ -95,7 +95,7 @@ func TestThePrereleaseTargetPassesBeforeTheTag(t *testing.T) {
 //     removed that loop would leave a closed entry unreported, and the report states no
 //     closed count.
 //
-// **The report publishes no closed count**, and `conformanceTotals` accumulates one. So the
+// **The report publishes no closed count, and `conformanceSetTotals` counts one.** So the
 // closed gate reaches the reader as a failing suite alone. #99 records that gap.
 //
 // This case reads a tracked file, so it needs no corpus and it reads no tag.
