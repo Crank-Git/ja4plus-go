@@ -11,10 +11,10 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1680 |
-| Deviations | 367 |
+| Matches | 1683 |
+| Deviations | 364 |
 | Accepted deviations | 558 |
-| Unaccepted uncovered values | 172 |
+| Unaccepted uncovered values | 173 |
 | Accepted uncovered values | 20 |
 | Accepted comparisons | 578 |
 | Stale register entries | 0 |
@@ -26,8 +26,8 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1103 | 63 | 275 | 132 | 14 |
-| per-packet | 577 | 304 | 283 | 40 | 6 |
+| per-stream | 1104 | 62 | 275 | 133 | 14 |
+| per-packet | 579 | 302 | 283 | 40 | 6 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -35,7 +35,7 @@ The register holds one entry for each accepted comparison, so the accepted compa
 
 ## Deviations
 
-The run reports 925 deviations in 86 groups. One group is one capture, one method and one vector set.
+The run reports 922 deviations in 84 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -50,9 +50,6 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `badcurveball.pcap` | per-packet | JA4L | 3 | `badcurveball.pcap/9/JA4L.1` | the vector holds a value the library does not produce | `2177_64_114797` | (none) |
 | `badcurveball.pcap` | per-packet | JA4LS | 2 | `badcurveball.pcap/2/JA4LS.1` | the library produces a value the vector does not hold | (none) | `781_238` |
 | `badcurveball.pcap` | per-packet | JA4LS | 2 | `badcurveball.pcap/9/JA4LS.1` | the vector holds a value the library does not produce | `781_238_9042` | (none) |
-| `badcurveball.pcap` | per-packet | JA4X | 2 | `badcurveball.pcap/7/JA4X.2` | the vector holds a value the library does not produce | `2e9214a636bc_2e9214a636bc_795797892f9c` | (none) |
-| `badcurveball.pcap` | per-packet | JA4X | 2 | `badcurveball.pcap/7/JA4X_r.2` | the vector holds a value the library does not produce | `550406,550408,55040a,550403_550406,550408,55040a,550403_551d0e,551d23,551d13` | (none) |
-| `badcurveball.pcap` | per-stream | JA4X | 1 | `badcurveball.pcap/0/JA4X.2` | the vector holds a value the library does not produce | `2e9214a636bc_2e9214a636bc_795797892f9c` | (none) |
 | `browsers-x509.pcapng` | per-packet | JA4L | 9 | `browsers-x509.pcapng/10/JA4L.1` | the vector holds a value the library does not produce | `56_128_3758` | (none) |
 | `browsers-x509.pcapng` | per-packet | JA4L | 9 | `browsers-x509.pcapng/122/JA4L.1` | the library produces a value the vector does not hold | (none) | `78_128` |
 | `browsers-x509.pcapng` | per-packet | JA4L | 9 | `browsers-x509.pcapng/123/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `247_128` |
@@ -268,7 +265,7 @@ The library produces a value, and the vector file of the capture publishes no ke
 
 The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
 
-The run reports 192 uncovered values in 59 groups, and the register accepts 20 of them. One group is one capture, one method and one vector set.
+The run reports 193 uncovered values in 59 groups, and the register accepts 20 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 
@@ -288,7 +285,8 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 | `CVE-2018-6794.pcap` | per-stream | JA4LS | 3 | `CVE-2018-6794.pcap/0/JA4L-S` | `2219_255` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4LS | 3 | `CVE-2018-6794.pcap/1/JA4L-S` | `1513_255` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4LS | 3 | `CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-S` | `1948_255` | yes |
-| `badcurveball.pcap` | per-stream | JA4X | 1 | `badcurveball.pcap/0/JA4X_r` | `550406,550408,55040a,550403_550406,55040a,550403_551d13,551d11,551d0e,551d0f,551d25` | no |
+| `badcurveball.pcap` | per-stream | JA4X | 2 | `badcurveball.pcap/0/JA4X_r` | `550406,550408,55040a,550403_550406,55040a,550403_551d13,551d11,551d0e,551d0f,551d25` | no |
+| `badcurveball.pcap` | per-stream | JA4X | 2 | `badcurveball.pcap/0/JA4X_r.2` | `550406,550408,55040a,550403_550406,550408,55040a,550403_551d0e,551d23,551d13` | no |
 | `browsers-x509.pcapng` | per-stream | JA4X | 7 | `browsers-x509.pcapng/0/JA4X_r` | `550406,55040a,550403_550406,550408,550407,55040a,550403_2b06010401d679020402,2b060104018237150a,2b0601040182371507,2b06010505070101,551d0e,551d0f,551d11,551d13,551d1f,551d20,551d23,551d25` | no |
 | `browsers-x509.pcapng` | per-stream | JA4X | 7 | `browsers-x509.pcapng/0/JA4X_r.2` | `550406,55040a,55040b,550403_550406,55040a,550403_551d0e,551d23,551d0f,551d25,551d13,2b06010505070101,551d1f,551d20,2b0601040182371501` | no |
 | `browsers-x509.pcapng` | per-stream | JA4X | 7 | `browsers-x509.pcapng/1/JA4X_r` | `550406,55040a,55040b,550403_550406,550408,550407,55040a,550403_551d23,551d0e,551d11,551d0f,551d25,551d1f,551d20,2b06010505070101,551d13,2b06010401d679020402` | no |
@@ -411,7 +409,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `badcurveball.pcap` | JA4 | per-stream | match | 4 | 0 | — |
 | `badcurveball.pcap` | JA4S | per-packet and per-stream | match | 4 | 0 | — |
 | `badcurveball.pcap` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `badcurveball.pcap` | JA4X | per-packet and per-stream | deviation | 3 | 3 | — |
+| `badcurveball.pcap` | JA4X | per-packet and per-stream | match | 6 | 0 | — |
 | `badcurveball.pcap` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `badcurveball.pcap` | JA4L | per-packet and per-stream | deviation | 1 | 3 | — |
 | `badcurveball.pcap` | JA4LS | per-packet and per-stream | deviation | 1 | 2 | — |
