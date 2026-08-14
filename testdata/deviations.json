@@ -2040,6 +2040,54 @@
     "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
   },
   {
+    "key": "CVE-2018-6794.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "2219_255",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "1_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/11/JA4LS.1",
+    "capability": false,
+    "ours": "1513_255",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/12/JA4L.1",
+    "capability": false,
+    "ours": "1_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/20/JA4LS.1",
+    "capability": false,
+    "ours": "1948_255",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
+  },
+  {
+    "key": "CVE-2018-6794.pcap/21/JA4L.1",
+    "capability": false,
+    "ours": "1_128",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
+  },
+  {
     "key": "http2-with-cookies.pcapng/4/JA4L.1",
     "capability": false,
     "ours": "470_128",

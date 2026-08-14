@@ -14,9 +14,9 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Matches | 1753 |
 | Deviations | 273 |
 | Accepted deviations | 580 |
-| Unaccepted uncovered values | 184 |
-| Accepted uncovered values | 20 |
-| Accepted comparisons | 600 |
+| Unaccepted uncovered values | 178 |
+| Accepted uncovered values | 26 |
+| Accepted comparisons | 606 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -27,7 +27,7 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
 | per-stream | 1116 | 44 | 281 | 144 | 14 |
-| per-packet | 637 | 229 | 299 | 40 | 6 |
+| per-packet | 637 | 229 | 299 | 34 | 12 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -243,18 +243,18 @@ The library produces a value, and the vector file of the capture publishes no ke
 
 The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
 
-The run reports 204 uncovered values in 59 groups, and the register accepts 20 of them. One group is one capture, one method and one vector set.
+The run reports 204 uncovered values in 59 groups, and the register accepts 26 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 
 | Capture | Vector set | Method | Uncovered | Comparison | Produced | Accepted |
 |---|---|---|---|---|---|---|
-| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/12/JA4L.1` | `1_128` | no |
-| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/21/JA4L.1` | `1_128` | no |
-| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/3/JA4L.1` | `1_128` | no |
-| `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/11/JA4LS.1` | `1513_255` | no |
-| `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/2/JA4LS.1` | `2219_255` | no |
-| `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/20/JA4LS.1` | `1948_255` | no |
+| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/12/JA4L.1` | `1_128` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/21/JA4L.1` | `1_128` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/3/JA4L.1` | `1_128` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/11/JA4LS.1` | `1513_255` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/2/JA4LS.1` | `2219_255` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/20/JA4LS.1` | `1948_255` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/0/JA4H_r` | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` | no |
 | `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/1/JA4H_r` | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language_` | no |
 | `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/0/JA4L-C` | `1_128` | yes |
