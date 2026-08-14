@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"testing"
 	"time"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
 )
 
 // fuzzCertificateDER returns the DER bytes of one self-signed certificate.
@@ -64,6 +66,12 @@ func FuzzReadX509IdentifiersReadsAnyCertificate(f *testing.F) {
 	f.Add([]byte{0x30, 0x82, 0xff, 0xff, 0x30, 0x00})
 
 	f.Fuzz(func(t *testing.T, der []byte) {
-		_, _ = ReadX509Identifiers(der)
+		input := fuzzprop.ExactInput(der)
+
+		fuzzprop.Check(t, len(input), func() any {
+			identifiers, ok := ReadX509Identifiers(input)
+
+			return []any{identifiers, ok}
+		})
 	})
 }

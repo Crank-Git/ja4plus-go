@@ -1,6 +1,10 @@
 package parser
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
+)
 
 // fuzzReassemblerMaxStreams bounds the stream count of the fuzz target. A small bound
 // makes the fuzzer reach the eviction path within a few segments.
@@ -28,15 +32,29 @@ func FuzzTCPStreamReassemblerReadsAnySegment(f *testing.F) {
 	f.Add("k", ^uint32(0), []byte{0x00, 0x01}, uint32(0), []byte{0x02})
 
 	f.Fuzz(func(t *testing.T, key string, firstSeq uint32, first []byte, secondSeq uint32, second []byte) {
-		reassembler := NewTCPStreamReassembler(fuzzReassemblerMaxStreams, fuzzReassemblerMaxBytes)
+		firstInput := fuzzprop.ExactInput(first)
+		secondInput := fuzzprop.ExactInput(second)
 
-		reassembler.AddSegment(key, firstSeq, first)
-		reassembler.AddSegment(key, secondSeq, second)
-		reassembler.AddSegment(key+"-second", secondSeq, second)
-		reassembler.AddSegment(key+"-third", firstSeq, first)
+		// This target takes five values, and FR-fuzz-16 bounds the size of the input. The
+		// three variable-length values carry that size, and the two sequence numbers add
+		// eight bytes.
+		inputBytes := len(key) + len(firstInput) + len(secondInput) + 8
 
-		_ = reassembler.GetStream(key)
-		reassembler.RemoveStream(key)
-		_ = reassembler.GetStream(key)
+		fuzzprop.Check(t, inputBytes, func() any {
+			// Each call builds one reassembler, so the second call reads the state that the
+			// first call read. A shared reassembler would make the second result differ for
+			// a reason that FR-fuzz-18 does not name.
+			reassembler := NewTCPStreamReassembler(fuzzReassemblerMaxStreams, fuzzReassemblerMaxBytes)
+
+			reassembler.AddSegment(key, firstSeq, firstInput)
+			reassembler.AddSegment(key, secondSeq, secondInput)
+			reassembler.AddSegment(key+"-second", secondSeq, secondInput)
+			reassembler.AddSegment(key+"-third", firstSeq, firstInput)
+
+			stream := reassembler.GetStream(key)
+			reassembler.RemoveStream(key)
+
+			return []any{stream, reassembler.GetStream(key)}
+		})
 	})
 }

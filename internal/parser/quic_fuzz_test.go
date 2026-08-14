@@ -1,6 +1,10 @@
 package parser
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
+)
 
 // FuzzParseQUICInitialReadsAnyPayload proves that ParseQUICInitial returns for any UDP
 // payload. FR-fuzz-3 states the requirement.
@@ -35,7 +39,13 @@ func FuzzParseQUICInitialReadsAnyPayload(f *testing.F) {
 	})
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
-		_, _ = ParseQUICInitial(payload)
+		input := fuzzprop.ExactInput(payload)
+
+		fuzzprop.Check(t, len(input), func() any {
+			hello, err := ParseQUICInitial(input)
+
+			return []any{hello, err}
+		})
 	})
 }
 
@@ -55,6 +65,12 @@ func FuzzParseCryptoFramesReadsAnyPayload(f *testing.F) {
 	f.Add([]byte{0x06, 0xc0})
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
-		_, _ = ParseCryptoFrames(payload)
+		input := fuzzprop.ExactInput(payload)
+
+		fuzzprop.Check(t, len(input), func() any {
+			fragments, err := ParseCryptoFrames(input)
+
+			return []any{fragments, err}
+		})
 	})
 }

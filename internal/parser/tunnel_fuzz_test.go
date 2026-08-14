@@ -6,6 +6,8 @@ import (
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
 )
 
 // fuzzTunnelSerialize returns the bytes of the layers, or it fails the caller.
@@ -96,14 +98,30 @@ func FuzzCheckTunnelReadsAnyFrame(f *testing.F) {
 	f.Add([]byte{})
 
 	f.Fuzz(func(t *testing.T, frame []byte) {
-		packet := gopacket.NewPacket(frame, layers.LayerTypeEthernet, gopacket.Default)
+		input := fuzzprop.ExactInput(frame)
 
-		_ = TunnelDepth(packet)
-		_ = CheckTunnel(packet)
-		_ = GetTCPLayer(packet)
-		_ = GetUDPLayer(packet)
-		_ = GetTCPPayload(packet)
-		_, _, _, _ = GetIPInfo(packet)
-		_, _, _ = GetGroupingIPInfo(packet)
+		fuzzprop.Check(t, len(input), func() any {
+			// Each call decodes one packet of its own. A `gopacket` packet caches the layer
+			// it decodes, so a shared packet would make the second call read a cache rather
+			// than the frame.
+			packet := gopacket.NewPacket(input, layers.LayerTypeEthernet, gopacket.Default)
+
+			sourceIP, destinationIP, timeToLive, addressed := GetIPInfo(packet)
+			groupSource, groupDestination, grouped := GetGroupingIPInfo(packet)
+
+			// The two layer readers return a pointer into the packet, so two calls return
+			// two addresses of one value. FR-fuzz-18 compares no such pointer, and this
+			// target still calls each reader for FR-fuzz-14.
+			_ = GetTCPLayer(packet)
+			_ = GetUDPLayer(packet)
+
+			return []any{
+				TunnelDepth(packet),
+				CheckTunnel(packet),
+				GetTCPPayload(packet),
+				sourceIP, destinationIP, timeToLive, addressed,
+				groupSource, groupDestination, grouped,
+			}
+		})
 	})
 }
