@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go"
+	"github.com/Crank-Git/ja4plus-go/internal/dbcache"
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
 	"github.com/gopacket/gopacket/pcapgo"
@@ -25,7 +26,10 @@ const ja4PlusMappingURL = "https://github.com/FoxIO-LLC/ja4/raw/main/ja4plus-map
 // ja4PlusMappingMaxBytes bounds the mapping download.
 // An unbounded copy writes whatever the server sends, and the mapping file is far below
 // this size. `.claude/rules/external-apis.md` states the rule.
-const ja4PlusMappingMaxBytes = 64 << 20
+//
+// The library states the value, and FR-lookup-25 states 16 MB. This program held 64 MB
+// until #75, and a bound in two places with two values rejects two different files.
+const ja4PlusMappingMaxBytes = dbcache.MaxBytes
 
 // ja4PlusDownloadTimeout bounds the whole mapping download.
 // The default client of net/http carries no timeout, so this program never uses it.
@@ -396,31 +400,23 @@ func runDBUpdate() error {
 		return fmt.Errorf("download: HTTP %d", resp.StatusCode)
 	}
 
-	tmp := cachePath + ".tmp"
-	out, err := os.Create(tmp)
-	if err != nil {
-		return fmt.Errorf("create %s: %w", tmp, err)
-	}
-	// The copy reads one byte more than the limit, so a body that reaches the limit is a
+	// The read takes one byte more than the limit, so a body that reaches the limit is a
 	// body the program declines rather than a file it truncates.
-	n, err := io.Copy(out, io.LimitReader(resp.Body, ja4PlusMappingMaxBytes+1))
-	if cerr := out.Close(); err == nil {
-		err = cerr
-	}
+	body, err := io.ReadAll(io.LimitReader(resp.Body, ja4PlusMappingMaxBytes+1))
 	if err != nil {
-		_ = os.Remove(tmp)
-		return fmt.Errorf("write: %w", err)
+		return fmt.Errorf("download: %w", err)
 	}
-	if n > ja4PlusMappingMaxBytes {
-		_ = os.Remove(tmp)
+	if len(body) > ja4PlusMappingMaxBytes {
 		return fmt.Errorf("download: the body exceeds the limit of %d bytes", ja4PlusMappingMaxBytes)
 	}
-	if err := os.Rename(tmp, cachePath); err != nil {
-		_ = os.Remove(tmp)
-		return fmt.Errorf("install: %w", err)
+
+	// The library validates the database and renames last, so a failed update leaves the
+	// previous cache file unchanged.
+	if err := dbcache.Write(cachePath, body); err != nil {
+		return fmt.Errorf("update the database: %w", err)
 	}
 
-	fmt.Printf("downloaded %d bytes to %s\n", n, cachePath)
+	fmt.Printf("downloaded %d bytes to %s\n", len(body), cachePath)
 	// #74 made the library reload the table when the cache file changes, so a running
 	// process needs no restart.
 	fmt.Println("note: a running process reads the new database at its next lookup")
