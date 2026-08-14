@@ -20,7 +20,37 @@ type TCPStreamReassembler struct {
 	// bounds the run that GetStream returns. Issue #567 added the first of the two, because
 	// a stream that stored every segment grew without a bound.
 	MaxBytes int
+	// MaxSegments bounds the segments that one stream stores. The maintainer ruled it on
+	// 2026-08-14, and issue #596 holds the ruling and the reversal path.
+	//
+	// MaxBytes bounds the bytes and it does not bound the count, so a sender of one-byte
+	// segments reaches 1048576 segments inside a byte bound of 1048576. The deduplication
+	// index of issue #596 costs 53.3 bytes for each stored segment, measured on 2026-08-14,
+	// so the count drives the memory rather than the bytes.
+	//
+	// NewTCPStreamReassembler sets DefaultMaxSegments. A caller states another value on this
+	// field, as it does on MaxBytes.
+	MaxSegments int
 }
+
+// DefaultMaxSegments is the segment count that one stream stores at most.
+//
+// The Python port ships this rule and this value. `ja4plus/utils/tcp_stream.py:45` at tag
+// v1.1.0 states `DEFAULT_MAX_STREAM_SEGMENTS = 4096`, and `.claude/rules/parity.md` rule 2
+// gives the port the interface where this project shipped no name.
+//
+// No vector of the shared corpus reaches this bound. A run of the conformance suite on
+// 2026-08-14 read 703 stream keys, and the largest held 788 segments. So 4096 sits above
+// five times the binding reading.
+//
+// The port's comment cites 1336, which is the count that a stream reaches without a byte
+// cap. This library holds a byte cap, so 788 is the reading that binds here.
+//
+// The port attributes its 788 to `http2-with-cookies.pcapng`, and this library measures its
+// 788 on the SSH stream `192.168.1.197:22->192.168.1.169:49237`. The largest stream on port
+// 443 reaches 750 here. The count agrees and the attribution does not, and issue #596
+// reports that difference.
+const DefaultMaxSegments = 4096
 
 type tcpStream struct {
 	segments []tcpSegment
@@ -58,11 +88,15 @@ type tcpSegmentKey struct {
 }
 
 // NewTCPStreamReassembler creates a reassembler with the given limits.
+//
+// The segment bound takes DefaultMaxSegments, so this signature states two limits and the
+// reassembler holds three. A caller that needs another segment bound writes MaxSegments.
 func NewTCPStreamReassembler(maxStreams, maxBytes int) *TCPStreamReassembler {
 	return &TCPStreamReassembler{
-		streams:    make(map[string]*tcpStream),
-		MaxStreams: maxStreams,
-		MaxBytes:   maxBytes,
+		streams:     make(map[string]*tcpStream),
+		MaxStreams:  maxStreams,
+		MaxBytes:    maxBytes,
+		MaxSegments: DefaultMaxSegments,
 	}
 }
 
@@ -122,6 +156,22 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 		return
 	}
 
+	// A stream that reached the segment bound stores no further segment. The maintainer
+	// ruled the bound on 2026-08-14, and issue #596 holds the ruling and the reversal path.
+	//
+	// The two bounds refuse independently, and neither one masks the other. MaxBytes bounds
+	// the bytes and MaxSegments bounds the count, so a sender of one-byte segments reaches
+	// this bound with 4096 stored bytes, and a sender of one large segment reaches the byte
+	// bound with one stored segment.
+	//
+	// This refusal reads the same shape as the byte refusal above. It drops no stored
+	// segment, so the stored prefix keeps the TLS Certificate message and the HTTP request
+	// line that `GetStream` reads from the lowest sequence number. A refused segment leaves
+	// no trace, so the stream stores it again after a removal frees the room.
+	if len(stream.segments) >= r.storedSegmentBound() {
+		return
+	}
+
 	segData := make([]byte, len(data))
 	copy(segData, data)
 	stream.segments = append(stream.segments, tcpSegment{seq: seq, data: segData})
@@ -142,6 +192,17 @@ func (r *TCPStreamReassembler) storedByteBound() int {
 	}
 
 	return r.MaxBytes
+}
+
+// storedSegmentBound returns the segments that one stream stores at most.
+// A segment limit below 0 holds no segment, and storedByteBound states the same rule for
+// the bytes.
+func (r *TCPStreamReassembler) storedSegmentBound() int {
+	if r.MaxSegments < 0 {
+		return 0
+	}
+
+	return r.MaxSegments
 }
 
 // GetStream reassembles and returns contiguous data from the lowest sequence number.
