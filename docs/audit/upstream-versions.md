@@ -3,8 +3,8 @@
 **A JA4 reference implementation runs inside a host, and the host decides what the
 implementation sees.** The FoxIO Wireshark plugin reads a field that a Wireshark core
 dissector produces. The FoxIO Zeek package reads a record field that the Zeek analyzer
-produces. **So a reading of a FoxIO implementation often has to read the host**, and a
-host that no pin names is a host the next reader cannot see.
+produces. **So a reading of a FoxIO implementation often has to read the host.** A host
+that no pin names is a host the next reader cannot see.
 
 This page records which host version the FoxIO pinned commit itself states. **It records a
 measurement. It decides no fingerprint value, and it moves none.**
@@ -101,9 +101,8 @@ Current JA4+ Wireshark plugin releases support Wireshark 4.4.0 or later.
 
 **The pin names two tested versions, and one of them builds the release.** `v4.6.0` is the
 version of `.github/workflows/wireshark-release.yml`, and `4.4.0` reaches the pin as a
-floor and as a second tested version. **A reader who traces a plugin field into the core
-reads the core that the shipped plugin was built against**, so the rule file names
-`v4.6.0`.
+floor and as a second tested version. **FoxIO builds the shipped plugin against one core,
+and a reader who traces a plugin field reads that core.** So the rule file names `v4.6.0`.
 
 **This project reverses that choice through issue #537**, and the reversal costs one row of
 `.claude/rules/external-apis.md` and one constant of `upstream_versions_test.go`.
@@ -197,8 +196,8 @@ does not record**, and this repository names one that it does.
 
 **`.claude/rules/parity.md` asks that both repositories read one version**, and the two
 now differ. **This page opens no port issue and settles nothing.** The decision comment of
-#537 states that a version the pin records outranks a version this project chooses, and
-this page applies that rule to this repository alone.
+#537 states that a version the pin records outranks a version this project chooses. **This
+page applies that rule to this repository alone.**
 
 **The port carries no Zeek row at all**, so the port gains one row and changes one.
 
