@@ -75,8 +75,12 @@ which one does not.
 | [`CachedDatabasePath`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#CachedDatabasePath) | Returns the path of the cached mapping file, and it creates the directory. |
 
 **`LookupFingerprint` returns `nil` for a fingerprint the table does not hold.**
-`LookupFingerprintRemote` returns `nil` and `nil` for the same case, and it returns `nil`
-and an error for a transport failure, a status other than 200, and a body it cannot decode.
+`LookupFingerprintRemote` returns `nil` and `nil` for that same case. It returns `nil` and
+an error for each of these.
+
+- A transport failure.
+- A status other than 200.
+- A body it cannot decode.
 
 ## The interpretation helpers
 

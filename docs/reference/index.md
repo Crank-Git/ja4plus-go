@@ -73,9 +73,9 @@ file.** `git show v0.3.0:LICENSE` reports
 `LICENSE` and `NOTICE`, so a later tag that carries both gives the generator a license to
 detect.
 
-**Every link of this section therefore resolves to the right page and to the right anchor,
-and the target renders the documentation when a tagged version carries the license.** The
-links name no version, so each one follows the latest version the generator holds. Issue
+**Every link of this section resolves to the right page and to the right anchor.** The
+target renders the documentation when a tagged version carries the license. The links name
+no version, so each one follows the latest version the generator holds. Issue
 [#593](https://github.com/Crank-Git/ja4plus-go/issues/593) records the question for the
 maintainer.
 

@@ -35,10 +35,12 @@ of this site is mirrored twice, and a test holds each mirror equal to the page.
 | An example function of `example_test.go` | `go test`, which type-checks it on every run. |
 
 `docs_go_samples_test.go` holds the three equal. **It compares the Go token sequence, after
-the comments and the semicolons are removed.** So a reindent, an added blank line and an
-edited comment each pass, and a renamed variable, a changed literal and a dropped call each
-fail. That file states the rule, the two rules it rejected, and the measurement of each
-case.
+the comments and the semicolons are removed.**
+
+- A reindent, an added blank line and an edited comment each pass.
+- A renamed variable, a changed literal and a dropped call each fail.
+
+That file states the rule, the two rules it rejected, and the measurement of each case.
 
 **Edit a page and its two mirrors in one commit.** A page edited alone reddens the build,
 and the message names the page and the line.
