@@ -29,6 +29,11 @@ The second run reports each of these.
 
 **A whole-run figure therefore names its run, and a five-method figure holds at both.**
 
+**Neither run above describes the tree today.** The Epic #441 batch merged after both of them,
+and it moved every count. **`## The merged tree of the Epic #441 batch, 2026-08-14` below states
+every re-measured figure**, and it names the run that measured each one. **A reader who carries
+1680, 367, 558 or 578 forward from this preamble reads a stale figure.**
+
 **#486 changes no byte of `testdata/deviations.json`, and it changes no Go file.**
 
 **This page builds no candidate change, and #459 bars a Go edit.** So the count each cause
@@ -50,6 +55,85 @@ closes carries one of three labels.
 **`make conformance` exits 2 on `dev`, and Epic #441 owns that exit.** This page reports no
 green gate. **Each of the two runs above exits 2.** The first run reports 475 deviations that
 the register does not hold, and the second run reports 367.
+
+**The green `conformance` check of a pull request is no conformance gate while Epic #441 is
+open.** `.github/workflows/ci.yml:187` runs `make conformance 2>&1 | tee conformance.log ||
+status=$?`, and it never exits on that status. `.github/workflows/ci.yml:200` fails the job on
+a `--- FAIL:` line that does not name `TestConformance`. **So a green check reports that the
+suite ran and that nothing but a deviation failed.** Round 47 of the `## Changelog` of
+`docs/specs/spec.md` records the same mechanism.
+
+## The merged tree of the Epic #441 batch, 2026-08-14
+
+**One run of `make conformance` on `issue/512-epic-441-round` at `74c8827` produced every
+figure of this section.** That run reads the corpus at
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, and `74c8827` is the head of
+`origin/epic/441-deviation-fixes` after the last member sub-merged. **The run rewrote no byte
+of `docs/audit/conformance.md`**, so the tracked report already described that head. **The run
+exits 2.**
+
+**Every count below this section names a run of 2026-08-13.** The Epic #441 batch then closed
+34 of the 67 with a code change, and it accepted 16 more in the register.
+
+| Count | The first run | The second run | The merged tree |
+|---|---|---|---|
+| matches | 1680 | 1680 | 1753 |
+| deviations the register does not hold | 475 | 367 | 278 |
+| accepted deviations | 450 | 558 | 575 |
+| register keys | 470 | 578 | 595 |
+
+**The Epic #441 batch closed 73 comparisons and opened 1.** So the 1680 of each run above holds
+for batch #478, and never for this batch. `1680 + 73 = 1753`, and `575 + 20 = 595`.
+
+**The merged tree reports 17 deviations that name one of the five methods**, against 67 in
+each run above. 15 sit in the per-packet set and 2 sit in the per-stream set.
+
+| Method | Each run of 2026-08-13 | The merged tree | Cause |
+|---|---|---|---|
+| JA4T | 31 | 0 | 1 |
+| JA4TS | 6 | 3 | 2 |
+| JA4SSH | 16 | 0 | 3, 4 and 5 |
+| JA4S | 7 | 7 | 6 and 7 |
+| JA4S_r | 7 | 7 | 6 and 7 |
+| **Total** | **67** | **17** | |
+
+| Cause | What closed it | Deviations of 2026-08-13 | The merged tree |
+|---|---|---|---|
+| 1 | #494, `ecc2fa1`. A code change. | 31 | 0 |
+| 2 | #495, `d637e66`. A code change on 3 of the 6. | 6 | 3 |
+| 3 | #484, `1d632a7`. 12 register declines. | 12 | 0 |
+| 4 | #484, `1d632a7`. 2 register declines under the #491 ruling. | 2 | 0 |
+| 5 | #484, `1d632a7`. 2 register declines. | 2 | 0 |
+| 6 | **Nothing. No issue of this batch built it.** | 12 | 12 |
+| 7 | **Nothing. #496 answered the question, and no member wrote the 2 entries.** | 2 | 2 |
+| **Total** | | **67** | **17** |
+
+**The 3 that remain of cause 2 are the three client resets of `https3-301-get.pcap`.**
+FR-parity-44 of `docs/specs/features/08-python-parity.md` declines a reset that the client
+sent, and **#502 holds that question**. #495 measured each frame, and
+`## Cause 2 — the library returns no JA4TS value on a reset of a connection that holds one SYN-ACK`
+below states the reading.
+
+**#495 also opened one comparison, and the register accepts it.** The run reports
+`browsers-x509.pcapng/119/JA4TS.1` as an accepted deviation under ruling #503. Frame 119 is a
+server reset that carries ACK, and FR-parity-42 states that this library reads the reset bit
+alone. **The old guard hid that difference on that frame.**
+
+**The register holds 87 entries that name one of the five methods**, against 70 at each run
+above.
+
+| Method | Entries | Ruling |
+|---|---|---|
+| JA4S | 28 | #42 |
+| JA4S_r | 28 | #42 |
+| JA4SSH | 14 | #484 |
+| JA4S | 5 | #387 |
+| JA4S_r | 5 | #387 |
+| JA4SSH | 4 | #223 |
+| JA4SSH | 2 | #491 |
+| JA4TS | 1 | #503 |
+
+**The register still holds no entry that names JA4T.**
 
 ## The measurement
 
@@ -114,6 +198,9 @@ agreement is a measurement rather than a carried number.
 entries at the first run and 578 at the branch head, and **the count of 70 holds at both**.
 It holds no entry that names JA4T, and no entry that names JA4TS.
 
+**The merged tree of the Epic #441 batch reads 87 and 595**, and it holds one JA4TS entry.
+`## The merged tree of the Epic #441 batch, 2026-08-14` above holds that table.
+
 | Method | Entries | Ruling |
 |---|---|---|
 | JA4S | 28 | #42 |
@@ -127,17 +214,27 @@ It holds no entry that names JA4T, and no entry that names JA4TS.
 | N | Cause | Deviations | Count it closes | Label |
 |---|---|---|---|---|
 | 1 | The library reads no TCP header that an ICMP error message quotes. | 31 | 31 | Proved |
-| 2 | The library returns no JA4TS value on a reset of a connection that holds one SYN-ACK. | 6 | 6 | Proved |
+| 2 | The library returns no JA4TS value on a reset of a connection that holds one SYN-ACK. | 6 | 3 | Proved |
 | 3 | The library clears the window at the first FIN+ACK packet, and the dissector clears none. | 12 | 12 | Attributed |
-| 4 | The library counts a server segment that the `tshark` SSH dissector does not label. | 2 | 2 | Attributed |
+| 4 | The library counts a server segment that the `tshark` SSH dissector does not label. | 2 | 0 | Register |
 | 5 | The library publishes the last open window, and the Python reference publishes none. | 2 | 0 | Register |
 | 6 | The library reads no TLS record that spans more than one TCP segment. | 12 | 0 | Attributed |
 | 7 | The library reads the second QUIC connection, and the Python reference publishes no value for it. | 2 | 0 | Register |
 
 **The seven causes attribute all 67.** 31 + 6 + 12 + 2 + 2 + 12 + 2 = 67.
 
+**The Epic #441 batch repaired two cells of the `Count it closes` column, and each repair
+carries a measurement.** **Cause 2 read 6, and #495 measured 3.** 3 of the 6 frames are client
+resets, FR-parity-44 declines a client reset, and #502 holds that question. **Cause 4 read 2
+and the label read `Attributed`, and the maintainer ruled the question at #491 on 2026-08-14.**
+The answer is a register decline and no code change, so the count is 0 and the label is
+`Register`. `### The reference is not unanimous, and the maintainer ruled this cause` below
+states the reading.
+
 **Cause 3 and cause 4 compose**, and neither one closes the six deviations of `sshv1.pcap`
-and `v6.pcap` on its own. **Cause 5 and cause 7 need a register entry and no code change.**
+and `v6.pcap` on its own. **Cause 4, cause 5 and cause 7 each need a register entry and no code
+change.** The maintainer ruled cause 4 that way at #491 on 2026-08-14, and the row above read
+`Attributed` before that ruling.
 **Cause 6 opens about as many per-stream deviations as it closes**, and its section states
 the measurement.
 
@@ -156,9 +253,12 @@ the worked example. It is an ICMP `Destination unreachable (3)` message of code 
 ssh2.pcapng/19/JA4T.1  expected: "64240_2-1-3-1-1-4_1460_8"  produced: ""
 ```
 
-**The library reads the outer layer list, and the quoted header sits inside the ICMP
+**The library read the outer layer list, and the quoted header sits inside the ICMP
 payload.** `GetTCPLayer` of `internal/parser/packet.go` walks the layers that `gopacket`
-decodes, and `ProcessPacket` of `ja4t.go` returns at once when that walk finds no TCP layer.
+decodes, and `ProcessPacket` of `ja4t.go` returned at once when that walk found no TCP layer.
+**#494 built the change at `ecc2fa1`**, and `ProcessPacket` now calls `QuotedTCPHeader` of
+`internal/parser/` before it decides. **Every sentence of this section that reads in the present
+tense describes the tree before that change.**
 `gopacket` decodes no IP layer and no TCP layer inside an ICMP payload, so the walk finds
 none.
 
@@ -179,6 +279,10 @@ closes is 31.**
 
 **Split T1 — whether a TCP header that an ICMP error message quotes produces a JA4T value.**
 
+**The maintainer ruled split T1 on 2026-08-14, and the answer is candidate answer 1.** #484 is
+the reversal path. #494 built the change at `ecc2fa1`, `internal/parser/icmp_quoted.go` holds
+the decode path, and `ja4t_icmp_quoted_test.go` holds the rule.
+
 - **The Wireshark dissector produces one.** `wireshark/source/packet-ja4.c:1261` and
   `wireshark/source/packet-ja4.c:1266` state the mechanism, and the per-packet vector holds
   31 such values in `ssh2.pcapng`.
@@ -194,8 +298,8 @@ closes is 31.**
 **The candidate answers.**
 
 1. The library reads a TCP header that an ICMP error message quotes, as the dissector does.
-2. The library reads the outer TCP header alone, as it does today, and as Zeek and the Rust
-   reference do.
+2. The library reads the outer TCP header alone, as it did before `ecc2fa1`, and as Zeek and the
+   Rust reference do. **The maintainer declined this answer.**
 3. The library reads the quoted header, and the conformance suite excludes the value from
    the per-stream comparison.
 
@@ -216,9 +320,15 @@ stop condition, and the maintainer rules it.
 
 ## Cause 2 — the library returns no JA4TS value on a reset of a connection that holds one SYN-ACK
 
-**6 deviations, and all 6 close.** `https3-301-get.pcap` holds 3, `ssh2.pcapng` holds 2 and
-`browsers-x509.pcapng` holds 1. Every one reads
+**6 deviations, and this page predicted that all 6 close.** `https3-301-get.pcap` holds 3,
+`ssh2.pcapng` holds 2 and `browsers-x509.pcapng` holds 1. Every one reads
 `the vector holds a value the library does not produce`.
+
+**#495 built the change, and it measured 3.** The 3 of `ssh2.pcapng` and
+`browsers-x509.pcapng` close. **The 3 of `https3-301-get.pcap` are client resets, FR-parity-44
+declines a client reset, and #502 holds that question.** `ja4tsConnKey` of `ja4ts.go` names the
+server first, so a client reset reverses the key and finds no connection. **#495 also opened
+`browsers-x509.pcapng/119/JA4TS.1`**, and the register accepts it under ruling #503.
 
 Every one of the 6 frames carries the TCP reset flag and no other flag.
 
@@ -226,10 +336,12 @@ Every one of the 6 frames carries the TCP reset flag and no other flag.
 https3-301-get.pcap/20/JA4TS.1  expected: "14240_2-4-8-1-3_1436_10"  produced: ""
 ```
 
-**The library holds a reset branch, and a guard closes it.** `ProcessPacket` of `ja4ts.go`
-calls `resetResults` for a packet that carries the reset flag. `resetResults` returns nil
-when the connection holds fewer than two SYN-ACK times. Each of the 6 connections holds one
-SYN-ACK, so the guard returns nil.
+**The library held a reset branch, and a guard closed it.** `ProcessPacket` of `ja4ts.go`
+calls `resetResults` for a packet that carries the reset flag. `resetResults` returned nil
+when the connection held fewer than two SYN-ACK times. Each of the 6 connections holds one
+SYN-ACK, so the guard returned nil. **#495 built the change at `d637e66`**, and `resetResults`
+now returns nil only where the connection key reaches no entry. **Every sentence of this section
+that reads in the present tense describes the tree before that change.**
 
 **The dissector publishes the stored four-part value, and the delay list is a separate
 branch.** `wireshark/source/packet-ja4.c:1295-1299` sets `syn = 3` for the flag byte `0x004`.
@@ -243,7 +355,9 @@ size, the window scale and the option list from the stored connection state, and
 `https3-301-get.pcap` holds one JA4TS value, `14240_2-4-8-1-3_1436_10`. The vector holds it
 on frame 2, which is the SYN-ACK, and the library matches that frame. The vector holds the
 same string on frames 20, 21 and 23, which are the three reset frames. The same identity
-holds for `ssh2.pcapng` and for `browsers-x509.pcapng`. **The count it closes is 6.**
+holds for `ssh2.pcapng` and for `browsers-x509.pcapng`. **This page read the count it closes as
+6, and #495 measured 3.** The identity holds for each of the 6, and the reset direction decides
+which 3 close.
 
 **One condition of the identity.** `wireshark/source/packet-ja4.c:1604-1606` appends the
 stored option list to the option list of the reset packet. Each of the 6 reset packets
@@ -253,6 +367,11 @@ produces a different string**, and no capture of the corpus reaches that input.
 ### This cause holds a reference split, and the maintainer rules it
 
 **Split T2 — whether a reset of a connection with one SYN-ACK produces a JA4TS value.**
+
+**The maintainer ruled split T2 on 2026-08-14, and the answer is candidate answer 1.** #484 is
+the reversal path. #495 built the change at `d637e66`, and the ruling falsified FR-parity-43 of
+`docs/specs/features/08-python-parity.md`. **The Epic #441 documentation round amended that
+requirement**, and it added FR-parity-43a for the reset that reaches no stored connection.
 
 - **The Wireshark dissector produces one**, in the four-part form. The two citations above
   state the mechanism.
@@ -264,7 +383,8 @@ produces a different string**, and no capture of the corpus reaches that input.
 **The candidate answers.**
 
 1. The library publishes the stored four-part value on a reset, as the dissector does.
-2. The library returns no value for such a reset, as it does today.
+2. The library returns no value for such a reset, as it did before `d637e66`. **The maintainer
+   declined this answer.**
 3. The library publishes the value in the per-packet comparison alone.
 
 **This reading picks none.**
@@ -377,6 +497,10 @@ connection.** A TCP close carries two FIN+ACK packets, so the dissector writes t
    states.
 3. The library writes one value for each FIN+ACK packet in the per-packet comparison alone.
 
+**The maintainer ruled this question on 2026-08-14, and the answer is candidate answer 2.** The
+library keeps the behavior it holds today. `testdata/deviations.json` records 12 declines under
+ruling #484, and #484 wrote every one at `1d632a7`. **#484 is the reversal path.**
+
 **This reading picks none.** **The question is whether a published FoxIO value contradicts a
 published FoxIO rule**, which `.claude/rules/rulings.md`
 `### The narrow delegation of 2026-08-12` reserves to a delegated ruling or to the
@@ -399,8 +523,11 @@ R8. So this reading records the evidence and decides nothing.
 
 ## Cause 4 — the library counts a server segment that the `tshark` SSH dissector does not label
 
-**2 deviations, in `sshv1.pcap` and `v6.pcap`, and both close.** Both read
-`the two values differ`, and both name the first FIN+ACK frame of the connection.
+**2 deviations, in `sshv1.pcap` and `v6.pcap`.** Both read `the two values differ`, and both
+name the first FIN+ACK frame of the connection. **This page read both as closing with a code
+change, and the maintainer ruled on 2026-08-14 that both close with a register decline.**
+`### The reference is not unanimous, and the maintainer ruled this cause` below states the
+ruling.
 
 ```
 sshv1.pcap/72/JA4SSH.1  expected: "c20s12_c18s21_c10s1"  produced: "c20s20_c18s25_c10s1"
@@ -433,20 +560,54 @@ tie, so the mode is 12. The four extra segments add one more length of 20, so th
 reads seven of 20 against six of 12, and its mode is 20. **`mode` of `ja4ssh.go` already
 holds the tie rule of R12**, so the tie rule needs no change.
 
-### The reference agrees, so this cause needs no ruling
+### The reference is not unanimous, and the maintainer ruled this cause
 
-`.claude/rules/parity.md` `## Where a difference comes from` row 1 governs it: the reference
-is unanimous and this project differs, so the change closes the difference and the register
-gains nothing. Each implementation counts a packet that the SSH dissector labels. Zeek counts
-the payload vectors at `zeek/ja4ssh/main.zeek:140`. Rust counts the SSH packet counters at
-`rust/ja4/src/ssh.rs:35`. Python counts a packet whose protocol list holds `ssh` at
-`python/ja4ssh.py:99`.
+**The heading of this section read `The reference agrees, so this cause needs no ruling`, and
+that sentence is false.** #491 measured the reference on 2026-08-14, and the Epic #441
+documentation round repaired the heading and this section.
 
-### The count is attributed, and this cause composes with cause 3
+**The reference is not unanimous on `sshv1.pcap`.** Only the Wireshark plugin publishes
+`c20s12_c18s21_c10s1`. `testdata/foxio/wireshark/sshv1.pcap.json` holds that value.
+`testdata/foxio/python/sshv1.pcap.json` holds one stream entry with `ssh_extras` and no JA4SSH
+value. **The corpus holds no Zeek vector and no Rust vector for that capture.** So row 1 of
+`.claude/rules/parity.md` `## Where a difference comes from` does not govern this cause. **The
+paragraph this round replaced stated that it does.**
 
-**2 is the count this cause holds on its own.** It also decides the value of the six
-`sshv1.pcap` and `v6.pcap` deviations of cause 3, because a republished window republishes
-whatever the count holds. **Neither cause closes those six on its own.**
+**The maintainer ruled the question at #491 on 2026-08-14, under row 3 of that same table.** Row
+3 names a reference that holds a proven defect. **The server count of 21 describes the capture
+rather than the connection.** `tshark` reaches 21 because it stalled its own reassembly. It
+reassembles 480 bytes across frame 63 and frame 65, and its own framing asks for 484. **So 4
+bytes stay pending, and frame 68 and frame 70 reach no SSH dissection.** **Frame 70 holds 20
+bytes, and it opens `00000009`.** That is one whole SSHv1 message under the arithmetic
+`4 + (8 - length % 8) + length`. **The same dissector applies that arithmetic to the four
+messages of frame 63.** **So a rule that frames SSH consistently produces the server count 25
+and the mode 20, and it never produces the mode 12.**
+
+**The answer is a register decline and no code change.** `testdata/deviations.json` holds
+`sshv1.pcap/72/JA4SSH.1` and `v6.pcap/72/JA4SSH.1` under ruling #491, and #484 wrote both
+entries at `1d632a7`. **#491 is the reversal path**, and `Crank-Git/ja4plus#608` holds the port
+half.
+
+**The three sentences below hold for a candidate change that this cause no longer needs.** Each
+implementation counts a packet that the SSH dissector labels. Zeek counts the payload vectors at
+`zeek/ja4ssh/main.zeek:140`. Rust counts the SSH packet counters at `rust/ja4/src/ssh.rs:35`.
+Python counts a packet whose protocol list holds `ssh` at `python/ja4ssh.py:99`. **None of the
+three publishes a value for `sshv1.pcap`**, which is why they settle nothing here.
+
+**One fact a later issue needs.** **The library labels no frame that `tshark` leaves unlabeled,
+in any of the nine SSH captures.** The two agree exactly on `ssh.pcapng` (318), `ssh2.pcapng`
+(318), `ssh-r.pcap` (1223), `ssh-scp-1050.pcap` (853) and `gre-sample.pcap` (8). The library
+adds 4 frames on `sshv1.pcap` and on `v6.pcap`, and 3 frames on `ssh2-malformed.pcap` and on
+`ssh2-moloch-crash.pcap`. **Any later issue that changes the JA4SSH packet selection re-measures
+those five agreements.** A change that closes this cause can open a deviation on a capture that
+matches today.
+
+### The count it closes is 0, and this cause composes with cause 3
+
+**2 is the count of deviations this cause holds on its own, and the count it closes is 0.** The
+maintainer ruled a register decline, so no code change closes either one. It also decides the
+value of the six `sshv1.pcap` and `v6.pcap` deviations of cause 3, because a republished window
+republishes whatever the count holds. **Neither cause closes those six on its own.**
 
 - **The port carries the same gap.** `ja4plus/fingerprinters/ja4ssh.py:247-248` holds
   `if completed and (is_ssh_packet(payload) or conn["client_id"] or conn["server_id"]):`,
@@ -497,13 +658,16 @@ names all three. **So the difference is a decline of a Python reference limit, a
   `ja4plus/fingerprinters/ja4ssh.py:439-442` clears the window at each emission, and the port
   publishes the last window under its own issues #105, #199 and #214. **No parity difference
   opens.**
-- **The register needs 2 new entries**, and **#467 owns `testdata/deviations.json`**. This
-  page writes none.
+- **The register needs 2 new entries**, and this page writes none. **#484 wrote both at
+  `1d632a7` on 2026-08-14**, under ruling #484. They are `ssh-scp-1050.pcap/0/JA4SSH.5` and
+  `ssh.pcapng/0/JA4SSH.2`. The sentence this round replaced named #467 as the owner of
+  `testdata/deviations.json`, and #467 is a member of batch #478.
 - **The two entries are `capability: false`**, because the library produces a value and the
   vector holds none.
-- **The count depends on cause 3.** A change that closes cause 3 renumbers the per-stream
-  values of these two captures. So a later worker measures the two entries after cause 3
-  lands, and never before.
+- **The count depended on cause 3, and the cause 3 ruling released it.** A change that closes
+  cause 3 renumbers the per-stream values of these two captures. **The maintainer ruled cause 3
+  as a register decline on 2026-08-14**, so no code change renumbers either capture and the two
+  entries needed no wait.
 
 ---
 
@@ -617,23 +781,31 @@ reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and t
   `ja4plus/fingerprinters/ja4s.py:82-87` reads a QUIC Initial packet, and
   `ja4plus/fingerprinters/ja4s.py:154-157` collects CRYPTO fragments until the ServerHello is
   complete. `ja4plus/fingerprinters/ja4s.py:266` writes the proto character `q`.
-- **The register needs 2 new entries**, and **#467 owns `testdata/deviations.json`**. This
-  page writes none.
-- **A reader answers one question before anybody writes those entries.** The
-  `## What this reading does not answer` section states it.
+- **The register needs 2 new entries**, and this page writes none. The sentence this round
+  replaced named #467 as the owner of `testdata/deviations.json`, and #467 is a member of batch
+  #478. **No member of the Epic #441 batch wrote either entry**, so the merged tree still reports
+  both comparisons as deviations.
+- **A reader answers one question before anybody writes those entries, and #496 answered it.**
+  The `## What this reading does not answer` section states the question and the answer.
 
 ---
 
 ## What this reading does not answer
 
-- **Which frame supplies the library's JA4S value for `0:50280`.** The run reports
+- **Which frame supplies the library's JA4S value for `0:50280`. #496 answered this on
+  2026-08-14, and the answer is frame 49 of that connection.** The run reports
   `chrome-cloudflare-quic-with-secrets.pcapng frame 48: cipher: message authentication failed`
   and the same line for frame 49. Frame 49 is the one frame of that connection that carries a
   ServerHello. **A value that the library derives from another connection is a different
   question from a value that the reference omits**, and the two need different register
-  entries. **A reader answers this before a register entry lands.** The two values of the
-  connection share the cipher `1301` and the extension hash `234ea6891581` with the values of
-  `0:57098`, and two connections to one server can send one ServerHello.
+  entries. The two values of the connection share the cipher `1301` and the extension hash
+  `234ea6891581` with the values of `0:57098`, and two connections to one server can send one
+  ServerHello. **`docs/audit/quic-ja4s-frame-source.md` holds the measurement.** A
+  `JA4SFingerprinter` that read frame 47 and frame 49 alone produced the whole value. **That
+  fingerprinter reports no error on either frame.** **Both error lines belong to
+  `JA4Fingerprinter`**, because `Processor.ProcessPacket` joins the errors of every
+  fingerprinter and an error line of the run names none. **#501 closed both lines** at
+  `74c8827`, and neither one was a deviation.
 - **Why the Python reference publishes no JA4S for the 6 reassembled streams of cause 6.**
   `python/ja4.py:591` names the highest layer, and the highest layer of each frame is `ocsp`
   or `x509ce`. `python/ja4.py:430-431` reads the first element of a handshake type list, and
@@ -642,11 +814,17 @@ reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and t
 - **The exact per-stream cost of cause 6.** The page states about 12, and it builds no
   candidate change.
 - **Whether cause 4 moves the value of a register entry.** The `## Cause 4` section names the
-  entry and the risk, and no measurement settles it.
-- **Split T1 and split T2.** The maintainer rules both.
-- **The FIN+ACK question of cause 3.** The maintainer rules it, or a delegated project
-  manager reads it against `.claude/rules/rulings.md`
-  `### The narrow delegation of 2026-08-12`.
+  entry and the risk, and no measurement settles it. **The cause 4 ruling of 2026-08-14 needs no
+  code change**, so no change of this batch reached that risk. **A later issue that changes the
+  JA4SSH packet selection still reaches it.**
+- **Split T1 and split T2. The maintainer ruled both on 2026-08-14**, and #484 is the reversal
+  path of each one. #494 built split T1 and #495 built split T2.
+- **The FIN+ACK question of cause 3. The maintainer ruled it on 2026-08-14**, and the answer is
+  candidate answer 2. The library keeps the behavior it holds today, and the register records 12
+  declines under ruling #484.
+- **Whether FR-parity-44 declines a client reset correctly.** #495 measured that 3 of the 6
+  frames of cause 2 are client resets, and **#502 holds that question**. A reversal of
+  FR-parity-44 closes those 3.
 
 ## What this reading measured with `tshark`
 

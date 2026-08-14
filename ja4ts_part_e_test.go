@@ -435,32 +435,47 @@ func TestJA4TS_ReadsARSTThatAlsoCarriesACK(t *testing.T) {
 	}
 }
 
-// FR-parity-43. A RST on a connection that holds no delay produces no value.
-// Both FoxIO implementations nest the RST branch inside the delay branch. Wireshark reads
-// `rst_time` only when `syn_ack_count > 1` at `wireshark/source/packet-ja4.c:693`, and Zeek
-// reads `rst_ts` only when the delay list holds a value at `zeek/ja4t/main.zeek:232`.
-// The port's issue #246 holds the other half.
-func TestJA4TS_ProducesNoValueForARSTOnAConnectionWithoutADelay(t *testing.T) {
-	cases := []struct {
-		name    string
-		synAcks int
-	}{
-		{"a RST arrives before any SYN-ACK", 0},
-		{"the server answered once", 1},
+// A RST that arrives before any SYN-ACK produces no value.
+// The connection key reaches no entry, so the fingerprinter holds no part a through part d
+// to publish. The port returns None on the same input at
+// `ja4plus/fingerprinters/ja4ts.py:183-184` of tag `v1.1.0`, under the port's issue #246.
+//
+// This test held a second case until #495, and the maintainer ruled that case on 2026-08-14.
+// `TestJA4TS_PublishesTheStoredFourPartValueOnAResetOfAOneSynAckConnection` now holds it.
+func TestJA4TS_ProducesNoValueForARSTBeforeAnySynAck(t *testing.T) {
+	fingerprinter := NewJA4TS()
+
+	if got := ja4tsValue(t, fingerprinter, ja4tsServerReset(t, ja4tsAt(4))); got != "" {
+		t.Errorf("the RST packet produces %q, want the empty string", got)
 	}
+}
 
-	for _, testCase := range cases {
-		t.Run(testCase.name, func(t *testing.T) {
-			fingerprinter := NewJA4TS()
+// A RST of a connection that holds one SYN-ACK produces the stored four-part value.
+//
+// The maintainer ruled split T2 on 2026-08-14, at #484, and #484 states the reversal path.
+// The dissector writes the four-part value outside the delay guard.
+// `wireshark/source/packet-ja4.c:1599-1608` reads the window size, the maximum segment
+// size, the window scale and the option list from the stored connection state.
+// `wireshark/source/packet-ja4.c:684` guards the delay list and the reset letter alone, on
+// `conn->syn_ack_count > 1`.
+//
+// Six per-packet comparisons of the FoxIO corpus name a reset frame of a one-SYN-ACK
+// connection. #495 measured that 3 of them close. The other 3 are client resets of
+// `https3-301-get.pcap`, which FR-parity-44 declines, and #502 holds that question.
+// `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md`
+// `## Cause 2 — the library returns no JA4TS value on a reset of a connection that holds one SYN-ACK`
+// names each frame, and it states 6.
+//
+// The port returns None on this input at `ja4plus/fingerprinters/ja4ts.py:183-184` of tag
+// `v1.1.0`, and `Crank-Git/ja4plus#609` holds the port half.
+func TestJA4TS_PublishesTheStoredFourPartValueOnAResetOfAOneSynAckConnection(t *testing.T) {
+	fingerprinter := NewJA4TS()
 
-			for index := 0; index < testCase.synAcks; index++ {
-				_ = ja4tsValue(t, fingerprinter, ja4tsSynAck(t, ja4tsAt(float64(index))))
-			}
+	_ = ja4tsValue(t, fingerprinter, ja4tsSynAck(t, ja4tsAt(0)))
 
-			if got := ja4tsValue(t, fingerprinter, ja4tsServerReset(t, ja4tsAt(4))); got != "" {
-				t.Errorf("the RST packet produces %q, want the empty string", got)
-			}
-		})
+	// The value carries no part e, because one SYN-ACK reaches no delay and no reset letter.
+	if got := ja4tsValue(t, fingerprinter, ja4tsServerReset(t, ja4tsAt(4))); got != ja4tsPrefix {
+		t.Errorf("the RST packet produces %q, want %q", got, ja4tsPrefix)
 	}
 }
 

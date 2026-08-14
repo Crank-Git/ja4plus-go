@@ -80,8 +80,8 @@ func (f *JA4TSFingerprinter) ensure() {
 }
 
 // ProcessPacket processes a packet and returns JA4TS fingerprint results for SYN-ACK packets.
-// It returns one result for a RST packet that ends a connection with a delay. It returns
-// no result for any other packet.
+// It returns one result for a RST packet of a connection that already sent a SYN-ACK. It
+// returns no result for any other packet.
 func (f *JA4TSFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
 	f.ensure()
 
@@ -225,7 +225,7 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 }
 
 // resetResults returns the results that one RST packet produces.
-// It returns no result when the connection holds fewer than two SYN-ACK packets.
+// It returns no result when the fingerprinter holds no state for the connection.
 //
 // Both FoxIO implementations write the reset letter inside the delay branch.
 // `wireshark/source/packet-ja4.c:684` opens that branch on `syn_ack_count > 1`, and
@@ -235,20 +235,35 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 //
 // Neither branch reaches the four-part value, and each implementation writes that value
 // above the branch. So a connection with one SYN-ACK still reaches a JA4TS value.
-// `ProcessPacket` writes that value on the SYN-ACK packet, and this method writes the
-// value that carries the delay list and the reset letter.
+// The maintainer ruled that question on 2026-08-14, at #484, and #484 is the reversal
+// path. `wireshark/source/packet-ja4.c:1599-1608` writes the four-part value for the RST
+// packet, and `TestJA4TS_PublishesTheStoredFourPartValueOnAResetOfAOneSynAckConnection`
+// holds the rule. The port half is `Crank-Git/ja4plus#609`.
+//
+// A RST packet carries no window size and no option, so part a through part d read the
+// stored prefix of the first SYN-ACK. `wireshark/source/packet-ja4.c:1604-1606` appends
+// the stored option list to the option list of the RST packet, so the dissector reads
+// both lists. This library reads the stored prefix alone, which FR-parity-41 states, and
+// the port reads the stored prefix alone at `ja4plus/fingerprinters/ja4ts.py:157` of tag
+// `v1.1.0`. No capture of the FoxIO corpus carries a RST packet that holds a TCP option,
+// so no comparison separates the two readings.
 func (f *JA4TSFingerprinter) resetResults(packet gopacket.Packet, tcp *layers.TCP, now time.Time) []FingerprintResult {
 	f.evictAgedConnections(now)
 
 	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
 	conn, held := f.connections[ja4tsConnKey(srcIP, uint16(tcp.SrcPort), dstIP, uint16(tcp.DstPort))]
-	if !held || len(conn.times) < 2 {
+	if !held {
 		return nil
 	}
 
-	fingerprint := fmt.Sprintf("%s_%s-R%d", conn.prefix, ja4tsJoinDelays(ja4tsDelayList(conn.times)),
-		ja4tsDelaySeconds(now, conn.times[len(conn.times)-1]))
+	// A connection the server answered once holds no delay, so the value stops at part d.
+	// `wireshark/source/packet-ja4.c:684` guards the delay list and the reset letter alone.
+	fingerprint := conn.prefix
+	if len(conn.times) >= 2 {
+		fingerprint = fmt.Sprintf("%s_%s-R%d", conn.prefix, ja4tsJoinDelays(ja4tsDelayList(conn.times)),
+			ja4tsDelaySeconds(now, conn.times[len(conn.times)-1]))
+	}
 
 	return []FingerprintResult{{
 		Fingerprint: fingerprint,

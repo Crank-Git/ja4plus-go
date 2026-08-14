@@ -27,6 +27,15 @@ func NewJA4T() *JA4TFingerprinter {
 func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
 	tcp := parser.GetTCPLayer(packet)
 	if tcp == nil {
+		// The maintainer ruled split T1 on 2026-08-14, under #484, and the library reads the
+		// TCP header that an ICMP error message quotes.
+		// `wireshark/source/packet-ja4.c:1261` matches the field abbreviation `tcp.flags`
+		// anywhere in the protocol tree, and the per-packet vector holds 31 such values in
+		// `ssh2.pcapng`. `ja4t_icmp_quoted_test.go` holds the ruling, #484 is the reversal
+		// path, and `Crank-Git/ja4plus#610` carries the port half.
+		tcp = parser.QuotedTCPHeader(packet)
+	}
+	if tcp == nil {
 		return nil, nil
 	}
 	// The line below tests two bits, and it reads no other flag. The maintainer ruled that
