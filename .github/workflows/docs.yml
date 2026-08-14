@@ -63,15 +63,15 @@ jobs:
     # The REST reference states no fine-grained permission for this endpoint, and it states
     # that a classic token needs the `repo` scope. So this job grants the narrowest scope
     # that names the resource it reads. A token that still cannot read the endpoint answers
-    # 403, and the third branch of the script below reports that status without a claim
-    # about the setting.
+    # 403, and the branch that reads a status other than 200 and 404 reports it without a
+    # claim about the setting.
     permissions:
       pages: read
     steps:
       - name: Read the Pages setting
         env:
-          # The endpoint answers 404 for a repository that has no Pages site, and the
-          # script separates that case from every other status.
+          # The script reads each value through an environment variable, and it expands no
+          # expression into shell text.
           GH_TOKEN: ${{ github.token }}
           EXPECTED_URL: https://crank-git.github.io/ja4plus-go/
         # The step names its shell, because the branches below depend on the shell options.
