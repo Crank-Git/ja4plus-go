@@ -40,11 +40,21 @@ func TestTheHarnessNumbersTheSecondJA4SValueOfOneStream(t *testing.T) {
 // FoxIO writes one per-stream entry for each HTTP request. A vector that holds one entry for
 // a stream still reaches a stream that carries more than one request.
 //
+// The `CVE-2018-6794.pcap` example below is history, and it is not the state of the tree.
 // `CVE-2018-6794.pcap/0/JA4H` fell from 12 deviations to 2 under the bare key, and the
 // second value and each later one reached no comparison. Those surplus values are
 // retransmission values, and never request values. Each HTTP connection of that capture
 // carries one request and five TCP retransmissions of it, and #233 holds the measurement.
+// `segmentCarriesNoNewRequest` of `ja4h.go` now drops each retransmission, so the library
+// emits one JA4H value per HTTP connection of that capture and `docs/audit/conformance.md`
+// holds no `CVE-2018-6794.pcap/0/JA4H.2` key.
 // `ja4h_retransmitted_capture_test.go` holds the count the library produces today.
+//
+// `http2-with-cookies.pcapng` is the live example, and #233 named it.
+// `testdata/foxio/python/http2-with-cookies.pcapng.json` holds 16 entries for stream 0, and
+// 15 of them hold a JA4H key. The vector group therefore holds more than one value, so the
+// harness numbers each one from `http2-with-cookies.pcapng/0/JA4H.1`.
+// Round 52 of the `## Changelog` of `docs/specs/spec.md` records this reading.
 func TestTheHarnessNumbersTheSecondAndLaterJA4HValuesOfOneStream(t *testing.T) {
 	for occurrence, want := range map[int]string{
 		1: "JA4H",

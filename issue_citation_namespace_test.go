@@ -63,16 +63,90 @@ import (
 // The batch #536 round re-measured the mark on 2026-08-14 and it read 552. The round cites
 // #544, #547, #548, #549, #550, #551 and #552, and each number sits above the inherited
 // mark of 543. Every one names an issue or a pull request of this repository.
+// Issue #565 re-measured the mark on 2026-08-14 and it read 578. That issue bounds the eight
+// fingerprinter state maps, and its code comments cite #565, #577 and #193. Each of the three
+// names an issue of this repository, and #565 and #577 sit above the inherited mark of 552.
+// **The self-review of #565 filed #577, and the guard then reported the new citation.** So one
+// issue re-measured the mark twice, and 578 is the second reading.
+//
+// The #556 hotfix re-measured the mark on 2026-08-14 and it read 568. That hotfix cites
+// `#556` in a code comment and in a test, and 556 sits above the inherited mark of 552. **A
+// hotfix pays this maintenance cost exactly as a batch round does**, because the guard reads
+// the number and never the shape of the change that carries it.
+//
+// The hotfix read 560 before it filed #568, and it read 568 after. **A mark that a later
+// allocation passes stays safe**, because the mark is a lower bound and this repository only
+// allocates upward.
+//
+// #87 re-measured the mark on 2026-08-14 and it read 595. `docs/reference/index.md` cites
+// #593, which records the `pkg.go.dev` license reading, and 593 sits above the inherited
+// mark of 568. **A member of a batch pays this maintenance cost exactly as a round does**,
+// because the guard reads the number and never the shape of the change that carries it.
+//
+// The Epic 9 round re-measured the mark on 2026-08-14 and it read 581. That round cites
+// #573, #577 and #581, and each number sits above the inherited mark of 543.
+//
+// The merge of `dev` into `epic/71-database-lookup` met two marks, 568 and 581, and it kept
+// 581. The mark is a lower bound, so the higher reading covers every citation the lower one
+// covers.
+//
+// The batch #555 round re-measured the mark on 2026-08-14 and it read 583. The round cites
+// #555, #557, #559, #560, #561, #563 and #575, and each number sits above the inherited
+// mark of 552. Every one names an issue or a pull request of this repository.
+//
+// **The merge of `dev` into batch #555 met two marks, and it keeps the higher one.** The
+// hotfix read 568 and the round read 583. **A mark is a lower bound, so the higher reading
+// covers the lower one** and no citation of either change falls outside it.
+//
+// **The second merge of `dev` into `epic/71-database-lookup` met the marks 581 and 583, and
+// it keeps 583.** Batch #555 landed on `dev` after the first merge, and it carried the
+// higher reading. The mark stays a lower bound, so 583 covers every citation that 581
+// covers.
+//
+// **The merge of `dev` into batch #432 met a third reading, and it keeps the highest.** #565
+// read 578, the hotfix read 568 and the round read 583. **Three readings of one lower bound
+// reconcile to the largest**, because this repository allocates upward and never reuses a
+// number.
+//
+// **Five changes of one day each re-measured this mark, and every reading reconciles to
+// 583.** A reader who counts the paragraphs above reads the maintenance cost that #351
+// named, and never a disagreement.
+//
+// The Epic 6 round re-measured the mark on 2026-08-14 and it read 602. The round cites #591,
+// #596, #600 and #602, and each number sits above the inherited mark of 568. Every one names
+// an issue or a pull request of this repository. **#602 is the round's own issue**, which is
+// the maintenance cost that #351 named and that every round pays.
+//
+// **The merge of `dev` into epic #43 met the marks 583 and 602, and it keeps 602.** The
+// Epic 6 round allocated #602 for itself, so its reading is the later one. **The mark is a
+// lower bound, so 602 covers every citation that 583 covers.**
+//
+// **The Epic 14 round merged `dev` into `epic/83-documentation-site` and it met two marks,
+// 595 and 583.** The round re-measured the mark on 2026-08-14 and it read 604. The round
+// cites #603, which is the issue that carries the merge and the refresh, and 603 sits above
+// both inherited marks. **A mark is a lower bound, so 604 covers every citation that 595
+// covers and every citation that 583 covers.**
+//
+// **The second merge of `dev` into `epic/83-documentation-site` met the marks 604 and 602,
+// and it keeps 604.** Epic 6 landed on `dev` after the first merge, and it carried the
+// reading of 602. **A mark is a lower bound, so 604 covers every citation that 602 covers.**
+//
 // #77 re-measured the mark on 2026-08-14 and it read 564. The TODO comment of
 // `compileFilter` in `internal/capture/pcapgo_linux.go` cites #564, which names the issue
 // that carries the capture filter question, and that number sits above the inherited mark
 // of 552. **A member pays this cost too**, and no round of the batch precedes a member that
 // files an issue.
+//
 // #80 re-measured the mark on 2026-08-14 and it read 591. The doc comment of `newMonitor`
 // in `cmd/ja4plus/watch.go` cites #577, which names the issue that carries the age-pass
 // clock question, and that number sits above the inherited mark of 564. **Two members of
 // one batch each pay this cost**, because #77 landed before #577 existed.
-const issueCitationHighWaterMark = 591
+//
+// **The merge of `dev` into `epic/76-live-capture` met the marks 604 and 591, and it keeps
+// 604.** Epic 14 allocated #603 for its own round, and that reading is the later one. **A
+// mark is a lower bound, so 604 covers every citation that 591 covers**, and it covers the
+// #564 citation of #77 and the #577 citation of #80.
+const issueCitationHighWaterMark = 604
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
@@ -96,11 +170,21 @@ var issueCitationExtension = map[string]bool{
 // reads the tree of another issue, and it then reports a defect that this branch does not
 // hold. `testdata/foxio` holds the fetched FoxIO corpus. That corpus is untracked and
 // FoxIO-licensed, so no rule of this project binds it.
+//
+// `site` and `.venv` each hold an artifact that `make docs` produces, and `.gitignore:47`
+// and `.gitignore:48` name them. **`make docs` became a real target on 2026-08-14**, so a
+// developer who builds the site and then runs `go test` gave this guard a second copy of
+// every page. It then reported one defect twice, and it named a generated HTML file that no
+// repair can reach. #87 measured it: a run after `make docs` reported
+// `site/reference/index.html:1511` and `site/search/search_index.json:1` beside the page
+// that holds the citation.
 var issueCitationSkipDirectory = map[string]bool{
 	".git":              true,
 	"bin":               true,
 	"vendor":            true,
 	"node_modules":      true,
+	"site":              true,
+	".venv":             true,
 	".claude/worktrees": true,
 	"testdata/foxio":    true,
 }

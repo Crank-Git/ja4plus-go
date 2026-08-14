@@ -296,7 +296,12 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 			}
 		case ExtSupportedVersions:
 			// Server selects ONE version -- 2 bytes directly, no list length byte
-			if extLen >= 2 {
+			//
+			// The guard reads the length of extData, and never extLen. extLen is the
+			// length the wire declares, and the clamp above shortens extData to the end
+			// of the record. A crafted record makes the two disagree, and #556 records
+			// the panic that the declared length produced.
+			if len(extData) >= 2 {
 				sv := uint16(extData[0])<<8 | uint16(extData[1])
 				sh.SupportedVersions = []uint16{sv}
 			}

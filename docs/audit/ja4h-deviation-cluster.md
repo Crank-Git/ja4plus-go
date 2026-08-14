@@ -32,10 +32,15 @@ is the record that earned the change.
 | 2 | #462, under the maintainer ruling of 2026-08-13 on #455 | `ProcessPacket` of `ja4h.go` produces the value at the packet that completes the request. `HTTPMessageIsComplete` of `internal/parser/http.go` holds the gate. |
 | 3 | #446 | `segmentCarriesNoNewRequest` of `ja4h.go` reads the consumed sequence range, so a repeated segment produces no second value. |
 
-**Cause 1 and cause 5 are open, and #441 owns each one.** **The maintainer ruled split S1
+**Cause 1 is open, and #441 owns it.** **The maintainer ruled split S1
 of cause 4 on 2026-08-13**, and #467 recorded that ruling in `testdata/deviations.json`.
 **The library produces no value for an SSDP request over UDP**, so cause 4 moves no
 fingerprint value.
+
+**#527 closed cause 5 on 2026-08-14.** The maintainer ruled rule 5b on the same day, and
+`### The maintainer ruled rule 5b on 2026-08-14` below states the ruling and the
+measurement. **The library reads a request path that holds a space, and JA4H part b hashes
+an empty header list.**
 
 **#446 landed in batch #421, and #462 landed in batch #457.** So the two changes reach
 `docs/audit/conformance.md` in two different measurements.
@@ -418,6 +423,11 @@ entry, so every SSDP value the library produces reads as a surplus value against
 
 ## Cause 5 — the request line parser rejects a path that holds a space
 
+**#527 closed this cause on 2026-08-14, and
+`### The maintainer ruled rule 5b on 2026-08-14` below states the result.** The rest of
+this section is the reading that earned the change, and it states the tree before the
+change.
+
 **3 deviations, all in `gre-erspan-vxlan.pcap`, and 1 of them closes.** #527 re-measured
 that count on 2026-08-14, and the run still reports 3. Frame 4 holds:
 
@@ -464,19 +474,29 @@ compose, and neither one closes a deviation on its own.
 
 ### Rule 5b needs a ruling
 
+**The maintainer ruled rule 5b on 2026-08-14, so this section is the reading that earned
+the ruling and never a statement of the tree today.**
+`### The maintainer ruled rule 5b on 2026-08-14` below states the ruling, and it states
+each sentence of this section that the ruling supersedes. **The split is real history, and
+this page keeps it.**
+
 **The four FoxIO implementations split two against two.** #527 read each one on 2026-08-14,
 at the pin `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 
 | Implementation | Part b of an empty header list | Evidence |
 |---|---|---|
-| Python | `e3b0c44298fc` | `testdata/foxio/reference/python/ja4h.py:72` and `testdata/foxio/reference/python/common.py:127` |
-| Wireshark | `e3b0c44298fc` | `testdata/foxio/reference/wireshark/source/packet-ja4.c:628` and `:641` |
+| Python | `e3b0c44298fc` | `testdata/foxio/reference/python/ja4h.py:76` and `testdata/foxio/reference/python/common.py:127` |
+| Wireshark | `e3b0c44298fc` | `testdata/foxio/reference/wireshark/source/packet-ja4.c:629-630` and `:641` |
 | Rust | `000000000000` | `testdata/foxio/reference/rust/ja4/src/http.rs:202` and `testdata/foxio/reference/rust/ja4/src/lib.rs:184` |
 | Zeek | `000000000000` | `testdata/foxio/reference/zeek/ja4h/main.zeek:195` and `testdata/foxio/reference/zeek/utils/common.zeek:64` |
 
 **Python and Wireshark hash the header string under no guard.**
-`testdata/foxio/reference/python/ja4h.py:72` holds `headers = sha_encode(x['headers'])`.
-`testdata/foxio/reference/wireshark/source/packet-ja4.c:641` writes `hash1` directly, and
+`testdata/foxio/reference/python/ja4h.py:76` holds `headers = sha_encode(x['headers'])`.
+**`:72` holds the cookie fields**, and R18 and R27 of `docs/specs/foxio/JA4H.md` already
+state that separation.
+`testdata/foxio/reference/wireshark/source/packet-ja4.c:629-630` computes `hash1` under no
+guard. `testdata/foxio/reference/wireshark/source/packet-ja4.c:641` writes `hash1`
+directly, and
 it reserves `zero_hash` for part c and part d alone.
 
 **Rust and Zeek return the zero sentinel for the empty string.**
@@ -521,8 +541,11 @@ rule 5b, and no session builds it first.** A ruling lands in this repository and
 `Crank-Git/ja4plus` together, under `.claude/rules/parity.md`.
 
 **A repair of rule 5b changes no line of `internal/parser/hash.go`.** `TruncatedHash` serves
-nine call sites outside part b, in `ja4.go`, in `ja4s.go`, in `ja4x.go` and in the two
-cookie parts of `computeJA4HFromRequest`. **R27 holds the sentinel for part c and part d**,
+ten call sites outside part b, in `ja4.go`, in `ja4s.go`, in `ja4x.go` and in the two
+cookie parts of `computeJA4HFromRequest`. **The root package holds eleven call sites in
+all**, and part b is the eleventh. `ja4hHashCallSites` of `ja4h_empty_header_list_test.go`
+names each one, and `TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed` reads the
+syntax tree to hold that table true. **R27 holds the sentinel for part c and part d**,
 and **R12 of `docs/specs/foxio/JA4X.md` holds the sentinel for JA4X**. The doc comment of
 `computeJA4XWithRaw` in `ja4x.go` cites R12 and it names the same reliance. So a change to
 the shared function moves a JA4 value, a JA4S value and a JA4X value.
@@ -531,6 +554,101 @@ the shared function moves a JA4 value, a JA4S value and a JA4X value.
 `ParseHTTPRequest` return a request for frame 4, and part b then writes `000000000000`
 against the expected `e3b0c44298fc`. **So no session builds rule 5a before the maintainer
 rules rule 5b.**
+
+### The maintainer ruled rule 5b on 2026-08-14
+
+**JA4H part b hashes an empty header list to `e3b0c44298fc`, and it writes no zero
+sentinel.** The ruling comment is comment 5294404252 of #527, and **issue #527 is the
+reversal path**. The port half is `Crank-Git/ja4plus#612`, and
+`ja4plus/fingerprinters/ja4h.py:480` at tag `v1.1.0` writes the sentinel that the ruling
+reverses.
+
+**The deciding fact is R18 of `docs/specs/foxio/JA4H.md`.** It is a rank 1 image rule, it
+states `Truncated SHA256 hash of Headers, in the order they appear`, and it names no
+sentinel. **R27 confines the sentinel to part c and to part d.**
+`.claude/rules/rulings.md` `## The source ranking` places an image above every
+implementation, so the image outranks the four references of the table above.
+
+**#527 built rule 5a and rule 5b together**, because the two rules close one comparison
+only when both hold.
+
+**Three sentences of `### Rule 5b needs a ruling` above no longer state the tree.** This
+section states each one.
+
+| The sentence above | What the tree holds today |
+|---|---|
+| `The maintainer rules rule 5b, and no session builds it first.` | The maintainer ruled it on 2026-08-14, and #527 built it. |
+| `So no session builds rule 5a before the maintainer rules rule 5b.` | #527 built rule 5a in the same change. |
+| The sentence that states that a repair of rule 5b changes no line of `internal/parser/hash.go`. | The repair adds `TruncatedHashNoSentinel` to that file, and it changes no call site outside JA4H part b. |
+
+**The repair keeps `TruncatedHash` unchanged, so it moves no JA4 value, no JA4S value and
+no JA4X value.** `TruncatedHashNoSentinel` of `internal/parser/hash.go` hashes the empty
+string, `TruncatedHash` calls it for a non-empty input, and `computeJA4HFromRequest` of
+`ja4h.go` is the one caller of the new function.
+`TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed` of
+`ja4h_empty_header_list_test.go` names every call site of the root package, and it fails
+when a later change adds one.
+
+**Rule 5a reads the path group.** `requestLineRe` of `internal/parser/http.go` now holds a
+lazy group of any character in place of the non-space group. The group is lazy, so a first
+line that holds two version tokens reaches the earlier one, as the non-space group did.
+
+**Rule 5a also made the expression read the first line and no other line, and the
+self-review of #527 earned each part.** `ja4l.go` reads `IsHTTPRequest` to pick a
+measurement point, so a match that reads a second line moves a JA4L value. **The two parts
+are separate defects, and one of them predates #527.**
+
+| Part | The payload that separates it | Before 2026-08-14 | Today |
+|---|---|---|---|
+| Each separator reads a space or a horizontal tab, and never a line ending. | `SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n` | The expression matched, and the defect predates #527. | No match. |
+| The path group reads no carriage return and no line feed. | `GET /a\rFAKE HTTP/1.1\r\n` | `ParseHTTPRequest` read no request, because the non-space path group read no carriage return. **The lazy group of any character opened it, and #527 opened and closed it on one day.** | `ParseHTTPRequest` reads no request. |
+
+**`IsHTTPRequest` answers `true` for the second payload from its nine-prefix fast path**,
+which reads `GET ` and never the expression. #57 built that path, and #527 moves it not at
+all. **`ParseHTTPRequest` reads no request**, so no fingerprint value follows.
+
+**Neither part moves a value of the corpus.** The run above is byte-identical with each
+part and without it, so no capture of the corpus holds such a payload.
+`TestTheRequestLineReadsNoSecondLine` of `ja4h_empty_header_list_test.go` holds both rules,
+and `TestTheRequestLineReadsASpaceAndATabAsASeparator` holds the separator set.
+
+#### The measurement
+
+**`make corpus` and then `make conformance`, on `issue/527-ja4h-hash-empty-header-list`,
+base `origin/batch/555-session-15-rulings` at `2d675e7`, corpus at
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, on 2026-08-14.**
+
+| Measure | Before | After |
+|---|---|---|
+| Matches | 1753 | 1754 |
+| Deviations the register does not hold | 270 | 267 |
+| Accepted deviations | 583 | 585 |
+| Unaccepted uncovered values | 172 | 175 |
+| Accepted uncovered values | 32 | 32 |
+| Register keys | 615 | 617 |
+| Stale register entries | 0 | 0 |
+| Orphan register entries | 0 | 0 |
+
+`585 + 32 = 617` holds.
+
+**One fingerprint value moved, and one capture holds it.**
+`gre-erspan-vxlan.pcap/4/JA4H.1` reached no value before the change, and it now matches
+`ge10nn000000_e3b0c44298fc_000000000000_000000000000`.
+
+**The two raw forms of the same frame became reachable, and #527 wrote a register entry for
+each one under ruling #285.** Each entry holds `ge10nn000000__` against
+`ge10nn000000___`, which is the one trailing underscore that #285 settles. **The reading
+above predicted both entries.**
+
+**Rule 5a also opened three uncovered values, and the reading above predicted none of
+them.** The per-stream vector file `testdata/foxio/python/gre-erspan-vxlan.pcap.json`
+holds `JA4L-S` and `JA4L-C` for stream 0, and it holds no JA4H key. The library now
+produces `gre-erspan-vxlan.pcap/0/JA4H`, `/JA4H_r` and `/JA4H_ro` for that stream, so the
+per-stream unaccepted uncovered count rises from 144 to 147. **The JA4H value of the
+stream equals the per-packet vector of frame 4**, so the three uncovered values record a
+coverage difference of the FoxIO Python harness and never a value disagreement. **#527
+wrote no register entry for them**, because the register records an accepted difference
+from a FoxIO value and no FoxIO value exists here.
 
 ---
 
@@ -542,11 +660,12 @@ rules rule 5b.**
 > 2026-08-12 that this library follows the per-stream set.
 
 **So the trailing underscore is settled, and it is not an open question.** The register holds
-140 entries for it today. **The count read 108 until #462**, which wrote the 32 entries that
-cause 2 predicted.
+142 entries for it today. **The count read 108 until #462**, which wrote the 32 entries that
+cause 2 predicted. **#527 wrote the last 2 on 2026-08-14**, when the ruling of rule 5b made
+frame 4 of `gre-erspan-vxlan.pcap` reach a value.
 
 **#285 no longer names every JA4H entry of the register.** #467 added 108 entries under
-ruling #441, so the register holds 248 JA4H entries across the two rulings.
+ruling #441, so the register holds 250 JA4H entries across the two rulings.
 
 **Three causes hide a #285 difference behind a larger one.** A frame that produces no value at
 all reports one deviation, and the same frame reports the #285 difference once it produces a
@@ -572,8 +691,11 @@ reversal of that ruling reaches them.**
 - **The count each candidate for cause 1 closes.** The section states the reason.
 - **The two-deviation difference between this run and the project manager's run.** Both runs
   read the same corpus and the same pin, and the per-capture counts agree.
-- **Whether rule 5b moves a value outside `gre-erspan-vxlan.pcap`.** The one measurement moved
-  no other capture, and one capture is one measurement.
+- **Whether rule 5b moves a value outside `gre-erspan-vxlan.pcap` in a capture the corpus
+  does not hold.** #527 answered the corpus half on 2026-08-14: the whole-corpus run moves
+  one comparison, and `gre-erspan-vxlan.pcap` holds it. **The corpus holds 215 JA4H values,
+  and 1 of them reads a header count of `00`.** The rule reaches every empty header list
+  outside the corpus, and no measurement bounds that set.
 - **Whether the maintainer confirms the ruling of split S1.** The maintainer ruled it on
   2026-08-13, and issue #441 is the reversal path.
 - **Split S2.** The ruling of split S1 makes it unreachable, and a reversal makes it live

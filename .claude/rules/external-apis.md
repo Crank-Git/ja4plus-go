@@ -21,6 +21,8 @@ Never describe an external interface from memory. A capability you cannot confir
 | FoxIO per-stream vectors | At the pinned commit | <https://github.com/FoxIO-LLC/ja4/tree/main/python/test/testdata> |
 | FoxIO per-packet vectors | At the pinned commit | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 | FoxIO License 1.1 | Read 2026-08-06 at `27f0cbf` | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE> |
+| Wireshark core dissectors | `v4.6.0`, which the pin records | <https://gitlab.com/wireshark/wireshark/-/tree/v4.6.0/epan/dissectors> |
+| Zeek analyzer | `8.0.0`, which the pin records | <https://github.com/zeek/zeek/tree/v8.0.0/src/analyzer/protocol> |
 | `github.com/gopacket/gopacket` | v1.6.1 | <https://pkg.go.dev/github.com/gopacket/gopacket> |
 | `golang.org/x/crypto` | v0.37.0 | <https://pkg.go.dev/golang.org/x/crypto> |
 | `ja4db.com` read API | Unversioned | <https://ja4db.com> |
@@ -51,6 +53,15 @@ The fingerprint definitions come from FoxIO. The wire formats come from these.
 - **The corpus is fetched, never committed.** It is FoxIO-licensed material. The pin in
   `testdata/foxio.pin` keeps the fetch reproducible. Move the pin in a commit that does
   nothing else.
+- **The Wireshark core and the Zeek core each carry the version that the FoxIO pin
+  records, and this project picks neither one.** A JA4 reference implementation reads a
+  field that its host produces, so a reading of the implementation often has to read the
+  host. `.github/workflows/wireshark-release.yml:15` builds the FoxIO plugin at `v4.6.0`,
+  and `.github/workflows/zeek-test.yml:21` runs the FoxIO Zeek tests at
+  `image: zeek/zeek:8.0.0`. Each path reads at base 1 of
+  `docs/specs/foxio/README.md` `## How to read a citation`.
+  **`docs/audit/upstream-versions.md` holds the measurement**, and
+  `upstream_versions_test.go` fails when a moved pin leaves either row behind.
 - **`ja4db.com` publishes no versioned API documentation.** Confirm the response shape
   against a live call before you change the response parser, and record the observed shape
   in the issue. Until then, leave the current parser unchanged.

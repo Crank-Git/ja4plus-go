@@ -62,8 +62,10 @@ of that register name a change to this repository. Read
 
 | Path | Holds |
 |---|---|
-| `*.go` at the root | Package `ja4plus`: one fingerprinter per method, `Processor`, the database lookup. |
+| `*.go` at the root | Package `ja4plus`: one fingerprinter per method, `Processor`, the local database lookup. |
+| `ja4db/` | Package `ja4db`: the remote lookup at `ja4db.com`. It is the one package of the library that reaches the network. |
 | `internal/parser/` | Protocol decoding for TLS, QUIC, HTTP, SSH, TCP streams, X.509 and GREASE. |
+| `internal/dbcache/` | The validation of a downloaded database, the 16 MB bound and the atomic cache write. |
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
 | `internal/capture/` | Opening a live interface. Holds the pure-Go backend and the libpcap backend. |
@@ -79,6 +81,11 @@ A new fingerprinter file goes at the root. New protocol decoding goes in
 `internal/parser/`. Interface capture goes in `internal/capture/`. Nothing that reads a
 packet belongs in `cmd/`.
 
+**Every network call of the library goes in `ja4db/`.** The maintainer ruled that boundary
+on 2026-08-14, and `docs/audit/network-boundary.md` holds the record. The core package
+imports no HTTP client, and `network_boundary_test.go` fails on an import that breaks the
+rule.
+
 ## Commands
 
 | Command | What it does |
@@ -89,24 +96,37 @@ packet belongs in `cmd/`.
 | `make lint-cache-check` | Prove the stale linter cache defect of #257, and prove the repair. |
 | `make corpus` | Fetch the FoxIO corpus at the pinned commit. |
 | `make conformance` | Run the conformance suite against the corpus. |
-| `make fuzz` | Run each fuzz target for 30 seconds. |
+| `make fuzz` | Run each fuzz target for 30 seconds. **The tree holds 15 targets**, measured on 2026-08-14. |
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
 | `make mutate` | **Not built yet.** #90 adds the target, under Epic #89. It runs the mutation sweep over the named package set. Slow. Gates nothing. |
 | `make prerelease` | **Not built yet.** #95 through #99 add the target, under Epic #94. It installs the built artifact into a clean environment and runs it. |
-| `make docs` | **Not built yet.** #84 configures MkDocs and adds the target. It builds the documentation site with `mkdocs build --strict`. |
+| `make docs` | Build the documentation site with `mkdocs build --strict`. #84 added the target on 2026-08-14. Install the pins of `docs/requirements.txt` first, or override the generator: `make docs MKDOCS=.venv/bin/mkdocs`. |
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
 
-**The `Makefile` defines the first ten rows of this table, and none of the last three.**
-An absent target is work a later issue does, and never a broken target. **`make docs`
-exits 0, and that exit code reports no site build.**
+**`make fuzz` reads the target list from the tree**, with `go test -list '^Fuzz'` over
+`go list ./...`. So a new target joins the run without an edit to the `Makefile`. Epic 6
+added 13 targets on 2026-08-14, and the recipe found every one of them. **The two targets
+that the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` and
+`FuzzTCPOptionEntriesReadsAnyOptionRegion`.** Re-measure the count with
+`grep -rn --include='*_test.go' '^func Fuzz' .` rather than reading it from a document.
+
+**One run of `make fuzz` takes about 8 minutes**, because it fuzzes 15 targets in turn for
+30 seconds each.
+
+**The `Makefile` defines the first ten rows of this table and the `docs` row, and it
+defines neither `mutate` nor `prerelease`.** An absent target is work a later issue does,
+and never a broken target.
 
 - `make mutate` and `make prerelease` each exit 2. Each one prints one line
   that names the target: ``make: *** No rule to make target `mutate'.  Stop.``
-- `make docs` prints ``make: Nothing to be done for `docs'.``, because `docs/` is a
-  directory and the name holds no recipe.
+- **`make docs` needs the `docs` entry of the `.PHONY` line, and that entry is not
+  decoration.** `docs/` is a directory of this repository, so make reads the bare target
+  name as that directory and finds it already up to date. Without the `.PHONY` entry it
+  prints ``make: Nothing to be done for `docs'.`` and it exits 0 without a site build.
+  `TestTheMakefileBuildsTheSite` in `mkdocs_config_test.go` holds the entry.
 - `make vuln` exits 3 when the library calls a vulnerable function. It exits 0 when a
   vulnerable module reaches the build and no call reaches it, and it prints a count of
   that second kind. **The scanner reads the Go version of the `go` command on the PATH**,
@@ -125,8 +145,10 @@ exits 0, and that exit code reports no site build.**
 5. Coverage does not fall below the value in `.coverage-floor`. **#68 created that file on
    2026-08-13, and this step is runnable today.** Run `make cover`, and read the total
    against the value in the file. The CI coverage job fails on a total below it.
-6. **This step is unrunnable today, because the `Makefile` defines no `docs` target. #84
-   builds it.** `make docs` succeeds, when the change touches a page.
+6. `make docs` succeeds, when the change touches a page. **#84 made this step runnable on
+   2026-08-14.** Install the pins of `docs/requirements.txt` into a virtual environment
+   first. The site publishes `docs/` and it excludes `docs/specs/` and `docs/audit/`, so a
+   change to the spec package alone leaves this step untouched.
 
 ## Conventions
 

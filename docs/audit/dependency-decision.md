@@ -157,9 +157,15 @@ fork's line numbers beside it.
 | `go build ./...` | Succeeds. |
 | `CGO_ENABLED=0 go build ./...` | Succeeds. |
 | `go build -tags libpcap ./...` | Succeeds. |
-| `go test -race ./...` | Passes in each of the four packages. |
+| `go test -race ./...` | Passes in each of the four packages the module held on 2026-08-13. |
 | `make lint` | Reports `0 issues.` |
 | `CGO_ENABLED=0` cross-compilation | Succeeds for each of the five release platforms. |
+
+**The module holds six packages today, and it held four at this gate.** Epic 9 added
+`github.com/Crank-Git/ja4plus-go/ja4db` and
+`github.com/Crank-Git/ja4plus-go/internal/dbcache` on 2026-08-14. `go list ./...` reports
+the six. **The row above states the measurement of the #438 gate**, and this paragraph
+states the count of today.
 
 **`.github/workflows/release.yml` names the five platforms.** They are `linux/amd64`,
 `linux/arm64`, `darwin/amd64`, `darwin/arm64` and `windows/amd64`.
@@ -391,7 +397,7 @@ published one.
 
 ## What FR-supply-27 asks for, and what a source comparison reveals
 
-**FR-supply-27 asks for every behaviour difference that the conformance suite reveals
+**FR-supply-27 asks for every behavior difference that the conformance suite reveals
 between the candidates. That measurement needs a migration branch, and issue #70 changes no
 dependency. So issue #70 left the conformance comparison unmeasured.**
 
@@ -712,13 +718,13 @@ option of kind 30 separates the two candidates, and a later measurement needs on
 
 ### What FR-supply-27 asks for, and the answer
 
-**FR-supply-27 asks the record to name every behaviour difference that the conformance
+**FR-supply-27 asks the record to name every behavior difference that the conformance
 suite reveals between the candidates. The suite reveals none.** Every count holds, every
 deviation key holds, and no register entry goes stale.
 
 **That answer reads the corpus, and it reads no other input.** The two source differences
-above are real, and the corpus separates neither one. **A behaviour difference that no
-capture reaches stays a behaviour difference**, and this measurement bounds the risk rather
+above are real, and the corpus separates neither one. **A behavior difference that no
+capture reaches stays a behavior difference**, and this measurement bounds the risk rather
 than removes it.
 
 ### What this measurement does not change
@@ -752,7 +758,7 @@ branch, `make conformance` ran, and no fingerprint value moved.**
 **The reading recommends candidate B, under one condition.** The condition is a measurement:
 one branch migrates, `make conformance` runs, and no fingerprint value moves without a
 FoxIO reason. **If a value moves, the reading recommends candidate A.** `.claude/rules/parity.md` rule 1
-states that FoxIO decides behaviour. A dependency decides none of it.
+states that FoxIO decides behavior. A dependency decides none of it.
 
 Three facts support B over A.
 
@@ -769,7 +775,7 @@ Two facts support A over B.
 
 1. **`layers/tcp.go` and `layers/geneve.go` each hold a difference that a fingerprint value
    can read.** Issue #70 wrote `The conformance result is unmeasured` here, and #434
-   measured it on 2026-08-13. **The suite reveals no behaviour difference, and the corpus
+   measured it on 2026-08-13. **The suite reveals no behavior difference, and the corpus
    separates neither source difference**, so each one stays a risk on a capture the corpus
    does not hold.
 2. **The fork carries two published advisories, and the original carries none.** Each fork

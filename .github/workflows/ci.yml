@@ -76,11 +76,14 @@ permissions:
 #
 # **`foundation_test.go` holds `goToolchainRange`, and that constant is the one source for
 # this range.** To move the range, or to reverse the decision and restore `'1.24'`, edit
-# these three places together:
+# these four places together:
 #
 #   1. The `goToolchainRange` constant in `foundation_test.go`.
 #   2. Every `go-version` input of this file, and the `go-version` matrix of the `test` job.
 #   3. The `go-version` input of `.github/workflows/release.yml`.
+#   4. Every `go-version` input of `.github/workflows/fuzz.yml`. #47 added that workflow on
+#      2026-08-14, and `TestTheNightlyFuzzWorkflowNamesTheGoToolchainRange` of
+#      `fuzz_job_test.go` reads it against the constant.
 #
 # **Count no jobs here, because a later issue adds one.** #68 and #69 each added a job after
 # #65 wrote this block, and the instruction that named three jobs then named the wrong
@@ -108,6 +111,17 @@ jobs:
 
       - name: Build
         run: go build ./...
+
+      # FR-documentation-27 of #87 states that this command gates every pull request.
+      #
+      # The `Build` step above already reaches `examples/`, because `./...` names every
+      # package of the module. **This step is not that step, and it is not decoration.**
+      # It names the command the requirement names. So a reader of a red run reads which
+      # requirement failed. A later edit of the `Build` step then drops no gate.
+      #
+      # #88 owns `docs.yml` and `docs-build.yml`, and it owns no step of this file.
+      - name: Build the examples
+        run: go build ./examples/...
 
       - name: Test
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -831,3 +845,64 @@ jobs:
           fi
 
           exit 0
+
+  # FR-fuzz-25 runs each fuzz target for 30 seconds on every pull request. FR-fuzz-26 fails
+  # this job when a target finds a crash.
+  #
+  # **This job adds no trigger, and it takes the two triggers at the head of this file.** So
+  # it runs on a push to `main` or `master`, and on a pull request into `main`, `master` or
+  # `dev`. #47 added the job on 2026-08-14, and it changed no existing job.
+  #
+  # **A member pull request of a batch never starts this job, and that is the design of this
+  # project.** A member targets an integration branch, and the `branches` filter of the
+  # `pull_request` trigger names no integration branch. Every member commit also carries
+  # `[skip ci]`, and the documentation states that a skip instruction reaches a `push` event
+  # and a `pull_request` event: `Skip instructions only apply to the push and pull_request
+  # events.` So this job reads the batch pull request into `dev`, which is the pull request
+  # that FR-fuzz-25 gates.
+  # Verified against
+  # <https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs>,
+  # retrieved 2026-08-14.
+  #
+  # **`make fuzz` holds the command, so this job and a developer run one thing.** The recipe
+  # runs each target for 30 seconds, and it exits 1 on the first target that fails. That exit
+  # status is what FR-fuzz-26 asks for, and this job adds no branch of its own.
+  #
+  # The tree holds 15 fuzz targets on 2026-08-14, so the run costs 7.5 minutes of fuzz time
+  # plus one build for each target. `timeout-minutes` bounds a target that stalls without an
+  # exit. Issue #568 records one measured stall of
+  # `FuzzParseCryptoFramesReadsAnyPayload`, and that issue is not a member of Epic 6.
+  fuzz:
+    runs-on: ubuntu-latest
+    # A job of a GitHub-hosted runner runs for up to 6 hours, and a stalled target would hold
+    # a runner for that whole time. 30 minutes covers 7.5 minutes of fuzz time and 15 builds.
+    # Verified against <https://docs.github.com/en/actions/reference/limits>, retrieved
+    # 2026-08-14: `Each job in a workflow can run for up to 6 hours of execution time.`
+    timeout-minutes: 30
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads the repository and writes nothing.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # `JA4PLUS_SEEDGEN=1` turns the seed corpus guard of `fuzz_seed_corpus_test.go` from a
+      # comparison into a write. A run that sets it rewrites every seed to match the code,
+      # and the guard then reports success whatever the code does. No line of this file sets
+      # it, and this step proves that the runner environment does not set it either.
+      #
+      # The step refuses any value, and the guard reads the value `1` alone. A second value
+      # names an environment this project does not describe, and a run under one is worth a
+      # stop.
+      - name: Refuse a seed corpus write
+        run: |
+          if [ -n "${JA4PLUS_SEEDGEN:-}" ]; then
+            echo "JA4PLUS_SEEDGEN is set, and it rewrites the seed corpus instead of reading it." >&2
+            exit 1
+          fi
+
+      - name: Fuzz each target for 30 seconds
+        run: make fuzz
