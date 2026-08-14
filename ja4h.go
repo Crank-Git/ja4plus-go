@@ -33,6 +33,11 @@ func NewJA4H() *JA4HFingerprinter {
 // ja4hMaxStreams and ja4hMaxStreamBytes bound the reassembler of one fingerprinter.
 // A long-running monitor holds one stream for each connection it has seen, so a limit
 // keeps the memory bounded.
+//
+// ja4hMaxStreamBytes bounds the bytes that one stream stores, and #567 added that bound.
+// This fingerprinter removes a stream after each value, so a request that completes returns
+// the whole bound to the connection. A sender that never completes a request holds one
+// stream at the bound until `CleanupConnection`, `Reset` or the stream limit removes it.
 const (
 	ja4hMaxStreams     = 100
 	ja4hMaxStreamBytes = 1048576
