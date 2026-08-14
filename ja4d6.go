@@ -181,10 +181,14 @@ type ja4d6Inputs struct {
 
 // walkDHCPv6Options returns the six JA4D6 inputs that the DHCPv6 options carry.
 //
-// The walk reads a nested option of a container, and it reads an option of the inner
-// message that option 9, Relay Message, carries. R19 and R20 of
-// `docs/specs/foxio/JA4D6.md` record that the Wireshark dissector reads every
-// `dhcpv6.option.type` field of the dissection tree, whatever nests it.
+// The walk reads every option at every nesting depth. It reads a nested option of a
+// container option, and it reads an option of the inner message that option 9, Relay
+// Message, carries.
+//
+// R11, R19, R20 and R23 of `docs/specs/foxio/JA4D6.md` each name one field that the
+// Wireshark dissector reads. `wireshark/source/packet-ja4.c:1500-1578` reads one flat
+// array of the fields of the whole dissection tree, and it matches each field on the
+// field name alone. So no depth limits any part of the value.
 func walkDHCPv6Options(opts []layers.DHCPv6Option) *ja4d6Inputs {
 	inputs := &ja4d6Inputs{}
 	for _, o := range opts {
@@ -270,7 +274,7 @@ func dhcpv6OptionsOffset(message []byte) int {
 }
 
 // walkDHCPv6RawOptions reads every DHCPv6 option of the wire form into the inputs.
-// A container below maxDHCPv6NestingDepth contributes no input.
+// A container deeper than maxDHCPv6NestingDepth contributes no input.
 func (in *ja4d6Inputs) walkDHCPv6RawOptions(rest []byte, depth int) {
 	if depth > maxDHCPv6NestingDepth {
 		return

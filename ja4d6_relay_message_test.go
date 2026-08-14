@@ -113,7 +113,7 @@ func TestJA4D6WritesTheOuterMessageTypeAloneOnARelayMessage(t *testing.T) {
 }
 
 // dhcpv6NestedRelayBytes returns the wire form of one RELAY-FORW message that nests
-// levels relay messages around the inner message.
+// `levels` relay messages around the inner message.
 func dhcpv6NestedRelayBytes(levels int, inner []byte) []byte {
 	message := inner
 	for i := 0; i < levels; i++ {
@@ -124,14 +124,15 @@ func dhcpv6NestedRelayBytes(levels int, inner []byte) []byte {
 
 // TestJA4D6ReadsTheInnerMessageOfARelayMessage holds the reading of issue #370.
 //
-// The Wireshark dissector reads a field name over the whole dissection tree, so every
+// `wireshark/source/packet-ja4.c:1500-1578` reads one flat array of the fields of the
+// whole dissection tree, and it matches each field on the field name alone. So every
 // option of the inner message reaches the value. R19 of `docs/specs/foxio/JA4D6.md`
 // records that it reads `dhcpv6.option.type`, and R20 records that part b skips no
 // option. R11 and R23 record the same field-name read for the client DUID length and for
 // the option request list.
 //
 // The port ships this rule at `ja4plus/fingerprinters/ja4d6.py:161-165`, at tag `v1.1.0`.
-// Its issue #271 records the reading as D1 and D2.
+// The port's issue #271 records the reading as D1 and D2.
 //
 // No FoxIO vector carries a relay message, so this constructed packet is the separating
 // input that `.claude/rules/rulings.md` requires.
@@ -163,6 +164,32 @@ func TestJA4D6ReadsTheInnerMessageOfARelayMessage(t *testing.T) {
 				t.Errorf("the relay message reaches %q, want %q", got, c.want)
 			}
 		})
+	}
+}
+
+// TestJA4D6ReadsASubfieldOptionOfANestedContainer holds the second half of the reading of
+// issue #370.
+//
+// R11 and R23 of `docs/specs/foxio/JA4D6.md` record that the dissector matches
+// `dhcpv6.duid.bytes` and `dhcpv6.requested_option_code` on the field name alone, so a
+// container option carries them to the value as an inner message does. The port reads the
+// four subfield options at every depth, at `ja4plus/fingerprinters/ja4d6.py:159` of tag
+// `v1.1.0`, which calls the subfield reader for every option of the walk.
+//
+// The message below carries the Client Identifier and the Option Request option inside
+// one IA_NA container. No capture of the corpus carries that shape, and the eight
+// conformance figures prove it.
+func TestJA4D6ReadsASubfieldOptionOfANestedContainer(t *testing.T) {
+	// RFC 8415 section 21.4 gives IA_NA a 12-byte header of an IAID, a T1 and a T2.
+	iana := make([]byte, 12)
+	iana = append(iana, dhcpv6OptionBytes(1, dhcpv6ClientDUID)...)
+	iana = append(iana, dhcpv6OptionBytes(6, []byte{0x00, 0x17})...)
+	message := []byte{0x01, 0x00, 0x01, 0x02}
+	message = append(message, dhcpv6OptionBytes(3, iana)...)
+
+	const want = "solct0014nn_3-1-6_23"
+	if got := ComputeJA4D6(buildDHCPv6Packet(t, message)); got != want {
+		t.Errorf("the nested container reaches %q, want %q", got, want)
 	}
 }
 
