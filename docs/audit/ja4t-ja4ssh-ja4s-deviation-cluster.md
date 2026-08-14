@@ -18,11 +18,16 @@ names its run.** Both runs read the corpus at
   entries between the two runs. The second run reports 1680 matches, 367 deviations, 558
   accepted deviations and 578 register keys.
 
-**Every five-method count of this page holds at both runs**, because each of the 108 entries
-names a `JA4H`, `JA4H_r` or `JA4H_ro` key and no entry names one of the five methods. The
-second run reports the same 67 deviations that the register does not hold, the same split of
-31, 6, 16, 7 and 7 over the five methods, and the same twelve captures. **A whole-run figure
-therefore names its run, and a five-method figure holds at both.**
+**Every five-method count of this page holds at both runs.** Each of the 108 entries names a
+`JA4H`, `JA4H_r` or `JA4H_ro` key. **No entry of the 108 names one of the five methods.**
+
+The second run reports each of these.
+
+- The same 67 deviations that the register does not hold.
+- The same split of 31, 6, 16, 7 and 7 over the five methods.
+- The same twelve captures.
+
+**A whole-run figure therefore names its run, and a five-method figure holds at both.**
 
 **#486 changes no byte of `testdata/deviations.json`, and it changes no Go file.**
 
