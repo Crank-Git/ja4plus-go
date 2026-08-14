@@ -48,14 +48,16 @@ func FuzzParseClientHelloReadsAnyPayload(f *testing.F) {
 //
 // This target found a real crash on its first 30-second run, and `Crank-Git/ja4plus-go`
 // issue 556 holds it. `ParseServerHello` panics on a record that declares a
-// supported_versions length of 2 or more and that holds no extension data. So this target
-// fails until that issue lands, and the failure is the target doing its work. Never weaken
-// the target to make the run pass.
+// supported_versions length of 2 or more and that holds no extension data. Never weaken
+// the target to make a run pass.
+//
+// #556 repaired `internal/parser/tls.go` and merged to `dev` on 2026-08-14, so this target
+// passes today. The crashing input is a tracked seed of this target, and it is the worked
+// example of FR-fuzz-24.
 //
 // The citation above names the repository, and it writes no bare number.
-// `issueCitationHighWaterMark` in `issue_citation_namespace_test.go` holds 543, and this
-// repository has allocated more numbers since that measurement. A bare number above the
-// mark fails that guard, and this member owns no file that carries the re-measurement.
+// `issueCitationHighWaterMark` in `issue_citation_namespace_test.go` bounds a bare number,
+// and the Epic 6 round re-measured that mark.
 //
 // The seeds below panic for no input, so `go test ./...` replays them and passes.
 func FuzzParseServerHelloReadsAnyPayload(f *testing.F) {

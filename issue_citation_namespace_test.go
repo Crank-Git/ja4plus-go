@@ -71,7 +71,11 @@ import (
 // The hotfix read 560 before it filed #568, and it read 568 after. **A mark that a later
 // allocation passes stays safe**, because the mark is a lower bound and this repository only
 // allocates upward.
-const issueCitationHighWaterMark = 568
+// The Epic 6 round re-measured the mark on 2026-08-14 and it read 602. The round cites #591,
+// #596, #600 and #602, and each number sits above the inherited mark of 568. Every one names
+// an issue or a pull request of this repository. **#602 is the round's own issue**, which is
+// the maintenance cost that #351 named and that every round pays.
+const issueCitationHighWaterMark = 602
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

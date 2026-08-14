@@ -33,8 +33,8 @@ on:
     # a daily run is far above that floor. The minute is not `0`, because every workflow
     # that names the top of an hour queues at the same moment.
     - cron: '17 5 * * *'
-  # A maintainer starts a sweep by hand from the Actions page with this trigger, and the
-  # trigger costs nothing when nobody uses it.
+  # A maintainer starts a nightly fuzz run by hand from the Actions page with this trigger,
+  # and the trigger costs nothing when nobody uses it.
   workflow_dispatch:
 
 # FR-supply-15 gives a workflow the smallest permission set that its jobs need. This floor
@@ -55,7 +55,7 @@ jobs:
   # **A hard-coded list of targets goes stale without a signal.** Epic 6 added 15 targets in
   # one batch, and a later issue adds more. A list in this file would leave a new target
   # unfuzzed, and no check would report it. `go test -list` reads the tree instead, so the
-  # sweep covers every target the tree holds.
+  # nightly fuzz run covers every target the tree holds.
   targets:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -80,7 +80,7 @@ jobs:
       #
       # A package that does not compile fails `go test -list`, and the shell then leaves this
       # step with a non-zero status. `make fuzz` takes the same reading, and a silent skip of
-      # a broken package would report a sweep that never ran.
+      # a broken package would report a nightly fuzz run that never ran.
       - name: List every fuzz target
         id: list
         run: |
@@ -134,7 +134,7 @@ jobs:
       # permission. This block is the repair, and it reaches this job alone.
       issues: write
     strategy:
-      # A crash in one target must not cancel the sweep of the other 14. The documentation
+      # A crash in one target must not cancel the run of the other 14. The documentation
       # states the behavior this line turns off:
       # `If a job in a matrix fails, any remaining jobs in the matrix are also canceled.`
       fail-fast: false
@@ -309,7 +309,7 @@ jobs:
           fi
 
           {
-            echo "The nightly fuzz sweep found a crashing input."
+            echo "The nightly fuzz run found a crashing input."
             echo
             echo "| Field | Value |"
             echo "|---|---|"

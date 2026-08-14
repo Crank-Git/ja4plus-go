@@ -37,6 +37,22 @@ lose its accepted input or its rejected input without a failure.
 
 Run `JA4PLUS_SEEDGEN=1 go test ./...` to write the files after a deliberate change.
 
+**Never set `JA4PLUS_SEEDGEN` in a CI job.** The variable switches the two tests above from
+compare to write. A job that sets it rewrites every seed to match whatever the code now does,
+and it then reports success whatever the code does. **The guard can never fail after that.**
+An engineer sets the variable by hand, and a workflow file never sets it.
+
+Two checks hold this rule, and #47 built both.
+
+- The fuzz job of `.github/workflows/ci.yml` and the fuzz job of `.github/workflows/fuzz.yml`
+  each refuse a run that carries the variable.
+- `TestNoWorkflowSetsTheSeedGenerationVariable` in `fuzz_job_test.go` reads both workflow
+  files for an assignment and for an environment key.
+  `TestEachFuzzJobRefusesASeedCorpusWrite` reads both jobs for the refusal.
+
+**Read the seed diff before you commit a write.** The variable makes the tracked file agree
+with the code, so a write hides a defect exactly as well as it records a deliberate change.
+
 ## The license reading of FR-fuzz-23
 
 **FR-fuzz-23 tracks this corpus in git, and `.gitignore` excludes the FoxIO corpus at
