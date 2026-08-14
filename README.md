@@ -8,6 +8,8 @@ JA4+ is a set of network fingerprinting standards created by [FoxIO](https://fox
 [![Go Reference](https://pkg.go.dev/badge/github.com/Crank-Git/ja4plus-go.svg)](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go)
 [![License](https://img.shields.io/badge/license-BSD--3--Clause%20and%20FoxIO%201.1-blue.svg)](LICENSE)
 
+**Documentation: <https://crank-git.github.io/ja4plus-go/>** — the usage guide, the output schema, the concurrency contract, the packet-throughput measurement and the licensing terms.
+
 ## Supported Fingerprint Types
 
 | Type | Protocol | Description |

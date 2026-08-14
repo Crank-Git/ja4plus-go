@@ -78,6 +78,11 @@ import (
 // allocation passes stays safe**, because the mark is a lower bound and this repository only
 // allocates upward.
 //
+// #87 re-measured the mark on 2026-08-14 and it read 595. `docs/reference/index.md` cites
+// #593, which records the `pkg.go.dev` license reading, and 593 sits above the inherited
+// mark of 568. **A member of a batch pays this maintenance cost exactly as a round does**,
+// because the guard reads the number and never the shape of the change that carries it.
+//
 // The Epic 9 round re-measured the mark on 2026-08-14 and it read 581. That round cites
 // #573, #577 and #581, and each number sits above the inherited mark of 543.
 //
@@ -115,7 +120,17 @@ import (
 // **The merge of `dev` into epic #43 met the marks 583 and 602, and it keeps 602.** The
 // Epic 6 round allocated #602 for itself, so its reading is the later one. **The mark is a
 // lower bound, so 602 covers every citation that 583 covers.**
-const issueCitationHighWaterMark = 602
+//
+// **The Epic 14 round merged `dev` into `epic/83-documentation-site` and it met two marks,
+// 595 and 583.** The round re-measured the mark on 2026-08-14 and it read 604. The round
+// cites #603, which is the issue that carries the merge and the refresh, and 603 sits above
+// both inherited marks. **A mark is a lower bound, so 604 covers every citation that 595
+// covers and every citation that 583 covers.**
+//
+// **The second merge of `dev` into `epic/83-documentation-site` met the marks 604 and 602,
+// and it keeps 604.** Epic 6 landed on `dev` after the first merge, and it carried the
+// reading of 602. **A mark is a lower bound, so 604 covers every citation that 602 covers.**
+const issueCitationHighWaterMark = 604
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
@@ -139,11 +154,21 @@ var issueCitationExtension = map[string]bool{
 // reads the tree of another issue, and it then reports a defect that this branch does not
 // hold. `testdata/foxio` holds the fetched FoxIO corpus. That corpus is untracked and
 // FoxIO-licensed, so no rule of this project binds it.
+//
+// `site` and `.venv` each hold an artifact that `make docs` produces, and `.gitignore:47`
+// and `.gitignore:48` name them. **`make docs` became a real target on 2026-08-14**, so a
+// developer who builds the site and then runs `go test` gave this guard a second copy of
+// every page. It then reported one defect twice, and it named a generated HTML file that no
+// repair can reach. #87 measured it: a run after `make docs` reported
+// `site/reference/index.html:1511` and `site/search/search_index.json:1` beside the page
+// that holds the citation.
 var issueCitationSkipDirectory = map[string]bool{
 	".git":              true,
 	"bin":               true,
 	"vendor":            true,
 	"node_modules":      true,
+	"site":              true,
+	".venv":             true,
 	".claude/worktrees": true,
 	"testdata/foxio":    true,
 }
