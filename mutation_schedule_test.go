@@ -279,6 +279,104 @@ func TestTheMutationWorkflowDedupesTheIssueByTitle(t *testing.T) {
 	}
 }
 
+// TestEveryPipedStepOfTheMutationWorkflowSetsPipefail holds a silent failure of the
+// scheduled run.
+//
+// **The default shell of a `run` step is `bash -e {0}`, and a pipeline then carries the
+// status of its last command.** `tee` exits 0 whatever it reads, so a failed comparison
+// would report success and the next step would read an empty output. The run would then
+// state that the sweep found nothing.
+//
+// The case reads each script that holds a pipe into `tee`, and it needs the option in the
+// same script.
+func TestEveryPipedStepOfTheMutationWorkflowSetsPipefail(t *testing.T) {
+	scripts := mutationRunScripts(workflowJobCommands(t, mutationWorkflow, "sweep"))
+	if len(scripts) == 0 {
+		t.Fatalf("%s holds no run script, so this case checked nothing", mutationWorkflow)
+	}
+
+	piped := 0
+	for _, script := range scripts {
+		if !strings.Contains(script, "| tee ") {
+			continue
+		}
+		piped++
+
+		if !strings.Contains(script, "set -o pipefail") {
+			t.Errorf("a run script of %s pipes into tee and it sets no pipefail, so a failed command reports success:\n%s", mutationWorkflow, script)
+		}
+	}
+
+	if piped == 0 {
+		t.Errorf("%s holds no piped step, and the sweep reads its two answers through a pipe", mutationWorkflow)
+	}
+}
+
+// mutationRunScripts returns each `run: |` script of one job.
+//
+// The reader takes the job without its comment lines, so a quotation in the prose reaches
+// no case.
+func mutationRunScripts(job string) []string {
+	scripts := []string{}
+	current := []string{}
+	inRun := false
+
+	for _, line := range strings.Split(job, "\n") {
+		if strings.TrimSpace(line) == "run: |" {
+			if inRun {
+				scripts = append(scripts, strings.Join(current, "\n"))
+			}
+			inRun = true
+			current = nil
+
+			continue
+		}
+
+		// A key at the step level ends the script block.
+		if inRun && !strings.HasPrefix(line, "          ") {
+			scripts = append(scripts, strings.Join(current, "\n"))
+			inRun = false
+			current = nil
+
+			continue
+		}
+
+		if inRun {
+			current = append(current, line)
+		}
+	}
+
+	if inRun {
+		scripts = append(scripts, strings.Join(current, "\n"))
+	}
+
+	return scripts
+}
+
+// TestTheRunScriptReaderSeparatesTwoScripts proves that mutationRunScripts can fail.
+//
+// A reader that returned the whole job as one script would find `set -o pipefail` of the
+// first step and report the second step clean.
+func TestTheRunScriptReaderSeparatesTwoScripts(t *testing.T) {
+	job := "    steps:\n" +
+		"      - name: first\n" +
+		"        run: |\n" +
+		"          set -o pipefail\n" +
+		"          a | tee x\n" +
+		"      - name: second\n" +
+		"        run: |\n" +
+		"          b | tee y\n"
+
+	scripts := mutationRunScripts(job)
+	if len(scripts) != 2 {
+		t.Fatalf("the reader found %d script(s) of a job that holds two: %q", len(scripts), scripts)
+	}
+
+	if strings.Contains(scripts[1], "pipefail") {
+		t.Errorf("the reader carried the option of the first script into the second: %q", scripts[1])
+	}
+}
+
 // mutationReportDirectoryDefect returns the defect of a workflow that writes its report
 // beside the tracked baseline, or the empty string.
 //
@@ -307,9 +405,9 @@ func mutationReportDirectoryDefect(text string) string {
 // mutationReportDirectoryDefect can fail.
 func TestTheReportDirectoryReaderReportsADefeatedWorkflow(t *testing.T) {
 	cases := map[string]string{
-		"          make mutate PKG=\"$SWEPT_PATH\"\n":                                        "the sweep writes its report to the tracked directory, so the next run compares the tree against itself",
+		"          make mutate PKG=\"$SWEPT_PATH\"\n":                                           "the sweep writes its report to the tracked directory, so the next run compares the tree against itself",
 		"          make mutate PKG=\"$SWEPT_PATH\" MUTATION_REPORT_DIR=docs/mutation_reports\n": "the sweep names the tracked directory, so the next run compares the tree against itself",
-		"          echo nothing\n": "the workflow runs no sweep",
+		"          echo nothing\n":                                                              "the workflow runs no sweep",
 	}
 
 	for text, want := range cases {

@@ -98,9 +98,15 @@ jobs:
       #
       # The command prints `key=value` lines, so this step appends them to the step output
       # without a parse.
+      #
+      # **`set -o pipefail` is load-bearing.** The default shell of a `run` step is
+      # `bash -e {0}`, and a pipeline without this option carries the status of its last
+      # command. `tee` exits 0 whatever it reads, so a failed comparison would report
+      # success and the next step would read an empty output.
       - name: Name the baseline report
         id: baseline
         run: |
+          set -o pipefail
           go run ./internal/mutationdiff -dir docs/mutation_reports | tee -a "$GITHUB_OUTPUT"
 
       # The sweep writes its report outside `docs/mutation_reports/`, because that directory
@@ -122,7 +128,9 @@ jobs:
           make mutate PKG="$SWEPT_PATH" MUTATION_REPORT_DIR="$scratch"
 
           # The sweep writes exactly one report, and this line fails when it wrote none.
-          current=$(find "$scratch" -name '*.md' -type f | sort | head -1)
+          # The sort takes the last name, because `reportName` of `internal/mutationreport`
+          # leads a name with the UTC calendar day.
+          current=$(find "$scratch" -name '*.md' -type f | sort | tail -1)
           if [ -z "$current" ]; then
             echo "the sweep wrote no report, so this run compares nothing" >&2
             exit 1
@@ -141,6 +149,8 @@ jobs:
           BASELINE: ${{ steps.baseline.outputs.baseline }}
           CURRENT: ${{ steps.sweep.outputs.current }}
         run: |
+          # The comment of the baseline step states why this option is load-bearing.
+          set -o pipefail
           go run ./internal/mutationdiff \
             -baseline "$BASELINE" \
             -current "$CURRENT" \
