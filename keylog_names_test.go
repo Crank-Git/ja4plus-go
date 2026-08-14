@@ -15,9 +15,9 @@ import (
 
 // These two tests hold the FR-gaps-17 amendment of issue #171.
 //
-// The requirement held one sentence that reads as two facts: the library exports a key log
-// surface, and no exported function of it accepts a KeyLog. A reader who reads the first
-// fact alone expects a fingerprint that a secret decrypts, and the library produces none.
+// The requirement held one sentence that states two facts. types.go holds eight exported
+// names for a key log, and no exported function accepts a KeyLog. A reader who reads the
+// first fact alone expects a fingerprint that a secret decrypts. The library produces none.
 //
 // Issue #492 needs a key log that a fingerprinter reads, and Epic 10 (#100) freezes the
 // exported API. So the second fact is a boundary the maintainer moves, and never a defect.
@@ -26,31 +26,31 @@ import (
 // conformanceGapsPath names the page that FR-gaps-17 lives on.
 const conformanceGapsPath = "docs/specs/features/05-conformance-gaps.md"
 
-// keyLogSurfaceNameCount states the count of exported names that FR-gaps-17 through
+// keyLogNameCount states the count of exported names that FR-gaps-17 through
 // FR-gaps-17b name. The page states the same count in prose, so a change to one of them
 // without the other fails this test.
-const keyLogSurfaceNameCount = 8
+const keyLogNameCount = 8
 
-// keyLogSurfaceCountSentence quotes the prose of the page that states the count above.
+// keyLogCountSentence quotes the prose of the page that states the count above.
 // A stale count is the defect this project measures most, so a test holds the sentence.
-const keyLogSurfaceCountSentence = "holds each of the eight exported names"
+const keyLogCountSentence = "holds each of the eight exported names"
 
-// TestFRGaps17NamesEveryExportedNameOfTheKeyLogSurface holds the first fact of the
-// amendment: the requirement names an exported name of this package, and never a name the
-// package does not hold.
-func TestFRGaps17NamesEveryExportedNameOfTheKeyLogSurface(t *testing.T) {
-	named := keyLogSurfaceNamesOfTheRequirement(t)
-	if len(named) != keyLogSurfaceNameCount {
+// TestFRGaps17NamesEveryExportedKeyLogName holds the first fact of the amendment.
+// The requirement names an exported name of this package, and never a name the package
+// does not hold.
+func TestFRGaps17NamesEveryExportedKeyLogName(t *testing.T) {
+	named := keyLogNamesOfTheRequirement(t)
+	if len(named) != keyLogNameCount {
 		t.Fatalf("FR-gaps-17 through FR-gaps-17b name %d exported names, want %d: %v",
-			len(named), keyLogSurfaceNameCount, named)
+			len(named), keyLogNameCount, named)
 	}
 
 	// The page wraps a sentence over more than one line, so the reader joins the lines
 	// before it looks for the count.
 	flat := strings.Join(strings.Fields(conformanceGapsPage(t)), " ")
-	if !strings.Contains(flat, keyLogSurfaceCountSentence) {
+	if !strings.Contains(flat, keyLogCountSentence) {
 		t.Errorf("%s states no sentence that holds %q, so the prose count is stale",
-			conformanceGapsPath, keyLogSurfaceCountSentence)
+			conformanceGapsPath, keyLogCountSentence)
 	}
 
 	held := exportedNamesOfThePackage(t)
@@ -98,9 +98,9 @@ func TestNoExportedFunctionAcceptsAKeyLog(t *testing.T) {
 	}
 }
 
-// keyLogSurfaceNamesOfTheRequirement returns each name that a code span of FR-gaps-17
+// keyLogNamesOfTheRequirement returns each name that a code span of FR-gaps-17
 // through FR-gaps-17b holds, sorted and without a repeat.
-func keyLogSurfaceNamesOfTheRequirement(t *testing.T) []string {
+func keyLogNamesOfTheRequirement(t *testing.T) []string {
 	t.Helper()
 
 	page := conformanceGapsPage(t)
