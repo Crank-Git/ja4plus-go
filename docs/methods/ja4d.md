@@ -49,26 +49,31 @@ message, and it aggregates nothing**, which is the rule R24 records for the Zeek
 
 **The `Type` field holds `ja4d`.**
 
-## Two questions this page carries
+## One question this page carries
 
 **The FoxIO implementations split on the skip set of part b.** R25 records it. The Zeek
 package skips options 50, 53, 81 and 255, which matches the image. The Wireshark dissector
 skips option 0 in place of option 81, and it writes option 255. **This library follows the
 Zeek package and the image**, and `dhcpExcludedOptions` in `ja4d.go` holds the set.
 
-**Field 4 of part a needs a ruling, and the maintainer holds it.** Issue #371 asks whether
-the field reads the domain name inside option 81, or the presence of option 81. **Two stop
-conditions fire together**: the implementations differ, and the image differs from one of
-them. R16 records the image label:
+## The ruling on field 4 of part a
+
+**The maintainer ruled issue #371 on 2026-08-14.** **The domain name inside option 81
+decides the field, and the presence of the option decides nothing.** R16 records the image
+label that the ruling reads:
 
 > Has a Domain name (d) or No domain (n)
 
-**This library sets the field on the presence of option 81 today.** `ProcessPacket` in
-`ja4d.go` holds that behavior. **No capture of the FoxIO corpus carries an option 81 at
-all**, and the program of issue #371 reported
-`captures=37 dhcpv4_messages=4 option81_occurrences=0 option81_no_name=0`. **So both
-candidate answers move no fingerprint value today, and the answer still binds a live
-capture.**
+`wireshark/source/packet-ja4.c:1521` tests the field `dhcp.fqdn.name`, and
+`zeek/ja4d/main.zeek:73` tests the presence. **The ruling declines the Zeek answer, because
+an image outranks an implementation.** `ProcessPacket` in `ja4d.go` writes `d` when option
+81 holds more than 3 bytes, and it writes `n` otherwise.
+
+**No capture of the FoxIO corpus carries an option 81 at all**, and the program of issue
+#371 reported `captures=37 dhcpv4_messages=4 option81_occurrences=0 option81_no_name=0`.
+**So the ruling moves no fingerprint value of the corpus, and it binds a live capture.**
+
+**Issue #371 is the reversal path**, and the port half is `Crank-Git/ja4plus#615`.
 
 ## One defect of the reference that this library declines
 

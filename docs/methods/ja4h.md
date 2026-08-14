@@ -76,7 +76,7 @@ ends.
 
 **The `Type` field holds `ja4h`.**
 
-## Three questions that the FoxIO implementations split on
+## Two questions that the FoxIO implementations split on
 
 **The method code of an unusual method.** R3 and R4 record four different answers. The
 Wireshark dissector holds a table of 43 methods, the Zeek package holds a table of nine,
@@ -84,21 +84,33 @@ and the reference Python lowercases the first two characters of any method.
 
 **The non-alphabetic Accept-Language character.** R17 records two answers.
 
-**Part b of a request that carries no header.** **The maintainer holds this question, and
-issue #527 records it.** The four FoxIO implementations split two against two, read on
-2026-08-14 at the pinned commit. The reference Python and the Wireshark dissector each
-hash the empty string and write `e3b0c44298fc`. The reference Rust and the Zeek package
-each write the zero sentinel `000000000000`.
+## Part b of a request that carries no header
 
-**This library writes the zero sentinel today.** `computeJA4HFromRequest` in `ja4h.go`
-calls `parser.TruncatedHash`, which returns `000000000000` for the empty string.
-**The question stays open until the maintainer rules it**, and
-`docs/audit/ja4h-deviation-cluster.md` holds each reading with its evidence.
+**The maintainer ruled this split on 2026-08-14.** **Part b hashes an empty header list to
+`e3b0c44298fc`, and it writes no zero sentinel.**
+
+The four FoxIO implementations split two against two, read at the pinned commit. The
+reference Python and the Wireshark dissector each hash the empty string and write
+`e3b0c44298fc`. The reference Rust and the Zeek package each write the zero sentinel
+`000000000000`. R18 of the JA4H transcription names no sentinel for part b, and R27
+confines the sentinel to part c and to part d.
+
+`computeJA4HFromRequest` in `ja4h.go` calls `parser.TruncatedHashNoSentinel` for part b,
+and it calls `parser.TruncatedHash` for part c and for part d. **So one request can carry
+`e3b0c44298fc` in part b and `000000000000` in part c.**
+
+**Issue #527 is the reversal path**, and the port half is `Crank-Git/ja4plus#612`.
 
 ## Where the register records a difference
 
-`testdata/deviations.json` holds 36 entries under `JA4H.1`, 103 under `JA4H_r.1` and 109
+`testdata/deviations.json` holds 36 entries under `JA4H.1`, 104 under `JA4H_r.1` and 110
 under `JA4H_ro.1`, measured on this branch. Two rulings cover them.
+
+| Key | Ruling `#441` | Ruling `#285` |
+|---|---|---|
+| `JA4H.1` | 36 | 0 |
+| `JA4H_r.1` | 36 | 68 |
+| `JA4H_ro.1` | 36 | 74 |
 
 **Ruling `#441` records a capability decline.**
 

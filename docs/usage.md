@@ -213,8 +213,18 @@ return the value, and the `cert` subcommand calls them.
 
 `LookupFingerprint` returns the record that the mapping table holds for a fingerprint,
 and it returns `nil` when the table holds none. **It performs no network input and no
-network output.** `LookupFingerprintRemote` is the function that reaches the network, and
-its name says so.
+network output.**
+
+**The function that reaches the network lives in a package of its own.**
+`ja4db.LookupFingerprintRemote`, at `github.com/Crank-Git/ja4plus-go/ja4db`, asks
+`ja4db.com` for a fingerprint the local table does not hold. **The `ja4plus` package
+imports no HTTP client**, so a caller who imports it alone links none. The maintainer ruled
+that boundary on 2026-08-14.
+
+**A caller of `ja4db.LookupFingerprintRemote` passes a context, a `*ja4db.RemoteLookupConfig`
+and the fingerprint.** The config names the endpoint and the HTTP client. **The function
+returns a `*ja4plus.LookupResult`**, so one result type serves the local table and the
+remote endpoint. The `README.md` of the repository holds the call.
 
 `GetDatabaseInfo` reports the active source, the path and the entry count. The `db info`
 subcommand prints that record.

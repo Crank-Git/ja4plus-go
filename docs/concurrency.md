@@ -240,6 +240,25 @@ Two fingerprinters carry a bound of their own, and neither bound replaces the ca
 `Reset` drops every connection at once. It suits the end of a capture file, and it does
 not suit a monitor that must keep the connections that are still live.
 
+## The database lookup holds one snapshot
+
+**The mapping table is process-wide state, and one `atomic.Pointer` publishes it.** Every
+goroutine of a program shares it, and no fingerprinter reads it. So the shard rule above
+still holds: no package-level variable reaches the per-packet path.
+
+**A reader loads the pointer and it reads one immutable snapshot.** `activeTable` in
+`lookup.go` loads that pointer, and it returns the snapshot when the cache file is
+unchanged. **That is the steady-state read, and it takes no lock.**
+
+**A read that finds a changed cache file calls `rebuildTable`, and `rebuildTable` takes a
+mutex.** So a reader takes the mutex on the path that rebuilds. **One goroutine parses the
+file, and the others wait for it.** The read path is lock-free in the steady state, and it
+is not lock-free at every call.
+
+`LookupFingerprint` performs no network input and no network output. **The function that
+reaches the network lives in the `ja4db` package**, and the
+[usage guide](usage.md#the-database-lookup) names it.
+
 ## The tests that hold this contract
 
 `go test -race ./...` runs the race tests of the library. `race_test.go` and

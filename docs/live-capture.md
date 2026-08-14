@@ -7,7 +7,10 @@
     holds no capture package. This page states what exists today, and it states what the
     design plans.
 
-    Measured on 2026-08-14 against the branch that this site is built from.
+    Measured on 2026-08-14 against the branch that this site is built from. `ls internal/`
+    reports `dbcache/`, `keylog/` and `parser/`, and it reports no `capture/`. **Epic 13
+    builds the capture package on a branch of its own, and that branch has not reached this
+    one.**
 
 ## What exists today
 
@@ -74,18 +77,30 @@ cgo.
 So the two backends answer one question each. The pure-Go backend keeps the default build
 free of cgo. The libpcap backend gives a macOS user a way to capture at all.
 
-## One open question about the capture filter
+## The capture filter needs the `libpcap` build tag
 
-**The design and a later reading disagree about which backend applies a capture filter.**
-This page records the disagreement, and it states no answer.
+**The maintainer ruled the capture filter on 2026-08-14, under issue #564.** **The pure-Go
+backend applies no capture filter.** A capture filter needs the `libpcap` build tag, and
+`--bpf` therefore names that tag.
 
-The requirement in the specification of this branch states that the pure-Go backend
-applies the capture filter as a BPF program. A reading dated 2026-08-14 states the
-opposite, and it states that a capture filter needs the `libpcap` build tag.
+The ruling reads three measurements, taken at the versions `go.mod` pins.
 
-**Only the maintainer settles that question.** No page of this site states filter behavior
-until it is settled. A wrong sentence here tells a user that a filter runs when none
-does.
+| What | What it does |
+|---|---|
+| `pcapgo.EthernetHandle.SetBPF` | It attaches an instruction slice, and it parses no expression. |
+| `golang.org/x/net/bpf` | It assembles an instruction slice, and it holds no parser. |
+| `pcap.CompileBPFFilter` | It compiles an expression, and it calls `C.pcap_compile`. |
+
+**So the compilation of a filter expression needs cgo, and the default build holds no
+cgo.** The maintainer declined two other answers. A pure-Go compiler adds a third module at
+the API freeze, and a compiler written here gives the two backends two grammars. **One
+filter string that selects two packet sets is the worst outcome for a fingerprint**, which
+exists to be compared.
+
+**The ruling states what a live-capture build must do, and this branch holds no such
+build.** It states that a build without the `libpcap` tag refuses `--bpf` and names the
+tag. **No `--bpf` option reaches the program of this branch**, so no user meets that
+refusal today. **Issue #564 is the reversal path.**
 
 ## What this page does not describe
 

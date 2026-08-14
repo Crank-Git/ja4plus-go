@@ -57,14 +57,31 @@ Two rules follow from that design, and the code holds both.
 A monitor runs for days, so state with no removal path is a leak. Every state map reaches
 `CleanupConnection` and `Reset`.
 
-Two fingerprinters carry a bound as well, because a caller can forget the call.
+**Seven fingerprinters carry a bound as well, because a caller can forget the call.** Every
+packet is untrusted input, so a sender opens one entry at the cost of one packet. **An
+unbounded map is therefore a memory-exhaustion path**, and batch #432 closed the last nine
+of them on 2026-08-14.
 
 | Fingerprinter | Entry bound | Idle limit | How it evicts |
 |---|---|---|---|
-| JA4SSH | 10000 connections | 600 seconds | The least recently active connection leaves when the table is full. |
+| JA4 | 1000 QUIC fragment connections | 30 seconds | The least recently touched connection leaves when the table is full. |
+| JA4L | 10000 connections | 600 seconds | The least recently touched connection leaves when the table is full. |
+| JA4S | 10000 connections | 600 seconds | The least recently touched connection leaves when the table is full. |
+| JA4SSH | 10000 connections, and 1000 handshakes | 600 seconds | The least recently active connection leaves when the table is full. |
 | JA4H | 100 streams | 600 seconds | The stream that received no segment longest leaves at the insert that reaches the bound. |
+| JA4TS | 1000 connections | 120 seconds | The oldest connection leaves when the table is full. |
+| JA4X | 50 streams, and 1000 certificates | A sweep every 30 seconds | The oldest stream leaves when the table is full, and the sweep drops the certificate record. |
 
-**JA4SSH sweeps for aged connections every 1000 packets**, and not for each packet.
+**The TCP stream reassembler bounds the stored bytes of one stream at 1 MB.** JA4H and JA4X
+each hold one reassembler, and each one refuses a further segment of a stream that reaches
+that bound.
+
+**JA4T, JA4D and JA4D6 hold no per-connection state**, because each one reads a single
+packet. None of the three needs a bound.
+
+**JA4SSH sweeps for aged connections every 1000 packets**, and not for each packet. **The
+eviction clock reads the capture timestamp**, and it does not read the wall clock. So a
+capture file replays the same eviction that the live traffic produced.
 
 ## The packet decoder
 
