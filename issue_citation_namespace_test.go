@@ -52,7 +52,11 @@ import (
 // the round pays it: the round cites its own issue number, and that number sits above the mark
 // the round inherits. Round 36 of the `## Changelog` of `docs/specs/spec.md` cites `#349`, so a
 // round that cites a pull request pays the cost too.
-const issueCitationHighWaterMark = 522
+// The batch #516 gate re-measured the mark on 2026-08-14 and it read 530. The gate note of
+// round 49 cites `#525`, which is the issue that carries the anaphoric citation ruling, and
+// that number sits above the inherited mark of 522. **The guard reported it and CI failed on
+// it**, which is the guard doing its work rather than a defect of the round.
+const issueCitationHighWaterMark = 530
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
