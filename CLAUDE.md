@@ -96,7 +96,7 @@ rule.
 | `make lint-cache-check` | Prove the stale linter cache defect of #257, and prove the repair. |
 | `make corpus` | Fetch the FoxIO corpus at the pinned commit. |
 | `make conformance` | Run the conformance suite against the corpus. |
-| `make fuzz` | Run each fuzz target for 30 seconds. |
+| `make fuzz` | Run each fuzz target for 30 seconds. **The tree holds 15 targets**, measured on 2026-08-14. |
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
@@ -105,6 +105,16 @@ rule.
 | `make docs` | **Not built yet.** #84 configures MkDocs and adds the target. It builds the documentation site with `mkdocs build --strict`. |
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
+
+**`make fuzz` reads the target list from the tree**, with `go test -list '^Fuzz'` over
+`go list ./...`. So a new target joins the run without an edit to the `Makefile`. Epic 6
+added 13 targets on 2026-08-14, and the recipe found every one of them. **The two targets
+that the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` and
+`FuzzTCPOptionEntriesReadsAnyOptionRegion`.** Re-measure the count with
+`grep -rn --include='*_test.go' '^func Fuzz' .` rather than reading it from a document.
+
+**One run of `make fuzz` takes about 8 minutes**, because it fuzzes 15 targets in turn for
+30 seconds each.
 
 **The `Makefile` defines the first ten rows of this table, and none of the last three.**
 An absent target is work a later issue does, and never a broken target. **`make docs`
