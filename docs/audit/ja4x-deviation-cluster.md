@@ -8,19 +8,19 @@ names one cause for each one. It states the count each cause closes, measured ag
 corpus at the pin of `testdata/foxio.pin`.
 
 **Every JA4X count of this page comes from one run of `go test -tags conformance -count=1
--v ./...` in one worktree, on 2026-08-13, against the corpus at
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.** That run read the batch #478 branch before
-#467 sub-merged, and it reports 1680 matches, 475 deviations, 450 accepted deviations and
-470 register keys. **No commit of #458 holds a Go file, and no commit of #458 changes
+-v ./...` in one worktree, on 2026-08-13.** That run reads the corpus at
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`. **It read the batch #478 branch before #467
+sub-merged.** It reports 1680 matches, 475 deviations, 450 accepted deviations and 470
+register keys. **No commit of #458 holds a Go file, and no commit of #458 changes
 `testdata/deviations.json`.**
 
 **#467 then added 108 register entries, and batch #478 re-measured the four whole-run
 counts at the branch head.** A second run of `make conformance` on 2026-08-13 reports 1680
 matches, 367 deviations, 558 accepted deviations and 578 register keys. **Every JA4X count
 of this page holds at the branch head**, because each of the 108 entries names a JA4H key.
-The second run reports 50 JA4X and JA4X_r deviations that the register does not hold, in
-the same six captures and in the same 34 and 16 split. **So a whole-run figure of this page
-names the first run, and a JA4X figure names both runs.**
+The second run reports 50 JA4X and JA4X_r deviations that the register does not hold. It
+reports the same six captures, and the same 34 and 16 split. **So a whole-run figure of this
+page names the first run, and a JA4X figure names both runs.**
 
 **`make conformance` exits 2, and Epic #441 owns that exit.** Step 4 of the
 `## A change is done when` list of `CLAUDE.md` is unmeetable today. This page reports no
@@ -399,9 +399,9 @@ belongs to the per-stream set. The per-stream vector set publishes JA4X alone, b
 `testdata/foxio/python/https-connect.pcap.json` holds one stream entry, and that entry names
 `JA4H` and `JA4H_ro` and no JA4X key at all. **So the reference publishes no JA4X value for
 that capture, and the library publishes two.** **That is a disagreement about coverage, and
-it is no disagreement about a value**, which is the reading that
-`## No cause reaches a maintainer ruling` below states for
-`chrome-cloudflare-quic-with-secrets.pcapng`. **Batch #478 measured the 45 and the 2**, and
+it is no disagreement about a value.** `## No cause reaches a maintainer ruling` below
+states the same reading for `chrome-cloudflare-quic-with-secrets.pcapng`. **Batch #478
+measured the 45 and the 2**, and
 the sentence this round replaced read `Every one of the 47 unaccepted keys names JA4X_r`.
 
 **The 12 accepted keys hold the 12 JA4X register entries, and each one names
