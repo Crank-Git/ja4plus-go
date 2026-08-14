@@ -190,12 +190,19 @@ holds the port's copy of the per-packet set, and three test files read that dire
 repository's copy, and it holds no JA4L key. **The port holds no per-packet file for
 `tls-handshake.pcapng`.**
 
-**The port's register holds five JA4L entries across three captures, and every one of them
-is per-stream.** `tests/foxio_deviations.json` at `v1.1.0` holds
-`CVE-2018-6794.pcap/JA4L-C`, `CVE-2018-6794.pcap/JA4L-S`, `https-connect.pcap/JA4L-C`,
+**The port's register holds 21 JA4L entries across six captures, and five of them record the
+absence of a key.** `tests/foxio_deviations.json` at `v1.1.0` holds the 21, and the six
+captures are `CVE-2018-6794.pcap`, `chrome-cloudflare-quic-with-secrets.pcapng`,
+`https-connect.pcap`, `ssh2.pcapng`, `tls-handshake.pcapng` and `tls3.pcapng`.
+
+**The five that record the absence sit on three captures**, and each one is per-stream. They
+are `CVE-2018-6794.pcap/JA4L-C`, `CVE-2018-6794.pcap/JA4L-S`, `https-connect.pcap/JA4L-C`,
 `https-connect.pcap/JA4L-S` and `tls-handshake.pcapng/JA4L-S`. **The port's issue #272
-decided the decline on 2026-08-08.** Each entry states one cause, and the cause quotes the
-per-stream reason of Answer 2 above.
+decided that decline on 2026-08-08.** Each of the five quotes the per-stream reason of
+Answer 2 above.
+
+**The other 16 entries state a different cause, and this page reads none of them.** No one
+of the 16 records the absence of a key.
 
 **So the port answers the per-stream question, and it asks no per-packet question.** This
 repository compares a per-packet set that the port does not, so this reading has no other
