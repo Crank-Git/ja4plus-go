@@ -225,12 +225,18 @@ func (l *publishedModuleListing) names() []string {
 
 // requirePublishedModule returns the listing, and it fails the case when the download
 // failed.
+//
+// It also fails the case on an empty listing. An absence case reads the listing for a name
+// it must not find, so an empty listing would pass that case for the wrong reason.
 func requirePublishedModule(t *testing.T) *publishedModuleListing {
 	t.Helper()
 
 	listing, err := readPublishedModule()
 	if err != nil {
 		t.Fatalf("read the published module %s@%s: %v", publishedModulePath, publishedModuleVersion, err)
+	}
+	if len(listing.entries) == 0 {
+		t.Fatalf("the published module %s@%s holds no file", publishedModulePath, publishedModuleVersion)
 	}
 
 	return listing
@@ -243,10 +249,6 @@ func requirePublishedModule(t *testing.T) *publishedModuleListing {
 // the working tree holds.
 func TestThePublishedModuleListsItsFiles(t *testing.T) {
 	listing := requirePublishedModule(t)
-
-	if len(listing.entries) == 0 {
-		t.Fatalf("the published module %s@%s holds no file", publishedModulePath, publishedModuleVersion)
-	}
 
 	t.Logf("the published module %s@%s holds %d file(s), %d byte(s) compressed, %d byte(s) uncompressed, %s",
 		publishedModulePath, listing.version, len(listing.entries), listing.zipSize, listing.uncompressedSize, listing.sum)
