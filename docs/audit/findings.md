@@ -103,11 +103,13 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `internal/parser/ssh_tracker.go` | #200 |
 | `cmd/ja4plus/types.go` | #61 |
 | `internal/parser/x509_identifiers.go` | #490 |
+| `internal/parser/icmp_quoted.go` | #494 |
 <!-- added-files:end -->
 
-The table holds three rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
-audit of Epic 2, issue #61 added `cmd/ja4plus/types.go` after it, and issue #490 added
-`internal/parser/x509_identifiers.go` after it, so no audit reads any of the three files.
+The table holds four rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
+audit of Epic 2, issue #61 added `cmd/ja4plus/types.go` after it, issue #490 added
+`internal/parser/x509_identifiers.go` after it, and issue #494 added
+`internal/parser/icmp_quoted.go` after it, so no audit reads any of the four files.
 
 ## The record
 

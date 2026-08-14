@@ -23,7 +23,7 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1722 matches, 310
+reports 1750 matches, 281
 deviations, 574 accepted deviations and 594 register keys. The run also reports 184 unaccepted
 uncovered values and 20 accepted uncovered values, and #361 states what an uncovered value is.
 An accepted deviation and an accepted uncovered value each name one register entry, so 574 and
@@ -440,17 +440,23 @@ that the interface declares.
 
 ### Fixed
 
-- **The library now publishes the stored four-part JA4TS value on a reset of a connection
-  that holds one SYN-ACK, and it produced no value before.** The maintainer ruled split T2 on
-  2026-08-14, at #484, and #495 built the answer. `resetResults` of `ja4ts.go` guards the
-  delay list and the reset letter alone, which is the shape
-  `wireshark/source/packet-ja4.c:684` holds. **A caller of `v0.3.0` who upgrades reads one
-  change**: a reset of a connection that the server answered once now reaches a value.
-  **The measured yield is 3 comparisons and not the 6 that the cluster page states.** Three
-  of the six frames are client resets of `https3-301-get.pcap`, which FR-parity-44 declines,
-  and #502 holds that question. The change also opens one deviation on
-  `browsers-x509.pcapng/119/JA4TS.1`, which is a reset that carries ACK, and #503 asks for
-  the register entry. `Crank-Git/ja4plus#609` holds the port half.
+- **The library now reads the TCP header that an ICMP error message quotes, and it read the
+  outer layer list alone before.** The maintainer ruled split T1 on 2026-08-14, at #484, and
+  #494 built it. `QuotedTCPHeader` of `internal/parser/icmp_quoted.go` reads the ICMP payload
+  as an IPv4 packet, and `ProcessPacket` of `ja4t.go` reads that header when the outer layer
+  list holds no TCP layer. **A caller of `v0.3.0` who upgrades reads one change.** A frame
+  that carries an ICMP error message of a TCP SYN now reaches a JA4T value, and it reached
+  none before. `wireshark/source/packet-ja4.c:1261` matches the field abbreviation `tcp.flags`
+  anywhere in the protocol tree, and `wireshark/source/packet-ja4.c:1266` sets `syn = 1` for
+  the flag byte `0x02`. **The change closes 31 deviations, all on `ssh2.pcapng`**, and each
+  one moved from a deviation to a match. **The base of the measurement is `1d632a7`, which
+  merges #489, #490, #506 and #484.** The run reports 1719 matches and 312 deviations before,
+  and 1750 matches and 281 deviations after. **The register holds 594 keys before and 594
+  after**, and no entry closed. **The payload is untrusted input**, so the reader bounds
+  the IP header length, the IP total length, the TCP data offset and the TCP option list
+  before it slices. **The port does not hold this rule**, at
+  `ja4plus/fingerprinters/ja4t.py:153`, so the change opens a parity difference on 31 values
+  that the port's issue Crank-Git/ja4plus#610 carries.
 - **The library now produces the JA4H value at the packet that completes the request, and it
   produced the value at the packet that ends the header block before.** The maintainer ruled
   the body gate on 2026-08-13, at #455. The library holds the value until the payload after
