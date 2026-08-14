@@ -81,8 +81,11 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 	// segment would remove that prefix and move a fingerprint value.
 	//
 	// The condition reads the stored bytes against the bound, and it never adds the length of
-	// the segment this call carries. An empty stream is below the bound, so it admits one
-	// segment of any size. `GetStream` then truncates the run at MaxBytes, as it always has.
+	// the segment this call carries. A stream below the bound admits one segment of any size,
+	// and `GetStream` then truncates the run at MaxBytes as it always has.
+	//
+	// A bound of 0 admits no segment, because an empty stream already reaches it. A bound
+	// below 0 reads the same way, and `storedByteBound` states that rule.
 	if stream.storedBytes >= r.storedByteBound() {
 		return
 	}

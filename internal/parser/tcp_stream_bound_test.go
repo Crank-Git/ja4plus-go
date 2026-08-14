@@ -137,6 +137,50 @@ func TestRemoveStreamReturnsTheByteBoundToOneStream(t *testing.T) {
 	}
 }
 
+// TestAddSegmentStoresNoSegmentWhenTheByteBoundIsZero holds the bound of 0.
+// An empty stream already reaches a bound of 0, so the reassembler stores no segment.
+func TestAddSegmentStoresNoSegmentWhenTheByteBoundIsZero(t *testing.T) {
+	r := NewTCPStreamReassembler(10, 0)
+
+	r.AddSegment("flow1", 0, []byte("hello"))
+
+	if stored := storedBytesOfStream(t, r, "flow1"); stored != 0 {
+		t.Errorf("the stream stores %d bytes, and the bound is 0", stored)
+	}
+
+	if got := r.GetStream("flow1"); got != nil {
+		t.Errorf("GetStream returns %q, and a bound of 0 stores no byte", got)
+	}
+}
+
+// TestGetStreamClampsAByteLimitThatFallsBelowZeroAfterOneStore holds the clamp of
+// `GetStream`, which the closure of F-22-8 added.
+//
+// `TestF22_8_GetStreamReturnsNoByteWhenTheByteLimitIsBelowZero` in `audit_parser_test.go`
+// built a reassembler with a limit below 0 and added one segment. The byte bound now refuses
+// that segment, so `GetStream` returns at its empty-segment exit and it never reaches the
+// slice expression that F-22-8 closed. That test still holds its assertion, and it no longer
+// reads the clamp.
+//
+// This test reaches the clamp with a stored segment. `MaxBytes` is an exported field, so a
+// caller lowers it after the reassembler stores a segment. A `GetStream` that read the
+// negative value would panic at `result[:maxBytes]`.
+func TestGetStreamClampsAByteLimitThatFallsBelowZeroAfterOneStore(t *testing.T) {
+	r := NewTCPStreamReassembler(10, 4096)
+
+	r.AddSegment("flow1", 1, []byte("hello"))
+
+	if stored := storedBytesOfStream(t, r, "flow1"); stored != 5 {
+		t.Fatalf("the stream stores %d bytes, and the segment carries 5", stored)
+	}
+
+	r.MaxBytes = -1
+
+	if got := r.GetStream("flow1"); got != nil {
+		t.Errorf("GetStream returns %q, and a byte limit below 0 holds no byte", got)
+	}
+}
+
 // firstBytes returns the first n bytes, so a failure message names a short prefix.
 func firstBytes(data []byte, n int) []byte {
 	if len(data) < n {
