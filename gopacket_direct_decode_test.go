@@ -26,22 +26,28 @@ import (
 // error and never a panic.
 //
 // This guard holds a property of this repository, and it triggers no panic. A test that
-// triggered the panic would assert third-party behavior that a dependency bump can change,
-// and it would leave the repository free to add the call this guard exists to prevent.
+// triggered the panic would assert third-party behavior, and a dependency bump can change
+// that behavior. Such a test would also leave the repository free to add the call this guard
+// exists to prevent.
 
 // directDecodeMethod names the method that no production line calls.
 //
 // The guard reads the method name, and it reads no receiver type. A receiver reaches the
-// call site through a variable, an interface value or a type alias, so a type rule would
+// call site through a variable, an interface value or a type alias. So a type rule would
 // miss a call that this rule catches. Every `DecodeFromBytes` of `gopacket` decodes
 // untrusted bytes outside the recovery of `gopacket.NewPacket`, so the name is the property.
 const directDecodeMethod = "DecodeFromBytes"
 
-// directDecodeSkipDir names each directory the walk declines. `testdata/foxio/` holds the
-// fetched FoxIO corpus, and no Go file of this module lives below it.
+// directDecodeSkipDir names each directory the walk declines, as a path from the repository
+// root. `testdata/foxio/` holds the fetched FoxIO corpus, and no Go file of this module lives
+// below it.
 //
 // The set names no directory that can hold a production Go file. A skip of such a directory
 // would leave a call site unread, and the guard would report a property it never checked.
+//
+// The rule reads the whole path, and it reads no base name. A base-name rule would skip a
+// later `internal/bin/` and report a property it never checked, because `bin` names a
+// directory at the root today and a base name carries no depth.
 var directDecodeSkipDir = map[string]bool{
 	".git":     true,
 	".claude":  true,
@@ -62,10 +68,10 @@ var directDecodeCitedRange = []string{
 	"layers/tcp.go:534-538",
 }
 
-// directDecodeException records one production file that calls the method, with the reason.
+// directDecodeException records each production file that calls the method, with the reason.
 //
 // The table is empty on 2026-08-14, because no production line of the tree calls the method.
-// An entry states the file, the count of call sites on it, and why the call is safe. A
+// One entry states one file, the count of call sites on it, and why the call is safe. A
 // stale entry fails TestTheDirectDecodeExceptionTableHoldsNoStaleEntry, so an exception
 // cannot outlive the call it excuses.
 var directDecodeException = []struct {
@@ -95,7 +101,7 @@ func directDecodeCallSite(t *testing.T) map[string][]int {
 		path = filepath.ToSlash(path)
 
 		if entry.IsDir() {
-			if directDecodeSkipDir[entry.Name()] {
+			if directDecodeSkipDir[path] {
 				return fs.SkipDir
 			}
 

@@ -70,8 +70,8 @@ Both readings report the same runtime error.
 ## The library crashes on no packet today
 
 **No production line of this repository calls `DecodeFromBytes`**, measured on 2026-08-14.
-Every fingerprinter reads a packet that `gopacket.NewPacket` decoded, and `cmd/ja4plus`
-builds each packet through that call.
+Every fingerprinter takes a `gopacket.Packet` that the caller supplies, and
+`cmd/ja4plus/main.go` holds the one call of `gopacket.NewPacket` in this repository.
 
 **The recovery of `gopacket.NewPacket` covers no direct call.** So a later production line
 that calls the method on untrusted bytes adds a crash path that no recovery reaches.
@@ -86,9 +86,9 @@ that calls the method on untrusted bytes adds a crash path that no recovery reac
 comment that names the method reaches no result.
 
 - **The guard triggers no panic.** A test that triggered the panic would assert third-party
-  behavior that a dependency bump can change, and it would leave the repository free to add
-  the call the guard exists to prevent.
-- **An exception carries a reason.** `directDecodeException` records one production file, the
+  behavior, and a dependency bump can change that behavior. Such a test would also leave the
+  repository free to add the call the guard exists to prevent.
+- **An exception carries a reason.** One entry of `directDecodeException` states one file, the
   count of call sites on it, and why the call is safe. The table is empty on 2026-08-14.
 - **A stale exception fails.**
   `TestTheDirectDecodeExceptionTableHoldsNoStaleEntry` fails on an entry that excuses a call
