@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"sync/atomic"
 	"syscall"
@@ -64,12 +65,21 @@ type captureOpener func(capture.Options) (capture.Handle, error)
 // line. FR-capture-37 states that order.
 // It returns the error of the capture backend when the host opens no handle.
 func runWatch(args []string) error {
+	return runWatchWithOpener(args, capture.Open)
+}
+
+// runWatchWithOpener reads packets from the interface that the opener opens.
+//
+// It parses every option before it calls the opener, and FR-capture-37 states that order.
+// A test passes an opener that counts its calls, because the order of two steps is a fact
+// that no message text states.
+func runWatchWithOpener(args []string, open captureOpener) error {
 	options, err := parseWatchArgs(args)
 	if err != nil {
 		return err
 	}
 
-	return watchInterface(options, capture.Open)
+	return watchInterface(options, open)
 }
 
 // parseWatchArgs returns the options that the arguments name.
@@ -181,9 +191,14 @@ func watchCaptureOptions(options watchOptions) capture.Options {
 func watchInterface(options watchOptions, open captureOpener) error {
 	handle, err := open(watchCaptureOptions(options))
 	if err != nil {
-		// Seam for #82. The privilege failure of FR-capture-35 and FR-capture-36 reads this
-		// error and names the capability the host needs. The message of the backend reaches
-		// the operator unchanged until then.
+		// FR-capture-35 names the capability that the host needs, and FR-capture-36 names
+		// `CAP_NET_RAW` on Linux. `capture.PermissionDenied` reads the error chain of the
+		// backend, so this branch reads no message text.
+		if capture.PermissionDenied(err) {
+			return fmt.Errorf("%s: %w", watchPermissionMessage(runtime.GOOS, options.iface), err)
+		}
+
+		// The message of the backend reaches the operator unchanged for every other failure.
 		return err
 	}
 
@@ -191,6 +206,38 @@ func watchInterface(options watchOptions, open captureOpener) error {
 	defer func() { _ = handle.Close() }()
 
 	return runMonitor(handle, options)
+}
+
+// watchPermissionMessage returns the message that the command writes when the host refuses
+// the capture handle. FR-capture-35 states the message, and it names the capability that
+// the host needs.
+//
+// The platforms get three messages, because the repair differs. Linux states a capability,
+// and FR-capture-36 names `CAP_NET_RAW`. macOS states no capability, and `bpf(4)` names
+// the device that libpcap opens. Every other platform reads one sentence that names the
+// platform, as `unsupportedMessage` of `internal/capture/unsupported.go` does.
+//
+// The message writes no path of the program. A `setcap` command reads the path of the
+// binary that the operator runs, and that path is the argument the operator already holds.
+func watchPermissionMessage(goos string, iface string) string {
+	switch goos {
+	case "linux":
+		return fmt.Sprintf(
+			"the host refuses a capture handle on interface %s. "+
+				"The process needs the CAP_NET_RAW capability. "+
+				"Run the command with sudo, or grant the capability with the command "+
+				"sudo setcap cap_net_raw+ep <path to ja4plus>", iface)
+	case "darwin":
+		return fmt.Sprintf(
+			"the host refuses a capture handle on interface %s. "+
+				"The process needs read access to a /dev/bpf device. "+
+				"Run the command with sudo", iface)
+	default:
+		return fmt.Sprintf(
+			"the host refuses a capture handle on interface %s. "+
+				"The process needs the privilege that a packet capture needs on %s. "+
+				"Run the command with sudo", iface, goos)
+	}
 }
 
 // runMonitor reads packets from the handle until a termination signal stops the run.

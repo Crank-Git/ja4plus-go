@@ -30,6 +30,8 @@ type pcapHandle struct {
 
 // open returns the libpcap capture handle for the interface that the options name.
 // It returns an error when libpcap opens no interface of that name.
+// It returns an error when the host refuses the capture device. `openError` carries the
+// errno of that refusal, and FR-capture-35 reads it.
 // It returns an error when libpcap compiles no program for the capture filter.
 func open(opts Options) (Handle, error) {
 	// `pcap.BlockForever` makes each read block until the interface delivers a packet, and
@@ -41,7 +43,7 @@ func open(opts Options) (Handle, error) {
 	// `pcapgo.NewEthernetHandle` sets none either, so the two backends read one packet set.
 	handle, err := pcap.OpenLive(opts.Interface, snapshotLength, false, pcap.BlockForever)
 	if err != nil {
-		return nil, fmt.Errorf("capture: the host opens no interface %s: %w", opts.Interface, err)
+		return nil, openError(opts.Interface, err)
 	}
 
 	if opts.Filter != "" {
