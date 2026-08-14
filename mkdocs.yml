@@ -47,15 +47,33 @@ strict: true
 # 2026-08-14 at `mkdocs==1.6.1`: a page that links to `specs/spec.md` builds and exits 0.
 #
 # `TestNoPublishedPageLinksIntoAnExcludedDirectory` in `mkdocs_config_test.go` holds that
-# gap. It fails when a published page links into `docs/specs/` or `docs/audit/`.
+# gap. It fails when a published page links into `docs/specs/`, `docs/audit/` or
+# `docs/mutation_reports/`.
 #
 # `docs/requirements.txt` sits under `docs_dir` because it belongs to the site, and MkDocs
 # copies an unexcluded non-markdown file into the built site. The third pattern holds the
 # pin list back, so the site publishes documentation alone.
+#
+# `docs/mutation_reports/` is the fourth pattern, and #91 added it under FR-mutation-6.
+# **A mutation report is a measurement artifact, and `docs/audit/` is the precedent.** Three
+# facts decide the exclusion.
+#
+#   1. One report names every mutation of the swept path, so it holds one table row for each.
+#      The `internal/parser` report of 2026-08-14 holds 882 rows.
+#   2. `make mutate` writes one report for each sweep, so the directory grows without a
+#      bound. A `nav` entry for each one grows a list with no reader.
+#   3. A report that no `nav` entry names reaches `validation.nav.omitted_files: warn`, and
+#      `strict` above turns that warning into a failed build. So an unexcluded report breaks
+#      `make docs` on the first sweep.
+#
+# #92 builds `docs/mutation_sweep.md`, which is published. **A link from that page into a
+# report is a link into an excluded file**, and the measured gap above states that MkDocs
+# does not fail it. `TestNoPublishedPageLinksIntoAnExcludedDirectory` fails it instead.
 exclude_docs: |
   /specs/
   /audit/
   /requirements.txt
+  /mutation_reports/
 
 # FR-documentation-5. A broken link and a broken anchor each reach `warn`, and `strict`
 # above turns each warning into a failed build.

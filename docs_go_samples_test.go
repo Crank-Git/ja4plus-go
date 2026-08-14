@@ -93,9 +93,9 @@ func (s goSample) name() string {
 
 // collectGoSamples returns every fenced Go block of every published page.
 //
-// It skips `docs/specs/` and `docs/audit/`, because `exclude_docs` of `mkdocs.yml` drops
-// both directories from the site. A sample in the spec package documents a design and
-// never an interface a reader calls.
+// It skips every directory of `excludedDocumentationDirs`, because `exclude_docs` of
+// `mkdocs.yml` drops each one from the site. A sample in the spec package documents a design
+// and never an interface a reader calls.
 func collectGoSamples(t *testing.T) []goSample {
 	t.Helper()
 
@@ -105,7 +105,7 @@ func collectGoSamples(t *testing.T) []goSample {
 			return err
 		}
 		if entry.IsDir() {
-			if path != documentationRoot && (entry.Name() == "specs" || entry.Name() == "audit") {
+			if path != documentationRoot && isExcludedDocumentationDir(entry.Name()) {
 				return filepath.SkipDir
 			}
 			return nil
