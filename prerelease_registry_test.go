@@ -60,7 +60,7 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the binaries",
 		requirements: []string{"FR-prerelease-18", "FR-prerelease-19", "FR-prerelease-20", "FR-prerelease-21", "FR-prerelease-22"},
 		issue:        98,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the documentation site",
@@ -123,7 +123,10 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // FR-prerelease-4 against the registry.
 //
 // A row that reports a case as built while the tree holds no case is the failure this
-// guard prevents. The clean environment is the one case the tree holds today.
+// guard prevents. #95 built the clean environment, and #98 built the binaries.
+//
+// **A member that builds a case appends its name in the order of the registry above.** The
+// comparison reads the order, and four members of Epic 16 append to this list in parallel.
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
@@ -132,8 +135,8 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 		}
 	}
 
-	if !slices.Equal(built, []string{"the clean environment"}) {
-		t.Errorf("the registry reports %v as built, and the tree holds the clean environment alone", built)
+	if !slices.Equal(built, []string{"the clean environment", "the binaries"}) {
+		t.Errorf("the registry reports %v as built, and the tree holds the clean environment and the binaries", built)
 	}
 }
 
