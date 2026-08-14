@@ -50,9 +50,9 @@
 // `maxPerVal` from the whole byte budget. Each line was measured at go1.26.5 on 2026-08-14.
 //
 // One measured seed replay reported `len=5 cap=8` at go1.26.5. A seed replay reaches no
-// mutator, so that measurement proves that the engine hands the target a slice whose capacity
-// is above its length, and it proves nothing about the four lines above. The conclusion holds
-// under either path.
+// mutator. So that measurement proves one thing: the engine hands the target a slice whose
+// capacity is above its length. It proves nothing about the four lines above. The conclusion
+// holds under either path.
 //
 // `ExactInput` returns a copy whose capacity equals its length, so a read of the second
 // kind panics and FR-fuzz-14 reports it. That is the whole mechanism FR-fuzz-15 needs.

@@ -159,10 +159,10 @@ above was measured at go1.26.5 on 2026-08-14**, and `internal/fuzzprop/fuzzprop.
 same four lines.
 
 **One measured seed replay reported `len=5 cap=8` at go1.26.5.** **That measurement reads a
-seed replay, and a seed replay reaches no mutator.** So it proves that the engine hands the
-target a slice whose capacity is above its length, and it proves nothing about the four lines
-above. **The conclusion holds under either path**, because FR-fuzz-15 needs one slice whose
-capacity is above its length.
+seed replay, and a seed replay reaches no mutator.** So it proves one thing: the engine hands
+the target a slice whose capacity is above its length. **It proves nothing about the four
+lines above.** **The conclusion holds under either path**, because FR-fuzz-15 needs one slice
+whose capacity is above its length.
 
 **`ExactInput` returns a copy whose capacity equals its length**, so the second read panics
 and FR-fuzz-14 then reports it. #45 measured both sides: the same expression returns 6 bytes

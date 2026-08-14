@@ -42,9 +42,9 @@ type TCPStreamReassembler struct {
 // alone. Measured at that tag on 2026-08-14.
 //
 // **That is a separate rule, and it is not the segment bound that #596 ruled.** Issue #596
-// measured the difference on 2026-08-14, and the batch #617 cross-member review recorded it
-// so that a later reader finds it rather than measures it again. **No issue holds the work
-// today**, and this comment states the divergence and never a plan.
+// measured the difference on 2026-08-14. The batch #617 cross-member review recorded it here,
+// so a later reader finds it rather than measures it again. **No issue holds the work today**,
+// and this comment states the divergence and never a plan.
 
 // DefaultMaxSegments is the segment count that one stream stores at most.
 //

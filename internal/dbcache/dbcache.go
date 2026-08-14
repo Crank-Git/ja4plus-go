@@ -8,8 +8,8 @@
 //
 // The CSV column set and the ja4db.com JSON field set are two keyspaces, and this package
 // holds the CSV one alone. `ja4db/lookup.go` names `application`, `library`, `device` and
-// `os` as JSON field names of the remote response, and that literal is no second copy of
-// this column set. The names read alike because ja4db.com publishes one record shape in two
+// `os` as JSON field names of the remote response. That literal is no second copy of this
+// column set. The names read alike because ja4db.com publishes one record shape in two
 // encodings.
 //
 // `docs/specs/features/09-database-lookup.md` states FR-lookup-23 through FR-lookup-26.
