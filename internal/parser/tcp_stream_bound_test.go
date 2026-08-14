@@ -181,6 +181,175 @@ func TestGetStreamClampsAByteLimitThatFallsBelowZeroAfterOneStore(t *testing.T) 
 	}
 }
 
+// The tests below hold the segment count bound of one stream. The maintainer ruled it on
+// 2026-08-14, and issue #596 holds the ruling and the reversal path.
+//
+// The byte bound of #567 bounds the bytes and it does not bound the count. A sender of
+// one-byte segments therefore reaches 1048576 segments inside a byte bound of 1048576, and
+// the deduplication index of #596 costs 53.3 bytes for each stored segment.
+//
+// The Python port ships the rule and the value at `ja4plus/utils/tcp_stream.py:45` of tag
+// v1.1.0. No vector reaches the bound: a conformance run on 2026-08-14 read 703 stream keys
+// and the largest held 788 segments.
+
+// segmentCountOfStream returns the segments that one stream holds.
+func segmentCountOfStream(t *testing.T, r *TCPStreamReassembler, key string) int {
+	t.Helper()
+
+	stream, held := r.streams[key]
+	if !held {
+		t.Fatalf("the reassembler holds no stream for key %q", key)
+	}
+
+	return len(stream.segments)
+}
+
+// TestNewTCPStreamReassemblerSetsTheDefaultSegmentBound holds the default that the
+// constructor states. `ja4h.go` and `ja4x.go` each build a reassembler through it, so the
+// default is the bound that the library runs with.
+func TestNewTCPStreamReassemblerSetsTheDefaultSegmentBound(t *testing.T) {
+	r := NewTCPStreamReassembler(10, 1048576)
+
+	if r.MaxSegments != DefaultMaxSegments {
+		t.Errorf("the constructor sets MaxSegments to %d, and the default is %d",
+			r.MaxSegments, DefaultMaxSegments)
+	}
+
+	if DefaultMaxSegments != 4096 {
+		t.Errorf("DefaultMaxSegments is %d, and the ruling of #596 states 4096",
+			DefaultMaxSegments)
+	}
+}
+
+// TestAddSegmentStoresNoSegmentAfterOneStreamReachesTheSegmentBound holds the bound against
+// the sender that earned it. One byte in each segment reaches the segment bound long before
+// the byte bound, which is the case that #596 measured.
+func TestAddSegmentStoresNoSegmentAfterOneStreamReachesTheSegmentBound(t *testing.T) {
+	// The byte bound of the production reassembler. A stream of one-byte segments stores
+	// 4096 bytes at this bound, which is 0.4 percent of it, so the byte bound refuses
+	// nothing here.
+	r := NewTCPStreamReassembler(10, 1048576)
+
+	// The offer exceeds the bound, so the reassembler refuses the last 904 segments.
+	for i := range DefaultMaxSegments + 904 {
+		r.AddSegment("flow1", uint32(i), []byte("a"))
+	}
+
+	if stored := segmentCountOfStream(t, r, "flow1"); stored != DefaultMaxSegments {
+		t.Errorf("the stream stores %d segments, and the bound is %d",
+			stored, DefaultMaxSegments)
+	}
+
+	if stored := storedBytesOfStream(t, r, "flow1"); stored != DefaultMaxSegments {
+		t.Errorf("the stream stores %d bytes, and 4096 segments of one byte hold %d",
+			stored, DefaultMaxSegments)
+	}
+}
+
+// TestTheSegmentBoundRefusesWhileTheByteBoundAdmits separates the two bounds in the
+// direction the ruling names. The stream reaches the segment bound with 4096 stored bytes,
+// and the byte bound admits 1048576, so the byte bound refuses nothing.
+func TestTheSegmentBoundRefusesWhileTheByteBoundAdmits(t *testing.T) {
+	const byteBound = 1048576
+
+	r := NewTCPStreamReassembler(10, byteBound)
+	r.MaxSegments = 100
+
+	for i := range 500 {
+		r.AddSegment("flow1", uint32(i), []byte("a"))
+	}
+
+	if stored := segmentCountOfStream(t, r, "flow1"); stored != 100 {
+		t.Errorf("the stream stores %d segments, and the segment bound is 100", stored)
+	}
+
+	// The stream sits far below the byte bound, so the segment bound alone refused.
+	if stored := storedBytesOfStream(t, r, "flow1"); stored >= byteBound {
+		t.Errorf("the stream stores %d bytes, and the byte bound of %d must refuse nothing here",
+			stored, byteBound)
+	}
+}
+
+// TestTheByteBoundRefusesWhileTheSegmentBoundAdmits separates the two bounds in the other
+// direction. The stream reaches the byte bound with 10 stored segments, and the segment
+// bound admits 4096, so the segment bound refuses nothing.
+func TestTheByteBoundRefusesWhileTheSegmentBoundAdmits(t *testing.T) {
+	const byteBound = 1000
+
+	r := NewTCPStreamReassembler(10, byteBound)
+
+	// Each segment carries 100 bytes, so 10 of them reach the byte bound.
+	for i := range 50 {
+		r.AddSegment("flow1", uint32(i*100), bytes.Repeat([]byte("a"), 100))
+	}
+
+	if stored := storedBytesOfStream(t, r, "flow1"); stored != byteBound {
+		t.Errorf("the stream stores %d bytes, and the byte bound is %d", stored, byteBound)
+	}
+
+	// The stream sits far below the segment bound, so the byte bound alone refused.
+	if stored := segmentCountOfStream(t, r, "flow1"); stored != 10 {
+		t.Errorf("the stream stores %d segments, and 10 segments of 100 bytes reach the byte bound",
+			stored)
+	}
+}
+
+// TestAddSegmentStoresNoSegmentWhenTheSegmentBoundIsZero holds the bound of 0. An empty
+// stream already reaches it, so the reassembler stores no segment. The byte bound of 0
+// reads the same way.
+func TestAddSegmentStoresNoSegmentWhenTheSegmentBoundIsZero(t *testing.T) {
+	r := NewTCPStreamReassembler(10, 4096)
+	r.MaxSegments = 0
+
+	r.AddSegment("flow1", 0, []byte("hello"))
+
+	if stored := segmentCountOfStream(t, r, "flow1"); stored != 0 {
+		t.Errorf("the stream stores %d segments, and the segment bound is 0", stored)
+	}
+
+	if got := r.GetStream("flow1"); got != nil {
+		t.Errorf("GetStream returns %q, and a segment bound of 0 stores no segment", got)
+	}
+}
+
+// TestAddSegmentStoresNoSegmentWhenTheSegmentBoundFallsBelowZero holds the clamp. A
+// segment limit below 0 holds no segment, and `storedSegmentBound` states that rule.
+// MaxSegments is an exported field, so a caller states a negative value.
+func TestAddSegmentStoresNoSegmentWhenTheSegmentBoundFallsBelowZero(t *testing.T) {
+	r := NewTCPStreamReassembler(10, 4096)
+	r.MaxSegments = -1
+
+	r.AddSegment("flow1", 0, []byte("hello"))
+
+	if stored := segmentCountOfStream(t, r, "flow1"); stored != 0 {
+		t.Errorf("the stream stores %d segments, and a segment limit below 0 holds none", stored)
+	}
+}
+
+// TestRemoveStreamReturnsTheSegmentBoundToOneStream holds the removal path of the bound.
+// `ja4h.go` removes a stream after each value, so the next request of that connection must
+// reach a stream that stores segments again. A refused segment leaves no trace.
+func TestRemoveStreamReturnsTheSegmentBoundToOneStream(t *testing.T) {
+	r := NewTCPStreamReassembler(10, 1048576)
+	r.MaxSegments = 4
+
+	for i := range 10 {
+		r.AddSegment("flow1", uint32(i), []byte("a"))
+	}
+
+	if stored := segmentCountOfStream(t, r, "flow1"); stored != 4 {
+		t.Fatalf("the stream stores %d segments, and the segment bound is 4", stored)
+	}
+
+	r.RemoveStream("flow1")
+	r.AddSegment("flow1", 100, []byte("b"))
+
+	if stored := segmentCountOfStream(t, r, "flow1"); stored != 1 {
+		t.Errorf("the stream stores %d segments after the removal, and the call added one",
+			stored)
+	}
+}
+
 // firstBytes returns the first n bytes, so a failure message names a short prefix.
 func firstBytes(data []byte, n int) []byte {
 	if len(data) < n {

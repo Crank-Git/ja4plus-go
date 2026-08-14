@@ -1,5 +1,10 @@
 package parser
 
+import (
+	"cmp"
+	"slices"
+)
+
 // TCPStreamReassembler reassembles TCP streams using sequence numbers.
 // Handles out-of-order segments, duplicates, and overlaps.
 // Evicts oldest streams (LRU) when MaxStreams is exceeded.
@@ -15,13 +20,55 @@ type TCPStreamReassembler struct {
 	// bounds the run that GetStream returns. Issue #567 added the first of the two, because
 	// a stream that stored every segment grew without a bound.
 	MaxBytes int
+	// MaxSegments bounds the segments that one stream stores. The maintainer ruled it on
+	// 2026-08-14, and issue #596 holds the ruling and the reversal path.
+	//
+	// MaxBytes bounds the bytes and it does not bound the count, so a sender of one-byte
+	// segments reaches 1048576 segments inside a byte bound of 1048576. The deduplication
+	// index of issue #596 costs 53.3 bytes for each stored segment, measured on 2026-08-14,
+	// so the count drives the memory rather than the bytes.
+	//
+	// NewTCPStreamReassembler sets DefaultMaxSegments. A caller states another value on this
+	// field, as it does on MaxBytes.
+	MaxSegments int
 }
+
+// DefaultMaxSegments is the segment count that one stream stores at most.
+//
+// The Python port ships this rule and this value. `ja4plus/utils/tcp_stream.py:45` at tag
+// v1.1.0 states `DEFAULT_MAX_STREAM_SEGMENTS = 4096`, and `.claude/rules/parity.md` rule 2
+// gives the port the interface where this project shipped no name.
+//
+// No vector of the shared corpus reaches this bound. A run of the conformance suite on
+// 2026-08-14 read 703 stream keys, and the largest held 788 segments. So 4096 sits above
+// five times the binding reading.
+//
+// The port's comment cites 1336, which is the count that a stream reaches without a byte
+// cap. This library holds a byte cap, so 788 is the reading that binds here.
+//
+// The port attributes its 788 to `http2-with-cookies.pcapng`, and this library measures its
+// 788 on the SSH stream `192.168.1.197:22->192.168.1.169:49237`. The largest stream on port
+// 443 reaches 750 here. The count agrees and the attribution does not, and issue #596
+// reports that difference.
+const DefaultMaxSegments = 4096
 
 type tcpStream struct {
 	segments []tcpSegment
 	baseSeq  uint32
 	// storedBytes counts the bytes of every segment this stream holds.
 	storedBytes int
+	// stored indexes the segments that this stream holds, so the deduplication reads one
+	// map lookup rather than a scan of every segment. Issue #596 measured the scan as a
+	// quadratic path: a stream of one byte per segment reaches 1048576 segments inside the
+	// byte bound, and the scan then costs the square of that count.
+	//
+	// The index is a second view of `segments`, and it never replaces the slice. `GetStream`
+	// walks the slice, because the assembled run reads the arrival order.
+	//
+	// The index lives in the stream rather than in the reassembler, so the removal of a
+	// stream releases it. `RemoveStream` and the eviction each delete the stream from the
+	// table, and no second release path can fall out of step with the first.
+	stored map[tcpSegmentKey]struct{}
 }
 
 type tcpSegment struct {
@@ -29,12 +76,27 @@ type tcpSegment struct {
 	data []byte
 }
 
+// tcpSegmentKey identifies one stored segment for the deduplication.
+//
+// The key holds the length beside the sequence number, because one stream legally holds two
+// segments of one sequence number. A retransmission that coalesces produces one, and a
+// re-segmentation produces one. A key of the sequence number alone would refuse the second
+// of them and move a JA4H value and a JA4X value.
+type tcpSegmentKey struct {
+	seq    uint32
+	length int
+}
+
 // NewTCPStreamReassembler creates a reassembler with the given limits.
+//
+// The segment bound takes DefaultMaxSegments, so this signature states two limits and the
+// reassembler holds three. A caller that needs another segment bound writes MaxSegments.
 func NewTCPStreamReassembler(maxStreams, maxBytes int) *TCPStreamReassembler {
 	return &TCPStreamReassembler{
-		streams:    make(map[string]*tcpStream),
-		MaxStreams: maxStreams,
-		MaxBytes:   maxBytes,
+		streams:     make(map[string]*tcpStream),
+		MaxStreams:  maxStreams,
+		MaxBytes:    maxBytes,
+		MaxSegments: DefaultMaxSegments,
 	}
 }
 
@@ -54,7 +116,10 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 			delete(r.streams, oldest)
 			r.order = r.order[1:]
 		}
-		stream = &tcpStream{baseSeq: seq}
+		stream = &tcpStream{
+			baseSeq: seq,
+			stored:  make(map[tcpSegmentKey]struct{}),
+		}
 		r.streams[key] = stream
 		r.order = append(r.order, key)
 	} else {
@@ -62,11 +127,12 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 		r.moveToEnd(key)
 	}
 
-	// Deduplicate: skip if exact same seq and length already exists
-	for _, seg := range stream.segments {
-		if seg.seq == seq && len(seg.data) == len(data) {
-			return
-		}
+	// Deduplicate: skip if exact same seq and length already exists.
+	// The index holds one key for each stored segment, so this lookup reads the same
+	// condition that the earlier scan of every segment read.
+	segKey := tcpSegmentKey{seq: seq, length: len(data)}
+	if _, held := stream.stored[segKey]; held {
+		return
 	}
 
 	// A stream that reached the byte bound stores no further segment. Every packet is
@@ -90,10 +156,32 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 		return
 	}
 
+	// A stream that reached the segment bound stores no further segment. The maintainer
+	// ruled the bound on 2026-08-14, and issue #596 holds the ruling and the reversal path.
+	//
+	// The two bounds refuse independently, and neither one masks the other. MaxBytes bounds
+	// the bytes and MaxSegments bounds the count, so a sender of one-byte segments reaches
+	// this bound with 4096 stored bytes, and a sender of one large segment reaches the byte
+	// bound with one stored segment.
+	//
+	// This refusal reads the same shape as the byte refusal above. It drops no stored
+	// segment, so the stored prefix keeps the TLS Certificate message and the HTTP request
+	// line that `GetStream` reads from the lowest sequence number. A refused segment leaves
+	// no trace, so the stream stores it again after a removal frees the room.
+	if len(stream.segments) >= r.storedSegmentBound() {
+		return
+	}
+
 	segData := make([]byte, len(data))
 	copy(segData, data)
 	stream.segments = append(stream.segments, tcpSegment{seq: seq, data: segData})
 	stream.storedBytes += len(data)
+
+	// The index gains a key only where the slice gains a segment. The byte bound above
+	// refuses a segment that the stream never stores, and the earlier scan read the stored
+	// segments alone, so a key written before the bound would deduplicate a segment that
+	// the stream does not hold.
+	stream.stored[segKey] = struct{}{}
 }
 
 // storedByteBound returns the bytes that one stream stores at most.
@@ -104,6 +192,17 @@ func (r *TCPStreamReassembler) storedByteBound() int {
 	}
 
 	return r.MaxBytes
+}
+
+// storedSegmentBound returns the segments that one stream stores at most.
+// A segment limit below 0 holds no segment, and storedByteBound states the same rule for
+// the bytes.
+func (r *TCPStreamReassembler) storedSegmentBound() int {
+	if r.MaxSegments < 0 {
+		return 0
+	}
+
+	return r.MaxSegments
 }
 
 // GetStream reassembles and returns contiguous data from the lowest sequence number.
@@ -172,15 +271,20 @@ func (r *TCPStreamReassembler) moveToEnd(key string) {
 	}
 }
 
-// sortSegments sorts segments by sequence number using insertion sort (small N).
+// sortSegments sorts segments by sequence number, and it keeps the arrival order of two
+// segments that carry one sequence number.
+//
+// The sort is stable, and that is a correctness requirement rather than a preference.
+// `GetStream` trims each later segment against the run it already assembled, so two
+// segments of one sequence number assemble to different bytes in the two orders.
+// `ja4h.go` and `ja4x.go` read those bytes, so an unstable sort moves a fingerprint value.
+// `slices.SortFunc` is the unstable call, and issue #596 measured the moved bytes.
+//
+// The earlier insertion sort was stable, because it compared with a strict `>`. It cost the
+// square of the segment count on a reversed arrival order, and issue #596 records that
+// measurement.
 func sortSegments(segs []tcpSegment) {
-	for i := 1; i < len(segs); i++ {
-		key := segs[i]
-		j := i - 1
-		for j >= 0 && segs[j].seq > key.seq {
-			segs[j+1] = segs[j]
-			j--
-		}
-		segs[j+1] = key
-	}
+	slices.SortStableFunc(segs, func(a, b tcpSegment) int {
+		return cmp.Compare(a.seq, b.seq)
+	})
 }
