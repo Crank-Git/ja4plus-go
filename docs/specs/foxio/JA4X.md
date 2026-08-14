@@ -116,6 +116,17 @@ like Issuer Org to eliminate FPs`.
   **The image carries a value for each half of the split.** The two `Sliver, Havoc C2`
   rows open with `000000000000`, and the `Qakbot` row ends with `e3b0c44298fc`.
 
+  **The maintainer ruled the split on 2026-08-14, and this library hashes an empty list.**
+  The ruling reaches part a, part b and part c together, so no part of a JA4X value of this
+  library writes `000000000000`. The deciding rule is R18 of `docs/specs/foxio/JA4H.md`,
+  which states a hash of the list and names no sentinel. R28 of that page records the same
+  ruling for JA4H, and #527 built the JA4H half. **Issue #582 is the reversal path of the
+  JA4X half**, and the port half is `Crank-Git/ja4plus#619`.
+
+  **The two halves above transcribe what FoxIO published, and this paragraph records what
+  this library answers.** The transcription survives, because a later reader needs the
+  evidence that the ruling settled.
+
 - **R13** — The Zeek package produces no JA4X value. **The image states nothing about a
   Zeek baseline.** `zeek/ja4x/__load__.zeek:1` holds the one line `# empty`, and the
   directory holds no other file.

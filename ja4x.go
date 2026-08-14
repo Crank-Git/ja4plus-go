@@ -468,11 +468,18 @@ func ja4xParts(certDER []byte) ([3]string, bool) {
 // Both values read the same three lists, so the raw form is the exact preimage of the
 // fingerprint. `testdata/foxio/reference/rust/ja4x/src/lib.rs:49` hashes each part into
 // the fingerprint, and `:50` writes the raw form as
-// `let ja4x_r = with_raw.then(|| parts.join("_"));`.
+// `let ja4x_r = with_raw.then(|| parts.join("_"));`. An empty list reaches the raw form as
+// an empty part, and `parser.TruncatedHashNoSentinel` of that empty part is the hashed
+// part, so the relation holds for every part.
 //
-// R12 of `docs/specs/foxio/JA4X.md` states the zero sentinel `000000000000`, and
-// `parser.TruncatedHash` returns it for an empty list. The raw form hashes nothing, so an
-// empty list reaches the raw form as an empty part and never as the sentinel.
+// R12 of `docs/specs/foxio/JA4X.md` transcribes a reference split for an empty list: the
+// Rust implementation and the Wireshark dissector write the zero sentinel `000000000000`,
+// and the Python implementation hashes the empty string. The maintainer ruled the split on
+// 2026-08-14, and an empty list hashes. R18 of `docs/specs/foxio/JA4H.md` is the deciding
+// rule, because it states a hash of the list and it names no sentinel. So each part below
+// calls `parser.TruncatedHashNoSentinel`, and no part of JA4X writes the sentinel.
+//
+// Issue #582 is the reversal path, and the port half is `Crank-Git/ja4plus#619`.
 func computeJA4XWithRaw(certDER []byte) (string, string) {
 	parts, ok := ja4xParts(certDER)
 	if !ok {
@@ -480,9 +487,9 @@ func computeJA4XWithRaw(certDER []byte) (string, string) {
 	}
 
 	fingerprint := fmt.Sprintf("%s_%s_%s",
-		parser.TruncatedHash(parts[0]),
-		parser.TruncatedHash(parts[1]),
-		parser.TruncatedHash(parts[2]),
+		parser.TruncatedHashNoSentinel(parts[0]),
+		parser.TruncatedHashNoSentinel(parts[1]),
+		parser.TruncatedHashNoSentinel(parts[2]),
 	)
 
 	return fingerprint, strings.Join(parts[:], "_")
