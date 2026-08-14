@@ -37,7 +37,9 @@ jobs:
       # `.github/workflows/ci.yml` names. The two files held different versions until
       # 2026-08-13: CI proved that the library calls no vulnerable function, and this
       # workflow built the artifact that does. On go1.24.13, the newest Go 1.24 patch,
-      # `govulncheck` v1.6.0 reports 9 called standard library vulnerabilities. Each one
+      # `govulncheck` v1.6.0 reported 9 called standard library vulnerabilities on
+      # 2026-08-13, and 13 on 2026-08-14. No line of this repository changed between the
+      # two runs, and `CLAUDE.md` states that every live figure carries its date. Each one
       # names a fix in a go1.25.x release or later, so no Go 1.24 patch clears them.
       #
       # **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.**
