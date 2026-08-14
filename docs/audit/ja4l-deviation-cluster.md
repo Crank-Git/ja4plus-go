@@ -321,6 +321,10 @@ A third candidate added the guard that fills point C once, and it was reverted w
 per-stream value, and it leaves every register entry in place. **It is the cheapest change
 of this reading, and it is still a reference split that the maintainer rules.**
 
+**The three sentences above read the run of 2026-08-13, and the register has grown since
+it.** `#### The candidate makes five register entries stale` below states the cost of the
+same candidate on 2026-08-14.
+
 **The shape above attributes 4 deviations to this cause, and the candidate closes 3.**
 `tls3.pcapng/153/JA4L.1` still reads `the two values differ`, so that row carries a second
 difference.
@@ -479,7 +483,7 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 |---|---|---|---|---|
 | 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | The maintainer. Ruling #127 holds it. |
 | 2 — the QUIC `JA4L-S` emission frame | 16 | **15** | Opens none. Orphans 20 entries. | An engineer. The four implementations agree. |
-| 3 — the QUIC client measurement point | 4 | **3** | None. | **Ruled on 2026-08-14. Issue #528 holds it.** |
+| 3 — the QUIC client measurement point | 4 | **3** | None on 2026-08-13. **5 stale entries on 2026-08-14.** | **Ruled on 2026-08-14. Issue #528 holds it.** |
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | — | The maintainer. A reference defect. |
 | 5 — the two vector sets disagree | 2 | Not measured. Each set holds a different value. | — | The maintainer. #249 holds it. |
 | Unattributed | 3 | — | — | — |
