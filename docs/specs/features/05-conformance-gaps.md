@@ -129,16 +129,16 @@ roadmap, and issue #171 is its reversal path.
   path.
 - **FR-gaps-31** — `ParseQUICInitial` reads the client hello of one datagram through
   `ClientHelloFromCryptoFragments`, and that function holds one completeness rule. The rule
-  refuses a handshake message that the fragments do not cover from offset 0 with no gap,
-  and it returns no client hello and no error. `ReassembleCryptoFrames` writes a zero byte
-  over a gap, so a reader without the rule reports a cipher list that no client sent. Issue
-  #532 built it, and
+  refuses a handshake message that the fragments do not cover from offset 0 with no gap. It
+  returns no client hello and no error for such a message. `ReassembleCryptoFrames` writes
+  a zero byte over a gap, so a reader without the rule reports a cipher list that no client
+  sent. Issue #532 built it, and
   `TestParseQUICInitialProducesNoClientHelloFromAGapInTheHandshakeMessage` holds it.
 - **FR-gaps-32** — `ParseQUICInitial` returns no client hello and no error for a handshake
   message of 1 to 3 bytes. A message of 3 bytes carries no 24-bit length, so the rule of
   FR-gaps-31 reads no length. **The reader that #532 replaced returned the error
-  `ClientHello truncated: too short for version` for that input**, and `ja4s.go` is the one
-  caller that reaches this path and it discards the error.
+  `ClientHello truncated: too short for version` for that input.** `ja4s.go` is the one
+  caller that reaches this path, and it discards the error.
   `TestParseQUICInitialProducesNoErrorForAHandshakeMessageOfThreeBytes` pins the value.
   Issue #532 is the reversal path.
 
