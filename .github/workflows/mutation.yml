@@ -1,0 +1,227 @@
+name: Scheduled mutation sweep
+
+# FR-mutation-17 runs the sweep on a schedule and not on a pull request. FR-mutation-18
+# opens an issue when a new `LIVED` mutation appears. FR-mutation-19 keeps the sweep off the
+# merge path, and this file therefore names no `pull_request` trigger and no `push` trigger.
+# `docs/specs/features/15-mutation-sweep.md` holds each one, and #93 built this file.
+#
+# **This file adds no required check.** `CLAUDE.md` states that `make mutate` gates nothing,
+# and `## A change is done when` of that file names five steps that do not hold it.
+#
+# FR-supply-12 pins every `uses:` reference to a 40-character commit hash, because a tag
+# moves and a hash does not. FR-supply-13 gives each one a trailing comment that names the
+# version the hash carries. Each hash below is the hash that `.github/workflows/ci.yml`
+# already holds, so this repository states one pin for one action.
+#
+# **A scheduled workflow runs on the default branch alone**, and the default branch of this
+# repository is `master`. So this file starts no run until it reaches `master`. The
+# documentation states both halves:
+# `Scheduled workflows run on the latest commit on the default branch.` and
+# `This event will only trigger a workflow run if the workflow file exists on the default
+# branch.`
+# **The maintainer accepted that cost on 2026-08-14 for `.github/workflows/fuzz.yml`**, and
+# this file carries the same cost. It is a recorded limit, and it is not a defect to repair.
+# Verified against
+# <https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows>,
+# retrieved 2026-08-14.
+#
+# **A `[skip ci]` commit message does not hold this workflow back**, because a skip
+# instruction reaches a `push` event and a `pull_request` event alone. The documentation
+# states it: `Workflows that would otherwise be triggered using `on: push` or
+# `on: pull_request` won't be triggered if you add any of the following strings to the
+# commit message in a push, or the HEAD commit of a pull request:` So the batch commit style
+# of this project does not disable the scheduled run.
+# Verified against
+# <https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs>,
+# retrieved 2026-08-14.
+
+on:
+  schedule:
+    # 03:47 UTC each day. The documentation states
+    # `The shortest interval you can run scheduled workflows is once every 5 minutes.`, and
+    # a daily run is far above that floor. The minute is not `0`, because every workflow
+    # that names the top of an hour queues at the same moment. The hour differs from the
+    # `17 5 * * *` of `.github/workflows/fuzz.yml`, so the two sweeps do not compete for a
+    # runner.
+    - cron: '47 3 * * *'
+  # A maintainer starts a sweep by hand from the Actions page with this trigger, and the
+  # trigger costs nothing when nobody uses it. The documentation states
+  # `workflow_dispatch is used to enable a workflow to be triggered manually.`
+  workflow_dispatch:
+
+# FR-supply-15 gives a workflow the smallest permission set that its jobs need. This floor
+# reads the repository, and the `sweep` job below widens it to `issues: write` for itself
+# alone. The documentation states why the floor is safe to widen in one place:
+# `If you specify the access for any of these permissions, all of those that are not
+# specified are set to none.`
+# Verified against
+# <https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax>,
+# retrieved 2026-08-14.
+permissions:
+  contents: read
+
+jobs:
+  # One job runs the sweep, compares it against the tracked baseline, and opens one issue.
+  #
+  # **The sweep reads the path that the baseline read, and it reads no path this file
+  # names.** `internal/mutationdiff` takes that path out of the tracked report. A sweep of a
+  # wider path would report every mutation of every package the baseline never measured as
+  # new, and the first scheduled run would then open an issue that names hundreds of rows.
+  #
+  # **The whole named package set is not the path this job sweeps.** `CLAUDE.md` measures
+  # that set at 1675 mutations and about 20 minutes on a 10-core machine. A hosted runner is
+  # slower, so the job sweeps what the baseline sweeps and the comparison stays like for
+  # like.
+  sweep:
+    runs-on: ubuntu-latest
+    # `make mutate` installs the tool, runs `gremlins`, and renders the report. The sweep of
+    # `./internal/parser` took 289 s on a 10-core machine on 2026-08-14, and a hosted runner
+    # is slower. This ceiling holds a sweep that runs several times that long.
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      # FR-mutation-18 opens an issue, and the floor above sets every unnamed permission to
+      # none. Without this key the job fails at `gh issue create` and it names the scope.
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` of `.github/workflows/ci.yml` states why the range reads
+      # `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # The baseline is the tracked report of the last sweep. `internal/mutationdiff` names
+      # it and it names the path that sweep read, and it fails when the directory holds no
+      # report. A run that compared against no baseline would report every mutation as new.
+      #
+      # The command prints `key=value` lines, so this step appends them to the step output
+      # without a parse.
+      - name: Name the baseline report
+        id: baseline
+        run: |
+          go run ./internal/mutationdiff -dir docs/mutation_reports | tee -a "$GITHUB_OUTPUT"
+
+      # The sweep writes its report outside `docs/mutation_reports/`, because that directory
+      # holds the tracked baseline. A report written beside the baseline would become the
+      # newest file of the directory, and the next run would then compare the tree against
+      # itself.
+      #
+      # The matrix value reaches the shell through the environment, and never through a
+      # template in the command. `internal/mutationdiff` produced it, and it read it from a
+      # tracked file.
+      - name: Run the sweep over the path of the baseline
+        id: sweep
+        env:
+          SWEPT_PATH: ${{ steps.baseline.outputs.swept-path }}
+        run: |
+          scratch="$RUNNER_TEMP/mutation-report"
+          mkdir -p "$scratch"
+
+          make mutate PKG="$SWEPT_PATH" MUTATION_REPORT_DIR="$scratch"
+
+          # The sweep writes exactly one report, and this line fails when it wrote none.
+          current=$(find "$scratch" -name '*.md' -type f | sort | head -1)
+          if [ -z "$current" ]; then
+            echo "the sweep wrote no report, so this run compares nothing" >&2
+            exit 1
+          fi
+
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "the sweep wrote $current"
+
+      # **This step counts a verdict from each mutation, and never from a total.** #91
+      # measured the reason on 2026-08-14: `mutants_total` of `gremlins` v0.6.0 omits every
+      # `TIMED OUT` mutation and every `NOT COVERED` mutation. The doc comment of
+      # `internal/mutationdiff` holds the measurement and the citation.
+      - name: Compare the sweep against the baseline
+        id: compare
+        env:
+          BASELINE: ${{ steps.baseline.outputs.baseline }}
+          CURRENT: ${{ steps.sweep.outputs.current }}
+        run: |
+          go run ./internal/mutationdiff \
+            -baseline "$BASELINE" \
+            -current "$CURRENT" \
+            -body body.md | tee -a "$GITHUB_OUTPUT"
+
+      # The artifact holds the whole report of this run. The tracked baseline moves only
+      # when an engineer commits a fresh report, so this artifact is the one record of a
+      # scheduled sweep.
+      - name: Upload the report of this run
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mutation-report
+          path: ${{ steps.sweep.outputs.current }}
+
+      # FR-mutation-18 opens the issue.
+      #
+      # **The title names the swept path and no count, so one open issue holds every
+      # scheduled run.** A title that carried the count or the date would open one issue for
+      # each night, and a line shift in the swept file makes the count move on its own. The
+      # body of the first issue names every row, and a later run writes its rows to the step
+      # summary while that issue stays open.
+      #
+      # `gh` reads no untrusted template. Each value reaches the shell through the
+      # environment, and the body reaches `gh` through a file.
+      #
+      # The documentation states the authentication:
+      # `For each step that uses GitHub CLI, you must set an environment variable called
+      # GH_TOKEN to a token with the required scopes.` and
+      # `GitHub CLI is preinstalled on all GitHub-hosted runners.`
+      # Verified against
+      # <https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-github-cli>,
+      # retrieved 2026-08-14.
+      #
+      # The `bug` label exists in this repository, measured on 2026-08-14. `gh issue create`
+      # fails on a label that does not exist, so this step names one label and no more. The
+      # issue carries no `status:` label, and the project manager triages it.
+      - name: Open an issue for a new unsettled mutation
+        if: steps.compare.outputs.new-lived != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SWEPT_PATH: ${{ steps.baseline.outputs.swept-path }}
+          COUNT: ${{ steps.compare.outputs.new-lived }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="mutation: the scheduled sweep of $SWEPT_PATH finds an unsettled mutation"
+
+          # `grep -F -x` reads the title as a fixed whole line, so no character of the title
+          # reads as a pattern.
+          open=$(gh issue list --repo "$REPOSITORY" --state open --limit 200 --json title --jq '.[].title' | grep -c -F -x "$title" || true)
+          if [ "$open" -gt 0 ]; then
+            echo "an open issue already names $SWEPT_PATH, so this run opens none"
+            {
+              echo "An open issue already names \`$SWEPT_PATH\`, and this run found $COUNT unsettled mutation(s)."
+              echo
+              cat body.md
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            cat body.md
+            echo
+            echo "The run that found them is $RUN_URL, and the artifact \`mutation-report\` holds the whole report."
+          } > issue.md
+
+          gh issue create --repo "$REPOSITORY" --title "$title" --body-file issue.md --label bug
+
+      # **This step never fails the job, and that is FR-mutation-19.** A red job on the
+      # Actions page is a report, and this project reads a red job as work to do. The sweep
+      # gates nothing, so a new unsettled mutation reaches an issue and it reaches no
+      # failure.
+      - name: State the result
+        env:
+          COUNT: ${{ steps.compare.outputs.new-lived }}
+          SWEPT_PATH: ${{ steps.baseline.outputs.swept-path }}
+          BASELINE: ${{ steps.baseline.outputs.baseline }}
+        run: |
+          if [ "$COUNT" = '0' ]; then
+            echo "the sweep of $SWEPT_PATH found no mutation that $BASELINE does not settle"
+            echo "The scheduled sweep of \`$SWEPT_PATH\` found no new unsettled mutation." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=New unsettled mutation::the sweep of $SWEPT_PATH found $COUNT mutation(s) that $BASELINE does not settle. An issue holds them."
+          fi
