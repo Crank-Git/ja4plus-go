@@ -2496,6 +2496,22 @@
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },
   {
+    "key": "gre-erspan-vxlan.pcap/4/JA4H_r.1",
+    "capability": false,
+    "ours": "ge10nn000000__",
+    "theirs": "ge10nn000000___",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "gre-erspan-vxlan.pcap/4/JA4H_ro.1",
+    "capability": false,
+    "ours": "ge10nn000000__",
+    "theirs": "ge10nn000000___",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
     "key": "http-empty-useragent.pcap/9/JA4H_r.1",
     "capability": false,
     "ours": "ge10nn010000_User-Agent_",
@@ -4846,5 +4862,77 @@
     "theirs": "14240_2-4-8-1-3_1436_10",
     "ruling": "#502",
     "reason": "Ruling #502 of 2026-08-14 declines a client RST, because `wireshark/source/packet-ja4.c:1600` keys the connection by the stream and `ja4tsConnKey` keys it by the server endpoint."
+  },
+  {
+    "key": "gre-sample.pcap/12/JA4LS.1",
+    "capability": false,
+    "ours": "22952_236",
+    "theirs": "",
+    "ruling": "#126",
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1279` reads the whole flag byte of this SYN-ACK for equality."
+  },
+  {
+    "key": "gre-sample.pcap/13/JA4L.1",
+    "capability": false,
+    "ours": "36_255",
+    "theirs": "",
+    "ruling": "#126",
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
+  },
+  {
+    "key": "gre-sample.pcap/14/JA4L.1",
+    "capability": false,
+    "ours": "26150_255",
+    "theirs": "",
+    "ruling": "#126",
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
+  },
+  {
+    "key": "macos_tcp_flags.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "17255_63",
+    "theirs": "",
+    "ruling": "#126",
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1279` reads the whole flag byte of this SYN-ACK for equality."
+  },
+  {
+    "key": "macos_tcp_flags.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "62_64",
+    "theirs": "",
+    "ruling": "#126",
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
+  },
+  {
+    "key": "macos_tcp_flags.pcap/4/JA4L.1",
+    "capability": false,
+    "ours": "393_64",
+    "theirs": "",
+    "ruling": "#126",
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
+  },
+  {
+    "key": "tls3.pcapng/147/JA4L.1",
+    "capability": false,
+    "ours": "59_128_quic",
+    "theirs": "90_128_quic",
+    "ruling": "#528",
+    "reason": "The maintainer ruled in issue #528 on 2026-08-14 that JA4L point C is the last QUIC server handshake packet, and `wireshark/source/packet-ja4.c:1426-1430` pins the first one."
+  },
+  {
+    "key": "tls3.pcapng/167/JA4L.1",
+    "capability": false,
+    "ours": "59_128_quic",
+    "theirs": "81_128_quic",
+    "ruling": "#528",
+    "reason": "The maintainer ruled in issue #528 on 2026-08-14 that JA4L point C is the last QUIC server handshake packet, and `wireshark/source/packet-ja4.c:1426-1430` pins the first one."
+  },
+  {
+    "key": "tls3.pcapng/312/JA4L.1",
+    "capability": false,
+    "ours": "45_128_quic",
+    "theirs": "83_128_quic",
+    "ruling": "#528",
+    "reason": "The maintainer ruled in issue #528 on 2026-08-14 that JA4L point C is the last QUIC server handshake packet, and `wireshark/source/packet-ja4.c:1426-1430` pins the first one."
   }
 ]
