@@ -23,12 +23,14 @@ type ethernetHandle struct {
 
 // open returns the pure-Go capture handle for the interface that the options name.
 // It returns an error when the host holds no interface of that name.
+// It returns an error when the host refuses the packet socket. `openError` carries the
+// errno of that refusal, and FR-capture-35 reads it.
 // It returns an error when the options carry a capture filter, because the maintainer
 // ruled on 2026-08-14 that the pure-Go backend applies none.
 func open(opts Options) (Handle, error) {
 	handle, err := pcapgo.NewEthernetHandle(opts.Interface)
 	if err != nil {
-		return nil, fmt.Errorf("capture: the host opens no interface %s: %w", opts.Interface, err)
+		return nil, openError(opts.Interface, err)
 	}
 
 	if opts.Filter != "" {

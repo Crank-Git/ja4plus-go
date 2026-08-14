@@ -2,10 +2,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -233,6 +235,105 @@ func TestRunWatchRefusesAnOptionBeforeItOpensAnInterface(t *testing.T) {
 	// prefix reports that the command reached no capture backend.
 	if strings.Contains(err.Error(), "capture: ") {
 		t.Errorf("the error is %q, and the command opened an interface for arguments it refuses", err)
+	}
+}
+
+func TestRunWatchOpensNoInterfaceForArgumentsThatItRefuses(t *testing.T) {
+	// FR-capture-37 states that the command opens no interface until it has parsed every
+	// option. The counter proves the order: an opener that the command never calls opens
+	// no interface, and no message text can state that fact.
+	opens := 0
+
+	err := runWatchWithOpener([]string{"--interface", "eth0", "--stats-interval", "often"},
+		func(capture.Options) (capture.Handle, error) {
+			opens++
+
+			return &stubHandle{}, nil
+		})
+
+	if err == nil {
+		t.Fatal("runWatchWithOpener returns no error for a statistics interval that holds no number")
+	}
+	if opens != 0 {
+		t.Errorf("the command called the opener %d times, and FR-capture-37 opens no interface for arguments it refuses", opens)
+	}
+}
+
+func TestRunWatchOpensTheInterfaceThatEveryParsedOptionNames(t *testing.T) {
+	// The counter of the test above proves nothing until one run reaches the opener, so
+	// this test states that a command line the parser accepts calls the opener once.
+	opens := 0
+
+	_ = runWatchWithOpener([]string{"--interface", "eth0"},
+		func(capture.Options) (capture.Handle, error) {
+			opens++
+
+			return &stubHandle{}, nil
+		})
+
+	if opens != 1 {
+		t.Errorf("the command called the opener %d times, and it opens one interface for a command line it accepts", opens)
+	}
+}
+
+func TestTheWatchPermissionMessageNamesCapNetRawOnLinux(t *testing.T) {
+	// FR-capture-36 states the capability by name.
+	message := watchPermissionMessage("linux", "eth0")
+
+	for _, want := range []string{"CAP_NET_RAW", "eth0", "sudo"} {
+		if !strings.Contains(message, want) {
+			t.Errorf("the message is %q, and it holds no %q", message, want)
+		}
+	}
+}
+
+func TestTheWatchPermissionMessageNamesTheBpfDeviceOnDarwin(t *testing.T) {
+	// macOS names no capability, and `bpf(4)` names the device that libpcap opens. So the
+	// message states the repair that the platform holds, as `unsupportedMessage` of
+	// `internal/capture/unsupported.go` does for the unsupported platform.
+	message := watchPermissionMessage("darwin", "en0")
+
+	for _, want := range []string{"/dev/bpf", "en0", "sudo"} {
+		if !strings.Contains(message, want) {
+			t.Errorf("the message is %q, and it holds no %q", message, want)
+		}
+	}
+	if strings.Contains(message, "CAP_NET_RAW") {
+		t.Errorf("the message is %q, and macOS holds no CAP_NET_RAW capability", message)
+	}
+}
+
+func TestTheWatchPermissionMessageNamesEveryPlatformThatHoldsNoBranch(t *testing.T) {
+	message := watchPermissionMessage("windows", "Ethernet")
+
+	if !strings.Contains(message, "windows") {
+		t.Errorf("the message is %q, and it names no platform", message)
+	}
+	if !strings.Contains(message, "Ethernet") {
+		t.Errorf("the message is %q, and it names no interface", message)
+	}
+}
+
+func TestWatchInterfaceReportsThePermissionFailureWithTheCapability(t *testing.T) {
+	// FR-capture-35 reports the capability that the host needs. The backend states the
+	// refusal as an errno, and `capture.PermissionDenied` reads that errno.
+	refusal := fmt.Errorf("capture: the host opens no interface eth0: %w", syscall.EPERM)
+
+	err := watchInterface(watchOptions{iface: "eth0"},
+		func(capture.Options) (capture.Handle, error) { return nil, refusal })
+
+	if err == nil {
+		t.Fatal("watchInterface returns no error for a host that refuses the capture handle")
+	}
+	if !strings.Contains(err.Error(), watchPermissionMessage(runtime.GOOS, "eth0")) {
+		t.Errorf("the error is %q, and it holds no message that names the capability", err)
+	}
+	// The cause survives, so the operator reads what the backend reported.
+	if !errors.Is(err, refusal) {
+		t.Errorf("the error is %q, and it carries the refusal of the backend never", err)
+	}
+	if !errors.Is(err, syscall.EPERM) {
+		t.Errorf("the error is %q, and it carries the errno of the host never", err)
 	}
 }
 

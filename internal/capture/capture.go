@@ -14,6 +14,9 @@ package capture
 
 import (
 	"errors"
+	"fmt"
+	"net"
+	"syscall"
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
@@ -75,6 +78,82 @@ func (a *dropAccumulator) add(delta uint32) uint64 {
 	a.total += uint64(delta)
 
 	return a.total
+}
+
+// PermissionDenied reports whether the host refused the capture handle because the process
+// holds too little privilege. `cmd/ja4plus` reads this answer, and FR-capture-35 of
+// `docs/specs/features/13-live-capture.md` states the message that follows it.
+//
+// It reads the error chain with `errors.Is`, and it reads no message text. The text of a
+// capture failure comes from a C library, from a Go library and from the locale of the
+// host. So a match on the text reports a failure that no host stated.
+//
+// The host states the refusal as an errno. `socket(2)` states EACCES:
+// `Permission to create a socket of the specified type and/or protocol is denied.`
+// `packet(7)` states EPERM: `User has insufficient privileges to carry out this operation.`
+// Verified against: <https://man7.org/linux/man-pages/man2/socket.2.html> and
+// <https://man7.org/linux/man-pages/man7/packet.7.html>, retrieved 2026-08-14.
+func PermissionDenied(err error) bool {
+	return errors.Is(err, syscall.EPERM) || errors.Is(err, syscall.EACCES)
+}
+
+// captureOpenError is the error that a capture backend returns when it opens no handle.
+//
+// It carries more than one cause, because the message of the backend and the errno of the
+// host are two different records of one failure. `errors.Is` reads every cause, so
+// `PermissionDenied` reaches the errno and a caller still reaches the message.
+type captureOpenError struct {
+	// message states the interface and the text of the backend.
+	message string
+	// causes holds the cause of the backend, and the errno of the host when the host
+	// refuses a capture handle.
+	causes []error
+}
+
+// Error returns the message that the operator reads.
+func (e *captureOpenError) Error() string {
+	return e.message
+}
+
+// Unwrap returns every cause of the failure, so errors.Is reads each one.
+func (e *captureOpenError) Unwrap() []error {
+	return e.causes
+}
+
+// openError returns the error that a capture backend reports when it opens no handle for
+// the interface that the caller names.
+//
+// It carries the errno of the host when the host refuses a capture handle, because a
+// capture library flattens that errno into its message text.
+// `gopacket@v1.6.1/pcapgo/capture.go:299` writes
+// `return nil, fmt.Errorf("couldn't open packet socket: %s", err)`, which holds `%s` and
+// never `%w`. `gopacket@v1.6.1/pcap/pcap_unix.go:249` writes
+// `return nil, errors.New(C.GoString(buf))`, which reads the error buffer of libpcap. So
+// the cause of either backend carries no errno, and `captureRefusal` recovers one.
+//
+// It returns the cause alone when the host holds no interface of that name. The edge-case
+// table of `docs/specs/features/13-live-capture.md` states one message that names the
+// interface for that case. A host that refuses a capture handle refuses it for every
+// interface. So a probe alone would report a permission failure for a name that names
+// nothing.
+//
+// Each call site calls this function inside the branch of a failed open, so the cause is
+// never nil.
+func openError(name string, cause error) error {
+	err := &captureOpenError{
+		message: fmt.Sprintf("capture: the host opens no interface %s: %s", name, cause.Error()),
+		causes:  []error{cause},
+	}
+
+	if _, lookupErr := net.InterfaceByName(name); lookupErr != nil {
+		return err
+	}
+
+	if refusal := captureRefusal(); refusal != nil {
+		err.causes = append(err.causes, refusal)
+	}
+
+	return err
 }
 
 // Open returns a capture handle for the interface that the options name.
