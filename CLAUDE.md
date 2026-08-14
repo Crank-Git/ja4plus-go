@@ -62,8 +62,10 @@ of that register name a change to this repository. Read
 
 | Path | Holds |
 |---|---|
-| `*.go` at the root | Package `ja4plus`: one fingerprinter per method, `Processor`, the database lookup. |
+| `*.go` at the root | Package `ja4plus`: one fingerprinter per method, `Processor`, the local database lookup. |
+| `ja4db/` | Package `ja4db`: the remote lookup at `ja4db.com`. It is the one package of the library that reaches the network. |
 | `internal/parser/` | Protocol decoding for TLS, QUIC, HTTP, SSH, TCP streams, X.509 and GREASE. |
+| `internal/dbcache/` | The validation of a downloaded database, the 16 MB bound and the atomic cache write. |
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
 | `internal/capture/` | Opening a live interface. Holds the pure-Go backend and the libpcap backend. |
@@ -78,6 +80,11 @@ of that register name a change to this repository. Read
 A new fingerprinter file goes at the root. New protocol decoding goes in
 `internal/parser/`. Interface capture goes in `internal/capture/`. Nothing that reads a
 packet belongs in `cmd/`.
+
+**Every network call of the library goes in `ja4db/`.** The maintainer ruled that boundary
+on 2026-08-14, and `docs/audit/network-boundary.md` holds the record. The core package
+imports no HTTP client, and `network_boundary_test.go` fails on an import that breaks the
+rule.
 
 ## Commands
 
