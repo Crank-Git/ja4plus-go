@@ -33,7 +33,14 @@ const methodTokenCharacters = "!#$%&'*+\\-.^_`|~0-9A-Za-z"
 // the nine the Rust reference names` holds the reading. The port decided it at its issue
 // #219 on 2026-08-08, and `python/ja4h.py:9` reads `method.lower()[:2]` and names no
 // method.
-var requestLineRe = regexp.MustCompile(`^([` + methodTokenCharacters + `]+)\s+(\S+)\s+(HTTP/\d+\.\d+)`)
+//
+// The path group reads a path that holds a space. A path group of non-space characters
+// read no request line of frame 4 of `testdata/foxio/pcap/gre-erspan-vxlan.pcap`, which
+// holds `GET /Hello Arkime HTTP/1.0`, and FoxIO holds a JA4H value for that frame. #527
+// records the defect. The group is lazy, so a first line that holds two version tokens
+// reaches the earlier one, as the non-space group did. `.` matches no line feed, so the
+// group stays inside the first line.
+var requestLineRe = regexp.MustCompile(`^([` + methodTokenCharacters + `]+)\s+(.+?)\s+(HTTP/\d+\.\d+)`)
 var headerLineRe = regexp.MustCompile(`^([^:]+):\s*(.*)$`)
 
 // requestLineLimit bounds the text that IsHTTPRequest matches the request line against.
