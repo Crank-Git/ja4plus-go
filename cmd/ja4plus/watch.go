@@ -576,9 +576,14 @@ type monitor struct {
 // is new, so it takes the clock that reaches no such packet.** The offline path of
 // `runAnalyze` keeps the packet timestamp, because a capture file replays faster than
 // real time and a host clock would evict every connection of it.
-// The clock also gives the eviction pass its early exit, because `time.Now` carries a
-// monotonic reading and `Sub` reads it. So the order list follows the age even when the
-// wall clock of the host moves.
+// The clock also gives the eviction pass its early exit. The `time` package states that
+// `the Time returned by time.Now contains both a wall clock reading and a monotonic clock
+// reading`, and that `later time-measuring operations, specifically comparisons and
+// subtractions, use the monotonic clock reading`. So the clock of the pass never goes
+// backwards, and the order list follows the age even when the wall clock of the host
+// moves.
+// Verified against: <https://pkg.go.dev/time>, read from `go doc time` at go1.26.5 on
+// 2026-08-14.
 func newMonitor(
 	options watchOptions,
 	stop *stopRequest,
