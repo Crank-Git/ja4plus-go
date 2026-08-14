@@ -42,7 +42,12 @@ import (
 // The mark is a lower bound, and this repository only allocates upward. So a stale mark
 // loosens this guard and it never reddens it. A batch that cites a number above the mark
 // re-measures the mark with the command above, and the failure below states that repair.
-const issueCitationHighWaterMark = 516
+//
+// The value reads 520 rather than 516, because the pull request of #351 allocated 517 through
+// 520. The batch documentation round cites a pull-request number, as round 36 of the
+// `## Changelog` of `docs/specs/spec.md` cites `#349`, so a mark measured before that pull
+// request reports the round's own citation.
+const issueCitationHighWaterMark = 520
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
