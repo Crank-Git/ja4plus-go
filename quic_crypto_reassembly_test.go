@@ -272,10 +272,10 @@ func TestJA4DropsTheConnectionOfAFragmentBufferAboveTheBound(t *testing.T) {
 
 // TestJA4DropsTheConnectionOfAClientHelloParseError holds issue #533.
 //
-// ClientHelloFromCryptoFragments returns nil and no error while a fragment is missing, so
-// an error of that function names a handshake message that holds every byte its length
-// field counts. No later packet repairs such a message, and the fingerprinter drops the
-// connection state rather than hold it for the life of the process.
+// ClientHelloFromCryptoFragments returns nil and no error while a fragment is missing.
+// So an error of that function names a complete handshake message. No later packet repairs
+// such a message. The fingerprinter drops the connection state, and it holds no entry for
+// the life of the process.
 func TestJA4DropsTheConnectionOfAClientHelloParseError(t *testing.T) {
 	fingerprinter := NewJA4()
 
