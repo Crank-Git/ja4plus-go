@@ -11,12 +11,12 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1753 |
-| Deviations | 270 |
-| Accepted deviations | 583 |
-| Unaccepted uncovered values | 172 |
+| Matches | 1754 |
+| Deviations | 267 |
+| Accepted deviations | 585 |
+| Unaccepted uncovered values | 175 |
 | Accepted uncovered values | 32 |
-| Accepted comparisons | 615 |
+| Accepted comparisons | 617 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -26,8 +26,8 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1116 | 44 | 281 | 144 | 14 |
-| per-packet | 637 | 226 | 302 | 28 | 18 |
+| per-stream | 1116 | 44 | 281 | 147 | 14 |
+| per-packet | 638 | 223 | 304 | 28 | 18 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -35,7 +35,7 @@ The register holds one entry for each accepted comparison, so the accepted compa
 
 ## Deviations
 
-The run reports 853 deviations in 76 groups. One group is one capture, one method and one vector set.
+The run reports 852 deviations in 76 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -78,9 +78,8 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S_r` | the library produces a value the vector does not hold (accepted) | (none) | `q130200_1301_0033,002b` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4X | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_7bf9a7bf7029` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4X | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_44440d41940c` | (none) |
-| `gre-erspan-vxlan.pcap` | per-packet | JA4H | 3 | `gre-erspan-vxlan.pcap/4/JA4H.1` | the vector holds a value the library does not produce | `ge10nn000000_e3b0c44298fc_000000000000_000000000000` | (none) |
-| `gre-erspan-vxlan.pcap` | per-packet | JA4H | 3 | `gre-erspan-vxlan.pcap/4/JA4H_r.1` | the vector holds a value the library does not produce | `ge10nn000000___` | (none) |
-| `gre-erspan-vxlan.pcap` | per-packet | JA4H | 3 | `gre-erspan-vxlan.pcap/4/JA4H_ro.1` | the vector holds a value the library does not produce | `ge10nn000000___` | (none) |
+| `gre-erspan-vxlan.pcap` | per-packet | JA4H | 2 | `gre-erspan-vxlan.pcap/4/JA4H_r.1` | the two values differ (accepted) | `ge10nn000000___` | `ge10nn000000__` |
+| `gre-erspan-vxlan.pcap` | per-packet | JA4H | 2 | `gre-erspan-vxlan.pcap/4/JA4H_ro.1` | the two values differ (accepted) | `ge10nn000000___` | `ge10nn000000__` |
 | `gre-sample.pcap` | per-packet | JA4SSH | 1 | `gre-sample.pcap/31/JA4SSH.1` | the vector holds a value the library does not produce (accepted) | `c24s23_c4s4_c5s4` | (none) |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 2 | `http-empty-useragent.pcap/9/JA4H_r.1` | the two values differ (accepted) | `ge10nn010000_User-Agent__` | `ge10nn010000_User-Agent_` |
 | `http-empty-useragent.pcap` | per-packet | JA4H | 2 | `http-empty-useragent.pcap/9/JA4H_ro.1` | the two values differ (accepted) | `ge10nn010000_User-Agent__` | `ge10nn010000_User-Agent_` |
@@ -243,7 +242,7 @@ The library produces a value, and the vector file of the capture publishes no ke
 
 The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
 
-The run reports 204 uncovered values in 59 groups, and the register accepts 32 of them. One group is one capture, one method and one vector set.
+The run reports 207 uncovered values in 60 groups, and the register accepts 32 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 
@@ -270,6 +269,9 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 | `browsers-x509.pcapng` | per-stream | JA4X | 7 | `browsers-x509.pcapng/1/JA4X_r` | `550406,55040a,55040b,550403_550406,550408,550407,55040a,550403_551d23,551d0e,551d11,551d0f,551d25,551d1f,551d20,2b06010505070101,551d13,2b06010401d679020402` | no |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4L | 1 | `gre-erspan-vxlan.pcap/3/JA4L.1` | `953_64` | no |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4LS | 1 | `gre-erspan-vxlan.pcap/2/JA4LS.1` | `997_64` | no |
+| `gre-erspan-vxlan.pcap` | per-stream | JA4H | 3 | `gre-erspan-vxlan.pcap/0/JA4H` | `ge10nn000000_e3b0c44298fc_000000000000_000000000000` | no |
+| `gre-erspan-vxlan.pcap` | per-stream | JA4H | 3 | `gre-erspan-vxlan.pcap/0/JA4H_r` | `ge10nn000000__` | no |
+| `gre-erspan-vxlan.pcap` | per-stream | JA4H | 3 | `gre-erspan-vxlan.pcap/0/JA4H_ro` | `ge10nn000000__` | no |
 | `gre-sample.pcap` | per-packet | JA4L | 2 | `gre-sample.pcap/13/JA4L.1` | `36_255` | yes |
 | `gre-sample.pcap` | per-packet | JA4L | 2 | `gre-sample.pcap/14/JA4L.1` | `26150_255` | yes |
 | `gre-sample.pcap` | per-packet | JA4LS | 1 | `gre-sample.pcap/12/JA4LS.1` | `22952_236` | yes |
@@ -453,7 +455,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `dtls-udp.notest.cap` | JA4D6 | — | not applicable | 0 | 0 | FoxIO marks the capture `notest`, so the suite compares no value on it. |
 | `gre-erspan-vxlan.pcap` | JA4 | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-erspan-vxlan.pcap` | JA4S | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
-| `gre-erspan-vxlan.pcap` | JA4H | per-packet | deviation | 0 | 3 | — |
+| `gre-erspan-vxlan.pcap` | JA4H | per-packet | deviation | 1 | 2 | — |
 | `gre-erspan-vxlan.pcap` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-erspan-vxlan.pcap` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `gre-erspan-vxlan.pcap` | JA4L | per-stream | match | 1 | 0 | — |

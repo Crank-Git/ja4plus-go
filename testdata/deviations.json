@@ -2496,6 +2496,22 @@
     "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
   },
   {
+    "key": "gre-erspan-vxlan.pcap/4/JA4H_r.1",
+    "capability": false,
+    "ours": "ge10nn000000__",
+    "theirs": "ge10nn000000___",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
+    "key": "gre-erspan-vxlan.pcap/4/JA4H_ro.1",
+    "capability": false,
+    "ours": "ge10nn000000__",
+    "theirs": "ge10nn000000___",
+    "ruling": "#285",
+    "reason": "The two FoxIO vector sets disagree on the JA4H shape, and the maintainer ruled on 2026-08-12 that this library follows the per-stream set."
+  },
+  {
     "key": "http-empty-useragent.pcap/9/JA4H_r.1",
     "capability": false,
     "ours": "ge10nn010000_User-Agent_",

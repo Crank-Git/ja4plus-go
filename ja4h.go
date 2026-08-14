@@ -485,8 +485,13 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 	partA := ja4hPartA(req)
 
 	// Part B: header names in original order, excluding Cookie, Referer, pseudo-headers.
+	//
+	// An empty header list hashes to `e3b0c44298fc`, and part b writes no zero sentinel.
+	// R18 of `docs/specs/foxio/JA4H.md` names no sentinel, and R27 confines the sentinel to
+	// part c and to part d. The maintainer ruled the reference split on 2026-08-14, and
+	// issue #527 is the reversal path. The port half is `Crank-Git/ja4plus#612`.
 	headersStr := strings.Join(ja4hHeaderNames(req), ",")
-	partB := parser.TruncatedHash(headersStr)
+	partB := parser.TruncatedHashNoSentinel(headersStr)
 
 	// Part C hashes the sorted cookie names, and part D hashes the sorted cookie pairs.
 	cookieNamesStr, cookieValuesStr := ja4hSortedCookieStrings(req)
