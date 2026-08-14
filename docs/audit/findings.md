@@ -105,13 +105,21 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `internal/parser/x509_identifiers.go` | #490 |
 | `internal/parser/icmp_quoted.go` | #494 |
 | `state_bound.go` | #565 |
+| `cmd/ja4plus/watch.go` | #79 |
+| `cmd/ja4plus/statistics.go` | #81 |
 <!-- added-files:end -->
 
-The table holds five rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
+The table holds seven rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
 audit of Epic 2, issue #61 added `cmd/ja4plus/types.go` after it, issue #490 added
 `internal/parser/x509_identifiers.go` after it, issue #494 added
-`internal/parser/icmp_quoted.go` after it, and issue #565 added `state_bound.go` after it,
-so no audit reads any of the five files.
+`internal/parser/icmp_quoted.go` after it, issue #565 added `state_bound.go` after it,
+issue #79 added `cmd/ja4plus/watch.go` after it, and issue #81 added
+`cmd/ja4plus/statistics.go` after it, so no audit reads any of the seven files.
+
+**The merge of `dev` into `epic/76-live-capture` met two tables, and it holds the union of
+them.** `dev` carried the row of #565, and the integration branch carried the row of #79 and
+the row of #81. **Each row states one file that one issue added**, so no row of either table
+contradicts a row of the other, and the union states the whole history.
 
 ## The record
 

@@ -297,6 +297,37 @@ jobs:
           path: conformance.log
           if-no-files-found: error
 
+  # FR-capture-12 puts the libpcap capture backend behind the `libpcap` build tag, and that
+  # backend is the one path of this module that uses cgo. This job compiles it on macOS,
+  # because macOS is the platform the tag exists for.
+  #
+  # **This job gates nothing else, and no release artifact carries the tag.**
+  # `docs/specs/features/13-live-capture.md` `## The cgo containment` states the three
+  # containment rules, and `.github/workflows/release.yml` builds five artifacts with no
+  # `-tags` flag. The `test` job above proves the other half: it builds every package with
+  # no tag, so the default build stays free of cgo.
+  #
+  # This job declares no `permissions` block of its own, and FR-supply-15 permits one block
+  # for the whole workflow.
+  libpcap:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      - name: Build the tagged path
+        run: go build -tags libpcap ./cmd/ja4plus
+
+      - name: Test the capture package with the tag
+        run: go test -tags libpcap ./internal/capture/
+
+      - name: Prove that the default build holds no cgo
+        run: CGO_ENABLED=0 go build ./...
+
   lint:
     runs-on: ubuntu-latest
     steps:

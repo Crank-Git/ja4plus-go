@@ -16,19 +16,22 @@ Round 2 listed live capture as a non-goal. The maintainer ruled on 2026-08-11 th
 capability Go cannot achieve stays out of scope, and Go can achieve this one.
 
 **The capability is not equal on every platform, and this feature set states the
-boundary.** `pcapgo/capture.go` carries the build constraint `linux,go1.9`, so the pure-Go
-capture handle reaches Linux alone. `gopacket/afpacket` uses cgo. macOS therefore needs
-libpcap through cgo, and the maintainer chose an opt-in build tag for it.
+boundary.** `gopacket@v1.6.1/pcapgo/capture.go:6` holds `//go:build linux`, so the pure-Go
+capture handle reaches Linux alone. `gopacket@v1.6.1/afpacket/afpacket.go:7` holds the
+same constraint, so `afpacket` reaches Linux alone too. macOS therefore needs libpcap
+through cgo, and the maintainer chose an opt-in build tag for it.
 
 ## The cgo containment
 
-`CLAUDE.md` states "No cgo. The build cross-compiles to five platforms." **The `libpcap`
-build tag contradicts that sentence for one build**, so this feature set contains the
-contradiction three ways and then rewrites the sentence.
+`CLAUDE.md` stated "No cgo. The build cross-compiles to five platforms." before this epic.
+**The `libpcap` build tag contradicts that sentence for one build**, so this feature set
+contains the contradiction three ways and it then rewrites the sentence. Acceptance
+criterion 10 below records that rewrite. `CLAUDE.md` states the containment on 2026-08-14.
 
 1. **The default build selects the pure-Go backend and holds no cgo.** `CGO_ENABLED=0`
    builds every package of this module.
-2. **No released binary carries cgo.** GoReleaser builds no artifact with the tag.
+2. **No released binary carries cgo.** `.github/workflows/release.yml` builds the five
+   artifacts, and no build command of that file carries `-tags`.
 3. **CI compiles the tagged path on a macOS runner and gates nothing else on it.** The
    check proves the code builds, and the release does not ship it.
 
@@ -74,7 +77,33 @@ makes the program say so.
   the platform is unsupported.
 - **FR-capture-14** — The handle stays open across the whole run. The monitor opens it
   once.
-- **FR-capture-15** — The pure-Go backend applies the capture filter as a BPF program.
+- **FR-capture-15** — The pure-Go backend applies no capture filter. It returns an error
+  that names the filter, the `libpcap` build tag and the build command.
+
+**FR-capture-15 changed on 2026-08-14, and this file records the change rather than the
+result alone.** The requirement read
+`The pure-Go backend applies the capture filter as a BPF program.` until that day. **The
+maintainer ruled #564**, and the ruling lives in comment 5294952561 of that issue.
+
+**The reason: no compiler of a capture filter reaches the default build.** #77 measured
+three candidates in the module cache on 2026-08-14.
+
+| What | What it does | Why it reaches no filter |
+|---|---|---|
+| `pcapgo.EthernetHandle.SetBPF` | Takes `[]bpf.RawInstruction`. | It parses no expression. `gopacket@v1.6.1/pcapgo/capture.go:207`. |
+| `golang.org/x/net/bpf` | Assembles an instruction slice. | It holds no parser. `golang.org/x/net@v0.39.0/bpf/asm.go:14`. |
+| `pcap.CompileBPFFilter` | Compiles an expression. | It calls `C.pcap_compile`, so it needs cgo. `gopacket@v1.6.1/pcap/pcap.go:434` and `pcap/pcap_unix.go:300`. |
+
+**A compiler for a subset of the grammar reaches two packet sets from one filter**, because
+the libpcap backend compiles the whole grammar. The ruling declines that outcome, and a
+fingerprint exists to be compared.
+
+**The libpcap backend applies a capture filter**, and FR-capture-12 names it.
+`pcap.CompileBPFFilter` serves that path.
+
+**Issue #564 is the reversal path.** A reversal adds a pure-Go compiler as a dependency, or
+it writes a compiler in this repository, and it re-reads the three rows above at the
+versions of that day.
 
 ### The monitor loop
 
@@ -168,27 +197,36 @@ side by side, plus the permission failure and the unsupported-platform message.
 | `internal/capture/pcapgo_linux.go` | New. Build tag `linux`. |
 | `internal/capture/libpcap.go` | New. Build tag `libpcap`. |
 | `internal/capture/unsupported.go` | New. The fallback that FR-capture-13 needs. |
-| `cmd/ja4plus/watch.go` | New. The command, the loop, the signals, the statistics line. |
+| `cmd/ja4plus/watch.go` | New. The command, the loop, the signals, the connection table. |
+| `cmd/ja4plus/statistics.go` | New. The statistics line and the goroutine that writes it. |
 | `cmd/ja4plus/main.go` | The subcommand joins the parser. |
 | `CLAUDE.md` | The no-cgo sentence states the containment. |
 | `.github/workflows/ci.yml` | A macOS job compiles the tagged path. |
-| `.goreleaser.yaml` | No artifact carries the tag. |
+| `.github/workflows/release.yml` | No artifact carries the tag. |
 
 ## Interfaces
 
 | Interface | Version | Documentation |
 |---|---|---|
-| `gopacket/pcapgo` | v1.1.19 | <https://pkg.go.dev/github.com/google/gopacket/pcapgo> |
-| `gopacket/pcap` | v1.1.19 | <https://pkg.go.dev/github.com/google/gopacket/pcap> |
+| `gopacket/pcapgo` | v1.6.1 | <https://pkg.go.dev/github.com/gopacket/gopacket/pcapgo> |
+| `gopacket/pcap` | v1.6.1 | <https://pkg.go.dev/github.com/gopacket/gopacket/pcap> |
 | `os/signal` | Go 1.24 | <https://pkg.go.dev/os/signal> |
 | Linux packet socket | `packet(7)` | <https://man7.org/linux/man-pages/man7/packet.7.html> |
 
-**`pcapgo.NewEthernetHandle` is confirmed to be Linux-only and cgo-free.** `pcapgo/
-capture.go` at v1.1.19 opens with `// +build linux,go1.9` and imports no C. Read
-2026-08-11 from the module cache at `github.com/google/gopacket@v1.1.19`.
+**`pcapgo.NewEthernetHandle` is Linux-only, and it holds no cgo.**
+`gopacket@v1.6.1/pcapgo/capture.go:6` holds `//go:build linux`, and the file imports no C.
+Read 2026-08-14 from the module cache at `github.com/gopacket/gopacket@v1.6.1`.
 
-**`gopacket/afpacket` is not used, because it imports C.** `afpacket/afpacket.go` and
-`afpacket/header.go` both do. Read at the same version and date.
+**`gopacket/afpacket` is not used, because it reaches Linux alone.**
+`gopacket@v1.6.1/afpacket/afpacket.go:7` holds `//go:build linux`, and
+`gopacket@v1.6.1/afpacket/header.go:7` holds the same line. **No file of that package
+imports C at v1.6.1**, so `afpacket` reaches macOS no better than `pcapgo` does. Read
+2026-08-14 from the same module cache.
+
+**The two paragraphs above read `github.com/gopacket/gopacket` at v1.6.1, and an earlier
+draft read `github.com/google/gopacket` at v1.1.19.** #438 moved the module on 2026-08-13,
+and the Epic 13 round re-read each constraint at the version `go.mod` requires. **The
+earlier draft stated `// +build linux,go1.9`, and no file of v1.6.1 holds that term.**
 
 ## Edge cases & failures
 
@@ -210,7 +248,9 @@ capture.go` at v1.1.19 opens with `// +build linux,go1.9` and imports no C. Read
    generates on the loopback interface.
 2. `CGO_ENABLED=0 go build ./...` succeeds for every package.
 3. `go build -tags libpcap ./cmd/ja4plus` succeeds on a macOS runner in CI.
-4. No GoReleaser artifact is built with the `libpcap` tag.
+4. No artifact of `.github/workflows/release.yml` is built with the `libpcap` tag. **This
+   repository holds no `.goreleaser.yaml` on 2026-08-14**, and #105 moves the release to
+   GoReleaser later. A criterion that named that file measured nothing.
 5. `SIGINT` stops the monitor, and the exit status is 0.
 6. The monitor prints the open windows after the stop request.
 7. A run of 100000 packets holds resident memory below a recorded ceiling.

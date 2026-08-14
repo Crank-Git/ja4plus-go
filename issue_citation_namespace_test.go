@@ -130,7 +130,36 @@ import (
 // **The second merge of `dev` into `epic/83-documentation-site` met the marks 604 and 602,
 // and it keeps 604.** Epic 6 landed on `dev` after the first merge, and it carried the
 // reading of 602. **A mark is a lower bound, so 604 covers every citation that 602 covers.**
-const issueCitationHighWaterMark = 604
+//
+// #77 re-measured the mark on 2026-08-14 and it read 564. `internal/capture/pcapgo_linux.go`
+// cites #564 at three places. #564 names the issue that carries the capture filter question,
+// and that number sits above the inherited mark of 552. **A member pays this cost too**, and
+// no round of the batch precedes a member that files an issue.
+//
+// **The sentence above named a TODO comment until the Epic 13 round repaired it.**
+// `grep -n "TODO" internal/capture/pcapgo_linux.go` reports nothing on 2026-08-14. The
+// three #564 citations sit at `:42`, `:112` and `:120`: one ordinary comment inside `open`,
+// and two lines of the doc comment of `compileFilter`. `.claude/rules/ste.md`
+// `### A code comment` gives `TODO(#N)` a defined form, so a reader who grepped that marker
+// found no target.
+//
+// #80 re-measured the mark on 2026-08-14 and it read 591. The doc comment of `newMonitor`
+// in `cmd/ja4plus/watch.go` cites #577, which names the issue that carries the age-pass
+// clock question, and that number sits above the inherited mark of 564. **Two members of
+// one batch each pay this cost**, because #77 landed before #577 existed.
+//
+// **The merge of `dev` into `epic/76-live-capture` met the marks 604 and 591, and it keeps
+// 604.** Epic 14 allocated #603 for its own round, and that reading is the later one. **A
+// mark is a lower bound, so 604 covers every citation that 591 covers**, and it covers the
+// #564 citation of #77 and the #577 citation of #80.
+//
+// The Epic 13 round re-measured the mark on 2026-08-14 and it read 614. The round cites
+// #609, #610, #611, #612, #613 and #614, and each number sits above the inherited mark of
+// 604. Every one names an issue of this repository. **#614 is the round's own issue**, and
+// #609 through #613 are the five findings of the Epic 13 cross-member review that earned a
+// tracker issue. **A round that runs after its review allocates six numbers rather than
+// one**, which is the maintenance cost that #351 named.
+const issueCitationHighWaterMark = 614
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

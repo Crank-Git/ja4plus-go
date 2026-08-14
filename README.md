@@ -102,6 +102,15 @@ ja4plus analyze capture.pcap --csv
 # Include fingerprint identification
 ja4plus analyze capture.pcap --lookup
 
+# Watch one live interface
+ja4plus watch --interface eth0
+
+# The analyze options hold the same meaning on the monitor
+ja4plus watch --interface eth0 --json --types ja4,ja4t --lookup
+
+# One statistics line every 10 seconds, on standard error
+ja4plus watch --interface eth0 --stats-interval 10
+
 # Fingerprint a certificate
 ja4plus cert server.der
 ja4plus cert server.pem
@@ -110,6 +119,26 @@ ja4plus cert server.pem
 ja4plus db update
 ja4plus db info
 ```
+
+### The capture filter of `ja4plus watch`
+
+**A capture filter needs the `libpcap` build tag.** The default build holds no cgo, and it
+reaches no compiler of a filter expression. So the default build declines `--bpf`, and it
+names the build command:
+
+```bash
+go build -tags libpcap ./cmd/ja4plus
+ja4plus watch --interface eth0 --bpf "tcp port 443"
+```
+
+**The maintainer ruled this on 2026-08-14, and issue #564 is the reversal path.** The
+monitor reads every packet of the interface without the tag, and `--types` filters the
+methods on any build. `docs/specs/features/13-live-capture.md` FR-capture-15 states the
+ruling.
+
+**The same tag reaches the monitor on macOS**, because the pure-Go capture handle builds on
+Linux alone. The monitor reads no interface on Windows, and `ja4plus analyze` reads a
+capture file on every platform.
 
 ## Go API
 

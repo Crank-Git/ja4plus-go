@@ -54,6 +54,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
+	case "watch":
+		if err := runWatch(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	case "cert":
 		if err := runCert(os.Args[2:]); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -78,6 +83,7 @@ func printUsage() {
 
 Usage:
   ja4plus analyze <pcap-file> [options]
+  ja4plus watch --interface <name> [options]
   ja4plus cert <cert-file>
   ja4plus db update
   ja4plus db info
@@ -91,6 +97,15 @@ Analyze options:
                   ja4l prints the client value and the server value.
                   ja4ls prints the server value alone.
   --lookup        Include application lookup for each fingerprint
+
+Watch options:
+  --interface <name>       The interface the monitor reads
+  --bpf <filter>           A capture filter. The libpcap build applies it, and the
+                           default build declines it.
+  --stats-interval <secs>  The seconds between two statistics lines. The default is 60,
+                           and 0 writes one line at exit.
+  --json, --csv, --types <list>, --lookup
+                           The options of the analyze command, with the same meaning.
 
 Database commands:
   db update       Download the latest ja4plus-mapping.csv from FoxIO
