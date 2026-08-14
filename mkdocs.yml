@@ -178,7 +178,23 @@ nav:
       - Implementation notes: implementation-notes.md
       - Parity with the port: parity.md
       - License: licensing.md
-  # #86 adds `methods/index.md` and the eleven method pages here.
-  - Methods: []
+  # #86 owns every entry between this line and the `Reference` marker below.
+  #
+  # The order is the order that `conformanceReportMethods` of `conformance_report_test.go`
+  # prints, so the site and the conformance report read the same sequence. **JA4L and JA4LS
+  # each hold one page**, under FR-documentation-17, and one Go type writes both.
+  - Methods:
+      - Overview: methods/index.md
+      - JA4: methods/ja4.md
+      - JA4S: methods/ja4s.md
+      - JA4H: methods/ja4h.md
+      - JA4X: methods/ja4x.md
+      - JA4SSH: methods/ja4ssh.md
+      - JA4L: methods/ja4l.md
+      - JA4LS: methods/ja4ls.md
+      - JA4T: methods/ja4t.md
+      - JA4TS: methods/ja4ts.md
+      - JA4D: methods/ja4d.md
+      - JA4D6: methods/ja4d6.md
   # #87 adds the API-reference pages and the examples here.
   - Reference: []
