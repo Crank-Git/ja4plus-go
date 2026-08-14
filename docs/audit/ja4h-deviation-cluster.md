@@ -485,14 +485,18 @@ at the pin `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 
 | Implementation | Part b of an empty header list | Evidence |
 |---|---|---|
-| Python | `e3b0c44298fc` | `testdata/foxio/reference/python/ja4h.py:72` and `testdata/foxio/reference/python/common.py:127` |
-| Wireshark | `e3b0c44298fc` | `testdata/foxio/reference/wireshark/source/packet-ja4.c:628` and `:641` |
+| Python | `e3b0c44298fc` | `testdata/foxio/reference/python/ja4h.py:76` and `testdata/foxio/reference/python/common.py:127` |
+| Wireshark | `e3b0c44298fc` | `testdata/foxio/reference/wireshark/source/packet-ja4.c:629-630` and `:641` |
 | Rust | `000000000000` | `testdata/foxio/reference/rust/ja4/src/http.rs:202` and `testdata/foxio/reference/rust/ja4/src/lib.rs:184` |
 | Zeek | `000000000000` | `testdata/foxio/reference/zeek/ja4h/main.zeek:195` and `testdata/foxio/reference/zeek/utils/common.zeek:64` |
 
 **Python and Wireshark hash the header string under no guard.**
-`testdata/foxio/reference/python/ja4h.py:72` holds `headers = sha_encode(x['headers'])`.
-`testdata/foxio/reference/wireshark/source/packet-ja4.c:641` writes `hash1` directly, and
+`testdata/foxio/reference/python/ja4h.py:76` holds `headers = sha_encode(x['headers'])`.
+**`:72` holds the cookie fields**, and R18 and R27 of `docs/specs/foxio/JA4H.md` already
+state that separation.
+`testdata/foxio/reference/wireshark/source/packet-ja4.c:629-630` computes `hash1` under no
+guard. `testdata/foxio/reference/wireshark/source/packet-ja4.c:641` writes `hash1`
+directly, and
 it reserves `zero_hash` for part c and part d alone.
 
 **Rust and Zeek return the zero sentinel for the empty string.**
@@ -537,8 +541,11 @@ rule 5b, and no session builds it first.** A ruling lands in this repository and
 `Crank-Git/ja4plus` together, under `.claude/rules/parity.md`.
 
 **A repair of rule 5b changes no line of `internal/parser/hash.go`.** `TruncatedHash` serves
-nine call sites outside part b, in `ja4.go`, in `ja4s.go`, in `ja4x.go` and in the two
-cookie parts of `computeJA4HFromRequest`. **R27 holds the sentinel for part c and part d**,
+ten call sites outside part b, in `ja4.go`, in `ja4s.go`, in `ja4x.go` and in the two
+cookie parts of `computeJA4HFromRequest`. **The root package holds eleven call sites in
+all**, and part b is the eleventh. `ja4hHashCallSites` of `ja4h_empty_header_list_test.go`
+names each one, and `TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed` reads the
+syntax tree to hold that table true. **R27 holds the sentinel for part c and part d**,
 and **R12 of `docs/specs/foxio/JA4X.md` holds the sentinel for JA4X**. The doc comment of
 `computeJA4XWithRaw` in `ja4x.go` cites R12 and it names the same reliance. So a change to
 the shared function moves a JA4 value, a JA4S value and a JA4X value.
