@@ -252,8 +252,9 @@ image.
   `tcp_flags == 0x012` at `wireshark/source/packet-ja4.c:1279`. Python tests
   `(flags & TCP_FLAGS['SYN']) and not (flags & TCP_FLAGS['ACK'])` at `python/ja4.py:563`.
   Zeek tests `(rp$tcp$flags & TH_SYN) == 0 || (rp$tcp$flags & TH_ACK) == TH_ACK` at
-  `zeek/ja4l/main.zeek:84`. Rust reads `tcp.flags.syn` and `tcp.flags.ack` as separate
-  fields, at `rust/ja4/src/time/tcp.rs:211` and at `rust/ja4/src/time/tcp.rs:212`. **So an
+  `zeek/ja4l/main.zeek:84`. Rust reads the two flags as separate fields. It reads
+  `tcp.flags.ack` at `rust/ja4/src/time/tcp.rs:211`, and it reads `tcp.flags.syn` at
+  `rust/ja4/src/time/tcp.rs:212`. **So an
   ECN-marked SYN reaches no Wireshark branch, and the dissector fills no connection
   record.** `wireshark/source/packet-ja4.c:1266` is one line, and JA4T and JA4L both read
   it. **The maintainer ruled that the SYN bit test of ruling #126 reaches JA4L, and not
