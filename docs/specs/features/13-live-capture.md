@@ -74,7 +74,33 @@ makes the program say so.
   the platform is unsupported.
 - **FR-capture-14** — The handle stays open across the whole run. The monitor opens it
   once.
-- **FR-capture-15** — The pure-Go backend applies the capture filter as a BPF program.
+- **FR-capture-15** — The pure-Go backend applies no capture filter. It returns an error
+  that names the filter, the `libpcap` build tag and the build command.
+
+**FR-capture-15 changed on 2026-08-14, and this file records the change rather than the
+result alone.** The requirement read
+`The pure-Go backend applies the capture filter as a BPF program.` until that day. **The
+maintainer ruled #564**, and the ruling lives in comment 5294952561 of that issue.
+
+**The reason: no compiler of a capture filter reaches the default build.** #77 measured
+three candidates in the module cache on 2026-08-14.
+
+| What | What it does | Why it reaches no filter |
+|---|---|---|
+| `pcapgo.EthernetHandle.SetBPF` | Takes `[]bpf.RawInstruction`. | It parses no expression. `gopacket@v1.6.1/pcapgo/capture.go:207`. |
+| `golang.org/x/net/bpf` | Assembles an instruction slice. | It holds no parser. `golang.org/x/net@v0.39.0/bpf/asm.go:14`. |
+| `pcap.CompileBPFFilter` | Compiles an expression. | It calls `C.pcap_compile`, so it needs cgo. `gopacket@v1.6.1/pcap/pcap.go:434` and `pcap/pcap_unix.go:300`. |
+
+**A compiler for a subset of the grammar reaches two packet sets from one filter**, because
+the libpcap backend compiles the whole grammar. The ruling declines that outcome, and a
+fingerprint exists to be compared.
+
+**The libpcap backend applies a capture filter**, and FR-capture-12 names it.
+`pcap.CompileBPFFilter` serves that path.
+
+**Issue #564 is the reversal path.** A reversal adds a pure-Go compiler as a dependency, or
+it writes a compiler in this repository, and it re-reads the three rows above at the
+versions of that day.
 
 ### The monitor loop
 

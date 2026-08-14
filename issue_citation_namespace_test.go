@@ -63,7 +63,12 @@ import (
 // The batch #536 round re-measured the mark on 2026-08-14 and it read 552. The round cites
 // #544, #547, #548, #549, #550, #551 and #552, and each number sits above the inherited
 // mark of 543. Every one names an issue or a pull request of this repository.
-const issueCitationHighWaterMark = 552
+// #77 re-measured the mark on 2026-08-14 and it read 564. The TODO comment of
+// `compileFilter` in `internal/capture/pcapgo_linux.go` cites #564, which names the issue
+// that carries the capture filter question, and that number sits above the inherited mark
+// of 552. **A member pays this cost too**, and no round of the batch precedes a member that
+// files an issue.
+const issueCitationHighWaterMark = 564
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
