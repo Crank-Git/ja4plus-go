@@ -253,9 +253,12 @@ the worked example. It is an ICMP `Destination unreachable (3)` message of code 
 ssh2.pcapng/19/JA4T.1  expected: "64240_2-1-3-1-1-4_1460_8"  produced: ""
 ```
 
-**The library reads the outer layer list, and the quoted header sits inside the ICMP
+**The library read the outer layer list, and the quoted header sits inside the ICMP
 payload.** `GetTCPLayer` of `internal/parser/packet.go` walks the layers that `gopacket`
-decodes, and `ProcessPacket` of `ja4t.go` returns at once when that walk finds no TCP layer.
+decodes, and `ProcessPacket` of `ja4t.go` returned at once when that walk found no TCP layer.
+**#494 built the change at `ecc2fa1`**, and `ProcessPacket` now calls `QuotedTCPHeader` of
+`internal/parser/` before it decides. **Every sentence of this section that reads in the present
+tense describes the tree before that change.**
 `gopacket` decodes no IP layer and no TCP layer inside an ICMP payload, so the walk finds
 none.
 
@@ -295,8 +298,8 @@ the decode path, and `ja4t_icmp_quoted_test.go` holds the rule.
 **The candidate answers.**
 
 1. The library reads a TCP header that an ICMP error message quotes, as the dissector does.
-2. The library reads the outer TCP header alone, as it does today, and as Zeek and the Rust
-   reference do.
+2. The library reads the outer TCP header alone, as it did before `ecc2fa1`, and as Zeek and the
+   Rust reference do. **The maintainer declined this answer.**
 3. The library reads the quoted header, and the conformance suite excludes the value from
    the per-stream comparison.
 
@@ -333,10 +336,12 @@ Every one of the 6 frames carries the TCP reset flag and no other flag.
 https3-301-get.pcap/20/JA4TS.1  expected: "14240_2-4-8-1-3_1436_10"  produced: ""
 ```
 
-**The library holds a reset branch, and a guard closes it.** `ProcessPacket` of `ja4ts.go`
-calls `resetResults` for a packet that carries the reset flag. `resetResults` returns nil
-when the connection holds fewer than two SYN-ACK times. Each of the 6 connections holds one
-SYN-ACK, so the guard returns nil.
+**The library held a reset branch, and a guard closed it.** `ProcessPacket` of `ja4ts.go`
+calls `resetResults` for a packet that carries the reset flag. `resetResults` returned nil
+when the connection held fewer than two SYN-ACK times. Each of the 6 connections holds one
+SYN-ACK, so the guard returned nil. **#495 built the change at `d637e66`**, and `resetResults`
+now returns nil only where the connection key reaches no entry. **Every sentence of this section
+that reads in the present tense describes the tree before that change.**
 
 **The dissector publishes the stored four-part value, and the delay list is a separate
 branch.** `wireshark/source/packet-ja4.c:1295-1299` sets `syn = 3` for the flag byte `0x004`.
@@ -378,7 +383,8 @@ requirement**, and it added FR-parity-43a for the reset that reaches no stored c
 **The candidate answers.**
 
 1. The library publishes the stored four-part value on a reset, as the dissector does.
-2. The library returns no value for such a reset, as it does today.
+2. The library returns no value for such a reset, as it did before `d637e66`. **The maintainer
+   declined this answer.**
 3. The library publishes the value in the per-packet comparison alone.
 
 **This reading picks none.**

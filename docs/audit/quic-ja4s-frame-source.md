@@ -268,11 +268,15 @@ below carry it without a change.
 }
 ```
 
-**This page writes neither entry**, and #484 owns the two entries.
+**This page writes neither entry.** **No member of the Epic #441 batch wrote either one**, so the
+merged tree reports both comparisons as deviations. **#484 keeps the two entries, and it does not close
+with this batch.**
 
-**`docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` `## Cause 7` names #467 as the owner of
-`testdata/deviations.json`, and #467 is closed.** The batch documentation round repairs that
-citation, and this page repairs no line of a record.
+**`docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md`
+`## Cause 7 — the library reads the second QUIC connection, and the Python reference publishes no value for it`
+named #467 as the owner of `testdata/deviations.json`, and #467 is a member of batch #478.** **The batch
+documentation round of the Epic #441 batch repaired that citation**, so the sentence above describes the
+page as it read before that repair.
 
 **No parity difference opens.** The port holds the same behavior:
 `ja4plus/fingerprinters/ja4s.py:82-87` reads a QUIC Initial packet.
