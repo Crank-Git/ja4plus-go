@@ -362,12 +362,17 @@ that separation, and neither one reads the fix status.
 
 **The tool offers no exclusion, and it states so.**
 
-> There is no support for silencing vulnerability findings. See
-> <https://go.dev/issue/61211> for updates.
+> There is no support for silencing vulnerability findings. See https://go.dev/issue/61211 for updates.
 
 Verified against <https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck>, retrieved
-2026-08-13. **So a named exclusion with an expiry date is unbuildable**, and the maintainer
-records an accepted risk in `docs/audit/dependency-decision.md` alone.
+2026-08-13. **The page renders `cmd/govulncheck/doc.go` of `golang.org/x/vuln`, and #486
+read that file at v1.6.0**, which `.github/workflows/ci.yml` pins.
+`golang.org/x/vuln@v1.6.0/cmd/govulncheck/doc.go:95` holds the sentence, and that line
+carries the bare URL. **The quotation above reproduces the tool's text**, and round 44 of
+the `## Changelog` of `docs/specs/spec.md` holds the same text.
+
+**So a named exclusion with an expiry date is unbuildable**, and the maintainer records an
+accepted risk in `docs/audit/dependency-decision.md` alone.
 
 ## Acceptance criteria
 
