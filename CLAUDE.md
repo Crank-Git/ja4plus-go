@@ -124,8 +124,9 @@ of `.gremlins.yaml` holds the two exclusions.
 test reaches `examples/`.
 
 **The set holds 1675 mutations**, measured on 2026-08-14 with `gremlins` v0.6.0: 1473
-runnable and 202 not covered. **One run takes about 20 minutes on a 10-core machine.** Sweep
-one package instead with `make mutate PKG=./internal/parser`.
+runnable and 202 not covered. **One run of the whole set takes about 20 minutes on a 10-core
+machine, and that figure adds the four rows below.** It is an extrapolation, and never a
+measurement. Sweep one package instead with `make mutate PKG=./internal/parser`.
 
 | Path | Mutations | Wall clock | Killed | Lived | Not covered | Timed out |
 |---|---|---|---|---|---|---|
@@ -134,16 +135,21 @@ one package instead with `make mutate PKG=./internal/parser`.
 | `./internal/parser` | 882 | 2m47s | 493 | 223 | 162 | 4 |
 | The root package | 663 | 15m24s | 484 | 162 | 16 | 1 |
 
-**The root package costs about ten times more for each mutant than `internal/parser`**, and
-the suite is the reason rather than the file count. **The conformance suite does not reach
-the sweep**, because it sits behind the `conformance` build tag and `.gremlins.yaml` sets no
-`tags` key.
+**The four rows hold 1592 mutations, and the set holds 1675.** The difference of 83 is
+`internal/capture` at 29, `internal/keylog` at 45 and `internal/fuzzprop` at 9, each
+measured with `gremlins unleash --dry-run` on 2026-08-14. **No sweep of those three has
+run**, so no row above names one.
+
+**The root package costs 1.39 seconds for each mutation, and `internal/parser` costs 0.19
+seconds.** That is a ratio of about seven, and the suite is the reason rather than the file
+count. **The conformance suite does not reach the sweep**, because it sits behind the
+`conformance` build tag and `.gremlins.yaml` sets no `tags` key.
 
 **`gremlins` reports a false `TIMED OUT` at its default timeout coefficient of 3.** It
-estimates the timeout of one mutant from a `go test` run that the Go build cache serves, so
-the estimate collapses to the cache-hit time. All 16 mutants of `internal/dbcache` reported
-`TIMED OUT`, measured on 2026-08-14. `.gremlins.yaml` sets the coefficient to 120, which is
-the lowest value that settles every measured package.
+estimates the timeout of one mutation from a `go test` run. The Go build cache serves that
+run, so the estimate collapses to the cache-hit time. All 16 mutations of `internal/dbcache`
+reported `TIMED OUT`, measured on 2026-08-14. `.gremlins.yaml` sets the coefficient to 120,
+which is the lowest value that settles every measured package.
 
 **A `gremlins` binary reports no version of its own.** `go install` writes no version stamp,
 so the installed v0.6.0 binary prints `gremlins version dev darwin/arm64`, measured on

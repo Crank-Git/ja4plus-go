@@ -32,10 +32,10 @@ func TestTheMakefileRunsTheMutationTool(t *testing.T) {
 // carries the measured case, because `docs/` is a directory of this repository.
 //
 // The reading for `mutate`: the repository root holds no path named `mutate`, so the trap
-// that `make docs` hits does not apply today. The entry still guards the target, because a
-// later change that adds such a path would leave `make mutate` reporting
-// `make: Nothing to be done for 'mutate'.` and exiting 0 without a sweep. The second
-// assertion below holds the reading, and it fails when the path appears.
+// that `make docs` hits does not apply today. The entry still guards the target. A later
+// change that adds such a path makes `make mutate` print
+// `make: Nothing to be done for 'mutate'.` and exit 0 without a sweep. The second assertion
+// below holds the reading, and it fails when the path appears.
 func TestTheMutateTargetIsPhony(t *testing.T) {
 	phony := regexp.MustCompile(`(?m)^\.PHONY:(.*)$`).FindStringSubmatch(readRepoFile(t, "Makefile"))
 	if phony == nil {
@@ -89,10 +89,12 @@ func TestTheMutateTargetSweepsOnePackage(t *testing.T) {
 // TestTheMutationConfigurationRaisesTheTimeoutCoefficient holds the measured configuration
 // of `.gremlins.yaml`.
 //
-// `gremlins` estimates the timeout of one mutant from a `go test` run that the Go build
-// cache serves, so the estimate collapses to the cache-hit time. At the default coefficient
-// of 3, every one of the 16 mutants of `internal/dbcache` reported `TIMED OUT`, measured on
-// 2026-08-14. `./ja4db` settles at 120, and 240 reports the same verdicts as 120.
+// `gremlins` estimates the timeout of one mutation from a `go test` run. The Go build cache
+// serves that run, so the estimate collapses to the cache-hit time.
+//
+// At the default coefficient of 3, every one of the 16 mutations of `internal/dbcache`
+// reported `TIMED OUT`, measured on 2026-08-14. `./ja4db` settles at 120, and 240 reports
+// the verdicts that 120 reports.
 func TestTheMutationConfigurationRaisesTheTimeoutCoefficient(t *testing.T) {
 	config := readRepoFile(t, ".gremlins.yaml")
 

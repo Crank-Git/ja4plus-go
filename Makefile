@@ -6,15 +6,19 @@
 MKDOCS ?= mkdocs
 
 # FR-mutation-2 pins the mutation tool, and this variable is the pin. A minor release of
-# `gremlins` can change a configuration key, and it can change a mutant set, so an unpinned
-# tool measures a different thing on each run.
+# `gremlins` can change a configuration key, and it can change a mutation set. So an
+# unpinned tool measures a different thing on each run.
 #
 # The pin lives here and not in `.gremlins.yaml`, because the documented configuration
 # schema holds no version key. Verified against
 # <https://gremlins.dev/latest/usage/configuration/>, retrieved 2026-08-14.
 #
-# `v0.6.0` was published 2025-12-05, and the module proxy states that date. Its `go.mod`
-# declares `go 1.25`, so the module floor of this repository compiles it.
+# `v0.6.0` was published 2025-12-05, and the module proxy states that date.
+#
+# The `go.mod` of `gremlins` v0.6.0 declares `go 1.25`, so a toolchain below go1.25 installs
+# no such binary. `CLAUDE.md` `## Stack` names go1.25.13 as the minimum build toolchain of
+# this repository, so the two agree. **That figure is a toolchain and never the language
+# version**, and `go.mod` of this repository still declares `go 1.24.0`.
 GREMLINS_VERSION ?= v0.6.0
 
 # `go install` writes the binary into the `bin` directory of `GOPATH`, and a developer PATH
@@ -113,7 +117,7 @@ fuzz:
 
 # FR-mutation-1 names `gremlins` as the mutation tool, and FR-mutation-3 names this target.
 # The sweep changes one expression, runs the test suite, and records whether a test failed.
-# A mutant that survives names a test that runs a line and asserts nothing about it.
+# A mutation that survives names a test that runs a line and asserts nothing about it.
 #
 # This target gates nothing. `CLAUDE.md` `## A change is done when` names six steps, and
 # this target is none of them. `docs/specs/features/15-mutation-sweep.md` FR-mutation-19
@@ -123,8 +127,8 @@ fuzz:
 # two differ because a `gremlins` binary cannot report its own version. `go install` of the
 # module writes no version stamp, so the installed `v0.6.0` binary reports
 # `gremlins version dev darwin/arm64`, measured on 2026-08-14. A recipe therefore cannot
-# check the binary on the PATH against `GREMLINS_VERSION`, and an install of the pin is the
-# one path that makes the pin bind.
+# check the binary on the PATH against `GREMLINS_VERSION`. An install of the pin is the one
+# path that makes the pin bind.
 #
 # `go install` reads the module cache on a second run, so it reaches the network once.
 #
@@ -142,24 +146,28 @@ fuzz:
 # So `gremlins` completes a run over `internal/parser` in under three minutes, and question 1
 # is answered: the tool is viable for this repository.
 #
-# The root package costs about ten times more for each mutant than `internal/parser`, and the
-# reason is the suite and not the file count. `go test .` reported `ok 3.941s` and
+# The root package costs 1.39 seconds for each mutation, and `internal/parser` costs 0.19
+# seconds. The reason is the suite and not the file count. `go test .` reported `ok 3.941s` and
 # `go test ./internal/parser` reported under one second, measured on 2026-08-14. **The
 # conformance suite does not reach the sweep**, because it sits behind the `conformance`
 # build tag and `.gremlins.yaml` sets no `tags` key.
 #
 # The whole named set holds 1675 mutations, measured with `gremlins unleash --dry-run .` on
-# 2026-08-14: 1473 runnable and 202 not covered.
+# 2026-08-14: 1473 runnable and 202 not covered. The four rows above hold 1592 of them, and
+# the difference of 83 is `internal/capture` at 29, `internal/keylog` at 45 and
+# `internal/fuzzprop` at 9. No sweep of those three has run.
 #
-# The four `TIMED OUT` verdicts of `internal/parser` are real hangs and not tool artifacts.
-# Each one mutates a loop condition: `x509_utils.go:64` holds `for val > 0`, and a boundary
-# mutant of it never terminates.
+# The four `TIMED OUT` verdicts of `internal/parser` are real hangs, and not tool artifacts.
+# `internal/parser/x509_utils.go:64` holds `for val > 0`, and a `CONDITIONALS_BOUNDARY`
+# mutation of it never terminates. The three others sit at
+# `internal/parser/ssh_tracker.go:317` and `internal/parser/ssh_tracker.go:318`, which hold
+# the loop of `readMessages` and its guard.
 #
 # **The sweep loads the machine.** The default worker count is the core count, and each
 # worker runs its own `go test`. The load average reached 39.67 on a 10-core machine during
 # the root sweep, measured on 2026-08-14. A developer who needs a quieter machine sets the
-# `workers` key of `.gremlins.yaml`. This repository sets no such key, because the schedule
-# of #93 runs the sweep on a CI runner and a fixed count would bound that runner too.
+# `workers` key of `.gremlins.yaml`. This repository sets no such key. The schedule of #93
+# runs the sweep on a CI runner, and a fixed count would bound that runner too.
 mutate:
 	go install github.com/go-gremlins/gremlins/cmd/gremlins@$(GREMLINS_VERSION)
 	$(GREMLINS) unleash $(PKG)
