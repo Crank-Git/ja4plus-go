@@ -149,6 +149,8 @@ across both repositories, because a reader moves between them.
 | endpoint | noun | One address and one port. | host, peer, side |
 | state table | noun | The map a fingerprinter uses to hold per-connection data. | cache, store, registry |
 | freeze | noun | The `v1.0.0` commitment that exported names and signatures stay stable. | lock, stabilization |
+| core package | noun | The package `ja4plus`, which the Go files of the repository root hold. It imports no HTTP client, so it performs no network input and no network output. `docs/audit/network-boundary.md` holds the ruling of 2026-08-14. | main package, root package, library package |
+| remote lookup | noun | The request that `LookupFingerprintRemote` of the package `github.com/Crank-Git/ja4plus-go/ja4db` makes to the `ja4db.com` service for the record of one fingerprint. | online lookup, network lookup, API call |
 | window | noun | The count of packets JA4SSH reads before it produces a fingerprint. | interval, batch, sample |
 | open window | noun | One JA4SSH window that a connection holds when the packet source ends. | partial window, trailing window |
 | bare ACK | noun | One TCP packet whose flags equal `0x0010` and whose payload is empty. `ACK` names the TCP acknowledgment flag. `docs/specs/foxio/JA4SSH.md` R16 holds the reading. | bare acknowledgment, empty ACK, pure ACK |
