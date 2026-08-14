@@ -41,8 +41,9 @@ var dhcpExcludedOptions = map[byte]bool{
 }
 
 // dhcpFQDNNameOffset is the count of bytes that option 81 holds before the domain name.
-// RFC 4702 puts the domain name after one flags byte and two rcode bytes. The port holds
-// the same value as `_DHCP_FQDN_NAME_OFFSET`.
+// Section 2 of RFC 4702 puts the domain name after one flags byte and two rcode bytes, and
+// it states that the minimum value of the length field is 3. So an option of exactly 3
+// bytes carries no name. The port holds the same value as `_DHCP_FQDN_NAME_OFFSET`.
 const dhcpFQDNNameOffset = 3
 
 // JA4DFingerprinter generates JA4D DHCP fingerprints (FoxIO PR #267/#270).
