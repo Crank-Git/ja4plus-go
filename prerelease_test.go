@@ -149,6 +149,12 @@ func (e *cleanEnvironment) directories() []string {
 func (e *cleanEnvironment) environ() []string {
 	return []string{
 		// PATH names the directory of the `go` command, and no other host directory.
+		//
+		// This entry reads a Unix path list, and it holds for Linux and for macOS. Windows
+		// separates a path list with `;` and holds no `/usr/bin`, so a Windows runner needs
+		// `os.PathListSeparator` and a different directory list here. `## Open questions`
+		// question 1 of `docs/specs/features/16-pre-release-validation.md` names a Windows
+		// runner for the binary case, so #98 reaches this line before any other issue does.
 		"PATH=" + e.goDir + ":/usr/bin:/bin",
 		"HOME=" + e.home,
 		"TMPDIR=" + e.tmp,
