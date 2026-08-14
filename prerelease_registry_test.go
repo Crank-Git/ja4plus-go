@@ -66,11 +66,33 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the documentation site",
 		requirements: []string{"FR-prerelease-23", "FR-prerelease-24", "FR-prerelease-25"},
 		issue:        99,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the release gate",
-		requirements: []string{"FR-prerelease-26", "FR-prerelease-27", "FR-prerelease-28", "FR-prerelease-29", "FR-prerelease-30"},
+		requirements: []string{"FR-prerelease-27", "FR-prerelease-29", "FR-prerelease-30"},
+		issue:        99,
+		built:        true,
+	},
+	// #99 split the two requirements below out of the release gate row on 2026-08-14.
+	//
+	// The `built` field states one fact for a whole row, and the release gate held five
+	// requirements in three states. Three of them run, one waits on a maintainer answer, and
+	// one waits on a second epic. One row would have reported all five as one state, and the
+	// summary of FR-prerelease-5 exists to separate a case that runs from a case that does
+	// not.
+	//
+	// **The split renumbers no requirement and it reorders no row.** Each requirement of the
+	// feature file still reaches exactly one row.
+	{
+		name:         "the pre-release run before the tag",
+		requirements: []string{"FR-prerelease-26"},
+		issue:        99,
+		built:        false,
+	},
+	{
+		name:         "the mutation sweep report",
+		requirements: []string{"FR-prerelease-28"},
 		issue:        99,
 		built:        false,
 	},
@@ -123,7 +145,12 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // FR-prerelease-4 against the registry.
 //
 // A row that reports a case as built while the tree holds no case is the failure this
-// guard prevents. The clean environment is the one case the tree holds today.
+// guard prevents.
+//
+// **Every member of Epic 16 edits the list below, and that is by construction.** A member
+// that builds its case adds the name of the case here, in the order the registry states.
+// #96, #97 and #98 each append their own name, and the project manager resolves the union
+// at the sub-merge.
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
@@ -132,8 +159,14 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 		}
 	}
 
-	if !slices.Equal(built, []string{"the clean environment"}) {
-		t.Errorf("the registry reports %v as built, and the tree holds the clean environment alone", built)
+	expected := []string{
+		"the clean environment",
+		"the documentation site",
+		"the release gate",
+	}
+
+	if !slices.Equal(built, expected) {
+		t.Errorf("the registry reports %v as built, and the tree holds %v", built, expected)
 	}
 }
 
