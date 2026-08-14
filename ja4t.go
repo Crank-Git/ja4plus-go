@@ -135,8 +135,9 @@ func tcpOptionRegion(tcp *layers.TCP) []byte {
 // the header writes a default rather than an error, so the value holds four parts on every
 // input. A zero-valued header reaches `0_00_00_00`.
 //
-// A caller therefore needs no nil test. Issue #508 deleted the dead nil test of the JA4T
-// caller. `TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket` and
+// A caller therefore needs no nil test. Issue #508 deleted the dead nil test of both
+// callers: `ProcessPacket` of `ja4t.go` and `ProcessPacket` of `ja4ts.go`.
+// `TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket` and
 // `TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress` hold the contract,
 // and each one fails when a later change makes the function fallible.
 func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType string) *FingerprintResult {

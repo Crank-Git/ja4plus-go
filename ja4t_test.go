@@ -131,11 +131,14 @@ func ja4tHeaderWithATruncatedOption() *layers.TCP {
 }
 
 // TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket holds the non-nil contract of
-// generateTCPFingerprint. Issue #508 deleted the dead nil test of the JA4T caller, and this
-// test fails when a later change makes the function return nil.
+// generateTCPFingerprint. Issue #508 deleted the dead nil test of both callers, and this test
+// fails when a later change makes the function return nil.
 //
-// No test reaches the deleted branch, because no input reaches it. This test therefore
-// asserts the contract that made the branch dead.
+// It reads both call sites, because one function serves both and the type name is the one
+// argument that separates them.
+//
+// No test reaches either deleted branch, because no input reaches one. This test therefore
+// asserts the contract that made both branches dead.
 func TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket(t *testing.T) {
 	synPacket := buildTCPPacket(t, 12345, 80, true, false, 65535, nil)
 	synHeader, held := synPacket.Layer(layers.LayerTypeTCP).(*layers.TCP)
@@ -157,16 +160,23 @@ func TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket(t *testing.T) 
 		{"a header with a truncated option", emptyPacket, ja4tHeaderWithATruncatedOption()},
 	}
 
-	for _, one := range cases {
-		t.Run(one.name, func(t *testing.T) {
-			fp := generateTCPFingerprint(one.packet, one.tcp, "ja4t")
-			if fp == nil {
-				t.Fatalf("generateTCPFingerprint returns nil for %s", one.name)
-			}
-			if parts := strings.Split(fp.Fingerprint, "_"); len(parts) != 4 {
-				t.Errorf("the value %q holds %d parts, want 4", fp.Fingerprint, len(parts))
-			}
-		})
+	// The two names are the two call sites. `ProcessPacket` of `ja4t.go` passes `ja4t`, and
+	// `ProcessPacket` of `ja4ts.go` passes `ja4ts`.
+	for _, fpType := range []string{"ja4t", "ja4ts"} {
+		for _, one := range cases {
+			t.Run(fpType+"/"+one.name, func(t *testing.T) {
+				fp := generateTCPFingerprint(one.packet, one.tcp, fpType)
+				if fp == nil {
+					t.Fatalf("generateTCPFingerprint of type %s returns nil for %s", fpType, one.name)
+				}
+				if fp.Type != fpType {
+					t.Errorf("the result reports type %q, want %q", fp.Type, fpType)
+				}
+				if parts := strings.Split(fp.Fingerprint, "_"); len(parts) != 4 {
+					t.Errorf("the value %q holds %d parts, want 4", fp.Fingerprint, len(parts))
+				}
+			})
+		}
 	}
 }
 
@@ -175,9 +185,9 @@ func TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket(t *testing.T) 
 // address of a composite literal allocates storage for a variable, so that address is never
 // nil.
 //
-// Issue #508 deleted the dead nil test of the JA4T caller. This test fails when a later
-// change adds a second return statement to the function, or when it returns anything other
-// than the address of a composite literal.
+// Issue #508 deleted the dead nil test of both callers. This test fails when a later change
+// adds a second return statement to the function, or when it returns anything other than the
+// address of a composite literal.
 func TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress(t *testing.T) {
 	file, err := goparser.ParseFile(gotoken.NewFileSet(), "ja4t.go", nil, 0)
 	if err != nil {
