@@ -48,6 +48,25 @@ func TestTheFuzzTargetRunsEachTargetForThirtySeconds(t *testing.T) {
 	}
 }
 
+// TestTheFuzzTargetBoundsTheCoverageMinimization holds the ruling of 2026-08-14 under
+// issue #568.
+//
+// `go help testflag` states that `-fuzzminimizetime` defaults to 60s, which is twice the
+// 30 seconds the recipe gives each target. One minimization then outlasts the run, and the
+// engine reports a frozen execution count. #568 measured two stalls in ten runs without
+// the bound, and none in ten runs with it.
+//
+// The maintainer accepted the cost: the engine minimizes the reproducer of a real crash
+// less. This guard holds the flag, because a bound that no test holds is one a later edit
+// removes silently.
+func TestTheFuzzTargetBoundsTheCoverageMinimization(t *testing.T) {
+	recipe := makefileRecipe(t, "fuzz")
+
+	if !strings.Contains(recipe, "-fuzzminimizetime 5s") {
+		t.Errorf("the fuzz target does not bound the coverage minimization:\n%s", recipe)
+	}
+}
+
 // TestThePullRequestFuzzJobAddsNoTrigger holds the batch model of this project. This
 // project runs CI once for each batch: a member pull request targets an integration
 // branch, and it carries `[skip ci]`. A trigger inside the fuzz job would start the job on
