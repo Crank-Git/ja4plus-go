@@ -575,8 +575,7 @@ func CollectCryptoFragments(collected []CryptoFragment, fragments []CryptoFragme
 	}
 
 	for _, fragment := range fragments {
-		if fragment.Offset > MaxCryptoBufferBytes ||
-			fragment.Offset+uint64(len(fragment.Data)) > MaxCryptoBufferBytes {
+		if cryptoFragmentPassesBound(fragment) {
 			continue
 		}
 
@@ -764,6 +763,10 @@ func ParseCryptoFrames(data []byte) ([]CryptoFragment, error) {
 
 // ReassembleCryptoFrames reassembles potentially fragmented CRYPTO frame data
 // into a contiguous byte slice ordered by offset.
+// It drops a fragment that reaches past MaxCryptoBufferBytes, so the buffer it returns
+// holds MaxCryptoBufferBytes bytes at most.
+// The port drops one fragment and keeps the rest at
+// `ja4plus/utils/quic_utils.py:322`, and this reader matches that rule.
 func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 	if len(fragments) == 0 {
 		return nil
@@ -780,21 +783,40 @@ func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 	// Calculate total size
 	var totalLen uint64
 	for _, f := range fragments {
+		if cryptoFragmentPassesBound(f) {
+			continue
+		}
 		end := f.Offset + uint64(len(f.Data))
 		if end > totalLen {
 			totalLen = end
 		}
 	}
 
-	if totalLen == 0 || totalLen > 1<<20 { // sanity limit: 1MB
+	if totalLen == 0 {
 		return nil
 	}
 
 	result := make([]byte, totalLen)
 	for _, f := range fragments {
+		if cryptoFragmentPassesBound(f) {
+			continue
+		}
 		copy(result[f.Offset:], f.Data)
 	}
 	return result
+}
+
+// cryptoFragmentPassesBound reports whether the fragment reaches past
+// MaxCryptoBufferBytes.
+// A fragment that reaches past the bound describes no real handshake message, and
+// ReassembleCryptoFrames allocates one byte of buffer for each byte up to the highest
+// offset. #168 measured an amplification of about 10000 to 1 from one datagram of 100
+// bytes.
+// The reader tests the offset before it adds the length, because RFC 9000 Section 16 lets
+// an offset reach 4611686018427387903 and the sum wraps in a uint64 addition.
+func cryptoFragmentPassesBound(fragment CryptoFragment) bool {
+	return fragment.Offset > MaxCryptoBufferBytes ||
+		fragment.Offset+uint64(len(fragment.Data)) > MaxCryptoBufferBytes
 }
 
 // ParseQUICServerInitial parses a QUIC server Initial packet and extracts the TLS ServerHello.
