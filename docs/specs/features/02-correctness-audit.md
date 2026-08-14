@@ -181,8 +181,8 @@ Failure scenario: a long-running program calls the update path and then looks up
 fingerprint that only the new table holds. The lookup returns no result.
 
 **#74 replaced the loader with one `atomic.Pointer[lookupTable]`.** `activeTable` of
-`lookup.go` reads the file time and the size of the cache file at each lookup, and it
-rebuilds the table when either one changes.
+`lookup.go` reads the file time and the size of the cache file at each lookup. It rebuilds
+the table when either one changes.
 `TestTheLookupTable_ReloadsWhenTheCacheFileChanges` holds the repair.
 
 ### S3 — Package-level lookup state was unguarded

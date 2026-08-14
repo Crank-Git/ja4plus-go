@@ -146,9 +146,9 @@ as part of the command-line output mockup.
 - A reload is atomic from a reader's view. A reader sees the old table or the new one,
   never a partial one.
 - The embedded copy is the last resort and always works. A process that reads a corrupt
-  cache file and holds no previous table falls back to the embedded copy, and
-  `GetDatabaseInfo` then reports the source `embedded`. A process that already holds a
-  table keeps that table, which FR-lookup-22 states.
+  cache file and holds no previous table falls back to the embedded copy. `GetDatabaseInfo`
+  then reports the source `embedded`. A process that already holds a table keeps that
+  table, which FR-lookup-22 states.
 - The remote endpoint is configurable, so the library never hard-codes a host that a
   caller cannot change.
 
@@ -172,10 +172,10 @@ as part of the command-line output mockup.
 | `ModTime` | `time.Time` | The cache file time, zero when the source is `embedded`. |
 
 **This table named the last two fields `Records` and `Updated` until 2026-08-14, and the
-code has never held either name.** #74 and #75 each measured the difference and each left
-the code alone, because #100 freezes the exported API at `v1.0.0` and a rename moves the
-frozen surface. **So this round repaired the table and no line of `lookup.go`.** Issue #100
-is the reversal path for a reader who wants the other pair of names.
+code has never held either name.** #74 and #75 each measured the difference, and each left
+the code alone. **#100 freezes the exported API at `v1.0.0`, so a rename moves the frozen
+surface.** **So this round repaired the table and no line of `lookup.go`.** Issue #100 is
+the reversal path for a reader who wants the other pair of names.
 
 ### Files
 
@@ -193,8 +193,8 @@ is the reversal path for a reader who wants the other pair of names.
 | `internal/dbcache/dbcache_test.go` | New. It holds the validation and atomic-write tests. |
 
 **`lookup_remote.go` no longer exists.** The maintainer ruled on 2026-08-14 that the remote
-lookup moves to a package rather than behind a build tag, so #72 moved the file into
-`ja4db/` and the build-tag option never shipped.
+lookup moves to a package rather than behind a build tag. #72 then moved the file into
+`ja4db/`, and the build-tag option never shipped.
 
 ## Interfaces
 
