@@ -18,7 +18,7 @@ The unit tests use packets that a person wrote, so they test the shapes that a p
 thought of.
 
 This feature set adds a fuzz target for every parser entry point, seeds each from the
-corpus, gates a short run on the batch pull request, and runs a long fuzz nightly.
+corpus, gates a short run on the batch pull request, and adds one nightly fuzz run.
 
 ## What Epic 6 built
 
@@ -53,8 +53,10 @@ crashing input is now a tracked seed at
 `internal/parser/testdata/fuzz/FuzzParseServerHelloReadsAnyPayload/issue-556-supported-versions-declares-data-the-record-holds-not`,
 which is the worked example of FR-fuzz-24.
 
-**Epic 6 changed no line of any file that is not a test file.** A proof that no input panics
-the library reads the code, and it never changes the code.
+**Epic 6 changed no line of the library.** A proof that no input panics the library reads the
+code, and it never changes the code. **The one new file that is not a test file is
+`internal/fuzzprop/fuzzprop.go`**, and ten `*_fuzz_test.go` files are the only files that
+import it.
 
 ## User stories
 
@@ -160,9 +162,9 @@ before the copy, and after the copy it raises
 ### FR-fuzz-17 names no mechanism, and #45 chose one by measurement
 
 **The requirement bounds bytes, and it names no way to count them.** #45 read three
-candidates and took the third.
+mechanisms and took the third.
 
-| Candidate | Why it fits, or does not |
+| Mechanism | Why it fits, or does not |
 |---|---|
 | `testing.AllocsPerRun` | It counts allocations, and FR-fuzz-17 bounds bytes. It also calls the function more than one time and it stops the garbage collector, so it changes the run it measures. |
 | `runtime.ReadMemStats` | It reports the bytes. One call measured **24736 ns**, so two calls for each input spend about 50 microseconds of every execution. |
@@ -205,7 +207,7 @@ target.** `FuzzNoExportedFunctionPanicsOnAnyFrame` and
 
 ### `JA4PLUS_SEEDGEN=1` must never reach a CI job
 
-**`fuzz_seed_corpus_test.go` of each package builds every seed, asserts the verdict of the
+**`fuzz_seed_corpus_test.go` of each package builds every seed, asserts the result of the
 code for it, and then compares the tracked file against the value it built.**
 `JA4PLUS_SEEDGEN=1` switches that test from compare to write.
 
@@ -292,9 +294,9 @@ the flag with it.
 ### A timeout is not a crash, and the nightly job separates the two
 
 **A job that reads the exit status alone would open a false issue on each stalled night.**
-#568 records a measured stall of `FuzzParseCryptoFramesReadsAnyPayload`, and that stall is
-unreproduced. The `Classify the result` step reads the tree instead, and it returns one of
-three results.
+Issue #568 records a measured stall of `FuzzParseCryptoFramesReadsAnyPayload`, and that
+stall is unreproduced. The `Classify the result` step reads the tree instead, and it returns
+one of three results.
 
 | Result | What produced it | What the job does |
 |---|---|---|
@@ -370,8 +372,13 @@ instead, which keeps a target beside the code it drives.
 the target list from the tree with `go test -list '^Fuzz'`, so it found the 13 new targets
 without a change.
 
-**No member edits a file that is not a test file, and none edits `testdata/deviations.json`.**
-So no fingerprint value moves, and Epic 6 writes no register entry.
+**No member changes a line of any file that the library already held.** `git diff --stat
+origin/dev...` names one file that is not a test file, and that file is new:
+`internal/fuzzprop/fuzzprop.go`. **Ten `*_fuzz_test.go` files import it, and no other file
+does**, so no line of the library reaches it.
+
+**No member edits `testdata/deviations.json`.** So no fingerprint value moves, and Epic 6
+writes no register entry.
 
 ## Interfaces
 

@@ -31,7 +31,7 @@ now replays green. **Never remove a file with an `issue-` prefix.**
 ## Two tests guard this corpus
 
 `fuzz_seed_corpus_test.go` of each package builds every seed of that package, and it
-asserts the verdict of the code for each one. It then compares the tracked file against the
+asserts the result of the code for each one. It then compares the tracked file against the
 value it built. So a seed cannot drift from the statement above it, and a target cannot
 lose its accepted input or its rejected input without a failure.
 
@@ -101,7 +101,7 @@ A record that lists them states a fact about a client. The reduction therefore c
 fact and it drops the expression, and the result carries no FoxIO license obligation.
 
 **A seed that fails this test is not committed.** One case reached that decline, and the
-verdict of #46 names it: a QUIC Initial packet of the corpus authenticates its own bytes
+reading of #46 names it: a QUIC Initial packet of the corpus authenticates its own bytes
 with an AEAD tag, so no reduction of it survives. The corpus therefore holds a synthesized
 Initial packet in place of a captured one, and the synthesized packet decrypts.
 
