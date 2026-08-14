@@ -249,13 +249,22 @@ func TestARemoteLookupBoundsTheResponseBodyToOneMegabyte(t *testing.T) {
 	}
 }
 
-// countingReader counts the bytes that a reader delivers.
+// countingReader delivers a long stream, and it counts the bytes it delivers.
+//
+// It stops at ceiling rather than running without an end. A reader without an end hangs the
+// whole test binary when the bound of readBounded regresses, and a hang reports no test name.
+// The ceiling stands far beyond the bound, so a bounded read never reaches it.
 type countingReader struct {
-	read  int
-	chunk int
+	read    int
+	chunk   int
+	ceiling int
 }
 
 func (c *countingReader) Read(p []byte) (int, error) {
+	if c.read >= c.ceiling {
+		return 0, errors.New("the reader reached the ceiling of this test, so the read of the package is unbounded")
+	}
+
 	n := len(p)
 	if c.chunk > 0 && n > c.chunk {
 		n = c.chunk
@@ -276,8 +285,8 @@ func (c *countingReader) Read(p []byte) (int, error) {
 // The reader stops one byte beyond the bound, because that byte is the evidence of the
 // overrun.
 func TestABoundedReadStopsAtOneByteBeyondTheBound(t *testing.T) {
-	// The reader delivers an endless stream, so an unbounded read never returns.
-	source := &countingReader{chunk: 4096}
+	// The reader delivers far more than the bound, so an unbounded read takes the whole stream.
+	source := &countingReader{chunk: 4096, ceiling: 8 * maxResponseBytes}
 
 	body, err := readBounded(source)
 	if err == nil {
@@ -441,8 +450,12 @@ func TestALookupAgainstAServerThatNeverRespondsReturnsAnErrorWithinElevenSeconds
 	}
 }
 
-// TestThePackageDocumentationStatesTheTransportRules records FR-lookup-9 through
-// FR-lookup-16 for the reader of `go doc`.
+// TestThePackageDocumentationStatesTheTransportRules holds the acceptance criterion of #73
+// that states `go doc` for the package.
+//
+// **This guard reads the documentation, and it holds no behavior.** A reader who deletes a
+// rule from the code and leaves the page alone passes this guard. Each guard above holds the
+// behavior, and this one holds the page that states it.
 func TestThePackageDocumentationStatesTheTransportRules(t *testing.T) {
 	content, err := os.ReadFile(filepath.Clean("doc.go"))
 	if err != nil {

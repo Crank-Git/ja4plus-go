@@ -23,6 +23,10 @@
 // other scheme. The request path carries the fingerprint, so a plain scheme discloses it.
 // A caller that states a redirect policy keeps that policy.
 //
+// That rule governs a redirect, and it governs no first request. The default endpoint carries
+// the https scheme. A caller that states an endpoint states the scheme of the first request,
+// and this package sends the request to the endpoint the caller names.
+//
 // A lookup reads at most 1 MB of the response body, and it returns an error beyond that
 // bound. It escapes the fingerprint before it builds the request path. It sends a
 // User-Agent header that names this library and its version.
