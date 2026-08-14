@@ -21,7 +21,7 @@ values, so a later run can report other counts.**
 | N | The question | The answer |
 |---|---|---|
 | 1 | Is the cluster one cause or several? | **Four causes.** Every one of the thirty falls into one of four groups, and each group names one condition of the dissector. |
-| 2 | Which line bars the emission? | `wireshark/source/packet-ja4.c:1324` for group A, `wireshark/source/packet-ja4.c:1266` and `wireshark/source/packet-ja4.c:1279` for group B, and `wireshark/source/packet-ja4.c:1364` for group C and group D. |
+| 2 | Which line bars the emission? | `wireshark/source/packet-ja4.c:1324` for group A, `wireshark/source/packet-ja4.c:1266` and `wireshark/source/packet-ja4.c:1279` for group B, and `wireshark/source/packet-ja4.c:1362` for group C and group D. |
 | 3 | Does each group earn a value decline, and under which ruling? | **Ruling #196 reaches none of the thirty.** Group A declines under ruling #128, and group C and group D decline under ruling #127. **Group B needs one answer from the maintainer.** |
 | 4 | Do the FoxIO implementations disagree? | **Yes, in every group, and the maintainer has already ruled three of the four splits.** `## The one question for the maintainer` below states the fourth. |
 
@@ -100,7 +100,7 @@ the thirty repeat another six exactly.
 
 **Every group names one condition of one chain, so this section states the chain once.**
 
-The dissector fills four points before it writes a TCP JA4L value.
+The dissector runs four steps before it opens the emission block.
 
 1. `wireshark/source/packet-ja4.c:1266` tests `tcp_flags == 0x02`. That branch fills
    `conn->client_port`, `conn->server_port`, `conn->client_ttl` and `conn->timestamp_A`.
@@ -187,8 +187,13 @@ of the connection.
 
 `chrome-cloudflare-quic-with-secrets.pcapng` carries IPv6 on all 83 of its frames, and it
 carries QUIC. **The QUIC emission site tests no time-to-live, so it publishes the stored
-value.** `testdata/foxio/wireshark/chrome-cloudflare-quic-with-secrets.pcapng.json` holds
-this on frame 52:
+value.** `wireshark/source/packet-ja4.c:1432` states the whole guard, and it names
+`dstport` and `conn->timestamp_D` alone. `wireshark/source/packet-ja4.c:1441` writes
+`conn->server_ttl` into part b of JA4LS, and `wireshark/source/packet-ja4.c:1447` writes
+`conn->client_ttl` into part b of JA4L. **The QUIC branch fills each field from `curr_ttl`**,
+at `wireshark/source/packet-ja4.c:1415` and at `wireshark/source/packet-ja4.c:1420`.
+`testdata/foxio/wireshark/chrome-cloudflare-quic-with-secrets.pcapng.json` holds this on
+frame 52:
 
 ```
 "ja4.ja4l": ["264_0_quic"]
@@ -198,7 +203,7 @@ this on frame 52:
 **Part b reads `0` in both values.** That is `curr_ttl` on an IPv6 packet, and it is the
 FoxIO dissector's own published output.
 
-### The corpus corroborates the reading
+### The corpus corroborates group A
 
 **15 vector files of `testdata/foxio/wireshark/` hold a `ja4.ja4l` key.** 14 of the 15 carry
 zero IPv6 frames. The one that carries IPv6 is
@@ -250,7 +255,7 @@ equality**, so a flag byte that carries one more bit reaches neither branch.
 `wireshark/source/packet-ja4.c:419` and `packet_from_server` at
 `wireshark/source/packet-ja4.c:424` each return false because both port fields hold `0`.
 
-### The corpus corroborates the reading
+### The corpus corroborates group B
 
 **JA4T reads `wireshark/source/packet-ja4.c:1266` and JA4TS reads
 `wireshark/source/packet-ja4.c:1279`, so the two methods fail with JA4L.**
@@ -285,7 +290,7 @@ maintainer` below states the question this raises.
 
 **6 values, on 2 captures.** `http1-with-cookies.pcapng` and `socks4-https.pcap`.
 
-**Each capture fills `C`, `D` and `E`, and neither one fills `F`.**
+**Each capture fills `C`, `D` and `E`. Neither capture fills `F`.**
 `wireshark/source/packet-ja4.c:1362` needs a client packet that carries a payload after the
 packet that fills `E`, and no such packet exists. **`is_http` is false on the packet that
 fills `E` in each capture**, so `wireshark/source/packet-ja4.c:1345` writes nothing and
@@ -338,12 +343,20 @@ pinned commit and runs it on `gre-erspan-vxlan.pcap`. This page runs no such bui
 
 **#376 proved that each of the thirty reaches the dissector's point `C`.** Ruling #196
 settles which packet fills point `C`, and `docs/specs/foxio/JA4L.md` R33 records that split.
-**A value that reaches point `C` is barred by a later condition**, so the reason text of the
-41 entries under ruling #196 is false for every one of the thirty. That reason reads:
+**A later condition of the chain bars every value of the thirty.**
+
+**The register holds 41 entries under ruling #196, and they carry two reason texts.** 6 of
+the 41 read:
 
 > The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here.
 
-`wireshark/source/packet-ja4.c:1302` bars no value of the thirty.
+The other 35 read:
+
+> The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame.
+
+**The first text names `wireshark/source/packet-ja4.c:1302`, and that line bars no value of
+the thirty.** **The second text states what the library writes, and it names no condition of
+the dissector.** So neither text explains one of the thirty.
 
 ## Ruling #127 settles group C and group D
 
@@ -432,7 +445,8 @@ names no key for them.
 **Python moves point `C` after it fills it, and it recomputes the value on each move.**
 `docs/specs/foxio/JA4L.md` R33 records that reading. **Python keeps the last value in one
 per-stream record, and the per-packet set of this project records each move on its own
-frame.** So the earlier values are visible here and invisible in the FoxIO per-stream file.
+frame.** So this project's set holds each earlier value, and the FoxIO per-stream file holds
+none of them.
 
 **This shape is not new, and no capture of this page is special.** `badcurveball.pcap`
 carries a `ja4.ja4l` key and the same shape: the run reports
