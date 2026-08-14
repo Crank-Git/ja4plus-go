@@ -403,6 +403,10 @@ each one.**
 `testdata/deviations.json` on 2026-08-14 reports 6 entries whose `ruling` is `#126`, and
 every one carries a JA4L key or a JA4LS key.
 
+**This section carried the name `## The one question for the maintainer` until batch #617.**
+**Round 51 of the `## Changelog` of `docs/specs/spec.md` names the old heading**, because
+that round records what #543 wrote on its own branch.
+
 ### The reading that earned the ruling
 
 **Does the bit test that ruling #126 states for JA4T also reach JA4L?**
