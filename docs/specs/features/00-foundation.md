@@ -57,11 +57,17 @@ today.** Read a row as a start state, and never as a claim about the present tre
 
   **The maintainer amended this requirement on 2026-08-13, and the amendment is
   provisional.** The requirement named Go 1.24 until that date. On go1.24.13, the newest
-  Go 1.24 patch, `govulncheck` v1.6.0 reports 9 vulnerabilities of the standard library
-  that this library calls. Each one names a fix in a go1.25.x release, and none names a
-  fix in a go1.24.x release. So no Go 1.24 patch clears them. Comment 5286440152 of #65
-  holds the decision, and issue #65 is the reversal path. **FR-foundation-1 does not
-  move**, because `go.mod` states a language version and never a toolchain.
+  Go 1.24 patch, `govulncheck` v1.6.0 reported 9 vulnerabilities of the standard library
+  that this library calls, measured on 2026-08-13. Each one names a fix in a go1.25.x
+  release, and none names a fix in a go1.24.x release. So no Go 1.24 patch clears them.
+  Comment 5286440152 of #65 holds the decision, and issue #65 is the reversal path.
+  **FR-foundation-1 does not move**, because `go.mod` states a language version and never
+  a toolchain.
+
+  **That count carries its date, because the vulnerability database is live.** The same
+  command on the same toolchain reported 13 on 2026-08-14, and #472 measured it. **No line
+  of this repository changed between the two measurements.** So a reader reads the figure
+  as a measurement of one day, and never as a property of go1.24.13.
 - **FR-foundation-3** — `.golangci.yml` exists and names every enabled linter.
 - **FR-foundation-4** — `.github/workflows/ci.yml` pins the `golangci-lint` version to a
   released version number.
@@ -91,6 +97,16 @@ today.** Read a row as a start state, and never as a claim about the present tre
 - **FR-foundation-21** — `CHANGELOG.md` exists and follows the Keep a Changelog format.
 - **FR-foundation-22** — `CHANGELOG.md` records `v0.1.0`, `v0.2.0` and `v0.3.0` from the
   git history.
+- **FR-foundation-23** — `README.md` and `doc.go` each state a minimum build toolchain, and
+  each one separates that statement from the language version.
+
+  **The maintainer ruled this question on 2026-08-14, and issue #472 holds the ruling.** The
+  ruling picked candidate answer 1 of #472: the two pages state a minimum build toolchain,
+  and `go.mod` does not move. **So FR-foundation-1 does not move**, and the language version
+  stays at 1.24. **The ruling reaches no part of Epic 10 (#100)**, because it changes nothing
+  a consumer needs. **Issue #472 is the reversal path.**
+
+  `go_toolchain_statement_test.go` holds this requirement.
 
 ## User flows
 

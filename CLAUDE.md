@@ -34,7 +34,19 @@ of that register name a change to this repository. Read
 
 ## Stack
 
-- Go 1.24 or later.
+- Go 1.24 or later. **That sentence states a language version, and it states no build
+  toolchain.** #438 established the reading on 2026-08-13, and `go.mod` declares
+  `go 1.24.0`. **The `or later` names the toolchain that compiles the module**, and it
+  names no toolchain that builds a released binary.
+- **The minimum build toolchain is go1.25.13, and it answers a different question from the
+  language version above.** A language version decides which consumer compiles the module.
+  **A build toolchain decides which standard library a built binary links.** So a Go 1.24
+  toolchain compiles this module and it links 13 called vulnerabilities, measured on
+  2026-08-14.
+- **The maintainer ruled the toolchain question on 2026-08-14**, and #472 holds the ruling
+  and the reversal path. `README.md` and `doc.go` state the measurement. **Every CI job
+  builds on the range `~1.26.6`**, and `goToolchainRange` in `foundation_test.go` states
+  that range once for both workflows.
 - `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
   `github.com/google/gopacket` on 2026-08-13, and #438 carried it.
 - `golang.org/x/crypto` for SSH and hashing.
@@ -131,7 +143,7 @@ exits 0, and that exit code reports no site build.**
   the procedure.
 - **A finding earns a tracker issue in five cases, and never otherwise.** The maintainer
   adopted this policy on 2026-08-13. A finding earns an issue when it touches one of these.
-  - Behaviour.
+  - Behavior.
   - A fingerprint value.
   - A guard that guards nothing.
   - A blocked epic.
@@ -140,7 +152,7 @@ exits 0, and that exit code reports no site build.**
   **The batch documentation round repairs every other finding, in the batch that found it,
   and it files no issue.** A falsified sentence, a moved citation, a missing term and a
   stale count each reach the round. **The round reports a finding that turns out to touch
-  behaviour**, and that finding then becomes an issue under the five cases above.
+  behavior**, and that finding then becomes an issue under the five cases above.
 
   The measurement that earned the policy: of 42 loose open issues, about twenty repaired a
   sentence, a citation, a term or a stale count. **Each repair produced more issues.** #410
@@ -153,6 +165,23 @@ exits 0, and that exit code reports no site build.**
   repository and in the Python port together, or in neither.
 - **A ruling carries a register entry or a test.** A ruling that records neither is a
   ruling the next reader cannot find.
+- **A ruling record quotes no live measurement without its date.** A live measurement reads
+  a source that moves without a change to this repository. The `govulncheck` count is one
+  such measurement. On `go1.24.13` it reported 9 vulnerabilities of the standard library
+  that this library calls on 2026-08-13, and 13 on 2026-08-14. **No line of this repository
+  changed between the two runs.** So write the date beside every live figure. Four places
+  carry one.
+  - A ruling comment.
+  - A pull-request body.
+  - A document.
+  - A code comment.
+
+  `TestTheToolchainPagesDateTheVulnerabilityMeasurement` in `go_toolchain_statement_test.go`
+  holds the rule for `README.md` and for `doc.go`. Batch #493 earned this rule.
+- **Every date of this repository states the UTC calendar day.** Batch #493 recorded the
+  ambiguity. The environment reported 2026-08-13 local and 2026-08-14 UTC on one day, and
+  each tracker timestamp reads UTC. A ruling record names a reversal path, so two clocks
+  give one ruling two dates. **Write the UTC day, and never the local day.**
 - **Never run the Python port from a test.** The shared FoxIO vector set is the parity
   gate. See `.claude/rules/parity.md`.
 - **One `Processor` serves one goroutine.** The core is lock-free by design. Route packets

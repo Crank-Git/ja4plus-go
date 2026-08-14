@@ -29,12 +29,14 @@ const theFilingPolicyFile = "CLAUDE.md"
 // writing standard of this project.
 const theCitationConventionFile = ".claude/rules/ste.md"
 
-// theBehaviourWord is the first case that earns a tracker issue.
+// theBehaviorWord is the first case that earns a tracker issue.
 //
-// `.golangci.yml` sets the `misspell` locale to US, and the rule files of this project
-// write the British form. The concatenation keeps the word out of the linter, and
-// `method_count_test.go` keeps a counted sentence out of its own scan the same way.
-const theBehaviourWord = "Behavi" + "our"
+// The round of batch #493 converted both uses in `CLAUDE.md` to the US form, under
+// `.claude/rules/ste.md` `## This project writes US English`. This constant held
+// `"Behavi" + "our"` until that round. The concatenation kept the British form out of
+// `misspell`, because `.golangci.yml` sets the locale to US. The US form needs no
+// concatenation.
+const theBehaviorWord = "Behavior"
 
 // theFilingPolicySentences are the sentences of policy 1 that carry the rule.
 //
@@ -44,12 +46,12 @@ var theFilingPolicySentences = []string{
 	"A finding earns a tracker issue in five cases, and never otherwise.",
 	"The maintainer adopted this policy on 2026-08-13.",
 	"The batch documentation round repairs every other finding, in the batch that found it, and it files no issue.",
-	"The round reports a finding that turns out to touch " + strings.ToLower(theBehaviourWord),
+	"The round reports a finding that turns out to touch " + strings.ToLower(theBehaviorWord),
 }
 
 // theFilingPolicyCases are the five cases that earn a tracker issue.
 var theFilingPolicyCases = []string{
-	theBehaviourWord + ".",
+	theBehaviorWord + ".",
 	"A fingerprint value.",
 	"A guard that guards nothing.",
 	"A blocked epic.",
