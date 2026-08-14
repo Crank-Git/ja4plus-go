@@ -33,14 +33,15 @@ not.** R9 holds it.
 **The cipher-suite count and the extension count each take two characters, and each one
 caps at `99`.** R10 to R15 hold the two counts. **Neither count reads a GREASE value.**
 RFC 8701 defines GREASE. **The extension count includes the server-name extension and the
-ALPN extension**, and part c excludes both from its list.
+ALPN extension**, and part c excludes both from its list under R26.
 
 **The two ALPN characters are the first character and the last character of the first ALPN
 value.** R16 holds it, and R17 states that a client with no ALPN value writes `00`.
 
 ### Part b and part c
 
-**Each hash is a SHA-256 truncated to twelve characters.** R23 and R26 hold the width.
+**Each hash is a SHA-256 truncated to twelve characters.** R23 holds the width, and the
+image states `Truncated` and no length.
 **A list writes each value as four lowercase hex characters, and a comma separates each
 pair.** R21 and R22 hold the form.
 

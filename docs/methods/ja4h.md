@@ -48,7 +48,10 @@ each pair of list values under R25.
 **Part b reads header names alone, and it reads no header value.** R20 holds it, and R18
 states that the list keeps the wire order.
 
-**Part c and part d each sort their list.** R22 and R24 hold the two. **A request that
+**Part c and part d each sort their list.** R22 holds part c, and R23 quotes the image
+label of part d: `Truncated SHA256 hash of Cookie Fields + Values, sorted`. **R24 holds the
+entry form of part d**, which writes the field name, then `=`, then the value.
+**A request that
 carries no cookie writes `000000000000` in part c and in part d**, under R27, and the image
 states no such rule.
 

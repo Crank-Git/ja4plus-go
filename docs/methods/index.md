@@ -43,13 +43,13 @@ two.
 **JA4TScan is out of scope, and the reason is that FoxIO publishes nothing to implement.**
 FoxIO ships no format specification, no image under `technical_details/` and no reference
 implementation of it. A goal of one answer for one packet cannot be met against a
-definition that does not exist. `docs/specs/spec.md` `Non-goals` holds the decision, and
-the decision reverses when FoxIO publishes a format.
+definition that does not exist. `docs/specs/spec.md` `Non-goals` holds the ruling, and the
+ruling reverses when FoxIO publishes a format.
 
 **FoxIO also names a scanner method, and this project decided nothing about it.** The name
 carries two spellings across the FoxIO records, and FoxIO publishes no format and no
 implementation for either spelling. This project states no reason, because a stated reason
-would assert a decision that no round holds.
+would assert a ruling that no round holds.
 
 ## Read the FoxIO records before you compare this list to theirs
 

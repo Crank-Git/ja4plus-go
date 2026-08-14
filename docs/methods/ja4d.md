@@ -74,7 +74,7 @@ capture.**
 
 **A repeated occurrence of option 57 concatenates in one FoxIO implementation.** R2 gives
 field 2 of part a four characters, so one occurrence decides it. **This library declines
-that defect**, under FR-parity-51, and the port decided the same question on 2026-08-08.
+that defect**, under FR-parity-51, and the port ruled the same question on 2026-08-08.
 
 ## Where the register records a difference
 

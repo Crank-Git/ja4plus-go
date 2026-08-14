@@ -19,8 +19,9 @@ the form.
 | b | The count of SSH packets of each side. | R14 |
 | c | The count of bare ACKs of each side. | R15 to R17 |
 
-**The mode is the payload length that the side sent most often.** R11 states that a tie
-takes the lower value. **The mode is `0` when the side sent no SSH packet**, under R13.
+**The mode is the payload length that the side sent most often.** R11 states that the mode
+reads the TCP payload length, and R12 states that a tie takes the smaller length. **The
+mode is `0` when the side sent no SSH packet**, under R13.
 
 **A bare ACK is one TCP packet whose flags equal `0x10` and whose payload is empty.** R16
 holds the reading.
@@ -64,9 +65,10 @@ the fingerprinter read from the SSH key exchange.
 dissector and the reference Python read TCP port 22, and that the Zeek package and the
 reference Rust read the connection direction.
 
-**The library carries step 2 of the client direction, under a provisional decision of
+**The library carries step 2 of the client direction, under a delegated ruling of
 2026-08-13.** `decideEndpoints` in `ja4ssh.go` holds it, and the doc comment of that
-function names the reversal path. **A reversal deletes step 2.**
+function names the reversal path. **A delegated ruling stays provisional until the
+maintainer confirms it**, and issue #346 holds it. **A reversal deletes step 2.**
 
 ## Where the register records a difference
 

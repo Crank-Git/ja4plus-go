@@ -39,8 +39,9 @@ heading:
 > The max is 10 retransmissions counted and the timeout is 2 minutes after the last SYNACK.
 
 **The project manager applied ten under a delegation on 2026-08-13, and the maintainer has
-not confirmed it.** Issue #369 records the decision and it names the reversal path.
-**A reader reads this count as unconfirmed, and never as settled.**
+not confirmed it.** Issue #369 records the delegated ruling and it names the reversal path.
+**A delegated ruling stays provisional until the maintainer confirms it**, so a reader
+reads this count as unconfirmed and never as settled.
 
 ## What this library emits
 
