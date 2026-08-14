@@ -1,0 +1,166 @@
+# The documentation site of ja4plus-go.
+#
+# `docs/requirements.txt` pins every generator this file needs. A build that reads a
+# different version reads a different set of defaults, so the pins and this file are one
+# unit. FR-documentation-8 states that rule.
+#
+# Build the site with `make docs`. That target runs `mkdocs build --strict`.
+
+site_name: ja4plus-go
+site_url: https://crank-git.github.io/ja4plus-go/
+site_description: >-
+  A Go library and command-line program for JA4+ network fingerprinting.
+site_author: Crank-Git
+repo_url: https://github.com/Crank-Git/ja4plus-go
+repo_name: Crank-Git/ja4plus-go
+edit_uri: edit/master/docs/
+copyright: >-
+  The original Go code is BSD 3-Clause. FoxIO licenses every method except JA4 under FoxIO
+  License 1.1, which permits non-commercial use only. NOTICE holds the FoxIO terms.
+
+# FR-documentation-3. The site reads the markdown of `docs/`.
+docs_dir: docs
+
+# FR-documentation-4. A warning fails the build. Every entry of the `validation` block
+# below therefore names an error of this site, and never a note a reader may skip.
+strict: true
+
+# FR-documentation-6 and FR-documentation-7. `docs/specs/` is the spec package and
+# `docs/audit/` holds the audit findings. Each one is design material, each one links
+# outside `docs_dir`, and neither one is published.
+#
+# `exclude_docs` is the mechanism, and the two neighboring mechanisms are wrong here.
+#
+#   - `not_in_nav` keeps the file in the built site and silences the nav warning alone.
+#     The pages would publish, and their links outside `docs_dir` would still warn.
+#   - The `exclude` plugin is a third-party package. MkDocs 1.5 added `exclude_docs`, so
+#     the plugin adds a dependency and reaches the same result.
+#
+# `exclude_docs` takes a `.gitignore` pattern, it drops the file from the built site, and
+# it implies `not_in_nav`.
+#
+# One limit is measured, and this file states it rather than claiming the opposite.
+# **A link from a published page into an excluded file does not fail the build.**
+# `_RelativePathTreeprocessor.path_to_url` in `mkdocs/structure/pages.py` computes
+# `warning_level = min(logging.INFO, self.config.validation.links.not_found)`, so the
+# message is capped at `INFO` and no value of `validation` raises it. Measured on
+# 2026-08-14 at `mkdocs==1.6.1`: a page that links to `specs/spec.md` builds and exits 0.
+#
+# `TestNoPublishedPageLinksIntoAnExcludedDirectory` in `mkdocs_config_test.go` holds that
+# gap. It fails when a published page links into `docs/specs/` or `docs/audit/`.
+#
+# `docs/requirements.txt` sits under `docs_dir` because it belongs to the site, and MkDocs
+# copies an unexcluded non-markdown file into the built site. The third pattern holds the
+# pin list back, so the site publishes documentation alone.
+exclude_docs: |
+  /specs/
+  /audit/
+  /requirements.txt
+
+# FR-documentation-5. A broken link and a broken anchor each reach `warn`, and `strict`
+# above turns each warning into a failed build.
+#
+# `links.anchors` defaults to `info`, so the anchor half of FR-documentation-5 exists only
+# because this block raises it.
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+    absolute_links: warn
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: warn
+    unrecognized_links: warn
+
+# FR-documentation-1 and FR-documentation-9.
+theme:
+  name: material
+  language: en
+  palette:
+    # The light palette. It follows the reader's own setting first, and the toggle
+    # overrides that setting.
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to the dark palette
+    # The dark palette.
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to the light palette
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  # FR-documentation-10. The table-of-contents slug matches the GitHub slug, so one link
+  # resolves in this site and in the GitHub blob view.
+  #
+  # The default slug function of `markdown.extensions.toc` does not match GitHub. It folds
+  # a non-ASCII letter to ASCII, and it collapses a run of separators to one. GitHub
+  # lowercases the whole string, it removes the punctuation, and it replaces each single
+  # space with one hyphen.
+  #
+  # Measured on 2026-08-14 against `Flet/github-slugger`, which states that it generates
+  # "a slug just like GitHub does for markdown headings".
+  #
+  #   Heading                     GitHub                  default                 this file
+  #   `Rounds 1 & 2 — a re-read`  rounds-1--2--a-re-read  rounds-1-2-a-re-read    rounds-1--2--a-re-read
+  #   `Café naïve résumé`         café-naïve-résumé       cafe-naive-resume       café-naïve-résumé
+  #   `ÉCOLE Normale`             école-normale           ecole-normale           école-normale
+  #
+  # `case: lower` is the setting, and `case: lower-ascii` is wrong. `lower-ascii` lowers
+  # `A` to `Z` alone, so it writes `École-normale` where GitHub writes `école-normale`.
+  # The deprecated `pymdownx.slugs.gfm` alias calls `lower-ascii`, so its name misreports
+  # what it does. Never adopt that alias.
+  # The key below is `kwds`, and `kwargs` is silently wrong. PyYAML reads `args`, `kwds`,
+  # `state`, `listitems` and `dictitems`, and it drops every other key without a message.
+  # A file that writes `kwargs` therefore builds, and it writes `Parity-with-the-port`
+  # where GitHub writes `parity-with-the-port`. Measured on 2026-08-14.
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+# The navigation.
+#
+# The three sections below are the skeleton, and each one is filled by one later issue.
+# #85 writes the prose pages, #86 writes the method pages, and #87 writes the API
+# reference and the examples. Each one appends its own entries under its own heading, and
+# it edits no entry of a sibling.
+#
+# A nav section with no page is a configuration error, so each section names one page
+# today and each later issue adds to the list beside it.
+nav:
+  # #85 adds `- Home: index.md` above this line, and it adds its prose pages to `Guides`.
+  # The site root serves no page until it does.
+  - Guides:
+      - Parity with the port: parity.md
+  # #86 adds `methods/index.md` and the eleven method pages here.
+  - Methods: []
+  # #87 adds the API-reference pages and the examples here.
+  - Reference: []

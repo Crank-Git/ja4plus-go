@@ -1,4 +1,9 @@
-.PHONY: build test lint lint-cache-check bench clean corpus conformance cover fuzz vuln
+.PHONY: build test lint lint-cache-check bench clean corpus conformance cover docs fuzz vuln
+
+# The generator of the documentation site. `docs/requirements.txt` pins it.
+# Override it to reach a virtual environment that the PATH does not hold:
+#   make docs MKDOCS=.venv/bin/mkdocs
+MKDOCS ?= mkdocs
 
 build:
 	go build -o bin/ja4plus ./cmd/ja4plus
@@ -85,5 +90,19 @@ fuzz:
 vuln:
 	govulncheck ./...
 
+# `docs/` is a directory of this repository, so make reads the target name as that
+# directory and finds it already up to date. It then prints
+# `make: Nothing to be done for 'docs'.` and it exits 0 without a build. The `docs` entry
+# of the `.PHONY` line above is what makes this recipe run, and it is not decoration.
+#
+# `--strict` fails the build on a warning. `mkdocs.yml` raises a broken link and a broken
+# anchor to a warning, so a broken link fails this target.
+#
+# This target installs nothing, and it fails when the PATH holds no `mkdocs`. Install the
+# versions that `docs/requirements.txt` pins, or a developer and the CI job build the site
+# with two different generators.
+docs:
+	$(MKDOCS) build --strict
+
 clean:
-	rm -rf bin/ coverage.out .golangci-cache
+	rm -rf bin/ coverage.out .golangci-cache site/
