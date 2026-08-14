@@ -226,7 +226,7 @@ answer:
 > **Read the IPv6 hop limit as the observed TTL, and write JA4L over IPv6.**
 
 The reading of 2026-08-12 on the same issue names the lines of the tree that carry the
-ruling, and it closes with one sentence that this page acts on:
+ruling. It closes with one sentence that this page acts on:
 
 > **The ruling reaches no durable record.**
 
@@ -263,9 +263,9 @@ equality**, so a flag byte that carries one more bit reaches neither branch.
 `testdata/foxio/wireshark/macos_tcp_flags.pcap.json` holds `ja4.ja4s` and `ja4.ja4s_r` and
 no other JA4 key. **Neither file holds `ja4.ja4t` or `ja4.ja4ts`.**
 
-**The worker of #126 measured the same two captures on 2026-08-13**, and it recorded them as
-the only two captures of the corpus that carry an ECN-marked SYN. That measurement and this
-one agree.
+**The worker of #126 measured the same two captures on 2026-08-13.** It recorded them as the
+only two captures of the corpus that carry an ECN-marked SYN. That measurement and this one
+agree.
 
 ### The other three implementations test the bit
 
@@ -312,8 +312,8 @@ The capture fills `C` at frame 3, `D` at frame 4 and `E` at frame 5. **Frame 5 c
 layer list `eth:ethertype:ip:gre:erspan:eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data`**,
 so it carries the `http` protocol and `wireshark/source/packet-ja4.c:1345` decides the
 outcome. `testdata/foxio/wireshark/gre-erspan-vxlan.pcap.json` holds `ja4.ja4t` on frame 1,
-`ja4.ja4ts` on frame 2 and the three JA4H keys on frame 4, and it holds no JA4L key on any
-frame.
+`ja4.ja4ts` on frame 2 and the three JA4H keys on frame 4. **The file holds no JA4L key on
+any frame.**
 
 **Two candidate readings explain the absent key, and this page separates them no further.**
 
@@ -401,8 +401,8 @@ register cannot cite a ruling for the six values of group B without an answer he
 | 3 | The six decline under ruling #127 alone. | 6 entries under ruling #127, and `docs/specs/foxio/JA4L.md` gains no rule. | 6 values move from unaccepted uncovered to accepted uncovered. |
 
 **Candidate 3 rests on one measurement, and this page states it.** Once the dissector reads
-the ECN-marked SYN, each capture of group B reaches a part c packet, so the dissector would
-publish a three-part value on a frame that the library does not write.
+the ECN-marked SYN, each capture of group B reaches a part c packet. **The dissector would
+then publish a three-part value on a frame that the library does not write.**
 
 | Capture | `C` | `D` | `E` | `F` | The frame the dissector would publish on |
 |---|---|---|---|---|---|
@@ -417,8 +417,8 @@ maintainer.
 
 ## Twenty of the thirty equal a FoxIO reference Python value
 
-**The FoxIO reference Python publishes a JA4L value for every one of the ten files**, and
-each published value equals one value of the thirty exactly.
+**The FoxIO reference Python publishes a JA4L value for every one of the ten files.** Each
+published value equals one value of the thirty exactly.
 
 | Capture | Python `JA4L-S` | The library key that holds it | Python `JA4L-C` | The library key that holds it |
 |---|---|---|---|---|
@@ -449,10 +449,10 @@ frame.** So this project's set holds each earlier value, and the FoxIO per-strea
 none of them.
 
 **This shape is not new, and no capture of this page is special.** `badcurveball.pcap`
-carries a `ja4.ja4l` key and the same shape: the run reports
+carries a `ja4.ja4l` key and the same shape. The run reports
 `badcurveball.pcap/2/JA4LS.1`, `badcurveball.pcap/3/JA4L.1` and
-`badcurveball.pcap/4/JA4L.1` from the library, and the register accepts only the third of
-them.
+`badcurveball.pcap/4/JA4L.1` from the library. **The register accepts only the third of the
+three.**
 
 ## The eight conformance figures
 
