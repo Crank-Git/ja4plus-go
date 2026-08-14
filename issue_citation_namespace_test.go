@@ -60,7 +60,11 @@ import (
 // merged `dev` into its integration branch after six members had landed**, so this guard
 // reached their commits only at the merge. It reported 8 bare citations above 530: 6 name
 // #532 and 2 name #533, and every one names an issue of this repository.
-const issueCitationHighWaterMark = 543
+// The #556 hotfix re-measured the mark on 2026-08-14 and it read 560. That hotfix cites
+// `#556` in a code comment and in a test, and 556 sits above the inherited mark of 543. A
+// hotfix pays this maintenance cost exactly as a batch round does, because the guard reads
+// the number and never the shape of the change that carries it.
+const issueCitationHighWaterMark = 560
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
