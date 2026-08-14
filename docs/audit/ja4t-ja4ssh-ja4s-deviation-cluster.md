@@ -82,8 +82,8 @@ exits 2.**
 | accepted deviations | 450 | 558 | 575 |
 | register keys | 470 | 578 | 595 |
 
-**The Epic #441 batch closed 73 comparisons and opened 1**, so the 1680 of each run above holds
-for batch #478 and never for this batch. `1680 + 73 = 1753`, and `575 + 20 = 595`.
+**The Epic #441 batch closed 73 comparisons and opened 1.** So the 1680 of each run above holds
+for batch #478, and never for this batch. `1680 + 73 = 1753`, and `575 + 20 = 595`.
 
 **The merged tree reports 17 deviations that name one of the five methods**, against 67 in
 each run above. 15 sit in the per-packet set and 2 sit in the per-stream set.
@@ -492,8 +492,8 @@ connection.** A TCP close carries two FIN+ACK packets, so the dissector writes t
 3. The library writes one value for each FIN+ACK packet in the per-packet comparison alone.
 
 **The maintainer ruled this question on 2026-08-14, and the answer is candidate answer 2.** The
-library keeps the behavior it holds today, and `testdata/deviations.json` records 12 declines
-under ruling #484. #484 wrote every one at `1d632a7`, and **#484 is the reversal path.**
+library keeps the behavior it holds today. `testdata/deviations.json` records 12 declines under
+ruling #484, and #484 wrote every one at `1d632a7`. **#484 is the reversal path.**
 
 **This reading picks none.** **The question is whether a published FoxIO value contradicts a
 published FoxIO rule**, which `.claude/rules/rulings.md`
@@ -563,19 +563,19 @@ documentation round repaired the heading and this section.
 **The reference is not unanimous on `sshv1.pcap`.** Only the Wireshark plugin publishes
 `c20s12_c18s21_c10s1`. `testdata/foxio/wireshark/sshv1.pcap.json` holds that value.
 `testdata/foxio/python/sshv1.pcap.json` holds one stream entry with `ssh_extras` and no JA4SSH
-value, and **the corpus holds no Zeek vector and no Rust vector for that capture.** So row 1 of
-`.claude/rules/parity.md` `## Where a difference comes from` does not govern this cause, and the
-paragraph this round replaced stated that it does.
+value. **The corpus holds no Zeek vector and no Rust vector for that capture.** So row 1 of
+`.claude/rules/parity.md` `## Where a difference comes from` does not govern this cause. **The
+paragraph this round replaced stated that it does.**
 
-**The maintainer ruled the question at #491 on 2026-08-14 under row 3 of that same table**: the
-reference holds a proven defect, because the value describes the capture rather than the
-connection. `tshark` reaches the server count of 21 because it stalled its own reassembly. It
-reassembles 480 bytes across frame 63 and frame 65 while its own framing asks for 484, so 4
-bytes stay pending and frame 68 and frame 70 reach no SSH dissection. **Frame 70 holds 20 bytes
-and opens `00000009`, which is one whole SSHv1 message under the arithmetic
-`4 + (8 - length % 8) + length`** that the same dissector applies to the four messages of frame
-63. **So a rule that frames SSH consistently produces the server count 25 and the mode 20, and
-it never produces the mode 12.**
+**The maintainer ruled the question at #491 on 2026-08-14, under row 3 of that same table.** Row
+3 names a reference that holds a proven defect. **The server count of 21 describes the capture
+rather than the connection.** `tshark` reaches 21 because it stalled its own reassembly. It
+reassembles 480 bytes across frame 63 and frame 65, and its own framing asks for 484. **So 4
+bytes stay pending, and frame 68 and frame 70 reach no SSH dissection.** **Frame 70 holds 20
+bytes, and it opens `00000009`.** That is one whole SSHv1 message under the arithmetic
+`4 + (8 - length % 8) + length`. **The same dissector applies that arithmetic to the four
+messages of frame 63.** **So a rule that frames SSH consistently produces the server count 25
+and the mode 20, and it never produces the mode 12.**
 
 **The answer is a register decline and no code change.** `testdata/deviations.json` holds
 `sshv1.pcap/72/JA4SSH.1` and `v6.pcap/72/JA4SSH.1` under ruling #491, and #484 wrote both
@@ -593,8 +593,8 @@ in any of the nine SSH captures.** The two agree exactly on `ssh.pcapng` (318), 
 (318), `ssh-r.pcap` (1223), `ssh-scp-1050.pcap` (853) and `gre-sample.pcap` (8). The library
 adds 4 frames on `sshv1.pcap` and on `v6.pcap`, and 3 frames on `ssh2-malformed.pcap` and on
 `ssh2-moloch-crash.pcap`. **Any later issue that changes the JA4SSH packet selection re-measures
-those five agreements**, because a change that closes this cause can open a deviation on a
-capture that matches today.
+those five agreements.** A change that closes this cause can open a deviation on a capture that
+matches today.
 
 ### The count it closes is 0, and this cause composes with cause 3
 
@@ -794,9 +794,9 @@ reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and t
   question from a value that the reference omits**, and the two need different register
   entries. The two values of the connection share the cipher `1301` and the extension hash
   `234ea6891581` with the values of `0:57098`, and two connections to one server can send one
-  ServerHello. **`docs/audit/quic-ja4s-frame-source.md` holds the measurement**: a
-  `JA4SFingerprinter` that read frame 47 and frame 49 alone produced the whole value, and
-  `JA4SFingerprinter` reports no error on either frame. **Both error lines belong to
+  ServerHello. **`docs/audit/quic-ja4s-frame-source.md` holds the measurement.** A
+  `JA4SFingerprinter` that read frame 47 and frame 49 alone produced the whole value. **That
+  fingerprinter reports no error on either frame.** **Both error lines belong to
   `JA4Fingerprinter`**, because `Processor.ProcessPacket` joins the errors of every
   fingerprinter and an error line of the run names none. **#501 closed both lines** at
   `74c8827`, and neither one was a deviation.
@@ -814,7 +814,7 @@ reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and t
 - **Split T1 and split T2. The maintainer ruled both on 2026-08-14**, and #484 is the reversal
   path of each one. #494 built split T1 and #495 built split T2.
 - **The FIN+ACK question of cause 3. The maintainer ruled it on 2026-08-14**, and the answer is
-  candidate answer 2: the library keeps the behavior it holds today, and the register records 12
+  candidate answer 2. The library keeps the behavior it holds today, and the register records 12
   declines under ruling #484.
 - **Whether FR-parity-44 declines a client reset correctly.** #495 measured that 3 of the 6
   frames of cause 2 are client resets, and **#502 holds that question**. A reversal of

@@ -209,8 +209,8 @@ certificate of it repeats on a second stream.
 set publishes no JA4X_r key, so every per-stream JA4X_r value the library produces reads as
 an uncovered value. The run of 2026-08-13 reports 47 unaccepted uncovered JA4X keys, and this
 page predicted that the change takes that count to 58. **#489 built the change, and the merged
-tree reads 59.** #490 adds `badcurveball.pcap/0/JA4X_r.2` on top of the 11 that #489 adds, so
-the 58 of the prediction and the 59 of the measurement differ by one.
+tree reads 59.** #490 adds `badcurveball.pcap/0/JA4X_r.2` on top of the 11 that #489 adds. **So
+the 58 of the prediction and the 59 of the measurement differ by one.**
 `## The merged tree of the Epic #441 batch, 2026-08-14` above names the run.
 **An uncovered value fails no gate.** `conformanceReportTotals` of
 `conformance_test.go` fails the run on a deviation count above zero, and it logs the
@@ -263,8 +263,8 @@ stream of the six captures.
 `the vector holds a value the library does not produce`.
 
 **#492 builds this cause, and #492 left the Epic #441 batch on 2026-08-14. The merged tree
-reports all 11.** The ship-partial comment of #441 of that date states the three parts the
-work needs, and it states that #492 reaches #171, Epic 10 and the port together.
+reports all 11.** The ship-partial comment of #441 of that date states the three parts the work
+needs. **It also states that #492 reaches #171, Epic 10 and the port together.**
 
 **`findCertificatesInStream` of `ja4x.go` reads the first byte of each TLS record, and it
 skips a byte that is not `parser.TLSRecordTypeHandshake`.**
@@ -518,9 +518,9 @@ reports a finding.
   `### How this page reads the library output without a candidate change` section states the
   method. **A fix issue re-measures the count it closes with a run.** #489 and #490 each did,
   and `## The merged tree of the Epic #441 batch, 2026-08-14` above states both results.
-  **This page wrote the word `yield` on two lines, and the `## Terms` table of
-  `docs/specs/spec.md` declines that word in the `Do not use` column of the `emit` row.** The
-  Epic #441 documentation round converted both.
+  **This page wrote the word `yield` on two lines.** The `## Terms` table of
+  `docs/specs/spec.md` declines that word, in the `Do not use` column of the `emit` row. **The
+  Epic #441 documentation round converted both lines.**
 - **Whether a fix for cause 2 produces a value outside the corpus.** Two captures of the
   corpus hold a protected certificate frame, and one measurement over 38 captures reports
   that. A capture that no corpus holds reaches no measurement here.
