@@ -211,13 +211,17 @@ func TestTheDependencyGraphOfTheCorePackageHoldsNoHTTPClient(t *testing.T) {
 func TestTheNetworkBoundaryRecordNamesTheDecisionAndTheReason(t *testing.T) {
 	record := readRepoFile(t, networkBoundaryRecordPage)
 
+	// The page writes an option at the head of a sentence and inside a table cell, so the
+	// first letter carries no meaning here. The reader lowers the case for the option alone.
+	lowered := strings.ToLower(record)
+
 	// FR-lookup-2 names three options, and the record names every one of them.
 	for _, option := range []string{
 		"keep the remote lookup in the package",
 		"move it behind a build tag",
 		"move it to a separate package",
 	} {
-		if !strings.Contains(record, option) {
+		if !strings.Contains(lowered, option) {
 			t.Errorf("%s names no option %q, and FR-lookup-2 names three options",
 				networkBoundaryRecordPage, option)
 		}
