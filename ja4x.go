@@ -41,11 +41,20 @@ type JA4XFingerprinter struct {
 	// concatenates in arrival order reads a TLS record header at the wrong offset and finds
 	// no certificate. `parser.TCPStreamReassembler` is the mechanism `ja4h.go:18` already
 	// uses, so JA4X reads one reassembler and never a second mechanism.
-	reassembler    *parser.TCPStreamReassembler
+	reassembler *parser.TCPStreamReassembler
+	// processedCerts names the certificate of one stream that the reader already read. Its
+	// key is ja4xCertSetKey, which names the certificate hash and the stream together.
+	//
+	// The key held the certificate hash alone until #489, so a certificate that two live
+	// streams carried reached one value. Three FoxIO implementations write one value for
+	// each certificate of each stream, and none of them holds a certificate cache.
+	// `docs/audit/ja4x-deviation-cluster.md` `## Cause 1 — the certificate set names no
+	// stream` measured 36 deviations of that shape.
 	processedCerts map[string]struct{}
 	// certsByStream names the certificate hashes that each stream produced. It is the
-	// removal path of processedCerts, whose key is the certificate hash alone. Without
-	// this index CleanupConnection leaves every hash for the life of the process.
+	// removal path of processedCerts, because a caller of CleanupConnection names a
+	// connection and never a certificate. Without this index CleanupConnection reads every
+	// key of the set to find the keys of one stream.
 	certsByStream map[string]map[string]struct{}
 	// streamBytes counts the payload bytes that each stream has added to the reassembler.
 	//
@@ -173,10 +182,11 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 	delete(f.streamBytes, rev)
 
 	// certsByStream is the reverse lookup that processedCerts needs. The key of
-	// processedCerts is the certificate hash, so that set names no connection.
+	// processedCerts names one certificate of one stream, so a caller who names a
+	// connection reaches no key of the set without this index.
 	for _, stream := range []string{fwd, rev} {
 		for certHash := range f.certsByStream[stream] {
-			delete(f.processedCerts, certHash)
+			delete(f.processedCerts, ja4xCertSetKey(stream, certHash))
 		}
 
 		delete(f.certsByStream, stream)
@@ -260,11 +270,14 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 		{
 			certs := ja4xCertificatesInRecord(data[i+5 : i+5+recordLength])
 			for _, certDER := range certs {
-				// Dedup by SHA-256 of DER bytes.
+				// The key names the SHA-256 hash of the DER bytes and the stream.
 				h := sha256.Sum256(certDER)
 				certHash := hex.EncodeToString(h[:])
+				setKey := ja4xCertSetKey(streamID, certHash)
 
-				if _, seen := f.processedCerts[certHash]; seen {
+				// The reassembler keeps every segment until a removal, so this reader reads
+				// the same certificate again at each later packet of the stream.
+				if _, seen := f.processedCerts[setKey]; seen {
 					continue
 				}
 
@@ -281,7 +294,7 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 						Timestamp:   parser.GetPacketTimestamp(packet),
 					}
 					results = append(results, result)
-					f.processedCerts[certHash] = struct{}{}
+					f.processedCerts[setKey] = struct{}{}
 
 					if f.certsByStream[streamID] == nil {
 						f.certsByStream[streamID] = make(map[string]struct{})
@@ -300,6 +313,15 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 	// this reader trims nothing and the certificate set removes the repeat instead.
 
 	return results
+}
+
+// ja4xCertSetKey returns the processedCerts key of one certificate on one stream.
+//
+// The hexadecimal hash is always 64 characters, so the concatenation needs no separator and
+// two pairs reach one key only when the pairs are equal. A separator would need an escape,
+// because a stream name of an IPv6 connection holds a colon.
+func ja4xCertSetKey(streamID, certHash string) string {
+	return certHash + streamID
 }
 
 // extractCertificates extracts individual DER-encoded certificates from a
