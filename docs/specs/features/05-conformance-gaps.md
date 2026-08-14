@@ -127,6 +127,20 @@ roadmap, and issue #171 is its reversal path.
   `ParseQUICServerInitial` each reassemble the fragments of one datagram without that
   accumulation. Issue #168 measured an amplification of about 10000 to 1 on the second
   path.
+- **FR-gaps-31** — `ParseQUICInitial` reads the client hello of one datagram through
+  `ClientHelloFromCryptoFragments`, and that function holds one completeness rule. The rule
+  refuses a handshake message that the fragments do not cover from offset 0 with no gap,
+  and it returns no client hello and no error. `ReassembleCryptoFrames` writes a zero byte
+  over a gap, so a reader without the rule reports a cipher list that no client sent. Issue
+  #532 built it, and
+  `TestParseQUICInitialProducesNoClientHelloFromAGapInTheHandshakeMessage` holds it.
+- **FR-gaps-32** — `ParseQUICInitial` returns no client hello and no error for a handshake
+  message of 1 to 3 bytes. A message of 3 bytes carries no 24-bit length, so the rule of
+  FR-gaps-31 reads no length. **The reader that #532 replaced returned the error
+  `ClientHello truncated: too short for version` for that input**, and `ja4s.go` is the one
+  caller that reaches this path and it discards the error.
+  `TestParseQUICInitialProducesNoErrorForAHandshakeMessageOfThreeBytes` pins the value.
+  Issue #532 is the reversal path.
 
 ### The hashed wire-order form
 
@@ -243,6 +257,8 @@ reader or reads the block directly.
 | Closing a deviation changes a fingerprint that a released version produced. | `CHANGELOG.md` records it as a breaking behavior change under `v1.0.0`. |
 | A QUIC connection sends a server Initial packet. | `DecryptQUICInitialCrypto` declines the packet, and it returns no error. |
 | The Length field of a QUIC Initial packet leaves fewer bytes than the authentication tag. | `DecryptQUICInitialCrypto` returns a non-fatal error that names the tag. |
+| The CRYPTO fragments of one QUIC Initial packet leave a gap inside the handshake message. | `ParseQUICInitial` returns no client hello and no error. FR-gaps-31 states the rule. |
+| A QUIC Initial packet carries a handshake message of 1 to 3 bytes. | `ParseQUICInitial` returns no client hello and no error. FR-gaps-32 states the value. |
 
 ## Acceptance criteria
 
