@@ -18,14 +18,28 @@ const ja4hPipelinedSecondRequest = "GET /second HTTP/1.1\r\n" +
 // Each test of this file records the measurement of #463, and none of them holds a ruling.
 //
 // **The maintainer rules the value count of a pipelined pair, and #463 carries the question.**
-// The four FoxIO implementations disagree, so `.claude/rules/rulings.md` `## Stop conditions`
-// sends the question to the maintainer. Three implementations produce one value for the pair.
-// `rust/ja4/src/pcap.rs:51` states `/// Gets the first protocol with the given name.`,
-// `python/ja4.py:414` reads `l = l[0] if isinstance(l, list) else l`, and
-// `wireshark/source/packet-ja4.c:1756` registers the tap with `register_postdissector(ja4_handle);`
-// and emits once for each frame. `zeek/ja4h/main.zeek:186` computes the value in
-// `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`, which
-// Zeek raises for each HTTP message, so the Zeek package produces two values.
+// The FoxIO implementations disagree, so `.claude/rules/rulings.md` `## Stop conditions` sends
+// the question to the maintainer. Three readings of the reference state the disagreement.
+//
+//   - The Rust implementation produces one value. `rust/ja4/src/http.rs:22` selects the layer
+//     with `pkt.find_proto("http")`, and `rust/ja4/src/pcap.rs:51` states
+//     `/// Gets the first protocol with the given name.`
+//   - The Python implementation produces one value. `python/ja4.py:414` reads
+//     `l = l[0] if isinstance(l, list) else l`, so it keeps the first layer alone.
+//   - The Zeek package produces two values. `zeek/ja4h/main.zeek:186` computes the value in
+//     `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`, and
+//     `zeek/ja4h/main.zeek:124` clears the state in `event http_request`.
+//
+// Zeek raises `http_message_done` for each HTTP message. The Zeek documentation states
+// `Generated once at the end of parsing an HTTP message.`, and it states
+// `A "message" is one top-level HTTP entity, such as a complete request or reply.`
+// Verified against <https://docs.zeek.org/en/master/scripts/base/bif/plugins/Zeek_HTTP.events.bif.zeek.html>,
+// retrieved 2026-08-14 UTC.
+//
+// **The count of the Wireshark dissector is unverified.**
+// `wireshark/source/packet-ja4.c:1756` reads `register_postdissector(ja4_handle);`, and no
+// documentation this project reached states how often Wireshark calls a postdissector. The
+// three readings above state the disagreement without it.
 //
 // No capture of the corpus reaches a pipelined pair, so no register entry records this
 // question and these tests record it. Each test fails when the count moves, and the
