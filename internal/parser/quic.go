@@ -209,6 +209,10 @@ func IsQUICHandshakePacket(payload []byte) bool {
 // ParseQUICInitial parses a QUIC Initial packet and extracts the TLS ClientHello.
 // Returns nil, nil if the payload is not a QUIC Initial packet.
 // Returns nil, error if it looks like a QUIC Initial but decryption/parsing fails.
+// Returns nil, nil when the CRYPTO fragments of the packet cover no complete handshake
+// message. It reads one datagram, so a client that splits a client hello across two
+// datagrams reaches this decline. ClientHelloFromCryptoFragments serves the caller that
+// collects the fragments of several packets.
 func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	if len(payload) < 5 {
 		return nil, nil
@@ -384,36 +388,10 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 		return nil, err
 	}
 
-	// Reassemble CRYPTO frame data
-	assembled := ReassembleCryptoFrames(fragments)
-	if len(assembled) == 0 {
-		return nil, nil
-	}
-
-	// The reassembled data should be a TLS Handshake message.
-	// Check for ClientHello (type 0x01)
-	if assembled[0] != TLSHandshakeClientHello {
-		return nil, nil
-	}
-
-	// Wrap in a fake TLS record header so ParseClientHello can process it.
-	// TLS record: content_type(1) + version(2) + length(2) + handshake data
-	tlsRecord := make([]byte, 5+len(assembled))
-	tlsRecord[0] = TLSRecordTypeHandshake // 0x16
-	tlsRecord[1] = 0x03
-	tlsRecord[2] = 0x01
-	tlsRecord[3] = byte(len(assembled) >> 8)
-	tlsRecord[4] = byte(len(assembled))
-	copy(tlsRecord[5:], assembled)
-
-	ch, err := ParseClientHello(tlsRecord)
-	if err != nil {
-		return nil, err
-	}
-	if ch != nil {
-		ch.IsQUIC = true
-	}
-	return ch, nil
+	// ClientHelloFromCryptoFragments holds the reassembly, the completeness check and the
+	// record wrapper, so one reader holds every rule. A second copy of the completeness
+	// check drifts from this one. #532 records the design decision.
+	return ClientHelloFromCryptoFragments(fragments)
 }
 
 // DecryptQUICInitialCrypto decrypts a QUIC Initial packet and returns the raw
