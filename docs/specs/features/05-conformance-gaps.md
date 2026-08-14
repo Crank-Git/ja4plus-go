@@ -119,6 +119,22 @@ the wire-order raw form.
   per-stream set publishes `JA4_o` alone, and the per-packet set publishes no `_o` key.
   Issue #290 scoped this requirement to the two vector sets.
 
+### The role of a QUIC Initial packet
+
+`DecryptQUICInitialCrypto` derives the client keys of the Destination Connection ID that the
+packet holds. The server derives its own keys from the Destination Connection ID that the
+client sent, and RFC 9001 Section 5.2 states that derivation input. So the derived key
+authenticates no server Initial packet. **Issue #501 chose the decline, and it is the
+reversal path.**
+
+- **FR-gaps-27** — `DecryptQUICInitialCrypto` returns no error for a packet that the derived
+  key does not authenticate.
+- **FR-gaps-28** — `DecryptQUICInitialCrypto` returns an error for a malformed packet. A
+  payload shorter than the authentication tag and a truncated CRYPTO frame each reach one.
+- **FR-gaps-29** — The decline of FR-gaps-27 covers a corrupted client Initial packet.
+  `crypto/cipher` reports one error value for every authentication failure, so the library
+  separates a wrong role from a corrupted packet at no point.
+
 ## User flows
 
 ### An engineer closes a deviation
@@ -201,6 +217,8 @@ reader or reads the block directly.
 | A QUIC connection sends fragments that never complete a client hello. | The fragment buffer reaches its bound and the library drops the connection state. |
 | `gopacket` at v1.1.19 cannot decode a tunnel that the corpus holds. | Epic 7 decides whether the maintained fork solves it. Risk R5 in `../spec.md` records this. |
 | Closing a deviation changes a fingerprint that a released version produced. | `CHANGELOG.md` records it as a breaking behaviour change under `v1.0.0`. |
+| A QUIC connection sends a server Initial packet. | `DecryptQUICInitialCrypto` declines the packet, and it returns no error. |
+| The Length field of a QUIC Initial packet leaves fewer bytes than the authentication tag. | `DecryptQUICInitialCrypto` returns a non-fatal error that names the tag. |
 
 ## Acceptance criteria
 

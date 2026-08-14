@@ -4750,5 +4750,13 @@
     "theirs": "c20s12_c18s21_c10s1",
     "ruling": "#491",
     "reason": "The maintainer ruled on 2026-08-14 that the server count 21 describes the stalled `tshark` reassembly, and no consistent SSH framing rule reaches it."
+  },
+  {
+    "key": "browsers-x509.pcapng/119/JA4TS.1",
+    "capability": false,
+    "ours": "64240_2-1-3-4-0-0_1460_2",
+    "theirs": "",
+    "ruling": "#503",
+    "reason": "FR-parity-42 makes this library read the reset bit alone, and `wireshark/source/packet-ja4.c:1296` tests the flag byte of frame 119 for equality."
   }
 ]
