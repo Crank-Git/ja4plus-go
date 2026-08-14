@@ -3,16 +3,25 @@ package parser
 // TCPStreamReassembler reassembles TCP streams using sequence numbers.
 // Handles out-of-order segments, duplicates, and overlaps.
 // Evicts oldest streams (LRU) when MaxStreams is exceeded.
+//
+// One TCPStreamReassembler serves one goroutine. It holds state that no lock guards, and
+// `.claude/rules/concurrency.md` states that contract.
 type TCPStreamReassembler struct {
-	streams    map[string]*tcpStream
-	order      []string // LRU order, oldest first
+	streams map[string]*tcpStream
+	order   []string // LRU order, oldest first
+	// MaxStreams bounds the count of the streams the table holds.
 	MaxStreams int
-	MaxBytes   int
+	// MaxBytes bounds one stream twice. It bounds the bytes that the stream stores, and it
+	// bounds the run that GetStream returns. Issue #567 added the first of the two, because
+	// a stream that stored every segment grew without a bound.
+	MaxBytes int
 }
 
 type tcpStream struct {
 	segments []tcpSegment
 	baseSeq  uint32
+	// storedBytes counts the bytes of every segment this stream holds.
+	storedBytes int
 }
 
 type tcpSegment struct {
@@ -60,9 +69,38 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 		}
 	}
 
+	// A stream that reached the byte bound stores no further segment. Every packet is
+	// untrusted input, and a sender that never completes a request otherwise grows one
+	// stream without a bound. Issue #567 measured 1853328 stored bytes on one stream of
+	// `testdata/foxio/pcap/http2-with-cookies.pcapng`, against the 1048576 that `ja4h.go`
+	// passes as MaxBytes.
+	//
+	// The reassembler refuses the new segment, and it drops no stored segment. `GetStream`
+	// reads the contiguous run from the lowest sequence number, so the stored prefix carries
+	// the TLS Certificate message and the HTTP request line. A bound that dropped the oldest
+	// segment would remove that prefix and move a fingerprint value.
+	//
+	// The condition reads the stored bytes against the bound, and it never adds the length of
+	// the segment this call carries. An empty stream is below the bound, so it admits one
+	// segment of any size. `GetStream` then truncates the run at MaxBytes, as it always has.
+	if stream.storedBytes >= r.storedByteBound() {
+		return
+	}
+
 	segData := make([]byte, len(data))
 	copy(segData, data)
 	stream.segments = append(stream.segments, tcpSegment{seq: seq, data: segData})
+	stream.storedBytes += len(data)
+}
+
+// storedByteBound returns the bytes that one stream stores at most.
+// A byte limit below 0 holds no byte, and `GetStream` reads the same rule.
+func (r *TCPStreamReassembler) storedByteBound() int {
+	if r.MaxBytes < 0 {
+		return 0
+	}
+
+	return r.MaxBytes
 }
 
 // GetStream reassembles and returns contiguous data from the lowest sequence number.
