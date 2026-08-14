@@ -549,8 +549,8 @@ func (t *connectionTable) len() int {
 // `GetShardKey` is exported and `.claude/rules/concurrency.md` names it, so the exported
 // rule decides and this function follows it. The Epic 13 cross-member review found the
 // pair, and issue #614 holds the reading. **The round wrote this comment and it moved no
-// code**, because a shared helper changes the exported package and the freeze of #100
-// reaches that surface.
+// code.** A shared helper changes the exported package, and the freeze of #100 reaches that
+// surface.
 // Every packet is untrusted input, so this function reads the decoded layers and it
 // slices no byte of its own.
 func monitorConnectionKey(packet gopacket.Packet) (connectionKey, bool) {

@@ -132,13 +132,13 @@ import (
 // reading of 602. **A mark is a lower bound, so 604 covers every citation that 602 covers.**
 //
 // #77 re-measured the mark on 2026-08-14 and it read 564. `internal/capture/pcapgo_linux.go`
-// cites #564 at three places, which names the issue that carries the capture filter
-// question, and that number sits above the inherited mark of 552. **A member pays this cost
-// too**, and no round of the batch precedes a member that files an issue.
+// cites #564 at three places. #564 names the issue that carries the capture filter question,
+// and that number sits above the inherited mark of 552. **A member pays this cost too**, and
+// no round of the batch precedes a member that files an issue.
 //
 // **The sentence above named a TODO comment until the Epic 13 round repaired it.**
 // `grep -n "TODO" internal/capture/pcapgo_linux.go` reports nothing on 2026-08-14. The
-// three #564 citations sit at `:42`, `:112` and `:120`: one ordinary comment inside `Open`,
+// three #564 citations sit at `:42`, `:112` and `:120`: one ordinary comment inside `open`,
 // and two lines of the doc comment of `compileFilter`. `.claude/rules/ste.md`
 // `### A code comment` gives `TODO(#N)` a defined form, so a reader who grepped that marker
 // found no target.
