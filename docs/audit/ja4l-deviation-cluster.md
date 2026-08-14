@@ -377,20 +377,23 @@ and the ruling alone holds three of them.**
 | `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` | `264_64_quic` | No entry. |
 
 **The last two rows carry a second difference, so ruling #528 alone does not hold either
-one.** `tls3.pcapng/153/JA4L.1` reads `71_128_quic` under the candidate and the vector holds
-`101_128_quic`, and no reading of this page states the remainder. Part a of
-`chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` agrees exactly under the candidate,
-and the time-to-live `0` of that vector stays open under
-`## Cause 4 — the time-to-live of a second QUIC connection on one four-tuple`. **An entry
-that named ruling #528 for either row would accept a difference the ruling does not
-decide.**
+one.** `tls3.pcapng/153/JA4L.1` reads `71_128_quic` under the candidate, and the vector holds
+`101_128_quic`. No reading of this page states that remainder.
+
+Part a of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` agrees exactly under the
+candidate. The time-to-live `0` of that vector stays open under cause 4.
+
+**An entry that named ruling #528 for either row would accept a difference the ruling does
+not decide.**
 
 **The row of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` is new.** The run of
-2026-08-13 attributed that comparison to cause 4 alone, and the re-measurement shows that
-the point C reading moves its part a from `113` to `264`. **So cause 3 and cause 4 both
-reach that one comparison.**
+2026-08-13 attributed that comparison to cause 4 alone. The re-measurement moves its part a
+from `113` to `264`. **So cause 3 and cause 4 both reach that one comparison.**
 
 #### The candidate makes five register entries stale
+
+**This section prices answer 2, and the maintainer ruled answer 1.** **The ruling itself
+costs no register entry**, because the library keeps the value it produces today.
 
 **Answer 2 is no longer cost-free, and the run of 2026-08-13 reported that it was.** The
 candidate makes five per-stream entries stale, because each one records the value the
@@ -483,7 +486,7 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 |---|---|---|---|---|
 | 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | The maintainer. Ruling #127 holds it. |
 | 2 — the QUIC `JA4L-S` emission frame | 16 | **15** | Opens none. Orphans 20 entries. | An engineer. The four implementations agree. |
-| 3 — the QUIC client measurement point | 4 | **3** | None on 2026-08-13. **5 stale entries on 2026-08-14.** | **Ruled on 2026-08-14. Issue #528 holds it.** |
+| 3 — the QUIC client measurement point | 4 | **3** | **The ruling costs nothing.** Answer 2 cost nothing on 2026-08-13, and it costs 5 stale entries on 2026-08-14. | **Ruled on 2026-08-14. Issue #528 holds it.** |
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | — | The maintainer. A reference defect. |
 | 5 — the two vector sets disagree | 2 | Not measured. Each set holds a different value. | — | The maintainer. #249 holds it. |
 | Unattributed | 3 | — | — | — |
