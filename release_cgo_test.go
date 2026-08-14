@@ -158,10 +158,14 @@ func TestNoReleaseSettingOutsideTheBuildStepDisablesCgo(t *testing.T) {
 	workflow := readRepoFile(t, releaseWorkflowPath)
 	step := releaseWorkflowStep(t, releaseBuildStepName)
 
-	for _, setting := range cgoAnyValue.FindAllString(workflow, -1) {
-		if !strings.Contains(step, setting) {
-			t.Errorf("this CGO_ENABLED setting sits outside the %q step, and it reaches the race detector of the test step:\n%s",
-				releaseBuildStepName, setting)
-		}
+	// The assertion counts the settings rather than searching the step for each one. A
+	// job-level `CGO_ENABLED: "0"` and the step-level one differ by indentation alone, so
+	// a substring search of the step finds the step's own line and reports nothing.
+	inFile := len(cgoAnyValue.FindAllString(workflow, -1))
+	inStep := len(cgoAnyValue.FindAllString(step, -1))
+
+	if inFile != inStep {
+		t.Errorf("%s holds %d CGO_ENABLED settings and the %q step holds %d, so %d of them reach the race detector of the test step",
+			releaseWorkflowPath, inFile, releaseBuildStepName, inStep, inFile-inStep)
 	}
 }
