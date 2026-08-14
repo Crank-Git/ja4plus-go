@@ -124,9 +124,13 @@ func (b *boundedKeys) admit(
 //
 // The packet carries that timestamp, so a crafted capture controls it, and one timestamp
 // decides the age of every key. A packet dated far in the future ages the whole table at once,
-// and this pass then removes every entry. `ja4ssh.go` and `ja4ts.go` hold the same rule, and
-// the port holds it at `ja4plus/utils/state_table.py` of tag `v1.1.0`. **Issue #577 carries
-// that question**, and this file repeats the established rule rather than inventing one.
+// and this pass then removes every entry. `ja4ssh.go`, `ja4ts.go` and `ja4h.go` hold the same
+// rule, and the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
+//
+// **The maintainer accepted that property on 2026-08-14**, and issue #577 holds the ruling and
+// the reversal path. The ruling declined a clamp, a monotonic clock and a quorum, because each
+// one invents a rule that no FoxIO source states. `age_clock_ruling_test.go` builds the
+// separating packet, and it fails when a later change hardens this clock.
 //
 // The entry bound holds the memory whatever the timestamp states, because it reads the recency
 // order and no timestamp. So the loss is the tracked state, and never the memory.

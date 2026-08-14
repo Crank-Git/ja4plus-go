@@ -277,11 +277,24 @@ func (f *JA4TSFingerprinter) resetResults(packet gopacket.Packet, tcp *layers.TC
 // The pass reads the capture timestamp of the packet that arrives, and never the wall
 // clock, because a capture replays faster than real time.
 //
-// The packet carries that timestamp, so a crafted capture controls it. A SYN-ACK dated far
-// in the future gives every later packet a negative age, and this pass then removes that
-// entry never. `evictOldestConnection` is the bound that holds the memory, because it
-// reads the arrival order and no timestamp. This pass reclaims a stale entry early, and it
-// is no memory bound of its own.
+// The packet carries that timestamp, so a crafted capture controls it, and one timestamp
+// decides the age of every connection.
+//
+// The forged timestamp reaches two cases, and this comment states both.
+//
+//   - The key of the sender. A SYN-ACK dated far in the future gives every later packet a
+//     negative age, so this pass removes that entry never.
+//   - Every other key. The packet that carries the future timestamp ages the whole table at
+//     once, so this pass removes every other connection.
+//
+// **The maintainer accepted the second case on 2026-08-14**, and issue #577 holds the ruling
+// and the reversal path. `state_bound.go`, `ja4ssh.go` and `ja4h.go` hold the same clock, and
+// the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
+// `age_clock_ruling_test.go` builds the separating packet.
+//
+// `evictOldestConnection` is the bound that holds the memory, because it reads the arrival
+// order and no timestamp. This pass reclaims a stale entry early, and it is no memory bound
+// of its own. So the loss of the second case is the tracked state, and never the memory.
 func (f *JA4TSFingerprinter) evictAgedConnections(now time.Time) {
 	for key, conn := range f.connections {
 		if len(conn.times) == 0 {

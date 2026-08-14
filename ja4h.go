@@ -307,6 +307,25 @@ func (f *JA4HFingerprinter) removeTheLeastRecentRange() {
 //
 // The clock reads the packet timestamp, and never the wall clock. A capture replays faster
 // than the wall clock, so a wall clock removes state that the capture still needs.
+//
+// The packet carries that timestamp, so a crafted capture controls it, and one timestamp
+// decides the age of every stream.
+//
+// The forged timestamp reaches two cases, and this comment states both.
+//
+//   - The key of the sender. A segment dated far in the future gives every later segment of
+//     that stream a negative age, so this pass removes that entry never.
+//   - Every other key. The segment that carries the future timestamp ages the whole table at
+//     once, so this pass removes every other stream.
+//
+// **The maintainer accepted the second case on 2026-08-14**, and issue #577 holds the ruling
+// and the reversal path. `state_bound.go`, `ja4ssh.go` and `ja4ts.go` hold the same clock, and
+// the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
+// `age_clock_ruling_test.go` builds the separating packet.
+//
+// `removeTheLeastRecentRange` is the bound that holds the memory, because it reads the
+// last-seen order and no age. So the loss of the second case is the tracked state, and never
+// the memory.
 func (f *JA4HFingerprinter) evictAgedRanges(now time.Time) {
 	for key, entry := range f.ranges {
 		if now.Sub(entry.lastSeen) > ja4hMaxStreamAge {
