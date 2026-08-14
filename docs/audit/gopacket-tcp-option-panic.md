@@ -1,6 +1,6 @@
 # The gopacket TCP option panic
 
-**This file records a defect of a pinned dependency, and it makes no decision.** Issue #510
+**This file records a defect of a pinned dependency, and it rules nothing.** Issue #510
 holds the record, and issue #494 met the defect in its own first commit.
 
 `CLAUDE.md` states that every packet is untrusted input, and that a fingerprinter returns a

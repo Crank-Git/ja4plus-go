@@ -68,7 +68,7 @@ Reproduce it exactly, in a code span or a block quote, and cite the location.
 
 1. **A FoxIO image under `technical_details/`.** It decides schema: the part count, the
    field widths, the character counts.
-2. **A FoxIO reference implementation.** It decides behaviour where the image is silent.
+2. **A FoxIO reference implementation.** It decides behavior where the image is silent.
 3. **A deleted FoxIO text specification.** It corroborates, and **it never outranks an
    image**. `docs/specs/foxio/deleted-text-specifications.md` holds the seven of them.
 4. **A Zeek baseline.** It is not a reference value for every method.

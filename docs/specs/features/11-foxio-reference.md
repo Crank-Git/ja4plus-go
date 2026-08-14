@@ -267,7 +267,7 @@ pin. FR-reference-12 records the commit it read, and the two commits differ on p
 
 ## Edge cases & failures
 
-| Case | Expected behaviour |
+| Case | Expected behavior |
 |---|---|
 | FoxIO moves the pin and an image changes. | FR-reference-5 fails. The engineer re-reads the image and re-measures the hash before moving the pin. |
 | A rule appears in no image and in no deleted file. | The page records the gap and names the implementations that state the rule. `JA4SSH.md` R11 is such a rule in the port. |
