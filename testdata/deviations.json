@@ -4805,7 +4805,7 @@
     "ours": "22952_236",
     "theirs": "",
     "ruling": "#126",
-    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1279` reads this ECN-marked SYN-ACK as no SYN-ACK."
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1279` reads the whole flag byte of this SYN-ACK for equality."
   },
   {
     "key": "gre-sample.pcap/13/JA4L.1",
@@ -4813,7 +4813,7 @@
     "ours": "36_255",
     "theirs": "",
     "ruling": "#126",
-    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads this ECN-marked SYN as no SYN."
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
   },
   {
     "key": "gre-sample.pcap/14/JA4L.1",
@@ -4821,7 +4821,7 @@
     "ours": "26150_255",
     "theirs": "",
     "ruling": "#126",
-    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads this ECN-marked SYN as no SYN."
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
   },
   {
     "key": "macos_tcp_flags.pcap/2/JA4LS.1",
@@ -4829,7 +4829,7 @@
     "ours": "17255_63",
     "theirs": "",
     "ruling": "#126",
-    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1279` reads this ECN-marked SYN-ACK as no SYN-ACK."
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1279` reads the whole flag byte of this SYN-ACK for equality."
   },
   {
     "key": "macos_tcp_flags.pcap/3/JA4L.1",
@@ -4837,7 +4837,7 @@
     "ours": "62_64",
     "theirs": "",
     "ruling": "#126",
-    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads this ECN-marked SYN as no SYN."
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
   },
   {
     "key": "macos_tcp_flags.pcap/4/JA4L.1",
@@ -4845,6 +4845,6 @@
     "ours": "393_64",
     "theirs": "",
     "ruling": "#126",
-    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads this ECN-marked SYN as no SYN."
+    "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
   }
 ]

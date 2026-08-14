@@ -9,10 +9,10 @@ import (
 // JA4L, and it reaches JA4T as well. `wireshark/source/packet-ja4.c:1266` is one line, and
 // both methods read it.
 //
-// The dissector tests the whole flag byte for equality, so an ECN-marked SYN reaches no
-// branch. The connection record never fills, and the per-packet vector file names no JA4L
-// key for it. The library reads the SYN bit alone, so it publishes a value that the vector
-// file does not hold.
+// The dissector tests the whole flag byte for equality, so a SYN that carries one more flag
+// bit reaches no branch. The connection record never fills, and the per-packet vector file
+// names no JA4L key for it. The library reads the SYN bit alone, so it publishes a value
+// that the vector file does not hold.
 //
 // These tests hold the ruling, because the vector set names no key that a comparison could
 // separate. `.claude/rules/rulings.md` `## Where a ruling is recorded` requires a register
@@ -24,6 +24,7 @@ const ja4lSYNBitRulingIssue = "#543"
 // ja4lSYNBitRulingCitations names each reference location that states the SYN bit test.
 var ja4lSYNBitRulingCitations = []string{
 	"wireshark/source/packet-ja4.c:1266",
+	"wireshark/source/packet-ja4.c:1279",
 	"python/ja4.py:563",
 	"zeek/ja4l/main.zeek:84",
 	"rust/ja4/src/time/tcp.rs:211",
@@ -32,7 +33,7 @@ var ja4lSYNBitRulingCitations = []string{
 
 // ja4lSYNBitDeclines names each per-packet value that declines under the ruling, with the
 // value the library produces. The two captures are the only two of the corpus that open a
-// connection with an ECN-marked SYN.
+// connection with a SYN that carries one more flag bit.
 var ja4lSYNBitDeclines = map[string]string{
 	"gre-sample.pcap/12/JA4LS.1":     "22952_236",
 	"gre-sample.pcap/13/JA4L.1":      "36_255",
@@ -42,7 +43,7 @@ var ja4lSYNBitDeclines = map[string]string{
 	"macos_tcp_flags.pcap/4/JA4L.1":  "393_64",
 }
 
-func TestTheRegisterDeclinesEachECNMarkedSYNValueUnderRuling126(t *testing.T) {
+func TestTheRegisterDeclinesEachExtraFlagBitSYNValueUnderRuling126(t *testing.T) {
 	held := make(map[string]deviationEntry)
 	for _, entry := range readDeviationRegister(t) {
 		held[entry.Key] = entry

@@ -254,11 +254,12 @@ image.
   Zeek tests `(rp$tcp$flags & TH_SYN) == 0 || (rp$tcp$flags & TH_ACK) == TH_ACK` at
   `zeek/ja4l/main.zeek:84`. Rust reads the two flags as separate fields. It reads
   `tcp.flags.ack` at `rust/ja4/src/time/tcp.rs:211`, and it reads `tcp.flags.syn` at
-  `rust/ja4/src/time/tcp.rs:212`. **So an
-  ECN-marked SYN reaches no Wireshark branch, and the dissector fills no connection
-  record.** `wireshark/source/packet-ja4.c:1266` is one line, and JA4T and JA4L both read
-  it. **The maintainer ruled that the SYN bit test of ruling #126 reaches JA4L, and not
-  JA4T alone.** Two captures of the corpus open a connection with an ECN-marked SYN, and
-  they are `gre-sample.pcap` and `macos_tcp_flags.pcap`. `testdata/deviations.json` declines
-  6 per-packet values under ruling #126 for that reason. **Issue #543 holds the ruling and
+  `rust/ja4/src/time/tcp.rs:212`. **Each Wireshark
+  test reads the whole byte, so a SYN that carries one more flag bit reaches no branch.**
+  The dissector then fills no connection record, and it publishes no JA4L value.
+  `wireshark/source/packet-ja4.c:1266` is one line, and JA4T and JA4L both read it. **The
+  maintainer ruled that the SYN bit test of ruling #126 reaches JA4L, and not JA4T alone.**
+  Two captures of the corpus open a connection with such a SYN, and they are
+  `gre-sample.pcap` and `macos_tcp_flags.pcap`. `testdata/deviations.json` declines 6
+  per-packet values under ruling #126 for that reason. **Issue #543 holds the ruling and
   the reversal path.**
