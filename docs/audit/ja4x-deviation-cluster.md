@@ -66,8 +66,9 @@ reports 367. 50 of them name JA4X or JA4X_r in each run.** **Epic #441 measured 
 2026-08-13, before batch #421 and before #438.** This page re-measured the number rather
 than adopt it, and the three measurements agree.
 
-**Each table of this section carries a second count column, and the Epic #441 batch produced
-it.** `## The merged tree of the Epic #441 batch, 2026-08-14` above names the run.
+**Each table of this section carries one more count column, headed `The merged tree`, and the
+Epic #441 batch produced every figure of it.**
+`## The merged tree of the Epic #441 batch, 2026-08-14` above names the run.
 
 | Key kind | 2026-08-13 | The merged tree |
 |---|---|---|
