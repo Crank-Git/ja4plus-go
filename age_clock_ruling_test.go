@@ -16,7 +16,7 @@ import (
 // clamp, no monotonic clock and no quorum reaches the tree. Each declined answer invents a
 // rule that no FoxIO source states.
 //
-// The property: an age pass reads the capture timestamp of the packet that arrives, and it
+// The property: an age pass reads the capture timestamp of the packet that arrives. It
 // compares that one timestamp against the last packet time of every key of the table. So one
 // packet dated far in the future ages every key at once, and the pass removes all of them.
 //
@@ -56,7 +56,7 @@ const ageClockHTTPRequest = "GET / HTTP/1.1\r\n" +
 	"\r\n"
 
 // TestOnePacketDatedFarInTheFutureEmptiesTheJA4FragmentTable drives `state_bound.go`
-// `agedKeys` through the JA4 QUIC fragment table.
+// `agedKeys` through the fragment table of JA4.
 //
 // JA4 runs the age pass on each datagram, so the crafted datagram reaches the pass at once.
 func TestOnePacketDatedFarInTheFutureEmptiesTheJA4FragmentTable(t *testing.T) {
@@ -102,6 +102,11 @@ func TestOnePacketDatedFarInTheFutureEmptiesTheJA4SSHConnectionTable(t *testing.
 		if _, err := fingerprinter.ProcessPacket(sshBoundPacketAt(1024+port, time.Unix(1700000000, 0))); err != nil {
 			t.Fatalf("the fingerprinter returns the error %v for seed connection %d", err, port)
 		}
+	}
+
+	if got := len(fingerprinter.connections); got != len(ageClockSeedPorts) {
+		t.Fatalf("the state table holds %d connections before the crafted packet, want %d",
+			got, len(ageClockSeedPorts))
 	}
 
 	for index := len(ageClockSeedPorts); index < sshEvictionInterval; index++ {
@@ -202,19 +207,23 @@ func ageClockHTTPSegment(t *testing.T, clientPort uint16, at time.Time) gopacket
 // The entry bound reads the recency order and no timestamp, so a crafted timestamp moves no
 // entry count above the bound. The loss of the age property is the tracked state, and it is
 // never the memory.
+//
+// The call states an eviction interval of 1, so the age pass runs on every key. Each key
+// carries a timestamp further ahead than the key before it, so the pass ages the whole table
+// on every call. The count stays at the bound whatever the pass removes.
 func TestTheEntryBoundHoldsTheMemoryWhateverTheTimestampStates(t *testing.T) {
 	var table boundedKeys
 
-	drops := 0
-	drop := func(string) { drops++ }
+	drop := func(string) {}
 
 	for index := 0; index < 100; index++ {
 		key := fmt.Sprintf("connection-%d", index)
 		table.admit(key, time.Unix(1700000000, 0).Add(ageClockForwardJump*time.Duration(index)),
-			4, 600*time.Second, 0, drop)
-	}
+			4, 600*time.Second, 1, drop)
 
-	if got := table.count(); got > 4 {
-		t.Errorf("the table holds %d keys, and the entry bound of this call states 4 at most", got)
+		if got := table.count(); got > 4 {
+			t.Fatalf("the table holds %d keys after key %d, and the entry bound of this call states 4 at most",
+				got, index)
+		}
 	}
 }

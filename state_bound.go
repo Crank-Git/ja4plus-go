@@ -127,10 +127,11 @@ func (b *boundedKeys) admit(
 // and this pass then removes every entry. `ja4ssh.go`, `ja4ts.go` and `ja4h.go` hold the same
 // rule, and the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
 //
-// **The maintainer accepted that property on 2026-08-14**, and issue #577 holds the ruling and
-// the reversal path. The ruling declined a clamp, a monotonic clock and a quorum, because each
-// one invents a rule that no FoxIO source states. `age_clock_ruling_test.go` builds the
-// separating packet, and it fails when a later change hardens this clock.
+// **The maintainer ruled that property on 2026-08-14, and the library accepts it.** Issue #577
+// holds the ruling and the reversal path. The ruling declined a clamp, a monotonic clock and a
+// quorum, because each one invents a rule that no FoxIO source states.
+// `age_clock_ruling_test.go` builds the separating packet, and it fails when a later change
+// hardens this clock.
 //
 // The entry bound holds the memory whatever the timestamp states, because it reads the recency
 // order and no timestamp. So the loss is the tracked state, and never the memory.

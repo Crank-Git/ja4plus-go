@@ -318,8 +318,8 @@ func (f *JA4HFingerprinter) removeTheLeastRecentRange() {
 //   - Every other key. The segment that carries the future timestamp ages the whole table at
 //     once, so this pass removes every other stream.
 //
-// **The maintainer accepted the second case on 2026-08-14**, and issue #577 holds the ruling
-// and the reversal path. `state_bound.go`, `ja4ssh.go` and `ja4ts.go` hold the same clock, and
+// **The maintainer ruled the second case on 2026-08-14, and the library accepts it.** Issue
+// #577 holds the ruling and the reversal path. `state_bound.go`, `ja4ssh.go` and `ja4ts.go` hold the same clock, and
 // the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
 // `age_clock_ruling_test.go` builds the separating packet.
 //
