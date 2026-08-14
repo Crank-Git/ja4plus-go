@@ -440,6 +440,25 @@ func (f *JA4SSHFingerprinter) removeConnection(connKey string) {
 //
 // The pass reads every connection. A capture states a timestamp of its own, so two packets can
 // arrive out of order. The order list then does not follow the age.
+//
+// The packet carries that timestamp, so a crafted capture controls it, and one timestamp
+// decides the age of every connection.
+//
+// The forged timestamp reaches two cases, and this comment states both.
+//
+//   - The key of the sender. A packet dated far in the future gives every later packet of
+//     that connection a negative age, so this pass removes that entry never.
+//   - Every other key. The packet that carries the future timestamp ages the whole table at
+//     once, so this pass removes every other connection and every handshake entry.
+//
+// **The maintainer ruled the second case on 2026-08-14, and the library accepts it.** Issue
+// #577 holds the ruling and the reversal path. `state_bound.go`, `ja4ts.go` and `ja4h.go` hold the same clock, and
+// the port holds it at `ja4plus/utils/state_table.py:414` of tag `v1.1.0`.
+// `age_clock_ruling_test.go` builds the separating packet.
+//
+// The entry bound holds the memory whatever the timestamp states, because it reads the
+// recency order and no timestamp. So the loss of the second case is the tracked state, and
+// never the memory.
 func (f *JA4SSHFingerprinter) evictAgedConnections(now time.Time) {
 	for element := f.order.Front(); element != nil; {
 		next := element.Next()
