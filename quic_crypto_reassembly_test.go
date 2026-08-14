@@ -270,6 +270,44 @@ func TestJA4DropsTheConnectionOfAFragmentBufferAboveTheBound(t *testing.T) {
 	}
 }
 
+// TestJA4DropsTheConnectionOfAClientHelloParseError holds issue #533.
+//
+// ClientHelloFromCryptoFragments returns nil and no error while a fragment is missing, so
+// an error of that function names a handshake message that holds every byte its length
+// field counts. No later packet repairs such a message, and the fingerprinter drops the
+// connection state rather than hold it for the life of the process.
+func TestJA4DropsTheConnectionOfAClientHelloParseError(t *testing.T) {
+	fingerprinter := NewJA4()
+
+	// The handshake message counts 34 body bytes, and it carries the legacy version and the
+	// random value alone. ParseClientHello reads the session identifier length behind them,
+	// and the message ends first.
+	message := []byte{parser.TLSHandshakeClientHello, 0x00, 0x00, 0x22}
+	message = append(message, 0x03, 0x03)          // the legacy version
+	message = append(message, make([]byte, 32)...) // the random value
+
+	// The frame names the CRYPTO type, an offset of zero and the length of the message.
+	frame := []byte{0x06, 0x00, byte(len(message))}
+	frame = append(frame, message...)
+
+	_, err := fingerprinter.ProcessPacket(quicReassemblyDatagram(t, frame, 0))
+	if err == nil {
+		t.Fatalf("the fingerprinter reaches no error, and the client hello holds no session identifier length")
+	}
+
+	if held := len(fingerprinter.quicFragments); held != 0 {
+		t.Errorf("the fingerprinter holds %d fragment buffers, and it drops the connection at a parse error", held)
+	}
+
+	if held := len(fingerprinter.dcidToTuple); held != 0 {
+		t.Errorf("the fingerprinter holds %d grouping key entries, and it drops the connection at a parse error", held)
+	}
+
+	if held := len(fingerprinter.dcidToReported); held != 0 {
+		t.Errorf("the fingerprinter holds %d reported key entries, and it drops the connection at a parse error", held)
+	}
+}
+
 // quicReassemblyClientHello returns the bytes of a TLS client hello handshake message.
 // The message holds three cipher suites and no extension.
 func quicReassemblyClientHello() []byte {
