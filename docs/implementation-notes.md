@@ -110,11 +110,13 @@ The release workflow builds five binaries:
 A build without cgo cross-compiles from one machine, and it links no system library at run
 time. That is what makes the five-way build cheap.
 
-**The release workflow sets `CGO_ENABLED=0` for each of the five builds**, so every
-released artifact holds the setting whatever the machine that built it defaults to.
+**The release workflow sets `CGO_ENABLED=0` for each of the five builds.** So every
+released artifact holds the setting, and the default of the build machine decides nothing.
 `.github/workflows/release.yml` states it as a step environment, and `release_cgo_test.go`
-guards it. #583 measured the gap on 2026-08-14: the job runs on `ubuntu-latest`, so the
-`linux/amd64` build was native and took the Go default of `1` while the four cross-compiles
+guards it.
+
+**#583 measured the gap on 2026-08-14.** The job runs on `ubuntu-latest`, so the
+`linux/amd64` build was native and it took the Go default of `1`. The four cross-compiles
 took `0`. **Issue #583 is the reversal path.**
 
 **Read the setting of any binary with `go version -m`.** It prints one `build
