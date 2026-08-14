@@ -51,6 +51,13 @@ var dhcpv6MessageMap = map[byte]string{
 	37: "arrep", // ARREPLY
 }
 
+// maxDHCPv6NestingDepth bounds the walk of the DHCPv6 options.
+//
+// A crafted message nests one container inside another without a limit, so an unbounded
+// descent exhausts the stack. The walk enters this many containers at most. The port
+// states the same bound at `ja4plus/fingerprinters/ja4d6.py:115`, at tag `v1.1.0`.
+const maxDHCPv6NestingDepth = 32
+
 // JA4D6Fingerprinter generates JA4D6 DHCPv6 fingerprints.
 //
 // Format: {type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}
@@ -103,37 +110,18 @@ func (f *JA4D6Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprin
 		return nil, fmt.Errorf("the DHCPv6 layer carries the type %T", dhcpLayer)
 	}
 
-	// Walk options recursively to collect type codes in presence order.
-	optionsInOrder := walkDHCPv6Options(dhcp.Options)
+	// One walk collects every input, so each one reaches an option of an inner message.
+	inputs := walkDHCPv6Options(dhcp.Options)
+	optionsInOrder := inputs.optionsInOrder
+	paramList := inputs.requestList
 
-	// Find option 1 (Client Identifier) for size, option 4 (IATA) for ip,
-	// option 39 (Client FQDN) for fqdn, option 6 (ORO) for request list.
-	var sizeStr = "0000"
-	var hasIATA, hasFQDN bool
-	var paramList []uint16
-
-	for _, opt := range dhcp.Options {
-		switch opt.Code {
-		case layers.DHCPv6OptClientID: // 1
-			if sizeStr == "0000" { // first occurrence
-				duidLen := len(opt.Data)
-				if duidLen > 9999 {
-					duidLen = 9999
-				}
-				sizeStr = fmt.Sprintf("%04d", duidLen)
-			}
-		case layers.DHCPv6OptIATA: // 4
-			hasIATA = true
-		case layers.DHCPv6OptClientFQDN: // 39
-			hasFQDN = true
-		case layers.DHCPv6OptOro: // 6 — Option Request Option
-			// Option data is a sequence of 2-byte option codes.
-			d := opt.Data
-			for i := 0; i+1 < len(d); i += 2 {
-				paramList = append(paramList, binary.BigEndian.Uint16(d[i:i+2]))
-			}
-		}
+	duidLen := inputs.duidLen
+	if duidLen > 9999 {
+		duidLen = 9999
 	}
+	sizeStr := fmt.Sprintf("%04d", duidLen)
+	hasIATA := inputs.hasIATA
+	hasFQDN := inputs.hasFQDN
 
 	msgTypeStr, ok := dhcpv6MessageMap[byte(dhcp.MsgType)]
 	if !ok {
@@ -181,21 +169,62 @@ func (f *JA4D6Fingerprinter) Reset() {
 func (f *JA4D6Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 }
 
-// walkDHCPv6Options walks DHCPv6 options recursively, returning the codes in
-// presence order including nested sub-options inside container options like
-// IA_NA, IA_TA, IA_PD, IAAddr, and IAPrefix.
-func walkDHCPv6Options(opts []layers.DHCPv6Option) []uint16 {
-	var out []uint16
-	for _, o := range opts {
-		out = append(out, uint16(o.Code))
-		out = append(out, parseDHCPv6SubOpts(o.Code, o.Data)...)
-	}
-	return out
+// ja4d6Inputs holds the six inputs that one walk of the DHCPv6 options collects.
+type ja4d6Inputs struct {
+	optionsInOrder []uint16
+	requestList    []uint16
+	duidLen        int
+	hasDUID        bool
+	hasIATA        bool
+	hasFQDN        bool
 }
 
-// parseDHCPv6SubOpts extracts nested option codes from container options that
-// carry sub-options after a fixed-size header. Returns codes in wire order.
-func parseDHCPv6SubOpts(parent layers.DHCPv6Opt, data []byte) []uint16 {
+// walkDHCPv6Options returns the six JA4D6 inputs that the DHCPv6 options carry.
+//
+// The walk reads every option at every nesting depth. It reads a nested option of a
+// container option, and it reads an option of the inner message that option 9, Relay
+// Message, carries.
+//
+// R11, R19, R20 and R23 of `docs/specs/foxio/JA4D6.md` each name one field that the
+// Wireshark dissector reads. `wireshark/source/packet-ja4.c:1500-1578` reads one flat
+// array of the fields of the whole dissection tree, and it matches each field on the
+// field name alone. So no depth limits any part of the value.
+func walkDHCPv6Options(opts []layers.DHCPv6Option) *ja4d6Inputs {
+	inputs := &ja4d6Inputs{}
+	for _, o := range opts {
+		inputs.optionsInOrder = append(inputs.optionsInOrder, uint16(o.Code))
+		inputs.readDHCPv6Option(o.Code, o.Data)
+		inputs.descendDHCPv6Option(o.Code, o.Data, 1)
+	}
+	return inputs
+}
+
+// readDHCPv6Option reads one DHCPv6 option into the four subfield inputs.
+// An option code outside the four contributes no input.
+func (in *ja4d6Inputs) readDHCPv6Option(code layers.DHCPv6Opt, data []byte) {
+	switch code {
+	case layers.DHCPv6OptClientID: // 1
+		// R13 of `docs/specs/foxio/JA4D6.md`: the dissector reads the length while the
+		// subfield is still empty, so the first client DUID of the walk decides it.
+		if !in.hasDUID {
+			in.duidLen = len(data)
+			in.hasDUID = true
+		}
+	case layers.DHCPv6OptIATA: // 4
+		in.hasIATA = true
+	case layers.DHCPv6OptClientFQDN: // 39
+		in.hasFQDN = true
+	case layers.DHCPv6OptOro: // 6 — Option Request Option
+		// The option data holds a sequence of two-byte option codes, big-endian.
+		for i := 0; i+1 < len(data); i += 2 {
+			in.requestList = append(in.requestList, binary.BigEndian.Uint16(data[i:i+2]))
+		}
+	}
+}
+
+// descendDHCPv6Option walks the options that one container option carries.
+// An option that carries no nested option contributes no input.
+func (in *ja4d6Inputs) descendDHCPv6Option(code layers.DHCPv6Opt, data []byte, depth int) {
 	// Per RFC 8415:
 	//   IA_NA (3): IAID(4) + T1(4) + T2(4) + options
 	//   IA_TA (4): IAID(4) + options
@@ -203,7 +232,7 @@ func parseDHCPv6SubOpts(parent layers.DHCPv6Opt, data []byte) []uint16 {
 	//   IA_PD (25): IAID(4) + T1(4) + T2(4) + options
 	//   IAPrefix (26): preferred(4) + valid(4) + prefix-length(1) + prefix(16) + options
 	var offset int
-	switch parent {
+	switch code {
 	case layers.DHCPv6OptIANA: // 3
 		offset = 12
 	case layers.DHCPv6OptIATA: // 4
@@ -214,25 +243,54 @@ func parseDHCPv6SubOpts(parent layers.DHCPv6Opt, data []byte) []uint16 {
 		offset = 12
 	case layers.DHCPv6OptIAPrefix: // 26
 		offset = 25
+	case layers.DHCPv6OptRelayMessage: // 9
+		// Option 9 carries a whole DHCPv6 message rather than a fixed header and
+		// sub-options, so the header of that message states the offset.
+		offset = dhcpv6OptionsOffset(data)
 	default:
-		return nil
+		return
 	}
 	if offset > len(data) {
-		return nil
+		return
 	}
-	rest := data[offset:]
-	var out []uint16
+	in.walkDHCPv6RawOptions(data[offset:], depth)
+}
+
+// dhcpv6OptionsOffset returns the offset of the first option of one DHCPv6 message.
+//
+// RFC 8415 section 8 gives an ordinary message a four-byte header, and section 9 gives
+// RELAY-FORW and RELAY-REPL a 34-byte header. A message shorter than the ordinary header
+// reports that header, so the caller reads no option of it.
+func dhcpv6OptionsOffset(message []byte) int {
+	const relayHeaderLen = 34
+	const messageHeaderLen = 4
+	if len(message) == 0 {
+		return messageHeaderLen
+	}
+	if message[0] == 12 || message[0] == 13 {
+		return relayHeaderLen
+	}
+	return messageHeaderLen
+}
+
+// walkDHCPv6RawOptions reads every DHCPv6 option of the wire form into the inputs.
+// A container deeper than maxDHCPv6NestingDepth contributes no input.
+func (in *ja4d6Inputs) walkDHCPv6RawOptions(rest []byte, depth int) {
+	if depth > maxDHCPv6NestingDepth {
+		return
+	}
 	for len(rest) >= 4 {
 		code := binary.BigEndian.Uint16(rest[0:2])
 		l := int(binary.BigEndian.Uint16(rest[2:4]))
 		if 4+l > len(rest) {
 			break
 		}
-		out = append(out, code)
-		out = append(out, parseDHCPv6SubOpts(layers.DHCPv6Opt(code), rest[4:4+l])...)
+		data := rest[4 : 4+l]
+		in.optionsInOrder = append(in.optionsInOrder, code)
+		in.readDHCPv6Option(layers.DHCPv6Opt(code), data)
+		in.descendDHCPv6Option(layers.DHCPv6Opt(code), data, depth+1)
 		rest = rest[4+l:]
 	}
-	return out
 }
 
 // ja4d6FormatU16List formats a slice of uint16 as dash-joined decimals.
