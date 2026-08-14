@@ -455,6 +455,8 @@ every packet of the connection, and `ComputeJA4TS` reads one packet and writes f
 - [gopacket](https://github.com/gopacket/gopacket) for packet capture and dissection
 - [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto) for QUIC HKDF key derivation
 - No cgo required for PCAP file analysis (uses pure Go `pcapgo`)
+- Every released binary is built with `CGO_ENABLED=0`. `.github/workflows/release.yml`
+  sets it, and `release_cgo_test.go` guards it.
 
 ## Development
 

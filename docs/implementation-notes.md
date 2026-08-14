@@ -110,9 +110,16 @@ The release workflow builds five binaries:
 A build without cgo cross-compiles from one machine, and it links no system library at run
 time. That is what makes the five-way build cheap.
 
-**Build the binary yourself when you need a guarantee about cgo.** Set `CGO_ENABLED=0`,
-and read the result with `go version -m`. This page states what the source imports, and a
-released artifact carries the settings of the machine that built it.
+**The release workflow sets `CGO_ENABLED=0` for each of the five builds**, so every
+released artifact holds the setting whatever the machine that built it defaults to.
+`.github/workflows/release.yml` states it as a step environment, and `release_cgo_test.go`
+guards it. #583 measured the gap on 2026-08-14: the job runs on `ubuntu-latest`, so the
+`linux/amd64` build was native and took the Go default of `1` while the four cross-compiles
+took `0`. **Issue #583 is the reversal path.**
+
+**Read the setting of any binary with `go version -m`.** It prints one `build
+CGO_ENABLED=` line, so a reader confirms the property of an artifact rather than trusting
+this page.
 
 **One build path uses cgo, and the `libpcap` build tag selects it.** It exists so that
 live capture reaches macOS, because the pure-Go capture handle reaches Linux alone. **That
