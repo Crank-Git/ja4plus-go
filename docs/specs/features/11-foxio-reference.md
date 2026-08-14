@@ -173,7 +173,7 @@ cross-member review of batch #342 found that breach inside the batch that wrote 
 - **FR-reference-38** — The guard reads no tracker.
 - **FR-reference-39** — The guard proves no subject of a number at or below the high-water
   number. **This repository allocates one number sequence to an issue and to a pull
-  request**, so every number at or below that number resolves to something here.
+  request.** So every number at or below that number resolves to something here.
 - **FR-reference-40** — The guard reads every file of the tree whose extension the test
   records.
 - **FR-reference-41** — The guard enters neither the corpus directory nor a linked worktree.
@@ -190,6 +190,8 @@ cross-member review of batch #342 found that breach inside the batch that wrote 
 - **FR-reference-50** — An exception names one file, one number, one count and one reason.
 - **FR-reference-51** — An exception that no longer reproduces fails a test.
 - **FR-reference-52** — No exception covers a whole file.
+- **FR-reference-53** — A row of a rendered register table stays on one line. **A row that
+  wraps hides its `Ruling` cell from FR-reference-45**, so a test names the wrapped row.
 
 ## User flows
 
@@ -246,7 +248,7 @@ This feature set changes no screen.
 | `conformance_test.go` | Reads the register. |
 | `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
 | `foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
-| `issue_citation_namespace_test.go` | New. Holds FR-reference-32 through FR-reference-52. |
+| `issue_citation_namespace_test.go` | New. Holds FR-reference-32 through FR-reference-53. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces

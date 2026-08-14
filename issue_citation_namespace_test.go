@@ -13,12 +13,16 @@ package ja4plus
 // `foxio_citation_base_test.go` holds the other citation rule, the file namespace, and
 // FR-reference-18a scopes that guard to `docs/specs/foxio/*.md`. This guard reads the whole
 // tree, because the issue-namespace rule binds every file. `docs/specs/features/
-// 11-foxio-reference.md` numbers this file as FR-reference-32 through FR-reference-52.
+// 11-foxio-reference.md` numbers this file as FR-reference-32 through FR-reference-53.
+//
+// This file uses two words for two things, and it never rotates them. An **exclusion** names
+// text that cites no issue, so the guard reads it and reports nothing. An **exception** names
+// one live breach that this member repairs not, with the count and the reason.
 //
 // This guard proves one half of the rule and it declines the other half. It proves that a
 // number names no issue of this repository, where the number is above the recorded high-water
-// number. It proves nothing about the subject of a number at or below that mark, because the
-// tracker holds the subject and this guard reads no tracker.
+// number. It proves nothing about the subject of a number at or below that mark. The tracker
+// holds that subject, and this guard reads no tracker.
 
 import (
 	"fmt"
@@ -32,8 +36,8 @@ import (
 )
 
 // issueCitationHighWaterMark is the highest number this repository had allocated on
-// 2026-08-14. GitHub allocates one number sequence to issues and to pull requests, so every
-// number at or below it names something of this repository and no number above it does.
+// 2026-08-14. GitHub allocates one number sequence to issues and to pull requests. So every
+// number at or below the mark names something of this repository, and no number above it does.
 //
 // The command that produced it:
 //
@@ -44,7 +48,7 @@ import (
 // re-measures the mark with the command above, and the failure below states that repair.
 //
 // The value reads 520 rather than 516, because the pull request of #351 allocated 517 through
-// 520. The batch documentation round cites a pull-request number, as round 36 of the
+// 520. The batch documentation round cites a pull-request number. Round 36 of the
 // `## Changelog` of `docs/specs/spec.md` cites `#349`, so a mark measured before that pull
 // request reports the round's own citation.
 const issueCitationHighWaterMark = 520
@@ -67,10 +71,10 @@ var issueCitationExtension = map[string]bool{
 // repository are named `foxio`. `testdata/foxio` holds the fetched corpus, and
 // `docs/specs/foxio` holds the transcriptions that this guard must read.
 //
-// `.claude/worktrees` holds the worktree of every live issue worker, so a walk that enters it
-// reads the tree of another issue and reports a defect that this branch does not hold.
-// `testdata/foxio` holds the fetched FoxIO corpus, which is untracked and FoxIO-licensed, so
-// no rule of this project binds it.
+// `.claude/worktrees` holds the worktree of every live issue worker. A walk that enters it
+// reads the tree of another issue, and it then reports a defect that this branch does not
+// hold. `testdata/foxio` holds the fetched FoxIO corpus. That corpus is untracked and
+// FoxIO-licensed, so no rule of this project binds it.
 var issueCitationSkipDirectory = map[string]bool{
 	".git":              true,
 	"bin":               true,
@@ -123,13 +127,17 @@ var issueCitationException = []struct {
 // issueCitationPortForm matches a citation that names the port.
 //
 // The tree uses five shapes, and round 36 of the `## Changelog` of `docs/specs/spec.md`
-// measured four of them. The fifth is a list: a marker that names the port carries a
+// measured four of them. The fifth one is a list. A marker that names the port carries a
 // following list of numbers, and each number of that list names the port too.
+//
+// The list reads three separators. A comma joins the items, and `and` or `or` joins the last
+// two. A separator this pattern does not name leaves the number bare, and the guard then
+// reports a citation that the sentence resolves.
 var issueCitationPortForm = regexp.MustCompile(
 	"(?i)(?:Crank-Git/ja4plus(?:/(?:issues|pull)/|#|`?\\s+(?:issues?\\s+)?#)" +
 		"|\\bja4plus#" +
 		"|\\b(?:the\\s+)?port(?:'s)?\\s+issues?\\s+#" +
-		")([0-9]+)((?:\\s*(?:,|and)\\s*#[0-9]+)*)")
+		")([0-9]+)((?:\\s*(?:,|and|or)\\s*#[0-9]+)*)")
 
 // issueCitationListItem matches one number of the list that follows a port marker.
 var issueCitationListItem = regexp.MustCompile(`#[0-9]+`)
@@ -207,11 +215,12 @@ func issueCitationFile(t *testing.T) []string {
 //
 // The preamble of the register in `docs/specs/spec.md` states that the `Ruling` column names
 // the port issue. `docs/specs/spec.html` renders the same table, so one rule reads both
-// formats: the guard finds the header cell, and it blanks the final cell of each row until
-// the table ends.
+// formats. The guard finds the header cell, and it blanks the final cell of each row until the
+// table ends.
 //
-// The function blanks a cell rather than a line, so a reported line number names the line of
-// the file and a citation in another cell of the same row still reaches the guard.
+// The function blanks a cell rather than a line, for two reasons. A reported line number then
+// names the line of the file. A citation in another cell of the same row then still reaches the
+// guard.
 func issueCitationBlankRulingColumn(lines []string) []string {
 	blanked := make([]string, len(lines))
 	copy(blanked, lines)
@@ -247,28 +256,71 @@ func issueCitationBlankRulingColumn(lines []string) []string {
 	return blanked
 }
 
+// issueCitationWrappedRulingRow returns the line number of every row of a rendered register
+// table that carries a cell on a line of its own.
+//
+// The rule above reads one row on one line. A row that wraps puts its `Ruling` cell on a line
+// that carries no `<tr>`, and the rule then blanks nothing there. That failure is silent, so
+// FR-reference-53 bars a wrapped row rather than a permissive rule that blanks every cell of
+// such a line.
+func issueCitationWrappedRulingRow(lines []string) []int {
+	var wrapped []int
+
+	table := false
+
+	for index, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		switch {
+		case strings.Contains(trimmed, "<th>"+issueCitationRulingColumn+"</th></tr>"):
+			table = true
+		case strings.Contains(trimmed, "</table>"):
+			table = false
+		case table && strings.Contains(trimmed, "<td>") && !strings.Contains(trimmed, "<tr>"):
+			wrapped = append(wrapped, index+1)
+		}
+	}
+
+	return wrapped
+}
+
+// issueCitationFinalCell returns the cells of a markdown table row and the index of the final
+// cell.
+//
+// Both helpers below read this one split, so a row that carries no trailing separator reaches
+// the same cell as a row that carries one. Two helpers that split a row two ways disagree on a
+// malformed row, and the disagreement blanks the wrong cell.
+func issueCitationFinalCell(row string) ([]string, int) {
+	cell := strings.Split(row, "|")
+
+	final := len(cell) - 1
+	if final > 0 && strings.TrimSpace(cell[final]) == "" {
+		final--
+	}
+
+	return cell, final
+}
+
 // issueCitationFinalMarkdownCell returns the final cell of a markdown table row, trimmed.
 func issueCitationFinalMarkdownCell(row string) string {
-	cell := strings.Split(strings.Trim(row, "|"), "|")
+	cell, final := issueCitationFinalCell(row)
+	if final < 0 {
+		return ""
+	}
 
-	return strings.TrimSpace(cell[len(cell)-1])
+	return strings.TrimSpace(cell[final])
 }
 
 // issueCitationCutFinalMarkdownCell returns the row with the final cell emptied.
 func issueCitationCutFinalMarkdownCell(row string) string {
-	last := strings.LastIndex(row, "|")
-	if last <= 0 {
+	cell, final := issueCitationFinalCell(row)
+	if final < 1 {
 		return row
 	}
 
-	head := row[:last]
+	cell[final] = ""
 
-	previous := strings.LastIndex(head, "|")
-	if previous < 0 {
-		return row
-	}
-
-	return head[:previous+1] + row[last:]
+	return strings.Join(cell, "|")
 }
 
 // issueCitationCutFinalHTMLCell returns the row with the final `<td>` element emptied.
@@ -590,6 +642,11 @@ func TestTheIssueCitationGuardExcludesEachRecordedShape(t *testing.T) {
 			want: nil,
 		},
 		{
+			name: "a list that `or` joins names the port",
+			text: "The port's issues #127 or #141 hold these rulings.",
+			want: nil,
+		},
+		{
 			name: "a port issue URL names the port",
 			text: "See <https://github.com/Crank-Git/ja4plus/issues/598> for the port half.",
 			want: nil,
@@ -625,6 +682,114 @@ func TestTheIssueCitationGuardExcludesEachRecordedShape(t *testing.T) {
 					got, one.text, one.want)
 			}
 		})
+	}
+}
+
+// FR-reference-53 — a row of a rendered register table stays on one line.
+//
+// The rule that blanks the `Ruling` column reads one row on one line. A row that wraps hides
+// its `Ruling` cell from that rule, and the guard then reports a citation the register
+// resolves. This test names the wrapped row rather than let the rule guess.
+func TestEveryRenderedRulingRowStaysOnOneLine(t *testing.T) {
+	// The detector is worth nothing until a wrapped row proves it, so these two fixtures run
+	// before the tree does.
+	oneLine := []string{
+		"<tr><th>Method</th><th>What must change</th><th>Ruling</th></tr>",
+		"<tr><td>JA4</td><td>Write `99`.</td><td>#127</td></tr>",
+		"</table>",
+	}
+
+	if got := issueCitationWrappedRulingRow(oneLine); got != nil {
+		t.Errorf("the detector names line %v of a table that wraps no row", got)
+	}
+
+	wrapped := []string{
+		"<tr><th>Method</th><th>What must change</th><th>Ruling</th></tr>",
+		"<tr>",
+		"<td>JA4</td><td>Write `99`.</td><td>#127</td>",
+		"</tr>",
+		"</table>",
+	}
+
+	if got := issueCitationWrappedRulingRow(wrapped); len(got) != 1 || got[0] != 3 {
+		t.Errorf("the detector names %v of a table whose row wraps onto line 3", got)
+	}
+
+	for _, file := range issueCitationFile(t) {
+		if !strings.HasSuffix(file, ".html") {
+			continue
+		}
+
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("%s does not open: %v", file, err)
+		}
+
+		for _, line := range issueCitationWrappedRulingRow(strings.Split(string(content), "\n")) {
+			t.Errorf("%s:%d carries a cell of a register row on a line of its own.\n\t"+
+				"Write the whole row on one line, so the guard reads its `%s` cell.",
+				file, line, issueCitationRulingColumn)
+		}
+	}
+}
+
+// FR-reference-36, FR-reference-37 and FR-reference-38 — the record of the high-water number
+// names its date and its command, the number is a lower bound, and the guard reads no tracker.
+//
+// A guard that reads a tracker fails when the network fails, and it then reports a defect that
+// the tree does not hold. So this test reads the source of the guard and it bars the three
+// shapes that reach a tracker.
+func TestTheIssueCitationGuardRecordsItsSourceAndReadsNoTracker(t *testing.T) {
+	const source = "issue_citation_namespace_test.go"
+
+	content, err := os.ReadFile(source)
+	if err != nil {
+		t.Fatalf("%s does not open: %v", source, err)
+	}
+
+	text := string(content)
+
+	// FR-reference-36 — the record names the date and the command.
+	for _, want := range []string{
+		"2026-08-14",
+		"gh api '/repos/Crank-Git/ja4plus-go/issues?state=all&per_page=1'",
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("the record of the high-water number names no %q", want)
+		}
+	}
+
+	// FR-reference-38 — the guard reaches no tracker. `gh` in a code span of the record above
+	// is the command a person runs, and never a call this file makes.
+	//
+	// Each name below is composed, because this test reads its own source. A literal here
+	// would match itself and report the guard it holds.
+	for _, barred := range []string{"net/" + "http", "os/" + "exec", "exec." + "Command"} {
+		if strings.Contains(text, barred) {
+			t.Errorf("the guard names %q, and a guard that reads a tracker fails with the "+
+				"network", barred)
+		}
+	}
+
+	// FR-reference-37 — the mark bounds the report from one side. A number at or below it
+	// reaches no report, so a stale mark loosens the guard.
+	reported := 0
+
+	for _, citation := range issueCitationRead(t) {
+		if citation.number <= issueCitationHighWaterMark {
+			continue
+		}
+
+		reported++
+	}
+
+	if reported != len(issueCitationException) {
+		t.Errorf("the guard reports %d citation above the mark, and the exception table "+
+			"holds %d", reported, len(issueCitationException))
+	}
+
+	if len(issueCitationRead(t)) <= reported {
+		t.Error("every citation of the tree sits above the mark, so the mark bounds nothing")
 	}
 }
 
@@ -674,6 +839,15 @@ func TestTheIssueCitationGuardHonorsTheTwoLocalRules(t *testing.T) {
 				"<tr><td>JA4, JA4S</td><td>Write `99`.</td><td>#127 " +
 					issueCitationHash(522) + "</td></tr>",
 				"</table>",
+			},
+			want: nil,
+		},
+		{
+			name: "a row without a trailing separator blanks the same cell",
+			text: []string{
+				"| Item | This project today | What must change | Rule | Ruling |",
+				"|---|---|---|---|---|",
+				"| The ALPN value | Writes `99`. | Done. | 1 | " + issueCitationHash(522),
 			},
 			want: nil,
 		},
