@@ -294,9 +294,10 @@ the flag with it.
 ### A timeout is not a crash, and the nightly job separates the two
 
 **A job that reads the exit status alone would open a false issue on each stalled night.**
-Issue #568 records a measured stall of `FuzzParseCryptoFramesReadsAnyPayload`, and that
-stall is unreproduced. The `Classify the result` step reads the tree instead, and it returns
-one of three results.
+Issue #568 records a measured stall of `FuzzParseCryptoFramesReadsAnyPayload`, and #568
+reproduced that stall on 2026-08-14. `### The stall of #568 is a coverage minimization`
+below states the reading. The `Classify the result` step reads the tree instead, and it
+returns one of three results.
 
 | Result | What produced it | What the job does |
 |---|---|---|
@@ -306,6 +307,122 @@ one of three results.
 
 A stall, a build failure and a failing seed each reach `failure`. Each one turns the job red
 and names itself in the log, and none of them opens an issue.
+
+### The stall of #568 is a coverage minimization
+
+**Issue #568 states two readings, and the measurement of 2026-08-14 separates them.**
+
+> 1. The fuzz engine stalls, and `ParseCryptoFrames` returns for every input.
+> 2. `ParseCryptoFrames` hangs on an input, and the engine reports the stall rather than the
+>    input.
+
+**Reading 1 holds, and reading 2 is false.** Every measurement below ran on an Apple M4 at
+`go1.26.5` on 2026-08-14, and the machine carried other work throughout.
+
+#### `ParseCryptoFrames` cannot fail to return
+
+**Every loop of `ParseCryptoFrames` in `internal/parser/quic.go` consumes one input byte or
+it leaves.** The outer loop advances `pos` on each branch, and it breaks on an unknown frame
+type. **The one loop that reads an attacker-controlled trip count is the additional ACK range
+loop**, and the count reaches 4611686018427387903. **That loop is bounded anyway**, because
+each iteration calls `DecodeVarint`, and `DecodeVarint` returns an error when `pos` reaches
+the length of the input. **Each successful `DecodeVarint` advances `pos` by one byte at
+least**, so the iteration count cannot exceed the input length.
+
+**40 fuzz runs reported 60794671 executions and no failure.** No run reported the FR-fuzz-16
+message, which `Check` in `internal/fuzzprop` writes when the lower of two calls takes more
+than one second.
+
+#### The parser holds 0.03 percent of the cost of one execution
+
+**`BenchmarkParseCryptoFramesReadsTheFuzzCorpus` in
+`internal/parser/quic_crypto_fuzz_cost_test.go` reports 28.13 ns for one call**, at
+`-benchtime 2s`. **`BenchmarkParseCryptoFramesUnderTheFuzzPropertiesReadsTheFuzzCorpus`
+reports 642.4 ns**, over the same corpus and the five steps that `check` in
+`internal/fuzzprop/fuzzprop.go` performs.
+
+**The fuzz engine reported about 120000 executions each second over 10 workers**, which is
+about 83 microseconds for one execution on one worker. **So the engine holds about 99
+percent of that time**, the property harness holds about 0.8 percent, and the parser holds
+about 0.03 percent. **Neither the parser nor the property harness can produce a stall of
+seconds.**
+
+#### The coordinator counts no execution while a worker minimizes
+
+**One coverage minimization occupies one worker, and the coordinator counts no execution
+until that minimization returns.** `logStats` in `internal/fuzz/fuzz.go` prints `minimizing`
+for a crash minimization alone, so a coverage minimization prints nothing at all.
+
+**A run of `-fuzztime 30s` from an empty cache corpus reproduced the reported signature.**
+Run 5 of ten reported this:
+
+```
+fuzz: elapsed: 15s, execs: 203058 (3516/sec), new interesting: 53 (total: 59)
+fuzz: elapsed: 18s, execs: 203058 (0/sec), new interesting: 53 (total: 59)
+fuzz: elapsed: 21s, execs: 203058 (0/sec), new interesting: 53 (total: 59)
+```
+
+**`GODEBUG=fuzzdebug=1` names what those six seconds held.** The same run then reported three
+minimizations that each covered the whole window:
+
+```
+minimizing took: 23.009211375s
+minimizing took: 23.428790875s
+minimizing took: 18.708534583s
+```
+
+**The frozen count reports that no worker fuzzed during that window.** `workerFuzzDuration`
+in `internal/fuzz/worker.go` gives a worker 100 milliseconds of fuzzing for each input, so a
+worker that fuzzes returns a result ten times each second. **The debug log names three
+minimizations that cover the window, and it names no state for the other seven workers.**
+
+**The longest minimization of the 30-second runs took 26.39531s, and the longest of the
+10-second runs took 9.1589115s.** **So the fuzz time bounds the minimization, and convergence
+does not.** `go help testflag` states `-fuzzminimizetime t ... The default is 60s.`, which is
+twice the 30 seconds that `make fuzz` gives each target.
+
+#### The stall needs a corpus that grows
+
+**Ten runs against a cache corpus of 83 entries held 37877 executions each second at least,
+and every one passed.** Each one reported `new interesting: 0`.
+
+**A rate of `0/sec` on the last line of a run reports no stall.** `CoordinateFuzzing` in
+`internal/fuzz/fuzz.go` defers one more `logStats` call, and that call divides a delta of
+about zero executions by a delta of about zero seconds. **Every one of those ten runs holds
+one such line, and each one sits at the same elapsed time as the periodic line above it.**
+**A stall holds the same execution count over two periodic lines**, three seconds apart.
+
+**Ten runs from an empty cache corpus reported 41 to 71 new interesting inputs each, and two
+of them stalled.** **The report of #568 records `total: 67` and `total: 71`**, so that run sat
+in the same phase.
+
+**A fresh CI runner holds no cache corpus**, so a nightly fuzz run starts in the phase that
+stalls.
+
+#### The failure of the report comes from the fuzz coordinator, and this reading is unreproduced
+
+**The reported run failed with `context deadline exceeded` and it wrote no input file.**
+`f.Fuzz` in `testing/fuzz.go` prints `Failing input written to %s` for a crash, so the absence
+of that line reports that `CoordinateFuzzing` returned the deadline error itself.
+
+**`stop` in `internal/fuzz/fuzz.go` suppresses that error with `err == fuzzCtx.Err()`.**
+`fuzzCtx` is a `context.WithCancel` child of the deadline context, and `cancelCtx.cancel` in
+`context/context.go` closes the parent Done channel before it cancels each child. **So a
+reader that wakes on the parent can observe a child error of nil, and the comparison then
+fails.**
+
+**A program that reads the child error at the moment the parent Done channel closes measured
+48 nil reads over 200000 rounds.** **That measurement proves the comparison is unreliable, and
+it reproduces no fuzz failure.**
+
+**40 runs of the target reported `context deadline exceeded` zero times**, so this reading
+rests on the source and on the context measurement alone.
+
+#### What this repository changes
+
+**Nothing.** The parser needs no repair, `internal/fuzzprop/fuzzprop.go` needs no repair, and
+the coordinator belongs to the Go toolchain. **A change to `make fuzz` that bounds
+minimization is a maintainer decision**, and issue #568 holds the question.
 
 ## User flows
 
@@ -465,4 +582,20 @@ repository has observed says so.
 
 ## Open questions
 
-None.
+**One question waits on the maintainer, and #568 holds it.** A coverage minimization runs
+until the fuzz run ends, and it stops every worker of that run.
+`### The stall of #568 is a coverage minimization` above states the measurement.
+
+**The question: does `make fuzz` bound the minimization?** Three answers stand, and this page
+picks none.
+
+1. **Accept the stall.** A fuzz run that spends 20 of its 30 seconds in a minimization still
+   writes an interesting input, and the nightly job already reports the stall as `failure`.
+2. **Pass `-fuzzminimizetime` to each run of `make fuzz`.** The recipe then keeps the
+   executions and it keeps a shorter minimization.
+3. **Raise the fuzz time.** A longer run reaches the same phase and it leaves that phase.
+
+**The Go fuzz coordinator holds a second question, and this repository holds no line of it.**
+`stop` in `internal/fuzz/fuzz.go` can fail to suppress the deadline error, so a clean run can
+report `context deadline exceeded`. **The maintainer decides whether this project reports that
+to the Go project.**
