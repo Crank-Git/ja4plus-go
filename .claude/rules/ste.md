@@ -38,10 +38,26 @@ rewritten` below binds a quotation, an error message and a sentence copied from 
 specification. A conversion of one of them destroys the evidence.
 
 **A section heading that the spec template shares stays until one change converts every
-file that carries it.** `## Behaviour rules` is that heading, and 18 tracked files hold it,
-measured on 2026-08-13 at commit `6681d3e`. One file cites the heading of another file, so
-a partial conversion breaks a citation. **A round converts the prose of a file it opens, and
-it leaves that heading.**
+file that carries it.** `## Behaviour rules` is that heading, and 17 tracked files carry it
+as a heading, measured on 2026-08-13 at commit `b178cfd`. **The 17 are the feature files of
+`docs/specs/features/`.** One file cites the heading of another file, so a partial
+conversion breaks a citation. **A round converts the prose of a file it opens, and it leaves
+that heading.**
+
+**The count above names the heading form, and it never names the string form.** The two
+forms reach two numbers, and a reader who measures the wrong one reads a disagreement that
+does not exist.
+
+| Form | Command | Files at `b178cfd` |
+|---|---|---|
+| The heading | `git grep -l -E '^## Behaviour rules'` | 17 |
+| The string | `git grep -l -F '## Behaviour rules'` | 19 |
+
+**Two files hold the string in a code span and not as a heading**, which is the whole
+difference. They are this file and `docs/specs/spec.md`. **The rule binds a heading, so the
+heading count is the count this file states.** Round 45 of the `## Changelog` of
+`docs/specs/spec.md` measured 17 and recorded the disagreement, and #486 repaired this
+sentence.
 
 **`misspell` reads a Go file alone, so no check of this repository reads a document.**
 `.golangci.yml:32` states `# The maintainer writes US English.`, and `locale: US` on the

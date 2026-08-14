@@ -171,7 +171,7 @@ the header block reaches the byte count that `Content-Length` names.**
 `http_req != -100`, which the dissector sets at `packet-ja4.c:1149` when the frame carries
 `http.request.method`.
 
-**The Wireshark HTTP dissector is not in this corpus, so this page reads its behaviour from
+**The Wireshark HTTP dissector is not in this corpus, so this page reads its behavior from
 the vector.** `testdata/foxio/wireshark/http1.pcapng.json` names frame 2 and names no frame 1,
 and frame 2 holds no request line. So the dissector exposed `http.request.method` on the
 frame that completes the reassembled request. **A reader who needs the dissector's own rule
@@ -247,7 +247,7 @@ value. **`segmentCarriesNoNewRequest` of `ja4h.go` now holds that sequence range
 at `testdata/foxio/reference/python/common.py:117`, which overwrites the cache entry, so the
 per-stream vector holds one entry for each stream.
 
-**The Wireshark HTTP dissector is not in this corpus, so this page reads its behaviour from
+**The Wireshark HTTP dissector is not in this corpus, so this page reads its behavior from
 the vector.** `packet-ja4.c:1634` fires only when the frame carries `http.request.method`, and
 the vector names frame 6 and frame 16 alone. So the dissector exposed no such field for the
 repeat. **A reader who needs the dissector's own rule must read the Wireshark source, which
@@ -408,7 +408,7 @@ latest.pcapng/172/JA4H_r.1  expected: "ms11nn040000_HOST,MAN,MX,ST__"
 entry, so every SSDP value the library produces reads as a surplus value against that set.
 
 - **No register entry closes.** The accepted count held at 419.
-- **The port carries the same behaviour, and the port matches the Python reference.**
+- **The port carries the same behavior, and the port matches the Python reference.**
   `ja4plus/fingerprinters/ja4h.py:111` reads `packet.haslayer(TCP)`. **A change here that the
   port does not make opens a parity difference on 36 values.**
 - **The cost is a UDP read path, a method table, and a conformance exclusion or 72 register

@@ -436,16 +436,21 @@ reference split, and it invents no rule.**
 - **The per-stream vector set publishes no JA4X_r key**, which the
   `## The uncovered JA4X values` section above states.
 
-## One sentence this page reports and does not repair
+## The sentence this page reported, and the round that repaired it
 
-**The `JA4XFingerprinter` row of the fingerprinter state table in `docs/specs/spec.md` reads
-`guarded by mu`, and `ja4x.go` holds no such field.** `JA4XFingerprinter` holds
-`reassembler`, `processedCerts`, `certsByStream`, `streamBytes` and `lastCleanup`, and no
-mutex. `.claude/rules/concurrency.md` bars a mutex in a fingerprinter, and no other row of
-that table names one. **#458 owns no file of `docs/specs/`, so this page reports the sentence
-and repairs nothing.** The sentence states no behavior, so `CLAUDE.md` sends it to the batch
-documentation round. **This page is a reading and it is no audit**, so it reports a sentence
-where an audit reports a finding.
+**The `JA4XFingerprinter` row of the fingerprinter state table in `docs/specs/spec.md` read
+`guarded by mu`, and `ja4x.go` holds no such field.** **#458 owns no file of `docs/specs/`,
+so this page reported the sentence and repaired nothing.** The sentence states no behavior,
+so `CLAUDE.md` sent it to the batch documentation round rather than to a new issue.
+
+**The repair landed in this same batch, and round 45 of the `## Changelog` of
+`docs/specs/spec.md` carried it.** The merged row names five fields: `reassembler`,
+`processedCerts`, `certsByStream`, `streamBytes` and `lastCleanup`. **The merged row names
+no mutex.** `.claude/rules/concurrency.md` bars a mutex in a fingerprinter, and no other row
+of that table names one. #486 read the merged row and recorded this repair.
+
+**This page is a reading and it is no audit**, so it reports a sentence where an audit
+reports a finding.
 
 ## What this reading does not answer
 

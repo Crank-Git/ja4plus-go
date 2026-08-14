@@ -7,8 +7,24 @@ It reads every JA4T, JA4TS, JA4SSH, JA4S and JA4S_r deviation that
 `testdata/deviations.json` does not hold. It names one cause for each one. It states the
 count each cause reaches, measured against the corpus at the pin of `testdata/foxio.pin`.
 
-**Every count of this page comes from one run of `make conformance` in one worktree, on
-2026-08-13, against the corpus at `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.**
+**Two runs of `make conformance` produced the counts of this page, and each figure below
+names its run.** Both runs read the corpus at
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, in one worktree, on 2026-08-13.
+
+- **The first run produced every count that #459 wrote.** It read the batch #478 branch
+  before #467 sub-merged. It reports 1680 matches, 475 deviations, 450 accepted deviations
+  and 470 register keys.
+- **The second run reads the branch head, and #486 produced it.** #467 added 108 register
+  entries between the two runs. The second run reports 1680 matches, 367 deviations, 558
+  accepted deviations and 578 register keys.
+
+**Every five-method count of this page holds at both runs**, because each of the 108 entries
+names a `JA4H`, `JA4H_r` or `JA4H_ro` key and no entry names one of the five methods. The
+second run reports the same 67 deviations that the register does not hold, the same split of
+31, 6, 16, 7 and 7 over the five methods, and the same twelve captures. **A whole-run figure
+therefore names its run, and a five-method figure holds at both.**
+
+**#486 changes no byte of `testdata/deviations.json`, and it changes no Go file.**
 
 **This page builds no candidate change, and #459 bars a Go edit.** So the count each cause
 closes carries one of three labels.
@@ -27,30 +43,34 @@ closes carries one of three labels.
 ## The gate condition
 
 **`make conformance` exits 2 on `dev`, and Epic #441 owns that exit.** This page reports no
-green gate. The run that produced every count below exits 2, and it reports 475 deviations
-that the register does not hold.
+green gate. **Each of the two runs above exits 2.** The first run reports 475 deviations that
+the register does not hold, and the second run reports 367.
 
 ## The measurement
 
-The run reads 38 captures, 3 of them not applicable, and 268 per-stream entries.
+Each run reads 38 captures, 3 of them not applicable, and 268 per-stream entries.
 
-| Count | Value |
-|---|---|
-| matches | 1680 |
-| deviations the register does not hold | 475 |
-| accepted deviations | 450 |
-| register keys | 470 |
+| Count | The first run | The second run |
+|---|---|---|
+| matches | 1680 | 1680 |
+| deviations the register does not hold | 475 | 367 |
+| accepted deviations | 450 | 558 |
+| register keys | 470 | 578 |
 
-**67 of the 475 name JA4T, JA4TS, JA4SSH, JA4S or JA4S_r.** 61 sit in the per-packet set
-and 6 sit in the per-stream set.
+**The matches hold at 1680 across both runs**, so no member of batch #478 moved a
+fingerprint value. **`475 - 367 = 108` and `558 - 450 = 108`**, so the fall in the
+unaccepted count equals the rise in the accepted count.
+
+**67 deviations name JA4T, JA4TS, JA4SSH, JA4S or JA4S_r, in each run.** 61 sit in the
+per-packet set and 6 sit in the per-stream set.
 
 ### The count per method
 
-**Epic #441 measured 65 on 2026-08-13, before batch #421 and before #438.** This run
-measures 67. **The JA4S pair is the one row that moves**: the epic recorded 12, and this run
-records 14. The JA4T pair holds at 37 and JA4SSH holds at 16.
+**Epic #441 measured 65 on 2026-08-13, before batch #421 and before #438.** Each run of this
+page measures 67. **The JA4S pair is the one row that moves**: the epic recorded 12, and each
+run records 14. The JA4T pair holds at 37 and JA4SSH holds at 16.
 
-| Method | Epic #441, 2026-08-13 | This run | Cause |
+| Method | Epic #441, 2026-08-13 | Each run | Cause |
 |---|---|---|---|
 | JA4T | 37 for the pair | 31 | 1 |
 | JA4TS | | 6 | 2 |
@@ -60,7 +80,7 @@ records 14. The JA4T pair holds at 37 and JA4SSH holds at 16.
 | **Total** | **65** | **67** | |
 
 **Nobody schedules work from a reading that gives one number for five methods.** So the
-table above is the form that Epic #441 reads. **Epic #421 changed JA4SSH behaviour, so the
+table above is the form that Epic #441 reads. **Epic #421 changed JA4SSH behavior, so the
 JA4SSH figure of the epic is stale by construction.** The two figures agree at 16, and that
 agreement is a measurement rather than a carried number.
 
@@ -85,8 +105,9 @@ agreement is a measurement rather than a carried number.
 
 ### What the register holds today
 
-**The register holds 70 entries that name one of the five methods, of 470.** It holds no
-entry that names JA4T, and no entry that names JA4TS.
+**The register holds 70 entries that name one of the five methods.** The register holds 470
+entries at the first run and 578 at the branch head, and **the count of 70 holds at both**.
+It holds no entry that names JA4T, and no entry that names JA4TS.
 
 | Method | Entries | Ruling |
 |---|---|---|
@@ -258,11 +279,16 @@ reset produces the four-part value where no delay exists.
 - **No register entry closes.** The register holds no JA4TS entry.
 - **The cost is one guard.** `resetResults` of `ja4ts.go` writes the stored prefix where the
   connection holds fewer than two SYN-ACK times.
-- **One doc comment of the tree needs a repair.** The doc comment of `resetResults` in
-  `ja4ts.go` states that both FoxIO implementations nest the reset branch inside the delay
-  branch. **That reading holds for the reset letter and not for the four-part value**, and
-  `wireshark/source/packet-ja4.c:1599-1608` writes the four-part value outside the delay
-  branch. **This page repairs no file that #459 does not own.**
+- **One doc comment of the tree needed a repair, and the repair landed.** The doc comment of
+  `resetResults` in `ja4ts.go` stated that both FoxIO implementations nest the reset branch
+  inside the delay branch. **That reading holds for the reset letter and not for the
+  four-part value**, and `wireshark/source/packet-ja4.c:1599-1608` writes the four-part value
+  outside the delay branch. **This page repaired no file that #459 does not own**, so it
+  reported the comment. **Round 45 of the `## Changelog` of `docs/specs/spec.md` repaired the
+  comment, in this same batch.** The merged comment reads
+  `Neither branch reaches the four-part value, and each implementation writes that value`
+  and `above the branch. So a connection with one SYN-ACK still reaches a JA4TS value.` #486
+  read the merged comment and recorded this repair.
 
 ---
 
@@ -352,7 +378,7 @@ published FoxIO rule**, which `.claude/rules/rulings.md`
 maintainer. **Narrow condition 2 fails**, because the dissector's FIN+ACK path departs from
 R8. So this reading records the evidence and decides nothing.
 
-- **The port carries the same behaviour as this library.**
+- **The port carries the same behavior as this library.**
   `ja4plus/fingerprinters/ja4ssh.py:439-442` clears the two packet lists and the two ACK
   counters inside `_close_window`, and `ja4plus/fingerprinters/ja4ssh.py:422-424` then
   returns nothing for the next call. The docstring at
@@ -384,7 +410,7 @@ segments of `sshv1.pcap` with a positive TCP payload length. It writes `ssh.dire
 of them. Frame 63 and frame 65 carry the `ssh` protocol and no `ssh.direction` field. Frame
 68 and frame 70 carry no `ssh` protocol at all.
 
-**The reference counts the labelled packet.** `docs/specs/foxio/JA4SSH.md` R7 states
+**The reference counts the labeled packet.** `docs/specs/foxio/JA4SSH.md` R7 states
 `The window counts SSH packets, and it counts no bare ACK.`, and it cites
 `wireshark/source/packet-ja4.c:1472` for the `ssh.direction` count.
 `wireshark/source/packet-ja4.c:1469-1470` reads the field, and
@@ -396,7 +422,7 @@ of them. Frame 63 and frame 65 carry the `ssh` protocol and no `ssh.direction` f
 banner test opens the count for every later segment, including the four the dissector does
 not label.
 
-**The mode follows from the count.** The 21 labelled server segments hold six lengths of 12
+**The mode follows from the count.** The 21 labeled server segments hold six lengths of 12
 and six lengths of 20. `docs/specs/foxio/JA4SSH.md` R12 states that the smaller length wins a
 tie, so the mode is 12. The four extra segments add one more length of 20, so the library
 reads seven of 20 against six of 12, and its mode is 20. **`mode` of `ja4ssh.go` already
@@ -462,7 +488,7 @@ The port's issues #105, #199 and #214 hold the ruling, and `CloseOpenWindows` of
 names all three. **So the difference is a decline of a Python reference limit, and
 `testdata/deviations.json` is the place that records it.**
 
-- **The port holds the same behaviour as this library.**
+- **The port holds the same behavior as this library.**
   `ja4plus/fingerprinters/ja4ssh.py:439-442` clears the window at each emission, and the port
   publishes the last window under its own issues #105, #199 and #214. **No parity difference
   opens.**
@@ -582,7 +608,7 @@ the stream.` The two keys above carry no entry, and the key form differs: a ruli
 reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and this key reads
 `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S`.
 
-- **The port holds the behaviour, so no parity difference opens.**
+- **The port holds the behavior, so no parity difference opens.**
   `ja4plus/fingerprinters/ja4s.py:82-87` reads a QUIC Initial packet, and
   `ja4plus/fingerprinters/ja4s.py:154-157` collects CRYPTO fragments until the ServerHello is
   complete. `ja4plus/fingerprinters/ja4s.py:266` writes the proto character `q`.
