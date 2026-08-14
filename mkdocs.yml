@@ -166,7 +166,7 @@ nav:
   #
   # The `Guides` order runs from the first question a reader asks to the last. A reader
   # runs the program, then reads a field of the output, then asks about a live interface,
-  # then shares a `Processor`. The licensing page sits last, and the home page links to it
+  # then shares a `Processor`. The license page sits last, and the home page links to it
   # from the first screen, because a reader must not have to reach the end to find it.
   - Home: index.md
   - Guides:
@@ -177,7 +177,7 @@ nav:
       - Packet throughput: throughput.md
       - Implementation notes: implementation-notes.md
       - Parity with the port: parity.md
-      - Licensing: licensing.md
+      - License: licensing.md
   # #86 adds `methods/index.md` and the eleven method pages here.
   - Methods: []
   # #87 adds the API-reference pages and the examples here.

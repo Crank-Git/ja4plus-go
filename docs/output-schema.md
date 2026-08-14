@@ -81,7 +81,7 @@ type,src_ip,src_port,dst_ip,dst_port,fingerprint,timestamp
 **`--lookup` appends one column.** The header then ends `timestamp,application`, and each
 row carries the extra field.
 
-**The CSV column set is fixed for the whole run.** The JSON output drops the
+**The CSV output writes the same column set for every row of the run.** The JSON output drops the
 `application` key for one record, and the CSV output writes an empty field in the same
 case. The two formats differ here, and a reader that converts between them must handle
 it.

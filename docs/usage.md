@@ -120,7 +120,7 @@ source is the embedded table or the cached table.
 
 **`db update` reaches the network, and no other subcommand does.** It downloads
 `ja4plus-mapping.csv` from FoxIO into the cache. FoxIO License 1.1 covers that file, and
-the [licensing page](licensing.md) states the terms.
+the [license page](licensing.md) states the terms.
 
 ## The library
 

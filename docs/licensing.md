@@ -1,4 +1,4 @@
-# Licensing
+# The license
 
 !!! danger "Two licenses cover this repository, and one of them permits non-commercial use only"
 

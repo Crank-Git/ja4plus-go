@@ -116,7 +116,7 @@ measurement that supports it, with the date. **A vulnerability count is a live
 measurement, so it carries the date of the run.** The same tree reported different counts
 on two consecutive days, because the scanner reads a source that moves.
 
-## The fingerprint mapping is embedded, and it is replaceable
+## The library embeds the fingerprint mapping, and a user replaces it
 
 The library embeds `data/ja4plus-mapping.csv`, so a lookup needs no file and no network.
 **`LookupFingerprint` performs no network input and no network output.**
@@ -125,9 +125,9 @@ The library embeds `data/ja4plus-mapping.csv`, so a lookup needs no file and no 
 which table the run reads. `GetDatabaseInfo` returns the same record to a Go caller.
 
 **FoxIO publishes that mapping file, and FoxIO License 1.1 covers it.** The
-[licensing page](licensing.md) states the terms.
+[license page](licensing.md) states the terms.
 
-## The output matches the FoxIO reference, and each difference is recorded
+## The output matches the FoxIO reference, and the register records each difference
 
 **The FoxIO reference decides every disputed fingerprint value.** A test of this library
 that disagrees with a FoxIO vector is wrong, and no vector is edited to make a test pass.
@@ -141,7 +141,8 @@ names the capture, the value this library produces, the value the reference prod
 issue that settled it and one sentence of reason. **An entry whose comparison now matches
 fails the suite**, so a difference that closes cannot sit in the file unnoticed.
 
-**The corpus is fetched and never committed**, because FoxIO licenses that material.
+**`make corpus` fetches the corpus, and no commit of this repository holds it**, because
+FoxIO licenses that material.
 
 ## Two implementations, one answer
 

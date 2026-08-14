@@ -11,7 +11,7 @@ The source of this site and of the library is at
 
     The original Go code is BSD 3-Clause. FoxIO licenses every method except JA4 under
     FoxIO License 1.1. That license permits non-commercial use only.
-    The [licensing page](licensing.md) states the split, and the `NOTICE` file at the
+    The [license page](licensing.md) states the split, and the `NOTICE` file at the
     repository root holds the FoxIO terms.
 
 ## Install
@@ -79,4 +79,4 @@ user directly.
   and it sets no target. The [packet-throughput page](throughput.md) holds the
   measurement.
 - **This project seeks no commercial license from FoxIO.** A commercial user contacts
-  FoxIO. The [licensing page](licensing.md) states that path.
+  FoxIO. The [license page](licensing.md) states that path.

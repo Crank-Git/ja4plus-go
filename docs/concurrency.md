@@ -242,9 +242,13 @@ not suit a monitor that must keep the connections that are still live.
 
 ## The tests that hold this contract
 
-`go test -race ./...` runs the race tests of the library. Four of them share one
-`SyncProcessor` between eight goroutines, and one of them proves that `GetShardKey` sends
-each connection to one shard.
+`go test -race ./...` runs the race tests of the library. `race_test.go` and
+`sync_processor_test.go` hold them.
+
+Several tests share one `SyncProcessor` between eight goroutines. They cover
+`ProcessPacket`, `Reset`, `CleanupConnection`, `CloseConnectionWindow` and `GetShardKey`.
+`TestShardedProcessors_SendEachConnectionToOneShard` proves the other pattern: it shows
+that `GetShardKey` sends each connection to one shard.
 
 **One test proves the contract by failing.**
 `TestBareProcessor_ReportsARaceBetweenTwoGoroutines` in `race_negative_test.go` shares a
