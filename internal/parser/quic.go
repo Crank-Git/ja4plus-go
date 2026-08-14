@@ -209,6 +209,10 @@ func IsQUICHandshakePacket(payload []byte) bool {
 // ParseQUICInitial parses a QUIC Initial packet and extracts the TLS ClientHello.
 // Returns nil, nil if the payload is not a QUIC Initial packet.
 // Returns nil, error if it looks like a QUIC Initial but decryption/parsing fails.
+// Returns nil, nil when the CRYPTO fragments of the packet cover no complete handshake
+// message. It reads one datagram, so a client that splits a client hello across two
+// datagrams reaches this decline. ClientHelloFromCryptoFragments serves the caller that
+// collects the fragments of several packets.
 func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	if len(payload) < 5 {
 		return nil, nil
@@ -384,36 +388,10 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 		return nil, err
 	}
 
-	// Reassemble CRYPTO frame data
-	assembled := ReassembleCryptoFrames(fragments)
-	if len(assembled) == 0 {
-		return nil, nil
-	}
-
-	// The reassembled data should be a TLS Handshake message.
-	// Check for ClientHello (type 0x01)
-	if assembled[0] != TLSHandshakeClientHello {
-		return nil, nil
-	}
-
-	// Wrap in a fake TLS record header so ParseClientHello can process it.
-	// TLS record: content_type(1) + version(2) + length(2) + handshake data
-	tlsRecord := make([]byte, 5+len(assembled))
-	tlsRecord[0] = TLSRecordTypeHandshake // 0x16
-	tlsRecord[1] = 0x03
-	tlsRecord[2] = 0x01
-	tlsRecord[3] = byte(len(assembled) >> 8)
-	tlsRecord[4] = byte(len(assembled))
-	copy(tlsRecord[5:], assembled)
-
-	ch, err := ParseClientHello(tlsRecord)
-	if err != nil {
-		return nil, err
-	}
-	if ch != nil {
-		ch.IsQUIC = true
-	}
-	return ch, nil
+	// ClientHelloFromCryptoFragments holds the reassembly, the completeness check and the
+	// record wrapper, so one reader holds every rule. A second copy of the completeness
+	// check drifts from this one. #532 records the design decision.
+	return ClientHelloFromCryptoFragments(fragments)
 }
 
 // DecryptQUICInitialCrypto decrypts a QUIC Initial packet and returns the raw
@@ -575,8 +553,7 @@ func CollectCryptoFragments(collected []CryptoFragment, fragments []CryptoFragme
 	}
 
 	for _, fragment := range fragments {
-		if fragment.Offset > MaxCryptoBufferBytes ||
-			fragment.Offset+uint64(len(fragment.Data)) > MaxCryptoBufferBytes {
+		if cryptoFragmentPassesBound(fragment) {
 			continue
 		}
 
@@ -598,10 +575,16 @@ func CollectCryptoFragments(collected []CryptoFragment, fragments []CryptoFragme
 // ReassembleCryptoFrames writes a zero byte over a range that no fragment covers, so a
 // reader that measures the highest offset alone reads a message the sender never sent. The
 // caller passes fragments that ReassembleCryptoFrames already sorted by offset.
+// It drops the fragment that ReassembleCryptoFrames drops. A reach past the buffer that
+// ReassembleCryptoFrames returns reports a message that the buffer does not hold.
 func cryptoFragmentsReach(fragments []CryptoFragment) uint64 {
 	var reach uint64
 
 	for _, fragment := range fragments {
+		if cryptoFragmentPassesBound(fragment) {
+			continue
+		}
+
 		if fragment.Offset > reach {
 			break
 		}
@@ -764,6 +747,10 @@ func ParseCryptoFrames(data []byte) ([]CryptoFragment, error) {
 
 // ReassembleCryptoFrames reassembles potentially fragmented CRYPTO frame data
 // into a contiguous byte slice ordered by offset.
+// It drops a fragment that reaches past MaxCryptoBufferBytes, so the buffer it returns
+// holds MaxCryptoBufferBytes bytes at most.
+// The port drops one fragment and keeps the rest at
+// `ja4plus/utils/quic_utils.py:322`, and this reader matches that rule.
 func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 	if len(fragments) == 0 {
 		return nil
@@ -780,21 +767,40 @@ func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 	// Calculate total size
 	var totalLen uint64
 	for _, f := range fragments {
+		if cryptoFragmentPassesBound(f) {
+			continue
+		}
 		end := f.Offset + uint64(len(f.Data))
 		if end > totalLen {
 			totalLen = end
 		}
 	}
 
-	if totalLen == 0 || totalLen > 1<<20 { // sanity limit: 1MB
+	if totalLen == 0 {
 		return nil
 	}
 
 	result := make([]byte, totalLen)
 	for _, f := range fragments {
+		if cryptoFragmentPassesBound(f) {
+			continue
+		}
 		copy(result[f.Offset:], f.Data)
 	}
 	return result
+}
+
+// cryptoFragmentPassesBound reports whether the fragment reaches past
+// MaxCryptoBufferBytes.
+// A fragment that reaches past the bound describes no real handshake message.
+// ReassembleCryptoFrames allocates one byte of buffer for each byte up to the highest
+// offset. #168 measured an amplification of about 10000 to 1 from one datagram of 100
+// bytes.
+// The reader tests the offset before it adds the length. RFC 9000 Section 16 lets an
+// offset reach 4611686018427387903, so the sum wraps in a uint64 addition.
+func cryptoFragmentPassesBound(fragment CryptoFragment) bool {
+	return fragment.Offset > MaxCryptoBufferBytes ||
+		fragment.Offset+uint64(len(fragment.Data)) > MaxCryptoBufferBytes
 }
 
 // ParseQUICServerInitial parses a QUIC server Initial packet and extracts the TLS ServerHello.

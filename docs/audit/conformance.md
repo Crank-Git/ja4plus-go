@@ -12,11 +12,11 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1753 |
-| Deviations | 278 |
-| Accepted deviations | 575 |
+| Deviations | 273 |
+| Accepted deviations | 580 |
 | Unaccepted uncovered values | 184 |
 | Accepted uncovered values | 20 |
-| Accepted comparisons | 595 |
+| Accepted comparisons | 600 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -26,8 +26,8 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1116 | 46 | 279 | 144 | 14 |
-| per-packet | 637 | 232 | 296 | 40 | 6 |
+| per-stream | 1116 | 44 | 281 | 144 | 14 |
+| per-packet | 637 | 229 | 299 | 40 | 6 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -74,8 +74,8 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4H | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4H_ro` | the vector holds a value the library does not produce | `ge20nn12enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4L | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4L-C` | the two values differ (accepted) | `113_64` | `113_64_quic` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4LS | 1 | `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4L-S` | the two values differ | `10990_56` | `9285_56_quic` |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S` | the library produces a value the vector does not hold | (none) | `q130200_1301_234ea6891581` |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S_r` | the library produces a value the vector does not hold | (none) | `q130200_1301_0033,002b` |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S` | the library produces a value the vector does not hold (accepted) | (none) | `q130200_1301_234ea6891581` |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4S | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S_r` | the library produces a value the vector does not hold (accepted) | (none) | `q130200_1301_0033,002b` |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4X | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4X.1` | the vector holds a value the library does not produce | `a373a9f83c6b_2bab15409345_7bf9a7bf7029` | (none) |
 | `chrome-cloudflare-quic-with-secrets.pcapng` | per-stream | JA4X | 2 | `chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4X.2` | the vector holds a value the library does not produce | `7d5dbb3783b4_a373a9f83c6b_44440d41940c` | (none) |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4H | 3 | `gre-erspan-vxlan.pcap/4/JA4H.1` | the vector holds a value the library does not produce | `ge10nn000000_e3b0c44298fc_000000000000_000000000000` | (none) |
@@ -116,9 +116,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `https3-301-get.pcap` | per-packet | JA4L | 3 | `https3-301-get.pcap/4/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `206_64` |
 | `https3-301-get.pcap` | per-packet | JA4LS | 2 | `https3-301-get.pcap/10/JA4LS.1` | the vector holds a value the library does not produce | `17805_50_18217` | (none) |
 | `https3-301-get.pcap` | per-packet | JA4LS | 2 | `https3-301-get.pcap/2/JA4LS.1` | the library produces a value the vector does not hold | (none) | `17805_50` |
-| `https3-301-get.pcap` | per-packet | JA4TS | 3 | `https3-301-get.pcap/20/JA4TS.1` | the vector holds a value the library does not produce | `14240_2-4-8-1-3_1436_10` | (none) |
-| `https3-301-get.pcap` | per-packet | JA4TS | 3 | `https3-301-get.pcap/21/JA4TS.1` | the vector holds a value the library does not produce | `14240_2-4-8-1-3_1436_10` | (none) |
-| `https3-301-get.pcap` | per-packet | JA4TS | 3 | `https3-301-get.pcap/23/JA4TS.1` | the vector holds a value the library does not produce | `14240_2-4-8-1-3_1436_10` | (none) |
+| `https3-301-get.pcap` | per-packet | JA4TS | 3 | `https3-301-get.pcap/20/JA4TS.1` | the vector holds a value the library does not produce (accepted) | `14240_2-4-8-1-3_1436_10` | (none) |
+| `https3-301-get.pcap` | per-packet | JA4TS | 3 | `https3-301-get.pcap/21/JA4TS.1` | the vector holds a value the library does not produce (accepted) | `14240_2-4-8-1-3_1436_10` | (none) |
+| `https3-301-get.pcap` | per-packet | JA4TS | 3 | `https3-301-get.pcap/23/JA4TS.1` | the vector holds a value the library does not produce (accepted) | `14240_2-4-8-1-3_1436_10` | (none) |
 | `latest.pcapng` | per-packet | JA4H | 11 | `latest.pcapng/113/JA4H_r.1` | the two values differ (accepted) | `ge11nn07enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language,If-None-Match,If-Modified-Since__` | `ge11nn07enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language,If-None-Match,If-Modified-Since_` |
 | `latest.pcapng` | per-packet | JA4H | 11 | `latest.pcapng/113/JA4H_ro.1` | the two values differ (accepted) | `ge11nn07enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language,If-None-Match,If-Modified-Since__` | `ge11nn07enus_Host,Connection,User-Agent,Accept-Encoding,Accept-Language,If-None-Match,If-Modified-Since_` |
 | `latest.pcapng` | per-packet | JA4H | 11 | `latest.pcapng/172/JA4H.1` | the vector holds a value the library does not produce (accepted) | `ms11nn040000_a3c882e23515_000000000000_000000000000` | (none) |

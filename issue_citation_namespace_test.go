@@ -56,7 +56,11 @@ import (
 // round 49 cites `#525`, which is the issue that carries the anaphoric citation ruling, and
 // that number sits above the inherited mark of 522. **The guard reported it and CI failed on
 // it**, which is the guard doing its work rather than a defect of the round.
-const issueCitationHighWaterMark = 530
+// The batch #530 round re-measured the mark on 2026-08-14 and it read 543. **That batch
+// merged `dev` into its integration branch after six members had landed**, so this guard
+// reached their commits only at the merge. It reported 8 bare citations above 530: 6 name
+// #532 and 2 name #533, and every one names an issue of this repository.
+const issueCitationHighWaterMark = 543
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

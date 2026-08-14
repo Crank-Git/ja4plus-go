@@ -1984,6 +1984,22 @@
     "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
   },
   {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S",
+    "capability": false,
+    "ours": "q130200_1301_234ea6891581",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S_r",
+    "capability": false,
+    "ours": "q130200_1301_0033,002b",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
     "key": "badcurveball.pcap/4/JA4L.1",
     "capability": false,
     "ours": "2181_64",
@@ -4758,5 +4774,29 @@
     "theirs": "",
     "ruling": "#503",
     "reason": "FR-parity-42 makes this library read the reset bit alone, and `wireshark/source/packet-ja4.c:1296` tests the flag byte of frame 119 for equality."
+  },
+  {
+    "key": "https3-301-get.pcap/20/JA4TS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14240_2-4-8-1-3_1436_10",
+    "ruling": "#502",
+    "reason": "Ruling #502 of 2026-08-14 declines a client RST, because `wireshark/source/packet-ja4.c:1600` keys the connection by the stream and `ja4tsConnKey` keys it by the server endpoint."
+  },
+  {
+    "key": "https3-301-get.pcap/21/JA4TS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14240_2-4-8-1-3_1436_10",
+    "ruling": "#502",
+    "reason": "Ruling #502 of 2026-08-14 declines a client RST, because `wireshark/source/packet-ja4.c:1600` keys the connection by the stream and `ja4tsConnKey` keys it by the server endpoint."
+  },
+  {
+    "key": "https3-301-get.pcap/23/JA4TS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14240_2-4-8-1-3_1436_10",
+    "ruling": "#502",
+    "reason": "Ruling #502 of 2026-08-14 declines a client RST, because `wireshark/source/packet-ja4.c:1600` keys the connection by the stream and `ja4tsConnKey` keys it by the server endpoint."
   }
 ]
