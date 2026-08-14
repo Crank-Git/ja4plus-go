@@ -42,8 +42,11 @@ one.** The prose then names the identifier alone.
 | `ParseQUICInitial`, `ClientHelloFromCryptoFragments` | `internal/parser/quic.go` |
 | `IsQUIC` | `internal/parser/tls.go` |
 
-**`ParseQUICInitial` and `ClientHelloFromCryptoFragments` each set `IsQUIC` on a
-ClientHello**, and answer 3 below reads that fact.
+**`ClientHelloFromCryptoFragments` sets `IsQUIC` on a ClientHello, and `ParseQUICInitial`
+reaches that one assignment because it returns that function**, and answer 3 below reads that
+fact. **#532 made `ParseQUICInitial` delegate on 2026-08-14**, and `internal/parser/quic.go:634`
+is the one line that sets the field on a ClientHello today. **This page read two setters before
+that change**, and the cross-member review of batch #530 found the sentence.
 
 ## The connection, and the five frames of the handshake start
 
@@ -208,8 +211,8 @@ frame 49: 443-50280 fp="q130200_1301_234ea6891581" raw="q130200_1301_0033,002b"
    frame 49 alone.
 2. **The protocol character differs**, and one function writes it. `computeJA4SPair` writes
    `q` for `IsQUIC`, and `ParseQUICServerInitial` is the one function that sets `IsQUIC` on a
-   ServerHello. `ParseQUICInitial` and `ClientHelloFromCryptoFragments` set the field of a
-   ClientHello, and no JA4S value reads one. A value that read the TCP ServerHello of frame 6
+   ServerHello. `ClientHelloFromCryptoFragments` sets the field of a
+   ClientHello and `ParseQUICInitial` returns that function, and no JA4S value reads one. A value that read the TCP ServerHello of frame 6
    would carry `t`.
 3. **The shared parts are the common parts of a TLS 1.3 ServerHello.** Cipher `0x1301` is
    `TLS_AES_128_GCM_SHA256`, and extensions `0033` and `002b` are the key share and the
