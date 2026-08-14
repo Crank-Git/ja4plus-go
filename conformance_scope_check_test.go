@@ -41,7 +41,10 @@ func TestTheHarnessNumbersTheSecondJA4SValueOfOneStream(t *testing.T) {
 // a stream still reaches a stream that carries more than one request.
 //
 // `CVE-2018-6794.pcap/0/JA4H` fell from 12 deviations to 2 under the bare key, and the
-// second, third and fourth request values reached no comparison.
+// second value and each later one reached no comparison. Those surplus values are
+// retransmission values, and never request values. Each HTTP connection of that capture
+// carries one request and five TCP retransmissions of it, and #233 holds the measurement.
+// `ja4h_retransmitted_capture_test.go` holds the count the library produces today.
 func TestTheHarnessNumbersTheSecondAndLaterJA4HValuesOfOneStream(t *testing.T) {
 	for occurrence, want := range map[int]string{
 		1: "JA4H",
