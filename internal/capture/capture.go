@@ -53,7 +53,7 @@ type Handle interface {
 	Close() error
 }
 
-// dropAccumulator returns the total drop count of a backend that reports a delta.
+// dropAccumulator holds the total drop count of a backend that reports a delta.
 //
 // The packet socket of Linux resets its counter at each read, so a backend that reads it
 // twice sees two deltas and never a total. `packet(7)` states the reset:
