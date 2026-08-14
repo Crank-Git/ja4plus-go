@@ -75,7 +75,7 @@ disagree with each other, and each one reads its own tooling rather than the pac
 one read `not alphanumeric` before that ruling, and the FoxIO measurement contradicts that
 test. **Both FoxIO implementations pass a printable ASCII byte through**, whether or not
 that byte is alphanumeric, so `\x20\x61` reads ` a` in each one. Parity rule 1 gives the
-behaviour to FoxIO, so the requirement was wrong and the code was right. #50 records the
+behavior to FoxIO, so the requirement was wrong and the code was right. #50 records the
 measurement, and `Crank-Git/ja4plus#601` closes the same wording on the port side.
 
 - **FR-parity-8** — When the first byte of the first ALPN value falls outside the printable
@@ -149,7 +149,7 @@ The port's issues #28, #96, #97, #105, #199 and #214 hold these rulings.
 - **FR-parity-33a** — `JA4SSHFingerprinter` exports `CloseConnectionWindow`, which emits
   the window one connection holds open and returns the results. The maintainer ruled the
   method on 2026-08-12, and issue #216 records the ruling. This project named the
-  behaviour first, and `Crank-Git/ja4plus` issue #598 holds the port half.
+  behavior first, and `Crank-Git/ja4plus` issue #598 holds the port half.
 - **FR-parity-33b** — `CloseConnectionWindow` reads the two endpoints of the connection in
   either order, as `CleanupConnection` does.
 - **FR-parity-33c** — `CloseConnectionWindow` removes the connection from the state table,
@@ -170,6 +170,18 @@ The port's issues #28, #96, #97, #105, #199 and #214 hold these rulings.
 
 The port's issues #215, #226 and #246 hold these rulings.
 
+**FR-parity-43 carries an amendment that the maintainer made on 2026-08-14, and #484 is the
+reversal path.** The requirement read
+`A RST on a connection that holds no delay produces no value.` The maintainer ruled split T2
+on that date, and the ruling contradicts that sentence. A connection that holds one SYN-ACK
+holds no delay, and the library now publishes the stored four-part value for a reset of it.
+`wireshark/source/packet-ja4.c:1599-1608` writes the four-part value above the delay guard
+of `wireshark/source/packet-ja4.c:684`. `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md`
+`## Cause 2 — the library returns no JA4TS value on a reset of a connection that holds one SYN-ACK`
+holds the reading, #495 built the change, and
+`TestJA4TS_PublishesTheStoredFourPartValueOnAResetOfAOneSynAckConnection` of
+`ja4ts_part_e_test.go` holds the rule. **`Crank-Git/ja4plus#609` holds the port half.**
+
 - **FR-parity-34** — An empty TCP option list writes `00` in part b.
 - **FR-parity-35** — Part c writes two digits. An absent maximum segment size writes `00`.
 - **FR-parity-36** — Part d writes two digits. A window scale of zero writes `00`.
@@ -184,7 +196,10 @@ The port's issues #215, #226 and #246 hold these rulings.
   the connection.
 - **FR-parity-42** — The RST test reads the RST bit of the flag byte, so a RST that also
   carries ACK reaches the rule.
-- **FR-parity-43** — A RST on a connection that holds no delay produces no value.
+- **FR-parity-43** — A RST on a connection that holds one SYN-ACK produces the stored
+  four-part value. **The maintainer amended this requirement on 2026-08-14, and #484 is the
+  reversal path.**
+- **FR-parity-43a** — A RST that reaches no stored connection produces no value.
 - **FR-parity-44** — A RST that the client sent produces no value.
 - **FR-parity-45** — `JA4TSFingerprinter` holds a state table keyed by the five-tuple, and
   `CleanupConnection` clears one entry of it.
@@ -300,12 +315,13 @@ what the CHANGELOG records.
 
 ## Edge cases & failures
 
-| Case | Expected behaviour |
+| Case | Expected behavior |
 |---|---|
 | A connection holds an open window and the caller never calls `CloseOpenWindows`. | The window is lost. The method is opt-in, and the library forces no flush. |
 | `CloseOpenWindows` is called twice. | The second call returns an empty slice. A window is emitted once. |
 | One connection ends before the packet source ends. | `CloseConnectionWindow` emits the window that connection holds open, and it removes the connection. `CleanupConnection` removes the connection and emits nothing. FR-parity-33a and FR-parity-33e cover the two. |
-| A RST arrives before any SYN-ACK. | No JA4TS value. FR-parity-43 covers it. |
+| A RST arrives before any SYN-ACK. | No JA4TS value. FR-parity-43a covers it. |
+| A RST arrives on a connection that holds one SYN-ACK. | The stored four-part value. FR-parity-43 covers it, and the maintainer amended that requirement on 2026-08-14. |
 | The server sends three SYN-ACK packets. | Part e holds two delays, joined by `-`. |
 | A DHCPv6 message nests a relay inside a relay. | Subfield 1 writes the outermost type. FR-parity-54 says "the outer", and the test builds the two-level case. |
 | The first ALPN value is empty. | The ALPN field writes the zero form the method already writes. This row settles a one-byte value, and an empty value is a separate case that no ruling covers. Record it in `Open questions`. |
