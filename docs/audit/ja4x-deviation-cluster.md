@@ -7,11 +7,20 @@ It reads every JA4X and JA4X_r deviation that `testdata/deviations.json` does no
 names one cause for each one. It states the count each cause closes, measured against the
 corpus at the pin of `testdata/foxio.pin`.
 
-**Every count of this page comes from one run of `go test -tags conformance -count=1 -v
-./...` in one worktree, on 2026-08-13, against the corpus at
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.** The run reports 1680 matches, 475 deviations,
-450 accepted deviations and 470 register keys. **No commit of #458 holds a Go file, and no
-commit of #458 changes `testdata/deviations.json`.**
+**Every JA4X count of this page comes from one run of `go test -tags conformance -count=1
+-v ./...` in one worktree, on 2026-08-13.** That run reads the corpus at
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`. **It read the batch #478 branch before #467
+sub-merged.** It reports 1680 matches, 475 deviations, 450 accepted deviations and 470
+register keys. **No commit of #458 holds a Go file, and no commit of #458 changes
+`testdata/deviations.json`.**
+
+**#467 then added 108 register entries, and batch #478 re-measured the four whole-run
+counts at the branch head.** A second run of `make conformance` on 2026-08-13 reports 1680
+matches, 367 deviations, 558 accepted deviations and 578 register keys. **Every JA4X count
+of this page holds at the branch head**, because each of the 108 entries names a JA4H key.
+The second run reports 50 JA4X and JA4X_r deviations that the register does not hold. It
+reports the same six captures, and the same 34 and 16 split. **So a whole-run figure of this
+page names the first run, and a JA4X figure names both runs.**
 
 **`make conformance` exits 2, and Epic #441 owns that exit.** Step 4 of the
 `## A change is done when` list of `CLAUDE.md` is unmeetable today. This page reports no
@@ -19,9 +28,10 @@ green gate.
 
 ## The measurement
 
-**The suite reports 475 deviations that the register does not hold. 50 of them name JA4X or
-JA4X_r.** **Epic #441 measured 50 on 2026-08-13, before batch #421 and before #438.** This
-page re-measured the number rather than adopt it, and the two agree.
+**The first run reports 475 deviations that the register does not hold, and the second run
+reports 367. 50 of them name JA4X or JA4X_r in each run.** **Epic #441 measured 50 on
+2026-08-13, before batch #421 and before #438.** This page re-measured the number rather
+than adopt it, and the three measurements agree.
 
 | Key kind | Count |
 |---|---|
@@ -380,9 +390,19 @@ is a value the library produces for which the vector file names no key.
 | unaccepted | 172 | 47 |
 | accepted | 20 | 12 |
 
-**Every one of the 47 unaccepted keys names `JA4X_r`**, and it belongs to the per-stream set.
-The per-stream vector set publishes JA4X alone, because
+**45 of the 47 unaccepted keys name `JA4X_r`, and 2 name `JA4X`.** Every one of the 47
+belongs to the per-stream set. The per-stream vector set publishes JA4X alone, because
 `testdata/foxio/reference/python/ja4x.py:87` writes the key `JA4X.{idx+1}` and no raw key.
+**So that rule accounts for the 45, and it accounts for neither of the 2.**
+
+**The 2 are `https-connect.pcap/0/JA4X` and `https-connect.pcap/0/JA4X.2`.**
+`testdata/foxio/python/https-connect.pcap.json` holds one stream entry, and that entry names
+`JA4H` and `JA4H_ro` and no JA4X key at all. **So the reference publishes no JA4X value for
+that capture, and the library publishes two.** **That is a disagreement about coverage, and
+it is no disagreement about a value.** `## No cause reaches a maintainer ruling` below
+states the same reading for `chrome-cloudflare-quic-with-secrets.pcapng`. **Batch #478
+measured the 45 and the 2**, and
+the sentence this round replaced read `Every one of the 47 unaccepted keys names JA4X_r`.
 
 **The 12 accepted keys hold the 12 JA4X register entries, and each one names
 `socks4-https.pcap` under ruling #375.** Six are per-stream and six are per-packet.
@@ -423,7 +443,7 @@ reference split, and it invents no rule.**
 `reassembler`, `processedCerts`, `certsByStream`, `streamBytes` and `lastCleanup`, and no
 mutex. `.claude/rules/concurrency.md` bars a mutex in a fingerprinter, and no other row of
 that table names one. **#458 owns no file of `docs/specs/`, so this page reports the sentence
-and repairs nothing.** The sentence states no behaviour, so `CLAUDE.md` sends it to the batch
+and repairs nothing.** The sentence states no behavior, so `CLAUDE.md` sends it to the batch
 documentation round. **This page is a reading and it is no audit**, so it reports a sentence
 where an audit reports a finding.
 
