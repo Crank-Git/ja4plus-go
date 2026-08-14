@@ -121,7 +121,8 @@ func TestJA4H_ProducesNoValueForASecondRequestThatTwoSegmentsSplit(t *testing.T)
 // **This test fails under the candidate repair that #463 names, and that is why it exists.**
 // A consumed range that ends at the first request leaves the rest of the segment outside
 // itself. The retransmission then reaches the parse path, and it produces the value of the
-// first request a second time. A worker of #463 measured that duplicate on 2026-08-14.
+// first request a second time. A worker of #463 measured that duplicate on 2026-08-14 UTC,
+// and pull request #499 records the measurement.
 // So a repair of #463 keeps the consumed range over every byte the emission read.
 func TestJA4H_ProducesNoDuplicateForARetransmissionOfAPipelinedSegment(t *testing.T) {
 	fingerprinter := NewJA4H()
