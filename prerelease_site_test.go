@@ -274,7 +274,7 @@ func TestTheDocumentationSiteBuildsFromItsPins(t *testing.T) {
 		}
 
 		// FR-prerelease-23. The environment is empty, and the pin file fills it.
-		t.Run("the pin file installs into an empty environment", func(t *testing.T) {
+		installed := t.Run("the pin file installs into an empty environment", func(t *testing.T) {
 			output, installErr := environment.run(environment.python, "-m", "pip", "install",
 				"--no-input", "--disable-pip-version-check",
 				"--requirement", filepath.Join(repository, sitePinFile))
@@ -284,7 +284,7 @@ func TestTheDocumentationSiteBuildsFromItsPins(t *testing.T) {
 			}
 		})
 
-		if t.Failed() {
+		if !installed {
 			// The two subtests below read the installation, so a failed installation makes
 			// each of them report a second symptom of one defect.
 			return nil
