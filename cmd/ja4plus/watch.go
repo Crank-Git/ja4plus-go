@@ -646,6 +646,19 @@ func (m *monitor) run(handle capture.Handle) error {
 		}
 
 		if err != nil {
+			// A failed read emits no open window, and it loses the last window of every
+			// connection. FR-capture-20 names the stop request, and this path holds no
+			// stop request. The edge-case table of
+			// `docs/specs/features/13-live-capture.md` names one message and exit status 1
+			// for the interface that the host removes, and it names no emission.
+			// `runAnalyze` returns on a failed read the same way, so one rule covers the
+			// two commands: **a capture that fails emits nothing that a reader would take
+			// for a complete result.**
+			// The flush still runs, so a writer that holds a row in a buffer writes it.
+			if flushErr := m.results.flush(); flushErr != nil {
+				return flushErr
+			}
+
 			return fmt.Errorf("read %s: %w", m.options.iface, err)
 		}
 

@@ -245,19 +245,55 @@ func TestTheMonitorReportsTheReadFailureOfTheInterface(t *testing.T) {
 	}
 }
 
-// TestTheMonitorClosesTheOpenWindowsAfterTheStopRequest reads FR-capture-20. A JA4SSH
-// window that reached no threshold holds open, and no packet emits it. The monitor calls
-// `Processor.CloseOpenWindows` after the stop request, and it prints the results.
-func TestTheMonitorClosesTheOpenWindowsAfterTheStopRequest(t *testing.T) {
-	// The payload holds one SSH binary packet: a four-byte length, one padding length and
-	// the rest. `parser.IsSSHPacket` reads that shape, and a packet of zero bytes is no
-	// SSH packet.
+// TestTheMonitorEmitsNoOpenWindowAfterAFailedRead reads FR-capture-20, which names the
+// stop request and names no failed read. The self-review of #80 raised the asymmetry, so
+// this test pins the answer rather than leaving it to a later reader.
+//
+// The capture fails, so the run emits nothing that a reader would take for a complete
+// result. `runAnalyze` returns on a failed read the same way.
+func TestTheMonitorEmitsNoOpenWindowAfterAFailedRead(t *testing.T) {
+	payload := monitorTestSSHPayload()
+	packets := [][]byte{
+		buildTCPPacketBytes(t, monitorTestClientIP, monitorTestServerIP, 54144, 22, false, payload),
+		buildTCPPacketBytes(t, monitorTestServerIP, monitorTestClientIP, 22, 54144, false, payload),
+	}
+
+	handle := newStubCaptureHandle(packets)
+	handle.end = errors.New("the interface is removed")
+
+	instance, out, errOut := newTestMonitor(t, watchOptions{iface: "eth0"}, steadyClock())
+
+	err := instance.run(handle)
+	if err == nil {
+		t.Fatal("the monitor returns no error for a failed read")
+	}
+
+	if strings.Contains(out.String(), "ja4ssh") {
+		t.Errorf("standard output holds an open JA4SSH window after a failed read: %q", out.String())
+	}
+
+	if strings.Contains(errOut.String(), "closing open windows") {
+		t.Errorf("standard error names a close of the open windows after a failed read: %q", errOut.String())
+	}
+}
+
+// monitorTestSSHPayload returns one SSH binary packet: a four-byte length, one padding
+// length, one message type and the rest. `parser.IsSSHPacket` reads that shape.
+func monitorTestSSHPayload() []byte {
 	payload := make([]byte, 36)
 	binary.BigEndian.PutUint32(payload[:4], 32)
 	payload[4] = 6
 	// The message type byte must be 1 or more, and 20 names SSH_MSG_KEXINIT.
 	payload[5] = 20
 
+	return payload
+}
+
+// TestTheMonitorClosesTheOpenWindowsAfterTheStopRequest reads FR-capture-20. A JA4SSH
+// window that reached no threshold holds open, and no packet emits it. The monitor calls
+// `Processor.CloseOpenWindows` after the stop request, and it prints the results.
+func TestTheMonitorClosesTheOpenWindowsAfterTheStopRequest(t *testing.T) {
+	payload := monitorTestSSHPayload()
 	packets := make([][]byte, 0, 8)
 
 	for index := 0; index < 4; index++ {
