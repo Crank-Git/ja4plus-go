@@ -66,15 +66,28 @@ const remoteLookupFunction = "LookupFingerprintRemote"
 // networkBoundaryRecordPage records the decision, the three options and the reason.
 const networkBoundaryRecordPage = "docs/audit/network-boundary.md"
 
+// coreWalkMustReach names each path prefix that the walk of the core package parses a file
+// under.
+//
+// A count of parsed files reports a walk that read nothing, and it reports no walk that read
+// the repository root and skipped a subtree. The root holds about fifteen production files,
+// so a skip of `internal/` leaves that count high and the guard then reports a property it
+// never checked.
+var coreWalkMustReach = []string{"internal/"}
+
 // httpClientImportSite returns each line of each production file below the root that imports
 // the HTTP client, keyed by the path.
 //
 // It reads no test file. A test file reaches no released binary, and `go list -deps` reads
 // no test import either, so the two parts of this guard measure one set of files.
-func httpClientImportSite(t *testing.T, root string, skipDir map[string]bool) map[string][]int {
+//
+// mustReach names each path prefix that the walk parses a file under. An empty list states
+// that the caller reads one directory, and it makes no claim about a subtree.
+func httpClientImportSite(t *testing.T, root string, skipDir map[string]bool, mustReach []string) map[string][]int {
 	t.Helper()
 
 	site := map[string][]int{}
+	reached := map[string]bool{}
 	parsed := 0
 
 	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
@@ -112,6 +125,12 @@ func httpClientImportSite(t *testing.T, root string, skipDir map[string]bool) ma
 
 		parsed++
 
+		for _, prefix := range mustReach {
+			if strings.HasPrefix(path, prefix) {
+				reached[prefix] = true
+			}
+		}
+
 		for _, spec := range file.Imports {
 			importPath, unquoteErr := strconv.Unquote(spec.Path.Value)
 			if unquoteErr != nil {
@@ -138,6 +157,15 @@ func httpClientImportSite(t *testing.T, root string, skipDir map[string]bool) ma
 		t.Fatalf("the walk of %s parsed no production Go file, and the guard reads every one of them", root)
 	}
 
+	// A walk that skipped one subtree still parses the files of the root, so the count above
+	// stays high and reports nothing.
+	for _, prefix := range mustReach {
+		if !reached[prefix] {
+			t.Fatalf("the walk of %s parsed no production Go file under %s, and the guard reads every one of them",
+				root, prefix)
+		}
+	}
+
 	return site
 }
 
@@ -151,7 +179,7 @@ func isHTTPClientImport(importPath string) bool {
 // TestNoProductionFileOfTheCorePackageImportsAnHTTPClient holds the property that the ruling
 // of #72 states. The core package and every package below `internal/` reach no HTTP client.
 func TestNoProductionFileOfTheCorePackageImportsAnHTTPClient(t *testing.T) {
-	for path, lines := range httpClientImportSite(t, ".", networkBoundarySkipDir) {
+	for path, lines := range httpClientImportSite(t, ".", networkBoundarySkipDir, coreWalkMustReach) {
 		sort.Ints(lines)
 
 		t.Errorf("%s imports %s at line %v, and it is no test file.\n"+
@@ -165,7 +193,7 @@ func TestNoProductionFileOfTheCorePackageImportsAnHTTPClient(t *testing.T) {
 // TestTheRemoteLookupPackageImportsAnHTTPClient proves that the reader above finds the import
 // it looks for. A clean result from a broken reader guards nothing.
 func TestTheRemoteLookupPackageImportsAnHTTPClient(t *testing.T) {
-	site := httpClientImportSite(t, remoteLookupPackageDir, map[string]bool{})
+	site := httpClientImportSite(t, remoteLookupPackageDir, map[string]bool{}, nil)
 
 	if len(site) == 0 {
 		t.Errorf("no production file of %s imports %s.\n"+

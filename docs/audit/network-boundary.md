@@ -25,8 +25,8 @@ FR-lookup-2 names three options, and this list holds each one.
 3. **Move it to a separate package.**
 
 **Each option holds FR-lookup-4, and each one holds it at a different strength.** FR-lookup-4
-states that the default build of the library performs no network input and no network output
-unless the caller calls a function whose name states that it does.
+states two rules. The default build of the library performs no network input and no network
+output. The one exception is a call of a function whose name states that reach.
 
 | Option | What holds FR-lookup-4 | Outcome |
 |---|---|---|
@@ -37,9 +37,9 @@ unless the caller calls a function whose name states that it does.
 ## The reason
 
 **A naming convention holds FR-lookup-4 only while every later contributor reads the
-convention.** The first option leaves the network code and the offline code in one package,
-so a later change adds network input and network output without a package line to cross. A
-reviewer who reads the change reads no import that reports it.
+convention.** The first option leaves the network code and the offline code in one package.
+A later change then adds network input and network output, and it crosses no package line. A
+reviewer who reads that change reads no import that reports it.
 
 **A build tag holds the requirement, and it adds a second build path.** `CLAUDE.md` states
 that one build path uses cgo and that the `libpcap` tag selects it. A second tag doubles the

@@ -241,7 +241,7 @@ reads the embedded table or the cache file, and it makes no request.
 
 **One function of this library reaches the network, and it lives in another package.**
 `LookupFingerprintRemote` of `github.com/Crank-Git/ja4plus-go/ja4db` asks the `ja4db.com`
-service for one record. A caller reaches it only by importing that package.
+service for one record. A caller reaches it only when it imports that package.
 
 ```go
 import "github.com/Crank-Git/ja4plus-go/ja4db"
