@@ -123,6 +123,12 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 				// Try to parse ClientHello from accumulated fragments
 				ch, err = parser.ClientHelloFromCryptoFragments(collected)
 				if err != nil {
+					// ClientHelloFromCryptoFragments returns nil and no error while a fragment is
+					// missing, so an error names a handshake message that holds every byte its
+					// length field counts. No later packet repairs that message, and the entries
+					// leak in a monitor that calls no CleanupConnection. Issue #533 records it.
+					f.dropConnection(dcidKey)
+
 					return nil, err
 				}
 				if ch != nil {
