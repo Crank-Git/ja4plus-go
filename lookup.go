@@ -96,6 +96,11 @@ func invalidateLookupTable() {
 //
 // It returns an error and leaves the previous cache file unchanged when the database fails
 // validation, and when the write fails. `internal/dbcache` states each rule.
+//
+// No package outside this one reaches this function, because #100 freezes the exported
+// surface. `ja4plus db update` runs in another process, and it writes the cache file
+// through `internal/dbcache`. A running process then reads the new file at its next
+// lookup, because `activeTable` stats the cache file.
 func updateCache(data []byte) error {
 	path, err := CachedDatabasePath()
 	if err != nil {

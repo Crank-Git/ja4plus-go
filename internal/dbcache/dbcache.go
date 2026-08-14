@@ -47,9 +47,17 @@ func IdentityColumns() []string {
 
 // Validate reports whether the database is one the library loads.
 //
-// It returns an error when the database is above MaxBytes, when the CSV reader rejects the
-// header row, when the header holds no fingerprint column, when the header holds no
-// identity column, and when no record carries a fingerprint value.
+// It returns an error in each of these cases.
+//
+//   - The database is above MaxBytes.
+//   - The CSV reader rejects the header row.
+//   - The header holds no fingerprint column.
+//   - The header holds no identity column.
+//   - No record carries both a fingerprint value and an identity value.
+//
+// The last case matters, because a database that yields no entry answers every lookup with
+// nil. `rebuildTable` in `lookup.go` then keeps the previous table, and the caller reads a
+// successful update that changed nothing.
 //
 // A record that the CSV reader rejects is not a reason to reject the file, because
 // `parseMapping` in `lookup.go` skips such a record.
@@ -76,7 +84,8 @@ func Validate(data []byte) error {
 			strings.Join(FingerprintColumns(), ", "))
 	}
 
-	if len(presentColumns(column, IdentityColumns())) == 0 {
+	identityIndex := presentColumns(column, IdentityColumns())
+	if len(identityIndex) == 0 {
 		return fmt.Errorf("the header holds no identity column, and one of %s is needed",
 			strings.Join(IdentityColumns(), ", "))
 	}
@@ -91,12 +100,14 @@ func Validate(data []byte) error {
 			continue
 		}
 
-		if holdsFingerprint(record, fingerprintIndex) {
+		// `parseMapping` skips a record that carries no identity value, so a record needs
+		// both halves to reach the table.
+		if holdsValue(record, fingerprintIndex) && holdsValue(record, identityIndex) {
 			return nil
 		}
 	}
 
-	return errors.New("the database holds no record that carries a fingerprint value")
+	return errors.New("the database holds no record that carries a fingerprint value and an identity value")
 }
 
 // Write validates the database and replaces the cache file at the path.
@@ -106,6 +117,10 @@ func Validate(data []byte) error {
 // temporary file on each failure path.
 //
 // A failure leaves the previous cache file unchanged.
+//
+// The function syncs the temporary file and it syncs no directory, so a power loss between
+// the rename and the next directory write can leave the previous name. The cache file holds
+// a copy of a file the program downloads again, so the library declines that cost.
 func Write(path string, data []byte) error {
 	if err := Validate(data); err != nil {
 		return err
@@ -167,10 +182,9 @@ func presentColumns(column map[string]int, names []string) []int {
 	return index
 }
 
-// holdsFingerprint reports whether the record carries a non-empty value in one of the
-// fingerprint columns.
-func holdsFingerprint(record []string, fingerprintIndex []int) bool {
-	for _, position := range fingerprintIndex {
+// holdsValue reports whether the record carries a non-empty value in one of the columns.
+func holdsValue(record []string, index []int) bool {
+	for _, position := range index {
 		if position < len(record) && strings.TrimSpace(record[position]) != "" {
 			return true
 		}

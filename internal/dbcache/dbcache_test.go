@@ -77,6 +77,18 @@ func TestValidate_RejectsAFileThatTheCSVReaderRejects(t *testing.T) {
 	}
 }
 
+// TestValidate_RejectsAFileWhoseFingerprintRecordsCarryNoIdentity holds FR-lookup-23.
+// `parseMapping` in `lookup.go` skips a record that carries no identity value, so such a
+// file parses and yields no entry. A write of it reports a success and leaves the library
+// on the previous database.
+func TestValidate_RejectsAFileWhoseFingerprintRecordsCarryNoIdentity(t *testing.T) {
+	database := "Application,ja4,Notes\n,t13d000000_000000000000_000000000099,no identity\n"
+
+	if err := dbcache.Validate([]byte(database)); err == nil {
+		t.Error("Validate accepted a file whose one fingerprint record carries no identity value")
+	}
+}
+
 func TestValidate_RejectsAnEmptyFile(t *testing.T) {
 	if err := dbcache.Validate(nil); err == nil {
 		t.Error("Validate accepted an empty file")
