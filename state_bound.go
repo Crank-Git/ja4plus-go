@@ -8,16 +8,17 @@ import (
 // boundedKeys holds the recency order of one state table, and it names the key that the entry
 // bound and the age bound remove.
 //
-// A fingerprinter of this package keys two or three maps with one key, and this type holds the
-// order and the last packet time of that key once. A fingerprinter that stored the time in its
-// own entry would need a wrapper struct for a map whose value is a slice, and
-// `quic_tunnel_cleanup_test.go` writes such a value directly.
+// A fingerprinter of this package keys two or three maps with one key. This type holds the
+// order and the last packet time of that key once.
+// A fingerprinter that stored the time in its own entry would need a wrapper struct for a map
+// whose value is a slice. `quic_tunnel_cleanup_test.go` writes such a value directly.
 //
 // One boundedKeys serves one fingerprinter, and one fingerprinter serves one goroutine. No
 // lock guards it, and `.claude/rules/concurrency.md` states that contract.
 //
-// The zero value is usable. `ensure` fills the two maps, because every fingerprinter of this
-// package reads its first packet from a zero value without a panic.
+// The zero value is usable, and `ensure` fills the two maps and the order list.
+// Every fingerprinter of this package reads its first packet from a zero value without a
+// panic.
 type boundedKeys struct {
 	// order names every key, least recent first. The entry bound removes the front.
 	order *list.List
@@ -119,12 +120,16 @@ func (b *boundedKeys) admit(
 // agedKeys returns each key whose last packet is older than the maximum age.
 //
 // The pass reads every key. A capture states a timestamp of its own, so two packets can arrive
-// out of order and the recency order then does not follow the age.
+// out of order. The recency order then does not follow the age.
 //
-// The packet carries that timestamp, so a crafted capture controls it. A packet dated far in
-// the future gives every later key a negative age, and this pass then removes nothing. The
-// entry bound is the bound that holds the memory, because it reads the recency order and no
-// timestamp.
+// The packet carries that timestamp, so a crafted capture controls it, and one timestamp
+// decides the age of every key. A packet dated far in the future ages the whole table at once,
+// and this pass then removes every entry. `ja4ssh.go` and `ja4ts.go` hold the same rule, and
+// the port holds it at `ja4plus/utils/state_table.py` of tag `v1.1.0`. **Issue #577 carries
+// that question**, and this file repeats the established rule rather than inventing one.
+//
+// The entry bound holds the memory whatever the timestamp states, because it reads the recency
+// order and no timestamp. So the loss is the tracked state, and never the memory.
 func (b *boundedKeys) agedKeys(now time.Time, age time.Duration) []string {
 	var aged []string
 

@@ -47,8 +47,8 @@ func stateBoundStart() time.Time {
 }
 
 // stateBoundDCID returns the destination connection identifier of one QUIC connection.
-// RFC 9000 Section 7.2 states that a client Initial carries at least 8 bytes, and the
-// Initial keys read this value, so each connection reads its own identifier.
+// RFC 9000 Section 7.2 states that a client Initial carries at least 8 bytes.
+// The Initial keys read this value, so each connection reads its own identifier.
 func stateBoundDCID(index int) []byte {
 	return []byte{
 		0x83, 0x94, 0xc8, 0xf0,
@@ -58,7 +58,7 @@ func stateBoundDCID(index int) []byte {
 
 // stateBoundQUICPacket returns one plain QUIC client Initial datagram at the named time.
 // The client port names the JA4S connection, and the connection identifier names the JA4
-// connection, so a caller reaches a new entry with a new value of either one.
+// connection. So a caller reaches a new entry with a new value of either one.
 func stateBoundQUICPacket(
 	t *testing.T, clientPort uint16, dcid []byte, handshake []byte, at time.Time,
 ) gopacket.Packet {
@@ -91,8 +91,8 @@ func stateBoundJA4SConnKey(clientPort uint16) string {
 }
 
 // TestJA4HoldsThePortValuesOfTheQUICFragmentBound reads the three JA4 values against the port.
-// The port bounds the QUIC fragment table below the default of its state table, because a
-// sender names a new connection identifier on each datagram at no cost.
+// The port bounds the QUIC fragment table below the default of its state table.
+// A sender names a new connection identifier on each datagram at no cost.
 // `.claude/rules/parity.md` rule 2 states that the port decides the interface, so a change to
 // one of the three values is a parity change.
 func TestJA4HoldsThePortValuesOfTheQUICFragmentBound(t *testing.T) {

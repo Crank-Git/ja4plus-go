@@ -9,12 +9,12 @@ import (
 )
 
 // maxJA4SConnections bounds the connection identifier table and the two indexes that name it.
-// Every packet is untrusted input, and one QUIC client Initial opens one entry, so a sender
-// fills the three maps at the cost of one datagram for each connection. No FoxIO source
-// addresses a state table, and `.claude/rules/parity.md` rule 2 gives the port the interface
-// this project shipped without one. `ja4plus/fingerprinters/ja4s.py:58` of tag `v1.1.0` builds
-// a `BoundedStateTable` with no argument, so the table holds the default that
-// `ja4plus/utils/state_table.py:52` states.
+// Every packet is untrusted input. One QUIC client Initial opens one entry, so a sender fills
+// the three maps at the cost of one datagram for each connection.
+// No FoxIO source addresses a state table. `.claude/rules/parity.md` rule 2 gives the port the
+// interface this project shipped without one.
+// `ja4plus/fingerprinters/ja4s.py:58` of tag `v1.1.0` builds a `BoundedStateTable` with no
+// argument, so the table holds the default that `ja4plus/utils/state_table.py:52` states.
 const maxJA4SConnections = 10000
 
 // ja4sConnectionAge drops a connection that received no packet for 600 seconds.

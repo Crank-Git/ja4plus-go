@@ -28,17 +28,18 @@ const quicMarker = "quic"
 const latencyDivisor = 2
 
 // maxJA4LConnections bounds the connection table and the index that names it.
-// Every packet is untrusted input, and one TCP SYN opens one entry, so a sender fills the
-// table at the cost of one packet for each connection. No FoxIO source addresses a state
-// table, and `.claude/rules/parity.md` rule 2 gives the port the interface this project
-// shipped without one. `ja4plus/fingerprinters/ja4l.py:100` of tag `v1.1.0` builds a
-// `BoundedStateTable` with no argument, so the table holds the default that
-// `ja4plus/utils/state_table.py:52` states.
+// Every packet is untrusted input. One TCP SYN opens one entry, so a sender fills the table at
+// the cost of one packet for each connection.
+// No FoxIO source addresses a state table. `.claude/rules/parity.md` rule 2 gives the port the
+// interface this project shipped without one.
+// `ja4plus/fingerprinters/ja4l.py:100` of tag `v1.1.0` builds a `BoundedStateTable` with no
+// argument, so the table holds the default that `ja4plus/utils/state_table.py:52` states.
 const maxJA4LConnections = 10000
 
 // ja4lConnectionAge drops a connection that received no packet for 600 seconds.
-// `ja4plus/utils/state_table.py:58` of tag `v1.1.0` states the value, and the comment above it
-// records the longest gap of the shared vector set at 320.714503 seconds, in `ssh-r.pcap`.
+// `ja4plus/utils/state_table.py:58` of tag `v1.1.0` states the value. The comment above that
+// line records the longest gap of the shared vector set at 320.714503 seconds, in
+// `ssh-r.pcap`.
 const ja4lConnectionAge = 600 * time.Second
 
 // ja4lEvictionInterval is the count of packets between two age passes.

@@ -12,11 +12,12 @@ import (
 )
 
 // maxJA4QUICFragmentConnections bounds the fragment table and the two indexes that name it.
-// Every packet is untrusted input, and a sender names a new destination connection identifier
-// on each datagram at no cost, so the three maps need a bound. No FoxIO source addresses a
-// state table, and `.claude/rules/parity.md` rule 2 gives the port the interface this project
-// shipped without one. `ja4plus/fingerprinters/ja4.py:26` of tag `v1.1.0` states the same
-// reason and the same value, which sits below the default of the port's state table.
+// Every packet is untrusted input. A sender names a new connection identifier on each datagram
+// at no cost, so the three maps need a bound.
+// No FoxIO source addresses a state table. `.claude/rules/parity.md` rule 2 gives the port the
+// interface this project shipped without one.
+// `ja4plus/fingerprinters/ja4.py:26` of tag `v1.1.0` states the same reason and the same value.
+// That value sits below the default of the port's state table.
 const maxJA4QUICFragmentConnections = 1000
 
 // ja4QUICFragmentAge drops a connection that added no CRYPTO fragment for 30 seconds.
@@ -28,8 +29,8 @@ const ja4QUICFragmentAge = 30 * time.Second
 // ja4QUICFragmentEvictionInterval runs the age pass on each datagram that carries a fragment.
 // An age pass that waits longer than the age it applies removes nothing from a connection that
 // sends few packets. `ja4plus/fingerprinters/ja4.py:47` of tag `v1.1.0` passes
-// `eviction_interval=1` for that reason, and the table it bounds holds 1000 entries at most,
-// so one pass reads 1000 keys at most.
+// `eviction_interval=1` for that reason. The table it bounds holds 1000 entries at most, so one
+// pass reads 1000 keys at most.
 const ja4QUICFragmentEvictionInterval = 1
 
 // JA4Fingerprinter computes JA4 TLS Client Hello fingerprints.
