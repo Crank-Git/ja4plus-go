@@ -134,8 +134,8 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		case layers.DHCPOptRequestIP: // 50
 			hasRequestIP = true
 		case 81: // Client FQDN
-			// The maintainer ruled issue #371 on 2026-08-14: the name inside option 81
-			// decides the flag, and the presence of the option decides nothing. R16 of
+			// The maintainer ruled issue #371 on 2026-08-14. The name inside option 81
+			// decides the flag. The presence of the option decides nothing. R16 of
 			// `docs/specs/foxio/JA4D.md` records the rank 1 image label
 			// `Has a Domain name (d) or No domain (n)`.
 			// `wireshark/source/packet-ja4.c:1521` tests the field `dhcp.fqdn.name`, and
