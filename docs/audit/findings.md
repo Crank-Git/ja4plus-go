@@ -503,11 +503,19 @@ descriptors while the library reads every crafted frame of the table. Every writ
 `cmd/ja4plus/main.go`, which `CLAUDE.md` names as the owner of all output.
 
 **FR-audit-21 reaches no finding.** `internal/parser/hash.go:8` holds the literal
-`000000000000`, and every method that hashes routes through
-`internal/parser/hash.go:13`. `docs/specs/foxio/zeek.md:48` records the reading of
+`000000000000`, and `TruncatedHash` of `internal/parser/hash.go` returns it for an empty
+input. `docs/specs/foxio/zeek.md:48` records the reading of
 `zeek/utils/common.zeek:63`, and `docs/specs/foxio/JA4.md` R24 and R30,
 `docs/specs/foxio/JA4S.md` R23 and `docs/specs/foxio/JA4H.md` R27 each name the same
 value. Issue #57 of Epic 8b holds the decision for the JA4X empty list.
+
+**JA4H part b writes no sentinel, and it is the one section that does not.** The maintainer
+ruled on 2026-08-14 that an empty header list hashes to `e3b0c44298fc`. R18 of
+`docs/specs/foxio/JA4H.md` names no sentinel, and R27 confines the sentinel to part c and
+to part d, so FR-audit-21 reads no sentinel for part b. `computeJA4HFromRequest` of
+`ja4h.go` calls `TruncatedHashNoSentinel` of `internal/parser/hash.go` for that one
+section, and every other section of every method still calls `TruncatedHash`. Issue #527 is
+the reversal path.
 
 **FR-audit-22 reaches one finding, and F-24-16 holds it.** Five other sorts use
 `sort.Slice`, which is not stable, and each one changes no result. `ja4.go:163`, `:176`,
