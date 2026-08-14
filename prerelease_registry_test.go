@@ -34,9 +34,13 @@ type prereleaseCase struct {
 
 // prereleaseCases holds one row for each case of the feature set.
 //
-// #95 built the clean environment on 2026-08-14. Every other row reads a published tag, a
-// published module or a released binary, and this project has cut no tag since `v0.3.0`.
-// So each of those rows waits for the release, and the summary reports it as absent.
+// #95 built the clean environment on 2026-08-14, and #97 built the published module
+// contents on the same day.
+//
+// A row that reads a published tag reads `v0.3.0`, because this project has cut no tag
+// since it. The maintainer ruled that scope on 2026-08-14, at #94: a member writes its
+// case against `v0.3.0` and it records each expected failure. So a built row can report a
+// failure that the next tag repairs, and `make prerelease` is red until Epic 10 ships one.
 var prereleaseCases = []prereleaseCase{
 	{
 		name:         "the clean environment",
@@ -54,7 +58,7 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the published module contents",
 		requirements: []string{"FR-prerelease-12", "FR-prerelease-13", "FR-prerelease-14", "FR-prerelease-15", "FR-prerelease-16", "FR-prerelease-17"},
 		issue:        97,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the binaries",
@@ -123,7 +127,11 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // FR-prerelease-4 against the registry.
 //
 // A row that reports a case as built while the tree holds no case is the failure this
-// guard prevents. The clean environment is the one case the tree holds today.
+// guard prevents.
+//
+// The list below is a shared surface of Epic 16. Four members build a case each, so each
+// member appends its own name and it moves no other name. The order is the registry order,
+// and a merge takes the union in that order.
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
@@ -132,8 +140,8 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 		}
 	}
 
-	if !slices.Equal(built, []string{"the clean environment"}) {
-		t.Errorf("the registry reports %v as built, and the tree holds the clean environment alone", built)
+	if !slices.Equal(built, []string{"the clean environment", "the published module contents"}) {
+		t.Errorf("the registry reports %v as built, and the tree holds the clean environment and the published module contents", built)
 	}
 }
 
