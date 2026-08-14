@@ -27,6 +27,25 @@ const quicMarker = "quic"
 // One measurement covers a round trip. `docs/specs/foxio/JA4L.md` R6 states the rule.
 const latencyDivisor = 2
 
+// maxJA4LConnections bounds the connection table and the index that names it.
+// Every packet is untrusted input, and one TCP SYN opens one entry, so a sender fills the
+// table at the cost of one packet for each connection. No FoxIO source addresses a state
+// table, and `.claude/rules/parity.md` rule 2 gives the port the interface this project
+// shipped without one. `ja4plus/fingerprinters/ja4l.py:100` of tag `v1.1.0` builds a
+// `BoundedStateTable` with no argument, so the table holds the default that
+// `ja4plus/utils/state_table.py:52` states.
+const maxJA4LConnections = 10000
+
+// ja4lConnectionAge drops a connection that received no packet for 600 seconds.
+// `ja4plus/utils/state_table.py:58` of tag `v1.1.0` states the value, and the comment above it
+// records the longest gap of the shared vector set at 320.714503 seconds, in `ssh-r.pcap`.
+const ja4lConnectionAge = 600 * time.Second
+
+// ja4lEvictionInterval is the count of packets between two age passes.
+// One pass reads every connection, so a pass on each packet costs the connection count on each
+// packet. `ja4plus/utils/state_table.py:62` of tag `v1.1.0` states the value.
+const ja4lEvictionInterval = 1000
+
 type connState struct {
 	timestamps map[string]time.Time // "A", "B", "C", "D" (for QUIC 4-point)
 	ttls       map[string]uint8     // "client", "server"
@@ -60,6 +79,9 @@ type JA4LFingerprinter struct {
 	// caller names a key that `connections` never holds.
 	// `ja4plus/fingerprinters/ja4l.py:100-104` holds the same map.
 	groupingKeys map[string]string
+	// keys holds the recency order of the connection table, and it names the connection that
+	// the entry bound and the age bound remove.
+	keys boundedKeys
 }
 
 // NewJA4L creates a new JA4L latency fingerprinter.
@@ -121,12 +143,14 @@ func (f *JA4LFingerprinter) processTCP(packet gopacket.Packet) ([]FingerprintRes
 	dstPort := uint16(tcpLayer.DstPort)
 
 	connKey, direction := f.normalizeKey("tcp", groupSrcIP, srcPort, groupDstIP, dstPort)
+	ts := parser.GetPacketTimestamp(packet)
+
+	f.openConnection(connKey, ts)
 
 	conn := f.getOrCreateConn(connKey, direction, "tcp")
 	if conn.report(srcIP, srcPort, dstIP, dstPort) {
 		f.indexReported(conn)
 	}
-	ts := parser.GetPacketTimestamp(packet)
 
 	// The SYN of each endpoint carries the initial sequence number that every relative
 	// number of that endpoint counts from.
@@ -358,12 +382,14 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	isClient := toServer
 
 	connKey, direction := f.normalizeKey("udp", groupSrcIP, srcPort, groupDstIP, dstPort)
+	ts := parser.GetPacketTimestamp(packet)
+
+	f.openConnection(connKey, ts)
 
 	conn := f.getOrCreateConn(connKey, direction, "udp")
 	if conn.report(srcIP, srcPort, dstIP, dstPort) {
 		f.indexReported(conn)
 	}
-	ts := parser.GetPacketTimestamp(packet)
 
 	// 4-point QUIC timing: A (client) -> B (server) -> C (server) -> D (client)
 	// `ja4plus/fingerprinters/ja4l.py:589-599` fills the two client points in that order.
@@ -518,6 +544,37 @@ func (f *JA4LFingerprinter) Reset() {
 
 	f.connections = make(map[string]*connState)
 	f.groupingKeys = make(map[string]string)
+	f.keys.reset()
+}
+
+// dropConnection removes every table entry that one grouping key holds.
+//
+// A caller that names the grouping key cannot name the reported key, so this method reads the
+// reported pair from the connection itself. Without that read an eviction removes the
+// connection and leaves the index entry, and one entry then leaks for every tunneled
+// connection. Issue #565 names that trap, and issue #193 records the same leak on the removal
+// path of a caller.
+//
+// One connection writes one index entry, because `report` fixes the reported pair on the first
+// packet and the caller indexes that pair once. So the read above reaches every index entry the
+// connection holds.
+func (f *JA4LFingerprinter) dropConnection(connKey string) {
+	if conn, held := f.connections[connKey]; held {
+		indexedKey, _ := f.normalizeKey(conn.proto,
+			conn.reportedSrcIP, conn.reportedSrcPort, conn.reportedDstIP, conn.reportedDstPort)
+		delete(f.groupingKeys, indexedKey)
+	}
+
+	delete(f.connections, connKey)
+	f.keys.remove(connKey)
+}
+
+// openConnection records one packet of the connection, and it holds the two bounds.
+// The removal path of this fingerprinter reaches the connection table and the index, so an
+// eviction removes both.
+func (f *JA4LFingerprinter) openConnection(connKey string, now time.Time) {
+	f.keys.admit(connKey, now,
+		maxJA4LConnections, ja4lConnectionAge, ja4lEvictionInterval, f.dropConnection)
 }
 
 // CleanupConnection removes internal state for the given connection.
@@ -538,19 +595,8 @@ func (f *JA4LFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 		connKey = reportedKey
 	}
 
-	// A caller that names the grouping key removes no index entry above, because the index
-	// holds the reported key alone. The connection carries the reported pair, so the method
-	// reads that pair and removes the entry the caller cannot name. Without this removal one
-	// entry leaks for every tunneled connection, and a long-running monitor never reclaims
-	// it.
-	if conn, held := f.connections[connKey]; held {
-		indexedKey, _ := f.normalizeKey(conn.proto,
-			conn.reportedSrcIP, conn.reportedSrcPort, conn.reportedDstIP, conn.reportedDstPort)
-		delete(f.groupingKeys, indexedKey)
-	}
-
 	delete(f.groupingKeys, reportedKey)
-	delete(f.connections, connKey)
+	f.dropConnection(connKey)
 }
 
 // CalculateDistance estimates physical distance in miles from one-way latency.

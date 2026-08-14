@@ -2,10 +2,31 @@ package ja4plus
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/gopacket/gopacket"
 )
+
+// maxJA4SConnections bounds the connection identifier table and the two indexes that name it.
+// Every packet is untrusted input, and one QUIC client Initial opens one entry, so a sender
+// fills the three maps at the cost of one datagram for each connection. No FoxIO source
+// addresses a state table, and `.claude/rules/parity.md` rule 2 gives the port the interface
+// this project shipped without one. `ja4plus/fingerprinters/ja4s.py:58` of tag `v1.1.0` builds
+// a `BoundedStateTable` with no argument, so the table holds the default that
+// `ja4plus/utils/state_table.py:52` states.
+const maxJA4SConnections = 10000
+
+// ja4sConnectionAge drops a connection that received no packet for 600 seconds.
+// The connection identifier outlives the fragments, because a server answers a client Initial
+// after a round trip. The comment above `ja4plus/fingerprinters/ja4s.py:58` of tag `v1.1.0`
+// states that reason, and `ja4plus/utils/state_table.py:58` states the value.
+const ja4sConnectionAge = 600 * time.Second
+
+// ja4sEvictionInterval is the count of packets between two age passes.
+// One pass reads every connection, so a pass on each packet costs the connection count on each
+// packet. `ja4plus/utils/state_table.py:62` of tag `v1.1.0` states the value.
+const ja4sEvictionInterval = 1000
 
 // JA4SFingerprinter computes JA4S TLS Server Hello fingerprints.
 //
@@ -24,6 +45,9 @@ type JA4SFingerprinter struct {
 	// map to reach the index entry of the connection. `ja4l.go` reads the reported key of the
 	// connection state for the same reason.
 	reportedKeys map[string]string
+	// keys holds the recency order of the connection identifier table, and it names the
+	// connection that the entry bound and the age bound remove.
+	keys boundedKeys
 }
 
 // NewJA4S creates a new JA4SFingerprinter.
@@ -103,6 +127,7 @@ func (f *JA4SFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 					if 6+dcidLen <= len(udp.Payload) {
 						dcid := make([]byte, dcidLen)
 						copy(dcid, udp.Payload[6:6+dcidLen])
+						f.openConnection(connKey, parser.GetPacketTimestamp(packet))
 						f.quicDCIDs[connKey] = dcid
 						f.indexReported(packet, connKey, srcPort, dstPort)
 					}
@@ -183,6 +208,15 @@ func (f *JA4SFingerprinter) Reset() {
 	f.quicDCIDs = make(map[string][]byte)
 	f.groupingKeys = make(map[string]string)
 	f.reportedKeys = make(map[string]string)
+	f.keys.reset()
+}
+
+// openConnection records one packet of the connection, and it holds the two bounds.
+// The removal path of this fingerprinter reaches all three maps, so an eviction removes every
+// entry the connection holds.
+func (f *JA4SFingerprinter) openConnection(connKey string, now time.Time) {
+	f.keys.admit(connKey, now,
+		maxJA4SConnections, ja4sConnectionAge, ja4sEvictionInterval, f.dropConnection)
 }
 
 // dropConnection removes every table entry that one grouping key holds.
@@ -196,6 +230,7 @@ func (f *JA4SFingerprinter) dropConnection(groupingKey string) {
 
 	delete(f.reportedKeys, groupingKey)
 	delete(f.quicDCIDs, groupingKey)
+	f.keys.remove(groupingKey)
 }
 
 // CleanupConnection removes internal state for the given connection.
