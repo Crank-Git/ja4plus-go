@@ -67,7 +67,7 @@ client, so the set is minimal.
 | `LookupFingerprintRemote` | `github.com/Crank-Git/ja4plus-go/ja4db` | The function builds the request and reads the response. |
 | `LookupResult` | The core package | `LookupFingerprint` returns it, and that path reaches no network. |
 | `LookupFingerprint` | The core package | It reads the embedded table or the cache file. |
-| `CachedDatabasePath` | The core package | `loadDB` of the core package calls it on every load. |
+| `CachedDatabasePath` | The core package | `rebuildTable` and `updateCache` of the core package each call it, and neither one reaches the network. |
 | `DatabaseInfo` | The core package | `GetDatabaseInfo` returns it. |
 | `GetDatabaseInfo` | The core package | It reports the loaded table, and it reaches no network. |
 
