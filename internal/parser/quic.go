@@ -420,6 +420,18 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 // CRYPTO frame fragments without attempting to parse a ClientHello.
 // Returns the DCID for key correlation across packets.
 // Returns nil, nil, nil if the payload is not a QUIC Initial.
+//
+// It declines a packet that the derived key does not authenticate, and it returns no error
+// for one. It derives the client keys of the Destination Connection ID that the packet
+// holds, so it authenticates a client Initial packet alone. A server Initial packet carries
+// the protection of the server keys of the Destination Connection ID that the client sent,
+// and RFC 9001 Section 5.2 states that derivation input. So a packet of the server role is
+// a packet of the other role, and never a defect of the input. Issue #501 records the
+// decline, and it is the reversal path.
+//
+// It reports an error for a malformed packet. A payload shorter than the authentication tag
+// and a truncated CRYPTO frame each keep the error they report, because each one names a
+// defect of the input rather than the role of the sender.
 func DecryptQUICInitialCrypto(payload []byte) (fragments []CryptoFragment, dcid []byte, err error) {
 	if len(payload) < 5 {
 		return nil, nil, nil
@@ -528,9 +540,18 @@ func DecryptQUICInitialCrypto(payload []byte) (fragments []CryptoFragment, dcid 
 	if e != nil {
 		return nil, dcid, e
 	}
+	// The Length field of the packet counts the authentication tag, so a payload below the
+	// tag length is malformed. crypto/cipher reports one error value for every failure of
+	// Open, so this guard runs first and it keeps the two cases apart.
+	if encLen < aead.Overhead() {
+		return nil, dcid, errors.New("QUIC Initial payload shorter than the authentication tag")
+	}
+
 	plaintext, e := aead.Open(nil, nonce, ciphertext, ad)
 	if e != nil {
-		return nil, dcid, e
+		// The derived key authenticates no packet of the server role, and such a packet is
+		// no defect of the input. Issue #501 holds the decline.
+		return nil, dcid, nil
 	}
 	fragments, e = ParseCryptoFrames(plaintext)
 	return fragments, dcid, e
