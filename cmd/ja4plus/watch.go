@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -61,8 +62,10 @@ func runWatch(args []string) error {
 }
 
 // parseWatchArgs returns the options that the arguments name.
-// It returns an error when an option carries no value, when an option names no value the
-// command accepts, or when the arguments name no interface.
+// It returns an error in three cases.
+//   - An option carries no value.
+//   - A value names nothing the command accepts.
+//   - The arguments name no interface.
 func parseWatchArgs(args []string) (watchOptions, error) {
 	options := watchOptions{statsInterval: defaultStatsInterval}
 
@@ -179,13 +182,13 @@ func watchInterface(options watchOptions, open captureOpener) error {
 	return runMonitor(handle, options)
 }
 
-// runMonitor reads packets from the handle until the operator stops the command.
+// runMonitor returns an error, and it reads no packet from the handle.
 //
 // TODO(#80): Build the loop, the signal handler and the connection table here.
 // FR-capture-16 through FR-capture-23 state the work. Both capture backends block until a
 // packet arrives, because the libpcap backend passes `pcap.BlockForever` deliberately. So
-// an idle interface blocks this read on every platform, and the statistics line of #81
-// needs a second goroutine that reads `options.statsInterval`.
+// an idle interface blocks the read of the loop on every platform, and the statistics line
+// of #81 needs a second goroutine that reads the statistics interval of the options.
 func runMonitor(_ capture.Handle, _ watchOptions) error {
-	return fmt.Errorf("watch: the monitor reads no packet yet. Issue #80 builds the monitor loop")
+	return errors.New("watch: the monitor reads no packet yet. Issue #80 builds the monitor loop")
 }

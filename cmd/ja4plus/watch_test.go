@@ -194,6 +194,11 @@ func TestWatchInterfaceReturnsTheErrorOfTheCaptureBackendUnchanged(t *testing.T)
 	if !errors.Is(err, refusal) {
 		t.Fatalf("watchInterface returns %v, and the backend returns the refusal", err)
 	}
+	// The comparison reads the whole text. `errors.Is` holds for a wrapped error too, so it
+	// passes for a command that prepends a second sentence about the capture filter.
+	if err.Error() != refusal.Error() {
+		t.Errorf("watchInterface returns %q, and the backend returns %q", err, refusal)
+	}
 }
 
 func TestWatchInterfaceClosesTheHandleThatItOpens(t *testing.T) {
