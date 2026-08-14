@@ -34,15 +34,18 @@ type prereleaseCase struct {
 
 // prereleaseCases holds one row for each case of the feature set.
 //
-// #95 built the clean environment on 2026-08-14, and #99 built the site and the gates.
+// #95 built the clean environment on 2026-08-14. #97 built the published module contents,
+// #98 built the binaries, and #99 built the documentation site and the release gate, each
+// on the same day.
 //
-// **A row that reads a published tag, a published module or a released binary waits for the
-// release.** This project has cut no tag since `v0.3.0`, so the summary reports each of
-// those rows as absent.
+// A row that reads a published tag reads `v0.3.0`, because this project has cut no tag
+// since it. The maintainer ruled that scope on 2026-08-14, at #94: a member writes its
+// case against `v0.3.0` and it records each expected failure. So a built row can report a
+// failure that the next tag repairs, and `make prerelease` is red until Epic 10 ships one.
 //
 // **A row that reads no tag does not wait.** The documentation site reads
-// `docs/requirements.txt`, and the release gate reads the tracked tree. Two more rows of
-// #99 wait on something other than a tag, and each one states what.
+// `docs/requirements.txt`, and the release gate reads the tracked tree. **Two rows of #99
+// wait on something other than a tag, and each one states what.**
 var prereleaseCases = []prereleaseCase{
 	{
 		name:         "the clean environment",
@@ -60,13 +63,13 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the published module contents",
 		requirements: []string{"FR-prerelease-12", "FR-prerelease-13", "FR-prerelease-14", "FR-prerelease-15", "FR-prerelease-16", "FR-prerelease-17"},
 		issue:        97,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the binaries",
 		requirements: []string{"FR-prerelease-18", "FR-prerelease-19", "FR-prerelease-20", "FR-prerelease-21", "FR-prerelease-22"},
 		issue:        98,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the documentation site",
@@ -155,8 +158,16 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 //
 // **Every member of Epic 16 edits the list below, and that is by construction.** A member
 // that builds its case adds the name of the case here, in the order the registry states.
-// #96, #97 and #98 each append their own name, and the project manager resolves the union
-// at the sub-merge.
+// Each member appends its own name and it moves no other name, and the project manager
+// resolves the union at the sub-merge.
+//
+// **The comparison reads equality over one shared slice, so every append conflicts.** A set
+// comparison would not, and no member changes the shape of this guard to avoid the conflict.
+//
+// **The project manager resolved two such merges on 2026-08-14**, first between #97 and
+// #98, then between that result and #99. **#95 built the clean environment, #97 built the
+// published module contents, #98 built the binaries, and #99 built the documentation site
+// and the release gate.** **#96 appends `the module install` when it lands.**
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
@@ -167,6 +178,8 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 
 	expected := []string{
 		"the clean environment",
+		"the published module contents",
+		"the binaries",
 		"the documentation site",
 		"the release gate",
 	}

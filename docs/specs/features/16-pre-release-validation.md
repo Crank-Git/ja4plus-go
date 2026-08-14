@@ -192,4 +192,8 @@ the reason FR-prerelease-26 puts every case before the tag rather than after it.
    unchecked, and the release notes name it.
 2. **Does the module size ceiling of FR-prerelease-17 have a number yet?** It is measured
    once at Epic 16 and recorded then. A ceiling invented before the measurement would be
-   arbitrary.
+   arbitrary. **#97 measured it on 2026-08-14, and `publishedModuleSizeCeiling` in
+   `prerelease_module_contents_test.go` holds the number.** The module zip of `v0.3.0`
+   measures 2253962 bytes, and `assets/logo.png` is 2192430 bytes of it. The ceiling is
+   4 MiB. A corpus capture and a built site each add more than 2 MiB, so either one
+   crosses it.
