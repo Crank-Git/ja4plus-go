@@ -18,7 +18,13 @@ import (
 //
 // The property: an age pass reads the capture timestamp of the packet that arrives. It
 // compares that one timestamp against the last packet time of every key of the table. So one
-// packet dated far in the future ages every key at once, and the pass removes all of them.
+// packet dated far in the future ages every key at once, and the pass removes every key it
+// ages.
+//
+// One key survives the pass, and it is the key of the packet that carries the crafted
+// timestamp. The fingerprinter records that key with the same crafted timestamp after the pass,
+// so a later packet of the same key reads an age of zero. **So each test below asserts a count
+// of 1 after the crafted packet, and never a count of 0.**
 //
 // Four sites of this repository hold it, and each test below drives one of them.
 //

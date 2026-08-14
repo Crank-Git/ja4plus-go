@@ -1,9 +1,9 @@
-// Package fuzzprop holds the property assertions that every fuzz target of this
+// Package fuzzprop holds the properties that every fuzz target of this
 // repository runs.
 //
 // `docs/specs/features/06-fuzz-testing.md` states FR-fuzz-14 through FR-fuzz-18. This
 // package carries one implementation of them, because 13 targets live in two packages and
-// 13 copies of one assertion drift apart.
+// 13 copies of one property drift apart.
 //
 // This package holds no fuzz target and no test of the library. A target calls
 // `ExactInput` and `Check`, and it reads no field of the result.
@@ -44,9 +44,15 @@
 // The second read is reachable, because the fuzz engine hands the target a slice whose
 // capacity is above its length. `mutateBytes` writes into a scratch slice at
 // `internal/fuzz/mutator.go:112`, and `internal/fuzz/mutator.go:113` assigns that scratch
-// slice to the value the target receives. That scratch slice holds a capacity of
-// `maxPerVal` bytes, which `internal/fuzz/mutator.go:56` computes from the whole byte
-// budget. One measured seed replay reported `len=5 cap=8` at go1.26.5.
+// slice to the value the target receives. `internal/fuzz/mutator.go:107` is the assignment
+// that gives that scratch slice a capacity of `maxPerVal` bytes, and
+// `internal/fuzz/mutator.go:106` is the test above it. `internal/fuzz/mutator.go:56` computes
+// `maxPerVal` from the whole byte budget. Each line was measured at go1.26.5 on 2026-08-14.
+//
+// One measured seed replay reported `len=5 cap=8` at go1.26.5. A seed replay reaches no
+// mutator. So that measurement proves one thing: the engine hands the target a slice whose
+// capacity is above its length. It proves nothing about the four lines above. The conclusion
+// holds under either path.
 //
 // `ExactInput` returns a copy whose capacity equals its length, so a read of the second
 // kind panics and FR-fuzz-14 reports it. That is the whole mechanism FR-fuzz-15 needs.
@@ -61,7 +67,7 @@
 //     the function more than one time and it disables the garbage collector, so it changes
 //     the run that the target measures.
 //   - `runtime.ReadMemStats` reports the bytes, and it costs too much for a per-input
-//     assertion. One call measured 24736 ns on an Apple M4 at go1.26.5. Two calls for each
+//     check. One call measured 24736 ns on an Apple M4 at go1.26.5. Two calls for each
 //     input therefore spend about 50 microseconds of every execution.
 //   - `runtime/metrics.Read` over one sample reports the same bytes, and one call measured
 //     230.7 ns on the same machine and the same toolchain. That is 107 times cheaper, and
@@ -117,7 +123,7 @@ func ExactInput(input []byte) []byte {
 //
 // call returns the whole result of the code under test. A caller that reads two values
 // returns them in one `[]any`, because `reflect.DeepEqual` compares that slice element by
-// element. A caller that reads no value returns nil, and the determinism assertion then
+// element. A caller that reads no value returns nil, and the determinism property then
 // holds without a comparison.
 //
 // Check fails the test, and it never panics for a result of any shape.
@@ -137,7 +143,7 @@ type reporter interface {
 	Errorf(format string, args ...any)
 }
 
-// check holds the assertions of Check. Check states what each one means.
+// check holds the properties of Check. Check states what each one means.
 func check(t reporter, inputBytes int, call func() any) {
 	t.Helper()
 

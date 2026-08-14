@@ -44,8 +44,10 @@ A caller has two supported patterns.
   State with no removal path leaks in a long-running monitor.
 - **The lookup table of `lookup.go` is process-wide state, and one `atomic.Pointer` holds
   it.** #74 repaired the unguarded package-level state that suspected finding S3 records.
-  A reader loads one immutable snapshot, so the read path takes no lock and this contract
-  holds. A build takes a mutex that no reader takes. **No fingerprinter reads that state**,
+  A reader loads one immutable snapshot, so the steady-state read path takes no lock and
+  this contract holds. **A reader that finds a changed cache file calls `rebuildTable`, and
+  `rebuildTable` takes a mutex.** So the read path is lock-free in the steady state, and it
+  is not lock-free at every call. **No fingerprinter reads that state**,
   so the rule above still bars a package-level variable on the packet path. See
   `docs/specs/features/09-database-lookup.md`, FR-lookup-19 through FR-lookup-22.
 

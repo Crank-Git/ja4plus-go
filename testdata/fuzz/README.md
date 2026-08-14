@@ -5,7 +5,11 @@ inputs of `internal/parser` live at `internal/parser/testdata/fuzz/`, because Go
 `testdata/fuzz/<TargetName>/` under the directory of the package that holds the target.
 
 `docs/specs/features/06-fuzz-testing.md` states FR-fuzz-19 through FR-fuzz-24. Issue #46
-built this corpus.
+built this seed corpus.
+
+**This file writes `seed corpus` for the set of seeds, and `FoxIO corpus` for the fetched
+FoxIO captures.** The `## Terms` table of `docs/specs/spec.md` gives each phrase one
+meaning, and it bars the bare word `corpus` as a name for the seed corpus.
 
 ## What each file is
 
@@ -28,7 +32,7 @@ is the worked example of FR-fuzz-24. `FuzzParseServerHelloReadsAnyPayload` found
 crash in 1.14 seconds on its first 30-second run, #556 repaired the parser, and the input
 now replays green. **Never remove a file with an `issue-` prefix.**
 
-## Two tests guard this corpus
+## Two tests guard this seed corpus
 
 `fuzz_seed_corpus_test.go` of each package builds every seed of that package, and it
 asserts the result of the code for each one. It then compares the tracked file against the
@@ -55,7 +59,7 @@ with the code, so a write hides a defect exactly as well as it records a deliber
 
 ## The license reading of FR-fuzz-23
 
-**FR-fuzz-23 tracks this corpus in git, and `.gitignore` excludes the FoxIO corpus at
+**FR-fuzz-23 tracks this seed corpus in git, and `.gitignore` excludes the FoxIO corpus at
 `testdata/foxio/`.** The two rules agree, because no file of this directory holds a byte of
 a FoxIO capture.
 
@@ -66,7 +70,8 @@ a FoxIO capture.
    strongest case: it is a QUIC version 1 Initial packet that the parser decrypts, and RFC
    9001 Section 5.2 states the public derivation that makes such a packet buildable from a
    connection identifier of our own choice.
-2. **A reduction of a FoxIO record.** `scripts/seed-fuzz.sh` reads the corpus and writes
+2. **A reduction of a FoxIO record.** `scripts/seed-fuzz.sh` reads the FoxIO corpus and
+   writes
    the three files that carry the `-reduced-` mark in the name.
 
 **The reduction reads these numbers of a captured record, and it reads nothing else.**
@@ -101,21 +106,23 @@ A record that lists them states a fact about a client. The reduction therefore c
 fact and it drops the expression, and the result carries no FoxIO license obligation.
 
 **A seed that fails this test is not committed.** One case reached that decline, and the
-reading of #46 names it: a QUIC Initial packet of the corpus authenticates its own bytes
-with an AEAD tag, so no reduction of it survives. The corpus therefore holds a synthesized
+reading of #46 names it: a QUIC Initial packet of the FoxIO corpus authenticates its own
+bytes with an AEAD tag, so no reduction of it survives. The seed corpus therefore holds a
+synthesized
 Initial packet in place of a captured one, and the synthesized packet decrypts.
 
 ## The formats this script reads
 
 `scripts/seed-fuzz.sh` reads a classic pcap file, and it reads no pcapng file. A classic
 pcap file states one link type in its header and one length before each packet. **24 of the
-38 captures of the corpus carry a classic pcap magic number**, measured on 2026-08-14 at
+38 captures of the FoxIO corpus carry a classic pcap magic number**, measured on 2026-08-14 at
 the commit that `testdata/foxio.pin` holds. A pcapng file carries block types, options and
 an interface table, and the reduction needs none of that.
 
 Two limits follow, and neither one loses a seed.
 
-- The script reads a file whose name ends `.pcap`, and 21 files of the corpus carry that
+- The script reads a file whose name ends `.pcap`, and 21 files of the FoxIO corpus carry
+  that
   name.
 - `scripts/seed-fuzz-reduce.awk` reads the little-endian byte order alone. It declines
   every other file, and the script then reads the next capture.
@@ -123,4 +130,4 @@ Two limits follow, and neither one loses a seed.
 The script reports the capture that each seed came from, and it names the target.
 
 The script writes nothing when `testdata/foxio/pcap` is absent. A fresh clone holds no
-corpus, and the tracked seeds of this corpus need no fetch.
+FoxIO corpus, and the tracked seeds of this seed corpus need no fetch.
