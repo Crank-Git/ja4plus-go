@@ -73,7 +73,7 @@ func fuzzGREFrame(tb testing.TB, depth int) []byte {
 //
 // FR-fuzz-13 names "each tunnel decoder that `features/05-conformance-gaps.md` adds". That
 // file names `internal/parser/tunnel.go` as a new file, and it names four decoders that the
-// file holds.
+// new file would hold.
 //   - A GRE decoder.
 //   - An ERSPAN decoder.
 //   - A VXLAN decoder.
