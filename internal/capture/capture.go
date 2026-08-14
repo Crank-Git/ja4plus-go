@@ -5,8 +5,8 @@
 // `unsupported.go` on another platform. That build compiles, and `Open` returns an error
 // on it.
 //
-// A build that carries the `libpcap` build tag reaches no backend today, and it compiles
-// no package. #78 writes that backend, and FR-capture-12 states the build constraint.
+// A build that carries the `libpcap` build tag selects the backend of `libpcap.go`. That
+// backend needs cgo, and FR-capture-12 states the build constraint that contains it.
 //
 // The package writes nothing to standard output and nothing to standard error. It returns
 // an error, and `cmd/ja4plus` prints it. `CLAUDE.md` `## Conventions` states that rule.
