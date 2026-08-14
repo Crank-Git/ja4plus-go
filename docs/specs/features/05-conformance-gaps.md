@@ -122,14 +122,18 @@ the wire-order raw form.
 ### The role of a QUIC Initial packet
 
 `DecryptQUICInitialCrypto` derives the client keys of the Destination Connection ID that the
-packet holds. RFC 9001 Section 5.2 states that the server derives its own keys from the
-Destination Connection ID that the client sent, so the derived key authenticates no server
-Initial packet. **Issue #501 chose the decline, and it is the reversal path.**
+packet holds. The server derives its own keys from the Destination Connection ID that the
+client sent, and RFC 9001 Section 5.2 states that derivation input. So the derived key
+authenticates no server Initial packet. **Issue #501 chose the decline, and it is the
+reversal path.**
 
 - **FR-gaps-27** — `DecryptQUICInitialCrypto` returns no error for a packet that the derived
   key does not authenticate.
 - **FR-gaps-28** — `DecryptQUICInitialCrypto` returns an error for a malformed packet. A
   payload shorter than the authentication tag and a truncated CRYPTO frame each reach one.
+- **FR-gaps-29** — The decline of FR-gaps-27 covers a corrupted client Initial packet.
+  `crypto/cipher` reports one error value for every authentication failure, so the library
+  separates a wrong role from a corrupted packet at no point.
 
 ## User flows
 
