@@ -39,9 +39,20 @@ hold.** Every sample of this site therefore writes the alias:
 
     ja4plus "github.com/Crank-Git/ja4plus-go"
 
-**`internal/parser`, `internal/keylog` and every other `internal` package reach no caller
-outside this module**, and no page of this section indexes one. The Go toolchain enforces
-that boundary.
+**The module exports two packages, and each one answers a different question.**
+
+| Import path | Package | What it holds |
+|---|---|---|
+| `github.com/Crank-Git/ja4plus-go` | `ja4plus` | Every fingerprinter, `Processor`, and the local database lookup. |
+| `github.com/Crank-Git/ja4plus-go/ja4db` | `ja4db` | The remote lookup at `ja4db.com`. |
+
+**`ja4db` is the one package of the library that reaches the network.** The maintainer
+ruled that boundary on 2026-08-14, and `network_boundary_test.go` fails on an import that
+breaks it. So a caller who imports `ja4plus` alone links no HTTP client.
+
+**`internal/parser`, `internal/keylog`, `internal/dbcache` and every other `internal`
+package reach no caller outside this module**, and no page of this section indexes one. The
+Go toolchain enforces that boundary.
 
 ## How a link to the generated documentation is written
 

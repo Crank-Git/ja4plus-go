@@ -33,6 +33,11 @@ func NewJA4H() *JA4HFingerprinter {
 // ja4hMaxStreams and ja4hMaxStreamBytes bound the reassembler of one fingerprinter.
 // A long-running monitor holds one stream for each connection it has seen, so a limit
 // keeps the memory bounded.
+//
+// ja4hMaxStreamBytes bounds the bytes that one stream stores, and #567 added that bound.
+// This fingerprinter removes a stream after each value, so a request that completes returns
+// the whole bound to the connection. A sender that never completes a request holds one
+// stream at the bound until `CleanupConnection`, `Reset` or the stream limit removes it.
 const (
 	ja4hMaxStreams     = 100
 	ja4hMaxStreamBytes = 1048576
@@ -485,8 +490,13 @@ func computeJA4HFromRequest(req *parser.HTTPRequest) string {
 	partA := ja4hPartA(req)
 
 	// Part B: header names in original order, excluding Cookie, Referer, pseudo-headers.
+	//
+	// An empty header list hashes to `e3b0c44298fc`, and part b writes no zero sentinel.
+	// R18 of `docs/specs/foxio/JA4H.md` names no sentinel, and R27 confines the sentinel to
+	// part c and to part d. The maintainer ruled the reference split on 2026-08-14, and
+	// issue #527 is the reversal path. The port half is `Crank-Git/ja4plus#612`.
 	headersStr := strings.Join(ja4hHeaderNames(req), ",")
-	partB := parser.TruncatedHash(headersStr)
+	partB := parser.TruncatedHashNoSentinel(headersStr)
 
 	// Part C hashes the sorted cookie names, and part D hashes the sorted cookie pairs.
 	cookieNamesStr, cookieValuesStr := ja4hSortedCookieStrings(req)

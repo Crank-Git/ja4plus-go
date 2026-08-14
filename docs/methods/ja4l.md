@@ -98,16 +98,18 @@ three parts, and that the reference Rust and the reference Python write two.
 **Which packet fills point C.** R33 records that the four implementations differ. Issue
 #196 holds it.
 
-## Two questions the maintainer holds today
+## Two rulings that the maintainer made on 2026-08-14
 
-**Whether a coalesced QUIC datagram fills point C.** Issue #449 records the reading and
-parks the question. The Wireshark dissector reads every QUIC packet of a datagram, and the
-reference Python and the reference Rust each read the first packet alone. **No line of this
-library answers it.**
+**A coalesced QUIC datagram does not fill point C.** The library reads the first QUIC
+packet of a datagram alone. The Wireshark dissector reads every QUIC packet of a datagram,
+and the reference Python and the reference Rust each read the first packet alone. **The
+ruling keeps the reading that the FoxIO Python states.** Issue #449 is the reversal path,
+and the port half is `Crank-Git/ja4plus#613`.
 
-**Whether the SYN selection rule of issue #126 reaches JA4L.** Issue #543 records the
-question, states three candidate answers and recommends no one of them. **The maintainer
-holds it**, and `docs/audit/per-packet-ja4l-thirty-uncovered.md` holds the reading.
+**The SYN selection rule of ruling #126 reaches JA4L.** A SYN packet with a clear ACK bit
+is the packet that fills point A, for JA4L as well as for JA4T.
+`wireshark/source/packet-ja4.c:1266` is one line, and both methods read it. Issue #543 is
+the reversal path.
 
 ## Where the register records a difference
 
@@ -120,6 +122,9 @@ measured on this branch.
 | `JA4L-C` | `#197` | 7 |
 | `JA4L-C` | `#361` | 4 |
 | `JA4L.1` | `#196` | 38 |
+| `JA4L.1` | `#126` | 4 |
+| `JA4L.1` | `#528` | 3 |
 
-**Ruling `#196` is the maintainer's, of 2026-08-12.** The [JA4LS](ja4ls.md) page holds the
-server half of the same table.
+**Ruling `#196` is the maintainer's, of 2026-08-12.** **Ruling `#126` and ruling `#528`
+each reached this table on 2026-08-14.** The [JA4LS](ja4ls.md) page holds the server half
+of the same table.

@@ -75,6 +75,10 @@ measured on this branch.
 | `JA4L-S` | `#197` | 6 |
 | `JA4L-S` | `#361` | 4 |
 | `JA4LS.1` | `#196` | 3 |
+| `JA4LS.1` | `#126` | 2 |
+
+**Ruling `#126` reached this table on 2026-08-14.** The maintainer ruled that the SYN
+selection rule of that ruling covers JA4L and JA4LS, and not JA4T alone.
 
 **One open issue holds the per-packet values that no register entry covers.** Issue #376
 records the reading, and `docs/audit/per-packet-ja4l-absence.md` holds the measurement.

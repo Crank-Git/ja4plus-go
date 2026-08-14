@@ -9,7 +9,7 @@ import (
 // These tests hold the gate, so that a later edit cannot drop it without a failure.
 //
 // FR-licensing-14 permits a header comment in `data/ja4plus-mapping.csv` or an adjacent
-// `data/README.md`. The loader at `lookup.go:53` reads the first line as the column
+// `data/README.md`. `loadDB` of `lookup.go` reads the first line as the column
 // header, so a comment line would become the header and every lookup would fail. This
 // slice takes the `data/README.md` option for that reason.
 
@@ -58,7 +58,7 @@ func TestDataREADMENamesFoxIOAsTheMappingSource(t *testing.T) {
 	}
 }
 
-// `lookup.go:19` embeds `data/ja4plus-mapping.csv`, so every binary that links this
+// An embed directive of `lookup.go` reads `data/ja4plus-mapping.csv`, so every binary that links this
 // package carries FoxIO material. `NOTICE:47` states the license of that file, and
 // `doc.go` is the package documentation that `go doc` prints.
 func TestDocGoStatesThatFoxIOLicensesTheEmbeddedMappingFile(t *testing.T) {

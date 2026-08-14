@@ -4,11 +4,34 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
 )
+
+// maxJA4QUICFragmentConnections bounds the fragment table and the two indexes that name it.
+// Every packet is untrusted input. A sender names a new connection identifier on each datagram
+// at no cost, so the three maps need a bound.
+// No FoxIO source addresses a state table. `.claude/rules/parity.md` rule 2 gives the port the
+// interface this project shipped without one.
+// `ja4plus/fingerprinters/ja4.py:26` of tag `v1.1.0` states the same reason and the same value.
+// That value sits below the default of the port's state table.
+const maxJA4QUICFragmentConnections = 1000
+
+// ja4QUICFragmentAge drops a connection that added no CRYPTO fragment for 30 seconds.
+// A client hello that spans several datagrams arrives inside one round trip, so a connection
+// that adds no fragment for this long abandoned its handshake.
+// `ja4plus/fingerprinters/ja4.py:31` of tag `v1.1.0` states the value and the same reason.
+const ja4QUICFragmentAge = 30 * time.Second
+
+// ja4QUICFragmentEvictionInterval runs the age pass on each datagram that carries a fragment.
+// An age pass that waits longer than the age it applies removes nothing from a connection that
+// sends few packets. `ja4plus/fingerprinters/ja4.py:47` of tag `v1.1.0` passes
+// `eviction_interval=1` for that reason. The table it bounds holds 1000 entries at most, so one
+// pass reads 1000 keys at most.
+const ja4QUICFragmentEvictionInterval = 1
 
 // JA4Fingerprinter computes JA4 TLS Client Hello fingerprints.
 //
@@ -25,6 +48,9 @@ type JA4Fingerprinter struct {
 	// `ja4l.go` runs from the reported key to the grouping key. The two directions differ
 	// because CleanupConnection reads every entry of `dcidToTuple` already.
 	dcidToReported map[string]string
+	// keys holds the recency order of the fragment table, and it names the connection that
+	// the entry bound and the age bound remove.
+	keys boundedKeys
 }
 
 // NewJA4 creates a new JA4Fingerprinter.
@@ -92,6 +118,10 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 			}
 			if len(frags) > 0 && len(dcid) > 0 {
 				dcidKey := fmt.Sprintf("%x", dcid)
+
+				// The bound precedes every write below, because the three maps name one
+				// connection and one eviction removes all three.
+				f.openConnection(dcidKey, parser.GetPacketTimestamp(packet))
 
 				// The entry holds the grouping key, so it reads the inner address pair.
 				// GetShardKey reads the same pair, and a tunneled connection would
@@ -180,6 +210,15 @@ func (f *JA4Fingerprinter) Reset() {
 	f.quicFragments = make(map[string][]parser.CryptoFragment)
 	f.dcidToTuple = make(map[string]string)
 	f.dcidToReported = make(map[string]string)
+	f.keys.reset()
+}
+
+// openConnection records one datagram of the connection, and it holds the two bounds.
+// The removal path of this fingerprinter reaches all three maps, so an eviction removes every
+// entry the connection holds.
+func (f *JA4Fingerprinter) openConnection(dcidKey string, now time.Time) {
+	f.keys.admit(dcidKey, now, maxJA4QUICFragmentConnections, ja4QUICFragmentAge,
+		ja4QUICFragmentEvictionInterval, f.dropConnection)
 }
 
 // dropConnection removes every table entry that one connection identifier holds.
@@ -189,6 +228,7 @@ func (f *JA4Fingerprinter) dropConnection(dcidKey string) {
 	delete(f.quicFragments, dcidKey)
 	delete(f.dcidToTuple, dcidKey)
 	delete(f.dcidToReported, dcidKey)
+	f.keys.remove(dcidKey)
 }
 
 // CleanupConnection removes internal state for the given connection.

@@ -68,11 +68,25 @@ which one does not.
 |---|---|
 | [`LookupResult`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#LookupResult) | The record the mapping table holds for one fingerprint. |
 | [`LookupFingerprint`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#LookupFingerprint) | Reads the local mapping table. It performs no network call. |
-| [`LookupFingerprintRemote`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#LookupFingerprintRemote) | Reads a remote endpoint. The caller opts in with a context and a config. |
-| [`RemoteLookupConfig`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#RemoteLookupConfig) | The endpoint and the HTTP client of a remote lookup. |
 | [`DatabaseInfo`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#DatabaseInfo) | The source, the path, the entry count and the modification time of the active table. |
 | [`GetDatabaseInfo`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#GetDatabaseInfo) | Returns the `DatabaseInfo` of the active table. |
 | [`CachedDatabasePath`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go#CachedDatabasePath) | Returns the path of the cached mapping file, and it creates the directory. |
+
+**Each name above lives in the `ja4plus` package, and none of them reaches the network.**
+
+### The remote lookup lives in `ja4db`
+
+**The remote lookup is a package of its own**, at
+`github.com/Crank-Git/ja4plus-go/ja4db`. The maintainer ruled the network boundary on
+2026-08-14, so the `ja4plus` package imports no HTTP client.
+
+| Name | What it is |
+|---|---|
+| [`LookupFingerprintRemote`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go/ja4db#LookupFingerprintRemote) | Reads a remote endpoint. The caller opts in with a context and a config. |
+| [`RemoteLookupConfig`](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go/ja4db#RemoteLookupConfig) | The endpoint and the HTTP client of a remote lookup. |
+
+**`LookupFingerprintRemote` returns a `*ja4plus.LookupResult`**, so a caller who reads both
+the local table and the remote endpoint handles one result type.
 
 **`LookupFingerprint` returns `nil` for a fingerprint the table does not hold.**
 `LookupFingerprintRemote` returns `nil` and `nil` for that same case. It returns `nil` and

@@ -104,12 +104,14 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `cmd/ja4plus/types.go` | #61 |
 | `internal/parser/x509_identifiers.go` | #490 |
 | `internal/parser/icmp_quoted.go` | #494 |
+| `state_bound.go` | #565 |
 <!-- added-files:end -->
 
-The table holds four rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
+The table holds five rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
 audit of Epic 2, issue #61 added `cmd/ja4plus/types.go` after it, issue #490 added
-`internal/parser/x509_identifiers.go` after it, and issue #494 added
-`internal/parser/icmp_quoted.go` after it, so no audit reads any of the four files.
+`internal/parser/x509_identifiers.go` after it, issue #494 added
+`internal/parser/icmp_quoted.go` after it, and issue #565 added `state_bound.go` after it,
+so no audit reads any of the five files.
 
 ## The record
 
@@ -485,9 +487,9 @@ states the reason.
 | F-24-10 | `ja4.go` | 141 | major | no change needed | A TLS record whose handshake length exceeds the record makes `ComputeJA4` return the empty string, which also names a packet with no ClientHello. |  | The port states that a fingerprinter which cannot parse a packet returns nothing, and `Processor.ProcessPacket` is the API that carries the error. |
 | F-24-11 | `ja4s.go` | 61 | major | unconfirmed | A QUIC Initial datagram that the parser cannot read makes JA4S return no error, and `ja4.go:56` returns an error on the same failure. |  | No crafted datagram of `audit_panic_test.go` makes `parser.ParseQUICInitial` return an error, so the test skips. |
 | F-24-12 | `ja4x.go` | 271 | major | no change needed | The DER buffer `30 03 02 01 00` makes `ComputeJA4XFromDER` return the empty string, which also names a buffer that holds no certificate. |  | The port states that a fingerprinter which cannot parse a packet returns nothing, and `Processor.ProcessPacket` is the API that carries the error. |
-| F-24-13 | `lookup.go` | 55 | major | unconfirmed | A cache file whose first row is not valid CSV leaves the table empty, so `LookupFingerprint` returns no result for every fingerprint. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
-| F-24-14 | `lookup.go` | 72 | major | unconfirmed | A cache row that holds an unescaped double quote makes the loader skip it, so `LookupFingerprint` returns no result for that row. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
-| F-24-15 | `lookup.go` | 43 | minor | unconfirmed | A cache file that the process cannot read makes the loader use the embedded table, and `GetDatabaseInfo` reports the source as embedded. |  | The loader runs once for each process through `lookupOnce`, so no test in the package reaches it with a crafted cache file. |
+| F-24-13 | `lookup.go` | 55 | major | unconfirmed | A cache file whose first row is not valid CSV leaves the table empty, so `LookupFingerprint` returns no result for every fingerprint. |  | Issue #24 measured that the loader ran once for each process, through `lookupOnce`. No test of that audit reached it with a crafted cache file. #74 replaced that loader on 2026-08-14. `## What Epic 9 changed under S2, S3 and F-24-13 through F-24-15` below names that test. |
+| F-24-14 | `lookup.go` | 72 | major | unconfirmed | A cache row that holds an unescaped double quote makes the loader skip it, so `LookupFingerprint` returns no result for that row. |  | Issue #24 measured that the loader ran once for each process, through `lookupOnce`. No test of that audit reached it with a crafted cache file. #74 replaced that loader on 2026-08-14. `## What Epic 9 changed under S2, S3 and F-24-13 through F-24-15` below names that test. |
+| F-24-15 | `lookup.go` | 43 | minor | unconfirmed | A cache file that the process cannot read makes the loader use the embedded table, and `GetDatabaseInfo` reports the source as embedded. |  | Issue #24 measured that the loader ran once for each process, through `lookupOnce`. No test of that audit reached it with a crafted cache file. #74 replaced that loader on 2026-08-14. `## What Epic 9 changed under S2, S3 and F-24-13 through F-24-15` below names that test. |
 | F-24-16 | `internal/parser/quic.go` | 637 | critical | confirmed | Thirteen CRYPTO fragments of which two share the offset 11 reassemble to the bytes of the first fragment, and the wire order names the second. | `5515a3c` | FR-audit-22 asks for a stable sort, and no FoxIO source states a rule for a duplicate offset. |
 <!-- findings:24:end -->
 
@@ -501,11 +503,19 @@ descriptors while the library reads every crafted frame of the table. Every writ
 `cmd/ja4plus/main.go`, which `CLAUDE.md` names as the owner of all output.
 
 **FR-audit-21 reaches no finding.** `internal/parser/hash.go:8` holds the literal
-`000000000000`, and every method that hashes routes through
-`internal/parser/hash.go:13`. `docs/specs/foxio/zeek.md:48` records the reading of
+`000000000000`, and `TruncatedHash` of `internal/parser/hash.go` returns it for an empty
+input. `docs/specs/foxio/zeek.md:48` records the reading of
 `zeek/utils/common.zeek:63`, and `docs/specs/foxio/JA4.md` R24 and R30,
 `docs/specs/foxio/JA4S.md` R23 and `docs/specs/foxio/JA4H.md` R27 each name the same
 value. Issue #57 of Epic 8b holds the decision for the JA4X empty list.
+
+**JA4H part b writes no sentinel, and it is the one section that does not.** The maintainer
+ruled on 2026-08-14 that an empty header list hashes to `e3b0c44298fc`. R18 of
+`docs/specs/foxio/JA4H.md` names no sentinel, and R27 confines the sentinel to part c and
+to part d, so FR-audit-21 reads no sentinel for part b. `computeJA4HFromRequest` of
+`ja4h.go` calls `TruncatedHashNoSentinel` of `internal/parser/hash.go` for that one
+section, and every other section of every method still calls `TruncatedHash`. Issue #527 is
+the reversal path.
 
 **FR-audit-22 reaches one finding, and F-24-16 holds it.** Five other sorts use
 `sort.Slice`, which is not stable, and each one changes no result. `ja4.go:163`, `:176`,
@@ -572,13 +582,39 @@ before the owner reaches the candidate, and issue #25 leaves none.
 | ID | Files | Owner | Status | Findings | Reason |
 |---|---|---|---|---|---|
 | S1 | the ten fingerprinter files | #23 | confirmed | F-23-1 through F-23-10 | Every fingerprinter appends each result to its results slice. No exported method reads that slice, and only Reset clears it. |
-| S2 | `lookup.go` | #23 | confirmed | F-23-14 | The `sync.Once` at `lookup.go:37` loads the mapping table once for the life of the process. The doc comment of `LookupFingerprint` states that the cache file decides the table. |
-| S3 | `lookup.go` | #23 | unconfirmed |  | No code writes `lookupDB`, `dbSource` or `dbCachePath` outside `lookupOnce.Do`, so `sync.Once` orders that write before every read that `loadDB` returns to. |
+| S2 | `lookup.go` | #23 | confirmed | F-23-14 | The `sync.Once` at `lookup.go:37` loaded the mapping table once for the life of the process. The doc comment of `LookupFingerprint` stated that the cache file decides the table. Epic 9 closed the candidate on 2026-08-14. |
+| S3 | `lookup.go` | #23 | unconfirmed |  | No code wrote `lookupDB`, `dbSource` or `dbCachePath` outside `lookupOnce.Do`, so `sync.Once` ordered that write before every read that `loadDB` returned to. Epic 9 removed all three variables on 2026-08-14. |
 <!-- suspected:end -->
 
 Issue #23 owns all three, because each candidate names state that a long-running process
 keeps. S2 and S3 hand over to Epic 9, which owns the network boundary. A status of
 `unconfirmed` or `no change needed` here states which part Epic 9 takes.
+
+## What Epic 9 changed under S2, S3 and F-24-13 through F-24-15
+
+**This section states what Epic 9 left, and it re-adjudicates no status above.** A status
+is the audit's to set, and this section reports the tree instead.
+
+**#74 replaced `sync.Once` with one `atomic.Pointer[lookupTable]` on 2026-08-14.** The
+package-level variables `lookupDB`, `dbSource` and `dbCachePath` no longer exist. The
+source, the cache path and the file time are fields of the unexported `lookupTable` type.
+`activeTable` of `lookup.go` publishes one immutable snapshot for every reader.
+
+**Five tests now reach the loader with a crafted cache file, and the audit of issue #24
+had none.** They live in `lookup_reload_test.go`.
+
+| Test | What it reaches |
+|---|---|
+| `TestTheLookupTable_ReloadsWhenTheCacheFileChanges` | A new cache file inside one process. |
+| `TestTheLookupTable_KeepsThePreviousTableWhenAReloadFails` | A cache file that the parser rejects. |
+| `TestTheLookupTable_FallsBackToTheEmbeddedCopyWhenTheCacheIsCorrupt` | A corrupt cache file, with no previous table. |
+| `TestTheLookupTable_ReadsTheEmbeddedCopyWhenTheCacheFileGoes` | A deleted cache file. |
+| `TestTheLookupTable_ReportsNoRaceWhenAnUpdateRunsBesideALookup` | The update path and the lookup path together, under the race detector. |
+
+**So the `Reason` cell of F-24-13, of F-24-14 and of F-24-15 no longer describes the
+tree.** Each cell states the measurement of issue #24 in the past tense, and the round of
+2026-08-14 wrote that tense. **A reader who wants those three statuses re-adjudicated
+raises that with the maintainer**, because a documentation round sets no audit status.
 
 ## The exported signatures a closure changed
 
@@ -623,20 +659,32 @@ for a packet it cannot read is the same rule at the exported surface.
 `Processor.ProcessPacket` returns `[]error` and separates both pairs.
 `TestTheProcessorReturnsAnErrorRatherThanDiscardingIt` holds that measurement.
 
-### F-23-14 — the lookup table loads once for the life of the process
+### F-23-14 — the lookup table loaded once for the life of the process
 
-`lookup.go:37` holds a `sync.Once`. A program that calls `LookupFingerprint` before a new
-mapping file reaches the cache path reads the embedded table until it exits.
-`ja4plus db update` already prints `note: existing processes must be restarted to pick up
-the new database`, so the command-line program states the same behavior.
+**This section records a ruling that the maintainer made on 2026-08-11, and every sentence
+of the two paragraphs below states the tree of that day.** `lookup.go:37` held a
+`sync.Once`. A program that called `LookupFingerprint` before a new mapping file reached
+the cache path read the embedded table until it exited. `ja4plus db update` printed
+`note: existing processes must be restarted to pick up the new database`, so the
+command-line program stated the same behavior.
 
-`.claude/rules/concurrency.md` reads that the package-level lookup state of `lookup.go` is
-a known exception **under repair**, and it names
-`docs/specs/features/09-database-lookup.md`. Issue #75 of Epic 9 carries the title
-`Reload the lookup table and hold the db subcommands`, which is this repair.
+`.claude/rules/concurrency.md` read that the package-level lookup state of `lookup.go` was
+a known exception **under repair**, and it named
+`docs/specs/features/09-database-lookup.md`. Issue #75 of Epic 9 carried the title
+`Reload the lookup table and hold the db subcommands`, which the maintainer named as this
+repair.
 
-**The ruling records F-23-14 as `declined`, and issue #75 owns the reload.** Issue #25
+**The ruling records F-23-14 as `declined`, and Epic 9 owns the reload.** Issue #25
 repairs nothing here.
+
+**Epic 9 built the reload on 2026-08-14, and #74 built it rather than #75.** #74 replaced
+the `sync.Once` with one `atomic.Pointer[lookupTable]`, and #75 then added the validation
+and the atomic cache write of `internal/dbcache`. **`cmd/ja4plus/main.go` no longer prints
+the restart note**, because a running process reads the new database at its next lookup.
+**`.claude/rules/concurrency.md` no longer names the state a known exception**, and its
+`## The contract` section now states that one `atomic.Pointer` holds the table.
+`## What Epic 9 changed under S2, S3 and F-24-13 through F-24-15` above names each test
+that holds the repair.
 
 ## The JA4SSH surplus belongs to issue #53
 
