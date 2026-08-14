@@ -3,11 +3,13 @@ package ja4plus
 import (
 	_ "embed"
 	"encoding/csv"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -21,92 +23,246 @@ type LookupResult struct {
 	Notes       string
 }
 
-var (
-	lookupDB    map[string]*LookupResult
-	lookupOnce  sync.Once
-	dbSource    = "embedded" // "embedded" or "cache"
-	dbCachePath string
-)
+// cacheStamp identifies one state of the cache file. The library rebuilds the table
+// when the stamp of the file differs from the stamp the loaded table carries.
+type cacheStamp struct {
+	exists  bool
+	modTime time.Time
+	size    int64
+}
 
-func loadDB() map[string]*LookupResult {
-	lookupOnce.Do(func() {
-		lookupDB = make(map[string]*LookupResult)
+// same reports whether two stamps describe one state of the cache file.
+// time.Time carries a location pointer, so a field comparison is safer than ==.
+func (s cacheStamp) same(other cacheStamp) bool {
+	if s.exists != other.exists {
+		return false
+	}
 
-		// Prefer the cache file if it exists and is non-empty.
-		data := mappingCSV
-		if cp, err := CachedDatabasePath(); err == nil {
-			if b, rerr := os.ReadFile(cp); rerr == nil && len(b) > 0 {
-				data = b
-				dbSource = "cache"
-				dbCachePath = cp
-			}
+	if !s.exists {
+		return true
+	}
+
+	return s.size == other.size && s.modTime.Equal(other.modTime)
+}
+
+// lookupTable holds one snapshot of the fingerprint table. No field changes after the
+// build, so a reader that loads the pointer needs no lock.
+type lookupTable struct {
+	// entries maps a fingerprint to its record.
+	entries map[string]*LookupResult
+	// source is "embedded" or "cache".
+	source string
+	// path is the cache path when source is "cache", and the empty string otherwise.
+	path string
+	// modTime is the file time of the cache file that produced this table. A table that
+	// declines a later cache file keeps the file time of the file it reads.
+	modTime time.Time
+	// cachePath is the resolved cache path, whichever source the table reads.
+	// The staleness check reads it, so it never calls CachedDatabasePath again.
+	cachePath string
+	// stamp is the state of the cache file that this table answers for. A table that
+	// declines a corrupt cache file still carries the stamp of that file, so the
+	// library rebuilds once for each state of the file.
+	stamp cacheStamp
+}
+
+// loadedTable publishes the active table. A reader loads the pointer, so the read path
+// takes no lock and `.claude/rules/concurrency.md` `## The contract` holds.
+var loadedTable atomic.Pointer[lookupTable]
+
+// buildMutex serializes a build. A reader never takes it, and it stops two goroutines
+// from parsing the same file at the same time.
+var buildMutex sync.Mutex
+
+// errEmptyTable reports a source that parses and holds no fingerprint. The library
+// declines such a source, because it answers every lookup with nil.
+var errEmptyTable = errors.New("the mapping source holds no fingerprint")
+
+// invalidateLookupTable discards the loaded table, so the next lookup builds a new one.
+// A caller that writes the cache file calls it to publish the new file at once.
+func invalidateLookupTable() {
+	loadedTable.Store(nil)
+}
+
+// statCache returns the state of the cache file. It reports no error, because an
+// unreadable file and an absent file reach the same result: the embedded copy.
+func statCache(path string) cacheStamp {
+	if path == "" {
+		return cacheStamp{}
+	}
+
+	info, err := os.Stat(path)
+	if err != nil || info.IsDir() {
+		return cacheStamp{}
+	}
+
+	return cacheStamp{exists: true, modTime: info.ModTime(), size: info.Size()}
+}
+
+// parseMapping returns the fingerprint table that the CSV content holds.
+// It returns an error when the content holds no header row and when it holds no
+// fingerprint. A caller that receives an error keeps the table it already has.
+func parseMapping(data []byte) (map[string]*LookupResult, error) {
+	r := csv.NewReader(strings.NewReader(string(data)))
+
+	header, err := r.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	// Build column index
+	colIdx := make(map[string]int)
+	for i, h := range header {
+		colIdx[strings.TrimSpace(h)] = i
+	}
+
+	fpTypes := []string{"ja4", "ja4s", "ja4h", "ja4x", "ja4t", "ja4tscan"}
+
+	entries := make(map[string]*LookupResult)
+
+	for {
+		row, err := r.Read()
+		if err == io.EOF {
+			break
 		}
-
-		r := csv.NewReader(strings.NewReader(string(data)))
-
-		// Read header
-		header, err := r.Read()
 		if err != nil {
-			return
+			continue
 		}
 
-		// Build column index
-		colIdx := make(map[string]int)
-		for i, h := range header {
-			colIdx[strings.TrimSpace(h)] = i
-		}
-
-		fpTypes := []string{"ja4", "ja4s", "ja4h", "ja4x", "ja4t", "ja4tscan"}
-
-		for {
-			row, err := r.Read()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
+		// Build identification string from available fields
+		var identParts []string
+		for _, field := range []string{"Application", "Library", "Device", "OS"} {
+			idx, ok := colIdx[field]
+			if !ok || idx >= len(row) {
 				continue
 			}
-
-			// Build identification string from available fields
-			var identParts []string
-			for _, field := range []string{"Application", "Library", "Device", "OS"} {
-				idx, ok := colIdx[field]
-				if !ok || idx >= len(row) {
-					continue
-				}
-				val := strings.TrimSpace(row[idx])
-				if val != "" {
-					identParts = append(identParts, val)
-				}
+			val := strings.TrimSpace(row[idx])
+			if val != "" {
+				identParts = append(identParts, val)
 			}
-			if len(identParts) == 0 {
+		}
+		if len(identParts) == 0 {
+			continue
+		}
+
+		ident := strings.Join(identParts, " / ")
+		notes := ""
+		if idx, ok := colIdx["Notes"]; ok && idx < len(row) {
+			notes = strings.TrimSpace(row[idx])
+		}
+
+		// Index by each fingerprint type present
+		for _, fpType := range fpTypes {
+			idx, ok := colIdx[fpType]
+			if !ok || idx >= len(row) {
 				continue
 			}
-
-			ident := strings.Join(identParts, " / ")
-			notes := ""
-			if idx, ok := colIdx["Notes"]; ok && idx < len(row) {
-				notes = strings.TrimSpace(row[idx])
-			}
-
-			// Index by each fingerprint type present
-			for _, fpType := range fpTypes {
-				idx, ok := colIdx[fpType]
-				if !ok || idx >= len(row) {
-					continue
-				}
-				fpVal := strings.TrimSpace(row[idx])
-				if fpVal != "" {
-					lookupDB[fpVal] = &LookupResult{
-						Application: ident,
-						Type:        fpType,
-						Notes:       notes,
-					}
+			fpVal := strings.TrimSpace(row[idx])
+			if fpVal != "" {
+				entries[fpVal] = &LookupResult{
+					Application: ident,
+					Type:        fpType,
+					Notes:       notes,
 				}
 			}
 		}
+	}
+
+	if len(entries) == 0 {
+		return nil, errEmptyTable
+	}
+
+	return entries, nil
+}
+
+// loadDB returns the active table. It rebuilds the table when the cache file changed
+// since the last build, so a database update takes effect in the same process.
+func loadDB() map[string]*LookupResult {
+	return activeTable().entries
+}
+
+// rebuildTable builds a new table and publishes it. It returns the previous table when
+// the cache file fails to parse, so FR-lookup-22 holds.
+func rebuildTable() *lookupTable {
+	buildMutex.Lock()
+	defer buildMutex.Unlock()
+
+	// Another goroutine can publish a fresh table while this one waits for the mutex.
+	if current := loadedTable.Load(); current != nil && statCache(current.cachePath).same(current.stamp) {
+		return current
+	}
+
+	previous := loadedTable.Load()
+
+	cachePath, err := CachedDatabasePath()
+	if err != nil {
+		cachePath = ""
+	}
+
+	stamp := statCache(cachePath)
+
+	if stamp.exists {
+		if data, rerr := os.ReadFile(cachePath); rerr == nil && len(data) > 0 {
+			if entries, perr := parseMapping(data); perr == nil {
+				return publish(&lookupTable{
+					entries:   entries,
+					source:    "cache",
+					path:      cachePath,
+					modTime:   stamp.modTime,
+					cachePath: cachePath,
+					stamp:     stamp,
+				})
+			}
+		}
+
+		// The cache file failed. A previous table answers every lookup it answered
+		// before, and the new stamp stops a rebuild for each later lookup.
+		if previous != nil {
+			carried := *previous
+			carried.cachePath = cachePath
+			carried.stamp = stamp
+
+			return publish(&carried)
+		}
+	}
+
+	entries, perr := parseMapping(mappingCSV)
+	if perr != nil {
+		// The embedded copy is the last resort, so a failure here leaves an empty
+		// table rather than a nil map.
+		entries = make(map[string]*LookupResult)
+	}
+
+	return publish(&lookupTable{
+		entries:   entries,
+		source:    "embedded",
+		cachePath: cachePath,
+		stamp:     stamp,
 	})
-	return lookupDB
+}
+
+// publish stores the table and returns it.
+func publish(table *lookupTable) *lookupTable {
+	loadedTable.Store(table)
+
+	return table
+}
+
+// activeTable returns the active table, and it rebuilds the table when the cache file
+// changed. GetDatabaseInfo reads the whole snapshot, so it reads one consistent state.
+//
+// The check costs one os.Stat call for each lookup. A lookup measured 6.6 ns before #74
+// and 614 ns after it, on macOS 25.6.0 on 2026-08-14. The library holds no exported name
+// that a writer in another package calls, so a stat is the one way to see an update that
+// another program made. A writer inside this package calls invalidateLookupTable instead,
+// and it pays nothing.
+func activeTable() *lookupTable {
+	table := loadedTable.Load()
+	if table != nil && statCache(table.cachePath).same(table.stamp) {
+		return table
+	}
+
+	return rebuildTable()
 }
 
 // LookupFingerprint looks up a JA4+ fingerprint in the local FoxIO database.
@@ -114,6 +270,13 @@ func loadDB() map[string]*LookupResult {
 // (see CachedDatabasePath), it is used; otherwise the embedded database is
 // used. Returns nil if the fingerprint is not found. This function never
 // makes network calls.
+//
+// The library reads the state of the cache file at each call, and it rebuilds the table
+// when that file changes. A program that updates the database therefore reads the new
+// table at its next lookup, and it needs no restart. A rebuild that fails leaves the
+// previous table in place.
+//
+// This function is safe for concurrent use.
 //
 // The remote lookup lives in the package
 // github.com/Crank-Git/ja4plus-go/ja4db, which this package does not import.
@@ -150,14 +313,16 @@ type DatabaseInfo struct {
 }
 
 // GetDatabaseInfo returns metadata about the currently-active database.
+// It reads one snapshot of the table, so the source, the path and the record count
+// describe one state.
 func GetDatabaseInfo() DatabaseInfo {
-	db := loadDB()
-	info := DatabaseInfo{Source: dbSource, Entries: len(db)}
-	if dbSource == "cache" {
-		info.Path = dbCachePath
-		if st, err := os.Stat(dbCachePath); err == nil {
-			info.ModTime = st.ModTime()
-		}
+	table := activeTable()
+	info := DatabaseInfo{Source: table.source, Entries: len(table.entries)}
+
+	if table.source == "cache" {
+		info.Path = table.path
+		info.ModTime = table.modTime
 	}
+
 	return info
 }

@@ -421,7 +421,9 @@ func runDBUpdate() error {
 	}
 
 	fmt.Printf("downloaded %d bytes to %s\n", n, cachePath)
-	fmt.Println("note: existing processes must be restarted to pick up the new database")
+	// #74 made the library reload the table when the cache file changes, so a running
+	// process needs no restart.
+	fmt.Println("note: a running process reads the new database at its next lookup")
 	return nil
 }
 

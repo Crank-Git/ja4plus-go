@@ -226,6 +226,14 @@ func TestTheLookupTable_ReportsNoRaceWhenAnUpdateRunsBesideALookup(t *testing.T)
 	}
 }
 
+// BenchmarkLookupFingerprint measures the read path. The reload check adds one os.Stat
+// call to each lookup, and this benchmark reports what that call costs.
+func BenchmarkLookupFingerprint(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = LookupFingerprint("t13d1516h2_8daaf6152771_02713d6af862")
+	}
+}
+
 // TestTheLookupSource_HoldsNoSyncOnce holds FR-lookup-19. The reload needs a mechanism
 // that runs more than once, and `sync.Once` runs exactly once.
 func TestTheLookupSource_HoldsNoSyncOnce(t *testing.T) {
