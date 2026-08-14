@@ -14,9 +14,9 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Matches | 1753 |
 | Deviations | 273 |
 | Accepted deviations | 580 |
-| Unaccepted uncovered values | 184 |
-| Accepted uncovered values | 20 |
-| Accepted comparisons | 600 |
+| Unaccepted uncovered values | 178 |
+| Accepted uncovered values | 26 |
+| Accepted comparisons | 606 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -27,7 +27,7 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
 | per-stream | 1116 | 44 | 281 | 144 | 14 |
-| per-packet | 637 | 229 | 299 | 40 | 6 |
+| per-packet | 637 | 229 | 299 | 34 | 12 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -243,7 +243,7 @@ The library produces a value, and the vector file of the capture publishes no ke
 
 The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
 
-The run reports 204 uncovered values in 59 groups, and the register accepts 20 of them. One group is one capture, one method and one vector set.
+The run reports 204 uncovered values in 59 groups, and the register accepts 26 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 
@@ -270,9 +270,9 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 | `browsers-x509.pcapng` | per-stream | JA4X | 7 | `browsers-x509.pcapng/1/JA4X_r` | `550406,55040a,55040b,550403_550406,550408,550407,55040a,550403_551d23,551d0e,551d11,551d0f,551d25,551d1f,551d20,2b06010505070101,551d13,2b06010401d679020402` | no |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4L | 1 | `gre-erspan-vxlan.pcap/3/JA4L.1` | `953_64` | no |
 | `gre-erspan-vxlan.pcap` | per-packet | JA4LS | 1 | `gre-erspan-vxlan.pcap/2/JA4LS.1` | `997_64` | no |
-| `gre-sample.pcap` | per-packet | JA4L | 2 | `gre-sample.pcap/13/JA4L.1` | `36_255` | no |
-| `gre-sample.pcap` | per-packet | JA4L | 2 | `gre-sample.pcap/14/JA4L.1` | `26150_255` | no |
-| `gre-sample.pcap` | per-packet | JA4LS | 1 | `gre-sample.pcap/12/JA4LS.1` | `22952_236` | no |
+| `gre-sample.pcap` | per-packet | JA4L | 2 | `gre-sample.pcap/13/JA4L.1` | `36_255` | yes |
+| `gre-sample.pcap` | per-packet | JA4L | 2 | `gre-sample.pcap/14/JA4L.1` | `26150_255` | yes |
+| `gre-sample.pcap` | per-packet | JA4LS | 1 | `gre-sample.pcap/12/JA4LS.1` | `22952_236` | yes |
 | `gre-sample.pcap` | per-packet | JA4T | 1 | `gre-sample.pcap/11/JA4T.1` | `5744_2-4-8-1-3_1436_00` | no |
 | `gre-sample.pcap` | per-packet | JA4TS | 1 | `gre-sample.pcap/12/JA4TS.1` | `5792_2-4-8-1-3_1460_00` | no |
 | `gre-sample.pcap` | per-stream | JA4SSH | 1 | `gre-sample.pcap/0/JA4SSH` | `c24s23_c4s4_c5s4` | no |
@@ -310,9 +310,9 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 | `latest.pcapng` | per-stream | JA4X | 8 | `latest.pcapng/1/JA4X_r` | `550406,55040a,550403_550406,550408,550407,55040a,550403_551d23,551d0e,551d11,551d0f,551d25,551d1f,551d20,2b06010505070101,551d13,2b06010401d679020402` | no |
 | `latest.pcapng` | per-stream | JA4X | 8 | `latest.pcapng/1/JA4X_r.2` | `550406,55040a,55040b,550403_550406,55040a,550403_551d13,551d0e,551d23,551d0f,551d25,2b06010505070101,551d1f,551d20` | no |
 | `latest.pcapng` | per-stream | JA4X | 8 | `latest.pcapng/10/JA4X_r` | `550406,55040a,550403_550406,550408,550407,55040a,550403_2b06010401d679020402,2b060104018237150a,2b0601040182371507,2b06010505070101,551d0e,551d0f,551d11,551d13,551d1f,551d20,551d23,551d25` | no |
-| `macos_tcp_flags.pcap` | per-packet | JA4L | 2 | `macos_tcp_flags.pcap/3/JA4L.1` | `62_64` | no |
-| `macos_tcp_flags.pcap` | per-packet | JA4L | 2 | `macos_tcp_flags.pcap/4/JA4L.1` | `393_64` | no |
-| `macos_tcp_flags.pcap` | per-packet | JA4LS | 1 | `macos_tcp_flags.pcap/2/JA4LS.1` | `17255_63` | no |
+| `macos_tcp_flags.pcap` | per-packet | JA4L | 2 | `macos_tcp_flags.pcap/3/JA4L.1` | `62_64` | yes |
+| `macos_tcp_flags.pcap` | per-packet | JA4L | 2 | `macos_tcp_flags.pcap/4/JA4L.1` | `393_64` | yes |
+| `macos_tcp_flags.pcap` | per-packet | JA4LS | 1 | `macos_tcp_flags.pcap/2/JA4LS.1` | `17255_63` | yes |
 | `macos_tcp_flags.pcap` | per-packet | JA4T | 1 | `macos_tcp_flags.pcap/1/JA4T.1` | `65535_2-1-3-1-1-8-4-0-0_1460_6` | no |
 | `macos_tcp_flags.pcap` | per-packet | JA4TS | 1 | `macos_tcp_flags.pcap/2/JA4TS.1` | `65160_2-4-8-1-3_1134_8` | no |
 | `single-packets.pcap` | per-stream | JA4H | 8 | `single-packets.pcap/0/JA4H_r` | `ge11cr06enus_Accept,Accept-Language,User-Agent,Accept-Encoding,Host,Connection_IDE_IDE=AHWqTUmq5vKag4U1NoZpmbEiY1PYuAYVT8bFXA1KRM6sqXH_QR5G3_2xSz7V6E3B` | no |
