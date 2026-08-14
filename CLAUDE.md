@@ -169,8 +169,13 @@ exits 0, and that exit code reports no site build.**
   a source that moves without a change to this repository. The `govulncheck` count is one
   such measurement. On `go1.24.13` it reported 9 vulnerabilities of the standard library
   that this library calls on 2026-08-13, and 13 on 2026-08-14. **No line of this repository
-  changed between the two runs.** So write the date beside every live figure: in a ruling
-  comment, in a pull-request body, in a document and in a code comment.
+  changed between the two runs.** So write the date beside every live figure. Four places
+  carry one.
+  - A ruling comment.
+  - A pull-request body.
+  - A document.
+  - A code comment.
+
   `TestTheToolchainPagesDateTheVulnerabilityMeasurement` in `go_toolchain_statement_test.go`
   holds the rule for `README.md` and for `doc.go`. Batch #493 earned this rule.
 - **Every date of this repository states the UTC calendar day.** Batch #493 recorded the

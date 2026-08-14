@@ -33,8 +33,8 @@ const theCitationConventionFile = ".claude/rules/ste.md"
 //
 // The round of batch #493 converted both uses in `CLAUDE.md` to the US form, under
 // `.claude/rules/ste.md` `## This project writes US English`. This constant held
-// `"Behavi" + "our"` until that round, because `.golangci.yml` sets the `misspell` locale to
-// US and the concatenation kept the British form out of the linter. The US form needs no
+// `"Behavi" + "our"` until that round. The concatenation kept the British form out of
+// `misspell`, because `.golangci.yml` sets the locale to US. The US form needs no
 // concatenation.
 const theBehaviorWord = "Behavior"
 
