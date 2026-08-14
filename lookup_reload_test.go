@@ -163,6 +163,32 @@ func TestTheLookupTable_FallsBackToTheEmbeddedCopyWhenTheCacheIsCorrupt(t *testi
 	}
 }
 
+// TestTheLookupTable_ReadsTheEmbeddedCopyWhenTheCacheFileGoes states what the library
+// does when a program deletes the cache file. A deletion is not a failed reload, so
+// FR-lookup-22 does not hold the previous table here.
+func TestTheLookupTable_ReadsTheEmbeddedCopyWhenTheCacheFileGoes(t *testing.T) {
+	path := useTemporaryCacheDir(t)
+
+	writeCacheFile(t, path, reloadCacheOne, time.Now().Truncate(time.Second))
+
+	if info := GetDatabaseInfo().Source; info != "cache" {
+		t.Fatalf("Source = %q, want cache before the deletion", info)
+	}
+
+	if err := os.Remove(path); err != nil {
+		t.Fatalf("remove %s: %v", path, err)
+	}
+
+	info := GetDatabaseInfo()
+	if info.Source != "embedded" {
+		t.Errorf("Source = %q, want embedded after the deletion", info.Source)
+	}
+
+	if result := LookupFingerprint(reloadFingerprintOne); result != nil {
+		t.Errorf("LookupFingerprint(%q) = %+v, want nil after the deletion", reloadFingerprintOne, result)
+	}
+}
+
 // TestTheLookupTable_ReportsNoRaceWhenAnUpdateRunsBesideALookup holds FR-lookup-20 and
 // FR-lookup-21. It reports a race only under `go test -race`.
 func TestTheLookupTable_ReportsNoRaceWhenAnUpdateRunsBesideALookup(t *testing.T) {

@@ -25,6 +25,9 @@ type LookupResult struct {
 
 // cacheStamp identifies one state of the cache file. The library rebuilds the table
 // when the stamp of the file differs from the stamp the loaded table carries.
+//
+// A stamp holds the file time and the size, so it separates no two files that carry both.
+// A writer inside this package calls invalidateLookupTable, which reaches that case.
 type cacheStamp struct {
 	exists  bool
 	modTime time.Time
@@ -58,7 +61,7 @@ type lookupTable struct {
 	// declines a later cache file keeps the file time of the file it reads.
 	modTime time.Time
 	// cachePath is the resolved cache path, whichever source the table reads.
-	// The staleness check reads it, so it never calls CachedDatabasePath again.
+	// activeTable reads it, so a lookup never calls CachedDatabasePath again.
 	cachePath string
 	// stamp is the state of the cache file that this table answers for. A table that
 	// declines a corrupt cache file still carries the stamp of that file, so the
@@ -183,6 +186,9 @@ func loadDB() map[string]*LookupResult {
 
 // rebuildTable builds a new table and publishes it. It returns the previous table when
 // the cache file fails to parse, so FR-lookup-22 holds.
+//
+// A cache file that the program deleted is not a failed parse. The library then reads the
+// embedded copy, because the embedded copy is the last resort of this package.
 func rebuildTable() *lookupTable {
 	buildMutex.Lock()
 	defer buildMutex.Unlock()
@@ -196,7 +202,12 @@ func rebuildTable() *lookupTable {
 
 	cachePath, err := CachedDatabasePath()
 	if err != nil {
+		// The path is deterministic, and CachedDatabasePath fails on the directory it
+		// creates. A previous table therefore names the file this build still reads.
 		cachePath = ""
+		if previous != nil {
+			cachePath = previous.cachePath
+		}
 	}
 
 	stamp := statCache(cachePath)
@@ -248,8 +259,9 @@ func publish(table *lookupTable) *lookupTable {
 	return table
 }
 
-// activeTable returns the active table, and it rebuilds the table when the cache file
-// changed. GetDatabaseInfo reads the whole snapshot, so it reads one consistent state.
+// activeTable returns the active table, and it rebuilds the table when the file time or
+// the size of the cache file changed. GetDatabaseInfo reads the whole snapshot, so it
+// reads one consistent state.
 //
 // The check costs one os.Stat call for each lookup. A lookup measured 6.6 ns before #74
 // and 614 ns after it, on macOS 25.6.0 on 2026-08-14. The library holds no exported name
@@ -271,10 +283,11 @@ func activeTable() *lookupTable {
 // used. Returns nil if the fingerprint is not found. This function never
 // makes network calls.
 //
-// The library reads the state of the cache file at each call, and it rebuilds the table
-// when that file changes. A program that updates the database therefore reads the new
-// table at its next lookup, and it needs no restart. A rebuild that fails leaves the
-// previous table in place.
+// The library reads the file time and the size of the cache file at each call, and it
+// rebuilds the table when one of the two changes. A program that updates the database
+// therefore reads the new table at its next lookup, and it needs no restart. A rebuild
+// that cannot parse the cache file leaves the previous table in place. A cache file that
+// the program deleted makes the library read the embedded copy.
 //
 // This function is safe for concurrent use.
 //
