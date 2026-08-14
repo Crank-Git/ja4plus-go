@@ -154,7 +154,7 @@ func checkTheReducedSeeds(t *testing.T) {
 }
 
 // TestEachTargetOfThisPackageHoldsAnAcceptedSeedAndARejectedSeed builds every seed of
-// `testdata/fuzz/`, and it asserts the verdict of the parser for each one. FR-fuzz-19,
+// `testdata/fuzz/`, and it asserts the result of the parser for each one. FR-fuzz-19,
 // FR-fuzz-20 and FR-fuzz-21 state the requirements.
 //
 // `JA4PLUS_SEEDGEN=1` writes the files. Every other run compares the tracked file against

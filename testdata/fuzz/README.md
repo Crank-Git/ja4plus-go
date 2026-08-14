@@ -31,11 +31,27 @@ now replays green. **Never remove a file with an `issue-` prefix.**
 ## Two tests guard this corpus
 
 `fuzz_seed_corpus_test.go` of each package builds every seed of that package, and it
-asserts the verdict of the code for each one. It then compares the tracked file against the
+asserts the result of the code for each one. It then compares the tracked file against the
 value it built. So a seed cannot drift from the statement above it, and a target cannot
 lose its accepted input or its rejected input without a failure.
 
 Run `JA4PLUS_SEEDGEN=1 go test ./...` to write the files after a deliberate change.
+
+**Never set `JA4PLUS_SEEDGEN` in a CI job.** The variable switches the two tests above from
+compare to write. A job that sets it rewrites every seed to match whatever the code now does,
+and it then reports success whatever the code does. **The guard can never fail after that.**
+An engineer sets the variable by hand, and a workflow file never sets it.
+
+Two checks hold this rule, and #47 built both.
+
+- The fuzz job of `.github/workflows/ci.yml` and the fuzz job of `.github/workflows/fuzz.yml`
+  each refuse a run that carries the variable.
+- `TestNoWorkflowSetsTheSeedGenerationVariable` in `fuzz_job_test.go` reads both workflow
+  files for an assignment and for an environment key.
+  `TestEachFuzzJobRefusesASeedCorpusWrite` reads both jobs for the refusal.
+
+**Read the seed diff before you commit a write.** The variable makes the tracked file agree
+with the code, so a write hides a defect exactly as well as it records a deliberate change.
 
 ## The license reading of FR-fuzz-23
 
@@ -85,7 +101,7 @@ A record that lists them states a fact about a client. The reduction therefore c
 fact and it drops the expression, and the result carries no FoxIO license obligation.
 
 **A seed that fails this test is not committed.** One case reached that decline, and the
-verdict of #46 names it: a QUIC Initial packet of the corpus authenticates its own bytes
+reading of #46 names it: a QUIC Initial packet of the corpus authenticates its own bytes
 with an AEAD tag, so no reduction of it survives. The corpus therefore holds a synthesized
 Initial packet in place of a captured one, and the synthesized packet decrypts.
 

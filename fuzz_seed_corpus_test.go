@@ -98,7 +98,7 @@ func seedResults(t *testing.T, frame []byte) int {
 }
 
 // TestEachTargetOfThisPackageHoldsAnAcceptedSeedAndARejectedSeed builds every seed of
-// `testdata/fuzz/`, and it asserts the verdict of the reader for each one. FR-fuzz-19,
+// `testdata/fuzz/`, and it asserts the result of the reader for each one. FR-fuzz-19,
 // FR-fuzz-20 and FR-fuzz-21 of `docs/specs/features/06-fuzz-testing.md` state the
 // requirements.
 //
