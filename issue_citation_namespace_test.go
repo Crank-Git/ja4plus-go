@@ -68,7 +68,11 @@ import (
 // that carries the capture filter question, and that number sits above the inherited mark
 // of 552. **A member pays this cost too**, and no round of the batch precedes a member that
 // files an issue.
-const issueCitationHighWaterMark = 564
+// #80 re-measured the mark on 2026-08-14 and it read 591. The doc comment of `newMonitor`
+// in `cmd/ja4plus/watch.go` cites #577, which names the issue that carries the age-pass
+// clock question, and that number sits above the inherited mark of 564. **Two members of
+// one batch each pay this cost**, because #77 landed before #577 existed.
+const issueCitationHighWaterMark = 591
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
