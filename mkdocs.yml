@@ -196,5 +196,15 @@ nav:
       - JA4TS: methods/ja4ts.md
       - JA4D: methods/ja4d.md
       - JA4D6: methods/ja4d6.md
-  # #87 adds the API-reference pages and the examples here.
-  - Reference: []
+  # #87 owns every entry between this line and the end of the file.
+  #
+  # The order runs from the whole surface to the parts. A reader opens the overview, then
+  # the group that holds the name it wants, then the programs that call it. The overview
+  # states the design decision, so it sits first. FR-documentation-19 and
+  # FR-documentation-20.
+  - Reference:
+      - Overview: reference/index.md
+      - Fingerprinters: reference/fingerprinters.md
+      - Processors: reference/processors.md
+      - Types and helpers: reference/types.md
+      - Examples: reference/examples.md
