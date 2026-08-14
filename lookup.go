@@ -11,6 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/Crank-Git/ja4plus-go/internal/dbcache"
 )
 
 //go:embed data/ja4plus-mapping.csv
@@ -87,6 +89,33 @@ func invalidateLookupTable() {
 	loadedTable.Store(nil)
 }
 
+// updateCache validates the database and replaces the cache file with it.
+//
+// It publishes the new table at once, so a lookup of this process reads the new database
+// without a stat of the cache file.
+//
+// It returns an error and leaves the previous cache file unchanged when the database fails
+// validation, and when the write fails. `internal/dbcache` states each rule.
+//
+// No package outside this one reaches this function, because #100 freezes the exported
+// surface. `ja4plus db update` runs in another process, and it writes the cache file
+// through `internal/dbcache`. A running process then reads the new file at its next
+// lookup, because `activeTable` stats the cache file.
+func updateCache(data []byte) error {
+	path, err := CachedDatabasePath()
+	if err != nil {
+		return err
+	}
+
+	if err := dbcache.Write(path, data); err != nil {
+		return err
+	}
+
+	invalidateLookupTable()
+
+	return nil
+}
+
 // statCache returns the state of the cache file. It reports no error, because an
 // unreadable file and an absent file reach the same result: the embedded copy.
 func statCache(path string) cacheStamp {
@@ -119,7 +148,11 @@ func parseMapping(data []byte) (map[string]*LookupResult, error) {
 		colIdx[strings.TrimSpace(h)] = i
 	}
 
-	fpTypes := []string{"ja4", "ja4s", "ja4h", "ja4x", "ja4t", "ja4tscan"}
+	// The validation of a downloaded database reads the same two column sets, so one
+	// package states each one. FR-lookup-24 names the expected columns.
+	fpTypes := dbcache.FingerprintColumns()
+
+	identity := dbcache.IdentityColumns()
 
 	entries := make(map[string]*LookupResult)
 
@@ -134,7 +167,7 @@ func parseMapping(data []byte) (map[string]*LookupResult, error) {
 
 		// Build identification string from available fields
 		var identParts []string
-		for _, field := range []string{"Application", "Library", "Device", "OS"} {
+		for _, field := range identity {
 			idx, ok := colIdx[field]
 			if !ok || idx >= len(row) {
 				continue
@@ -213,16 +246,20 @@ func rebuildTable() *lookupTable {
 	stamp := statCache(cachePath)
 
 	if stamp.exists {
-		if data, rerr := os.ReadFile(cachePath); rerr == nil && len(data) > 0 {
-			if entries, perr := parseMapping(data); perr == nil {
-				return publish(&lookupTable{
-					entries:   entries,
-					source:    "cache",
-					path:      cachePath,
-					modTime:   stamp.modTime,
-					cachePath: cachePath,
-					stamp:     stamp,
-				})
+		// Another program writes the cache file, so the file is untrusted input. The bound
+		// of FR-lookup-25 therefore holds for a read as well as for a write.
+		if stamp.size <= dbcache.MaxBytes {
+			if data, rerr := os.ReadFile(cachePath); rerr == nil && len(data) > 0 {
+				if entries, perr := parseMapping(data); perr == nil {
+					return publish(&lookupTable{
+						entries:   entries,
+						source:    "cache",
+						path:      cachePath,
+						modTime:   stamp.modTime,
+						cachePath: cachePath,
+						stamp:     stamp,
+					})
+				}
 			}
 		}
 

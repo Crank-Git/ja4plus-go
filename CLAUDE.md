@@ -65,6 +65,7 @@ of that register name a change to this repository. Read
 | `*.go` at the root | Package `ja4plus`: one fingerprinter per method, `Processor`, the database lookup. |
 | `ja4db/` | Package `ja4db`: the remote lookup at `ja4db.com`. It is the one package of the library that reaches the network. |
 | `internal/parser/` | Protocol decoding for TLS, QUIC, HTTP, SSH, TCP streams, X.509 and GREASE. |
+| `internal/dbcache/` | The validation of a downloaded database, the 16 MB bound and the atomic cache write. |
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
 | `internal/capture/` | Opening a live interface. Holds the pure-Go backend and the libpcap backend. |
