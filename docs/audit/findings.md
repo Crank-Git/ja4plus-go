@@ -515,15 +515,31 @@ descriptors while the library reads every crafted frame of the table. Every writ
 input. `docs/specs/foxio/zeek.md:48` records the reading of
 `zeek/utils/common.zeek:63`, and `docs/specs/foxio/JA4.md` R24 and R30,
 `docs/specs/foxio/JA4S.md` R23 and `docs/specs/foxio/JA4H.md` R27 each name the same
-value. Issue #57 of Epic 8b holds the decision for the JA4X empty list.
+value. **Issue #57 of Epic 8b held the decision for the JA4X empty list, and the ruling of
+2026-08-14 supersedes that sentence.** Issue #582 built the ruling, and the paragraph below
+states it.
 
-**JA4H part b writes no sentinel, and it is the one section that does not.** The maintainer
-ruled on 2026-08-14 that an empty header list hashes to `e3b0c44298fc`. R18 of
-`docs/specs/foxio/JA4H.md` names no sentinel, and R27 confines the sentinel to part c and
-to part d, so FR-audit-21 reads no sentinel for part b. `computeJA4HFromRequest` of
-`ja4h.go` calls `TruncatedHashNoSentinel` of `internal/parser/hash.go` for that one
-section, and every other section of every method still calls `TruncatedHash`. Issue #527 is
-the reversal path.
+**Four call sites of the root package write no sentinel, and the tree holds no fifth.**
+`ja4hHashCallSites` in `ja4h_empty_header_list_test.go` names each one, and
+`TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed` reads the syntax tree against that
+list.
+
+| Function | File | Sites without the sentinel |
+|---|---|---|
+| `computeJA4HFromRequest` | `ja4h.go` | 1, which is part b. |
+| `computeJA4XWithRaw` | `ja4x.go` | 3, which are the three JA4X parts. |
+
+**JA4H part b writes no sentinel.** The maintainer ruled on 2026-08-14 that an empty header
+list hashes to `e3b0c44298fc`. R18 of `docs/specs/foxio/JA4H.md` names no sentinel, and R27
+confines the sentinel to part c and to part d, so FR-audit-21 reads no sentinel for part b.
+Issue #527 is the reversal path.
+
+**No part of JA4X writes the sentinel.** R12 of `docs/specs/foxio/JA4X.md` transcribes a
+reference split for an empty list, and the maintainer ruled that split on 2026-08-14: an
+empty list hashes. Issue #582 is the reversal path, and the port half is
+`Crank-Git/ja4plus#619`.
+
+**Every other section of every method still calls `TruncatedHash`.**
 
 **FR-audit-22 reaches one finding, and F-24-16 holds it.** Five other sorts use
 `sort.Slice`, which is not stable, and each one changes no result. `ja4.go:163`, `:176`,

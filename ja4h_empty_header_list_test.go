@@ -172,10 +172,12 @@ type ja4hHashCallSite struct {
 
 // ja4hHashCallSites names every call of a truncated-hash function in the root package.
 //
-// The ruling of 2026-08-14 moves JA4H part b alone, so exactly one site calls
-// `parser.TruncatedHashNoSentinel`. Each of the other ten keeps the zero sentinel for an
-// empty list, and this table is the record of which ten. A new call site fails this test,
-// so a later author must state which rule the new site follows.
+// The ruling of 2026-08-14 reaches JA4H part b and each of the three JA4X parts, so four
+// sites call `parser.TruncatedHashNoSentinel`. Each of the other seven keeps the zero
+// sentinel for an empty list, and this table is the record of which seven. A new call site
+// fails this test, so a later author must state which rule the new site follows.
+//
+// #527 built the JA4H half, and #582 built the JA4X half.
 var ja4hHashCallSites = []ja4hHashCallSite{
 	{"ja4.go", "ja4CipherHash", "TruncatedHash"},
 	{"ja4.go", "ja4ExtensionHash", "TruncatedHash"},
@@ -185,9 +187,9 @@ var ja4hHashCallSites = []ja4hHashCallSite{
 	{"ja4h.go", "computeJA4HFromRequest", "TruncatedHash"},
 	{"ja4h.go", "computeJA4HFromRequest", "TruncatedHash"},
 	{"ja4s.go", "computeJA4SPair", "TruncatedHash"},
-	{"ja4x.go", "computeJA4XWithRaw", "TruncatedHash"},
-	{"ja4x.go", "computeJA4XWithRaw", "TruncatedHash"},
-	{"ja4x.go", "computeJA4XWithRaw", "TruncatedHash"},
+	{"ja4x.go", "computeJA4XWithRaw", "TruncatedHashNoSentinel"},
+	{"ja4x.go", "computeJA4XWithRaw", "TruncatedHashNoSentinel"},
+	{"ja4x.go", "computeJA4XWithRaw", "TruncatedHashNoSentinel"},
 }
 
 // TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed reads the source and compares it

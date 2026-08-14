@@ -45,6 +45,11 @@ TODOS.md
 
 # Documentation site build output. The pages under docs/ are tracked; the built site is not.
 site/
+# Two virtual environment names reach the documentation build, and this file covers both.
+# `python3 -m venv` writes a `.gitignore` holding `*` inside the directory it creates, so an
+# environment ignores itself today. A release that stops writing that file would let
+# `git add -A` stage a whole virtual environment, and these two lines hold without it.
+.venv/
 .venv-docs/
 
 # Mutation sweep scratch. The reports under docs/mutation_reports/ are tracked.

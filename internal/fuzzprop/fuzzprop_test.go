@@ -96,7 +96,7 @@ func TestTheAllocationBoundFiresForNoSmallCall(t *testing.T) {
 	}
 }
 
-func TestTheDeterminismAssertionFiresOnATwoValueResult(t *testing.T) {
+func TestTheDeterminismPropertyFiresOnATwoValueResult(t *testing.T) {
 	reported := &recordingReporter{}
 	counter := 0
 
@@ -114,7 +114,7 @@ func TestTheDeterminismAssertionFiresOnATwoValueResult(t *testing.T) {
 	}
 }
 
-func TestTheDeterminismAssertionFiresForNoRepeatedResult(t *testing.T) {
+func TestTheDeterminismPropertyFiresForNoRepeatedResult(t *testing.T) {
 	reported := &recordingReporter{}
 
 	check(reported, 8, func() any {

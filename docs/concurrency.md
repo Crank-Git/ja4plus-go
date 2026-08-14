@@ -251,8 +251,48 @@ Seven fingerprinters carry a bound of their own, and no bound replaces the call.
 packet. None of the three needs a bound. The
 [implementation notes](implementation-notes.md) state the eviction rule of each bound.
 
+**JA4H and JA4X each hold one TCP stream reassembler, and it carries two bounds of its own:
+1 MB of stored bytes, and 4096 stored segments for one stream.** The two bounds refuse
+independently. The [implementation notes](implementation-notes.md) state both.
+
 `Reset` drops every connection at once. It suits the end of a capture file, and it does
 not suit a monitor that must keep the connections that are still live.
+
+## One packet dated far in the future ages a whole bounded table
+
+**Six of the seven idle limits above read the capture timestamp of the packet that arrives.**
+They are JA4, JA4L, JA4S, JA4SSH, JA4H and JA4TS. **The JA4X sweep reads the wall clock**,
+because `ProcessPacket` in `ja4x.go` calls `time.Now()`. So this section names the six, and it
+names JA4X for the wall clock alone.
+
+The pass compares that one timestamp against the last packet time of every key of the table.
+**So one packet dated far in the future ages every key at once, and the pass removes every key
+it ages.**
+
+**One key survives the pass, and it is the key of the packet that carries the crafted
+timestamp.** The fingerprinter records that key with the same crafted timestamp after the pass,
+so a later packet of the same key reads an age of zero. **So one crafted packet leaves the
+table holding one key, and never zero.** `age_clock_ruling_test.go` asserts that count of 1 at
+each of the four sites.
+
+**Every packet is untrusted input, and the packet carries the timestamp.** A sender that dates
+one packet in the year 9999 therefore costs one packet for the whole table, rather than one
+packet for one entry.
+
+**The loss is the tracked state, and it is not the memory.** The entry bound reads the
+recency order and no timestamp, so it holds the memory whatever the timestamp states. Each
+connection of the emptied table restarts, so the run answers with fewer fingerprints rather
+than with wrong ones.
+
+**The library accepts this property, and it hardens no clock.** The maintainer ruled it on
+2026-08-14. A clamp, a monotonic clock and a quorum each invent a rule that no FoxIO source
+states. A live capture takes its timestamp from the host clock rather than from the sender.
+**Issue #577 holds the ruling and the reversal path**, and `age_clock_ruling_test.go` builds
+the separating packet.
+
+**The Python port holds the same clock**, at `ja4plus/utils/state_table.py` of tag `v1.1.0`.
+So a reader of either implementation finds one property. The [parity
+page](parity.md) states how each name of the port maps onto this library.
 
 ## The database lookup holds one snapshot
 

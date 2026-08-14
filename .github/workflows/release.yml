@@ -73,7 +73,46 @@ jobs:
       - name: Run tests
         run: go test -v -race ./...
 
+      # FR-release-35c requires every artifact to be built with `CGO_ENABLED=0`, and
+      # `CLAUDE.md` `## Stack` states the same rule in prose.
+      #
+      # #583 measured on 2026-08-14 that the tree did not hold that rule. This job runs on
+      # `ubuntu-latest`, so `GOOS=linux GOARCH=amd64` below is the runner's native pair.
+      # The Go command therefore took the native default of `1` for that one build of five.
+      # That artifact linked glibc dynamically where the other four are static. A user on a
+      # musl distribution or in a `scratch` container met the difference.
+      #
+      # **No package of the default build imports cgo**, so nothing here needs the C name
+      # resolver. `internal/capture/libpcap.go` does import cgo, and the `libpcap` build tag
+      # keeps it out of the default build and out of every artifact below.
+      #
+      # **This is a step environment and never a job environment.** The `Run tests` step
+      # above runs `go test -race` on the same runner, and the race detector needs cgo
+      # there. Measured on 2026-08-14 for the runner's platform:
+      #
+      #   $ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -race -o /dev/null ./cmd/ja4plus
+      #   go: -race requires cgo
+      #
+      # So a job-level setting would turn the release red at the test step, and it would
+      # never reach the build it was written for.
+      #
+      # `release_cgo_test.go` holds this shape. It asserts the setting, it asserts that
+      # every artifact build sits inside this step, and it asserts that no CGO_ENABLED
+      # setting sits outside it. A build appended after this step reads no setting here.
+      #
+      # FR-release-35d keeps the `libpcap` build tag out of every artifact. That tagged
+      # path needs cgo, so this setting must not reach it and no build below passes the
+      # tag.
+      #
+      # Verified against
+      # <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions>,
+      # retrieved 2026-08-14. It states the precedence: `When more than one environment
+      # variable is defined with the same name, GitHub uses the most specific variable. For
+      # example, an environment variable defined in a step will override job and workflow
+      # environment variables with the same name, while the step executes.`
       - name: Build binaries
+        env:
+          CGO_ENABLED: "0"
         run: |
           VERSION=${GITHUB_REF_NAME}
           LDFLAGS="-s -w -X main.Version=${VERSION}"

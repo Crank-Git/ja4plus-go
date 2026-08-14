@@ -72,9 +72,17 @@ of them on 2026-08-14.
 | JA4TS | 1000 connections | 120 seconds | The oldest connection leaves when the table is full. |
 | JA4X | 50 streams, and 1000 certificates | A sweep every 30 seconds | The oldest stream leaves when the table is full, and the sweep drops the certificate record. |
 
-**The TCP stream reassembler bounds the stored bytes of one stream at 1 MB.** JA4H and JA4X
-each hold one reassembler, and each one refuses a further segment of a stream that reaches
-that bound.
+**The TCP stream reassembler holds two bounds for one stream: 1 MB of stored bytes, and 4096
+stored segments.** JA4H and JA4X each hold one reassembler, and each one refuses a further
+segment of a stream that reaches either bound.
+
+**The two bounds refuse independently, and neither one masks the other.** A sender of one-byte
+segments reaches the segment bound at 4096 stored bytes. A sender of one large segment reaches
+the byte bound with one stored segment. A refused segment leaves no trace, so the stream stores
+it again after a removal frees the room.
+
+**The maintainer ruled the segment bound on 2026-08-14**, and issue #596 holds the ruling and
+the reversal path. `DefaultMaxSegments` in `internal/parser/tcp_stream.go` states the value.
 
 **JA4T, JA4D and JA4D6 hold no per-connection state**, because each one reads a single
 packet. None of the three needs a bound.
@@ -110,9 +118,18 @@ The release workflow builds five binaries:
 A build without cgo cross-compiles from one machine, and it links no system library at run
 time. That is what makes the five-way build cheap.
 
-**Build the binary yourself when you need a guarantee about cgo.** Set `CGO_ENABLED=0`,
-and read the result with `go version -m`. This page states what the source imports, and a
-released artifact carries the settings of the machine that built it.
+**The release workflow sets `CGO_ENABLED=0` for each of the five builds.** So every
+released artifact holds the setting, and the default of the build machine decides nothing.
+`.github/workflows/release.yml` states it as a step environment, and `release_cgo_test.go`
+guards it.
+
+**#583 measured the gap on 2026-08-14.** The job runs on `ubuntu-latest`, so the
+`linux/amd64` build was native and it took the Go default of `1`. The four cross-compiles
+took `0`. **Issue #583 is the reversal path.**
+
+**Read the setting of any binary with `go version -m`.** It prints one `build
+CGO_ENABLED=` line, so a reader confirms the property of an artifact rather than trusting
+this page.
 
 **One build path uses cgo, and the `libpcap` build tag selects it.** It exists so that
 live capture reaches macOS, because the pure-Go capture handle reaches Linux alone. **That

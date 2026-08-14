@@ -165,7 +165,8 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
 - **R28** — An empty header list reaches part b as a hash, and never as the zero sentinel.
   **R18 names no sentinel, and R27 confines the sentinel to part c and to part d.** The
   hash of the empty string is `e3b0c44298fc`. **The implementations split two against
-  two.** `python/ja4h.py:76` and `wireshark/source/packet-ja4.c:641` hash the empty string.
+  two.** `python/ja4h.py:76` and `wireshark/source/packet-ja4.c:629-630` hash the empty
+  string, and `wireshark/source/packet-ja4.c:641` writes that hash into the value.
   `rust/ja4/src/lib.rs:184` and `zeek/utils/common.zeek:64` return the sentinel. **The
   maintainer ruled the split on 2026-08-14**, and a rank 1 image rule outranks an
   implementation. **Issue #527 is the reversal path**, and the port half is

@@ -28,6 +28,11 @@ value reaches the list as the hex form of its content octets**, under R9, and a 
 separates each pair under R10. **Each hash is a SHA-256 truncated to twelve characters**,
 under R11.
 
+**An empty list hashes, and it writes `e3b0c44298fc`.** The FoxIO implementations split on
+that input, and R12 records the split. **The maintainer ruled it on 2026-08-14**, and the
+ruling reaches part a, part b and part c together. So a JA4X value of this library writes
+`000000000000` in no part. **Issue #582 is the reversal path.**
+
 ## What this library emits
 
 `JA4XFingerprinter` produces the value. `NewJA4X` builds one, and `ProcessPacket` reads
@@ -59,7 +64,8 @@ that the Zeek package ships an empty load file for it.
 **The FoxIO implementations split on the empty list.** R12 records that the reference Rust
 and the Wireshark dissector write the zero sentinel `000000000000`, and that the reference
 Python hashes the empty string and writes `e3b0c44298fc`. **The image itself shows both
-forms**, in two different example values.
+forms**, in two different example values. **The maintainer ruled that split, and
+`## The value` above states the answer.**
 
 ## Two defects that a deviation cluster measured
 

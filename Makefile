@@ -53,12 +53,35 @@ cover:
 # Epic 6 adds the fuzz targets, and this target finds them without a change.
 # `-run '^$$'` holds the unit tests back, so each run fuzzes and does nothing else.
 # A package that does not compile fails the list, and `grep` alone would hide that.
+#
+# `-fuzzminimizetime 5s` bounds the coverage minimization, and the maintainer ruled it on
+# 2026-08-14 under issue #568. `go help testflag` states
+# `-fuzzminimizetime t ... The default is 60s.`, which is twice the 30 seconds this recipe
+# gives each target. So one minimization attempt outlasts the whole run, and the engine
+# reports a frozen execution count while the clock advances.
+#
+# The engine minimizes an interesting input, and never a crashing input alone. A target
+# that finds no crash pays that cost on every run, against a 30-second budget. #568
+# measured one minimization at 26.39531s of a 30-second run, and it measured two stalls in
+# ten runs from an empty cache corpus.
+#
+# The cost of the bound: the engine minimizes the reproducer of a real crash less, so that
+# input can land larger than a reader wants. The maintainer accepted that cost on
+# 2026-08-14.
+#
+# A fresh CI runner holds no cache corpus, so a CI fuzz run always starts in the phase that
+# stalls. That is why the bound is not academic.
+#
+# `.github/workflows/fuzz.yml` needs no such flag, and this recipe changes no line of it.
+# That workflow gives each target `-fuzztime 10m`, so the 60-second default spends about a
+# tenth of one run rather than twice one run. Its `timeout-minutes` comment already reads
+# the default.
 fuzz:
 	@for package in $$(go list ./...); do \
 		targets=$$(go test -list '^Fuzz' $$package) || exit 1; \
 		for target in $$(echo "$$targets" | grep '^Fuzz' || true); do \
 			echo "fuzz: $$target in $$package"; \
-			go test -run '^$$' -fuzz "^$$target$$" -fuzztime 30s $$package || exit 1; \
+			go test -run '^$$' -fuzz "^$$target$$" -fuzztime 30s -fuzzminimizetime 5s $$package || exit 1; \
 		done; \
 	done
 
