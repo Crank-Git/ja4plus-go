@@ -55,14 +55,17 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // moves this constant moves every case of this file to the new tag.
 const publishedModuleVersion = "v0.3.0"
 
+// embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
+const embeddedDatabase = "data/ja4plus-mapping.csv"
+
 // publishedModuleSizeCeiling is the ceiling of FR-prerelease-17, in bytes.
 //
 // The module zip of `v0.3.0` measures 2253962 bytes on 2026-08-14, and `assets/logo.png`
 // is 2192430 bytes of it. So one image carries 97 percent of the module, and the ceiling
 // has to sit above it.
 //
-// 4 MiB leaves the tag room to grow and it still catches the two defects this feature set
-// guards. A corpus capture and a built site each add more than 2 MiB, so either one
+// 4 MiB leaves the tag room to grow. It still catches the two defects that this feature
+// set guards. A corpus capture and a built site each add more than 2 MiB, so either one
 // crosses this ceiling. A ceiling nobody measured is a ceiling that never fails, so
 // `TestThePublishedModuleSizeIsBelowTheCeiling` logs the measurement on every run.
 const publishedModuleSizeCeiling = 4 << 20
@@ -129,8 +132,12 @@ type downloadedModule struct {
 
 // downloadPublishedModule downloads the published module into the clean environment.
 //
-// It returns the report of `go mod download -json`. It returns an error when the proxy
-// serves no such version, and the message then names the proxy and the tag.
+// It returns the report of `go mod download -json`.
+//
+// It returns an error when the command fails, and it returns an error when the report
+// names one. The `go` command reaches the network, so the failure can be a proxy that
+// serves no such version, and it can be a network that answers nothing. The message
+// carries the standard error of the command, because the exit status separates neither.
 //
 // The command runs outside a module, because the environment root holds no `go.mod` and
 // the harness sets `GOWORK=off`. A module query of the form `path@version` needs no main
@@ -141,14 +148,14 @@ func downloadPublishedModule(environment *cleanEnvironment) (*downloadedModule, 
 	command := environment.command("go", "mod", "download", "-json", query)
 	output, err := command.Output()
 	if err != nil {
-		// The message of the `go` command names the proxy and the reason, and the exit
-		// status alone names neither.
+		// The standard error of the `go` command names the reason. The exit status names
+		// none of them.
 		message := ""
 		exitErr := &exec.ExitError{}
 		if errors.As(err, &exitErr) {
 			message = strings.TrimSpace(string(exitErr.Stderr))
 		}
-		return nil, fmt.Errorf("the module proxy served no %s: %w: %s", query, err, message)
+		return nil, fmt.Errorf("the download of %s failed: %w: %s", query, err, message)
 	}
 
 	module := &downloadedModule{}
@@ -261,19 +268,27 @@ func TestThePublishedModuleListsItsFiles(t *testing.T) {
 //
 // `lookup.go` carries `//go:embed data/ja4plus-mapping.csv`, so a module that publishes no
 // such file compiles for nobody. The edge-case table of the feature file states the same
-// order: this case fails first, and it names the missing path.
+// order. This case fails first, and it names the missing path.
 func TestThePublishedModuleHoldsTheEmbeddedDatabase(t *testing.T) {
 	listing := requirePublishedModule(t)
 
-	const database = "data/ja4plus-mapping.csv"
-	if !listing.holds(database) {
+	if !listing.holds(embeddedDatabase) {
 		t.Fatalf("the published module %s@%s holds no %s, and `//go:embed` in `lookup.go` needs it",
-			publishedModulePath, listing.version, database)
+			publishedModulePath, listing.version, embeddedDatabase)
 	}
+}
+
+// TestTheEmbeddedDatabaseOfThePublishedModuleHoldsBytes holds FR-prerelease-13 against an
+// empty file.
+//
+// A zip entry states a name and a size, so a module can publish the name of the database
+// and none of its rows. `//go:embed` then compiles, and every lookup answers nothing.
+func TestTheEmbeddedDatabaseOfThePublishedModuleHoldsBytes(t *testing.T) {
+	listing := requirePublishedModule(t)
 
 	for _, entry := range listing.entries {
-		if entry.name == database && entry.size == 0 {
-			t.Errorf("the published module %s@%s holds an empty %s", publishedModulePath, listing.version, database)
+		if entry.name == embeddedDatabase && entry.size == 0 {
+			t.Errorf("the published module %s@%s holds an empty %s", publishedModulePath, listing.version, embeddedDatabase)
 		}
 	}
 }
