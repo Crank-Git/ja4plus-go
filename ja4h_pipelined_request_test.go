@@ -7,9 +7,10 @@ import (
 // The second request of a pipelined pair. It declares no body, so the header block completes
 // it under the gate of #455.
 //
-// A pipelined pair is one byte range that holds a complete request and then a second request.
-// `ja4hDeclaredBodyRequest` of `ja4h_body_gate_test.go` is the first request of each pair
-// below, because it declares a body and the pipelined case needs a declared body.
+// The `## Terms` table of `docs/specs/spec.md` holds the row `pipelined pair`, and the round
+// of batch #493 added it. `ja4hDeclaredBodyRequest` of `ja4h_body_gate_test.go` is the first
+// request of each pair below, because it declares a body and the pipelined case needs a
+// declared body.
 const ja4hPipelinedSecondRequest = "GET /second HTTP/1.1\r\n" +
 	"Host: 192.168.235.136:8089\r\n" +
 	"Accept: */*\r\n" +
