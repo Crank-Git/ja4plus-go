@@ -597,10 +597,16 @@ func CollectCryptoFragments(collected []CryptoFragment, fragments []CryptoFragme
 // ReassembleCryptoFrames writes a zero byte over a range that no fragment covers, so a
 // reader that measures the highest offset alone reads a message the sender never sent. The
 // caller passes fragments that ReassembleCryptoFrames already sorted by offset.
+// It drops the fragment that ReassembleCryptoFrames drops. A reach past the buffer that
+// ReassembleCryptoFrames returns reports a message that the buffer does not hold.
 func cryptoFragmentsReach(fragments []CryptoFragment) uint64 {
 	var reach uint64
 
 	for _, fragment := range fragments {
+		if cryptoFragmentPassesBound(fragment) {
+			continue
+		}
+
 		if fragment.Offset > reach {
 			break
 		}
@@ -808,12 +814,12 @@ func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 
 // cryptoFragmentPassesBound reports whether the fragment reaches past
 // MaxCryptoBufferBytes.
-// A fragment that reaches past the bound describes no real handshake message, and
+// A fragment that reaches past the bound describes no real handshake message.
 // ReassembleCryptoFrames allocates one byte of buffer for each byte up to the highest
 // offset. #168 measured an amplification of about 10000 to 1 from one datagram of 100
 // bytes.
-// The reader tests the offset before it adds the length, because RFC 9000 Section 16 lets
-// an offset reach 4611686018427387903 and the sum wraps in a uint64 addition.
+// The reader tests the offset before it adds the length. RFC 9000 Section 16 lets an
+// offset reach 4611686018427387903, so the sum wraps in a uint64 addition.
 func cryptoFragmentPassesBound(fragment CryptoFragment) bool {
 	return fragment.Offset > MaxCryptoBufferBytes ||
 		fragment.Offset+uint64(len(fragment.Data)) > MaxCryptoBufferBytes

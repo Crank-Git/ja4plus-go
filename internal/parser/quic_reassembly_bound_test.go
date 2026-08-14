@@ -78,6 +78,23 @@ func TestReassembleCryptoFramesDropsTheFragmentThatPassesTheBound(t *testing.T) 
 	}
 }
 
+// TestTheFragmentReachStopsAtTheBufferTheReassemblyReturns holds FR-gaps-30.
+// ClientHelloFromCryptoFragments reads the reach against the 24-bit handshake length, so
+// a reach past the buffer accepts a message that the buffer does not hold. The two
+// readers therefore drop one fragment set.
+func TestTheFragmentReachStopsAtTheBufferTheReassemblyReturns(t *testing.T) {
+	fragments := []CryptoFragment{
+		{Offset: 0, Data: make([]byte, MaxCryptoBufferBytes-4)},
+		{Offset: MaxCryptoBufferBytes - 4, Data: make([]byte, 10)},
+	}
+
+	assembled := ReassembleCryptoFrames(fragments)
+	if reach := cryptoFragmentsReach(fragments); reach > uint64(len(assembled)) {
+		t.Errorf("cryptoFragmentsReach reports %d bytes, and ReassembleCryptoFrames returns %d",
+			reach, len(assembled))
+	}
+}
+
 // TestReassembleCryptoFramesDropsTheFragmentThatOverflowsTheOffsetSum holds FR-gaps-30.
 // RFC 9000 Section 16 lets an offset reach 4611686018427387903, so the sum of the offset
 // and the length wraps in a uint64 addition. The reader tests the offset alone first.
