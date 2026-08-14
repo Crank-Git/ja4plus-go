@@ -13,8 +13,8 @@ never states the count that the issue first wrote, so the enumeration is a state
 present and never a history. Issue #42 put 248
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
-140 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, and issue
-#441 put 108 more.
+140 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
+#441 put 108 more, issue #484 put 14 more, and issue #491 put 2 more.
 Issue #455 wrote the last 32 entries of the ruling #285 count, because the body gate moved
 16 frames of `http1.pcapng` to a match and left the raw forms of those frames in deviation.
 Issue #409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5
@@ -23,11 +23,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1719 matches, 328
-deviations, 558 accepted deviations and 578 register keys. The run also reports 184 unaccepted
+reports 1753 matches, 279
+deviations, 574 accepted deviations and 594 register keys. The run also reports 184 unaccepted
 uncovered values and 20 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 558 and
-20 add up to the 578 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 574 and
+20 add up to the 594 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
@@ -440,6 +440,23 @@ that the interface declares.
 
 ### Fixed
 
+- **The library now reads the TCP header that an ICMP error message quotes, and it read the
+  outer layer list alone before.** The maintainer ruled split T1 on 2026-08-14, at #484, and
+  #494 built it. `QuotedTCPHeader` of `internal/parser/icmp_quoted.go` reads the ICMP payload
+  as an IPv4 packet, and `ProcessPacket` of `ja4t.go` reads that header when the outer layer
+  list holds no TCP layer. **A caller of `v0.3.0` who upgrades reads one change.** A frame
+  that carries an ICMP error message of a TCP SYN now reaches a JA4T value, and it reached
+  none before. `wireshark/source/packet-ja4.c:1261` matches the field abbreviation `tcp.flags`
+  anywhere in the protocol tree, and `wireshark/source/packet-ja4.c:1266` sets `syn = 1` for
+  the flag byte `0x02`. **The change closes 31 deviations, all on `ssh2.pcapng`**, and each
+  one moved from a deviation to a match. **The base of the measurement is `1d632a7`, which
+  merges #489, #490, #506 and #484.** The run reports 1719 matches and 312 deviations before,
+  and 1750 matches and 281 deviations after. **The register holds 594 keys before and 594
+  after**, and no entry closed. **The payload is untrusted input**, so the reader bounds
+  the IP header length, the IP total length, the TCP data offset and the TCP option list
+  before it slices. **The port does not hold this rule**, at
+  `ja4plus/fingerprinters/ja4t.py:153`, so the change opens a parity difference on 31 values
+  that the port's issue Crank-Git/ja4plus#610 carries.
 - **The library now produces the JA4H value at the packet that completes the request, and it
   produced the value at the packet that ends the header block before.** The maintainer ruled
   the body gate on 2026-08-13, at #455. The library holds the value until the payload after
