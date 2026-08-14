@@ -251,6 +251,31 @@ Seven fingerprinters carry a bound of their own, and no bound replaces the call.
 packet. None of the three needs a bound. The
 [implementation notes](implementation-notes.md) state the eviction rule of each bound.
 
+### One packet dated far in the future empties a bounded table
+
+**The idle limit above reads the capture timestamp of the packet that arrives.** The pass
+compares that one timestamp against the last packet time of every key of the table. **So one
+packet dated far in the future ages every key at once, and the pass removes all of them.**
+
+**Every packet is untrusted input, and the packet carries the timestamp.** A sender that dates
+one packet in the year 9999 therefore costs one packet for the whole table, rather than one
+packet for one entry.
+
+**The loss is the tracking state, and it is not the memory.** The entry bound reads the
+recency order and no timestamp, so it holds the memory whatever the timestamp states. Each
+connection of the emptied table restarts, so the run answers with fewer fingerprints rather
+than with wrong ones.
+
+**The library accepts this property, and it hardens no clock.** The maintainer ruled it on
+2026-08-14. A clamp, a monotonic clock and a quorum each invent a rule that no FoxIO source
+states, and a live capture takes its timestamp from the host clock rather than from the
+sender. **Issue #577 holds the ruling and the reversal path**, and `age_clock_ruling_test.go`
+builds the separating packet.
+
+**The Python port holds the same clock**, at `ja4plus/utils/state_table.py` of tag `v1.1.0`.
+So a reader of either implementation finds one property. The [parity
+page](parity.md) states how each name of the port maps onto this library.
+
 `Reset` drops every connection at once. It suits the end of a capture file, and it does
 not suit a monitor that must keep the connections that are still live.
 
