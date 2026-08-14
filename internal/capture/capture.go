@@ -1,8 +1,12 @@
 // Package capture opens a capture handle on one live interface.
 //
 // The build selects one capture backend. `pcapgo_linux.go` holds the pure-Go backend, and
-// it builds on Linux alone. A build that selects no backend compiles, and `Open` returns
-// an error on it.
+// it builds on Linux alone. A build that carries no build tag selects the fallback of
+// `unsupported.go` on another platform. That build compiles, and `Open` returns an error
+// on it.
+//
+// A build that carries the `libpcap` build tag reaches no backend today, and it compiles
+// no package. #78 writes that backend, and FR-capture-12 states the build constraint.
 //
 // The package writes nothing to standard output and nothing to standard error. It returns
 // an error, and `cmd/ja4plus` prints it. `CLAUDE.md` `## Conventions` states that rule.
