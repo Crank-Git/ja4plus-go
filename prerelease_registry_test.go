@@ -57,7 +57,7 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the module install",
 		requirements: []string{"FR-prerelease-6", "FR-prerelease-7", "FR-prerelease-8", "FR-prerelease-9", "FR-prerelease-10", "FR-prerelease-11"},
 		issue:        96,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the published module contents",
@@ -164,10 +164,15 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // **The comparison reads equality over one shared slice, so every append conflicts.** A set
 // comparison would not, and no member changes the shape of this guard to avoid the conflict.
 //
-// **The project manager resolved two such merges on 2026-08-14**, first between #97 and
-// #98, then between that result and #99. **#95 built the clean environment, #97 built the
-// published module contents, #98 built the binaries, and #99 built the documentation site
-// and the release gate.** **#96 appends `the module install` when it lands.**
+// **The project manager resolved three such merges on 2026-08-14**: #97 against #98, that
+// result against #99, and that result against #96. #95 built the clean environment, #96
+// built the module install, #97 built the published module contents, #98 built the
+// binaries, and #99 built the documentation site and the release gate.
+//
+// **Six rows of the registry are built, and two are not.** `the pre-release run before the
+// tag` waits on the maintainer answer that #633 carries, and `the mutation sweep report`
+// waits on Epic #89. **So this list holds six names and the registry holds eight rows**, and
+// a reader who counts one against the other reads no disagreement.
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
@@ -177,11 +182,12 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	}
 
 	expected := []string{
-		"the clean environment",
-		"the published module contents",
-		"the binaries",
-		"the documentation site",
-		"the release gate",
+		"the clean environment",         // #95
+		"the module install",            // #96
+		"the published module contents", // #97
+		"the binaries",                  // #98
+		"the documentation site",        // #99
+		"the release gate",              // #99
 	}
 
 	if !slices.Equal(built, expected) {

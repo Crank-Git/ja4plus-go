@@ -172,7 +172,13 @@ import (
 // `.claude/rules/rulings.md` `## A citation names its repository` already bars it. This guard
 // enforces the bare form for this repository, and
 // `TestEveryPortIssueCitationCarriesARecordedForm` reads the qualified form.
-const issueCitationHighWaterMark = 622
+// #96 re-measured the mark on 2026-08-14 and it read 628.
+// `prerelease_install_test.go` cites #628, which names the issue that carries the version
+// of a program that `go install` builds. That number sits above the inherited mark of 622.
+// **A member pays this cost**, and no round of Epic 16 precedes a member that files an
+// issue. **Three members of Epic 16 run beside #96**, so a later member re-measures the
+// mark again and the union of the four is one number.
+const issueCitationHighWaterMark = 628
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
