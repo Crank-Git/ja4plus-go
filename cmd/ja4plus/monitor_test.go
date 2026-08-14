@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io"
@@ -42,8 +43,6 @@ type stubCaptureHandle struct {
 	end error
 	// index counts the packets the handle returned.
 	index int
-	// closed reports whether the caller closed the handle.
-	closed bool
 	// beforeRead runs before each read, so a test sets the stop request between two
 	// packets.
 	beforeRead func(index int)
@@ -67,10 +66,7 @@ func (h *stubCaptureHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, erro
 
 func (h *stubCaptureHandle) LinkType() layers.LinkType { return layers.LinkTypeEthernet }
 
-func (h *stubCaptureHandle) Close() error {
-	h.closed = true
-	return nil
-}
+func (h *stubCaptureHandle) Close() error { return nil }
 
 // newStubCaptureHandle returns a handle that serves the packets and then reports the end
 // of the stream.
@@ -160,12 +156,7 @@ func newTestMonitor(t *testing.T, options watchOptions, clock func() time.Time) 
 	out := &strings.Builder{}
 	errOut := &strings.Builder{}
 
-	instance, err := newMonitor(options, &stopRequest{}, out, errOut, clock)
-	if err != nil {
-		t.Fatalf("newMonitor returns the error %v", err)
-	}
-
-	return instance, out, errOut
+	return newMonitor(options, &stopRequest{}, out, errOut, clock), out, errOut
 }
 
 // steadyClock returns a clock that reports one time, so a test that reads no age holds
@@ -258,17 +249,33 @@ func TestTheMonitorReportsTheReadFailureOfTheInterface(t *testing.T) {
 // window that reached no threshold holds open, and no packet emits it. The monitor calls
 // `Processor.CloseOpenWindows` after the stop request, and it prints the results.
 func TestTheMonitorClosesTheOpenWindowsAfterTheStopRequest(t *testing.T) {
+	// The payload holds one SSH binary packet: a four-byte length, one padding length and
+	// the rest. `parser.IsSSHPacket` reads that shape, and a packet of zero bytes is no
+	// SSH packet.
 	payload := make([]byte, 36)
-	packets := make([][]byte, 0, 4)
+	binary.BigEndian.PutUint32(payload[:4], 32)
+	payload[4] = 6
+	// The message type byte must be 1 or more, and 20 names SSH_MSG_KEXINIT.
+	payload[5] = 20
+
+	packets := make([][]byte, 0, 8)
 
 	for index := 0; index < 4; index++ {
 		packets = append(packets, buildTCPPacketBytes(t, monitorTestClientIP, monitorTestServerIP, 54144, 22, false, payload))
+		packets = append(packets, buildTCPPacketBytes(t, monitorTestServerIP, monitorTestClientIP, 22, 54144, false, payload))
 	}
 
 	handle := newStubCaptureHandle(packets)
 
 	instance, out, errOut := newTestMonitor(t, watchOptions{iface: "lo"}, steadyClock())
-	instance.stop.request()
+
+	// The stop request arrives after the last packet, so the run reaches the close of the
+	// open windows.
+	handle.beforeRead = func(index int) {
+		if index == len(packets) {
+			instance.stop.request()
+		}
+	}
 
 	if err := instance.run(handle); err != nil {
 		t.Fatalf("the monitor returns the error %v", err)
