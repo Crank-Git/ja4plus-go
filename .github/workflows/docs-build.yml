@@ -1,0 +1,89 @@
+name: Docs build
+
+# FR-documentation-30 states that this workflow builds the site and uploads the artifact
+# when the caller asks. FR-documentation-33 states that it runs on every pull request and
+# publishes nothing.
+#
+# **This file holds the one build recipe of the documentation site.**
+# `.github/workflows/docs.yml` calls it, and FR-documentation-32 bars a second recipe
+# there. A publish that builds the site with its own steps would ship a site that no pull
+# request ever built.
+#
+# FR-documentation-37 pins every `uses:` reference to a 40-character commit hash, because a
+# tag moves and a hash does not. The trailing comment names the version the hash carries.
+# #88 resolved each hash from the GitHub API on 2026-08-14, and never from memory. Read a
+# hash as the truth and the comment as a label.
+#
+# `.github/workflows/ci.yml` states the same convention for the Go jobs, and this file
+# follows it without a change.
+#
+# Verified against <https://docs.github.com/en/actions/reference/workflows-and-actions/reusable-workflows>,
+# retrieved 2026-08-14. It states the keywords a caller job may use, and it states that the
+# called workflow can only reduce the permissions of the caller.
+
+on:
+  # A caller passes `upload-artifact: true` to publish. The default is `false`, so a caller
+  # that asks for a build alone gets a build alone.
+  workflow_call:
+    inputs:
+      upload-artifact:
+        description: 'Upload the built site as the `github-pages` artifact.'
+        required: false
+        default: false
+        type: boolean
+
+  # FR-documentation-33 names every pull request, so this trigger carries no branch filter.
+  # `.github/workflows/ci.yml` filters on `main`, `master` and `dev`, and this file must not
+  # copy that filter: a pull request into an integration branch also changes a page.
+  pull_request:
+
+# This workflow reads the repository and it writes no ref. FR-documentation-35 gives
+# `pages: write` and `id-token: write` to the deploy job of `docs.yml` alone, and this
+# block holds that rule on the build side.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # `docs/requirements.txt` was measured on CPython 3.14.3, and this range names that
+      # minor version. A second Python minor version resolves a different wheel set, and the
+      # runner would then build the site with software that no developer installed.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      # FR-documentation-8 states that `docs/requirements.txt` pins every version, so this
+      # step installs that file and it names no package of its own.
+      - name: Install the pinned generator
+        run: pip install -r docs/requirements.txt
+
+      # `make docs` runs `mkdocs build --strict`, and the `Makefile` holds that command. So
+      # the runner and a developer can never build the site with two different commands.
+      # `--strict` fails on a broken link, on a broken anchor and on a page that the
+      # navigation does not name.
+      - name: Build the site
+        run: make docs
+
+      # `mkdocs.yml` names no `site_dir`, so MkDocs writes the site into `site/`. The
+      # `clean` target of the `Makefile` removes that same directory.
+      #
+      # The step runs when the caller asks for the artifact, and a pull-request run reaches
+      # no `inputs` value. The contexts reference states that a nonexistent property
+      # evaluates to an empty string, and it lists `inputs` among the contexts that a step
+      # `if` reads. So the empty value is false here, and the pull-request run uploads
+      # nothing.
+      #
+      # Verified against
+      # <https://docs.github.com/en/actions/reference/workflows-and-actions/contexts>,
+      # retrieved 2026-08-14.
+      - name: Upload the site artifact
+        if: inputs.upload-artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
