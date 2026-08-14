@@ -7,15 +7,20 @@ import (
 )
 
 // The two fuzz jobs are build gates, and no Go code reads either one at run time. The tests
-// below hold FR-fuzz-25 through FR-fuzz-30, so that a later edit cannot drop a step without
+// below hold FR-fuzz-25 through FR-fuzz-29, so that a later edit cannot drop a step without
 // a failure. #47 added them on 2026-08-14.
 //
 // `workflowJobCommands` of `coverage_floor_test.go` reads a job without its comment lines.
 // Every phrase below therefore reads a command, and never the prose above it.
 //
 // **No test below runs either workflow.** A workflow runs on a runner, and this suite runs
-// on a developer machine. `TestGoTestReplaysEverySeedInput` of the seed corpus tests holds
-// FR-fuzz-30, which is the one requirement of this slice that an ordinary test run proves.
+// on a developer machine.
+//
+// **No test below holds FR-fuzz-30, and no test of this repository holds it.** That
+// requirement states that `go test ./...` replays every seed input with no fuzz time, and
+// the run itself is the proof: `go test` starts one subtest for each seed of each target.
+// A run on 2026-08-14 reported 91 passing seed subtests over the 15 targets, at exit 0.
+// `fuzz_seed_corpus_test.go` reads the content of each seed, which is a different question.
 
 // nightlyFuzzWorkflow names the file that FR-fuzz-27 names.
 const nightlyFuzzWorkflow = ".github/workflows/fuzz.yml"
