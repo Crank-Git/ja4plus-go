@@ -16,6 +16,54 @@ The project's controlled vocabulary is the `## Terms` table in `docs/specs/spec.
 it before you write a domain word. When you need a word that the table does not hold, add
 it to the table.
 
+## This project writes US English
+
+**The maintainer decided the English question on 2026-08-13.** Comment 5286085774 of #439
+holds the decision, and it states the rule:
+
+> **This project writes US English, and the documentation round converts incrementally.**
+
+Write `behavior`, and never `behaviour`. Write `license` for the noun and for the verb.
+Write the `-ize` form where both forms exist.
+
+**The round of a batch converts each file that the batch already touches, and no other
+file.** The maintainer declined a repository-wide sweep, because a sweep edits a file that
+a live batch member also edits. **Issue #388 asked for the sweep, and the maintainer closed
+it on 2026-08-13.** So no issue holds the remaining files, and each round takes the files it
+opens. **35 tracked files hold a British spelling**, measured on 2026-08-13 at commit
+`6681d3e`.
+
+**A verbatim quotation keeps the spelling of its source.** `## What is verbatim, and never
+rewritten` below binds a quotation, an error message and a sentence copied from a
+specification. A conversion of one of them destroys the evidence.
+
+**A section heading that the spec template shares stays until one change converts every
+file that carries it.** `## Behaviour rules` is that heading, and 17 tracked files carry it
+as a heading, measured on 2026-08-13 at commit `b178cfd`. **The 17 are the feature files of
+`docs/specs/features/`.** One file cites the heading of another file, so a partial
+conversion breaks a citation. **A round converts the prose of a file it opens, and it leaves
+that heading.**
+
+**The count above names the heading form, and it never names the string form.** The two
+forms reach two numbers, and a reader who measures the wrong one reads a disagreement that
+does not exist.
+
+| Form | Command | Files at `b178cfd` |
+|---|---|---|
+| The heading | `git grep -l -E '^## Behaviour rules'` | 17 |
+| The string | `git grep -l -F '## Behaviour rules'` | 19 |
+
+**Two files hold the string in a code span and not as a heading**, which is the whole
+difference. They are this file and `docs/specs/spec.md`. **The rule binds a heading, so the
+heading count is the count this file states.** Round 45 of the `## Changelog` of
+`docs/specs/spec.md` measured 17 and recorded the disagreement, and #486 repaired this
+sentence.
+
+**`misspell` reads a Go file alone, so no check of this repository reads a document.**
+`.golangci.yml:32` states `# The maintainer writes US English.`, and `locale: US` on the
+next line binds the Go files. Round 39 of the `## Changelog` of `docs/specs/spec.md`
+records the same reading.
+
 ## What is verbatim, and never rewritten
 
 Reproduce these without a change. Rewriting evidence destroys it, and rewriting a quote
@@ -76,7 +124,7 @@ of those three citations is the defect, and never a citation this file makes.**
 ### Grammar
 
 11. Active voice. The reader must know who acts.
-12. Present tense for behaviour. Imperative for an instruction.
+12. Present tense for behavior. Imperative for an instruction.
 13. Keep the articles. Write "the branch", not "branch".
 14. No `-ing` form as a noun or as a heading.
 15. Write positively. State what to do.
@@ -147,7 +195,7 @@ Good: // LookupFingerprint returns the database record for the fingerprint.
       // It performs no network input and no network output.
 ```
 
-**A test name is a sentence.** One behaviour, present tense, active voice:
+**A test name is a sentence.** One behavior, present tense, active voice:
 `TestRemoteLookup_ReturnsErrorWhenServerNeverResponds`, not `TestLookup2`.
 
 A marker comment keeps its conventional keyword, because tooling matches on it. Write the
@@ -167,4 +215,4 @@ body to this standard and name the issue:
 - [ ] A list carries anything with more than two conditions.
 - [ ] Quotes, evidence, code, paths, identifiers and fingerprint values are verbatim.
 - [ ] A code comment states the reason. A doc comment opens with the name and the result.
-      A test name reads as one behaviour.
+      A test name reads as one behavior.

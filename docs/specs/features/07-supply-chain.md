@@ -51,7 +51,59 @@ This feature set adds the missing gates and settles the dependency question.
 - **FR-supply-6** — `.github/dependabot.yml` exists.
 - **FR-supply-7** — Dependabot watches the `gomod` ecosystem at the repository root.
 - **FR-supply-8** — Dependabot watches the `github-actions` ecosystem.
-- **FR-supply-9** — Dependabot opens a pull request that targets `dev`.
+- **FR-supply-9** — Dependabot opens a version update pull request that targets `dev`. A
+  security update pull request targets the default branch, and the default branch is
+  `master`.
+
+  **#477 amended this requirement on 2026-08-13, and the amendment is provisional.** The
+  requirement read `Dependabot opens a pull request that targets \`dev\`.` until that date.
+  **That sentence promises what the platform does not deliver**, because `target-branch`
+  moves a version update alone.
+
+  **GitHub states the limit, and no configuration key escapes it:**
+
+  > All options marked with a security updates icon also change how Dependabot creates pull
+  > requests for security updates, except where `target-branch` is used.
+
+  The page renders an icon where this quotation writes `a security updates icon`. Verified
+  against
+  <https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference>,
+  retrieved 2026-08-13. **#477 read the page rather than adopting the sentence**, and it
+  read the same sentence at the address GitHub redirects to,
+  <https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference>.
+
+  The same page states the rule three more times, once for each option that names it:
+
+  > All pull requests for security updates are created with the chosen assignees, unless
+  > `target-branch` defines updates to a non-default branch.
+
+  **`.github/dependabot.yml` holds `target-branch: "dev"` on both ecosystems, and that is
+  correct for a version update.** `gh repo view Crank-Git/ja4plus-go` reports the default
+  branch as `master`, measured on 2026-08-13. So a security update reaches `master`, and it
+  reaches `dev` through a later merge.
+
+  **The one other lever belongs to the maintainer, and this amendment does not pull it.**
+  A repository whose default branch is `dev` receives every security update on `dev`. That
+  is a repository setting, and no session changes it.
+
+  **Issue #66 is the reversal path.** #66 built `.github/dependabot.yml`, and the comment
+  block of that file records the same reading. A reversal states which of the two answers
+  the project takes: the default branch moves to `dev`, or the requirement returns to its
+  first wording and stays false.
+
+  **No maintainer comment and no project manager comment confirms this amendment**, and
+  #477 measured that rather than adopting it. The body of issue #477 cites comment
+  5286085774 of #439 and comment 5286440152 of #65 as the confirmation. **Neither comment
+  names FR-supply-9, Dependabot or `target-branch`.** Comment 5286085774 of #439 decides the
+  English question, and comment 5286440152 of #65 decides the Go 1.26 move. **So this
+  amendment is unconfirmed, and a later reader reads it as unconfirmed.**
+
+  **Comment 5286179281 of #66 states the one limit that no issue can close.**
+
+  > **FR-supply-9 and FR-supply-11 cannot be proven by this issue.** No Dependabot pull
+  > request exists until the schedule fires.
+
+  The first Dependabot pull request is the first proof of the sentence above.
 - **FR-supply-10** — Dependabot runs weekly.
 - **FR-supply-11** — A Dependabot pull request runs the whole CI workflow, including
   conformance.
@@ -129,7 +181,7 @@ This feature set adds the missing gates and settles the dependency question.
 - **FR-supply-25** — The project records a decision on `github.com/google/gopacket` in
   `docs/audit/dependency-decision.md`.
 - **FR-supply-26** — The record names the last release date of each candidate.
-- **FR-supply-27** — The record names every behaviour difference that the conformance
+- **FR-supply-27** — The record names every behavior difference that the conformance
   suite reveals between the candidates.
 - **FR-supply-28** — The project completes any migration before Epic 10 freezes the API.
 - **FR-supply-29** — A migration keeps every exported signature of this library
@@ -244,26 +296,34 @@ No entity changes. The following files change.
 | `docs/audit/dependency-decision.md` | New. |
 | `go.mod`, `go.sum` | Change if the `gopacket` decision is a migration. |
 
-**Three rows above name a file that the tree does not hold on 2026-08-13.** They name
-`.github/dependabot.yml`, `.github/workflows/fuzz.yml` and `.coverage-floor`. **This
-feature set creates two of the three, and it creates no workflow file.** FR-supply-6
-creates `.github/dependabot.yml`, and the two bullets below carry the other two rows.
+**This feature set built two of the three files that it had to create, and Epic 7 merged
+them on 2026-08-13.** The reading below states what the tree holds today. **#477 measured
+each sentence of it at commit `6681d3e`, and it adopted no earlier count.**
 
-- `.github/workflows/fuzz.yml`. `features/06-fuzz-testing.md:132` names it `New.`, and
-  FR-fuzz-27 states the nightly run that it holds. Issue #47 creates it. FR-supply-12,
-  FR-supply-13 and FR-supply-14 bind it when it arrives.
-- `.coverage-floor`. **This feature set creates it, and FR-supply-30 states that.** Two
-  records named a different creator. The Epic 0 file table named Epic 0, `CLAUDE.md` names
-  issue #68, and Epic 0 carries `status: built` while the tree holds no such file. **Epic
-  0 created the file at no point, and no later change removed it.**
-  `git log --all -- .coverage-floor` returns no commit, measured on 2026-08-13 at
-  `8c3e0ae`. The project manager settled the question on 2026-08-13, and issue #429
-  records that scope decision.
+**One row above names a file that the tree does not hold**, and that row is
+`.github/workflows/fuzz.yml`. `git ls-tree -r --name-only HEAD -- .github` returns
+`.github/dependabot.yml`, `.github/workflows/ci.yml` and `.github/workflows/release.yml`,
+measured on 2026-08-13 at `6681d3e`. The same command against `origin/dev` returns the same
+three paths.
+
+- `.github/dependabot.yml`. **Issue #66 created it, and the tree holds it.** FR-supply-6
+  states the requirement, and the file carries the reading of every key it sets.
+- `.coverage-floor`. **Issue #68 created it, and the tree holds it.** `git ls-files
+  .coverage-floor` returns the path, and the file holds `75.0`, measured on 2026-08-13 at
+  `6681d3e`. **This feature set creates it, and FR-supply-30 states that.** Two records
+  named a different creator. The Epic 0 file table named Epic 0, and Epic 0 carries
+  `status: built`. **Epic 0 created the file at no point.** The project manager settled the
+  question on 2026-08-13, and issue #429 records that scope decision.
   `features/00-foundation.md` `## Behaviour rules` records the other half.
+- `.github/workflows/fuzz.yml`. **The tree holds no such file.**
+  `features/06-fuzz-testing.md` names it `New.`, and FR-fuzz-27 states the nightly run that
+  it holds. Issue #47 creates it. FR-supply-12, FR-supply-13 and FR-supply-14 bind it when
+  it arrives.
 
-`git ls-tree -r --name-only origin/dev -- .github` returns `.github/workflows/ci.yml` and
-`.github/workflows/release.yml` alone, measured on 2026-08-13 at `76659bb`. Issue #426
-records the reading, and it moved no requirement between two epics.
+**An earlier reading of this section named three absent files, and #66 and #68 falsified
+two of the three.** Issue #426 recorded that reading on 2026-08-13 at `76659bb`, and it
+moved no requirement between two epics. **The count was correct on the day it was written**,
+and this round replaces it rather than correcting a number inside it.
 
 ## Interfaces
 
@@ -283,12 +343,36 @@ before FR-supply-25, and cites the dates in the record.
 
 | Case | What happens |
 |---|---|
-| `govulncheck` reports a vulnerability with no fixed version. | The job fails. The maintainer records an accepted risk in `docs/audit/dependency-decision.md`, and the job gains a named exclusion with an expiry date. |
+| `govulncheck` reports a vulnerability with no fixed version. | The calling path decides the exit status, and the fix status does not. A call that reaches the vulnerable symbol fails the job. A vulnerability that no call reaches exits 0, and the scanner prints a count of that kind. The maintainer records an accepted risk in `docs/audit/dependency-decision.md`. **The job gains no exclusion**, because the tool supports none. |
 | Dependabot opens a pull request that breaks conformance. | The conformance job fails and the pull request does not merge. The maintainer decides. |
 | A pinned action hash points at a deleted commit. | The workflow fails and names the action. The maintainer moves the pin. |
 | The coverage measurement varies between runs. | Coverage from `go test -coverprofile` is deterministic for a deterministic suite. A varying number means a non-deterministic test, which is a defect. |
 | The `gopacket` fork produces a different fingerprint for a capture. | The conformance suite catches it. The record names it and the decision accounts for it. |
 | The benchmark comparison has no base result. | The job posts the head results and does not warn. |
+
+**#477 repaired both halves of the first row on 2026-08-13, and it read the tool rather
+than the requirement.** The row promised a failure that the fix status does not produce,
+and it promised an exclusion that the tool does not offer.
+
+**The calling path decides the exit status.** The `vuln` target of `Makefile` records the
+three sources of `golang.org/x/vuln` v1.6.0 that state the rule, and `parseFlags` in
+`internal/scan/flags.go` sets the default scan level to `symbol`. **A called vulnerability
+exits 3, and an uncalled one exits 0.** FR-supply-2 and FR-supply-5 each state one half of
+that separation, and neither one reads the fix status.
+
+**The tool offers no exclusion, and it states so.**
+
+> There is no support for silencing vulnerability findings. See https://go.dev/issue/61211 for updates.
+
+Verified against <https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck>, retrieved
+2026-08-13. **The page renders `cmd/govulncheck/doc.go` of `golang.org/x/vuln`, and #486
+read that file at v1.6.0**, which `.github/workflows/ci.yml` pins.
+`golang.org/x/vuln@v1.6.0/cmd/govulncheck/doc.go:95` holds the sentence, and that line
+carries the bare URL. **The quotation above reproduces the tool's text**, and round 44 of
+the `## Changelog` of `docs/specs/spec.md` holds the same text.
+
+**So a named exclusion with an expiry date is unbuildable**, and the maintainer records an
+accepted risk in `docs/audit/dependency-decision.md` alone.
 
 ## Acceptance criteria
 
@@ -296,7 +380,9 @@ before FR-supply-25, and cites the dates in the record.
 - [ ] The CI vulnerability job fails when a test dependency with a known called
       vulnerability is added.
 - [ ] `.github/dependabot.yml` watches `gomod` and `github-actions`.
-- [ ] A Dependabot pull request targets `dev`.
+- [ ] A Dependabot version update pull request targets `dev`.
+- [ ] A Dependabot security update pull request targets `master`, which is the default
+      branch.
 - [ ] Every `uses:` reference in every workflow is a 40-character commit hash with a
       version comment.
 - [ ] `.github/workflows/ci.yml` declares `permissions: contents: read`.

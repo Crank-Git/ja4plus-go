@@ -1,7 +1,11 @@
 # The JA4H deviation cluster
 
-This page is a reading. **It moves no fingerprint value, and it adds no register entry.**
-Issue #442 produced it, under Epic #441.
+This page is a reading. **It moves no fingerprint value.** Issue #442 produced it, under
+Epic #441.
+
+**#442 added no register entry, and #467 added 108 of them for cause 4.**
+`### The maintainer ruled split S1 on 2026-08-13` below states the ruling those entries
+record.
 
 It reads every JA4H, JA4H_r and JA4H_ro deviation that `testdata/deviations.json` does not
 hold. It names one cause for each one. It states the count each cause closes, measured
@@ -12,8 +16,10 @@ against the corpus at the pin of `testdata/foxio.pin`.
 candidate change was built, measured, and then reverted with `git checkout -- .`. **No
 commit of #442 holds a Go file.**
 
-**The `## Two causes are closed since this reading` section below is the one exception.**
-#465 measured it against the batch #457 head, and it names its own counts.
+**Two sections below carry a count that a later run measured, and each one names its own
+run.** #465 measured `## Two causes are closed since this reading` against the batch #457
+head. #467 measured `### The maintainer ruled split S1 on 2026-08-13` against the
+batch #478 head.
 
 ## Two causes are closed since this reading
 
@@ -26,8 +32,10 @@ is the record that earned the change.
 | 2 | #462, under the maintainer ruling of 2026-08-13 on #455 | `ProcessPacket` of `ja4h.go` produces the value at the packet that completes the request. `HTTPMessageIsComplete` of `internal/parser/http.go` holds the gate. |
 | 3 | #446 | `segmentCarriesNoNewRequest` of `ja4h.go` reads the consumed sequence range, so a repeated segment produces no second value. |
 
-**Cause 1, cause 4 and cause 5 are open, and #441 owns each one.** The maintainer rules
-split S1 and split S2 of cause 4.
+**Cause 1 and cause 5 are open, and #441 owns each one.** **The maintainer ruled split S1
+of cause 4 on 2026-08-13**, and #467 recorded that ruling in `testdata/deviations.json`.
+**The library produces no value for an SSDP request over UDP**, so cause 4 moves no
+fingerprint value.
 
 **#446 landed in batch #421, and #462 landed in batch #457.** So the two changes reach
 `docs/audit/conformance.md` in two different measurements.
@@ -163,7 +171,7 @@ the header block reaches the byte count that `Content-Length` names.**
 `http_req != -100`, which the dissector sets at `packet-ja4.c:1149` when the frame carries
 `http.request.method`.
 
-**The Wireshark HTTP dissector is not in this corpus, so this page reads its behaviour from
+**The Wireshark HTTP dissector is not in this corpus, so this page reads its behavior from
 the vector.** `testdata/foxio/wireshark/http1.pcapng.json` names frame 2 and names no frame 1,
 and frame 2 holds no request line. So the dissector exposed `http.request.method` on the
 frame that completes the reassembled request. **A reader who needs the dissector's own rule
@@ -239,7 +247,7 @@ value. **`segmentCarriesNoNewRequest` of `ja4h.go` now holds that sequence range
 at `testdata/foxio/reference/python/common.py:117`, which overwrites the cache entry, so the
 per-stream vector holds one entry for each stream.
 
-**The Wireshark HTTP dissector is not in this corpus, so this page reads its behaviour from
+**The Wireshark HTTP dissector is not in this corpus, so this page reads its behavior from
 the vector.** `packet-ja4.c:1634` fires only when the frame carries `http.request.method`, and
 the vector names frame 6 and frame 16 alone. So the dissector exposed no such field for the
 repeat. **A reader who needs the dissector's own rule must read the Wireshark source, which
@@ -285,7 +293,44 @@ The per-packet vector holds `ms11nn050000_2ba00a982a15_000000000000_000000000000
 **The library reads TCP alone.** `ProcessPacket` of `ja4h.go` returns at once when the packet
 holds no TCP layer.
 
-### This cause holds a reference split, and the maintainer rules it
+### The maintainer ruled split S1 on 2026-08-13
+
+**The library reads an HTTP request over TCP alone.** The ruling is at comment 5286085639
+of issue #441. It follows the FoxIO Python reference, so the library produces no JA4H value
+for an SSDP request over UDP.
+
+**#467 recorded the ruling in `testdata/deviations.json`.** A ruling that a vector reaches
+carries a register entry, and `.claude/rules/rulings.md` `## Where a ruling is recorded`
+states that rule. **Each entry is a capability decline**, because the library declines a
+capability and it produces no different value.
+
+**#467 re-measured the count against the batch #478 head, and it did not adopt the 108 of
+this page.** The two counts agree.
+
+| What #467 measured | Count |
+|---|---|
+| Unaccepted per-packet JA4H deviations in `ssh2.pcapng`, `tls3.pcapng` and `latest.pcapng` | 108 |
+| Frames that carry them | 36 |
+| Register entries #467 added | 108 |
+
+**Every one of the 36 frames is UDP port 1900.** `tshark` reports IP protocol `17` and the
+protocol column `SSDP` for each one, and it reports no TCP port. **No frame of any other
+capture in this cluster is SSDP.**
+
+**The run counts moved as the ruling predicts.**
+
+| Count | Before | After |
+|---|---|---|
+| Matches | 1680 | 1680 |
+| Deviations the register does not hold | 475 | 367 |
+| Accepted deviations | 450 | 558 |
+| Register keys the run reaches | 470 | 578 |
+
+**The fall of 108 equals the rise of 108, and the matches hold at 1680.** So the change
+moves no fingerprint value.
+
+**The reversal path is issue #441.** A reversal reads the UDP payload, and it needs a
+matching change in the port. `### The measurement` below states the cost.
 
 **Split S1 — whether an HTTP request over UDP produces a JA4H value.**
 
@@ -305,8 +350,8 @@ holds no TCP layer.
 3. The library reads an HTTP request over UDP, and the conformance suite excludes the value
    from the per-stream comparison.
 
-**This reading picks none.** `.claude/rules/rulings.md` `## Stop conditions` names the first
-stop condition, and the maintainer rules it.
+**This reading picked none**, because `.claude/rules/rulings.md` `## Stop conditions` names
+the first stop condition. **The maintainer picked answer 2 on 2026-08-13.**
 
 **Split S2 — the two-letter method code.**
 
@@ -328,9 +373,17 @@ stop condition, and the maintainer rules it.
 2. The library reads the first two characters, as it does today.
 3. The library reads the table for the per-packet comparison alone.
 
-**This reading picks none.** **No vector separates the two rules on a TCP request**, because
+**This reading picks none, and the ruling of split S1 makes split S2 unreachable.**
+`M-SEARCH` reaches this library only through an SSDP request over UDP, and the ruling
+produces no value for one. **No vector separates the two rules on a TCP request**, because
 every method that both vector sets reach is `GET`, `POST` or `HEAD`, and the two rules agree
-on all three. **Split S2 becomes reachable only when split S1 is settled the first way.**
+on all three.
+
+**So the library keeps the first-two-characters rule**, which the Python reference states
+and which ruling #219 of the port already records.
+
+**Split S2 becomes live again only if the maintainer reverses the ruling of split S1.** A
+reversal reopens the question, and issue #441 is the reversal path.
 
 ### The measurement
 
@@ -355,7 +408,7 @@ latest.pcapng/172/JA4H_r.1  expected: "ms11nn040000_HOST,MAN,MX,ST__"
 entry, so every SSDP value the library produces reads as a surplus value against that set.
 
 - **No register entry closes.** The accepted count held at 419.
-- **The port carries the same behaviour, and the port matches the Python reference.**
+- **The port carries the same behavior, and the port matches the Python reference.**
   `ja4plus/fingerprinters/ja4h.py:111` reads `packet.haslayer(TCP)`. **A change here that the
   port does not make opens a parity difference on 36 values.**
 - **The cost is a UDP read path, a method table, and a conformance exclusion or 72 register
@@ -416,8 +469,11 @@ compose, and neither one closes a deviation on its own.
 > 2026-08-12 that this library follows the per-stream set.
 
 **So the trailing underscore is settled, and it is not an open question.** The register holds
-140 entries for it today, and every JA4H entry of the register names it. **The count read 108
-until #462**, which wrote the 32 entries that cause 2 predicted.
+140 entries for it today. **The count read 108 until #462**, which wrote the 32 entries that
+cause 2 predicted.
+
+**#285 no longer names every JA4H entry of the register.** #467 added 108 entries under
+ruling #441, so the register holds 248 JA4H entries across the two rulings.
 
 **Three causes hide a #285 difference behind a larger one.** A frame that produces no value at
 all reports one deviation, and the same frame reports the #285 difference once it produces a
@@ -432,6 +488,10 @@ value.
 **Each one needs a new register entry, and no one of them needs a new ruling.** A change that
 closes cause 2 therefore closes 64 deviations and adds 32 register entries.
 
+**The 72 of cause 4 stay unreachable under the ruling of split S1.** The library produces no
+value for an SSDP request over UDP, so no frame of cause 4 reveals a #285 difference. **A
+reversal of that ruling reaches them.**
+
 ---
 
 ## What this reading does not answer
@@ -441,4 +501,7 @@ closes cause 2 therefore closes 64 deviations and adds 32 register entries.
   read the same corpus and the same pin, and the per-capture counts agree.
 - **Whether rule 5b moves a value outside `gre-erspan-vxlan.pcap`.** The one measurement moved
   no other capture, and one capture is one measurement.
-- **Split S1 and split S2.** The maintainer rules both.
+- **Whether the maintainer confirms the ruling of split S1.** The maintainer ruled it on
+  2026-08-13, and issue #441 is the reversal path.
+- **Split S2.** The ruling of split S1 makes it unreachable, and a reversal makes it live
+  again.
