@@ -653,9 +653,14 @@ func TestEveryMethodThatHashesWritesTheZeroSentinelForAnEmptyInput(t *testing.T)
 			sections: []int{2},
 		},
 		{
+			// Section 1 is JA4H part b, and it holds a hash rather than the sentinel. R18 of
+			// `docs/specs/foxio/JA4H.md` names no sentinel, and R27 confines the sentinel to
+			// part c and to part d. The maintainer ruled the split on 2026-08-14, and
+			// `TestJA4HPartBHashesAnEmptyHeaderList` holds the ruled value. Issue #527 is the
+			// reversal path.
 			name:     "JA4H over a request that holds no header and no cookie",
 			produced: computeJA4HFromRequest(&parser.HTTPRequest{Method: "GET", Version: "HTTP/1.1"}),
-			sections: []int{1, 2, 3},
+			sections: []int{2, 3},
 		},
 	}
 

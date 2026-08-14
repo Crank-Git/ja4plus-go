@@ -235,6 +235,27 @@ if result != nil {
 }
 ```
 
+#### Which functions reach the network
+
+**The `ja4plus` package performs no network input and no network output.** It imports no
+HTTP client, so a program that imports it alone reaches no network. `LookupFingerprint`
+reads the embedded table or the cache file, and it makes no request.
+
+**One function of this library reaches the network, and it lives in another package.**
+`LookupFingerprintRemote` of `github.com/Crank-Git/ja4plus-go/ja4db` asks the `ja4db.com`
+service for one record. A caller reaches it only when it imports that package.
+
+```go
+import "github.com/Crank-Git/ja4plus-go/ja4db"
+
+cfg := &ja4db.RemoteLookupConfig{HTTPClient: &http.Client{Timeout: 10 * time.Second}}
+result, err := ja4db.LookupFingerprintRemote(ctx, cfg, "t13d1516h2_8daaf6152771_02713d6af862")
+```
+
+The command-line program carries its own HTTP client, and `ja4plus db update` downloads the
+mapping file. The maintainer ruled the boundary on 2026-08-14, and
+`docs/audit/network-boundary.md` holds the record and the reason.
+
 ### All-In-One Processor
 
 Runs all 10 fingerprinters on each packet:
