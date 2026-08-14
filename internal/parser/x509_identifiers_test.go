@@ -50,7 +50,7 @@ func testCertificateDER(t *testing.T) []byte {
 	return der
 }
 
-// crypto/x509 states the identifier lists of a certificate it accepts, so the reader of
+// crypto/x509 states the identifier lists of a certificate it accepts. So the reader of
 // this package must state the same three lists on the same bytes.
 func TestReadX509IdentifiersAgreesWithCryptoX509OnACertificateThatCryptoX509Accepts(t *testing.T) {
 	der := testCertificateDER(t)
@@ -112,8 +112,8 @@ func TestReadX509IdentifiersRefusesEveryTruncatedPrefixOfACertificate(t *testing
 	}
 }
 
-// A byte that no certificate holds must reach a refusal, so each case below states one
-// malformed input and the reader answers false for every one.
+// A malformed input must reach a refusal. Each case below states one such input, and the
+// reader answers false for every one.
 func TestReadX509IdentifiersRefusesAMalformedInput(t *testing.T) {
 	cases := map[string][]byte{
 		"an empty input":             {},
@@ -133,10 +133,30 @@ func TestReadX509IdentifiersRefusesAMalformedInput(t *testing.T) {
 	}
 }
 
+// A byte after the outer SEQUENCE fails the read, because DER states one definite length
+// for every element. `x509.ParseCertificate` returns `x509: trailing data` for the same
+// input, and the self-review of #490 measured that the reader accepted it.
+func TestReadX509IdentifiersRefusesACertificateThatCarriesTrailingData(t *testing.T) {
+	der := testCertificateDER(t)
+
+	if _, ok := ReadX509Identifiers(der); !ok {
+		t.Fatal("the reader read no certificate")
+	}
+
+	corrupt := append(append([]byte{}, der...), 0x00, 0x01, 0x02, 0x03)
+	if _, err := x509.ParseCertificate(corrupt); err == nil {
+		t.Fatal("crypto/x509 read a certificate that carries trailing data")
+	}
+
+	if _, ok := ReadX509Identifiers(corrupt); ok {
+		t.Error("the reader read a certificate that carries four trailing bytes")
+	}
+}
+
 // derBuild returns one DER element that carries the tag and the content.
 //
-// The builder writes the short length form below 128 bytes and the one-octet long form
-// above it, so every element it builds stays under 256 bytes.
+// The builder writes the short length form below 128 bytes. It writes the one-octet long
+// form above it, so every element it builds stays under 256 bytes.
 func derBuild(tag byte, content []byte) []byte {
 	if len(content) < 0x80 {
 		return append([]byte{tag, byte(len(content))}, content...)
@@ -150,8 +170,8 @@ func derBuildName(oid []byte) []byte {
 	return derBuild(0x30, derBuild(0x31, attribute))
 }
 
-// A certificate that carries a unique identifier field puts that field between the public
-// key and the extensions, so the reader must skip it and still find the extensions.
+// A unique identifier field sits between the public key and the extensions. So the reader
+// must skip that field and still find the extensions.
 //
 // `crypto/x509` writes no unique identifier field, so the test builds the certificate. RFC
 // 5280 section 4.1 states that issuerUniqueID and subjectUniqueID are each optional.

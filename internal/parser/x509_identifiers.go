@@ -31,16 +31,17 @@ const (
 // derMaxLengthOctets bounds the long form of an ASN.1 length field.
 //
 // A length above four octets names a certificate larger than any memory this library
-// holds, and `ja4xCertificatesInMessage` of `ja4x.go` already bounds one certificate at
-// 200000 bytes. The bound also stops a crafted field that would otherwise read far past
-// the input.
+// holds. `ja4xCertificatesInMessage` of `ja4x.go` already bounds one certificate at 200000
+// bytes. The bound also stops a crafted field that would read far past the input.
 const derMaxLengthOctets = 4
 
 // X509Identifiers holds the three object identifier lists that JA4X reads.
 //
 // Each string is the lowercase hexadecimal form of the content octets of one ASN.1 OBJECT
-// IDENTIFIER. `testdata/foxio/reference/rust/ja4x/src/lib.rs:66` writes
-// `hex::encode(a.attr_type().as_bytes())`, so the reference hexes the same octets.
+// IDENTIFIER. R9 of `docs/specs/foxio/JA4X.md` states that form, and
+// `testdata/foxio/reference/rust/ja4x/src/lib.rs:68` writes
+// `hex::encode(a.attr_type().as_bytes())` for the issuer list. `:80` writes
+// `hex::encode(ext.oid.as_bytes())` for the extension list.
 type X509Identifiers struct {
 	// Issuer holds the identifiers of the issuer RDNSequence, in the order the certificate
 	// states them.
@@ -66,8 +67,14 @@ func ReadX509Identifiers(der []byte) (X509Identifiers, bool) {
 	var identifiers X509Identifiers
 
 	// Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue }.
-	certificate, _, ok := derElement(der, derTagSequence)
-	if !ok {
+	//
+	// A byte after that SEQUENCE fails the read. DER states one definite length for every
+	// element, so a certificate is exactly the SEQUENCE and nothing after it.
+	// `x509.ParseCertificate` returns `x509: trailing data` for the same input, and this
+	// reader must decline what that function declines for a reason no FoxIO implementation
+	// disputes.
+	certificate, afterCertificate, ok := derElement(der, derTagSequence)
+	if !ok || len(afterCertificate) != 0 {
 		return identifiers, false
 	}
 
@@ -162,9 +169,11 @@ func derIdentifiersInTrailingFields(fields []byte) ([]string, bool) {
 // derIdentifiersInName returns the object identifier of every attribute of one
 // RDNSequence, in the order the certificate states them.
 //
-// Name ::= RDNSequence ::= SEQUENCE OF RelativeDistinguishedName, and
-// RelativeDistinguishedName ::= SET OF AttributeTypeAndValue. RFC 5280 section 4.1.2.4
-// states both. The first field of AttributeTypeAndValue is the identifier.
+// RFC 5280 section 4.1.2.4 states `Name ::= CHOICE { rdnSequence  RDNSequence }`,
+// `RDNSequence ::= SEQUENCE OF RelativeDistinguishedName` and
+// `RelativeDistinguishedName ::= SET SIZE (1..MAX) OF AttributeTypeAndValue`. The CHOICE
+// holds one alternative, so a Name carries the SEQUENCE tag of the RDNSequence. The first
+// field of AttributeTypeAndValue is the identifier.
 func derIdentifiersInName(name []byte) ([]string, bool) {
 	var identifiers []string
 
@@ -195,8 +204,9 @@ func derIdentifiersInName(name []byte) ([]string, bool) {
 
 // derIdentifiersInExtensions returns the object identifier of every extension.
 //
-// Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension, and the first field of Extension is
-// the identifier. RFC 5280 section 4.1 states both.
+// RFC 5280 section 4.1 states `Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension` and
+// `Extension  ::=  SEQUENCE  { extnID      OBJECT IDENTIFIER, ... }`. So the first field of
+// each extension is the identifier.
 func derIdentifiersInExtensions(extensions []byte) ([]string, bool) {
 	list, _, ok := derElement(extensions, derTagSequence)
 	if !ok {
