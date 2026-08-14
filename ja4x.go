@@ -410,7 +410,23 @@ func ja4xParts(certDER []byte) ([3]string, bool) {
 
 	cert, err := x509.ParseCertificate(certDER)
 	if err != nil {
-		return parts, false
+		// `crypto/x509` fails the whole certificate parse for a public key it declines, and
+		// JA4X reads no public key. `parser.ReadX509Identifiers` reads the three identifier
+		// lists from the ASN.1 structure, so a certificate that names explicit elliptic
+		// curve parameters still reaches a value. Issue #490 records the measurement, and
+		// `docs/audit/ja4x-deviation-cluster.md`
+		// `## Cause 3 — the Go certificate parser refuses explicit elliptic curve parameters`
+		// holds the evidence.
+		identifiers, ok := parser.ReadX509Identifiers(certDER)
+		if !ok {
+			return parts, false
+		}
+
+		parts[0] = strings.Join(identifiers.Issuer, ",")
+		parts[1] = strings.Join(identifiers.Subject, ",")
+		parts[2] = strings.Join(identifiers.Extensions, ",")
+
+		return parts, true
 	}
 
 	// Extract issuer RDN OIDs.
