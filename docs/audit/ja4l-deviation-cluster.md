@@ -17,9 +17,10 @@ Every number of this section and of causes 1, 2, 4 and 5 comes from one run of
 `make conformance` on `issue/443-ja4l-deviation-cluster` on 2026-08-13, with the corpus
 present at the pinned commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 
-**That run predates the 89 comparisons that closed on 2026-08-14, so each count below reads
-a tree that no branch holds today.** `### The ruling of 2026-08-14` under cause 3 states the
-re-measured figures, and it names the command that measured them.
+**Each count below reads a tree that no branch holds today.** The run of 2026-08-13 reported
+635 deviations of the whole corpus, and the base of this ruling reports 273 on 2026-08-14.
+`### The ruling of 2026-08-14` under cause 3 states the re-measured figures, and it names
+the command that measured them.
 
 | Measure | Count |
 |---|---|
