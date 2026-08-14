@@ -1,5 +1,10 @@
 package parser
 
+import (
+	"cmp"
+	"slices"
+)
+
 // TCPStreamReassembler reassembles TCP streams using sequence numbers.
 // Handles out-of-order segments, duplicates, and overlaps.
 // Evicts oldest streams (LRU) when MaxStreams is exceeded.
@@ -22,11 +27,34 @@ type tcpStream struct {
 	baseSeq  uint32
 	// storedBytes counts the bytes of every segment this stream holds.
 	storedBytes int
+	// stored indexes the segments that this stream holds, so the deduplication reads one
+	// map lookup rather than a scan of every segment. Issue #596 measured the scan as a
+	// quadratic path: a stream of one byte per segment reaches 1048576 segments inside the
+	// byte bound, and the scan then costs the square of that count.
+	//
+	// The index is a second view of `segments`, and it never replaces the slice. `GetStream`
+	// walks the slice, because the assembled run reads the arrival order.
+	//
+	// The index lives in the stream rather than in the reassembler, so the removal of a
+	// stream releases it. `RemoveStream` and the eviction each delete the stream from the
+	// table, and no second release path can fall out of step with the first.
+	stored map[tcpSegmentKey]struct{}
 }
 
 type tcpSegment struct {
 	seq  uint32
 	data []byte
+}
+
+// tcpSegmentKey identifies one stored segment for the deduplication.
+//
+// The key holds the length beside the sequence number, because one stream legally holds two
+// segments of one sequence number. A retransmission that coalesces produces one, and a
+// re-segmentation produces one. A key of the sequence number alone would refuse the second
+// of them and move a JA4H value and a JA4X value.
+type tcpSegmentKey struct {
+	seq    uint32
+	length int
 }
 
 // NewTCPStreamReassembler creates a reassembler with the given limits.
@@ -54,7 +82,10 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 			delete(r.streams, oldest)
 			r.order = r.order[1:]
 		}
-		stream = &tcpStream{baseSeq: seq}
+		stream = &tcpStream{
+			baseSeq: seq,
+			stored:  make(map[tcpSegmentKey]struct{}),
+		}
 		r.streams[key] = stream
 		r.order = append(r.order, key)
 	} else {
@@ -62,11 +93,12 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 		r.moveToEnd(key)
 	}
 
-	// Deduplicate: skip if exact same seq and length already exists
-	for _, seg := range stream.segments {
-		if seg.seq == seq && len(seg.data) == len(data) {
-			return
-		}
+	// Deduplicate: skip if exact same seq and length already exists.
+	// The index holds one key for each stored segment, so this lookup reads the same
+	// condition that the earlier scan of every segment read.
+	segKey := tcpSegmentKey{seq: seq, length: len(data)}
+	if _, held := stream.stored[segKey]; held {
+		return
 	}
 
 	// A stream that reached the byte bound stores no further segment. Every packet is
@@ -94,6 +126,12 @@ func (r *TCPStreamReassembler) AddSegment(key string, seq uint32, data []byte) {
 	copy(segData, data)
 	stream.segments = append(stream.segments, tcpSegment{seq: seq, data: segData})
 	stream.storedBytes += len(data)
+
+	// The index gains a key only where the slice gains a segment. The byte bound above
+	// refuses a segment that the stream never stores, and the earlier scan read the stored
+	// segments alone, so a key written before the bound would deduplicate a segment that
+	// the stream does not hold.
+	stream.stored[segKey] = struct{}{}
 }
 
 // storedByteBound returns the bytes that one stream stores at most.
@@ -172,15 +210,20 @@ func (r *TCPStreamReassembler) moveToEnd(key string) {
 	}
 }
 
-// sortSegments sorts segments by sequence number using insertion sort (small N).
+// sortSegments sorts segments by sequence number, and it keeps the arrival order of two
+// segments that carry one sequence number.
+//
+// The sort is stable, and that is a correctness requirement rather than a preference.
+// `GetStream` trims each later segment against the run it already assembled, so two
+// segments of one sequence number assemble to different bytes in the two orders.
+// `ja4h.go` and `ja4x.go` read those bytes, so an unstable sort moves a fingerprint value.
+// `slices.SortFunc` is the unstable call, and issue #596 measured the moved bytes.
+//
+// The earlier insertion sort was stable, because it compared with a strict `>`. It cost the
+// square of the segment count on a reversed arrival order, and issue #596 records that
+// measurement.
 func sortSegments(segs []tcpSegment) {
-	for i := 1; i < len(segs); i++ {
-		key := segs[i]
-		j := i - 1
-		for j >= 0 && segs[j].seq > key.seq {
-			segs[j+1] = segs[j]
-			j--
-		}
-		segs[j+1] = key
-	}
+	slices.SortStableFunc(segs, func(a, b tcpSegment) int {
+		return cmp.Compare(a.seq, b.seq)
+	})
 }
