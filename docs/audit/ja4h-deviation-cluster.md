@@ -418,7 +418,8 @@ entry, so every SSDP value the library produces reads as a surplus value against
 
 ## Cause 5 — the request line parser rejects a path that holds a space
 
-**3 deviations, all in `gre-erspan-vxlan.pcap`, and 1 of them closes.** Frame 4 holds:
+**3 deviations, all in `gre-erspan-vxlan.pcap`, and 1 of them closes.** #527 re-measured
+that count on 2026-08-14, and the run still reports 3. Frame 4 holds:
 
 ```
 GET /Hello Arkime HTTP/1.0\r\n\r\n
@@ -435,10 +436,11 @@ The per-packet vector holds `ge10nn000000_e3b0c44298fc_000000000000_000000000000
 **Rule 5b — part b writes the zero sentinel for an empty header list.**
 `computeJA4HFromRequest` of `ja4h.go` calls
 `parser.TruncatedHash`, and `TruncatedHash` of `internal/parser/hash.go` returns `000000000000` for the
-empty string. **The reference hashes the empty string.**
+empty string. **The Python reference hashes the empty string.**
 `testdata/foxio/reference/python/common.py:127` holds
 `return sha256(','.join(values).encode('utf8')).hexdigest()[:12]`, and that value is
-`e3b0c44298fc`.
+`e3b0c44298fc`. **Two other FoxIO implementations write the zero sentinel instead**, and
+`### Rule 5b needs a ruling` below states each reading.
 
 **The measurement.** A candidate change that relaxed the path group alone moved the JA4H count
 from 337 to 337, and it closed nothing. It produced
@@ -450,14 +452,85 @@ compose, and neither one closes a deviation on its own.
 **The 2 deviations that remain are ruling #285.** The two raw forms hold
 `ge10nn000000__` against the expected `ge10nn000000___`.
 
-- **The FoxIO implementations agree on rule 5b.** The dissector hashes the header string too,
-  and `packet-ja4.c:637` reserves the zero string for the cookie fields.
+- **The FoxIO implementations split on rule 5b.** An earlier draft of this page stated that
+  they agree, and it read two of the four. `### Rule 5b needs a ruling` below states each
+  reading, and #527 holds the question.
 - **The port carries both gaps.** `ja4plus/utils/http_utils.py:31-34` holds the same `(\S+)`
   path group. **A change here that the port does not make opens a parity difference.**
 - **No register entry closes.** The accepted count held at 419.
 - **The cost of rule 5a is one regular expression, and the cost of rule 5b is one call
   site.** **Rule 5b reaches every JA4H value whose header list is empty, so it needs a wider
   measurement than one capture before anybody builds it.**
+
+### Rule 5b needs a ruling
+
+**The four FoxIO implementations split two against two.** #527 read each one on 2026-08-14,
+at the pin `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+
+| Implementation | Part b of an empty header list | Evidence |
+|---|---|---|
+| Python | `e3b0c44298fc` | `testdata/foxio/reference/python/ja4h.py:72` and `testdata/foxio/reference/python/common.py:127` |
+| Wireshark | `e3b0c44298fc` | `testdata/foxio/reference/wireshark/source/packet-ja4.c:628` and `:641` |
+| Rust | `000000000000` | `testdata/foxio/reference/rust/ja4/src/http.rs:202` and `testdata/foxio/reference/rust/ja4/src/lib.rs:184` |
+| Zeek | `000000000000` | `testdata/foxio/reference/zeek/ja4h/main.zeek:195` and `testdata/foxio/reference/zeek/utils/common.zeek:64` |
+
+**Python and Wireshark hash the header string under no guard.**
+`testdata/foxio/reference/python/ja4h.py:72` holds `headers = sha_encode(x['headers'])`.
+`testdata/foxio/reference/wireshark/source/packet-ja4.c:641` writes `hash1` directly, and
+it reserves `zero_hash` for part c and part d alone.
+
+**Rust and Zeek return the zero sentinel for the empty string.**
+`testdata/foxio/reference/rust/ja4/src/lib.rs:184` holds `if s.is_empty() {`, and the next
+line returns `"000000000000".to_owned()`.
+`testdata/foxio/reference/zeek/utils/common.zeek:64` holds `if (input == "") {`, and the
+next line returns `"000000000000"`.
+
+**Each of the two guards reaches part b, and neither one reaches part b in a published
+vector.** `testdata/foxio/reference/rust/ja4/src/http.rs:202` calls `hash12` on the joined
+header list, and an empty list joins to the empty string. **No Rust snapshot reads a header
+count of `00`**, so no published Rust value exercises the guard.
+
+**R18 of `docs/specs/foxio/JA4H.md` is a rank 1 image rule, and it names no sentinel.** It
+states `Truncated SHA256 hash of Headers, in the order they appear`. **R27 confines the zero
+sentinel to part c and part d.** So the image agrees with Python and with Wireshark.
+
+**One vector of the corpus exercises the question, and the Wireshark dissector produced
+it.** `testdata/foxio/wireshark/gre-erspan-vxlan.pcap.json` holds
+`ge10nn000000_e3b0c44298fc_000000000000_000000000000` at frame 4. **That vector is the
+output of one party to the split**, so it corroborates the image rather than deciding the
+question on its own.
+
+**The corpus holds 215 JA4H values, and 1 of them reads a header count of `00`.** No vector
+of the corpus writes `000000000000` in part b. Measured on 2026-08-14.
+
+**This project already records the same question for another method, and it records it as a
+reference split.** **R12 of `docs/specs/foxio/JA4X.md` states
+`**R12** — **Reference split.** An empty list produces two different values.`** It names
+`rust/ja4x/src/lib.rs:171` and `wireshark/source/packet-ja4.c:590` for the sentinel, and
+`python/ja4x.py:87` for the hash. **So the empty list question is open for JA4X today**, and
+rule 5b asks it for part b of JA4H.
+
+**One difference separates the two.** The JA4X image carries a value for each half of the
+split, and R12 records both. **The JA4H image names a hash at R18, and it confines the
+sentinel to part c and part d at R27.** So the JA4H evidence leans one way and the JA4X
+evidence leans neither way.
+
+**Two stop conditions of `.claude/rules/rulings.md` fire together.** The implementations
+disagree with each other, and the image disagrees with two of them. **The maintainer rules
+rule 5b, and no session builds it first.** A ruling lands in this repository and in
+`Crank-Git/ja4plus` together, under `.claude/rules/parity.md`.
+
+**A repair of rule 5b changes no line of `internal/parser/hash.go`.** `TruncatedHash` serves
+nine call sites outside part b, in `ja4.go`, in `ja4s.go`, in `ja4x.go` and in the two
+cookie parts of `computeJA4HFromRequest`. **R27 holds the sentinel for part c and part d**,
+and **R12 of `docs/specs/foxio/JA4X.md` holds the sentinel for JA4X**. The doc comment of
+`computeJA4XWithRaw` in `ja4x.go` cites R12 and it names the same reliance. So a change to
+the shared function moves a JA4 value, a JA4S value and a JA4X value.
+
+**Rule 5a alone opens a deviation rather than closing one.** The path group repair makes
+`ParseHTTPRequest` return a request for frame 4, and part b then writes `000000000000`
+against the expected `e3b0c44298fc`. **So no session builds rule 5a before the maintainer
+rules rule 5b.**
 
 ---
 

@@ -241,9 +241,12 @@ reserves a reference split to the maintainer, and the maintainer already ruled t
 
 ### The six values of `CVE-2018-6794.pcap` fall under ruling #196
 
-**The register already holds 35 per-packet JA4L entries under ruling #196**, and each one
-records the same divergence. Each one carries an empty `theirs`, because the dissector
-publishes no value on the frame this library writes. The entry
+**The register held 35 per-packet JA4L entries under ruling #196 when this page landed**,
+and each one records the same divergence. **It holds 41 today, and issue #544 wrote the 6
+that this section names.** Round 51 of the `## Changelog` of `docs/specs/spec.md` records
+that change. **`testdata/deviations.json` holds 41 entries whose `ruling` reads `#196` on
+2026-08-14**, and 6 of the 41 name `CVE-2018-6794.pcap`. Each one carries an empty `theirs`,
+because the dissector publishes no value on the frame this library writes. The entry
 `badcurveball.pcap/4/JA4L.1` is one of the 35, and its reason reads:
 
 > The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame.
@@ -257,11 +260,14 @@ difference is a classification of the harness and never a cause.**
   reports an **uncovered value**.
 
 **#361 built the machinery that makes an uncovered value registrable**, and ruling #196
-predates it. **That is why the six sit outside the register while their 35 siblings sit
-inside it.**
+predates it. **That is why the six sat outside the register while their 35 siblings sat
+inside it.** **Issue #544 closed that difference on 2026-08-14, and all 41 sit inside the
+register today.**
 
-**So the six values earn a value decline under ruling #196, and this page writes none.** An
-entry states a per-packet reason, and never the per-stream reason of ruling #361. The
+**So the six values earn a value decline under ruling #196, and this page writes none.**
+**Issue #544 wrote the six entries, in pull request #547**, so a reader reads this sentence
+as the reading that earned them and never as open work. An entry states a per-packet
+reason, and never the per-stream reason of ruling #361. The
 reason names `wireshark/source/packet-ja4.c:1302`, because that line is why the dissector
 publishes no key for this capture.
 
