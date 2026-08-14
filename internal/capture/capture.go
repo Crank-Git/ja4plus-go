@@ -41,8 +41,40 @@ type Handle interface {
 	ReadPacketData() ([]byte, gopacket.CaptureInfo, error)
 	// LinkType returns the link type of the bytes that ReadPacketData returns.
 	LinkType() layers.LinkType
+	// DropCount returns the count of packets the capture backend dropped since the handle
+	// opened. It returns false when the backend reports no count, and FR-capture-33 of
+	// `docs/specs/features/13-live-capture.md` writes `unknown` for that answer.
+	//
+	// The goroutine that reads the handle calls this method, and no second goroutine calls
+	// it. The pure-Go backend accumulates a delta that the kernel resets at each read, so a
+	// second caller takes a count that the first caller then loses.
+	DropCount() (uint64, bool)
 	// Close releases the capture handle.
 	Close() error
+}
+
+// dropAccumulator holds the total drop count of a backend that reports a delta.
+//
+// The packet socket of Linux resets its counter at each read, so a backend that reads it
+// twice sees two deltas and never a total. `packet(7)` states the reset:
+// `Receiving statistics resets the internal counters.`
+// Verified against: <https://man7.org/linux/man-pages/man7/packet.7.html>, retrieved
+// 2026-08-14.
+//
+// One goroutine owns one accumulator, because one goroutine owns the handle that holds it.
+// The type carries no build constraint, so a test of every platform reads it.
+type dropAccumulator struct {
+	// total holds the count of packets the backend dropped since the handle opened.
+	total uint64
+}
+
+// add records one delta, and it returns the total since the handle opened.
+// The total holds 64 bits and the delta holds 32, because a monitor that runs for weeks
+// passes the width of one delta.
+func (a *dropAccumulator) add(delta uint32) uint64 {
+	a.total += uint64(delta)
+
+	return a.total
 }
 
 // Open returns a capture handle for the interface that the options name.

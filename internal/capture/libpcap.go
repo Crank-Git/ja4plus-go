@@ -92,6 +92,33 @@ func (p *pcapHandle) LinkType() layers.LinkType {
 	return p.handle.LinkType()
 }
 
+// DropCount returns the count of packets libpcap dropped since the handle opened.
+//
+// It returns false when libpcap reports no statistics for the handle, and FR-capture-33
+// writes `unknown` for that answer. It returns false for a negative count too, because a
+// count below zero states no drop total.
+//
+// `pcap.Handle.Stats` calls `pcap_stats`, which fills `PacketsDropped` from `ps_drop`. The
+// manual page states the count: `number of packets dropped because there was no room in
+// the operating system's buffer when they arrived, because packets weren't being read fast
+// enough`. It states the period too: `The values represent packet statistics from the
+// start of the run to the time of the call.` So this backend accumulates nothing, and the
+// pure-Go backend of `pcapgo_linux.go` accumulates a delta.
+// Verified against: <https://www.tcpdump.org/manpages/pcap_stats.3pcap.html>, retrieved
+// 2026-08-14. The Go binding is `gopacket@v1.6.1/pcap/pcap_unix.go:278`.
+func (p *pcapHandle) DropCount() (uint64, bool) {
+	stats, err := p.handle.Stats()
+	if err != nil {
+		return 0, false
+	}
+
+	if stats.PacketsDropped < 0 {
+		return 0, false
+	}
+
+	return uint64(stats.PacketsDropped), true
+}
+
 // Close releases the libpcap handle. It returns no error.
 //
 // `pcap.Handle.Close` of gopacket v1.6.1 returns no value, so this backend reports no
