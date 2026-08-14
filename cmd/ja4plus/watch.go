@@ -32,9 +32,8 @@ const watchUsage = "Usage: ja4plus watch --interface <name> [--bpf <filter>] [--
 
 // watchOptions holds every option of the watch command.
 //
-// The monitor of #80 reads each field, and the statistics line of #81 reads
-// `statsInterval`. This slice parses the options and opens the handle, and it runs no
-// monitor loop.
+// The monitor reads each field, and the statistics line of #81 reads `statsInterval`.
+// `newMonitor` takes the whole struct, so #81 needs no new parameter.
 type watchOptions struct {
 	// iface names the interface the monitor reads. FR-capture-2 states the option.
 	iface string

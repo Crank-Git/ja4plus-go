@@ -204,7 +204,7 @@ func TestWatchInterfaceReturnsTheErrorOfTheCaptureBackendUnchanged(t *testing.T)
 func TestWatchInterfaceClosesTheHandleThatItOpens(t *testing.T) {
 	handle := &stubHandle{}
 
-	// The monitor loop of #80 is not built, so this call returns the error of the seam. The
+	// The stub reports a failed read, so the monitor loop of #80 returns that error. The
 	// handle closes on every path, because a live run holds one handle for the whole run.
 	_ = watchInterface(watchOptions{iface: "eth0"},
 		func(capture.Options) (capture.Handle, error) { return handle, nil })
