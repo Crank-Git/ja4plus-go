@@ -38,9 +38,15 @@ const methodTokenCharacters = "!#$%&'*+\\-.^_`|~0-9A-Za-z"
 // read no request line of frame 4 of `testdata/foxio/pcap/gre-erspan-vxlan.pcap`, which
 // holds `GET /Hello Arkime HTTP/1.0`, and FoxIO holds a JA4H value for that frame. #527
 // records the defect. The group is lazy, so a first line that holds two version tokens
-// reaches the earlier one, as the non-space group did. `.` matches no line feed, so the
-// group stays inside the first line.
-var requestLineRe = regexp.MustCompile(`^([` + methodTokenCharacters + `]+)\s+(.+?)\s+(HTTP/\d+\.\d+)`)
+// reaches the earlier one, as the non-space group did.
+//
+// Each separator reads a space or a horizontal tab, and never a line ending. A separator
+// of `\s` reads a line ending too, so the match crossed into the second line and read a
+// request line that no line of the payload holds. The payload
+// `SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n` matched under `\s` and the path group of
+// non-space characters, and `ja4l.go` reads `IsHTTPRequest` to pick a measurement point, so
+// that match moved a JA4L value. #527 measured the defect on 2026-08-14 and closed it.
+var requestLineRe = regexp.MustCompile(`^([` + methodTokenCharacters + `]+)[ \t]+(.+?)[ \t]+(HTTP/\d+\.\d+)`)
 var headerLineRe = regexp.MustCompile(`^([^:]+):\s*(.*)$`)
 
 // requestLineLimit bounds the text that IsHTTPRequest matches the request line against.

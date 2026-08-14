@@ -89,6 +89,50 @@ func TestJA4HReadsARequestPathThatHoldsASpace(t *testing.T) {
 	}
 }
 
+// TestTheRequestLineReadsNoSecondLine holds the separator rule of `requestLineRe`.
+//
+// A separator of `\s` reads a line ending, so the match crossed into the second line and
+// read a request line that no line of the payload holds. `ja4l.go` reads `IsHTTPRequest` to
+// pick a measurement point, so such a match moves a JA4L value. #527 closed the defect on
+// 2026-08-14, and the first payload below matched before that day.
+func TestTheRequestLineReadsNoSecondLine(t *testing.T) {
+	payloads := []string{
+		"SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n\r\n",
+		"SSH-2.0-OpenSSH_9.6\r\nsome junk HTTP/1.1\r\n\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n",
+	}
+
+	for _, payload := range payloads {
+		if parser.IsHTTPRequest([]byte(payload)) {
+			t.Errorf("IsHTTPRequest reads %q as a request", payload)
+		}
+		if request := parser.ParseHTTPRequest([]byte(payload)); request != nil {
+			t.Errorf("ParseHTTPRequest reads %q as the request %+v", payload, request)
+		}
+	}
+}
+
+// TestTheRequestLineReadsASpaceAndATabAsASeparator holds the separator set of
+// `requestLineRe`. RFC 9112 section 3 names one space, and a lenient parser reads a tab.
+func TestTheRequestLineReadsASpaceAndATabAsASeparator(t *testing.T) {
+	payloads := []string{
+		"GET /a HTTP/1.1\r\n\r\n",
+		"GET\t/a\tHTTP/1.1\r\n\r\n",
+		"GET  /a  HTTP/1.1\r\n\r\n",
+		"GET /a HTTP/1.1\n\n",
+	}
+
+	for _, payload := range payloads {
+		request := parser.ParseHTTPRequest([]byte(payload))
+		if request == nil {
+			t.Fatalf("ParseHTTPRequest read no request from %q", payload)
+		}
+		if request.Path != "/a" {
+			t.Errorf("Path of %q is %q, want %q", payload, request.Path, "/a")
+		}
+	}
+}
+
 // TestJA4HProducesTheFoxioValueOfTheSpacedPathFrame proves that the two rules of #527
 // close one comparison of the corpus together.
 func TestJA4HProducesTheFoxioValueOfTheSpacedPathFrame(t *testing.T) {

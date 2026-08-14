@@ -586,6 +586,17 @@ when a later change adds one.
 lazy group of any character in place of the non-space group. The group is lazy, so a first
 line that holds two version tokens reaches the earlier one, as the non-space group did.
 
+**Rule 5a also tightened each separator of that expression, and the self-review of #527
+earned the change.** A separator of `\s` reads a line ending, so the match crossed into the
+second line of the payload and read a request line that no line holds. **The payload
+`SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n` matched before 2026-08-14**, under the non-space
+path group and the `\s` separator. `ja4l.go` reads `IsHTTPRequest` to pick a measurement
+point, so that match moves a JA4L value. Each separator now reads a space or a horizontal
+tab. **The change moves no value of the corpus**: the run above is byte-identical with the
+separator and without it, so no capture of the corpus holds such a payload.
+`TestTheRequestLineReadsNoSecondLine` of `ja4h_empty_header_list_test.go` holds the rule,
+and `TestTheRequestLineReadsASpaceAndATabAsASeparator` holds the separator set.
+
 #### The measurement
 
 **`make corpus` and then `make conformance`, on `issue/527-ja4h-hash-empty-header-list`,
