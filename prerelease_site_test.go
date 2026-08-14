@@ -35,9 +35,13 @@ import (
 // measurement on 2026-08-14 read `/opt/homebrew/bin/python3` on darwin/arm64. So this file
 // composes its own variable list, and it changes no line that #98 owns.
 //
-// Verified against the output of `python3 -m venv --help`, `pip install --help`,
-// `pip list --help` and `mkdocs build --help` at Python 3.14.3, mkdocs 1.6.1 and pip
-// 26.2.1, read 2026-08-14.
+// Verified against the output of four commands, read on 2026-08-14. The versions are Python
+// 3.14.3, mkdocs 1.6.1 and pip 26.2.1.
+//
+//   - `python3 -m venv --help`
+//   - `pip install --help`
+//   - `pip list --help`
+//   - `mkdocs build --help`
 
 // sitePinFile holds every version of the site generator, under FR-documentation-8.
 const sitePinFile = "docs/requirements.txt"
@@ -47,8 +51,8 @@ const siteConfigFile = "mkdocs.yml"
 
 // sitePackageIndexAddress names the package index that the installation reads.
 //
-// The case dials it before it installs, so a machine with no network reports that it could
-// not check rather than a defect of the pin file.
+// The case dials it before it installs. A machine with no network then reports that it
+// could not check, and never a defect of the pin file.
 const sitePackageIndexAddress = "pypi.org:443"
 
 // siteEnvironmentBootstrap names each distribution that the Python environment supplies.

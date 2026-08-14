@@ -32,15 +32,17 @@ const prereleaseConformanceSuite = "conformance_test.go"
 
 // documentationSiteAddress names the host that serves the documentation site.
 //
-// The case dials it before it reads the link. A host that accepts a connection and answers
-// with an error status states that the link does not resolve, and a host that accepts no
-// connection states that the case could not check.
+// The case dials it before it reads the link, and the two outcomes mean two things.
+//
+//   - The host accepts a connection and answers with an error status. The link does not
+//     resolve, and the case fails.
+//   - The host accepts no connection. The case could not check, and it skips.
 const documentationSiteAddress = "crank-git.github.io:443"
 
 // prereleaseSummaryRow returns the count that one row of the report summary states.
 //
-// It fails the test when the report holds no such row, because a release gate that reads an
-// absent row would pass on a report that measures nothing.
+// It fails the test when the report holds no such row. A release gate that read an absent
+// row would pass on a report that measures nothing.
 func prereleaseSummaryRow(t *testing.T, report, measure string) int {
 	t.Helper()
 
@@ -219,8 +221,12 @@ func prereleaseTrackedFiles(t *testing.T) []string {
 
 // prereleasePathIsSkipped reports whether the ordinary method-count walk skips the path.
 //
-// The walk skips a directory by name, so a tracked file under one of them reaches no guard
-// even when its extension is one the walk reads.
+// The walk skips a directory by name. So a tracked file under one of them reaches no
+// guard, whatever its extension.
+//
+// **`assets` is the one skipped directory that git tracks**, and `assets/logo.png` is the
+// one file it holds today. A later `assets/README.md` would reach this case and no other,
+// because the walk skips the directory and the ordinary guard reads no file of it.
 func prereleasePathIsSkipped(path string) bool {
 	slashed := filepath.ToSlash(path)
 

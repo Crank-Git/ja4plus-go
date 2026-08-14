@@ -34,9 +34,15 @@ type prereleaseCase struct {
 
 // prereleaseCases holds one row for each case of the feature set.
 //
-// #95 built the clean environment on 2026-08-14. Every other row reads a published tag, a
-// published module or a released binary, and this project has cut no tag since `v0.3.0`.
-// So each of those rows waits for the release, and the summary reports it as absent.
+// #95 built the clean environment on 2026-08-14, and #99 built the site and the gates.
+//
+// **A row that reads a published tag, a published module or a released binary waits for the
+// release.** This project has cut no tag since `v0.3.0`, so the summary reports each of
+// those rows as absent.
+//
+// **A row that reads no tag does not wait.** The documentation site reads
+// `docs/requirements.txt`, and the release gate reads the tracked tree. Two more rows of
+// #99 wait on something other than a tag, and each one states what.
 var prereleaseCases = []prereleaseCase{
 	{
 		name:         "the clean environment",
