@@ -8,9 +8,12 @@ Issue #443 produced it, under Epic #441. `.claude/rules/rulings.md` states who r
 
 ## The measurement
 
-Every number on this page comes from one run of `make conformance` on
-`issue/443-ja4l-deviation-cluster`, with the corpus present at the pinned commit
+Every number of this section, and of causes 1 to 5, comes from one run of `make conformance`
+on `issue/443-ja4l-deviation-cluster`, with the corpus present at the pinned commit
 `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+
+**Cause 6 below carries its own base, and `### The measurement of this section` states it.**
+#449 added that cause on a later branch, so a number of cause 6 reads against another run.
 
 | Measure | Count |
 |---|---|
@@ -345,10 +348,11 @@ declines nothing.**
 **This cause holds 2 deviations of the count of 177, and it holds 4 on the base of this
 reading.** #449 produced it, under batch #536.
 
-**The two counts differ because #443 measured the cluster before #447 landed.** The two
-`JA4L` rows sit in `## The unattributed deviation` below, and #443 stated that each one
-needs a separate reading. #447 moved the QUIC `JA4L-S` emission to the point D frame, and
-two `JA4LS` rows joined them. **This section states that reading, and it decides no value.**
+**The two counts differ because #443 measured the cluster before #447 landed.** #443 left
+the two `JA4L` rows unattributed, and this section holds them now.
+`## The unattributed deviation` below records that move. #447 then moved the QUIC `JA4L-S`
+emission to the point D frame, and two `JA4LS` rows joined the two `JA4L` rows. **This
+section states the reading that #443 asked for, and it decides no value.**
 
 ### The measurement of this section
 
