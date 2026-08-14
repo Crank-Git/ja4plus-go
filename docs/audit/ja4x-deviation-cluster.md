@@ -26,6 +26,39 @@ page names the first run, and a JA4X figure names both runs.**
 `## A change is done when` list of `CLAUDE.md` is unmeetable today. This page reports no
 green gate.
 
+**Neither run above describes the tree today, and every count of this page outside the next
+section names a run of 2026-08-13.** The Epic #441 batch merged after both runs, and it closed
+39 of the 50. **`## The merged tree of the Epic #441 batch, 2026-08-14` below states every
+re-measured figure**, and it names the run that measured each one. **A reader who carries 1680,
+475, 367, 558 or 578 forward from this preamble reads a stale figure.**
+
+## The merged tree of the Epic #441 batch, 2026-08-14
+
+**One run of `make conformance` on `issue/512-epic-441-round` at `74c8827` produced every
+figure of this section.** That run reads the corpus at
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, and `74c8827` is the head of
+`origin/epic/441-deviation-fixes` after the last member sub-merged. **The run rewrote no byte
+of `docs/audit/conformance.md`**, so the tracked report already described that head.
+
+**The run reports 1753 matches, 278 deviations that the register does not hold, 575 accepted
+deviations and 595 register keys.** It reports 184 unaccepted uncovered values, 20 accepted
+uncovered values, 0 stale register entries and 0 orphan register entries. **`575 + 20 = 595`,
+so the accepted comparison count equals the register key count.**
+
+| Cause | The member that built it | Deviations of 2026-08-13 | The merged tree |
+|---|---|---|---|
+| 1 | #489, `91a289d` | 36 | 0 |
+| 2 | **None. #492 left this batch.** | 11 | 11 |
+| 3 | #490, `8347afd` | 3 | 0 |
+| **Total** | | **50** | **11** |
+
+**The 11 that remain are the 11 of cause 2, and the run names the same two captures.**
+`http2-with-cookies.pcapng` holds 9 and
+`chrome-cloudflare-quic-with-secrets.pcapng` holds 2. **So the cause 2 attribution of this
+page holds against the merged tree**, and the two closed causes reached the counts they
+predicted. **The ship-partial comment of #441 dated 2026-08-14 states why #492 left the
+batch.**
+
 ## The measurement
 
 **The first run reports 475 deviations that the register does not hold, and the second run
@@ -33,26 +66,35 @@ reports 367. 50 of them name JA4X or JA4X_r in each run.** **Epic #441 measured 
 2026-08-13, before batch #421 and before #438.** This page re-measured the number rather
 than adopt it, and the three measurements agree.
 
-| Key kind | Count |
-|---|---|
-| `JA4X` | 34 |
-| `JA4X_r` | 16 |
+**Each table of this section carries one more count column, headed `The merged tree`, and the
+Epic #441 batch produced every figure of it.**
+`## The merged tree of the Epic #441 batch, 2026-08-14` above names the run.
 
-| Direction | Count |
-|---|---|
-| `the vector holds a value the library does not produce` | 47 |
-| `the two values differ` | 3 |
+| Key kind | 2026-08-13 | The merged tree |
+|---|---|---|
+| `JA4X` | 34 | 8 |
+| `JA4X_r` | 16 | 3 |
 
-**Six captures hold the 50.**
+| Direction | 2026-08-13 | The merged tree |
+|---|---|---|
+| `the vector holds a value the library does not produce` | 47 | 11 |
+| `the two values differ` | 3 | 0 |
 
-| Capture | Per-stream | Per-packet | Total |
-|---|---|---|---|
-| `tls-handshake.pcapng` | 6 | 12 | 18 |
-| `socks-https-example.pcap` | 4 | 8 | 12 |
-| `http2-with-cookies.pcapng` | 3 | 6 | 9 |
-| `latest.pcapng` | 2 | 4 | 6 |
-| `badcurveball.pcap` | 1 | 2 | 3 |
-| `chrome-cloudflare-quic-with-secrets.pcapng` | 2 | 0 | 2 |
+**The `the two values differ` row reads 0, and this page keeps the row.** A row that states a
+measured 0 separates a direction that no deviation reaches from a direction that nobody
+measured. **Every remaining JA4X deviation reads
+`the vector holds a value the library does not produce`.**
+
+**Six captures hold the 50, and two of the six hold the 11.**
+
+| Capture | Per-stream | Per-packet | Total | The merged tree |
+|---|---|---|---|---|
+| `tls-handshake.pcapng` | 6 | 12 | 18 | 0 |
+| `socks-https-example.pcap` | 4 | 8 | 12 | 0 |
+| `http2-with-cookies.pcapng` | 3 | 6 | 9 | 9 |
+| `latest.pcapng` | 2 | 4 | 6 | 0 |
+| `badcurveball.pcap` | 1 | 2 | 3 | 0 |
+| `chrome-cloudflare-quic-with-secrets.pcapng` | 2 | 0 | 2 | 2 |
 
 **The per-packet set publishes JA4X and JA4X_r for one frame, and the per-stream set
 publishes JA4X alone.** So one certificate that the library misses costs two per-packet keys
@@ -86,6 +128,9 @@ value the vector names at occurrence 3.**
 
 **36 deviations.** `tls-handshake.pcapng` holds 18, `socks-https-example.pcap` holds 12 and
 `latest.pcapng` holds 6. **All 36 close.**
+
+**#489 built the change, and it sub-merged at `91a289d` on 2026-08-14. The merged tree reports
+0 of the 36.**
 
 **`findCertificatesInStream` of `ja4x.go` reads `processedCerts` before it writes a value,
 and it skips a certificate the set holds.** The key of that set is the SHA-256 hash of the
@@ -162,8 +207,12 @@ certificate of it repeats on a second stream.
 
 **The change raises the count of unaccepted uncovered values by 11.** The per-stream vector
 set publishes no JA4X_r key, so every per-stream JA4X_r value the library produces reads as
-an uncovered value. The run reports 47 unaccepted uncovered JA4X keys today, and the change
-takes that count to 58. **An uncovered value fails no gate.** `conformanceReportTotals` of
+an uncovered value. The run of 2026-08-13 reports 47 unaccepted uncovered JA4X keys, and this
+page predicted that the change takes that count to 58. **#489 built the change, and the merged
+tree reads 59.** #490 adds `badcurveball.pcap/0/JA4X_r.2` on top of the 11 that #489 adds. **So
+the 58 of the prediction and the 59 of the measurement differ by one.**
+`## The merged tree of the Epic #441 batch, 2026-08-14` above names the run.
+**An uncovered value fails no gate.** `conformanceReportTotals` of
 `conformance_test.go` fails the run on a deviation count above zero, and it logs the
 uncovered counts.
 
@@ -212,6 +261,10 @@ stream of the six captures.
 **11 deviations.** `http2-with-cookies.pcapng` holds 9 and
 `chrome-cloudflare-quic-with-secrets.pcapng` holds 2. Every one reads
 `the vector holds a value the library does not produce`.
+
+**#492 builds this cause, and #492 left the Epic #441 batch on 2026-08-14. The merged tree
+reports all 11.** The ship-partial comment of #441 of that date states the three parts the work
+needs. **It also states that #492 reaches #171, Epic 10 and the port together.**
 
 **`findCertificatesInStream` of `ja4x.go` reads the first byte of each TLS record, and it
 skips a byte that is not `parser.TLSRecordTypeHandshake`.**
@@ -303,6 +356,9 @@ cause 1 does. `http2-with-cookies.pcapng` stream 0 gains 3, and
 **3 deviations, all in `badcurveball.pcap`, and all 3 close.** One is per-stream and two are
 per-packet. Every one reads `the vector holds a value the library does not produce`.
 
+**#490 built the change, and it sub-merged at `8347afd` on 2026-08-14. The merged tree reports
+0 of the 3.**
+
 ```
 per-packet deviation badcurveball.pcap/7/JA4X.2: the vector holds a value the library does not produce
       expected: "2e9214a636bc_2e9214a636bc_795797892f9c"
@@ -382,18 +438,20 @@ list and a subject list that are equal, which is the self-signed certificate tha
 
 ## The uncovered JA4X values
 
-**The run reports 192 uncovered values, and 59 of them name a JA4X key.** An uncovered value
+**The run of 2026-08-13 reports 192 uncovered values, and 59 of them name a JA4X key.** **The
+merged tree reports 204 uncovered values, and 71 of them name a JA4X key.** An uncovered value
 is a value the library produces for which the vector file names no key.
 
-| Category | All methods | JA4X keys |
-|---|---|---|
-| unaccepted | 172 | 47 |
-| accepted | 20 | 12 |
+| Category | All methods, 2026-08-13 | JA4X keys, 2026-08-13 | All methods, merged | JA4X keys, merged |
+|---|---|---|---|---|
+| unaccepted | 172 | 47 | 184 | 59 |
+| accepted | 20 | 12 | 20 | 12 |
 
-**45 of the 47 unaccepted keys name `JA4X_r`, and 2 name `JA4X`.** Every one of the 47
+**45 of the 47 unaccepted keys name `JA4X_r`, and 2 name `JA4X`.** **The merged tree reads 57
+of the 59 as `JA4X_r`, and the same 2 as `JA4X`.** Every unaccepted JA4X key of each run
 belongs to the per-stream set. The per-stream vector set publishes JA4X alone, because
 `testdata/foxio/reference/python/ja4x.py:87` writes the key `JA4X.{idx+1}` and no raw key.
-**So that rule accounts for the 45, and it accounts for neither of the 2.**
+**So that rule accounts for the 45 and for the 57, and it accounts for neither of the 2.**
 
 **The 2 are `https-connect.pcap/0/JA4X` and `https-connect.pcap/0/JA4X.2`.**
 `testdata/foxio/python/https-connect.pcap.json` holds one stream entry, and that entry names
@@ -454,11 +512,15 @@ reports a finding.
 
 ## What this reading does not answer
 
-- **The yield of each cause under a candidate change.** #458 writes no Go file, so no
+- **The count that each cause closes under a candidate change.** #458 writes no Go file, so no
   candidate change was built and no second conformance run measured one. **Each count above
   reads the run output, the vector files and the certificate bytes**, and the
   `### How this page reads the library output without a candidate change` section states the
-  method. **A fix issue re-measures its own yield with a run.**
+  method. **A fix issue re-measures the count it closes with a run.** #489 and #490 each did,
+  and `## The merged tree of the Epic #441 batch, 2026-08-14` above states both results.
+  **This page wrote the word `yield` on two lines.** The `## Terms` table of
+  `docs/specs/spec.md` declines that word, in the `Do not use` column of the `emit` row. **The
+  Epic #441 documentation round converted both lines.**
 - **Whether a fix for cause 2 produces a value outside the corpus.** Two captures of the
   corpus hold a protected certificate frame, and one measurement over 38 captures reports
   that. A capture that no corpus holds reaches no measurement here.

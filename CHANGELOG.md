@@ -43,7 +43,7 @@ produces, under three bounds on the state it added. Issue #57 widened the reques
 so that a method outside a closed list of nine reaches a JA4H value, and it made JA4X read a
 reassembled stream, and it kept the first Maximum DHCP Message Size on a repeated option 57.
 Issue #361 built the uncovered value, and it put 28 entries into the register. Issue #126 held
-the JA4T SYN selection in a test, and it changed no behaviour. Issue #356 recorded the two
+the JA4T SYN selection in a test, and it changed no behavior. Issue #356 recorded the two
 one-shot names as `not applicable`. Issue #375 put 12 entries into the register and closed
 FR-parity-50. The batch ran from `5010de7` to the merge of `epic/54-parity-tcp-http-cert-dhcp`.
 The run reports 1627 matches, 676 deviations and 409 accepted deviations before, and 1658
@@ -325,7 +325,7 @@ that the interface declares.
   the value half alone, and never the orphan half.** A register key that the run never
   reaches falls outside the key loop of the engine. Issue #307 asks for no second pass over
   the register. **`docs/specs/features/04-conformance-harness.md:115-125` numbers the
-  check as FR-conformance-33a through FR-conformance-33g.** The behaviour reached no
+  check as FR-conformance-33a through FR-conformance-33g.** The behavior reached no
   requirement when `6a03362` merged, and `4a30c33` numbered it inside this batch. The
   ordinal carries a letter, because `.github/workflows/ci.yml`, `corpus_fetch_test.go`,
   `conformance_skip_marker_test.go` and `docs/specs/spec.md` cite FR-conformance-34
@@ -374,7 +374,7 @@ that the interface declares.
   that ten test files and four documents hold.
   `docs/specs/features/08-python-parity.md:287` gains the eviction row, which separates
   `CloseConnectionWindow` from `CleanupConnection`. `docs/specs/spec.md:433` gains the
-  register row, and that row states that this project named the behaviour first. Rule 2 of
+  register row, and that row states that this project named the behavior first. Rule 2 of
   `.claude/rules/parity.md` therefore runs toward the port, and the row cites
   `Crank-Git/ja4plus#598`. `docs/specs/spec.md:474` names the method in the `Cleared by`
   cell of `JA4SSHFingerprinter`. **The member changes no Go file, and it moves no
@@ -739,7 +739,7 @@ that the interface declares.
   absence of output as the absence of fingerprints. `cmd/ja4plus/types.go` holds the eleven
   tokens, and the error names every one of them. **The shape follows the port**, at
   `ja4plus/cli.py:82-92` of tag `v1.1.0`. **A script that passes an unknown token changes
-  behaviour**, and `--types` with an empty list still selects nothing and exits 0, which the
+  behavior**, and `--types` with an empty list still selects nothing and exits 0, which the
   port also does. Issue #61 built it.
 - **`--types ja4ls` selects the JA4LS values alone, and `--types ja4l` still selects both.**
   The token is a superset over the port, which rejects `ja4ls` today, and
@@ -789,12 +789,12 @@ that the interface declares.
   **The library needs no change, because FR-parity-27 already holds the rule.** The mode reads
   the packet lengths of its own window alone, and `TestJA4SSHReadsTheModeOfTheWindowAlone` holds
   that rule. Port issue #96 ruled it. **This change moves no fingerprint value, and it changes
-  no behaviour.** Measured on `batch/236-ja4ssh-remainder` at `cc2c522` with the corpus present:
+  no behavior.** Measured on `batch/236-ja4ssh-remainder` at `cc2c522` with the corpus present:
   the run reports 1091 matches before and after, and 1279 deviations before and 1275 after. The
   register holds 198 keys before and 202 after, and no entry reads as closed. Coverage reads
   72.4% before and after. `docs/specs/spec.md` `## Changelog` round 23 records the ruling.
 - **JA4L now writes the marker `quic` as the third part of a value on a QUIC connection, and a
-  TCP connection keeps two parts.** This is a breaking behaviour change under `v1.0.0`.
+  TCP connection keeps two parts.** This is a breaking behavior change under `v1.0.0`.
   **The maintainer ruled on 2026-08-12 in issue #197, and issue #127 holds the original
   ruling.** The QUIC half of issue #127 reached no code, and issue #197 found the gap. The
   deciding rule is that the library matches the port one to one, and that it follows the FoxIO
@@ -831,9 +831,9 @@ that the interface declares.
   before and after, and no entry reads as closed.
 - **JA4L now fills the TCP client measurement point from the packet that the Python
   reference names, and the client value of a TCP connection moves.** This is a breaking
-  behaviour change under `v1.0.0`. **The maintainer ruled on 2026-08-12 in issue #196.**
+  behavior change under `v1.0.0`. **The maintainer ruled on 2026-08-12 in issue #196.**
   Point `C` reads every packet that carries `ACK`, carries no `SYN`, and holds the relative
-  sequence number `1` and the relative acknowledgement number `1`. A later such packet
+  sequence number `1` and the relative acknowledgment number `1`. A later such packet
   replaces the point. A packet that carries a whole HTTP request moves no point, because the
   reference keeps such a packet under a separate cache. Earlier releases read the first packet
   that carried `ACK` and no `SYN`, they tested no sequence number, and the point never moved.
@@ -863,7 +863,7 @@ that the interface declares.
   per-stream set now matches. Issues #205 and #206 hold the two comparisons the harness change
   leaves worse, both on `chrome-cloudflare-quic-with-secrets.pcapng` stream 0.
 - **JA4L and JA4LS now report half of the measured time, and every latency value moves.**
-  This is a breaking behaviour change under `v1.0.0`. The `JA4L.png` image labels part a
+  This is a breaking behavior change under `v1.0.0`. The `JA4L.png` image labels part a
   `One-way TCP latency in µs (1ms = 1,000µs)`. `docs/specs/foxio/JA4L.md` R6 states that
   part a is half of the measured time, because one measurement covers a round trip.
   Earlier releases reported the whole time between the two measurement points. Every value
@@ -879,7 +879,7 @@ that the interface declares.
   carries a third part that the library does not yet produce. Issue #166 holds the
   measurement, and the run measured the change on `batch/184-ja4l-repairs` at `f4aa6e6`.
 - **JA4L now fills the two QUIC client measurement points in the reference direction, and
-  the client value of a QUIC connection moves.** This is a breaking behaviour change under
+  the client value of a QUIC connection moves.** This is a breaking behavior change under
   `v1.0.0`. A server Handshake packet fills point C, and a client Handshake packet fills
   point D and completes the value. Every server Handshake packet moves point C until point
   D fills, so the last one supplies the point. A long-header packet of another type fills
@@ -897,7 +897,7 @@ that the interface declares.
   the vector value, which #166 halves. Issue #186 holds the measurement, and the run
   measured the change on `batch/184-ja4l-repairs` at `4d46f47`.
 - **JA4L and JA4LS now read a UDP flow only when the flow carries QUIC, and the library
-  produces no value for another UDP flow.** This is a breaking behaviour change under
+  produces no value for another UDP flow.** This is a breaking behavior change under
   `v1.0.0`. The library reads the UDP payload for a QUIC long header, and it reads the
   direction of the flow from the UDP port 443 alone. A flow whose two ports are 443 names
   no server, so the library produces no value for it. Earlier releases timed every UDP
@@ -911,7 +911,7 @@ that the interface declares.
   at 0. Issue #173 holds the measurement, and the run measured the change on
   `batch/184-ja4l-repairs` at `c1f13d5`.
 - **A tunneled connection now carries two keys, and the fingerprint of such a connection
-  moves.** This is a breaking behaviour change under `v1.0.0`. A `FingerprintResult` for a
+  moves.** This is a breaking behavior change under `v1.0.0`. A `FingerprintResult` for a
   GRE, ERSPAN, VXLAN or Geneve packet holds the outer address pair with the inner port
   pair, and the first packet of the connection fixes that pairing. The library collects
   packets into one connection by the inner address pair and the inner port pair, and
@@ -927,7 +927,7 @@ that the interface declares.
   read the outer UDP layer directly. They reported the tunnel port, and they grouped a
   tunneled connection by the outer address pair. #170 routes both branches through the
   helper. No capture of the FoxIO corpus carries QUIC inside a tunnel, so no value moves
-  and `quic_tunnel_test.go` holds the behaviour.
+  and `quic_tunnel_test.go` holds the behavior.
 - The parser reads no fingerprint from a packet that nests more than four tunnel layers,
   and it returns a non-fatal error that names the limit. It returns the same result for a
   tunnel whose inner packet it does not read, such as a GRE header that names an unknown
@@ -942,7 +942,7 @@ that the interface declares.
   raw form moves from `q12i030000_1301,1302,1303_` to
   `q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201`.
   The earlier value read a part of the client hello, so it named three cipher suites and no
-  extension. A released version produced it, so this is a breaking behaviour change under
+  extension. A released version produced it, so this is a breaking behavior change under
   `v1.0.0`. Issue #42 holds the measurement.
 - `ClientHelloFromCryptoFragments` returns no client hello while a fragment of the
   handshake message is still missing. It parsed a part of the message before, which

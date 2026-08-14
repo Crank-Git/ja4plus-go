@@ -140,7 +140,7 @@ reversal path.**
 ### An engineer closes a deviation
 
 1. Read the deviation row in `docs/audit/conformance.md`.
-2. Read the FoxIO reference behaviour for that method and that capture.
+2. Read the FoxIO reference behavior for that method and that capture.
 3. Write a test that reads the capture and asserts the FoxIO value. The test fails.
 4. Change the parser or the fingerprinter.
 5. The test passes.
@@ -216,7 +216,7 @@ reader or reads the block directly.
 | A Decryption Secrets Block holds a secret for a connection that the capture does not carry. | The library ignores the secret. |
 | A QUIC connection sends fragments that never complete a client hello. | The fragment buffer reaches its bound and the library drops the connection state. |
 | `gopacket` at v1.1.19 cannot decode a tunnel that the corpus holds. | Epic 7 decides whether the maintained fork solves it. Risk R5 in `../spec.md` records this. |
-| Closing a deviation changes a fingerprint that a released version produced. | `CHANGELOG.md` records it as a breaking behaviour change under `v1.0.0`. |
+| Closing a deviation changes a fingerprint that a released version produced. | `CHANGELOG.md` records it as a breaking behavior change under `v1.0.0`. |
 | A QUIC connection sends a server Initial packet. | `DecryptQUICInitialCrypto` declines the packet, and it returns no error. |
 | The Length field of a QUIC Initial packet leaves fewer bytes than the authentication tag. | `DecryptQUICInitialCrypto` returns a non-fatal error that names the tag. |
 
