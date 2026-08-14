@@ -20,6 +20,19 @@
 // database is live. The README states the measurement, and it names the command that
 // re-takes it.
 //
+// # Network
+//
+// This package performs no network input and no network output. It imports no HTTP client,
+// so no call of it reaches the network. LookupFingerprint reads the embedded table or the
+// cache file, and it makes no request.
+//
+// One function of this library reaches the network, and it lives in another package:
+// LookupFingerprintRemote of github.com/Crank-Git/ja4plus-go/ja4db. A program that imports
+// the core package alone links no HTTP client.
+//
+// The maintainer ruled that boundary on 2026-08-14, and docs/audit/network-boundary.md
+// holds the record, the three options and the reason.
+//
 // # Concurrency
 //
 // One Processor serves one goroutine, and one fingerprinter serves one goroutine. Every

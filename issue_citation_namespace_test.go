@@ -72,6 +72,13 @@ import (
 // allocation passes stays safe**, because the mark is a lower bound and this repository only
 // allocates upward.
 //
+// The Epic 9 round re-measured the mark on 2026-08-14 and it read 581. That round cites
+// #573, #577 and #581, and each number sits above the inherited mark of 543.
+//
+// The merge of `dev` into `epic/71-database-lookup` met two marks, 568 and 581, and it kept
+// 581. The mark is a lower bound, so the higher reading covers every citation the lower one
+// covers.
+//
 // The batch #555 round re-measured the mark on 2026-08-14 and it read 583. The round cites
 // #555, #557, #559, #560, #561, #563 and #575, and each number sits above the inherited
 // mark of 552. Every one names an issue or a pull request of this repository.
@@ -79,6 +86,11 @@ import (
 // **The merge of `dev` into batch #555 met two marks, and it keeps the higher one.** The
 // hotfix read 568 and the round read 583. **A mark is a lower bound, so the higher reading
 // covers the lower one** and no citation of either change falls outside it.
+//
+// **The second merge of `dev` into `epic/71-database-lookup` met the marks 581 and 583, and
+// it keeps 583.** Batch #555 landed on `dev` after the first merge, and it carried the
+// higher reading. The mark stays a lower bound, so 583 covers every citation that 581
+// covers.
 const issueCitationHighWaterMark = 583
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of

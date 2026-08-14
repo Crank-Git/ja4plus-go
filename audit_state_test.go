@@ -463,9 +463,10 @@ func TestNoFingerprinterTypeHoldsAResultsField(t *testing.T) {
 }
 
 // The suspected finding S3 states that a goroutine which reads the package-level lookup
-// state races another goroutine. No code writes that state outside lookupOnce.Do, so the
+// state races another goroutine. #74 replaced that state with one atomic.Pointer, so the
 // race detector reports nothing here.
-// The audit records S3 as unconfirmed, and this test holds the measurement.
+// This test reads the table from eight goroutines and writes none of it.
+// TestTheLookupTable_ReportsNoRaceWhenAnUpdateRunsBesideALookup adds the writer.
 func TestTheLookupState_ReportsNoRaceWhenGoroutinesReadTheDatabase(t *testing.T) {
 	const goroutines = 8
 

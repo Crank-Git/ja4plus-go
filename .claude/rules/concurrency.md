@@ -42,8 +42,12 @@ A caller has two supported patterns.
   which of the two patterns applies.
 - **A new state map has a removal path.** Add it to `CleanupConnection` and to `Reset`.
   State with no removal path leaks in a long-running monitor.
-- **The package-level lookup state in `lookup.go` is a known exception under repair.**
-  See `docs/specs/features/09-database-lookup.md`. Do not copy that pattern.
+- **The lookup table of `lookup.go` is process-wide state, and one `atomic.Pointer` holds
+  it.** #74 repaired the unguarded package-level state that suspected finding S3 records.
+  A reader loads one immutable snapshot, so the read path takes no lock and this contract
+  holds. A build takes a mutex that no reader takes. **No fingerprinter reads that state**,
+  so the rule above still bars a package-level variable on the packet path. See
+  `docs/specs/features/09-database-lookup.md`, FR-lookup-19 through FR-lookup-22.
 
 ## Tests
 
