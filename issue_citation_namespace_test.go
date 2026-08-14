@@ -178,7 +178,21 @@ import (
 // **A member pays this cost**, and no round of Epic 16 precedes a member that files an
 // issue. **Three members of Epic 16 run beside #96**, so a later member re-measures the
 // mark again and the union of the four is one number.
-const issueCitationHighWaterMark = 628
+//
+// **The project manager re-measured the mark on 2026-08-14 and it read 635.** It resolved
+// the three registry conflicts of Epic 16 by hand, and its own resolution wrote a bare
+// `#633` into `prerelease_registry_test.go`. **#633 names the issue that carries the
+// FR-prerelease-26 question**, and the project manager filed it after #96 measured 628.
+//
+// **The guard reported that citation and the ordinary gate turned red**, which is the guard
+// doing its work rather than a defect of any member. **#96 predicted this exact breach**,
+// three paragraphs above, and no member closed it because the number arrived after every
+// member had measured.
+//
+// **A project manager pays this cost too, and not a member alone.** A conflict resolution
+// writes prose, and prose cites an issue. **So the resolver re-measures the mark**, and the
+// Epic 16 cross-member review is what found that it had not.
+const issueCitationHighWaterMark = 635
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

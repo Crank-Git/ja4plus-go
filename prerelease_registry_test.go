@@ -34,9 +34,9 @@ type prereleaseCase struct {
 
 // prereleaseCases holds one row for each case of the feature set.
 //
-// #95 built the clean environment on 2026-08-14. #97 built the published module contents,
-// #98 built the binaries, and #99 built the documentation site and the release gate, each
-// on the same day.
+// #95 built the clean environment on 2026-08-14. #96 built the module install, #97 built
+// the published module contents, #98 built the binaries, and #99 built the documentation
+// site and the release gate, each on the same day.
 //
 // A row that reads a published tag reads `v0.3.0`, because this project has cut no tag
 // since it. The maintainer ruled that scope on 2026-08-14, at #94: a member writes its
