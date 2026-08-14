@@ -217,25 +217,24 @@ func watchInterface(options watchOptions, open captureOpener) error {
 // the device that libpcap opens. Every other platform reads one sentence that names the
 // platform, as `unsupportedMessage` of `internal/capture/unsupported.go` does.
 //
-// The message writes no path of the program. A `setcap` command reads the path of the
-// binary that the operator runs, and that path is the argument the operator already holds.
+// The Linux text follows `docs/specs/mockups/03-watch-output.html`, which names the
+// capability and the `setcap` command. `$(which ja4plus)` writes the path of the program
+// that the operator runs, so the operator copies the command without an edit.
 func watchPermissionMessage(goos string, iface string) string {
 	switch goos {
 	case "linux":
 		return fmt.Sprintf(
-			"the host refuses a capture handle on interface %s. "+
-				"The process needs the CAP_NET_RAW capability. "+
-				"Run the command with sudo, or grant the capability with the command "+
-				"sudo setcap cap_net_raw+ep <path to ja4plus>", iface)
+			"the monitor needs CAP_NET_RAW to open interface %s on this host. "+
+				"Run the command with sudo. "+
+				"The command sudo setcap cap_net_raw+ep $(which ja4plus) grants the capability instead",
+			iface)
 	case "darwin":
 		return fmt.Sprintf(
-			"the host refuses a capture handle on interface %s. "+
-				"The process needs read access to a /dev/bpf device. "+
+			"the monitor needs read access to a /dev/bpf device to open interface %s on this host. "+
 				"Run the command with sudo", iface)
 	default:
 		return fmt.Sprintf(
-			"the host refuses a capture handle on interface %s. "+
-				"The process needs the privilege that a packet capture needs on %s. "+
+			"the monitor needs the privilege of a packet capture to open interface %s on %s. "+
 				"Run the command with sudo", iface, goos)
 	}
 }

@@ -86,7 +86,7 @@ func (a *dropAccumulator) add(delta uint32) uint64 {
 //
 // It reads the error chain with `errors.Is`, and it reads no message text. The text of a
 // capture failure comes from a C library, from a Go library and from the locale of the
-// host, so a match on the text reports a failure that no host stated.
+// host. So a match on the text reports a failure that no host stated.
 //
 // The host states the refusal as an errno. `socket(2)` states EACCES:
 // `Permission to create a socket of the specified type and/or protocol is denied.`
@@ -134,7 +134,11 @@ func (e *captureOpenError) Unwrap() []error {
 // It returns the cause alone when the host holds no interface of that name. The edge-case
 // table of `docs/specs/features/13-live-capture.md` states one message that names the
 // interface for that case. A host that refuses a capture handle refuses it for every
-// interface, so the probe would report a permission failure for a name that names nothing.
+// interface. So a probe alone would report a permission failure for a name that names
+// nothing.
+//
+// Each call site calls this function inside the branch of a failed open, so the cause is
+// never nil.
 func openError(name string, cause error) error {
 	err := &captureOpenError{
 		message: fmt.Sprintf("capture: the host opens no interface %s: %s", name, cause.Error()),

@@ -17,9 +17,11 @@ import (
 // device, and it stops at the first device that states an answer of its own.
 // Verified against `man 4 bpf` on macOS 15, read on 2026-08-14.
 //
-// A host that runs 4 capture programs already reports EBUSY on each of these devices, and
-// `captureRefusal` then returns nil. The operator reads the message of libpcap for that
-// run, and no message names a capability the host holds.
+// A host that already runs 4 capture programs reports EBUSY on each of these devices. The
+// probe then answers nothing, and `captureRefusal` returns nil. **That answer states no
+// permission failure, and it states no absence of one.** The operator reads the message of
+// libpcap for that run, which is the message this project wrote before #82. So the bound
+// costs a message, and it never produces a wrong one.
 const bpfDeviceCount = 4
 
 // captureRefusal returns the errno that macOS states when it refuses a BPF device, and it

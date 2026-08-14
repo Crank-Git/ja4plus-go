@@ -8,8 +8,8 @@ package capture
 // Linux holds the packet socket, and `permission_linux.go` probes it. macOS holds the BPF
 // device, and `permission_darwin.go` probes it. The release workflow builds five
 // platforms, and Windows is the one that reaches this file. `unsupportedMessage` of
-// `unsupported.go` states that the monitor reads no interface there, so no run of Windows
-// reaches a capture handle and no probe answers a question.
+// `unsupported.go` states that the monitor reads no interface on Windows. So no run of
+// Windows reaches a capture handle, and no probe answers a question there.
 func captureRefusal() error {
 	return nil
 }
