@@ -49,9 +49,8 @@ const prereleaseInstallVersion = "v0.3.0"
 // builds.
 //
 // The value comes from the fingerprinter of this repository, measured on 2026-08-14 over
-// the same frame. `make conformance` holds this tree against the FoxIO corpus, so the
-// tree is the source of the expected value and the installed program is the artifact
-// under test.
+// the same frame. `make conformance` holds this tree against the FoxIO corpus. So the tree
+// states the expected value, and the installed program is the artifact under test.
 const prereleaseExpectedJA4 = "t13d0504h2_bf5bdbdbea07_ef5f37ab036a"
 
 // prereleaseInstallRetryWindow bounds the wait for a tag the proxy has not seen.
@@ -117,8 +116,8 @@ func writePrereleaseCapture(t *testing.T, directory string, frame []byte) string
 // runPrereleaseCommand runs one command of the clean environment and returns its combined
 // output.
 //
-// A case reads the output of a failure as well as the output of a success, so the two
-// streams are combined and the error is returned beside the text.
+// A case reads the output of a failure and the output of a success. So this helper
+// combines the two streams, and it returns the error beside the text.
 func runPrereleaseCommand(environment *cleanEnvironment, directory string, name string, arg ...string) (string, error) {
 	command := environment.command(name, arg...)
 	if directory != "" {
@@ -133,8 +132,8 @@ func runPrereleaseCommand(environment *cleanEnvironment, directory string, name 
 // proxy cannot resolve.
 //
 // The install retries on this failure alone. A compile failure and a checksum failure each
-// repeat identically, so a retry of one of them spends the whole window and reports the
-// same message.
+// repeat identically. So a retry of one of them spends the whole window, and it reports
+// the same message.
 func proxyHasNotSeenTheTag(output string) bool {
 	for _, symptom := range []string{
 		"unknown revision",
@@ -216,9 +215,9 @@ func requireEnvironmentStandsOutsideTheRepository(t *testing.T, environment *cle
 // requireNoDependencyOfTheRepository holds FR-prerelease-11 against the packages that a
 // build reads.
 //
-// `go list -deps` reports the directory of every package the build compiles, so this
-// check reads the resolution of the `go` command rather than a claim about it. A
-// directory of the repository here means the build read the working tree.
+// `go list -deps` reports the directory of every package the build compiles. So this check
+// reads the resolution of the `go` command, and never a claim about it. A directory of the
+// repository here means the build read the working tree.
 // It also requires one directory under the module cache, because a check that finds no
 // directory at all would pass over an empty list.
 func requireNoDependencyOfTheRepository(t *testing.T, environment *cleanEnvironment, directory string) {
@@ -255,9 +254,9 @@ func requireNoDependencyOfTheRepository(t *testing.T, environment *cleanEnvironm
 // requireModuleCacheHoldsThePublishedModule holds FR-prerelease-11 for the program case.
 //
 // `go install pkg@version` writes no module of its own, so the module cache is where the
-// downloaded source lands. The glob reads the escaped module path rather than a literal,
-// because the proxy escapes an upper-case letter of the path and this check states no
-// escape rule of its own.
+// downloaded source lands. The glob reads the escaped module path, and never a literal.
+// The proxy escapes an upper-case letter of the path, and this check states no escape rule
+// of its own.
 //
 // The Go modules reference states the rule that keeps the working tree out of the build:
 //

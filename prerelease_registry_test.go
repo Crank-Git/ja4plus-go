@@ -124,7 +124,7 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 //
 // A row that reports a case as built while the tree holds no case is the failure this
 // guard prevents. Each slice of Epic 16 appends its own case name here, in the order of
-// the registry above, so the union of four parallel members stays mechanical.
+// the registry above. The union of four parallel members then stays mechanical.
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
