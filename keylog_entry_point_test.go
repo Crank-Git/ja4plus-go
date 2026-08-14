@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -239,22 +240,10 @@ func packageSourceFiles(t *testing.T) []string {
 	return sources
 }
 
-// typeExpressionText returns the source text of a type expression, without a space.
+// typeExpressionText returns the source text of a type expression.
+// It calls types.ExprString, which reads every expression form the Go grammar states. A
+// hand-written reader returns the empty string for the form it does not name, and a
+// `func(*KeyLog)` parameter then passes the guard of FR-gaps-17c.
 func typeExpressionText(expr ast.Expr) string {
-	switch node := expr.(type) {
-	case *ast.Ident:
-		return node.Name
-	case *ast.StarExpr:
-		return "*" + typeExpressionText(node.X)
-	case *ast.SelectorExpr:
-		return typeExpressionText(node.X) + "." + node.Sel.Name
-	case *ast.ArrayType:
-		return "[]" + typeExpressionText(node.Elt)
-	case *ast.Ellipsis:
-		return "..." + typeExpressionText(node.Elt)
-	case *ast.MapType:
-		return "map[" + typeExpressionText(node.Key) + "]" + typeExpressionText(node.Value)
-	default:
-		return ""
-	}
+	return types.ExprString(expr)
 }
