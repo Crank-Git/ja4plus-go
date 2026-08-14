@@ -28,7 +28,8 @@ QUIC Initial packets (RFC 9001/9369) are automatically decrypted to extract TLS 
 
 ## Installation
 
-The module requires Go 1.24 or later.
+The module requires Go 1.24 or later. **That sentence states a language version, and it
+states no build toolchain.** The section below states the build toolchain.
 
 ```bash
 go get github.com/Crank-Git/ja4plus-go
@@ -68,7 +69,8 @@ advisory names a fix in a go1.25.x release or a later one.
 database is live. Run `make vuln` to re-take the measurement on your own toolchain.
 
 **This project builds and releases on the range `~1.26.6`.**
-`.github/workflows/ci.yml` names that range for every job.
+`.github/workflows/ci.yml` names that range for every job, and
+`.github/workflows/release.yml` names it for every released binary.
 
 ## CLI
 
