@@ -438,7 +438,7 @@ func TestJA4TS_ReadsARSTThatAlsoCarriesACK(t *testing.T) {
 // A RST that arrives before any SYN-ACK produces no value.
 // The connection key reaches no entry, so the fingerprinter holds no part a through part d
 // to publish. The port returns None on the same input at
-// `ja4plus/fingerprinters/ja4ts.py:183-184` of tag `v1.1.0`, under its issue #246.
+// `ja4plus/fingerprinters/ja4ts.py:183-184` of tag `v1.1.0`, under the port's issue #246.
 //
 // This test held a second case until #495, and the maintainer ruled that case on 2026-08-14.
 // `TestJA4TS_PublishesTheStoredFourPartValueOnAResetOfAOneSynAckConnection` now holds it.
@@ -454,14 +454,14 @@ func TestJA4TS_ProducesNoValueForARSTBeforeAnySynAck(t *testing.T) {
 //
 // The maintainer ruled split T2 on 2026-08-14, at #484, and #484 states the reversal path.
 // The dissector writes the four-part value outside the delay guard.
-// `wireshark/source/packet-ja4.c:1599-1608` copies the window size, the maximum segment
-// size, the window scale and the option list from the stored connection state, and
-// `wireshark/source/packet-ja4.c:684` guards the delay list and the reset letter on
+// `wireshark/source/packet-ja4.c:1599-1608` reads the window size, the maximum segment
+// size, the window scale and the option list from the stored connection state.
+// `wireshark/source/packet-ja4.c:684` guards the delay list and the reset letter alone, on
 // `conn->syn_ack_count > 1`.
 //
-// Six per-packet comparisons of the FoxIO corpus name a reset frame of a connection that
-// holds one SYN-ACK, and #495 measured that 3 of them close. The other 3 are client resets
-// of `https3-301-get.pcap`, which FR-parity-44 declines, and #502 holds that question.
+// Six per-packet comparisons of the FoxIO corpus name a reset frame of a one-SYN-ACK
+// connection. #495 measured that 3 of them close. The other 3 are client resets of
+// `https3-301-get.pcap`, which FR-parity-44 declines, and #502 holds that question.
 // `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md`
 // `## Cause 2 — the library returns no JA4TS value on a reset of a connection that holds one SYN-ACK`
 // names each frame, and it states 6.
