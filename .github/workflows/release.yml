@@ -74,13 +74,17 @@ jobs:
         run: go test -v -race ./...
 
       # FR-release-35c requires every artifact to be built with `CGO_ENABLED=0`, and
-      # `CLAUDE.md` `## Stack` states the same rule in prose. #583 measured on 2026-08-14
-      # that the tree did not hold it: this job runs on `ubuntu-latest`, so
-      # `GOOS=linux GOARCH=amd64` below is the runner's native pair and the Go command took
-      # the native default of `1` for that one build of five. The artifact linked glibc
-      # dynamically where the other four are static, and a user on a musl distribution or
-      # in a `scratch` container met the difference. No package of this module imports cgo,
-      # so nothing here needs the C name resolver.
+      # `CLAUDE.md` `## Stack` states the same rule in prose.
+      #
+      # #583 measured on 2026-08-14 that the tree did not hold that rule. This job runs on
+      # `ubuntu-latest`, so `GOOS=linux GOARCH=amd64` below is the runner's native pair.
+      # The Go command therefore took the native default of `1` for that one build of five.
+      # That artifact linked glibc dynamically where the other four are static. A user on a
+      # musl distribution or in a `scratch` container met the difference.
+      #
+      # **No package of the default build imports cgo**, so nothing here needs the C name
+      # resolver. `internal/capture/libpcap.go` does import cgo, and the `libpcap` build tag
+      # keeps it out of the default build and out of every artifact below.
       #
       # **This is a step environment and never a job environment.** The `Run tests` step
       # above runs `go test -race` on the same runner, and the race detector needs cgo

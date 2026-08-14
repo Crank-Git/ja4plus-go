@@ -49,14 +49,28 @@ var releaseBuildPlatforms = []string{
 // It accepts a quoted value and a bare one, because YAML reads `0` as a number and
 // GitHub Actions converts it to the string `0`. It rejects any other value, so an edit to
 // `CGO_ENABLED: 1` fails rather than passes on the key alone.
-var cgoDisabled = regexp.MustCompile(`(?m)^\s*CGO_ENABLED:\s*["']?0["']?\s*$`)
+//
+// The three forms are one alternation and never two optional quote characters. The
+// self-review of #583 measured that `["']?0["']?` also matches the mismatched `"0'`,
+// which is not valid YAML and which this pattern must not accept.
+var cgoDisabled = regexp.MustCompile(`(?m)^\s*CGO_ENABLED:\s*(?:0|"0"|'0')\s*$`)
 
 // cgoAnyValue matches the mapping key at any value, so a test can find a setting that
 // sits outside the build step.
 var cgoAnyValue = regexp.MustCompile(`(?m)^\s*CGO_ENABLED:\s*\S+\s*$`)
 
 // releaseArtifactBuild matches a build command that writes an artifact into `dist/`.
-var releaseArtifactBuild = regexp.MustCompile(`(?m)^.*go build .*-o dist/.*$`)
+//
+// The pattern anchors the platform pair to the start of the line, so a `#` between the
+// indent and `GOOS=` stops the match. **A commented-out build is not a build**, and a
+// pattern that reads one as a build lets the workflow ship four artifacts while every
+// test passes.
+//
+// The self-review of #583 measured that defect on 2026-08-14. An earlier `^.*go build `
+// absorbed the `#` of a comment, so a maintainer who commented out one of the five builds
+// and left the text in place kept the count at five, kept the line inside the step, and
+// kept every platform pair present as a substring of the comment.
+var releaseArtifactBuild = regexp.MustCompile(`(?m)^[ \t]*GOOS=\S+ GOARCH=\S+ go build .*-o dist/\S+`)
 
 // releaseWorkflowStep returns the lines of one named step of the release workflow.
 //
