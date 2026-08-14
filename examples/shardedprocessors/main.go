@@ -26,7 +26,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	defer f.Close()
+	// The page teaches the shard pattern, and a close error of a read-only file changes no
+	// fingerprint. `docs_go_samples_test.go` holds this file equal to the page, and it
+	// compares tokens rather than bytes, so this comment reaches no comparison.
+	defer f.Close() //nolint:errcheck // The mirrored page states no error path here.
 
 	reader, err := pcapgo.NewReader(f)
 	if err != nil {

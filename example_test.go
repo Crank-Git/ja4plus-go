@@ -31,7 +31,10 @@ import (
 // It mirrors the fenced Go block of `docs/usage.md`.
 func ExampleProcessor_ProcessPacket() {
 	f, _ := os.Open("capture.pcap")
-	defer f.Close()
+	// The page teaches the read path, and a close error of a read-only file changes no
+	// fingerprint. This comment reaches no comparison, because the matching rule of
+	// `docs_go_samples_test.go` drops every comment.
+	defer f.Close() //nolint:errcheck // The mirrored page states no error path here.
 
 	reader, _ := pcapgo.NewReader(f)
 	proc := ja4plus.NewProcessor()
@@ -68,7 +71,10 @@ func ExampleProcessor_GetShardKey_shardedProcessors() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	defer f.Close()
+	// The page teaches the read path, and a close error of a read-only file changes no
+	// fingerprint. This comment reaches no comparison, because the matching rule of
+	// `docs_go_samples_test.go` drops every comment.
+	defer f.Close() //nolint:errcheck // The mirrored page states no error path here.
 
 	reader, err := pcapgo.NewReader(f)
 	if err != nil {
@@ -136,7 +142,10 @@ func ExampleSyncProcessor_ProcessPacket() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	defer f.Close()
+	// The page teaches the read path, and a close error of a read-only file changes no
+	// fingerprint. This comment reaches no comparison, because the matching rule of
+	// `docs_go_samples_test.go` drops every comment.
+	defer f.Close() //nolint:errcheck // The mirrored page states no error path here.
 
 	reader, err := pcapgo.NewReader(f)
 	if err != nil {
