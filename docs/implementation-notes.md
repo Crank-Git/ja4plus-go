@@ -149,9 +149,9 @@ A Python port of this project exists, and a user who runs both must get one answ
 [parity page](parity.md) records how each name of the port maps onto this library.
 
 **The shared FoxIO vector set is the gate, and no test of this repository runs Python.** A
-cross-language test rig would couple two repositories that move at different speeds, and
-it would fail for reasons that have nothing to do with the change under test. Two
-implementations that each match the reference match each other.
+cross-language test rig would couple two repositories that move at different speeds. It
+would then fail for a reason that the change under test did not cause. Two implementations
+that each match the reference match each other.
 
 ## Where a disputed value stops
 

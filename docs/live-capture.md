@@ -84,8 +84,8 @@ applies the capture filter as a BPF program. A reading dated 2026-08-14 states t
 opposite, and it states that a capture filter needs the `libpcap` build tag.
 
 **Only the maintainer settles that question.** No page of this site states filter behavior
-until the question is settled, because a wrong sentence here tells a user that a filter
-runs when none does.
+until it is settled. A wrong sentence here tells a user that a filter runs when none
+does.
 
 ## What this page does not describe
 
