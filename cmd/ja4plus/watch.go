@@ -535,6 +535,10 @@ type monitorCounters struct {
 	fingerprints atomic.Uint64
 	// connections holds the entry count of the connection table. FR-capture-32 reports it.
 	connections atomic.Uint64
+	// drops holds the count of packets the capture backend dropped, and it holds
+	// `dropCountUnknown` when the backend reports no count. FR-capture-31 reports it, and
+	// the goroutine that owns the capture handle writes it.
+	drops atomic.Uint64
 }
 
 // monitor holds the state of one watch run.
@@ -553,7 +557,13 @@ type monitor struct {
 	// counters holds the counts that #81 reports.
 	counters *monitorCounters
 	// now reads the clock of the monitor. A test passes a clock of its own.
+	// The statistics goroutine reads this clock too, so a test passes a clock that two
+	// goroutines call.
 	now func() time.Time
+	// startedAt holds the time the run started. FR-capture-28 reports the time since it.
+	startedAt time.Time
+	// lastDropSample holds the time the loop last read the drop count of the handle.
+	lastDropSample time.Time
 	// results writes each fingerprint to standard output.
 	results resultWriter
 	// errOut takes the diagnostic output. FR-capture-7 sends the statistics line there,
@@ -591,14 +601,18 @@ func newMonitor(
 	errOut io.Writer,
 	now func() time.Time,
 ) *monitor {
+	started := now()
+
 	instance := &monitor{
-		processor: ja4plus.NewProcessor(),
-		stop:      stop,
-		counters:  &monitorCounters{},
-		now:       now,
-		results:   newResultWriter(out, options),
-		errOut:    errOut,
-		options:   options,
+		processor:      ja4plus.NewProcessor(),
+		stop:           stop,
+		counters:       &monitorCounters{},
+		now:            now,
+		startedAt:      started,
+		lastDropSample: started,
+		results:        newResultWriter(out, options),
+		errOut:         errOut,
+		options:        options,
 	}
 
 	instance.table = newConnectionTable(maxMonitorConnections, monitorIdleTimeout, instance.dropConnection)
@@ -616,7 +630,8 @@ func (m *monitor) dropConnection(key connectionKey) {
 	m.processor.CleanupConnection(key.srcIP, key.srcPort, key.dstIP, key.dstPort, key.proto)
 }
 
-// run reads packets from the handle until a termination signal stops the run.
+// run reads packets from the handle until a termination signal stops the run, and it
+// writes the statistics line.
 //
 // It returns the error of a failed read, and the edge-case table of
 // `docs/specs/features/13-live-capture.md` names one message and exit status 1 for it.
@@ -624,12 +639,48 @@ func (m *monitor) dropConnection(key connectionKey) {
 // of the stream.
 // It closes no handle, because `watchInterface` opened it and closes it.
 //
+// The statistics goroutine returns before this method writes the open windows, so the two
+// goroutines write the error writer in order and take no lock. `statistics.go` states that
+// design.
+func (m *monitor) run(handle capture.Handle) error {
+	// The first sample gives the first statistics line a count, because the loop samples
+	// again only after `dropSampleInterval`.
+	m.sampleDropCount(handle)
+
+	stopStatistics := m.startStatisticsWriter()
+
+	err := m.readPackets(handle)
+
+	stopStatistics()
+	m.sampleDropCount(handle)
+
+	if err == nil {
+		err = m.close()
+	}
+
+	// FR-capture-9 writes one statistics line at exit, and a statistics interval of 0
+	// writes that line alone. The line follows the open windows, as the user flow of
+	// `docs/specs/features/13-live-capture.md` states.
+	// A run that a failed read ended writes the line too, because the line reports the
+	// counts of the run and never the result of it.
+	if statsErr := m.writeStatisticsLine(); statsErr != nil && err == nil {
+		err = statsErr
+	}
+
+	return err
+}
+
+// readPackets reads packets from the handle until a termination signal stops the run.
+//
+// It returns the error of a failed read, and it returns nil for a run that the stop
+// request stopped. It writes no statistics line, because `run` owns that line.
+//
 // **A read blocks until the interface delivers a packet.** Both capture backends block,
 // because #78 passed `pcap.BlockForever` deliberately so that the two behave the same.
 // So the loop reads the stop request after each packet, which FR-capture-17 states, and
 // an interface that carries no traffic reaches that read never. The second signal of
 // FR-capture-19 is the exit of that run.
-func (m *monitor) run(handle capture.Handle) error {
+func (m *monitor) readPackets(handle capture.Handle) error {
 	linkType := handle.LinkType()
 
 	if err := m.results.header(); err != nil {
@@ -666,6 +717,14 @@ func (m *monitor) run(handle capture.Handle) error {
 			return err
 		}
 
+		// A read of the drop count costs one system call, so the loop bounds the rate of
+		// it. FR-capture-31 reports the count, and this loop owns the handle that holds it.
+		if now := m.now(); now.Sub(m.lastDropSample) >= dropSampleInterval {
+			m.lastDropSample = now
+
+			m.sampleDropCount(handle)
+		}
+
 		// FR-capture-17 reads the stop request after the packet, so the monitor finishes
 		// the packet it holds and no packet is half-processed.
 		if m.stop.isRequested() {
@@ -673,7 +732,7 @@ func (m *monitor) run(handle capture.Handle) error {
 		}
 	}
 
-	return m.close()
+	return nil
 }
 
 // handlePacket reads one packet: it records the connection, evicts what either bound

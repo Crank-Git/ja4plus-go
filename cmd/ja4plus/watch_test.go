@@ -28,6 +28,11 @@ func (s *stubHandle) LinkType() layers.LinkType {
 	return layers.LinkTypeEthernet
 }
 
+// DropCount reports no drop count, so the statistics line of this handle writes `unknown`.
+func (s *stubHandle) DropCount() (uint64, bool) {
+	return 0, false
+}
+
 func (s *stubHandle) Close() error {
 	s.closed = true
 	return nil

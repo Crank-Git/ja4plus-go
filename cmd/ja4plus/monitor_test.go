@@ -46,6 +46,11 @@ type stubCaptureHandle struct {
 	// beforeRead runs before each read, so a test sets the stop request between two
 	// packets.
 	beforeRead func(index int)
+	// drops holds the count that `DropCount` returns. #81 reads it for FR-capture-31.
+	drops uint64
+	// dropsHeld reports whether the handle reports a drop count. A false value writes
+	// `unknown`, and FR-capture-33 states that field value.
+	dropsHeld bool
 }
 
 func (h *stubCaptureHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, error) {
@@ -65,6 +70,10 @@ func (h *stubCaptureHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, erro
 }
 
 func (h *stubCaptureHandle) LinkType() layers.LinkType { return layers.LinkTypeEthernet }
+
+// DropCount returns the count the test set, and the goroutine that reads the handle calls
+// it. So this method needs no atomic value.
+func (h *stubCaptureHandle) DropCount() (uint64, bool) { return h.drops, h.dropsHeld }
 
 func (h *stubCaptureHandle) Close() error { return nil }
 
