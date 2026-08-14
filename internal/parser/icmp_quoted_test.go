@@ -291,6 +291,29 @@ func TestQuotedTCPHeaderReadsNoIPVersionOtherThanFour(t *testing.T) {
 	}
 }
 
+// TestQuotedTCPHeaderReadsATruncatedMultipathOption bounds one defect of `gopacket`.
+//
+// `layers/tcp.go:347-353` at v1.6.1 reads `data[1]` and `data[2]` of a Multipath TCP option
+// without a length guard, and the `default` branch at `layers/tcp.go:534-538` guards the same
+// read. So the option kind `30` as the last byte of the option region panics inside
+// `layers.TCP.DecodeFromBytes`. `CLAUDE.md` states that a fingerprinter returns a non-fatal
+// error and never a panic, so this reader calls no option decoder of `gopacket`. #510 records
+// the defect.
+func TestQuotedTCPHeaderReadsATruncatedMultipathOption(t *testing.T) {
+	const multipathKind = 30
+	header := buildQuotedTCPHeader([]byte{1, 1, 1, multipathKind}, 64240)
+	quoted := buildQuotedIPPacket(header, 0)
+	packet := buildICMPPacket(t, layers.ICMPv4TypeDestinationUnreachable, 13, quoted)
+
+	tcp := QuotedTCPHeader(packet)
+	if tcp == nil {
+		t.Fatalf("QuotedTCPHeader read no header of a well-formed 24-byte quoted header")
+	}
+	if tcp.Window != 64240 {
+		t.Fatalf("the quoted header carries the window %d, and the test needs 64240", tcp.Window)
+	}
+}
+
 // TestQuotedTCPHeaderReadsNoEmptyPayload bounds a message that quotes nothing.
 func TestQuotedTCPHeaderReadsNoEmptyPayload(t *testing.T) {
 	packet := buildICMPPacket(t, layers.ICMPv4TypeDestinationUnreachable, 13, nil)

@@ -51,6 +51,10 @@ func QuotedTCPHeader(packet gopacket.Packet) *layers.TCP {
 		if !held {
 			continue
 		}
+		// The loop ends at the first ICMP layer, and it reads no second one. `gopacket` at
+		// v1.6.1 returns `gopacket.LayerTypePayload` from `ICMPv4.NextLayerType` at
+		// `layers/icmp4.go:261-263`, so one packet reaches one ICMPv4 layer and the decode
+		// chain adds no second one.
 		if !quotesAPacket(icmp.TypeCode.Type()) {
 			return nil
 		}
@@ -111,12 +115,60 @@ func decodeQuotedTCPHeader(quoted []byte) *layers.TCP {
 		return nil
 	}
 
-	tcp := &layers.TCP{}
-	// The three bounds above cover every structural error that DecodeFromBytes reports, so
-	// the remaining error names one malformed TCP option. `layers/tcp.go:319` adds the layer
-	// of an outer header that carries such an option, and a caller of GetTCPLayer reads it.
-	// The read of a quoted header therefore keeps the read of an outer header.
-	_ = tcp.DecodeFromBytes(transport[:dataOffset], gopacket.NilDecodeFeedback)
+	return readQuotedTCPFields(transport[:dataOffset])
+}
+
+// readQuotedTCPFields returns the TCP layer that the header bytes of the argument state. The
+// caller bounds the argument to the length that the data offset states, and the argument
+// holds at least 20 bytes.
+//
+// It reads no TCP option, and it leaves the `Options` field empty. `tcpOptionEntries` of
+// `ja4t.go` reads the raw option region of `Contents`, because ruling #297 writes one part b
+// entry for each option byte.
+//
+// It calls `layers.TCP.DecodeFromBytes` for no input, because that method panics on a
+// truncated Multipath TCP option. `layers/tcp.go:347-353` at v1.6.1 reads `data[1]` and
+// `data[2]` of the option without a length guard, and the `default` branch at
+// `layers/tcp.go:534-538` guards the same read. The option kind `30` as the last byte of the
+// option region therefore panics, and `CLAUDE.md` states that a fingerprinter returns a
+// non-fatal error and never a panic.
+// `TestQuotedTCPHeaderReadsATruncatedMultipathOption` holds that bound, and #510 records the
+// `gopacket` defect.
+func readQuotedTCPFields(header []byte) *layers.TCP {
+	const (
+		flagsOffset      = 13
+		flagFIN     byte = 0x01
+		flagSYN     byte = 0x02
+		flagRST     byte = 0x04
+		flagPSH     byte = 0x08
+		flagACK     byte = 0x10
+		flagURG     byte = 0x20
+		flagECE     byte = 0x40
+		flagCWR     byte = 0x80
+	)
+
+	flags := header[flagsOffset]
+
+	tcp := &layers.TCP{
+		SrcPort:    layers.TCPPort(binary.BigEndian.Uint16(header[0:2])),
+		DstPort:    layers.TCPPort(binary.BigEndian.Uint16(header[2:4])),
+		Seq:        binary.BigEndian.Uint32(header[4:8]),
+		Ack:        binary.BigEndian.Uint32(header[8:12]),
+		DataOffset: header[12] >> 4,
+		NS:         header[12]&0x01 != 0,
+		FIN:        flags&flagFIN != 0,
+		SYN:        flags&flagSYN != 0,
+		RST:        flags&flagRST != 0,
+		PSH:        flags&flagPSH != 0,
+		ACK:        flags&flagACK != 0,
+		URG:        flags&flagURG != 0,
+		ECE:        flags&flagECE != 0,
+		CWR:        flags&flagCWR != 0,
+		Window:     binary.BigEndian.Uint16(header[14:16]),
+		Checksum:   binary.BigEndian.Uint16(header[16:18]),
+		Urgent:     binary.BigEndian.Uint16(header[18:20]),
+	}
+	tcp.BaseLayer = layers.BaseLayer{Contents: header}
 
 	return tcp
 }
