@@ -10,24 +10,27 @@ mockups: []
 ## Purpose
 
 `lookup.go` maps a fingerprint to an application name. It reads an embedded copy of
-`data/ja4plus-mapping.csv`, and it can read a downloaded copy instead. It can also ask
-`ja4db.com` over the network.
+`data/ja4plus-mapping.csv`, and it can read a downloaded copy instead. The package
+`github.com/Crank-Git/ja4plus-go/ja4db` asks `ja4db.com` over the network.
 
-Three things about that design need a decision before an API freeze.
+Three things about that design needed a decision before an API freeze. **Epic 9 settled
+all three on 2026-08-14**, and each paragraph below states the state the epic left.
 
-The library performs network input and output. A fingerprinting library that reaches the
-network surprises a caller who embeds it in a monitor. The reach is opt-in today, and
-`LookupFingerprintRemote` is an exported name that a caller can call by accident.
+**The library performed network input and output from the core package.** A fingerprinting
+library that reaches the network surprises a caller who embeds it in a monitor. #72 moved
+`RemoteLookupConfig` and `LookupFingerprintRemote` to `ja4db`, so the core package imports
+no HTTP client. `docs/audit/network-boundary.md` holds the maintainer's ruling, and
+`network_boundary_test.go` fails on an import that breaks it.
 
-The client has no timeout. `RemoteLookupConfig.HTTPClient` falls back to
-`http.DefaultClient`, which has no timeout at all. A slow or hostile server holds the
-calling goroutine for as long as it likes.
+**The client had no timeout.** `RemoteLookupConfig.HTTPClient` fell back to
+`http.DefaultClient`, which has no timeout at all. #73 gave the package a default client
+with a 10-second timeout, a redirect rule, a 1 MB body bound and a `User-Agent` header.
 
-The table loads once through `sync.Once`. A process that updates the database and then
-looks up a fingerprint reads the old table. Epic 2 records this as suspected finding S2,
-and suspected finding S3 records the unguarded package-level state that goes with it.
-
-This feature set settles the boundary, fixes the client, and makes the reload work.
+**The table loaded once through `sync.Once`.** A process that updated the database and then
+looked up a fingerprint read the old table. Epic 2 records that as suspected finding S2,
+and suspected finding S3 records the unguarded package-level state that went with it. #74
+replaced the loader with one `atomic.Pointer[lookupTable]`, and #75 added the validation
+and the atomic cache write of `internal/dbcache`.
 
 ## User stories
 
@@ -80,7 +83,7 @@ This feature set settles the boundary, fixes the client, and makes the reload wo
 - **FR-lookup-19** — The library replaces `sync.Once` with a mechanism that supports a
   reload.
 - **FR-lookup-20** — Every read of the loaded table is safe for concurrent use.
-- **FR-lookup-21** — Every read of `dbSource` and of the cache path is safe for
+- **FR-lookup-21** — Every read of the source and of the cache path is safe for
   concurrent use.
 - **FR-lookup-22** — A reload that fails leaves the previous table in place.
 - **FR-lookup-23** — The library validates a downloaded database before it replaces the
@@ -91,6 +94,11 @@ This feature set settles the boundary, fixes the client, and makes the reload wo
 - **FR-lookup-26** — The library writes the cache file atomically, through a temporary
   file and a rename.
 - **FR-lookup-27** — `GetDatabaseInfo` reports the source, the path and the record count.
+
+**#74 replaced the package-level variables `dbSource` and `dbCachePath` with fields of the
+unexported `lookupTable` type.** A reader loads one immutable snapshot through
+`activeTable` of `lookup.go`, so FR-lookup-20 and FR-lookup-21 hold with no lock on the
+read path.
 
 ## User flows
 
@@ -137,8 +145,10 @@ as part of the command-line output mockup.
   last.
 - A reload is atomic from a reader's view. A reader sees the old table or the new one,
   never a partial one.
-- The embedded copy is the last resort and always works. A corrupt cache falls back to it
-  and records the reason.
+- The embedded copy is the last resort and always works. A process that reads a corrupt
+  cache file and holds no previous table falls back to the embedded copy, and
+  `GetDatabaseInfo` then reports the source `embedded`. A process that already holds a
+  table keeps that table, which FR-lookup-22 states.
 - The remote endpoint is configurable, so the library never hard-codes a host that a
   caller cannot change.
 
@@ -156,20 +166,35 @@ as part of the command-line output mockup.
 
 | Field | Type | Meaning |
 |---|---|---|
-| Source | `string` | `embedded` or `cache`. |
-| Path | `string` | The cache path, empty when the source is `embedded`. |
-| Records | `int` | The record count in the loaded table. |
-| Updated | `time.Time` | The cache file time, zero when the source is `embedded`. |
+| `Source` | `string` | `embedded` or `cache`. |
+| `Path` | `string` | The cache path, empty when the source is `embedded`. |
+| `Entries` | `int` | The record count in the loaded table. |
+| `ModTime` | `time.Time` | The cache file time, zero when the source is `embedded`. |
+
+**This table named the last two fields `Records` and `Updated` until 2026-08-14, and the
+code has never held either name.** #74 and #75 each measured the difference and each left
+the code alone, because #100 freezes the exported API at `v1.0.0` and a rename moves the
+frozen surface. **So this round repaired the table and no line of `lookup.go`.** Issue #100
+is the reversal path for a reader who wants the other pair of names.
 
 ### Files
 
 | File | Change |
 |---|---|
-| `lookup.go` | The load path, the client and the state guard change. |
-| `lookup_remote.go` | New, if the decision moves the remote lookup behind a build tag. |
-| `cmd/ja4plus/main.go` | The `db update` path triggers the reload. |
-| `docs/audit/network-boundary.md` | New. |
-| `lookup_test.go` | Gains the timeout, bound, validation and reload tests. |
+| `lookup.go` | The load path and the state guard change. `atomic.Pointer[lookupTable]` replaces `sync.Once`. |
+| `ja4db/lookup.go` | New. It holds `RemoteLookupConfig`, `LookupFingerprintRemote` and the hardened client. |
+| `ja4db/doc.go` | New. It states that this package reaches the network. |
+| `internal/dbcache/dbcache.go` | New. It validates a downloaded database, holds the 16 MB bound and writes the cache file atomically. |
+| `cmd/ja4plus/main.go` | The `db update` path writes the cache through `internal/dbcache`. |
+| `docs/audit/network-boundary.md` | New. It records the boundary ruling of 2026-08-14. |
+| `network_boundary_test.go` | New. It fails when a production file of the core package imports an HTTP client. |
+| `lookup_reload_test.go` | New. It holds the reload, fallback and race tests. |
+| `ja4db/hardening_test.go` | New. It holds the timeout, redirect, bound and `User-Agent` tests. |
+| `internal/dbcache/dbcache_test.go` | New. It holds the validation and atomic-write tests. |
+
+**`lookup_remote.go` no longer exists.** The maintainer ruled on 2026-08-14 that the remote
+lookup moves to a package rather than behind a build tag, so #72 moved the file into
+`ja4db/` and the build-tag option never shipped.
 
 ## Interfaces
 
@@ -195,7 +220,7 @@ call before changing the parser, and records the observed shape in the issue.
 | The remote server never responds. | The client times out after 10 seconds and returns an error that names the timeout. |
 | The remote server returns 2 GB. | The library stops at 1 MB and returns an error that names the bound. |
 | The remote server returns a redirect to `http://`. | The library refuses the redirect and returns an error. |
-| The cache file is corrupt. | The library falls back to the embedded copy and records the reason in `DatabaseInfo`. |
+| The cache file is corrupt. | The library falls back to the embedded copy, and `GetDatabaseInfo` reports the source `embedded`. |
 | An update runs while another goroutine looks up a fingerprint. | The reader sees the old table or the new one. The race detector reports nothing. |
 | The cache directory is not writable. | The update fails, names the path, and leaves the embedded copy in use. |
 | The fingerprint holds a character that changes the URL path. | The library escapes it, so the request reaches the intended endpoint. |
@@ -232,8 +257,9 @@ call before changing the parser, and records the observed shape in the issue.
 
 ## Open questions
 
-- **Q1** — Which of the three boundary options does the maintainer want? FR-lookup-1
-  records the decision. The engineer proposes one with a reason before the work starts.
+- **Q1 — closed on 2026-08-14.** The maintainer chose the third of the three boundary
+  options: the remote lookup moves to a separate package. `docs/audit/network-boundary.md`
+  records the decision and the reason, which FR-lookup-1 asks for. #72 carried the move.
 - **R6** — The `ja4db.com` response shape is unconfirmed, because the service publishes no
   versioned API documentation. The engineer confirms it against a live call and records
   the observed shape before changing the response parser. Until then, the current parser

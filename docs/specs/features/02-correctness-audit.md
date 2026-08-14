@@ -168,27 +168,40 @@ Failure scenario: a monitor that runs for a day and calls `CleanupConnection` fo
 closed connection still holds one `FingerprintResult` for every fingerprint it has ever
 produced. Memory grows until the process ends.
 
-### S2 — `sync.Once` prevents a database reload
+### S2 — `sync.Once` prevented a database reload
 
-`lookup.go` loads the mapping table once through `lookupOnce`. `db update` writes a new
-cache file. A process that updates the database and then performs a lookup reads the old
-table, because `sync.Once` has already run.
+**Epic 9 closed this candidate on 2026-08-14, and this section records what the survey
+found.** `lookup.go` loaded the mapping table once through `lookupOnce`. `db update`
+writes a new cache file. A process that updated the database and then performed a lookup
+read the old table, because `sync.Once` had already run.
 
-File: `lookup.go`, near line 31.
+File: `lookup.go`, near line 31, at the survey.
 
 Failure scenario: a long-running program calls the update path and then looks up a
 fingerprint that only the new table holds. The lookup returns no result.
 
-### S3 — Package-level lookup state is unguarded
+**#74 replaced the loader with one `atomic.Pointer[lookupTable]`.** `activeTable` of
+`lookup.go` reads the file time and the size of the cache file at each lookup, and it
+rebuilds the table when either one changes.
+`TestTheLookupTable_ReloadsWhenTheCacheFileChanges` holds the repair.
 
-`lookupDB`, `dbSource` and `dbCachePath` are package-level variables. `sync.Once`
-guards the write. No lock guards a read that happens while another goroutine runs the
-update path.
+### S3 — Package-level lookup state was unguarded
 
-File: `lookup.go`, near line 28.
+**Epic 9 closed this candidate on 2026-08-14, and this section records what the survey
+found.** `lookupDB`, `dbSource` and `dbCachePath` were package-level variables.
+`sync.Once` guarded the write. No lock guarded a read that happened while another
+goroutine ran the update path.
 
-Failure scenario: one goroutine calls the update path while a second goroutine reads
-`dbSource`. The race detector reports a data race.
+File: `lookup.go`, near line 28, at the survey.
+
+Failure scenario: one goroutine calls the update path while a second goroutine reads the
+source. The race detector reports a data race.
+
+**#74 removed all three variables.** The source, the cache path and the file time are now
+fields of the unexported `lookupTable` type, and one `atomic.Pointer` publishes each
+snapshot. `TestTheLookupState_ReportsNoRaceWhenGoroutinesReadTheDatabase` and
+`TestTheLookupTable_ReportsNoRaceWhenAnUpdateRunsBesideALookup` hold the repair under the
+race detector.
 
 ## Acceptance criteria
 
