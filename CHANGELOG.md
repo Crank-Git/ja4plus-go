@@ -23,7 +23,7 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1750 matches, 281
+reports 1753 matches, 279
 deviations, 574 accepted deviations and 594 register keys. The run also reports 184 unaccepted
 uncovered values and 20 accepted uncovered values, and #361 states what an uncovered value is.
 An accepted deviation and an accepted uncovered value each name one register entry, so 574 and
