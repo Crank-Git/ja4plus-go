@@ -84,7 +84,7 @@ file that did not exist.
 
 - **FR-release-29** — `CHANGELOG.md` holds a `v1.0.0` section.
 - **FR-release-30** — The section records every changed fingerprint as a breaking
-  behaviour change.
+  behavior change.
 - **FR-release-31** — The section records every added exported name.
 - **FR-release-32** — The section records every removed exported name.
 - **FR-release-33** — The section records the license correction.

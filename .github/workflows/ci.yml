@@ -34,10 +34,16 @@ permissions:
 #
 # **The maintainer decided on 2026-08-13 that every job moves to Go 1.26.** Comment
 # 5286440152 of #65 holds the decision. On go1.24.13, the newest Go 1.24 patch,
-# `govulncheck` v1.6.0 reports 9 called standard library vulnerabilities and exits 3. Each
-# one names a fix in a go1.25.x release, and none names a fix in a go1.24.x release. So no
-# Go 1.24 patch clears them, and a Go 1.24 build of this library calls a vulnerable
-# function.
+# `govulncheck` v1.6.0 reported 9 called standard library vulnerabilities and exited 3,
+# measured on 2026-08-13. Each one names a fix in a go1.25.x release, and none names a fix in
+# a go1.24.x release. So no Go 1.24 patch clears them, and a Go 1.24 build of this library
+# calls a vulnerable function.
+#
+# **That count carries its date, because the vulnerability database is live.** The same
+# command on the same toolchain reported 13 on 2026-08-14, and #472 measured it. No line of
+# this repository changed between the two measurements. So read the figure as a measurement
+# of one day, and never as a property of go1.24.13. `CLAUDE.md` `## Conventions` states the
+# rule that a ruling record quotes no live measurement without its date.
 #
 # **`go.mod` does not move, and it states a language version rather than a toolchain.**
 # #438 established that reading, and Go states it: `The language version for a Go version
@@ -82,8 +88,9 @@ permissions:
 # constant, and `TestReleaseWorkflowNamesTheGoToolchainRange` reads the release workflow. So
 # a site left behind fails a test in the tree.
 #
-# A reversal to Go 1.24 returns the nine called vulnerabilities that comment 5286440152 of
-# #65 measured.
+# A reversal to Go 1.24 returns the called vulnerabilities of the Go 1.24 standard library.
+# Comment 5286440152 of #65 measured nine of them on 2026-08-13, and #472 measured 13 on
+# 2026-08-14. A reversal re-takes the measurement, because the database is live.
 jobs:
   test:
     strategy:
