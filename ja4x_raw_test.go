@@ -105,11 +105,15 @@ func TestJA4XRawFormReachesTheFoxIOVectorRelation(t *testing.T) {
 		vectorFingerprint = "2e9214a636bc_a373a9f83c6b_0e17604154c5"
 	)
 
+	// The test reads `parser.TruncatedHashNoSentinel`, because `computeJA4XWithRaw` calls
+	// that function for every part after the ruling of 2026-08-14. The two functions agree
+	// on a non-empty part, and they disagree on an empty one. Each part of this vector is
+	// non-empty, so the ruling moves no value of this test. Issue #582 holds the ruling.
 	rawParts := strings.Split(vectorRaw, "_")
 	hashParts := strings.Split(vectorFingerprint, "_")
 
 	for i := range hashParts {
-		if got := parser.TruncatedHash(rawParts[i]); got != hashParts[i] {
+		if got := parser.TruncatedHashNoSentinel(rawParts[i]); got != hashParts[i] {
 			t.Errorf("part %d: the hash of %q is %q, the vector holds %q",
 				i, rawParts[i], got, hashParts[i])
 		}
