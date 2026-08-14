@@ -71,7 +71,11 @@ import (
 // The hotfix read 560 before it filed #568, and it read 568 after. **A mark that a later
 // allocation passes stays safe**, because the mark is a lower bound and this repository only
 // allocates upward.
-const issueCitationHighWaterMark = 568
+// #87 re-measured the mark on 2026-08-14 and it read 595. `docs/reference/index.md` cites
+// #593, which records the `pkg.go.dev` license reading, and 593 sits above the inherited
+// mark of 568. **A member of a batch pays this maintenance cost exactly as a round does**,
+// because the guard reads the number and never the shape of the change that carries it.
+const issueCitationHighWaterMark = 595
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
@@ -95,11 +99,21 @@ var issueCitationExtension = map[string]bool{
 // reads the tree of another issue, and it then reports a defect that this branch does not
 // hold. `testdata/foxio` holds the fetched FoxIO corpus. That corpus is untracked and
 // FoxIO-licensed, so no rule of this project binds it.
+//
+// `site` and `.venv` each hold an artifact that `make docs` produces, and `.gitignore:47`
+// and `.gitignore:48` name them. **`make docs` became a real target on 2026-08-14**, so a
+// developer who builds the site and then runs `go test` gave this guard a second copy of
+// every page. It then reported one defect twice, and it named a generated HTML file that no
+// repair can reach. #87 measured it: a run after `make docs` reported
+// `site/reference/index.html:1511` and `site/search/search_index.json:1` beside the page
+// that holds the citation.
 var issueCitationSkipDirectory = map[string]bool{
 	".git":              true,
 	"bin":               true,
 	"vendor":            true,
 	"node_modules":      true,
+	"site":              true,
+	".venv":             true,
 	".claude/worktrees": true,
 	"testdata/foxio":    true,
 }
