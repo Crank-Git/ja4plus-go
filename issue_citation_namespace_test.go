@@ -47,11 +47,12 @@ import (
 // loosens this guard and it never reddens it. A batch that cites a number above the mark
 // re-measures the mark with the command above, and the failure below states that repair.
 //
-// The value reads 520 rather than 516, because the pull request of #351 allocated 517 through
-// 520. The batch documentation round cites a pull-request number. Round 36 of the
-// `## Changelog` of `docs/specs/spec.md` cites `#349`, so a mark measured before that pull
-// request reports the round's own citation.
-const issueCitationHighWaterMark = 520
+// The value read 520 when #351 first measured it, and the batch documentation round
+// re-measured it with the same command on the same day. #351 named this maintenance cost, and
+// the round pays it: the round cites its own issue number, and that number sits above the mark
+// the round inherits. Round 36 of the `## Changelog` of `docs/specs/spec.md` cites `#349`, so a
+// round that cites a pull request pays the cost too.
+const issueCitationHighWaterMark = 522
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
@@ -106,23 +107,16 @@ const issueCitationRulingColumn = "Ruling"
 // Each entry names one file, one number and the count of occurrences on that file. A count
 // keeps the entry narrow, exactly as `foxioCitationException` does: a second breach of the
 // same number on the same file fails the test rather than hiding under the entry.
+// The table is empty on 2026-08-14. #351 recorded one entry, for the one bare number of round
+// 19 of the `## Changelog` of `docs/specs/spec.md`. Round 49 of that changelog writes
+// `Crank-Git/ja4plus#594` in place of that number, so the breach no longer reproduces and the
+// batch documentation round removed the entry.
 var issueCitationException = []struct {
 	file   string
 	number int
 	count  int
 	reason string
-}{
-	{
-		file:   "docs/specs/spec.md",
-		number: 594,
-		count:  1,
-		reason: "Round 19 of the `## Changelog` writes `when it closes " +
-			issueCitationHash(594) + "`, and `Crank-Git/ja4plus#594` is the issue that " +
-			"sentence names. #512 owns this file on the `epic/441-deviation-fixes` branch, " +
-			"so #351 repairs no line of it. The batch documentation round writes the " +
-			"explicit form, and it then removes this entry.",
-	},
-}
+}{}
 
 // issueCitationPortForm matches a citation that names the port.
 //
