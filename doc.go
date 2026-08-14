@@ -3,8 +3,9 @@
 //
 // # Build toolchain
 //
-// The language version and the build toolchain are two different statements, and this
-// section states both.
+// The language version and the build toolchain answer two different questions, and this
+// section states both. A language version decides which consumer compiles the module. A
+// build toolchain decides which standard library a built binary links.
 //
 // The go.mod file declares the Go 1.24 language version. A language version is not a
 // toolchain, so a consumer on a Go 1.24 toolchain compiles this module.

@@ -28,8 +28,9 @@ QUIC Initial packets (RFC 9001/9369) are automatically decrypted to extract TLS 
 
 ## Installation
 
-The module requires Go 1.24 or later. **That sentence states a language version, and it
-states no build toolchain.** The section below states the build toolchain.
+The module requires Go 1.24 or later. **That sentence states a language version, and the
+`or later` names the toolchain that compiles the module.** It names no toolchain that
+builds a binary free of a called vulnerability, and the section below names that one.
 
 ```bash
 go get github.com/Crank-Git/ja4plus-go
@@ -37,7 +38,10 @@ go get github.com/Crank-Git/ja4plus-go
 
 ### The language version and the build toolchain
 
-**These are two statements about two different things, and this section states both.**
+**These two statements answer two different questions, and this section states both.**
+
+- **A language version decides which consumer compiles the module.**
+- **A build toolchain decides which standard library a built binary links.**
 
 **The language version is 1.24.** `go.mod` declares `go 1.24.0`, and a language version is
 not a toolchain. So a consumer on a Go 1.24 toolchain compiles this module, and this

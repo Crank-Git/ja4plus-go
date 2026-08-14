@@ -33,6 +33,23 @@ const minimumBuildToolchain = "go1.25.13"
 // toolchainStatementPages names each page that FR-foundation-23 binds.
 var toolchainStatementPages = []string{"README.md", "doc.go"}
 
+// pageProse returns the words of a page as one space-separated line.
+//
+// It strips the leading comment marker of each line, because `doc.go` carries one and
+// `README.md` carries none. It then collapses every run of whitespace, so a sentence that
+// wraps reads the same as a sentence that does not. #472 measured the reason: a line wrap
+// inside a quoted phrase defeats a substring check against the raw bytes.
+func pageProse(t *testing.T, page string) string {
+	t.Helper()
+
+	lines := strings.Split(readRepoFile(t, page), "\n")
+	for index, line := range lines {
+		lines[index] = strings.TrimPrefix(strings.TrimSpace(line), "// ")
+	}
+
+	return strings.Join(strings.Fields(strings.Join(lines, " ")), " ")
+}
+
 // FR-foundation-23. A page that names no toolchain leaves a user on go1.24.13, and that
 // toolchain linked 13 called standard library vulnerabilities on 2026-08-14.
 func TestTheToolchainPagesNameTheMinimumBuildToolchain(t *testing.T) {
@@ -47,16 +64,39 @@ func TestTheToolchainPagesNameTheMinimumBuildToolchain(t *testing.T) {
 
 // FR-foundation-23. A page that names one Go version and no reading reads two ways, and a
 // reader then takes the language version for a toolchain floor.
-func TestTheToolchainPagesSeparateTheLanguageVersionFromTheToolchain(t *testing.T) {
+//
+// The assertion reads the negation rather than the two terms, because a page that names
+// both terms can still read two ways. The self-review of #472 measured that: an earlier
+// version of this test read `language version` and `toolchain` as two substrings, and it
+// passed for a `CLAUDE.md` sentence that named a toolchain floor under the language version
+// heading.
+func TestTheToolchainPagesDenyThatTheLanguageVersionIsTheToolchain(t *testing.T) {
+	// Each page states the negation in this form. A page that drops it loses the one
+	// sentence that stops the two readings from merging.
+	const negation = "language version is not a toolchain"
+
 	for _, page := range toolchainStatementPages {
-		content := readRepoFile(t, page)
+		content := pageProse(t, page)
 
-		if !strings.Contains(content, "language version") {
-			t.Errorf("%s states no language version reading, and FR-foundation-23 requires the separation", page)
+		if !strings.Contains(content, negation) {
+			t.Errorf("%s does not state that a language version is not a toolchain, and FR-foundation-23 requires that separation", page)
 		}
+	}
+}
 
-		if !strings.Contains(content, "toolchain") {
-			t.Errorf("%s states no toolchain reading, and FR-foundation-23 requires the separation", page)
+// FR-foundation-23. Each page states what each of the two readings decides, so a reader
+// learns which question the number answers rather than which number is larger.
+func TestTheToolchainPagesStateWhatEachReadingDecides(t *testing.T) {
+	for _, page := range toolchainStatementPages {
+		content := strings.Join(strings.Fields(readRepoFile(t, page)), " ")
+
+		for _, reading := range []string{
+			"language version decides which consumer compiles the module",
+			"build toolchain decides which standard library a built binary links",
+		} {
+			if !strings.Contains(content, reading) {
+				t.Errorf("%s does not state that a %s, and FR-foundation-23 requires both readings", page, reading)
+			}
 		}
 	}
 }
@@ -103,8 +143,17 @@ func TestClaudeMdSeparatesTheLanguageVersionFromTheToolchain(t *testing.T) {
 	if !strings.Contains(content, minimumBuildToolchain) {
 		t.Errorf("CLAUDE.md names no %s, and every page that names a Go version agrees with the #472 ruling", minimumBuildToolchain)
 	}
+}
 
-	if !strings.Contains(content, goToolchainRange) {
+// FR-foundation-23. `CLAUDE.md` names the range every CI job builds on, and
+// `goToolchainRange` states that range once. A page that hard-codes a second value drifts
+// from the workflows without a failing test.
+//
+// This test is separate from the one above, because `.claude/rules/ste.md` states that a
+// test name reads as one behavior. The self-review of #472 found the two claims bundled
+// under one name, so a failure reported the wrong claim.
+func TestClaudeMdNamesTheCIToolchainRange(t *testing.T) {
+	if !strings.Contains(readRepoFile(t, "CLAUDE.md"), goToolchainRange) {
 		t.Errorf("CLAUDE.md names no %s, and that range is the toolchain every CI job builds on", goToolchainRange)
 	}
 }
