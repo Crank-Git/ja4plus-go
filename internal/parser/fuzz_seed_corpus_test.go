@@ -25,6 +25,39 @@ import (
 // the ordinary run, and it never drifts from the value this file states.
 func seedGenerate() bool { return os.Getenv("JA4PLUS_SEEDGEN") == "1" }
 
+// seedNamed holds each seed path that `seedCorpusFile` reached in this run.
+// `seedCorpusHoldsNoOtherFile` reads it, so a rename that leaves the old file behind fails
+// the test rather than leaving a seed whose name states a behavior it does not hold.
+var seedNamed = map[string]bool{}
+
+// seedCorpusHoldsNoOtherFile fails when a target directory holds a file that the test
+// names no value for. A file with the `issue-` prefix is a crash that the fuzzer wrote,
+// and FR-fuzz-24 keeps it, so this check passes over it.
+func seedCorpusHoldsNoOtherFile(t *testing.T) {
+	t.Helper()
+
+	root := filepath.Join("testdata", "fuzz")
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+		// `README.md` sits beside the target directories, and Go reads no seed there.
+		if filepath.Dir(path) == root {
+			return nil
+		}
+		if strings.HasPrefix(entry.Name(), "issue-") || seedNamed[path] {
+			return nil
+		}
+
+		t.Errorf("the seed corpus holds %s, and no test builds it", path)
+
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // seedCorpusFile writes one seed file, or it compares the tracked file against the lines.
 // `target` names the fuzz target, and `name` names the file under `testdata/fuzz/<target>/`.
 func seedCorpusFile(t *testing.T, target, name string, lines ...string) {
@@ -32,6 +65,7 @@ func seedCorpusFile(t *testing.T, target, name string, lines ...string) {
 
 	path := filepath.Join("testdata", "fuzz", target, name)
 	body := "go test fuzz v1\n" + strings.Join(lines, "\n") + "\n"
+	seedNamed[path] = true
 
 	if seedGenerate() {
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -72,7 +106,10 @@ func seedBytes(b []byte) string {
 func seedRead(t *testing.T, target, name string) []byte {
 	t.Helper()
 
-	raw, err := os.ReadFile(filepath.Join("testdata", "fuzz", target, name))
+	path := filepath.Join("testdata", "fuzz", target, name)
+	seedNamed[path] = true
+
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,10 +123,12 @@ func seedRead(t *testing.T, target, name string) []byte {
 	return []byte(value)
 }
 
-// TestTheReducedSeedsOfTheFoxIOCorpusParse proves that each seed of
-// `scripts/seed-fuzz.sh` reaches the parser, so FR-fuzz-20 holds for the derived seeds.
-// The script builds each one from the identifiers of a capture, and it copies no byte.
-func TestTheReducedSeedsOfTheFoxIOCorpusParse(t *testing.T) {
+// checkTheReducedSeeds proves that each seed of `scripts/seed-fuzz.sh` reaches the parser,
+// so FR-fuzz-20 holds for the derived seeds. The script builds each one from the
+// identifiers of a capture, and it copies no byte.
+func checkTheReducedSeeds(t *testing.T) {
+	t.Helper()
+
 	hello, err := ParseClientHello(seedRead(t,
 		"FuzzParseClientHelloReadsAnyPayload", "accepts-the-reduced-client-hello-of-badcurveball"))
 	if err != nil {
@@ -346,4 +385,8 @@ func TestEachTargetOfThisPackageHoldsAnAcceptedSeedAndARejectedSeed(t *testing.T
 	}
 	seedCorpusFile(t, "FuzzReadX509IdentifiersReadsAnyCertificate",
 		"rejects-a-der-sequence-that-holds-no-certificate", seedBytes(x509Reject))
+
+	t.Run("the reduced seeds of the FoxIO corpus parse", checkTheReducedSeeds)
+
+	seedCorpusHoldsNoOtherFile(t)
 }
