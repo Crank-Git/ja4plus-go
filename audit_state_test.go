@@ -324,10 +324,11 @@ func TestJA4CleanupConnectionReadsBothDirectionsOfTheTuple(t *testing.T) {
 	}
 }
 
-// F-23-12 is closed. JA4X keys the deduplication set by the hash of the certificate, so
+// F-23-12 is closed. JA4X keyed the deduplication set by the hash of the certificate, so
 // CleanupConnection reached no entry of it and a certificate that two connections carried
 // produced one fingerprint. The fingerprinter now holds a stream index of the hashes it
 // wrote, and CleanupConnection removes the hashes of the connection the caller names.
+// #489 then gave the set key the stream beside the certificate hash.
 func TestJA4XCleanupConnectionRemovesTheCertificateHashOfTheConnection(t *testing.T) {
 	client := net.IP{192, 168, 1, 10}
 	server := net.IP{10, 0, 0, 5}
@@ -361,17 +362,19 @@ func TestJA4XCleanupConnectionRemovesTheCertificateHashOfTheConnection(t *testin
 		t.Errorf("the deduplication set holds %d entries, and the second connection wrote one", got)
 	}
 
-	// The same connection reads the same certificate twice, and the second read produces
-	// no result. CleanupConnection is the only removal path, and this states that the
-	// closure kept the deduplication that a live connection needs.
+	// A third connection carries the same certificate on a third stream, and it produces
+	// one value. #489 keyed the set by the certificate and the stream together, and this
+	// assertion read 0 before that change.
+	// `TestJA4XProducesOneValueWhenOneStreamRepeatsOneCertificate` of
+	// `ja4x_stream_key_test.go` holds the deduplication that one stream still needs.
 	third, err := fingerprinter.ProcessPacket(
 		buildTCPPacketWithSeq(t, server, client, 443, 40032, 1, record))
 	if err != nil {
 		t.Fatalf("ProcessPacket returned the error %v", err)
 	}
 
-	if len(third) != 0 {
-		t.Errorf("a third connection with no cleanup produced %d results, want 0", len(third))
+	if len(third) != 1 {
+		t.Errorf("a third connection produced %d results, and the closure of #489 produces 1", len(third))
 	}
 }
 
