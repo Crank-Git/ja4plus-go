@@ -34,7 +34,14 @@ of that register name a change to this repository. Read
 
 ## Stack
 
-- Go 1.24 or later.
+- Go 1.24 or later. **That sentence states a language version, and it states no
+  toolchain.** #438 established the reading on 2026-08-13, and `go.mod` declares
+  `go 1.24.0`.
+- **The minimum build toolchain is go1.25.13, and it is a separate statement from the
+  language version above.** The maintainer ruled the question on 2026-08-14, and #472
+  holds the ruling and the reversal path. `README.md` and `doc.go` state the measurement.
+  **Every CI job builds on the range `~1.26.6`**, and `goToolchainRange` in
+  `foundation_test.go` states that range once for both workflows.
 - `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
   `github.com/google/gopacket` on 2026-08-13, and #438 carried it.
 - `golang.org/x/crypto` for SSH and hashing.

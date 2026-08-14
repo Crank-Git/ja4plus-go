@@ -34,6 +34,42 @@ The module requires Go 1.24 or later.
 go get github.com/Crank-Git/ja4plus-go
 ```
 
+### The language version and the build toolchain
+
+**These are two statements about two different things, and this section states both.**
+
+**The language version is 1.24.** `go.mod` declares `go 1.24.0`, and a language version is
+not a toolchain. So a consumer on a Go 1.24 toolchain compiles this module, and this
+section does not narrow who consumes the library.
+
+**The minimum build toolchain is go1.25.13.** A user who builds a binary from this source
+takes go1.25.13 or a later toolchain, and the measurement below states why. `go1.25.13` is
+the oldest toolchain this project measured at zero called vulnerabilities, and no claim
+here covers a patch that the table does not name.
+
+`govulncheck` reads the standard library of the `go` command on the PATH, so the toolchain
+decides the result. `govulncheck` v1.6.0 reported this on 2026-08-14, against the
+vulnerability database that <https://vuln.go.dev> published at 2026-08-13 21:43:54 UTC:
+
+| Toolchain | Called standard library vulnerabilities | Exit status |
+|---|---|---|
+| go1.24.13 | 13 | 3 |
+| go1.25.13 | 0 | 0 |
+| go1.26.5 | 4 | 3 |
+| go1.26.6 | 0 | 0 |
+
+**A later toolchain is not a clean toolchain by itself.** go1.26.5 is later than go1.25.13,
+and it carries four. So a user on the Go 1.26 line takes go1.26.6 or later.
+
+**No Go 1.24 patch clears the 13.** go1.24.13 is the newest Go 1.24 patch, and each
+advisory names a fix in a go1.25.x release or a later one.
+
+**Every count above moves without a change to this repository**, because the vulnerability
+database is live. Run `make vuln` to re-take the measurement on your own toolchain.
+
+**This project builds and releases on the range `~1.26.6`.**
+`.github/workflows/ci.yml` names that range for every job.
+
 ## CLI
 
 Pre-built binaries are available on the [Releases](https://github.com/Crank-Git/ja4plus-go/releases) page. Or build from source:

@@ -1,6 +1,24 @@
 // Package ja4plus computes JA4+ network fingerprints from the packets that gopacket
 // decodes.
 //
+// # Build toolchain
+//
+// The language version and the build toolchain are two different statements, and this
+// section states both.
+//
+// The go.mod file declares the Go 1.24 language version. A language version is not a
+// toolchain, so a consumer on a Go 1.24 toolchain compiles this module.
+//
+// The minimum build toolchain is go1.25.13. It is the oldest toolchain this project
+// measured at zero called vulnerabilities of the standard library. On 2026-08-14,
+// govulncheck v1.6.0 reported 13 for go1.24.13, 0 for go1.25.13, 4 for go1.26.5 and 0 for
+// go1.26.6. So a later toolchain is not a clean toolchain by itself, and a user on the Go
+// 1.26 line takes go1.26.6 or later.
+//
+// Every count above moves without a change to this repository, because the vulnerability
+// database is live. The README states the measurement, and it names the command that
+// re-takes it.
+//
 // # Concurrency
 //
 // One Processor serves one goroutine, and one fingerprinter serves one goroutine. Every
