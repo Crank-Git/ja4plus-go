@@ -40,6 +40,11 @@ var dhcpExcludedOptions = map[byte]bool{
 	81: true,
 }
 
+// dhcpFQDNNameOffset is the count of bytes that option 81 holds before the domain name.
+// RFC 4702 puts the domain name after one flags byte and two rcode bytes. The port holds
+// the same value as `_DHCP_FQDN_NAME_OFFSET`.
+const dhcpFQDNNameOffset = 3
+
 // JA4DFingerprinter generates JA4D DHCP fingerprints (FoxIO PR #267/#270).
 //
 // Format: {type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}
@@ -47,7 +52,7 @@ var dhcpExcludedOptions = map[byte]bool{
 //   - type: 5-char DHCP message type abbreviation (from option 53)
 //   - size: 4-digit Maximum DHCP Message Size (option 57), capped 9999, default "0000"
 //   - ip:   'i' if Requested IP Address (option 50) is present, else 'n'
-//   - fqdn: 'd' if Client FQDN (option 81) is present, else 'n'
+//   - fqdn: 'd' if Client FQDN (option 81) carries a domain name, else 'n'
 //   - options: dash-joined option type codes in PRESENCE ORDER, excluding
 //     Pad (0), MessageType (53), Requested IP (50), FQDN (81). Default "00".
 //   - request_list: dash-joined items of the Parameter Request List (option 55)
@@ -128,7 +133,20 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		case layers.DHCPOptRequestIP: // 50
 			hasRequestIP = true
 		case 81: // Client FQDN
-			hasFQDN = true
+			// The maintainer ruled issue #371 on 2026-08-14: the name inside option 81
+			// decides the flag, and the presence of the option decides nothing. R16 of
+			// `docs/specs/foxio/JA4D.md` records the rank 1 image label
+			// `Has a Domain name (d) or No domain (n)`.
+			// `wireshark/source/packet-ja4.c:1521` tests the field `dhcp.fqdn.name`, and
+			// `zeek/ja4d/main.zeek:73` tests the presence. The ruling declines the Zeek
+			// answer, because an image outranks an implementation. The port holds the same
+			// rule at `ja4plus/fingerprinters/ja4d.py:161-165` of tag `v1.1.0`, and the
+			// port half is `Crank-Git/ja4plus#615`. A reversal restores `hasFQDN = true`
+			// in both repositories together.
+			//
+			// The option data holds a length that the packet states, so the comparison
+			// below reads that length and it slices no byte.
+			hasFQDN = hasFQDN || len(opt.Data) > dhcpFQDNNameOffset
 		case layers.DHCPOptParamsRequest: // 55
 			paramList = opt.Data
 		}
