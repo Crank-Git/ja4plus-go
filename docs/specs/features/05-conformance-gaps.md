@@ -80,11 +80,29 @@ the deviation list exists, not before.
 
 ### QUIC decryption secrets
 
+**FR-gaps-17 held one sentence that states two facts, and this amendment separates them.**
+The cross-member review of the Epic 5 batch found the ambiguity on 2026-08-11, and issue
+#171 records it. **The library exports a key log surface, and no exported function of it
+accepts a `KeyLog`.** So a caller reads a key log and decrypts one packet by hand. **No
+`Processor` method and no fingerprinter reads a secret.** `types.go` holds each of the eight
+exported names, and FR-gaps-17 through FR-gaps-17b name them.
+
+**Issue #492 needs a key log that a fingerprinter reads, and FR-gaps-17c states that the
+library holds no such path.** The ship-partial comment of #441, dated 2026-08-14, states
+that **#492 reaches #171, Epic 10 and the port together**. **Epic 10 (#100) freezes the
+exported API, so a `KeyLog` parameter needs a ruling of the maintainer.** This amendment
+states no roadmap, and issue #171 is its reversal path.
+
 - **FR-gaps-15** — The capture reader reads a pcapng Decryption Secrets Block.
 - **FR-gaps-16** — The library decrypts a QUIC packet with a secret that a Decryption
   Secrets Block supplies.
-- **FR-gaps-17** — The library exports a way for a caller to supply a TLS key log, so
-  that a caller who reads a capture through another reader can pass secrets.
+- **FR-gaps-17** — The library exports the `KeyLog` type, and a caller builds one with
+  `ParseKeyLog` or with `ReadKeyLogFromCapture`.
+- **FR-gaps-17a** — A caller reads one secret with `KeyLog.Secret`, and it decrypts one
+  QUIC packet with `DecryptQUICPacket`.
+- **FR-gaps-17b** — `KeyLog.ClientRandoms` and `KeyLog.Len` report what one `KeyLog` holds,
+  and `ErrNoSecret` reports that the library holds no secret for the connection.
+- **FR-gaps-17c** — No exported function of the library accepts a `KeyLog`.
 - **FR-gaps-18** — The library produces no fingerprint from a secret when the caller
   supplies none, and returns a non-fatal error instead.
 
@@ -168,7 +186,7 @@ No entity changes. The following files change.
 | `internal/parser/secrets.go` | New. Holds the key-log reader. |
 | `capture.go` | New or changed. Reads a Decryption Secrets Block. |
 | `docs/audit/conformance-exclusions.md` | New. |
-| `types.go` | Gains the `OriginalOrder` field of `FingerprintResult`. |
+| `types.go` | Gains the `OriginalOrder` field of `FingerprintResult`, and the key log surface that FR-gaps-17 through FR-gaps-17b name. |
 | `ja4.go` | Gains the builder of the `JA4_o` value. |
 | `CHANGELOG.md` | One entry for each changed fingerprint. |
 
@@ -227,8 +245,10 @@ reader or reads the block directly.
 - This feature set does not add a method that FoxIO defines and this library does not
   implement. The non-goals in `../spec.md` record which.
 - This feature set does not add live capture.
-- This feature set does not change the API, except where FR-gaps-17 adds the key-log
-  entry point.
+- This feature set changes the API at one place. FR-gaps-17 through FR-gaps-17b add the key
+  log surface, and FR-gaps-17c states that no exported function accepts a `KeyLog`.
+- This feature set adds no `KeyLog` parameter to the `Processor` and to no fingerprinter.
+  Issue #492 needs that path, and Epic 10 (#100) freezes the exported API.
 
 ## Open questions
 
