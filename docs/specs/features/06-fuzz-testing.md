@@ -324,9 +324,9 @@ and names itself in the log, and none of them opens an issue.
 **Every loop of `ParseCryptoFrames` in `internal/parser/quic.go` consumes one input byte or
 it leaves.** The outer loop advances `pos` on each branch, and it breaks on an unknown frame
 type. **The one loop that reads an attacker-controlled trip count is the additional ACK range
-loop**, and the count reaches 4611686018427387903. **That loop is bounded anyway**, because
-each iteration calls `DecodeVarint`, and `DecodeVarint` returns an error when `pos` reaches
-the length of the input. **Each successful `DecodeVarint` advances `pos` by one byte at
+loop**, and the count reaches 4611686018427387903. **`DecodeVarint` bounds that loop anyway.** Each iteration
+calls `DecodeVarint`, and `DecodeVarint` returns an error when `pos` reaches the length of
+the input. **Each successful `DecodeVarint` advances `pos` by one byte at
 least**, so the iteration count cannot exceed the input length.
 
 **40 fuzz runs reported 60794671 executions and no failure.** No run reported the FR-fuzz-16
@@ -338,8 +338,10 @@ than one second.
 **`BenchmarkParseCryptoFramesReadsTheFuzzCorpus` in
 `internal/parser/quic_crypto_fuzz_cost_test.go` reports 28.13 ns for one call**, at
 `-benchtime 2s`. **`BenchmarkParseCryptoFramesUnderTheFuzzPropertiesReadsTheFuzzCorpus`
-reports 642.4 ns**, over the same corpus and the five steps that `check` in
-`internal/fuzzprop/fuzzprop.go` performs.
+reports 642.4 ns**, over the same corpus. **The second benchmark copies the shape of `check`
+in `internal/fuzzprop/fuzzprop.go`, and it omits three steps of it.** It omits the two
+`time.Now` and `time.Since` pairs, the FR-fuzz-16 duration comparison and the FR-fuzz-17
+allocation comparison. **So 642.4 ns is a lower bound of the harness cost.**
 
 **The fuzz engine reported about 120000 executions each second over 10 workers**, which is
 about 83 microseconds for one execution on one worker. **So the engine holds about 99
@@ -402,8 +404,8 @@ stalls.
 #### The failure of the report comes from the fuzz coordinator, and this reading is unreproduced
 
 **The reported run failed with `context deadline exceeded` and it wrote no input file.**
-`f.Fuzz` in `testing/fuzz.go` prints `Failing input written to %s` for a crash, so the absence
-of that line reports that `CoordinateFuzzing` returned the deadline error itself.
+`f.Fuzz` in `testing/fuzz.go` prints `Failing input written to %s` for a crash. **The
+reported run holds no such line**, so `CoordinateFuzzing` returned the deadline error itself.
 
 **`stop` in `internal/fuzz/fuzz.go` suppresses that error with `err == fuzzCtx.Err()`.**
 `fuzzCtx` is a `context.WithCancel` child of the deadline context, and `cancelCtx.cancel` in
@@ -589,8 +591,8 @@ until the fuzz run ends, and it stops every worker of that run.
 **The question: does `make fuzz` bound the minimization?** Three answers stand, and this page
 picks none.
 
-1. **Accept the stall.** A fuzz run that spends 20 of its 30 seconds in a minimization still
-   writes an interesting input, and the nightly job already reports the stall as `failure`.
+1. **Accept the stall.** A fuzz run that minimizes for 20 of its 30 seconds still writes an
+   interesting input. The nightly job already reports a stall as `failure`.
 2. **Pass `-fuzzminimizetime` to each run of `make fuzz`.** The recipe then keeps the
    executions and it keeps a shorter minimization.
 3. **Raise the fuzz time.** A longer run reaches the same phase and it leaves that phase.

@@ -108,11 +108,16 @@ func BenchmarkParseCryptoFramesReadsTheFuzzCorpus(b *testing.B) {
 // BenchmarkParseCryptoFramesUnderTheFuzzPropertiesReadsTheFuzzCorpus measures the work
 // that one fuzz execution performs.
 //
-// `check` in `internal/fuzzprop/fuzzprop.go` takes two `runtime/metrics` readings, calls
-// the parser two times and compares the two results with `reflect.DeepEqual`. That
-// function is unexported and it takes a `*testing.T`, so this benchmark performs the same
-// five steps rather than calls it. A change to that harness leaves this benchmark behind,
-// and issue #568 records the reason this file copies the shape.
+// `check` in `internal/fuzzprop/fuzzprop.go` is unexported and it takes a `*testing.T`, so
+// this benchmark copies its shape rather than calls it. It reproduces the two
+// `runtime/metrics` readings, the two parser calls and the `reflect.DeepEqual` comparison.
+//
+// It omits three things that `check` also does: the two `time.Now` and `time.Since` pairs,
+// the FR-fuzz-16 duration comparison and the FR-fuzz-17 allocation comparison. So this
+// benchmark states a lower bound of the harness cost, and never the whole cost.
+//
+// A change to that harness leaves this benchmark behind, and issue #568 records the reason
+// this file copies the shape.
 func BenchmarkParseCryptoFramesUnderTheFuzzPropertiesReadsTheFuzzCorpus(b *testing.B) {
 	inputs := readFuzzCryptoCorpus(b)
 	sample := []metrics.Sample{{Name: "/gc/heap/allocs:bytes"}}
