@@ -48,12 +48,25 @@ MUTATION_SCRATCH ?= .gremlins
 MUTATION_JSON ?= $(MUTATION_SCRATCH)/last-run.json
 MUTATION_REPORT_DIR ?= docs/mutation_reports
 
+# `$(PKG)` reaches both commands below without a quotation, and `$(MUTATION_EXCLUDED)` needs
+# one. `PKG` holds a Go package path, which carries no space. `MUTATION_EXCLUDED` holds
+# prose, which carries a space and a backtick, so a single quotation stops the shell from
+# reading the backtick as a command substitution.
+#
 # The report states which paths the sweep does not read, under the edge case of
 # `docs/specs/features/15-mutation-sweep.md` that names an unswept package.
 #
 # `TestTheMutationReportNamesEveryExcludedPath` in `mutation_sweep_test.go` fails when this
 # value and the `exclude-files` list of `.gremlins.yaml` disagree.
 MUTATION_EXCLUDED ?= `cmd/` and `examples/`
+
+# **Never set a threshold key of `.gremlins.yaml` without a change to this recipe.** `Do` in
+# `internal/report/report.go` of `gremlins` v0.6.0 calls `reportFindings` before `assess`, so
+# the sweep writes a complete JSON file and then exits non-zero when a configured efficacy
+# threshold or coverage threshold is not met. make halts a recipe on the first non-zero
+# command, so the render step below would never run and the sweep would produce no tracked
+# report. FR-mutation-19 states that the sweep blocks no merge, so this repository sets no
+# threshold today and `assess` returns nil.
 
 build:
 	go build -o bin/ja4plus ./cmd/ja4plus
@@ -196,7 +209,7 @@ mutate:
 		-input $(MUTATION_JSON) \
 		-dir $(MUTATION_REPORT_DIR) \
 		-tool-version $(GREMLINS_VERSION) \
-		-packages '$(PKG)' \
+		-packages $(PKG) \
 		-excluded '$(MUTATION_EXCLUDED)'
 
 # FR-supply-4 holds the command that the `vuln` job of `.github/workflows/ci.yml` runs, so

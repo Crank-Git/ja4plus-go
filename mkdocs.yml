@@ -61,7 +61,7 @@ strict: true
 #   1. One report names every mutation of the swept path, so it holds one table row for each.
 #      The `internal/parser` report of 2026-08-14 holds 882 rows.
 #   2. `make mutate` writes one report for each sweep, so the directory grows without a
-#      bound. A `nav` entry for each one is a list nobody reads.
+#      bound. A `nav` entry for each one grows a list with no reader.
 #   3. A report that no `nav` entry names reaches `validation.nav.omitted_files: warn`, and
 #      `strict` above turns that warning into a failed build. So an unexcluded report breaks
 #      `make docs` on the first sweep.

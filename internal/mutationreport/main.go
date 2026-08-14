@@ -12,7 +12,7 @@
 // nor FR-mutation-10.
 //
 //   - It records no tool version and no date. `OutputResult` in
-//     `internal/report/internal/structure.go` of `gremlins` v0.6.0 holds 9 fields, and no
+//     `internal/report/internal/structure.go` of `gremlins` v0.6.0 holds 11 fields, and no
 //     one of them names either. FR-mutation-9 needs both, so this command adds them.
 //   - It orders the `files` array from a Go map. `fileReport` in `internal/report/report.go`
 //     ranges over `r.files`, so two runs over one tree write two orders. A tracked file that
@@ -58,12 +58,12 @@ type gremlinsMutation struct {
 // verdictOrder lists every status that `gremlins` v0.6.0 emits, in the order the report
 // prints them.
 //
-// `Status.String` in `internal/mutator/mutator.go` of `gremlins` v0.6.0 returns exactly
+// `Status.String` at `internal/mutator/mutator.go:45` of `gremlins` v0.6.0 returns exactly
 // these seven strings. **FR-mutation-8 names five of them.** `RUNNABLE` is the dry-run
 // verdict that `Engine.mutationStatus` sets, and `SKIPPED` marks a mutation outside a
-// configured diff. Neither one reaches a full sweep of this repository, and the report
-// carries a row for each so that a later `gremlins` release cannot drop a mutation into a
-// verdict the report does not print.
+// configured diff. Neither one reaches a full sweep of this repository. The report carries
+// a row for each, so a later `gremlins` release cannot drop a mutation into a verdict the
+// report does not print.
 var verdictOrder = []string{
 	"KILLED",
 	"LIVED",
@@ -81,6 +81,10 @@ type reportInput struct {
 	date        string
 	packages    string
 	excluded    string
+
+	// paths maps the base name that `gremlins` writes to every module path that carries it.
+	// `resolvePaths` builds it, and `render` needs no file system.
+	paths map[string][]string
 }
 
 func main() {
@@ -119,6 +123,7 @@ func run(input, dir string, meta reportInput) error {
 	if meta.result, err = parse(raw); err != nil {
 		return fmt.Errorf("read %s: %w", input, err)
 	}
+	meta.paths = resolvePaths(sweptRoot(meta.packages))
 
 	path := filepath.Join(dir, reportName(meta.date, meta.packages))
 	if err := os.MkdirAll(dir, 0o750); err != nil {
@@ -132,12 +137,77 @@ func run(input, dir string, meta reportInput) error {
 	return nil
 }
 
+// resolvePaths maps each Go base name under root to every module path that carries it.
+//
+// **`gremlins` v0.6.0 writes a base name and never a path.** `newReport` in
+// `internal/report/report.go` keys its file map on `m.Position().Filename`, and
+// `OutputFile` in `internal/report/internal/structure.go` carries that value alone. Its
+// `Mutator` interface holds a `Pkg` method, and the output structure holds no field for it.
+//
+// So a report of the whole named set writes `lookup.go` for two different files: the one at
+// the module root and the one in `ja4db/`. `doc.go` collides the same way. FR-mutation-11
+// settles a `LIVED` mutation by reading the line it names, and an ambiguous name names no
+// line to read.
+//
+// This walk resolves the name where exactly one file carries it. Where two files carry it,
+// `pathOf` keeps the base name and the report reports the collision.
+func resolvePaths(root string) map[string][]string {
+	paths := make(map[string][]string)
+	_ = filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return nil //nolint:nilerr // An unreadable directory resolves no name, and it fails no report.
+		}
+		name := entry.Name()
+		if entry.IsDir() {
+			// A hidden directory and `testdata` hold no package that the sweep reads.
+			if path != root && (strings.HasPrefix(name, ".") || name == "testdata") {
+				return filepath.SkipDir
+			}
+
+			return nil
+		}
+		if strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, "_test.go") {
+			paths[name] = append(paths[name], filepath.ToSlash(filepath.Clean(path)))
+		}
+
+		return nil
+	})
+	for name := range paths {
+		sort.Strings(paths[name])
+	}
+
+	return paths
+}
+
+// pathOf returns the module path of one base name, or the base name when the walk found no
+// single file that carries it.
+func pathOf(paths map[string][]string, name string) string {
+	if found := paths[name]; len(found) == 1 {
+		return found[0]
+	}
+
+	return name
+}
+
+// ambiguousNames returns every base name of the sweep that two or more files carry.
+func ambiguousNames(meta reportInput) []string {
+	var found []string
+	for _, file := range meta.result.Files {
+		if len(meta.paths[file.Filename]) > 1 {
+			found = append(found, file.Filename)
+		}
+	}
+	sort.Strings(found)
+
+	return found
+}
+
 // parse returns the sweep result that one `gremlins` output file holds.
 //
 // It rejects a result that holds no file. `gremlins` prints `No results to report.` and
-// writes no output file when it applies no mutation, so an empty `files` array names a
-// sweep that measured nothing. A report of zero mutations reads as a clean sweep, which is
-// the most expensive mistake this command can make.
+// writes no output file when it applies no mutation. So an empty `files` array names a
+// sweep that measured nothing. A report of zero mutations reads as a clean sweep, and the
+// reader has no way to tell the two apart.
 func parse(raw []byte) (gremlinsResult, error) {
 	var result gremlinsResult
 	if err := json.Unmarshal(raw, &result); err != nil {
@@ -150,14 +220,26 @@ func parse(raw []byte) (gremlinsResult, error) {
 	return result, nil
 }
 
+// sweptRoot returns the directory that the sweep read, for the name walk of resolvePaths.
+//
+// `gremlins unleash <path>` reads the whole directory tree under the path, so the same path
+// bounds the walk.
+func sweptRoot(packages string) string {
+	root := strings.TrimSuffix(packages, "/...")
+	if root == "" {
+		return "."
+	}
+
+	return root
+}
+
 // reportName returns the file name of one sweep: the UTC day, then the swept path.
 //
-// The day leads the name so that a plain sort of the directory reads as a history, and
-// acceptance criterion 3 of the feature file can name "the most recent report".
+// The day leads the name, so a plain sort of the directory orders the reports by date.
+// Acceptance criterion 3 of the feature file then names "the most recent report".
 func reportName(date, packages string) string {
-	slug := strings.TrimPrefix(packages, "./")
-	slug = strings.Trim(slug, "./")
-	if slug == "" {
+	slug := strings.Trim(strings.TrimPrefix(sweptRoot(packages), "./"), "/")
+	if slug == "" || slug == "." {
 		slug = "all"
 	}
 	slug = strings.ReplaceAll(slug, "/", "-")
@@ -176,11 +258,14 @@ type mutationRow struct {
 // `gremlins` writes the `files` array from a Go map, so its order changes between two runs
 // over one tree. This report is tracked in git under FR-mutation-10, so an unsorted report
 // would produce a diff on every sweep that changes no verdict.
-func rows(result gremlinsResult) []mutationRow {
+func rows(meta reportInput) []mutationRow {
 	var out []mutationRow
-	for _, file := range result.Files {
+	for _, file := range meta.result.Files {
 		for _, mutation := range file.Mutations {
-			out = append(out, mutationRow{file: file.Filename, gremlinsMutation: mutation})
+			out = append(out, mutationRow{
+				file:             pathOf(meta.paths, file.Filename),
+				gremlinsMutation: mutation,
+			})
 		}
 	}
 	sort.Slice(out, func(i, j int) bool {
@@ -202,8 +287,8 @@ func rows(result gremlinsResult) []mutationRow {
 
 // countVerdicts returns the count of each verdict, read from the mutation entries.
 //
-// **The top-level counts of the JSON do not answer this.** `fileReport` in
-// `internal/report/report.go` of `gremlins` v0.6.0 sets
+// **The top-level counts of the JSON do not answer this.** `fileReport` at
+// `internal/report/report.go:178` of `gremlins` v0.6.0 sets
 // `MutantsTotal: r.lived + r.killed + r.notViable`, so `mutants_total` excludes every
 // `NOT COVERED` and every `TIMED OUT` mutation. The JSON carries no timed-out count and no
 // skipped count at all. The `status` field of each mutation carries every verdict, so the
@@ -219,8 +304,9 @@ func countVerdicts(rows []mutationRow) map[string]int {
 
 // render returns the whole report as markdown.
 func render(meta reportInput) string {
-	all := rows(meta.result)
+	all := rows(meta)
 	counts := countVerdicts(all)
+	ambiguous := ambiguousNames(meta)
 
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Mutation report — %s — `%s`\n\n", meta.date, meta.packages)
@@ -260,6 +346,16 @@ func render(meta reportInput) string {
 		meta.result.MutantsTotal)
 
 	fmt.Fprintf(&b, "## Every mutation\n\n")
+	b.WriteString("**The `File` column names a module path, and `gremlins` writes no path.**\n")
+	b.WriteString("`OutputFile` in `internal/report/internal/structure.go` of `gremlins` v0.6.0 carries the\n")
+	b.WriteString("base name alone, so this report resolves each name against the swept tree.\n")
+	if len(ambiguous) == 0 {
+		b.WriteString("Every name of this sweep resolved to one file.\n\n")
+	} else {
+		fmt.Fprintf(&b, "**Two or more files carry each name below, so the rows of that name keep the "+
+			"base name: %s.** A reader of such a row searches the swept tree for the file.\n\n",
+			"`"+strings.Join(ambiguous, "`, `")+"`")
+	}
 	b.WriteString("| File | Line | Column | Mutation | Verdict |\n|---|---|---|---|---|\n")
 	for _, row := range all {
 		fmt.Fprintf(&b, "| `%s` | %d | %d | `%s` | `%s` |\n",

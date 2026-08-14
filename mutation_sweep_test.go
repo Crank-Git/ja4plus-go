@@ -200,8 +200,8 @@ func TestTheMutationReportRecordsEveryRequiredField(t *testing.T) {
 		t.Error("the report records no date")
 	}
 
-	// FR-mutation-8. Five verdicts are named by the requirement, and `gremlins` v0.6.0
-	// emits seven. The report prints a row for every one.
+	// FR-mutation-8 names five verdicts, and `gremlins` v0.6.0 emits seven. The report
+	// prints a row for every one.
 	for _, verdict := range []string{
 		"KILLED", "LIVED", "NOT COVERED", "TIMED OUT", "NOT VIABLE", "SKIPPED", "RUNNABLE",
 	} {

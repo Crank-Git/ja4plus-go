@@ -51,6 +51,9 @@ func sampleInput(t *testing.T) reportInput {
 		date:        "2026-08-14",
 		packages:    "./internal/parser",
 		excluded:    "`cmd/` and `examples/`",
+		// The sample already carries a path in each `file_name`, so no name resolves and
+		// `pathOf` returns each name unchanged. A separate test covers the resolution.
+		paths: map[string][]string{},
 	}
 }
 
@@ -145,7 +148,7 @@ func TestTheReportStatesTheLivedCountBeforeTheTable(t *testing.T) {
 // two runs over one tree write two orders. A tracked file that reorders on every sweep
 // produces a diff that states no change of verdict.
 func TestTheReportSortsEveryMutation(t *testing.T) {
-	ordered := rows(sampleInput(t).result)
+	ordered := rows(sampleInput(t))
 
 	want := []string{
 		"internal/dbcache/cache.go:7:1",
@@ -186,11 +189,76 @@ func TestTheReportNameLeadsWithTheDate(t *testing.T) {
 	for _, test := range []struct{ packages, want string }{
 		{"./internal/parser", "2026-08-14-internal-parser.md"},
 		{".", "2026-08-14-all.md"},
+		{"./", "2026-08-14-all.md"},
+		{"", "2026-08-14-all.md"},
 		{"./ja4db", "2026-08-14-ja4db.md"},
+		{"./internal/parser/", "2026-08-14-internal-parser.md"},
+		{"./internal/parser/...", "2026-08-14-internal-parser.md"},
 	} {
 		if got := reportName("2026-08-14", test.packages); got != test.want {
 			t.Errorf("reportName for %q returned %q, and the naming states %q", test.packages, got, test.want)
 		}
+	}
+}
+
+// TestTheReportResolvesTheBaseNameThatGremlinsWrites holds FR-mutation-7.
+//
+// `newReport` in `internal/report/report.go` of `gremlins` v0.6.0 keys its file map on
+// `m.Position().Filename`, and `OutputFile` carries that value alone. **The value is a base
+// name, and the whole named set of this repository holds two names that two files carry:
+// `lookup.go` and `doc.go`.** FR-mutation-11 settles a `LIVED` mutation by reading the line
+// it names, and an ambiguous name names no line to read.
+func TestTheReportResolvesTheBaseNameThatGremlinsWrites(t *testing.T) {
+	root := t.TempDir()
+	for _, path := range []string{"lookup.go", "ja4db/lookup.go", "parser/tls.go", "parser/tls_test.go"} {
+		full := filepath.Join(root, path)
+		if err := os.MkdirAll(filepath.Dir(full), 0o750); err != nil {
+			t.Fatalf("create %s: %v", full, err)
+		}
+		if err := os.WriteFile(full, []byte("package p\n"), 0o600); err != nil {
+			t.Fatalf("write %s: %v", full, err)
+		}
+	}
+
+	paths := resolvePaths(root)
+
+	if got := len(paths["lookup.go"]); got != 2 {
+		t.Errorf("the walk found %d file named lookup.go, and the tree holds 2", got)
+	}
+	if got := pathOf(paths, "lookup.go"); got != "lookup.go" {
+		t.Errorf("an ambiguous name resolved to %q, and it keeps the base name", got)
+	}
+	if got := pathOf(paths, "tls.go"); !strings.HasSuffix(got, "parser/tls.go") {
+		t.Errorf("a unique name resolved to %q, and it resolves to the module path", got)
+	}
+	if _, found := paths["tls_test.go"]; found {
+		t.Error("the walk read a test file, and gremlins mutates no test file")
+	}
+	if got := pathOf(paths, "absent.go"); got != "absent.go" {
+		t.Errorf("an unknown name resolved to %q, and it keeps the base name", got)
+	}
+}
+
+// TestTheReportReportsAnAmbiguousBaseName holds the reader half of the resolution above.
+//
+// A row that keeps a base name is a row the reader cannot follow to a file. The report says
+// so rather than presenting the name as a path.
+func TestTheReportReportsAnAmbiguousBaseName(t *testing.T) {
+	meta := sampleInput(t)
+	meta.paths = map[string][]string{
+		"internal/parser/tls.go": {"a/tls.go", "b/tls.go"},
+	}
+
+	report := render(meta)
+	if !strings.Contains(report, "Two or more files carry each name below") {
+		t.Error("the report reports no ambiguous base name")
+	}
+	if !strings.Contains(report, "`internal/parser/tls.go`.**") {
+		t.Error("the report does not name the ambiguous base name")
+	}
+
+	if clean := render(sampleInput(t)); !strings.Contains(clean, "Every name of this sweep resolved to one file.") {
+		t.Error("a sweep with no ambiguous name does not say so")
 	}
 }
 
@@ -219,8 +287,8 @@ func TestTheCommandWritesOneReportAndPrintsItsPath(t *testing.T) {
 	}
 }
 
-// TestTheCommandFailsOnAnEmptySweep holds the case that costs the most to miss: a report
-// that states zero mutations reads as a clean sweep.
+// TestTheCommandFailsOnAnEmptySweep holds the highest-risk case: a report that states zero
+// mutations reads as a clean sweep.
 func TestTheCommandFailsOnAnEmptySweep(t *testing.T) {
 	dir := t.TempDir()
 	input := filepath.Join(dir, "empty.json")
