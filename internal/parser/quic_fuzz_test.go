@@ -5,10 +5,10 @@ import "testing"
 // FuzzParseQUICInitialReadsAnyPayload proves that ParseQUICInitial returns for any UDP
 // payload. FR-fuzz-3 states the requirement.
 //
-// No seed of this target decrypts. A packet the parser accepts to the end carries an
-// AEAD tag over a key that the destination connection identifier derives, and a seed of
-// that shape comes from the FoxIO corpus that #46 adds. Each seed below therefore reaches
-// the header reader, the varint reader and the length check.
+// No seed of this target decrypts. A packet the parser accepts to the end carries an AEAD
+// tag, over a key that the destination connection identifier derives. A seed of that shape
+// comes from the FoxIO corpus that #46 adds. Each seed below therefore reaches the header
+// reader, the varint reader and the length check.
 func FuzzParseQUICInitialReadsAnyPayload(f *testing.F) {
 	// A version 1 Initial packet with an 8-byte destination connection identifier, an
 	// empty token and a length that the datagram holds. The header reader accepts it.

@@ -45,8 +45,11 @@ func fuzzKEXINITMessage() []byte {
 // FuzzParseSSHPacketReadsAnyPayload proves that ParseSSHPacket returns for any TCP
 // payload. FR-fuzz-6 states the requirement.
 func FuzzParseSSHPacketReadsAnyPayload(f *testing.F) {
-	// The parser accepts each seed below. The first is an identification string. The
-	// second is a binary packet that carries a NEWKEYS message.
+	// The parser accepts each seed below.
+	//   - An identification string.
+	//   - A binary packet that carries a NEWKEYS message.
+	//   - An identification string with no line terminator. The parser reads the four
+	//     bytes `SSH-` and it returns a banner, so no line terminator is needed.
 	f.Add([]byte("SSH-2.0-OpenSSH_8.9\r\n"))
 
 	newkeys := make([]byte, 26)
@@ -55,12 +58,12 @@ func FuzzParseSSHPacketReadsAnyPayload(f *testing.F) {
 	newkeys[5] = 21
 	f.Add(newkeys)
 
+	f.Add([]byte("SSH-2.0-" + strings.Repeat("A", 300)))
+
 	// The parser rejects each seed below. The first holds no byte. The second states a
-	// packet length of 16 megabytes. The third is an identification string with no line
-	// terminator.
+	// packet length of 16 megabytes.
 	f.Add([]byte{})
 	f.Add([]byte{0x01, 0x00, 0x00, 0x00, 0x05, 0x14, 0x00, 0x00})
-	f.Add([]byte("SSH-2.0-" + strings.Repeat("A", 300)))
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
 		_ = ParseSSHPacket(payload)

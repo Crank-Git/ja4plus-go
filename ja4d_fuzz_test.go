@@ -10,8 +10,10 @@ import (
 // fuzzDHCPv4Discover returns the bytes of one DHCPDISCOVER message.
 //
 // The fixed part of a DHCPv4 message is 236 bytes, and the magic cookie and the options
-// follow it. The message names option 53 for the message type, option 55 for the
-// parameter request list and option 255 for the end.
+// follow it. The message names three options.
+//   - Option 53, the message type.
+//   - Option 55, the parameter request list.
+//   - Option 255, the end.
 func fuzzDHCPv4Discover() []byte {
 	message := make([]byte, 236)
 	message[0] = 0x01 // The operation code of a request.
@@ -42,9 +44,12 @@ func FuzzComputeJA4DReadsAnyFrame(f *testing.F) {
 	// port to the server port.
 	f.Add(panicAuditFrame(f, "udp", 68, 67, fuzzDHCPv4Discover()))
 
-	// The reader writes no value for each seed below. The first holds no byte. The second
-	// states an option length that the message does not hold. The third carries the
-	// message on a port that is not a DHCP port.
+	// The reader writes no value for each seed below.
+	//   - The first holds no byte.
+	//   - The second holds a 34-byte message. `gopacket` at v1.6.1 refuses a DHCPv4
+	//     message under 240 bytes at `layers/dhcpv4.go:126`, and it reads no option of
+	//     this message at all.
+	//   - The third carries the message on a port that is not a DHCP port.
 	f.Add([]byte{})
 	f.Add(panicAuditFrame(f, "udp", 68, 67, []byte{
 		0x01, 0x01, 0x06, 0x00, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00,

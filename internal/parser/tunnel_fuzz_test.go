@@ -71,13 +71,18 @@ func fuzzGREFrame(tb testing.TB, depth int) []byte {
 // FuzzCheckTunnelReadsAnyFrame proves that the tunnel reader of `packet.go` returns for
 // any Ethernet frame. FR-fuzz-13 states the requirement.
 //
-// FR-fuzz-13 names "each tunnel decoder that `features/05-conformance-gaps.md` adds", and
-// that file names `internal/parser/tunnel.go` as a new file that holds a GRE decoder, an
-// ERSPAN decoder, a VXLAN decoder and a Geneve decoder. **The tree holds no such file and
-// no such decoder.** `isTunnelLayerType` in `packet.go` states the reason: `gopacket`
-// registers a decoder for each of the four types, and this package adds none. So this
-// target reads the decapsulation code that this repository does hold, and it invents no
-// decoder. Issue #44 records the reading.
+// FR-fuzz-13 names "each tunnel decoder that `features/05-conformance-gaps.md` adds". That
+// file names `internal/parser/tunnel.go` as a new file, and it names four decoders that the
+// file holds.
+//   - A GRE decoder.
+//   - An ERSPAN decoder.
+//   - A VXLAN decoder.
+//   - A Geneve decoder.
+//
+// **The tree holds no such file, and it holds no such decoder.** `isTunnelLayerType` in
+// `packet.go` states the reason. `gopacket` registers a decoder for each of the four types,
+// and this package adds none. So this target reads the decapsulation code that this
+// repository does hold, and it invents no decoder. Issue #44 records the reading.
 func FuzzCheckTunnelReadsAnyFrame(f *testing.F) {
 	// The reader accepts each seed below. The first carries no tunnel. The second carries
 	// one GRE layer. The third carries four GRE layers, which is MaxTunnelDepth.
