@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
 )
 
 // fuzzSSHNameList returns the SSH name-list encoding of the names: a 4-byte length and
@@ -66,7 +68,11 @@ func FuzzParseSSHPacketReadsAnyPayload(f *testing.F) {
 	f.Add([]byte{0x01, 0x00, 0x00, 0x00, 0x05, 0x14, 0x00, 0x00})
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
-		_ = ParseSSHPacket(payload)
+		input := fuzzprop.ExactInput(payload)
+
+		fuzzprop.Check(t, len(input), func() any {
+			return ParseSSHPacket(input)
+		})
 	})
 }
 
@@ -87,6 +93,10 @@ func FuzzParseKEXINITReadsAnyPayload(f *testing.F) {
 	f.Add(append(truncated, 0xff, 0xff, 0xff, 0xff, 0x61))
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
-		_ = ParseKEXINIT(payload)
+		input := fuzzprop.ExactInput(payload)
+
+		fuzzprop.Check(t, len(input), func() any {
+			return ParseKEXINIT(input)
+		})
 	})
 }

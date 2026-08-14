@@ -5,6 +5,8 @@ import (
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
 )
 
 // FuzzProcessPacketReadsAnyFrame proves that Processor.ProcessPacket returns for any
@@ -16,9 +18,9 @@ import (
 // `ProcessPacket` alone, because a crash that the audit target reports names no function.
 // A crash that this target reports names `ProcessPacket`.
 //
-// The target reads no field of the result. A returned call is the whole proof, because
-// the fuzz engine reports a panic and a hang. #45 adds the property assertions of
-// FR-fuzz-14 through FR-fuzz-18.
+// The target calls `ExactInput` and `Check` of `internal/fuzzprop`, and those two calls
+// carry FR-fuzz-14 through FR-fuzz-18. The package comment of `internal/fuzzprop` states
+// which requirement each one meets, and it states why FR-fuzz-14 needs no code.
 func FuzzProcessPacketReadsAnyFrame(f *testing.F) {
 	// The processor accepts each seed below. Each one is a well-formed frame that carries
 	// one payload a fingerprinter reads.
@@ -42,9 +44,17 @@ func FuzzProcessPacketReadsAnyFrame(f *testing.F) {
 	f.Add(panicAuditFrame(f, "udp", 12345, 443, nil))
 
 	f.Fuzz(func(t *testing.T, frame []byte) {
-		packet := gopacket.NewPacket(frame, layers.LayerTypeEthernet, gopacket.Default)
+		input := fuzzprop.ExactInput(frame)
 
-		processor := NewProcessor()
-		processor.ProcessPacket(packet)
+		fuzzprop.Check(t, len(input), func() any {
+			// Each call decodes one packet and builds one processor. A `gopacket` packet
+			// caches the layer it decodes, and a processor holds per-connection state, so a
+			// shared value would make the second call read state rather than the frame.
+			packet := gopacket.NewPacket(input, layers.LayerTypeEthernet, gopacket.Default)
+
+			results, errs := NewProcessor().ProcessPacket(packet)
+
+			return []any{results, errs}
+		})
 	})
 }

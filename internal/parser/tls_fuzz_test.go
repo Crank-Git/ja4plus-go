@@ -1,10 +1,17 @@
 package parser
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
+)
 
 // Every fuzz target of this package reads one untrusted payload and discards the result.
 // A returned call is the whole proof, because the fuzz engine reports a panic and a hang.
-// #45 adds the property assertions of FR-fuzz-14 through FR-fuzz-18 to each target.
+//
+// Every target calls `ExactInput` and `Check` of `internal/fuzzprop`, and those two calls
+// carry FR-fuzz-14 through FR-fuzz-18. The package comment of `internal/fuzzprop` states
+// which requirement each one meets, and it states why FR-fuzz-14 needs no code.
 //
 // `docs/specs/features/06-fuzz-testing.md` states each requirement this file meets.
 
@@ -26,7 +33,13 @@ func FuzzParseClientHelloReadsAnyPayload(f *testing.F) {
 	f.Add([]byte{0x16, 0x03, 0x01, 0x00, 0x05, 0x01, 0x00, 0xff, 0xff, 0x03})
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
-		_, _ = ParseClientHello(payload)
+		input := fuzzprop.ExactInput(payload)
+
+		fuzzprop.Check(t, len(input), func() any {
+			hello, err := ParseClientHello(input)
+
+			return []any{hello, err}
+		})
 	})
 }
 
@@ -61,6 +74,12 @@ func FuzzParseServerHelloReadsAnyPayload(f *testing.F) {
 	f.Add([]byte{})
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
-		_, _ = ParseServerHello(payload)
+		input := fuzzprop.ExactInput(payload)
+
+		fuzzprop.Check(t, len(input), func() any {
+			hello, err := ParseServerHello(input)
+
+			return []any{hello, err}
+		})
 	})
 }

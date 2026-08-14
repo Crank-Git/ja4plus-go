@@ -5,6 +5,8 @@ import (
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
 )
 
 // FuzzComputeJA4D6ReadsAnyFrame proves that the DHCPv6 reader returns for any Ethernet
@@ -13,9 +15,9 @@ import (
 // `ComputeJA4D6` is the entry point of the DHCPv6 reader of this library. `ja4d6.go`
 // reads every option, and it descends into a relay message.
 //
-// The target reads no field of the result. A returned call is the whole proof, because
-// the fuzz engine reports a panic and a hang. #45 adds the property assertions of
-// FR-fuzz-14 through FR-fuzz-18.
+// The target calls `ExactInput` and `Check` of `internal/fuzzprop`, and those two calls
+// carry FR-fuzz-14 through FR-fuzz-18. The package comment of `internal/fuzzprop` states
+// which requirement each one meets, and it states why FR-fuzz-14 needs no code.
 func FuzzComputeJA4D6ReadsAnyFrame(f *testing.F) {
 	// The reader accepts each seed below. The first carries one SOLICIT message. The
 	// second carries one RELAY-FORW message that holds the SOLICIT message inside it, so
@@ -31,8 +33,15 @@ func FuzzComputeJA4D6ReadsAnyFrame(f *testing.F) {
 	}).Data())
 
 	f.Fuzz(func(t *testing.T, frame []byte) {
-		packet := gopacket.NewPacket(frame, layers.LayerTypeEthernet, gopacket.Default)
+		input := fuzzprop.ExactInput(frame)
 
-		_ = ComputeJA4D6(packet)
+		fuzzprop.Check(t, len(input), func() any {
+			// Each call decodes one packet of its own. A `gopacket` packet caches the layer
+			// it decodes, so a shared packet would make the second call read a cache rather
+			// than the frame.
+			packet := gopacket.NewPacket(input, layers.LayerTypeEthernet, gopacket.Default)
+
+			return ComputeJA4D6(packet)
+		})
 	})
 }

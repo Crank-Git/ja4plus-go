@@ -1,6 +1,10 @@
 package parser
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
+)
 
 // FuzzParseHTTPRequestReadsAnyPayload proves that ParseHTTPRequest returns for any TCP
 // payload. FR-fuzz-5 states the requirement.
@@ -20,6 +24,10 @@ func FuzzParseHTTPRequestReadsAnyPayload(f *testing.F) {
 	f.Add([]byte("GET / HTTP/1.1\r\nHost: example.com\r\n"))
 
 	f.Fuzz(func(t *testing.T, payload []byte) {
-		_ = ParseHTTPRequest(payload)
+		input := fuzzprop.ExactInput(payload)
+
+		fuzzprop.Check(t, len(input), func() any {
+			return ParseHTTPRequest(input)
+		})
 	})
 }

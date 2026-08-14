@@ -5,6 +5,8 @@ import (
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
+
+	"github.com/Crank-Git/ja4plus-go/internal/fuzzprop"
 )
 
 // fuzzDHCPv4Discover returns the bytes of one DHCPDISCOVER message.
@@ -36,9 +38,9 @@ func fuzzDHCPv4Discover() []byte {
 // `ComputeJA4D` is the entry point of the DHCPv4 reader of this library. `gopacket`
 // decodes the DHCPv4 layer, and `ja4d.go` reads every option of it.
 //
-// The target reads no field of the result. A returned call is the whole proof, because
-// the fuzz engine reports a panic and a hang. #45 adds the property assertions of
-// FR-fuzz-14 through FR-fuzz-18.
+// The target calls `ExactInput` and `Check` of `internal/fuzzprop`, and those two calls
+// carry FR-fuzz-14 through FR-fuzz-18. The package comment of `internal/fuzzprop` states
+// which requirement each one meets, and it states why FR-fuzz-14 needs no code.
 func FuzzComputeJA4DReadsAnyFrame(f *testing.F) {
 	// The reader accepts this seed. It carries one DHCPDISCOVER message from the client
 	// port to the server port.
@@ -60,8 +62,15 @@ func FuzzComputeJA4DReadsAnyFrame(f *testing.F) {
 	f.Add(panicAuditFrame(f, "udp", 12345, 443, fuzzDHCPv4Discover()))
 
 	f.Fuzz(func(t *testing.T, frame []byte) {
-		packet := gopacket.NewPacket(frame, layers.LayerTypeEthernet, gopacket.Default)
+		input := fuzzprop.ExactInput(frame)
 
-		_ = ComputeJA4D(packet)
+		fuzzprop.Check(t, len(input), func() any {
+			// Each call decodes one packet of its own. A `gopacket` packet caches the layer
+			// it decodes, so a shared packet would make the second call read a cache rather
+			// than the frame.
+			packet := gopacket.NewPacket(input, layers.LayerTypeEthernet, gopacket.Default)
+
+			return ComputeJA4D(packet)
+		})
 	})
 }
