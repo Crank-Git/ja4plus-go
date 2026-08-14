@@ -60,7 +60,9 @@ import (
 // merged `dev` into its integration branch after six members had landed**, so this guard
 // reached their commits only at the merge. It reported 8 bare citations above 530: 6 name
 // #532 and 2 name #533, and every one names an issue of this repository.
-const issueCitationHighWaterMark = 543
+// The Epic 9 round re-measured the mark on 2026-08-14 and it read 581. That round cites
+// #573, #577 and #581, and each number sits above the inherited mark of 543.
+const issueCitationHighWaterMark = 581
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
