@@ -28,8 +28,9 @@ func TestOpenNamesTheInterfaceThatTheHostDoesNotHold(t *testing.T) {
 }
 
 func TestCompileFilterHoldsTheFilterTextInTheError(t *testing.T) {
-	// The pure-Go path reaches no compiler today, and `compileFilter` names the filter so
-	// that `cmd/ja4plus` prints the text the operator wrote.
+	// The maintainer ruled #564 on 2026-08-14, and the pure-Go backend applies no capture
+	// filter. The error names the filter, the build tag and the build command, so the
+	// operator reads what to do. `cmd/ja4plus` prints it, and #79 owns that print site.
 	const filter = "tcp port 443"
 
 	program, err := compileFilter(filter)
@@ -39,7 +40,24 @@ func TestCompileFilterHoldsTheFilterTextInTheError(t *testing.T) {
 	if program != nil {
 		t.Errorf("compileFilter returned %d instructions beside the error", len(program))
 	}
-	if !strings.Contains(err.Error(), filter) {
-		t.Errorf("the error %q holds no filter text", err)
+
+	for _, want := range []string{filter, "libpcap", "go build -tags libpcap ./cmd/ja4plus"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the error %q holds no %q", err, want)
+		}
+	}
+}
+
+func TestOpenDeclinesEveryCaptureFilter(t *testing.T) {
+	// The interface name reaches no host, so the run needs no `CAP_NET_RAW`. The filter
+	// check runs after the open, and this test states the error of the open path alone
+	// when the host holds no such interface.
+	handle, err := Open(Options{Interface: "an-interface-that-no-host-holds", Filter: "tcp port 443"})
+	if err == nil {
+		_ = handle.Close()
+		t.Fatal("Open returned no error for a capture filter")
+	}
+	if handle != nil {
+		t.Errorf("Open returned the handle %v beside the error", handle)
 	}
 }

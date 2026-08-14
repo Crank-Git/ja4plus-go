@@ -21,7 +21,8 @@ type ethernetHandle struct {
 
 // open returns the pure-Go capture handle for the interface that the options name.
 // It returns an error when the host holds no interface of that name.
-// It returns an error when the capture filter reaches no compiler.
+// It returns an error when the options carry a capture filter, because the maintainer
+// ruled on 2026-08-14 that the pure-Go backend applies none.
 func open(opts Options) (Handle, error) {
 	handle, err := pcapgo.NewEthernetHandle(opts.Interface)
 	if err != nil {
@@ -34,9 +35,11 @@ func open(opts Options) (Handle, error) {
 			_ = handle.Close()
 			return nil, compileErr
 		}
-		// FR-capture-15 applies the capture filter as a BPF program. `SetBPF` attaches
-		// the program to the packet socket, so the kernel drops a packet the filter
-		// rejects.
+		// `compileFilter` returns an error for every filter under the ruling of #564, so
+		// no run reaches the line below today. The call site stays, because a reversal of
+		// that ruling restores the program and changes one function.
+		// `SetBPF` attaches the program to the packet socket, so the kernel drops a
+		// packet that the filter rejects.
 		if err := handle.SetBPF(program); err != nil {
 			_ = handle.Close()
 			return nil, fmt.Errorf("capture: the packet socket takes no filter program: %w", err)
@@ -77,14 +80,21 @@ func (e *ethernetHandle) Close() error {
 	return nil
 }
 
-// compileFilter returns the BPF program of one capture filter.
+// compileFilter returns an error for every capture filter, and it returns no BPF program.
 //
-// It returns an error for every expression today, because this module holds no compiler
-// that reads a Berkeley Packet Filter expression. `golang.org/x/net/bpf` assembles an
-// instruction slice and it parses no expression. `pcap.CompileBPFFilter` compiles an
-// expression, and `pcap/pcap_unix.go` includes `<pcap.h>`, so it needs cgo.
+// **The maintainer ruled #564 on 2026-08-14, and the pure-Go backend applies no capture
+// filter.** No compiler of a Berkeley Packet Filter expression reaches this build:
+// `golang.org/x/net/bpf` assembles an instruction slice and parses no expression, and
+// `pcap.CompileBPFFilter` calls `C.pcap_compile`, which needs cgo. A compiler for a subset
+// of the expression grammar would give the two backends two grammars, so one filter would
+// select two packet sets. The ruling declines that outcome, and the error names the build
+// command that applies a filter.
 //
-// TODO(#564): Compile the capture filter on the pure-Go path.
+// Issue #564 is the reversal path. FR-capture-15 of
+// `docs/specs/features/13-live-capture.md` states the ruling.
 func compileFilter(expr string) ([]bpf.RawInstruction, error) {
-	return nil, fmt.Errorf("capture: the pure-Go backend compiles no capture filter, and the filter is %q", expr)
+	return nil, fmt.Errorf(
+		"capture: the pure-Go backend applies no capture filter, and it declines the filter %q. "+
+			"Build with the libpcap build tag to apply a capture filter: "+
+			"go build -tags libpcap ./cmd/ja4plus", expr)
 }
