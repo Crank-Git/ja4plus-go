@@ -26,8 +26,8 @@ import (
 func seedGenerate() bool { return os.Getenv("JA4PLUS_SEEDGEN") == "1" }
 
 // seedNamed holds each seed path that `seedCorpusFile` reached in this run.
-// `seedCorpusHoldsNoOtherFile` reads it, so a rename that leaves the old file behind fails
-// the test rather than leaving a seed whose name states a behavior it does not hold.
+// `seedCorpusHoldsNoOtherFile` reads it. A rename that leaves the old file behind then
+// fails the test, so no seed keeps a name that states a behavior it does not hold.
 var seedNamed = map[string]bool{}
 
 // seedCorpusHoldsNoOtherFile fails when a target directory holds a file that the test

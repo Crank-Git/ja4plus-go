@@ -61,14 +61,27 @@ a FoxIO capture.
 - The HTTP method, and the HTTP header names, in order.
 
 **The script then builds a new record from those numbers.** Every other field holds a fixed
-filler that the script states: the random field holds 32 zero bytes, the session identifier
-is empty, the server name is `example.invalid`, the application protocol is `h2`, and every
-header value is `x`. So the output holds no random value, no session identifier, no key
-share, no host name, no header value, no certificate and no payload of the capture.
+filler that the script states.
+
+- The random field holds 32 zero bytes.
+- The session identifier is empty.
+- The server name is `example.invalid`.
+- The application protocol is `h2`.
+- Every header value is `x`.
+
+**So the output holds no value of the capture from any of these fields.**
+
+- The random field.
+- The session identifier.
+- The key share.
+- The host name.
+- The header value.
+- The certificate.
+- The payload.
 
 **Each number the reduction keeps is an identifier of an IANA registry.** A cipher suite
-number, an extension number and an HTTP field name are the words of a public protocol, and
-a record that lists them states a fact about a client. The reduction therefore carries the
+number, a TLS extension number and an HTTP field name are the words of a public protocol.
+A record that lists them states a fact about a client. The reduction therefore carries the
 fact and it drops the expression, and the result carries no FoxIO license obligation.
 
 **A seed that fails this test is not committed.** One case reached that decline, and the

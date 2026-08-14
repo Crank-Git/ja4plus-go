@@ -9,10 +9,16 @@
 #   - The TLS extension identifiers, in order.
 #   - The HTTP method and the HTTP header names, in order.
 # It then builds a new record from those numbers, with a fixed filler for every other
-# field. Each number above is an identifier of an IANA registry, and the output holds no
-# random value, no session identifier, no key share, no host name, no header value and no
-# certificate of the capture. So the output carries no FoxIO license obligation, and
-# FR-fuzz-23 tracks the result in git.
+# field. Each number above is an identifier of an IANA registry. The output holds no value
+# of the capture from any of these fields.
+#   - The random field.
+#   - The session identifier.
+#   - The key share.
+#   - The host name.
+#   - The header value.
+#   - The certificate.
+# So the output carries no FoxIO license obligation, and FR-fuzz-23 tracks the result in
+# git.
 #
 # The corpus is optional. A fresh clone holds no corpus, and this script then writes
 # nothing and reports success. `make corpus` fetches the corpus.
