@@ -586,15 +586,23 @@ when a later change adds one.
 lazy group of any character in place of the non-space group. The group is lazy, so a first
 line that holds two version tokens reaches the earlier one, as the non-space group did.
 
-**Rule 5a also tightened each separator of that expression, and the self-review of #527
-earned the change.** A separator of `\s` reads a line ending, so the match crossed into the
-second line of the payload and read a request line that no line holds. **The payload
-`SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n` matched before 2026-08-14**, under the non-space
-path group and the `\s` separator. `ja4l.go` reads `IsHTTPRequest` to pick a measurement
-point, so that match moves a JA4L value. Each separator now reads a space or a horizontal
-tab. **The change moves no value of the corpus**: the run above is byte-identical with the
-separator and without it, so no capture of the corpus holds such a payload.
-`TestTheRequestLineReadsNoSecondLine` of `ja4h_empty_header_list_test.go` holds the rule,
+**Rule 5a also made the expression read the first line and no other line, and the
+self-review of #527 earned each part.** `ja4l.go` reads `IsHTTPRequest` to pick a
+measurement point, so a match that reads a second line moves a JA4L value. **The two parts
+are separate defects, and one of them predates #527.**
+
+| Part | The payload that separates it | Before 2026-08-14 | Today |
+|---|---|---|---|
+| Each separator reads a space or a horizontal tab, and never a line ending. | `SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n` | The expression matched, and the defect predates #527. | No match. |
+| The path group reads no carriage return and no line feed. | `GET /a\rFAKE HTTP/1.1\r\n` | `ParseHTTPRequest` read no request, because the non-space path group read no carriage return. **The lazy group of any character opened it, and #527 opened and closed it on one day.** | `ParseHTTPRequest` reads no request. |
+
+**`IsHTTPRequest` answers `true` for the second payload from its nine-prefix fast path**,
+which reads `GET ` and never the expression. #57 built that path, and #527 moves it not at
+all. **`ParseHTTPRequest` reads no request**, so no fingerprint value follows.
+
+**Neither part moves a value of the corpus.** The run above is byte-identical with each
+part and without it, so no capture of the corpus holds such a payload.
+`TestTheRequestLineReadsNoSecondLine` of `ja4h_empty_header_list_test.go` holds both rules,
 and `TestTheRequestLineReadsASpaceAndATabAsASeparator` holds the separator set.
 
 #### The measurement

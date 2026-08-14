@@ -96,16 +96,36 @@ func TestJA4HReadsARequestPathThatHoldsASpace(t *testing.T) {
 // pick a measurement point, so such a match moves a JA4L value. #527 closed the defect on
 // 2026-08-14, and the first payload below matched before that day.
 func TestTheRequestLineReadsNoSecondLine(t *testing.T) {
-	payloads := []string{
+	// A payload that starts with none of the nine method prefixes reaches the expression, so
+	// both functions answer from it.
+	unmatched := []string{
 		"SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n\r\n",
 		"SSH-2.0-OpenSSH_9.6\r\nsome junk HTTP/1.1\r\n\r\n",
 		"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n",
 	}
 
-	for _, payload := range payloads {
+	for _, payload := range unmatched {
 		if parser.IsHTTPRequest([]byte(payload)) {
 			t.Errorf("IsHTTPRequest reads %q as a request", payload)
 		}
+		if request := parser.ParseHTTPRequest([]byte(payload)); request != nil {
+			t.Errorf("ParseHTTPRequest reads %q as the request %+v", payload, request)
+		}
+	}
+
+	// The path group reads no carriage return and no line feed. A group of any character
+	// reads a bare carriage return, and the path then holds the smuggled text.
+	//
+	// `IsHTTPRequest` answers `true` for each payload below from its nine-prefix fast path,
+	// which reads `GET ` and never the expression. #57 built that path, and #527 does not
+	// move it. So this test reads `ParseHTTPRequest` alone here, and no fingerprint value
+	// follows a payload that reaches no request.
+	smuggled := []string{
+		"GET /a\rFAKE HTTP/1.1\r\nReal: 1\r\n\r\n",
+		"GET /a\r\nFAKE HTTP/1.1\r\n\r\n",
+	}
+
+	for _, payload := range smuggled {
 		if request := parser.ParseHTTPRequest([]byte(payload)); request != nil {
 			t.Errorf("ParseHTTPRequest reads %q as the request %+v", payload, request)
 		}

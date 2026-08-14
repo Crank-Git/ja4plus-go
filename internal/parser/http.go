@@ -40,13 +40,19 @@ const methodTokenCharacters = "!#$%&'*+\\-.^_`|~0-9A-Za-z"
 // records the defect. The group is lazy, so a first line that holds two version tokens
 // reaches the earlier one, as the non-space group did.
 //
-// Each separator reads a space or a horizontal tab, and never a line ending. A separator
-// of `\s` reads a line ending too, so the match crossed into the second line and read a
-// request line that no line of the payload holds. The payload
-// `SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n` matched under `\s` and the path group of
-// non-space characters, and `ja4l.go` reads `IsHTTPRequest` to pick a measurement point, so
-// that match moved a JA4L value. #527 measured the defect on 2026-08-14 and closed it.
-var requestLineRe = regexp.MustCompile(`^([` + methodTokenCharacters + `]+)[ \t]+(.+?)[ \t]+(HTTP/\d+\.\d+)`)
+// The expression reads the first line of the payload and no other line. Three parts hold
+// that rule, and `ja4l.go` reads `IsHTTPRequest` to pick a measurement point, so a match
+// that reads a second line moves a JA4L value. #527 measured each part on 2026-08-14.
+//
+//   - Each separator reads a space or a horizontal tab. A separator of `\s` reads a line
+//     ending too, so the match crossed into the second line and read a request line that no
+//     line of the payload holds. The payload `SSH-2.0-OpenSSH_9.6\r\n/a HTTP/1.1\r\n`
+//     matched under `\s` and the path group of non-space characters.
+//   - The path group reads no carriage return and no line feed. A group of any character
+//     reads a bare carriage return, so `GET /a\rFAKE HTTP/1.1\r\n` reached a value and the
+//     path held the smuggled text.
+//   - The expression is anchored at the start of the payload.
+var requestLineRe = regexp.MustCompile(`^([` + methodTokenCharacters + `]+)[ \t]+([^\r\n]+?)[ \t]+(HTTP/\d+\.\d+)`)
 var headerLineRe = regexp.MustCompile(`^([^:]+):\s*(.*)$`)
 
 // requestLineLimit bounds the text that IsHTTPRequest matches the request line against.
