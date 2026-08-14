@@ -15,11 +15,20 @@ const ja4hPipelinedSecondRequest = "GET /second HTTP/1.1\r\n" +
 	"Accept: */*\r\n" +
 	"\r\n"
 
-// Each test of this file records the measurement of #463, and none of them holds a ruling.
+// Each test of this file holds the ruling of #463.
 //
-// **The maintainer rules the value count of a pipelined pair, and #463 carries the question.**
-// The FoxIO implementations disagree, so `.claude/rules/rulings.md` `## Stop conditions` sends
-// the question to the maintainer. Three readings of the reference state the disagreement.
+// **The maintainer ruled this question on 2026-08-14, and the answer is one value.** The
+// library produces one JA4H value for a pipelined pair. `ja4h.go` needs no change, because the
+// library already produces one value. **Each test below fails when the count moves, and #463 is
+// the reversal path.**
+//
+// **No capture of the corpus reaches a pipelined pair.** A scan of all 38 captures of the
+// corpus reports 0 payloads that hold a byte past the first complete request. So
+// `.claude/rules/rulings.md` `## Where a ruling is recorded` prescribes a test rather than a
+// register entry, and `testdata/deviations.json` holds no entry for this question.
+//
+// The ruling rests on the four readings below. Each one reads the corpus at the pinned commit
+// that `testdata/foxio.pin` holds.
 //
 //   - The Rust implementation produces one value. `rust/ja4/src/http.rs:22` selects the layer
 //     with `pkt.find_proto("http")`, and `rust/ja4/src/pcap.rs:51` states
@@ -29,27 +38,47 @@ const ja4hPipelinedSecondRequest = "GET /second HTTP/1.1\r\n" +
 //   - The Zeek package produces two values. `zeek/ja4h/main.zeek:186` computes the value in
 //     `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`, and
 //     `zeek/ja4h/main.zeek:124` clears the state in `event http_request`.
+//   - **The count of the Wireshark dissector is unverified.**
+//     `wireshark/source/packet-ja4.c:1756` reads `register_postdissector(ja4_handle);`, and no
+//     documentation this project reached states how often Wireshark calls a postdissector. **A
+//     reversal of this ruling starts at this row**, because the ruling does not rest on it.
 //
-// Zeek raises `http_message_done` for each HTTP message. The Zeek documentation states
-// `Generated once at the end of parsing an HTTP message.`, and it states
+// **The Zeek count did not decide the question, because it follows from the event rather than
+// from a stated rule.** Zeek raises `http_message_done` for each HTTP message. The Zeek
+// documentation states `Generated once at the end of parsing an HTTP message.`, and it states
 // `A "message" is one top-level HTTP entity, such as a complete request or reply.`
+// `docs/specs/foxio/zeek.md` `## The rank of a Zeek value` already records that a Zeek value is
+// not a reference value for every method.
 // Verified against <https://docs.zeek.org/en/master/scripts/base/bif/plugins/Zeek_HTTP.events.bif.zeek.html>,
 // retrieved 2026-08-14 UTC.
 //
-// **The count of the Wireshark dissector is unverified.**
-// `wireshark/source/packet-ja4.c:1756` reads `register_postdissector(ja4_handle);`, and no
-// documentation this project reached states how often Wireshark calls a postdissector. The
-// three readings above state the disagreement without it.
+// **The port needs no change, and it produces one value.**
+// `ja4plus/fingerprinters/ja4h.py:167` at the tag `v1.1.0` records the whole buffer as
+// consumed. So the two implementations agree today.
 //
-// No capture of the corpus reaches a pipelined pair, so no register entry records this
-// question and these tests record it. Each test fails when the count moves, and the
-// maintainer's ruling at #463 is the reversal path.
+// **`segmentCarriesNoNewRequest` suppresses no segment of any arrangement below.** The consumed
+// range ends at the last byte of the emitting segment, so a later segment starts at
+// `consumedEnd` and the guard admits it. **The library produces no second value because it
+// reads no byte past the request it parsed.** The body of #463 names the guard as the cause,
+// and the measurement names this sentence instead. A later reader who reopens this question
+// starts here.
+//
+// **The candidate repair that the body of #463 names does not work.** That candidate records
+// the byte count of the parsed request rather than the byte count of the buffer. A worker
+// applied it, measured it and reverted it.
+//
+//   - It changes no value count of the three arrangements below.
+//   - It makes a retransmission of a pipelined segment emit the first value a second time,
+//     which reverses the repair of #446.
+//   - The two tests of #446 pass under it, so they never caught that duplicate.
+//
+// `TestJA4H_ProducesNoDuplicateForARetransmissionOfAPipelinedSegment` now holds that guard.
 
-// TestJA4H_ProducesOneValueForASegmentThatHoldsTwoRequests records the count of one segment
-// that holds a pipelined pair.
+// TestJA4H_ProducesOneValueForASegmentThatHoldsTwoRequests holds the ruling of #463.
 //
 // The library produces the value of the first request. It reads no byte past that request, so
-// the second request reaches no value.
+// the second request reaches no value. **The maintainer ruled that count on 2026-08-14**, and
+// #463 is the reversal path.
 func TestJA4H_ProducesOneValueForASegmentThatHoldsTwoRequests(t *testing.T) {
 	fingerprinter := NewJA4H()
 
@@ -59,7 +88,7 @@ func TestJA4H_ProducesOneValueForASegmentThatHoldsTwoRequests(t *testing.T) {
 		t.Fatalf("the segment returned an error: %v", err)
 	}
 	if len(results) != 1 {
-		t.Fatalf("the pipelined segment produced %d values, and the measurement of #463 states 1",
+		t.Fatalf("the pipelined segment produced %d values, and the ruling of #463 states 1",
 			len(results))
 	}
 	if results[0].Fingerprint != "po11nn030000_51b2f3543123_000000000000_000000000000" {
@@ -68,12 +97,12 @@ func TestJA4H_ProducesOneValueForASegmentThatHoldsTwoRequests(t *testing.T) {
 	}
 }
 
-// TestJA4H_ProducesTwoValuesForTwoRequestsInTwoSegments states the limit of the defect of
-// #463.
+// TestJA4H_ProducesTwoValuesForTwoRequestsInTwoSegments states the limit of the ruling of #463.
 //
-// The consumed range ends at the last byte of the emitting segment, so a segment that starts
-// at that byte reaches the parse path. A pipelined pair that one segment holds is therefore
-// the one arrangement that loses a value.
+// **The ruling names one byte range that holds two requests, and it names no separate
+// request.** Two requests in two segments are two byte ranges, so each one reaches a value.
+// The consumed range ends at the last byte of the emitting segment, so the second segment
+// starts at `consumedEnd` and the guard admits it. #463 is the reversal path.
 func TestJA4H_ProducesTwoValuesForTwoRequestsInTwoSegments(t *testing.T) {
 	fingerprinter := NewJA4H()
 
@@ -96,12 +125,13 @@ func TestJA4H_ProducesTwoValuesForTwoRequestsInTwoSegments(t *testing.T) {
 	}
 }
 
-// TestJA4H_ProducesNoValueForASecondRequestThatTwoSegmentsSplit records the second
-// arrangement of #463.
+// TestJA4H_ProducesNoValueForASecondRequestThatTwoSegmentsSplit holds the ruling of #463 on the
+// second arrangement.
 //
 // The emission removes the stream, so the head of the second request leaves the reassembler
 // with it. The segment that carries the tail starts with no request line, so
-// `parser.IsHTTPRequest` declines it and the second request reaches no value.
+// `parser.IsHTTPRequest` declines it and the second request reaches no value. **One value is
+// the ruled count**, and #463 is the reversal path.
 func TestJA4H_ProducesNoValueForASecondRequestThatTwoSegmentsSplit(t *testing.T) {
 	fingerprinter := NewJA4H()
 
@@ -114,7 +144,7 @@ func TestJA4H_ProducesNoValueForASecondRequestThatTwoSegmentsSplit(t *testing.T)
 		t.Fatalf("the first segment returned an error: %v", err)
 	}
 	if len(one) != 1 {
-		t.Fatalf("the first segment produced %d values, and the measurement of #463 states 1",
+		t.Fatalf("the first segment produced %d values, and the ruling of #463 states 1",
 			len(one))
 	}
 
@@ -124,7 +154,7 @@ func TestJA4H_ProducesNoValueForASecondRequestThatTwoSegmentsSplit(t *testing.T)
 		t.Fatalf("the tail segment returned an error: %v", err)
 	}
 	if len(two) != 0 {
-		t.Fatalf("the tail segment produced %d values, and the measurement of #463 states 0",
+		t.Fatalf("the tail segment produced %d values, and the ruling of #463 states 0",
 			len(two))
 	}
 }
@@ -137,7 +167,9 @@ func TestJA4H_ProducesNoValueForASecondRequestThatTwoSegmentsSplit(t *testing.T)
 // itself. The retransmission then reaches the parse path, and it produces the value of the
 // first request a second time. A worker of #463 measured that duplicate on 2026-08-14 UTC,
 // and pull request #499 records the measurement.
-// So a repair of #463 keeps the consumed range over every byte the emission read.
+//
+// **The ruling of #463 needs no repair, so this test guards a later reversal.** A reader who
+// reverses the ruling to two values keeps the consumed range over every byte the emission read.
 func TestJA4H_ProducesNoDuplicateForARetransmissionOfAPipelinedSegment(t *testing.T) {
 	fingerprinter := NewJA4H()
 
@@ -147,7 +179,7 @@ func TestJA4H_ProducesNoDuplicateForARetransmissionOfAPipelinedSegment(t *testin
 		t.Fatalf("the first segment returned an error: %v", err)
 	}
 	if len(one) != 1 {
-		t.Fatalf("the first segment produced %d values, and the measurement of #463 states 1",
+		t.Fatalf("the first segment produced %d values, and the ruling of #463 states 1",
 			len(one))
 	}
 
