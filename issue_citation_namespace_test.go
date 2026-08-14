@@ -112,11 +112,24 @@ import (
 // 583.** A reader who counts the paragraphs above reads the maintenance cost that #351
 // named, and never a disagreement.
 //
+// The Epic 6 round re-measured the mark on 2026-08-14 and it read 602. The round cites #591,
+// #596, #600 and #602, and each number sits above the inherited mark of 568. Every one names
+// an issue or a pull request of this repository. **#602 is the round's own issue**, which is
+// the maintenance cost that #351 named and that every round pays.
+//
+// **The merge of `dev` into epic #43 met the marks 583 and 602, and it keeps 602.** The
+// Epic 6 round allocated #602 for itself, so its reading is the later one. **The mark is a
+// lower bound, so 602 covers every citation that 583 covers.**
+//
 // **The Epic 14 round merged `dev` into `epic/83-documentation-site` and it met two marks,
 // 595 and 583.** The round re-measured the mark on 2026-08-14 and it read 604. The round
 // cites #603, which is the issue that carries the merge and the refresh, and 603 sits above
 // both inherited marks. **A mark is a lower bound, so 604 covers every citation that 595
 // covers and every citation that 583 covers.**
+//
+// **The second merge of `dev` into `epic/83-documentation-site` met the marks 604 and 602,
+// and it keeps 604.** Epic 6 landed on `dev` after the first merge, and it carried the
+// reading of 602. **A mark is a lower bound, so 604 covers every citation that 602 covers.**
 const issueCitationHighWaterMark = 604
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of

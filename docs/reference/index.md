@@ -6,9 +6,10 @@ read its signature.
 
 ## The reference is hand-written, and it adds no generator
 
-`docs/specs/features/14-documentation.md` states the design:
-
-> The API reference is hand-written and links to `pkg.go.dev`. Do not add a generator; Go already publishes a canonical generated surface from the same doc comments.
+**Go already publishes a canonical API surface at `pkg.go.dev`**, and the module proxy
+builds it from the doc comments of this library. A second generated copy would drift from
+that surface, and a check for the drift would cost more than these pages are worth. **This
+section is therefore hand-written, and it adds no generator.**
 
 **So no page of this section repeats a signature.** A copied signature goes stale at the
 first change, and a reader who trusts it reaches a compiler error. Each page states what a

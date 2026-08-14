@@ -93,14 +93,22 @@ bound what a caller can conclude.
 
 ## The state that bounds a long run
 
-A monitor that runs for days holds state for each connection it has seen. Two
+A monitor that runs for days holds state for each connection it has seen. Seven
 fingerprinters carry a bound, and the [concurrency page](concurrency.md) states the caller
 duty that goes with them.
 
 | Fingerprinter | Bound | Idle limit |
 |---|---|---|
-| JA4SSH | 10000 connections | 600 seconds |
+| JA4 | 1000 QUIC fragment connections | 30 seconds |
+| JA4L | 10000 connections | 600 seconds |
+| JA4S | 10000 connections | 600 seconds |
+| JA4SSH | 10000 connections, and 1000 handshakes | 600 seconds |
 | JA4H | 100 streams | 600 seconds |
+| JA4TS | 1000 connections | 120 seconds |
+| JA4X | 50 streams, and 1000 certificates | A sweep every 30 seconds |
+
+**JA4T, JA4D and JA4D6 carry no bound**, because each one reads a single packet and holds
+no per-connection state.
 
 **JA4SSH sweeps for aged connections every 1000 packets.** It does not sweep for each
 packet, so the sweep cost spreads across the run.

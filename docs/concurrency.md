@@ -230,12 +230,26 @@ holds, and it guards no other one.
 per-connection state, and a caller that never releases it holds the state of every
 connection it has seen.
 
-Two fingerprinters carry a bound of their own, and neither bound replaces the call.
+Seven fingerprinters carry a bound of their own, and no bound replaces the call.
 
-- **JA4SSH holds at most 10000 connections.** It evicts the least recently active
-  connection when the table is full, and it drops a connection that is idle past 600
-  seconds.
+- **JA4 holds at most 1000 QUIC fragment connections**, and it drops a connection that is
+  idle past 30 seconds.
+- **JA4L holds at most 10000 connections**, and it drops a connection that is idle past
+  600 seconds.
+- **JA4S holds at most 10000 connections**, and it drops a connection that is idle past
+  600 seconds.
+- **JA4SSH holds at most 10000 connections and 1000 handshakes.** It evicts the least
+  recently active connection when the table is full, and it drops a connection that is
+  idle past 600 seconds.
 - **JA4H holds at most 100 streams**, and it drops a stream that is idle past 600 seconds.
+- **JA4TS holds at most 1000 connections**, and it drops a connection that is idle past
+  120 seconds.
+- **JA4X holds at most 50 streams and 1000 certificates.** A sweep every 30 seconds drops
+  the certificate record.
+
+**JA4T, JA4D and JA4D6 hold no per-connection state**, because each one reads a single
+packet. None of the three needs a bound. The
+[implementation notes](implementation-notes.md) state the eviction rule of each bound.
 
 `Reset` drops every connection at once. It suits the end of a capture file, and it does
 not suit a monitor that must keep the connections that are still live.
