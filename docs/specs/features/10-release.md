@@ -117,10 +117,13 @@ file that did not exist.
 
   **#473 amended this requirement on 2026-08-13, and the amendment is provisional.** The
   requirement named Go 1.24 until that date, and the release workflow built every artifact
-  on that toolchain. On go1.24.13, the newest Go 1.24 patch, `govulncheck` v1.6.0 reports 9
-  vulnerabilities of the standard library that this library calls. Each one names a fix in a
-  go1.25.x release or later. Comment 5286440152 of #65 holds the maintainer's Go 1.26
-  decision, and **that decision named `.github/workflows/ci.yml` alone**. Issue #473 carried
+  on that toolchain. On go1.24.13, the newest Go 1.24 patch, `govulncheck` v1.6.0 reported 9
+  vulnerabilities of the standard library that this library calls, measured on 2026-08-13.
+  **That count carries its date, because the vulnerability database is live.** The same
+  command on the same toolchain reported 13 on 2026-08-14, and #472 measured it. Each
+  advisory names a fix in a go1.25.x release or later. Comment 5286440152 of #65 holds the
+  maintainer's Go 1.26 decision, and **that decision named `.github/workflows/ci.yml`
+  alone**. Issue #473 carried
   the range to the release workflow, and issue #473 is the reversal path.
   `TestReleaseWorkflowNamesTheGoToolchainRange` holds the value, and `goToolchainRange` in
   `foundation_test.go` states it once for both workflows. **FR-foundation-1 does not move**,
