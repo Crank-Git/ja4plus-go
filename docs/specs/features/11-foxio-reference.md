@@ -148,6 +148,51 @@ because a citation that resolves under no base fails silently. A writer joins
 - **FR-reference-31** — The register holds each key once. The reader declines a second
   entry for one key.
 
+### The issue namespace
+
+`.claude/rules/rulings.md` `## A citation names its repository` states the second citation
+rule of this project. A bare `#N` names an issue of this repository, and a citation of an
+issue of the port names the port. #255 wrote that rule, and no guard held it anywhere.
+FR-reference-18a scopes the guard of #335 to one directory, so every citation outside
+`docs/specs/foxio/` was unchecked. #351 builds the guard below, and it reads the whole tree.
+
+The failure the rule prevents is a reader who follows one number into the wrong repository.
+`#127` names the JA4L part count here, and it names the JA4 ALPN value in the port. The
+cross-member review of batch #342 found that breach inside the batch that wrote the rule.
+
+- **FR-reference-32** — A bare `#N` of a file the guard reads names an issue of this
+  repository.
+- **FR-reference-33** — A citation of an issue of the port carries one of the recorded
+  forms.
+- **FR-reference-34** — A shape that names the port beside a bare number fails a test.
+- **FR-reference-35** — A bare `#N` above the recorded high-water number fails a test.
+- **FR-reference-36** — The record of the high-water number names the date and the command
+  that produced it.
+- **FR-reference-37** — The high-water number is a lower bound. A stale record loosens the
+  guard, and it reddens no test.
+- **FR-reference-38** — The guard reads no tracker.
+- **FR-reference-39** — The guard proves no subject of a number at or below the high-water
+  number. **This repository allocates one number sequence to an issue and to a pull
+  request.** So every number at or below that number resolves to something here.
+- **FR-reference-40** — The guard reads every file of the tree whose extension the test
+  records.
+- **FR-reference-41** — The guard enters neither the corpus directory nor a linked worktree.
+- **FR-reference-42** — No test of the guard skips.
+- **FR-reference-43** — An exclusion names one file and one reason.
+- **FR-reference-44** — `docs/specs/foxio/port-register.md` is excluded, because it is a
+  verbatim copy of a section of the port's specification.
+- **FR-reference-45** — The final cell of a row of a table that a `Ruling` header cell heads
+  is excluded.
+- **FR-reference-46** — A `#` token of five or more digits cites no issue.
+- **FR-reference-47** — A `#` token that a word character or a `/` precedes cites no issue.
+- **FR-reference-48** — A `#` token that a letter follows cites no issue.
+- **FR-reference-49** — One test case holds each exclusion.
+- **FR-reference-50** — An exception names one file, one number, one count and one reason.
+- **FR-reference-51** — An exception that no longer reproduces fails a test.
+- **FR-reference-52** — No exception covers a whole file.
+- **FR-reference-53** — A row of a rendered register table stays on one line. **A row that
+  wraps hides its `Ruling` cell from FR-reference-45**, so a test names the wrapped row.
+
 ## User flows
 
 ### An engineer writes a transcription
@@ -203,6 +248,7 @@ This feature set changes no screen.
 | `conformance_test.go` | Reads the register. |
 | `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
 | `foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
+| `issue_citation_namespace_test.go` | New. Holds FR-reference-32 through FR-reference-53. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces
@@ -221,7 +267,7 @@ pin. FR-reference-12 records the commit it read, and the two commits differ on p
 
 ## Edge cases & failures
 
-| Case | Expected behaviour |
+| Case | Expected behavior |
 |---|---|
 | FoxIO moves the pin and an image changes. | FR-reference-5 fails. The engineer re-reads the image and re-measures the hash before moving the pin. |
 | A rule appears in no image and in no deleted file. | The page records the gap and names the implementations that state the rule. `JA4SSH.md` R11 is such a rule in the port. |

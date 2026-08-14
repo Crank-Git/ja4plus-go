@@ -103,9 +103,6 @@ func (f *JA4TSFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprin
 	}
 
 	fp := generateTCPFingerprint(packet, tcp, "ja4ts")
-	if fp == nil {
-		return nil, nil
-	}
 
 	delays := f.recordSynAck(ja4tsConnKey(fp.SrcIP, fp.SrcPort, fp.DstIP, fp.DstPort), now, fp.Fingerprint)
 	if len(delays) > 0 {
