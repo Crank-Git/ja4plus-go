@@ -37,7 +37,7 @@ FR-audit-1 states the set:
 the feature file counts "Ten fingerprinters, nine parser files and a command-line program".
 Those counts hold only without the test files. `internal/parser/` holds ten files that
 ship, and nine of them decode a protocol. The audit reads a file that ships, because every
-check in FR-audit-11 through FR-audit-24 names shipped behaviour.
+check in FR-audit-11 through FR-audit-24 names shipped behavior.
 
 `internal/capture/` is outside the set, because FR-audit-1 names three directories and that
 directory is none of them.
@@ -102,11 +102,14 @@ Issue #162 states this classification, and the project manager decided it on iss
 |---|---|
 | `internal/parser/ssh_tracker.go` | #200 |
 | `cmd/ja4plus/types.go` | #61 |
+| `internal/parser/x509_identifiers.go` | #490 |
+| `internal/parser/icmp_quoted.go` | #494 |
 <!-- added-files:end -->
 
-The table holds two rows. Issue #200 added `internal/parser/ssh_tracker.go` after the audit
-of Epic 2, and issue #61 added `cmd/ja4plus/types.go` after it, so no audit reads either
-file.
+The table holds four rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
+audit of Epic 2, issue #61 added `cmd/ja4plus/types.go` after it, issue #490 added
+`internal/parser/x509_identifiers.go` after it, and issue #494 added
+`internal/parser/icmp_quoted.go` after it, so no audit reads any of the four files.
 
 ## The record
 
@@ -625,7 +628,7 @@ for a packet it cannot read is the same rule at the exported surface.
 `lookup.go:37` holds a `sync.Once`. A program that calls `LookupFingerprint` before a new
 mapping file reaches the cache path reads the embedded table until it exits.
 `ja4plus db update` already prints `note: existing processes must be restarted to pick up
-the new database`, so the command-line program states the same behaviour.
+the new database`, so the command-line program states the same behavior.
 
 `.claude/rules/concurrency.md` reads that the package-level lookup state of `lookup.go` is
 a known exception **under repair**, and it names

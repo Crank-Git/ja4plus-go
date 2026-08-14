@@ -4622,5 +4622,141 @@
     "theirs": "ms11nn040000_HOST,MAN,ST,MX__",
     "ruling": "#441",
     "reason": "#467 records ruling #441, and the library reads TCP alone as `testdata/foxio/reference/python/ja4.py:514` does, so this SSDP request over UDP produces no value."
+  },
+  {
+    "key": "gre-sample.pcap/31/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c24s23_c4s4_c5s4",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "ssh-r.pcap/0/JA4SSH.2",
+    "capability": false,
+    "ours": "c64s64_c33s48_c41s2",
+    "theirs": "c64s64_c0s0_c0s1",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so it publishes no empty second window."
+  },
+  {
+    "key": "ssh-r.pcap/339/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c48s21_c6s5_c4s5",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "ssh-r.pcap/1831/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c76s76_c66s65_c9s52",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "ssh-r.pcap/1851/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c64s64_c33s48_c41s2",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "ssh2.pcapng/14/JA4SSH.2",
+    "capability": false,
+    "ours": "c36s52_c42s76_c51s2",
+    "theirs": "c36s36_c0s0_c2s0",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so it publishes no empty second window."
+  },
+  {
+    "key": "sshv1.pcap/73/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "sshv1.pcap/74/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "sshv1.pcap/75/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "v6.pcap/73/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "v6.pcap/74/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "v6.pcap/75/JA4SSH.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#484",
+    "reason": "The maintainer ruled on 2026-08-14 that the library clears the counters at the first FIN+ACK packet, so a later FIN+ACK packet reaches an empty window."
+  },
+  {
+    "key": "ssh-scp-1050.pcap/0/JA4SSH.5",
+    "capability": false,
+    "ours": "c0s1460_c0s53_c6s0",
+    "theirs": "",
+    "ruling": "#484",
+    "reason": "`CloseOpenWindows` of `ja4ssh.go` publishes the last open window under the port's issues #105, #199 and #214, and `python/ja4.py:610` holds that call as a comment."
+  },
+  {
+    "key": "ssh.pcapng/0/JA4SSH.2",
+    "capability": false,
+    "ours": "c36s52_c42s76_c0s0",
+    "theirs": "",
+    "ruling": "#484",
+    "reason": "`CloseOpenWindows` of `ja4ssh.go` publishes the last open window under the port's issues #105, #199 and #214, and `python/ja4.py:610` holds that call as a comment."
+  },
+  {
+    "key": "sshv1.pcap/72/JA4SSH.1",
+    "capability": false,
+    "ours": "c20s20_c18s25_c10s1",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#491",
+    "reason": "The maintainer ruled on 2026-08-14 that the server count 21 describes the stalled `tshark` reassembly, and no consistent SSH framing rule reaches it."
+  },
+  {
+    "key": "v6.pcap/72/JA4SSH.1",
+    "capability": false,
+    "ours": "c20s20_c18s25_c10s1",
+    "theirs": "c20s12_c18s21_c10s1",
+    "ruling": "#491",
+    "reason": "The maintainer ruled on 2026-08-14 that the server count 21 describes the stalled `tshark` reassembly, and no consistent SSH framing rule reaches it."
+  },
+  {
+    "key": "browsers-x509.pcapng/119/JA4TS.1",
+    "capability": false,
+    "ours": "64240_2-1-3-4-0-0_1460_2",
+    "theirs": "",
+    "ruling": "#503",
+    "reason": "FR-parity-42 makes this library read the reset bit alone, and `wireshark/source/packet-ja4.c:1296` tests the flag byte of frame 119 for equality."
   }
 ]
