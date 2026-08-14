@@ -115,8 +115,8 @@ func TestJA4T_MSSOnly(t *testing.T) {
 }
 
 // ja4tHeaderThatStatesALengthItDoesNotHold returns a TCP header whose data offset states a
-// header the contents do not hold. `tcpOptionRegion` returns nil for it, which is the one
-// read of the function that reaches no option byte.
+// header the contents do not hold. `tcpOptionRegion` returns nil for it, so
+// `tcpOptionEntries` reads no option byte.
 func ja4tHeaderThatStatesALengthItDoesNotHold() *layers.TCP {
 	return &layers.TCP{BaseLayer: layers.BaseLayer{Contents: make([]byte, 20)}, DataOffset: 15}
 }
@@ -152,7 +152,7 @@ func TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket(t *testing.T) 
 		tcp    *layers.TCP
 	}{
 		{"a SYN packet that carries no option", synPacket, synHeader},
-		{"a zero-valued header on a packet that carries no layer", emptyPacket, &layers.TCP{}},
+		{"a zero-valued header on a packet that carries no address layer", emptyPacket, &layers.TCP{}},
 		{"a header that states a length it does not hold", emptyPacket, ja4tHeaderThatStatesALengthItDoesNotHold()},
 		{"a header with a truncated option", emptyPacket, ja4tHeaderWithATruncatedOption()},
 	}
@@ -170,9 +170,9 @@ func TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket(t *testing.T) 
 	}
 }
 
-// TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress proves the non-nil
-// contract from the source, and no packet input proves it. The Go specification states that
-// the address of a composite literal points at a unique variable, so that address is never
+// TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress reads the source of
+// generateTCPFingerprint, and it reads no packet. The Go specification states that the
+// address of a composite literal allocates storage for a variable, so that address is never
 // nil.
 //
 // Issue #508 deleted the dead nil test of the JA4T caller. This test fails when a later

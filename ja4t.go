@@ -127,7 +127,7 @@ func tcpOptionRegion(tcp *layers.TCP) []byte {
 	return tcp.Contents[tcpHeaderLength:headerLength]
 }
 
-// generateTCPFingerprint returns the value that a TCP header holds.
+// generateTCPFingerprint returns the four-part value of a TCP header.
 // JA4T reads a SYN packet, and JA4TS reads a SYN-ACK packet. Both methods call it.
 // Format: {window_size}_{options}_{mss}_{wscale}
 //
@@ -135,7 +135,7 @@ func tcpOptionRegion(tcp *layers.TCP) []byte {
 // the header writes a default rather than an error, so the value holds four parts on every
 // input. A zero-valued header reaches `0_00_00_00`.
 //
-// A caller therefore needs no nil test. Issue #508 deleted the dead test of the JA4T
+// A caller therefore needs no nil test. Issue #508 deleted the dead nil test of the JA4T
 // caller. `TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket` and
 // `TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress` hold the contract,
 // and each one fails when a later change makes the function fallible.
