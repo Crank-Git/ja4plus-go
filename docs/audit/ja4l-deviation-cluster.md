@@ -2,15 +2,25 @@
 
 This page reads the JA4L and JA4LS deviations that `testdata/deviations.json` does not
 hold. **The page records what each source states, and it decides no value.** It changes no
-code, it moves no fingerprint, and it adds no register entry.
+code and it moves no fingerprint. **The maintainer rules, and the page records each
+ruling.**
 
 Issue #443 produced it, under Epic #441. `.claude/rules/rulings.md` states who rules.
 
+**The maintainer ruled cause 3 on 2026-08-14, and issue #528 holds that ruling.**
+`## Cause 3 — the QUIC client measurement point, and a reference split` below records the
+ruling, the re-measurement and the three register entries it wrote.
+
 ## The measurement
 
-Every number on this page comes from one run of `make conformance` on
-`issue/443-ja4l-deviation-cluster`, with the corpus present at the pinned commit
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+Every number of this section and of causes 1, 2, 4 and 5 comes from one run of
+`make conformance` on `issue/443-ja4l-deviation-cluster` on 2026-08-13, with the corpus
+present at the pinned commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+
+**Each count below reads a tree that no branch holds today.** The run of 2026-08-13 reported
+635 deviations of the whole corpus, and the base of this ruling reports 273 on 2026-08-14.
+`### The ruling of 2026-08-14` under cause 3 states the re-measured figures, and it names
+the command that measured them.
 
 | Measure | Count |
 |---|---|
@@ -209,7 +219,9 @@ rewritten.
 
 ## Cause 3 — the QUIC client measurement point, and a reference split
 
-**This cause holds 4 deviations, and it is a reference split that no page records.**
+**This cause holds 4 deviations, and it is a reference split that no page records.** That
+sentence reads the run of 2026-08-13. **The maintainer ruled the split on 2026-08-14**, and
+`### The ruling of 2026-08-14` below states the re-measured count.
 
 `ja4l.go:394-399` moves point C to the last server handshake packet:
 
@@ -309,9 +321,104 @@ A third candidate added the guard that fills point C once, and it was reverted w
 per-stream value, and it leaves every register entry in place. **It is the cheapest change
 of this reading, and it is still a reference split that the maintainer rules.**
 
+**The three sentences above read the run of 2026-08-13, and the register has grown since
+it.** `#### The candidate makes five register entries stale` below states the cost of the
+same candidate on 2026-08-14.
+
 **The shape above attributes 4 deviations to this cause, and the candidate closes 3.**
 `tls3.pcapng/153/JA4L.1` still reads `the two values differ`, so that row carries a second
 difference.
+
+### The ruling of 2026-08-14
+
+**The maintainer ruled answer 1 on 2026-08-14.** JA4L point C is the last QUIC server
+handshake packet. Comment 5294398628 of issue #528 holds the ruling, and issue #528 is the
+reversal path.
+
+**The library keeps the packet it reads today, so no line of `ja4l.go` changes.** The
+register gains one entry for each per-packet comparison that the point C reading alone
+holds.
+
+#### The re-measurement
+
+Issue #528 ran `make corpus` and then `make conformance` on
+`issue/528-ja4l-point-c-last-packet` on 2026-08-14, with the base
+`origin/batch/555-session-15-rulings` at `05a7566` and the corpus at the pinned commit
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+
+| Measure | Before the entries | After the entries |
+|---|---|---|
+| Matches | 1753 | 1753 |
+| Deviations the register does not hold | 273 | 270 |
+| Accepted deviations | 580 | 583 |
+| Register keys | 606 | 609 |
+| Unaccepted uncovered values | 178 | 178 |
+| Accepted uncovered values | 26 | 26 |
+| Stale register entries | 0 | 0 |
+| Orphan register entries | 0 | 0 |
+
+**The identity holds on each side: `580 + 26 = 606`, and `583 + 26 = 609`.**
+
+#### The count of this ruling is 3, and the count above is 4
+
+**The figure of 4 comes from the run of 2026-08-13, and it is not the count this ruling
+writes.** Issue #528 re-ran the candidate of `### The count answer 2 closes` above against
+the base of 2026-08-14, and it measured a different set.
+
+**Five per-packet comparisons move when point C reads the first server handshake packet,
+and the ruling alone holds three of them.**
+
+| Key | The vector holds | The library produces | The candidate produces | The register |
+|---|---|---|---|---|
+| `tls3.pcapng/147/JA4L.1` | `90_128_quic` | `59_128_quic` | `90_128_quic` | One entry under ruling #528. |
+| `tls3.pcapng/167/JA4L.1` | `81_128_quic` | `59_128_quic` | `81_128_quic` | One entry under ruling #528. |
+| `tls3.pcapng/312/JA4L.1` | `83_128_quic` | `45_128_quic` | `83_128_quic` | One entry under ruling #528. |
+| `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | No entry. |
+| `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` | `264_64_quic` | No entry. |
+
+**The last two rows carry a second difference, so ruling #528 alone does not hold either
+one.** `tls3.pcapng/153/JA4L.1` reads `71_128_quic` under the candidate, and the vector holds
+`101_128_quic`. No reading of this page states that remainder.
+
+Part a of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` agrees exactly under the
+candidate. The time-to-live `0` of that vector stays open under cause 4.
+
+**An entry that named ruling #528 for either row would accept a difference the ruling does
+not decide.**
+
+**The row of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` is new.** The run of
+2026-08-13 attributed that comparison to cause 4 alone. The re-measurement moves its part a
+from `113` to `264`. **So cause 3 and cause 4 both reach that one comparison.**
+
+#### The candidate makes five register entries stale
+
+**This section prices answer 2, and the maintainer ruled answer 1.** **The ruling itself
+costs no register entry**, because the library keeps the value it produces today.
+
+**Answer 2 is no longer cost-free, and the run of 2026-08-13 reported that it was.** The
+candidate makes five per-stream entries stale, because each one records the value the
+library produces under answer 1.
+
+| Comparison | Recorded | The candidate produces |
+|---|---|---|
+| `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4L-C` | `113_64_quic` | `264_64_quic` |
+| `tls3.pcapng/21/JA4L-C` | `59_128_quic` | `90_128_quic` |
+| `tls3.pcapng/23/JA4L-C` | `40_128_quic` | `71_128_quic` |
+| `tls3.pcapng/24/JA4L-C` | `59_128_quic` | `81_128_quic` |
+| `tls3.pcapng/28/JA4L-C` | `45_128_quic` | `83_128_quic` |
+
+**A reversal of ruling #528 therefore rewrites those five entries and removes the three
+entries of this ruling.** `.claude/rules/parity.md` states that a register entry whose
+comparison now matches fails the conformance suite.
+
+**The candidate ships in no commit.** Issue #528 restored `ja4l.go` with `cp` from a copy it
+took before the edit, and `git status` reports the file unchanged.
+
+#### The port needs no change
+
+`ja4plus/fingerprinters/ja4l.py:591-594` at tag `v1.1.0` takes the last server handshake
+packet, as this library does. **This ruling makes the two repositories agree, and it opens
+no issue of the port.**
 
 ## Cause 4 — the time-to-live of a second QUIC connection on one four-tuple
 
@@ -379,7 +486,7 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 |---|---|---|---|---|
 | 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | The maintainer. Ruling #127 holds it. |
 | 2 — the QUIC `JA4L-S` emission frame | 16 | **15** | Opens none. Orphans 20 entries. | An engineer. The four implementations agree. |
-| 3 — the QUIC client measurement point | 4 | **3** | None. | The maintainer. A reference split, 3 against 1. |
+| 3 — the QUIC client measurement point | 4 | **3** | **The ruling costs nothing.** Answer 2 cost nothing on 2026-08-13, and it costs 5 stale entries on 2026-08-14. | **Ruled on 2026-08-14. Issue #528 holds it.** |
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | — | The maintainer. A reference defect. |
 | 5 — the two vector sets disagree | 2 | Not measured. Each set holds a different value. | — | The maintainer. #249 holds it. |
 | Unattributed | 3 | — | — | — |
@@ -406,11 +513,13 @@ ran beside another one. A reader who buys two causes measures the pair.
 
 ## What this page does not state
 
-- **It recommends no change.** Causes 1, 3, 4 and 5 each reach the maintainer.
+- **It recommends no change.** Causes 1, 3, 4 and 5 each reach the maintainer. **The
+  maintainer ruled cause 3 on 2026-08-14**, and causes 1, 4 and 5 stay with the maintainer.
 - **It measured causes 1, 2 and 3.** Causes 4 and 5 carry no measured count, because each
   one needs a ruling before a candidate exists.
 - **It measured each cause on its own, against the same base.** It measured no pair of
   causes together, so the three counts do not add.
 - **It ran no Python.** The port was read as text. `.claude/rules/parity.md` states the rule.
-- **It writes no register entry**, and `testdata/deviations.json` is unchanged.
+- **The reading of #443 writes no register entry.** **Issue #528 wrote three entries under
+  the ruling of 2026-08-14**, and `### The ruling of 2026-08-14` above names each one.
 - **It states no count for the JA4H cluster.** #442 reads that cluster.

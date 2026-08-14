@@ -15,10 +15,13 @@ entries into `testdata/deviations.json`, and the register held no entry before t
 put 35 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 140 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
-issue #503 put 1 more, and issue #126 put 6 more.
+issue #503 put 1 more, issue #126 put 6 more, and issue #528 put 3 more.
 Issue #543 wrote the 6 entries of the ruling #126 count. The maintainer ruled on 2026-08-14
 that the SYN bit test of ruling #126 reaches JA4L, and `docs/specs/foxio/JA4L.md` R36 holds
 that ruling.
+Issue #528 wrote the 3 entries of its own count. The maintainer ruled on 2026-08-14 that
+JA4L point C is the last QUIC server handshake packet, and the per-packet vector set reads
+the first one.
 Issue #455 wrote the last 32 entries of the ruling #285 count, because the body gate moved
 16 frames of `http1.pcapng` to a match and left the raw forms of those frames in deviation.
 Issue #409 extended the ruling of #387 to the hashed JA4S value, and it wrote the last 5
@@ -27,11 +30,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1753 matches, 273
-deviations, 580 accepted deviations and 606 register keys. The run also reports 178 unaccepted
+reports 1753 matches, 270
+deviations, 583 accepted deviations and 609 register keys. The run also reports 178 unaccepted
 uncovered values and 26 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 580 and
-26 add up to the 606 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 583 and
+26 add up to the 609 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
