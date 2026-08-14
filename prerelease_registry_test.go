@@ -48,7 +48,7 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the module install",
 		requirements: []string{"FR-prerelease-6", "FR-prerelease-7", "FR-prerelease-8", "FR-prerelease-9", "FR-prerelease-10", "FR-prerelease-11"},
 		issue:        96,
-		built:        false,
+		built:        true,
 	},
 	{
 		name:         "the published module contents",
@@ -123,7 +123,8 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // FR-prerelease-4 against the registry.
 //
 // A row that reports a case as built while the tree holds no case is the failure this
-// guard prevents. The clean environment is the one case the tree holds today.
+// guard prevents. Each slice of Epic 16 appends its own case name here, in the order of
+// the registry above, so the union of four parallel members stays mechanical.
 func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 	built := []string{}
 	for _, prereleaseCase := range prereleaseCases {
@@ -132,8 +133,12 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 		}
 	}
 
-	if !slices.Equal(built, []string{"the clean environment"}) {
-		t.Errorf("the registry reports %v as built, and the tree holds the clean environment alone", built)
+	expected := []string{
+		"the clean environment", // #95
+		"the module install",    // #96
+	}
+	if !slices.Equal(built, expected) {
+		t.Errorf("the registry reports %v as built, and the tree holds %v", built, expected)
 	}
 }
 
