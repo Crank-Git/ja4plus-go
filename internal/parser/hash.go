@@ -21,7 +21,8 @@ func TruncatedHash(input string) string {
 // digest of the input. It hashes the empty string, so an empty list reaches
 // `e3b0c44298fc` and never the zero sentinel.
 //
-// JA4H part b is the one caller. R18 of `docs/specs/foxio/JA4H.md` states
+// JA4H part b is the one caller outside this file, and `TruncatedHash` above calls it for
+// a non-empty input. R18 of `docs/specs/foxio/JA4H.md` states
 // `Truncated SHA256 hash of Headers, in the order they appear`, and it names no sentinel.
 // R27 of the same page confines the sentinel to part c and to part d. The Rust reference
 // and the Zeek package write the sentinel in part b, and a rank 1 image rule outranks an

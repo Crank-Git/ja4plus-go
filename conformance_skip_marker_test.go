@@ -15,18 +15,22 @@ import (
 // directory is absent. `.github/workflows/ci.yml` reads it, and FR-conformance-36 fails
 // the job on it.
 //
-// The skip message of FR-conformance-11 cannot carry the job. Six untagged tests write
-// that same sentence when one capture is absent, and `make conformance` runs them, so
-// their skip reaches the same log. A pin move that renames one capture would then fail
-// the job with the wrong reason: the job would report an absent corpus that is present.
-// This marker names the one condition the job means. #142.
+// The skip message of FR-conformance-11 cannot carry the job. Six untagged test files
+// hold a skip that writes that same sentence when one capture is absent, and
+// `make conformance` runs each one, so those skips reach the same log. A pin move that
+// renames one capture would then fail the job with the wrong reason: the job would report
+// an absent corpus that is present. This marker names the one condition the job means.
+// #142.
 //
-// The count above reads six on 2026-08-14, and the argument holds at any count. Round 51
-// of the `## Changelog` of `docs/specs/spec.md` records the repair of a count that read
-// three, and it states the command that measures it. To re-measure the count, count the
-// `.go` files that hold the skip sentence, and subtract the one file that carries the
-// `conformance` build constraint. A comment that quotes that sentence joins the count, so
-// this comment quotes it nowhere.
+// The count above counts files, and it never counts tests. `tunnelSkipWithoutCapture` of
+// `tunnel_keys_test.go` writes the sentence for five callers, so more tests write it than
+// files hold it. Round 51 of the `## Changelog` of `docs/specs/spec.md` records the repair
+// of a count that read three, and round 52 records the repair of the noun.
+//
+// The count above reads six on 2026-08-14, and the argument holds at any count. To
+// re-measure it, count the `.go` files that hold the skip sentence, and subtract the one
+// file that carries the `conformance` build constraint. A comment that quotes that
+// sentence joins the count, so this comment quotes it nowhere.
 //
 // The constant sits in an untagged file, because the tests below read it and the
 // `conformance` build tag hides the suite from them. The tagged build compiles this file
