@@ -4781,7 +4781,7 @@
     "ours": "",
     "theirs": "14240_2-4-8-1-3_1436_10",
     "ruling": "#502",
-    "reason": "The maintainer ruled in issue #502 on 2026-08-14 that a reset the client sent produces no value, because `ja4tsConnKey` keys the connection by the server endpoint and `wireshark/source/packet-ja4.c:1600` keys it by the stream."
+    "reason": "Ruling #502 of 2026-08-14 declines a client RST, because `wireshark/source/packet-ja4.c:1600` keys the connection by the stream and `ja4tsConnKey` keys it by the server endpoint."
   },
   {
     "key": "https3-301-get.pcap/21/JA4TS.1",
@@ -4789,7 +4789,7 @@
     "ours": "",
     "theirs": "14240_2-4-8-1-3_1436_10",
     "ruling": "#502",
-    "reason": "The maintainer ruled in issue #502 on 2026-08-14 that a reset the client sent produces no value, because `ja4tsConnKey` keys the connection by the server endpoint and `wireshark/source/packet-ja4.c:1600` keys it by the stream."
+    "reason": "Ruling #502 of 2026-08-14 declines a client RST, because `wireshark/source/packet-ja4.c:1600` keys the connection by the stream and `ja4tsConnKey` keys it by the server endpoint."
   },
   {
     "key": "https3-301-get.pcap/23/JA4TS.1",
@@ -4797,6 +4797,6 @@
     "ours": "",
     "theirs": "14240_2-4-8-1-3_1436_10",
     "ruling": "#502",
-    "reason": "The maintainer ruled in issue #502 on 2026-08-14 that a reset the client sent produces no value, because `ja4tsConnKey` keys the connection by the server endpoint and `wireshark/source/packet-ja4.c:1600` keys it by the stream."
+    "reason": "Ruling #502 of 2026-08-14 declines a client RST, because `wireshark/source/packet-ja4.c:1600` keys the connection by the stream and `ja4tsConnKey` keys it by the server endpoint."
   }
 ]
