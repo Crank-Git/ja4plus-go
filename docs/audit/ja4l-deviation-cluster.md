@@ -22,6 +22,9 @@ present at the pinned commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 `### The ruling of 2026-08-14` under cause 3 states the re-measured figures, and it names
 the command that measured them.
 
+**Cause 6 below carries its own base, and `### The measurement of this section` states it.**
+#449 added that cause on a later branch, so a number of cause 6 reads against another run.
+
 | Measure | Count |
 |---|---|
 | Deviations of the whole corpus | 635 |
@@ -116,7 +119,7 @@ frame.
 
 **28 per-packet deviations remain, and 27 of them carry the marker `quic`.** Causes 2, 3
 and 4 below hold those 27. **One TCP deviation remains**, and
-`## The three unattributed deviations` below names it.
+`## The unattributed deviation` below names it.
 
 ### Does the change move a value the register already accepts
 
@@ -447,6 +450,174 @@ the connection.** `.claude/rules/parity.md` `## Where a difference comes from` n
 shape a proven reference defect, and it reserves the decline to the maintainer. **This page
 declines nothing.**
 
+## Cause 6 — the coalesced QUIC datagram, and a second reference split
+
+**This cause holds 2 deviations of the count of 177, and it holds 4 on the base of this
+reading.** #449 produced it, under batch #536.
+
+**The two counts differ because #443 measured the cluster before #447 landed.** #443 left
+the two `JA4L` rows unattributed, and this section holds them now.
+`## The unattributed deviation` below records that move. #447 then moved the QUIC `JA4L-S`
+emission to the point D frame, and two `JA4LS` rows joined the two `JA4L` rows. **This
+section states the reading that #443 asked for, and it decides no value.**
+
+### The measurement of this section
+
+**Every number of this section comes from one run of `make conformance` on
+`issue/449-coalesced-quic-datagram`**, forked from `batch/536-value-moving-repairs` at the
+merge of batch #530. The corpus is present at the pinned commit
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`. **The base of this section is not the base of
+`## The measurement` above**, so no count of this section adds to a count of that table.
+
+### Where the library stands
+
+`IsQUICHandshakePacket` in `internal/parser/quic.go` reads `payload[0]`, which is the first
+byte of the first QUIC packet of a datagram. `processUDP` in `ja4l.go` is the sole caller on
+the client point path.
+
+**RFC 9000 Section 12.2 lets one datagram carry more than one QUIC packet.** A server
+datagram that coalesces an Initial packet and a Handshake packet therefore fills point B,
+and it fills no point C. The connection then fills no point D, and the library publishes no
+`JA4L` value and no `JA4L-S` value for it.
+
+**The point B branch of `processUDP` returns after it fills point B**, so one datagram
+reaches one point today. A repair needs the walk and the fall-through together.
+
+### The four rows
+
+| Key | The vector holds | The library produces |
+|---|---|---|
+| `ssh2.pcapng/1046/JA4L.1` | `279_128_quic` | (none) |
+| `ssh2.pcapng/1046/JA4LS.1` | `16192_57_quic` | (none) |
+| `tls3.pcapng/297/JA4L.1` | `271_128_quic` | (none) |
+| `tls3.pcapng/297/JA4LS.1` | `3051_57_quic` | (none) |
+
+**Each row reproduces on the base of this section.** The per-stream set adds one row:
+`ssh2.pcapng/33/JA4L-S` reads `the vector holds a value the library does not produce`.
+
+### The count this cause closes
+
+A candidate walked every QUIC packet of a datagram, and it was reverted with
+`git checkout -- internal/parser/quic.go ja4l.go docs/audit/conformance.md`.
+
+| Measure | Before | After |
+|---|---|---|
+| Matches of the whole corpus | 1753 | **1757** |
+| Deviations the register does not hold | 273 | **271** |
+| Accepted deviations | 580 | 580 |
+| Register keys | 600 | 600 |
+| Unaccepted uncovered values | 184 | 184 |
+| Accepted uncovered values | 20 | 20 |
+| Stale register entries | 0 | 0 |
+| Orphan register entries | 0 | 0 |
+| Per-packet deviations | 229 | **225** |
+| Per-stream deviations | 44 | **46** |
+
+**The candidate closes 4 per-packet deviations, and it opens 2 per-stream deviations.** It
+writes no register entry, and it makes no entry stale or orphan.
+
+**The two opened rows are the reason this cause reaches the maintainer.**
+
+| Key | The vector holds | The candidate produces |
+|---|---|---|
+| `ssh2.pcapng/33/JA4L-C` | (none) | `279_128_quic` |
+| `tls3.pcapng/25/JA4L-C` | (none) | `271_128_quic` |
+
+**One per-stream row changes shape rather than state.** `ssh2.pcapng/33/JA4L-S` reads
+`the two values differ` after the candidate: the vector holds `16192_57` and the candidate
+produces `16192_57_quic`. **The latency and the time-to-live agree exactly, and part c is
+the whole difference.**
+
+**`CHANGELOG.md` holds a guard that reads the two moved counts.**
+`TestTheChangelogPreambleStatesTheCountsTheTreeProduces` failed under the candidate, and it
+named 1753 and 273. That is the one test of the suite that the candidate reddened.
+
+### Do the FoxIO implementations agree
+
+**No. Two read every QUIC packet of a datagram, and two read the first packet alone.**
+
+**Wireshark reads every packet.** `wireshark/source/packet-ja4.c:969` walks every field of
+the frame:
+
+```c
+        for (unsigned item_idx = 0; item_idx < items->len; item_idx++) {
+```
+
+`wireshark/source/packet-ja4.c:1408` matches each `quic.long.packet_type` field of that
+walk, and a coalesced datagram carries one such field for each QUIC packet:
+
+```c
+            if (strcmp(field->hfinfo->abbrev, "quic.long.packet_type") == 0) {
+```
+
+**FoxIO's Python reads the first packet alone.** `python/ja4.py:403-404` drops every QUIC
+layer after the first:
+
+```python
+            if isinstance(quic, list):
+                quic = quic[0]
+```
+
+**Rust reads the first packet alone.** `rust/ja4/src/time/udp.rs:258` takes the first `quic`
+protocol of the packet, and `rust/ja4/src/time/udp.rs:278` takes the first field of it:
+
+```rust
+        let Ok(packet_type) = quic.first("quic.long.packet_type") else {
+```
+
+`rust/ja4/src/pcap.rs:123` states what `first` returns:
+
+```rust
+    /// Returns the [value] of the first field ([`rtshark::Metadata`]) with the given name.
+```
+
+**The Zeek reading is incomplete.** `zeek/ja4l/main.zeek:237` hooks one event for each QUIC
+Handshake packet:
+
+```zeek
+event QUIC::handshake_packet(c: connection, is_orig: bool, version: count, dcid: string, scid: string) {
+```
+
+**Zeek raises that event, and Zeek's QUIC analyzer is not in the corpus.** So this page
+states no answer for Zeek, and it counts 2 against 2 at worst and 3 against 2 at best.
+
+### The vector sets carry the disagreement
+
+**The per-stream set is FoxIO's Python output, and it holds no client value for either
+connection.** `testdata/foxio/python/ssh2.pcapng.json` holds `"JA4L-S": "16192_57"` for
+stream 33 and no `JA4L-C`. `testdata/foxio/python/tls3.pcapng.json` holds
+`"JA4L-S": "3583_57"` for stream 25 and no `JA4L-C`.
+
+**Every other QUIC stream of `tls3.pcapng` holds both values.** Streams 21, 22, 23, 24 and
+28 each hold a `JA4L-C`, and none of those five carries a coalesced server datagram. **So
+the absence names the coalesced datagram, and it names no other property of the capture.**
+
+**The per-packet set is Wireshark's output, and it holds both values.** The four rows above
+state them.
+
+### This cause is the maintainer's
+
+**`.claude/rules/rulings.md` `## Stop conditions` names a disagreement of the FoxIO
+implementations, and it reserves that question to the maintainer.** This page picks no
+answer. The two candidate answers are:
+
+1. **Read every QUIC packet of a datagram.** Wireshark writes it. The per-packet vector set
+   carries it. The measurement above states the cost: it closes 4 and it opens 2.
+2. **Read the first QUIC packet of a datagram.** FoxIO's Python and Rust write it, and the
+   library writes it today. The per-stream vector set carries it. The cost is nothing,
+   because the library writes it today.
+
+**Cause 3 above splits 3 against 1 the other way, and the library follows the three there.**
+A reader who rules answer 1 here rules against the Python and the Rust of one method, and
+the library then follows Wireshark on this question and the three on cause 3.
+
+### Does the port carry the same gap
+
+**Yes.** `ja4plus/fingerprinters/ja4l.py:558` calls `long_header_packet_type` once for one
+datagram, and `ja4plus/utils/quic_utils.py:64` reads `udp_payload[0]`. **The port therefore
+writes answer 2**, and a ruling for answer 1 is a change in both repositories.
+`Crank-Git/ja4plus#613` holds the other half.
+
 ## What #253 and #249 explain
 
 **#253 explains no deviation of this cluster.** It reads that FoxIO's reference Python
@@ -489,36 +660,43 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 | 3 — the QUIC client measurement point | 4 | **3** | **The ruling costs nothing.** Answer 2 cost nothing on 2026-08-13, and it costs 5 stale entries on 2026-08-14. | **Ruled on 2026-08-14. Issue #528 holds it.** |
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | — | The maintainer. A reference defect. |
 | 5 — the two vector sets disagree | 2 | Not measured. Each set holds a different value. | — | The maintainer. #249 holds it. |
-| Unattributed | 3 | — | — | — |
+| 6 — the coalesced QUIC datagram | 2 | **4**, on a later base. Opens 2. | None. | The maintainer. A reference split, 2 against 2. |
+| Unattributed | 1 | — | — | — |
 | **Total** | **177** | | | |
 
-**Three causes carry a measured count, and each one was measured on its own.** Cause 3 is
+**Four causes carry a measured count, and each one was measured on its own.** Cause 3 is
 the cheapest: it closes 3, it opens none, and it leaves the register whole. Cause 2 closes
-15 and rewrites 20 register entries. Cause 1 closes 149 and opens 100.
+15 and rewrites 20 register entries. Cause 1 closes 149 and opens 100. Cause 6 closes 4 and
+opens 2.
 
-**The three counts do not add.** Each candidate ran against the same base, and no candidate
-ran beside another one. A reader who buys two causes measures the pair.
+**The four counts do not add.** Causes 1, 2 and 3 each ran against the base of
+`## The measurement` above. **Cause 6 ran against a later base**, which #447 had already
+moved, so its count of 4 counts two rows that the base of this page does not hold. A reader
+who buys two causes measures the pair.
 
-**Every deviation of the cluster reaches a cause, except three.**
+**Every deviation of the cluster reaches a cause, except one.**
 
-## The three unattributed deviations
+## The unattributed deviation
 
 | Key | The vector holds | The library produces | Why it stays open |
 |---|---|---|---|
-| `ssh2.pcapng/1046/JA4L.1` | `279_128_quic` | (none) | The library writes no client value for the connection, and no cause above states why. |
-| `tls3.pcapng/297/JA4L.1` | `271_128_quic` | (none) | The same shape as the row above. |
 | `browsers-x509.pcapng/128/JA4LS.1` | `2948_229_14055` | (none) | Three numeric parts on a TCP connection, and the candidate of cause 1 did not close it. |
 
-**Each one needs a separate reading, and #443 produced none.**
+**It needs a separate reading, and #443 produced none.**
+
+**#443 listed two more rows here, and cause 6 above now holds them.**
+`ssh2.pcapng/1046/JA4L.1` and `tls3.pcapng/297/JA4L.1` each read
+`the vector holds a value the library does not produce`, and #449 states why.
 
 ## What this page does not state
 
-- **It recommends no change.** Causes 1, 3, 4 and 5 each reach the maintainer. **The
-  maintainer ruled cause 3 on 2026-08-14**, and causes 1, 4 and 5 stay with the maintainer.
-- **It measured causes 1, 2 and 3.** Causes 4 and 5 carry no measured count, because each
-  one needs a ruling before a candidate exists.
-- **It measured each cause on its own, against the same base.** It measured no pair of
-  causes together, so the three counts do not add.
+- **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14**, and causes
+  1, 4, 5 and 6 each stay with the maintainer.
+- **It measured causes 1, 2, 3 and 6.** Causes 4 and 5 carry no measured count, because
+  each one needs a ruling before a candidate exists.
+- **It measured each cause on its own.** It measured no pair of causes together, so the
+  four counts do not add. **Causes 1, 2 and 3 ran against one base, and cause 6 ran against
+  a later base.** `### The measurement of this section` states the base of cause 6.
 - **It ran no Python.** The port was read as text. `.claude/rules/parity.md` states the rule.
 - **The reading of #443 writes no register entry.** **Issue #528 wrote three entries under
   the ruling of 2026-08-14**, and `### The ruling of 2026-08-14` above names each one.
