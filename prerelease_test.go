@@ -102,7 +102,38 @@ func newCleanEnvironment(parent string) (*cleanEnvironment, error) {
 		}
 	}
 
+	if err := environment.stopTelemetry(); err != nil {
+		_ = environment.remove()
+		return nil, err
+	}
+
 	return environment, nil
+}
+
+// stopTelemetry shuts the Go telemetry collection of the environment.
+//
+// A `go` command writes a counter file under the directory that `os.UserConfigDir`
+// reports, and it writes that file after the command exits. HOME names the environment,
+// so the write lands inside the environment and it recreates the tree that `remove`
+// deleted. A measurement of go1.26.5 on 2026-08-14 recorded six leaked environments after
+// one run, and each one held
+// `home/Library/Application Support/go/telemetry/local/go@go1.26.5-...v1.count`.
+//
+// `go help telemetry` at go1.26.5 states that no environment variable shuts it:
+//
+//	The current telemetry mode is also available as the value of the
+//	non-settable "GOTELEMETRY" go env variable. The directory in the
+//	local file system that telemetry data is written to is available
+//	as the value of the non-settable "GOTELEMETRYDIR" go env variable.
+//
+// It states the command that does:
+//
+//	To disable both collection and uploading, run "go telemetry off".
+//
+// The mode reaches the environment alone, because HOME names the environment. The setting
+// of the person who runs the case does not change.
+func (e *cleanEnvironment) stopTelemetry() error {
+	return e.command("go", "telemetry", "off").Run()
 }
 
 // directories returns every directory that `newCleanEnvironment` creates under the root.
@@ -240,14 +271,21 @@ func TestTheCleanEnvironmentHoldsNoSourceOfThisRepository(t *testing.T) {
 			t.Errorf("the environment %s stands inside the repository %s", environment.root, repository)
 		}
 
+		// The environment holds one file at its start, and the harness writes it. It is the
+		// telemetry mode file that `stopTelemetry` writes under HOME. Every other directory
+		// of the environment is empty, and a case fills the ones it needs.
 		files := []string{}
 		walkErr := filepath.WalkDir(environment.root, func(path string, entry os.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if !entry.IsDir() {
-				files = append(files, path)
+			if entry.IsDir() {
+				return nil
 			}
+			if strings.HasPrefix(path, environment.home+string(filepath.Separator)) {
+				return nil
+			}
+			files = append(files, path)
 			return nil
 		})
 		if walkErr != nil {
@@ -255,7 +293,7 @@ func TestTheCleanEnvironmentHoldsNoSourceOfThisRepository(t *testing.T) {
 		}
 
 		if len(files) != 0 {
-			t.Errorf("the environment holds %d file(s) at its start: %v", len(files), files)
+			t.Errorf("the environment holds %d file(s) outside HOME at its start: %v", len(files), files)
 		}
 
 		if environment.command("go", "version").Dir != environment.root {
@@ -443,6 +481,41 @@ func TestTheCaseRemovesTheEnvironmentThatHoldsAReadOnlyModuleCache(t *testing.T)
 		}
 		// The directory loses the owner write bit last, because the file lands inside it.
 		return os.Chmod(module, 0o555)
+	})
+	if err != nil {
+		t.Fatalf("run the case: %v", err)
+	}
+
+	requireAbsent(t, root)
+}
+
+// TestTheCaseRemovesTheEnvironmentAfterAGoCommandRuns holds FR-prerelease-4 against the
+// Go telemetry writer.
+//
+// A `go` command writes a telemetry counter file under HOME after the command exits, and
+// HOME names the environment. A measurement of go1.26.5 on 2026-08-14 recorded six leaked
+// environments after one `make prerelease` run, and every one of them came from a case
+// that ran a `go` command. `remove` reported no error in each of the six, because the
+// write landed after the removal.
+//
+// `newCleanEnvironment` runs `go telemetry off` in the environment, so no counter file is
+// written and the removal is final. This case runs two `go` commands, and it then reads
+// the environment root.
+func TestTheCaseRemovesTheEnvironmentAfterAGoCommandRuns(t *testing.T) {
+	root := ""
+
+	err := runInCleanEnvironment(t.TempDir(), func(environment *cleanEnvironment) error {
+		root = environment.root
+
+		mode, err := environment.goEnv("GOTELEMETRY")
+		if err != nil {
+			return err
+		}
+		if mode != "off" {
+			t.Errorf("go env GOTELEMETRY reports %q, and a counter file then survives the removal", mode)
+		}
+
+		return environment.command("go", "version").Run()
 	})
 	if err != nil {
 		t.Fatalf("run the case: %v", err)
