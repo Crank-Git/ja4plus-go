@@ -10,7 +10,7 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Every measurement in this section names the base of the run that produced it. **The
 enumeration below states the count that the register holds today under each ruling.** It
 never states the count that the issue first wrote, so the enumeration is a statement of the
-present and never a history. Issue #42 put 248
+present and never a history. Issue #42 put 250
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 35 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 140 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
@@ -23,11 +23,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1753 matches, 278
-deviations, 575 accepted deviations and 595 register keys. The run also reports 184 unaccepted
+reports 1753 matches, 276
+deviations, 577 accepted deviations and 597 register keys. The run also reports 184 unaccepted
 uncovered values and 20 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 575 and
-20 add up to the 595 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 577 and
+20 add up to the 597 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
