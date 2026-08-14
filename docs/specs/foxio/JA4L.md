@@ -246,3 +246,18 @@ image.
   writes the marker on a QUIC connection. Round 15 of the `## Changelog` of
   `docs/specs/spec.md` follows the per-stream set where the two sets disagree, and it states
   that the ruling knowingly gives up the per-packet vector.
+- **R36** — **Reference split. The maintainer ruled it on 2026-08-14.** Wireshark tests the
+  whole TCP flag byte for equality, and the other three implementations test the SYN bit.
+  Wireshark tests `tcp_flags == 0x02` at `wireshark/source/packet-ja4.c:1266`, and it tests
+  `tcp_flags == 0x012` at `wireshark/source/packet-ja4.c:1279`. Python tests
+  `(flags & TCP_FLAGS['SYN']) and not (flags & TCP_FLAGS['ACK'])` at `python/ja4.py:563`.
+  Zeek tests `(rp$tcp$flags & TH_SYN) == 0 || (rp$tcp$flags & TH_ACK) == TH_ACK` at
+  `zeek/ja4l/main.zeek:84`. Rust reads `tcp.flags.syn` and `tcp.flags.ack` as separate
+  fields, at `rust/ja4/src/time/tcp.rs:211` and at `rust/ja4/src/time/tcp.rs:212`. **So an
+  ECN-marked SYN reaches no Wireshark branch, and the dissector fills no connection
+  record.** `wireshark/source/packet-ja4.c:1266` is one line, and JA4T and JA4L both read
+  it. **The maintainer ruled that the SYN bit test of ruling #126 reaches JA4L, and not
+  JA4T alone.** Two captures of the corpus open a connection with an ECN-marked SYN, and
+  they are `gre-sample.pcap` and `macos_tcp_flags.pcap`. `testdata/deviations.json` declines
+  6 per-packet values under ruling #126 for that reason. **Issue #543 holds the ruling and
+  the reversal path.**
