@@ -63,6 +63,12 @@ import (
 // The batch #536 round re-measured the mark on 2026-08-14 and it read 552. The round cites
 // #544, #547, #548, #549, #550, #551 and #552, and each number sits above the inherited
 // mark of 543. Every one names an issue or a pull request of this repository.
+// Issue #565 re-measured the mark on 2026-08-14 and it read 578. That issue bounds the eight
+// fingerprinter state maps, and its code comments cite #565, #577 and #193. Each of the three
+// names an issue of this repository, and #565 and #577 sit above the inherited mark of 552.
+// **The self-review of #565 filed #577, and the guard then reported the new citation.** So one
+// issue re-measured the mark twice, and 578 is the second reading.
+//
 // The #556 hotfix re-measured the mark on 2026-08-14 and it read 568. That hotfix cites
 // `#556` in a code comment and in a test, and 556 sits above the inherited mark of 552. **A
 // hotfix pays this maintenance cost exactly as a batch round does**, because the guard reads
@@ -91,6 +97,15 @@ import (
 // it keeps 583.** Batch #555 landed on `dev` after the first merge, and it carried the
 // higher reading. The mark stays a lower bound, so 583 covers every citation that 581
 // covers.
+//
+// **The merge of `dev` into batch #432 met a third reading, and it keeps the highest.** #565
+// read 578, the hotfix read 568 and the round read 583. **Three readings of one lower bound
+// reconcile to the largest**, because this repository allocates upward and never reuses a
+// number.
+//
+// **Five changes of one day each re-measured this mark, and every reading reconciles to
+// 583.** A reader who counts the paragraphs above reads the maintenance cost that #351
+// named, and never a disagreement.
 const issueCitationHighWaterMark = 583
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of

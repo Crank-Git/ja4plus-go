@@ -56,12 +56,21 @@ type JA4XFingerprinter struct {
 	// connection and never a certificate. Without this index CleanupConnection reads every
 	// key of the set to find the keys of one stream.
 	certsByStream map[string]map[string]struct{}
-	// streamBytes counts the payload bytes that each stream has added to the reassembler.
+	// streamBytes counts the payload bytes that each stream offered the reassembler.
 	//
-	// `parser.TCPStreamReassembler` bounds the run that GetStream returns, and it bounds no
-	// stored segment. The buffer this reader replaced kept the last ja4xMaxStreamBytes
-	// bytes, so a long connection held a bounded amount. This counter keeps that bound: a
-	// stream above it is dropped, and a certificate chain never reaches one megabyte.
+	// It bounds no memory. Issue #567 gave that duty to `parser.TCPStreamReassembler`, which
+	// now bounds the bytes one stream stores against the MaxBytes this file passes. So the
+	// two names bound two quantities, and never the same bytes twice.
+	//
+	// This counter bounds the payload that the reader searches for a certificate on one
+	// stream, and it removes the stream at the bound. A server sends the certificate chain in
+	// the first few kilobytes, so a stream above the bound carries application data and no
+	// certificate. The removal also releases a stream that the byte bound holds full, and
+	// the next segment of that connection opens a stream that stores bytes again.
+	//
+	// The two counts differ. The reassembler counts the bytes it stores. This counter counts
+	// every byte the stream offered, which includes a duplicate and a byte the byte bound
+	// refused.
 	streamBytes map[string]int
 	lastCleanup time.Time
 }
@@ -135,8 +144,8 @@ func (f *JA4XFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	results := f.findCertificatesInStream(streamID, stream, packet, srcIP, dstIP, srcPort, dstPort)
 
 	// A server sends the certificate chain in the first few kilobytes of the session, so a
-	// stream above the bound carries application data and no certificate. The drop bounds
-	// the memory of a long connection.
+	// stream above the bound carries application data and no certificate. The removal ends
+	// the search of this stream, and `parser.TCPStreamReassembler` bounds its memory.
 	if f.streamBytes[streamID] > ja4xMaxStreamBytes {
 		f.reassembler.RemoveStream(streamID)
 		delete(f.streamBytes, streamID)
@@ -196,10 +205,9 @@ func (f *JA4XFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 // cleanup prunes the certificate set and the byte counter to prevent unbounded growth.
 //
 // The reassembler bounds the count of its stream table, because it evicts the least recent
-// stream when the table reaches ja4xMaxStreams. **It bounds the bytes of one stream
-// nowhere**: `AddSegment` stores every segment, and `MaxBytes` truncates the run that
-// GetStream returns and never the stored segments. ProcessPacket holds that second bound
-// with the streamBytes counter.
+// stream when the table reaches ja4xMaxStreams. It also bounds the bytes of one stream,
+// because #567 made `AddSegment` refuse a segment that a full stream offers. So this method
+// bounds no memory of the reassembler, and it prunes the two maps of this file alone.
 func (f *JA4XFingerprinter) cleanup() {
 	// Prune processed certs.
 	// certsByStream indexes the processedCerts set, so the reset of one resets the other.
