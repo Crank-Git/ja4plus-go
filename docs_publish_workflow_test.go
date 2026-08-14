@@ -123,7 +123,7 @@ func TestTheDocsPublishWorkflowReadsThePagesSettingFirst(t *testing.T) {
 	if !strings.Contains(workflow, "  pages-setting:") {
 		t.Fatal("FR-documentation-34 states that docs.yml reads the Pages setting")
 	}
-	if !strings.Contains(workflow, "/pages\")") {
+	if !strings.Contains(workflow, "/repos/$GITHUB_REPOSITORY/pages") {
 		t.Error("FR-documentation-34 reads the Pages setting, and no step calls the Pages endpoint")
 	}
 	if !strings.Contains(workflow, "needs: pages-setting") {

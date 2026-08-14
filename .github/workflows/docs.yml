@@ -31,15 +31,21 @@ on:
   push:
     branches: [master]
 
-# FR-documentation-35 gives `pages: write` and `id-token: write` to the `deploy` job alone.
-# This block is the floor of the workflow, and each job below states what it adds.
+# FR-documentation-35 gives the two Pages permissions to the `deploy` job alone. This block
+# serves a job that declares no block of its own.
+#
+# **A job block replaces this block, and it never adds to it.** The workflow-syntax
+# reference states that a job block configures a different set of permissions for that job,
+# so a scope this block names is absent from a job that does not name it again. Each of the
+# three jobs below therefore states every scope it needs. A later step that reads the
+# repository needs `contents: read` in its own job block.
 permissions:
   contents: read
 
 # FR-documentation-36 runs one deployment at a time, and it cancels no run in progress.
 # `cancel-in-progress: false` is what holds the second half. The workflow-syntax reference
 # states the default: `By default, any existing pending job or workflow in the same
-# concurrency group will be canceled`. A cancelled deployment can leave the site at the
+# concurrency group will be canceled`. A canceled deployment can leave the site at the
 # older commit, so the second push waits instead.
 concurrency:
   group: pages
@@ -68,13 +74,26 @@ jobs:
           # script separates that case from every other status.
           GH_TOKEN: ${{ github.token }}
           EXPECTED_URL: https://crank-git.github.io/ja4plus-go/
+        # The step names its shell, because the branches below depend on the shell options.
+        # The workflow-syntax reference states the invocation of an explicit `bash`:
+        # `bash --noprofile --norc -eo pipefail {0}`. So `-e` ends the step at the first
+        # command that fails, and each read below holds its own exit status. Without the
+        # three guards, a `curl` that cannot connect would end the step before the branch
+        # that names the reason.
+        shell: bash
         run: |
+          # `--write-out` prints the status code, and it prints `000` when the connection
+          # fails. `|| true` holds that status back, so the branches below report it.
           status=$(curl --silent --show-error --location \
             --write-out '%{http_code}' --output pages.json \
             --header 'Accept: application/vnd.github+json' \
             --header "Authorization: Bearer $GH_TOKEN" \
             --header 'X-GitHub-Api-Version: 2022-11-28' \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages")
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages" || true)
+
+          if [ -z "$status" ]; then
+            status="000"
+          fi
 
           if [ "$status" = "404" ]; then
             echo "GitHub Pages is not enabled for this repository, so this run publishes nothing." >&2
@@ -87,14 +106,32 @@ jobs:
             # the read, and a failed read is not an absent site.
             echo "The Pages API answered $status, so this run did not read the setting." >&2
             echo "The response body:" >&2
-            cat pages.json >&2
+            if [ -f pages.json ]; then
+              cat pages.json >&2
+            else
+              echo "the read wrote no body" >&2
+            fi
             echo >&2
             echo "This message states no reading of the Pages setting. Read the status above first." >&2
             exit 1
           fi
 
-          build_type=$(jq -r '.build_type // "none"' pages.json)
-          html_url=$(jq -r '.html_url // "none"' pages.json)
+          # A body that holds no JSON fails `jq`, and `-e` would then end the step without
+          # a message. Each read holds that status back, and the value falls to `none`.
+          build_type=$(jq -r '.build_type // "none"' pages.json 2>/dev/null || echo none)
+          html_url=$(jq -r '.html_url // "none"' pages.json 2>/dev/null || echo none)
+
+          # A 200 that holds no `build_type` reads the same way as a failed read, and it
+          # states nothing about the setting. So this branch names no repair of the setting.
+          if [ "$build_type" = "none" ]; then
+            echo "The Pages API answered 200, and the body names no build_type." >&2
+            echo "The response body:" >&2
+            cat pages.json >&2
+            echo >&2
+            echo "This message states no reading of the Pages setting." >&2
+            exit 1
+          fi
+
           echo "The Pages site builds from \"$build_type\", and it serves $html_url."
 
           if [ "$build_type" != "workflow" ]; then
