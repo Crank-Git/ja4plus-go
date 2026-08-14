@@ -42,9 +42,6 @@ func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 	fp := generateTCPFingerprint(packet, tcp, "ja4t")
-	if fp == nil {
-		return nil, nil
-	}
 	return []FingerprintResult{*fp}, nil
 }
 
@@ -130,9 +127,18 @@ func tcpOptionRegion(tcp *layers.TCP) []byte {
 	return tcp.Contents[tcpHeaderLength:headerLength]
 }
 
-// generateTCPFingerprint builds the fingerprint string from TCP header fields.
-// Shared between JA4T (SYN) and JA4TS (SYN-ACK).
+// generateTCPFingerprint returns the value that a TCP header holds.
+// JA4T reads a SYN packet, and JA4TS reads a SYN-ACK packet. Both methods call it.
 // Format: {window_size}_{options}_{mss}_{wscale}
+//
+// It returns a non-nil result for every packet, and no input makes it fail. Each read of
+// the header writes a default rather than an error, so the value holds four parts on every
+// input. A zero-valued header reaches `0_00_00_00`.
+//
+// A caller therefore needs no nil test. Issue #508 deleted the dead test of the JA4T
+// caller. `TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket` and
+// `TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress` hold the contract,
+// and each one fails when a later change makes the function fallible.
 func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType string) *FingerprintResult {
 	windowSize := tcp.Window
 
