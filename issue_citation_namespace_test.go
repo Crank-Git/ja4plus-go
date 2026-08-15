@@ -322,7 +322,13 @@ import (
 // batch this round closes. They sit in `docs/specs/spec.html`, in `docs/specs/spec.md`
 // twice, in `internal/parser/http.go` and in `ja4l_mixed_line_ending_test.go`. **The mark is
 // a lower bound**, and 711 covers every citation the tree carries.
-const issueCitationHighWaterMark = 711
+//
+// **#727 re-measured the mark on 2026-08-15 UTC and it read 730.** The same two commands
+// reported issue 728 and pull request 730. #727 cites its own number in
+// `cmd/ja4plus/main.go` and in `cmd/ja4plus/capture_format_dispatch_test.go`, and the mark of
+// 711 reddened the guard on all 3 citations. **The mark is a lower bound**, and 730 covers
+// every citation the tree carries.
+const issueCitationHighWaterMark = 730
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
