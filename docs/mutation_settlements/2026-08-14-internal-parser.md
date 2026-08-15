@@ -14,7 +14,7 @@ the code of today. Read the position against the report, and never against a lat
 line.** `.claude/rules/ste.md` `## How a citation names its target` states that rule, because
 a line number finds the code until the next edit. **A mutation position is a coordinate, and
 that rule does not reach one.** The cross-member review of Epic 15 found five reader citations
-of the barred form in this record, and round 58 of the `## Changelog` of `docs/specs/spec.md`
+of the barred form in this record, and round 59 of the `## Changelog` of `docs/specs/spec.md`
 records the repair.
 
 **Each settlement below names its issue, and #92 is that issue for every one of them.**
@@ -130,7 +130,7 @@ The base run reports these figures.
 - 0 orphan register entries.
 
 **The base run also reports 617 register keys, and that count is not one of the eight.** The
-list above held it as a ninth item until round 58 of the `## Changelog` of
+list above held it as a ninth item until round 59 of the `## Changelog` of
 `docs/specs/spec.md`, so the sentence above named eight figures over a list of nine. The
 `## Parity with ja4plus` register of `docs/specs/spec.md` writes the eight out and then
 states the register key count separately, and this record now follows that form.

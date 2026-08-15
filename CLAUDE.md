@@ -142,7 +142,7 @@ holds 2m47s. **Both figures are wall clock, and neither one is a transcription d
 run of `gremlins` v0.6.0 reports one elapsed value to the console and to the JSON, so two
 values name two runs. The four verdict counts agree, because the mutation set and its
 verdicts are deterministic. Wall clock is not deterministic, because the machine load moves
-it. The `mutate` comment of the `Makefile` holds the reading, and round 58 of the
+it. The `mutate` comment of the `Makefile` holds the reading, and round 59 of the
 `## Changelog` of `docs/specs/spec.md` records it.
 
 **The four rows hold 1592 mutations, and the set holds 1675.** The difference of 83 is

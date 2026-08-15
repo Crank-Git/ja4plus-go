@@ -50,7 +50,7 @@ strict: true
 # gap. It reads `excludedDocumentationDirs`, so it fails when a published page links into
 # `docs/specs/`, `docs/audit/`, `docs/mutation_reports/` or `docs/mutation_settlements/`.
 # **The list decides the count, and this comment does not.** #92 added the fourth directory,
-# and the enumeration above named three until round 58 of the `## Changelog` of
+# and the enumeration above named three until round 59 of the `## Changelog` of
 # `docs/specs/spec.md`.
 #
 # `docs/requirements.txt` sits under `docs_dir` because it belongs to the site, and MkDocs

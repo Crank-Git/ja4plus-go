@@ -180,7 +180,7 @@ import (
 // and its title is `Amend FR-mutation-11 to settle by fingerprint risk and count the
 // remainder`.
 // #638 re-measured the mark on 2026-08-14 and it read 639. #638 is the Epic 15 documentation
-// round, and it cites its own number in round 58 of the `## Changelog` of
+// round, and it cites its own number in round 59 of the `## Changelog` of
 // `docs/specs/spec.md`. That number sits above the inherited mark of 635, which is the case
 // the paragraph above names. The highest number this repository had allocated is #639, which
 // is the pull request of the Epic 16 documentation round.
