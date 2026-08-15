@@ -7,15 +7,17 @@ import (
 )
 
 // The released binaries that the pre-release binary cases read, and the guards that hold
-// the list against the release workflow.
+// the list against the release build.
 //
 // This file carries no build tag, so `go test ./...` holds the guards. The cases live in
 // `prerelease_binaries_test.go` under the `prerelease` build tag, because each one reads a
 // published artifact that this repository does not hold.
 //
-// `release_cgo_test.go` reads the same workflow for a different property, so this file
-// reuses `releaseWorkflowPath`, `releaseWorkflowStep` and `releaseBuildStepName` rather
-// than stating any of them a second time.
+// **The guards read `.goreleaser.yaml`, and they read no step of the release workflow.**
+// #105 moved the build to GoReleaser on 2026-08-15, and FR-release-35a states that the
+// workflow holds no inline build matrix. `release_cgo_test.go` reads the same file for a
+// different property, so this file reuses `goreleaserConfigPath`, `yamlListItems` and
+// `goreleaserBuildPlatforms` rather than stating any of them a second time.
 
 // releasedBinary names one artifact that the release publishes.
 type releasedBinary struct {
@@ -30,9 +32,8 @@ type releasedBinary struct {
 
 // releasedBinaries holds one row for each artifact of the release.
 //
-// `TestTheReleaseWorkflowBuildsEveryBinaryThatTheCasesRead` holds this list equal to the
-// build step of the workflow, so a sixth artifact reaches the cases rather than shipping
-// unchecked.
+// `TestTheReleaseBuildsEveryBinaryThatTheCasesRead` holds this list equal to the build of
+// `.goreleaser.yaml`, so a sixth artifact reaches the cases rather than shipping unchecked.
 var releasedBinaries = []releasedBinary{
 	{file: "ja4plus-linux-amd64", goos: "linux", goarch: "amd64"},
 	{file: "ja4plus-linux-arm64", goos: "linux", goarch: "arm64"},
@@ -45,64 +46,83 @@ var releasedBinaries = []releasedBinary{
 // artifact against.
 const releaseChecksumFile = "checksums.txt"
 
-// releaseChecksumStepName names the step that writes the checksum file.
-const releaseChecksumStepName = "Create checksums"
-
-// releaseArtifactOutput reads the artifact name and the platform pair of one build command.
+// archiveNameTemplate reads the template that names each published artifact.
 //
-// The pattern anchors the platform pair to the start of the line, as `releaseArtifactBuild`
-// of `release_cgo_test.go` does. A `#` between the indent and `GOOS=` then stops the match,
-// because a commented-out build publishes no artifact.
-var releaseArtifactOutput = regexp.MustCompile(`(?m)^[ \t]*GOOS=(\S+) GOARCH=(\S+) go build .*-o dist/(\S+)`)
+// GoReleaser applies the template and then appends the binary extension of the platform, so
+// the Windows artifact reads `ja4plus-windows-amd64.exe`.
+// `internal/pipe/archive/archive.go` of `goreleaser/goreleaser` at `v2.17.1` states it:
+// `finalName := name + binary.Ext()`.
+var archiveNameTemplate = regexp.MustCompile(`(?m)^\s*name_template: "ja4plus-\{\{ \.Os \}\}-\{\{ \.Arch \}\}"\s*$`)
 
-// TestTheReleaseWorkflowBuildsEveryBinaryThatTheCasesRead holds FR-prerelease-18 against
-// the workflow.
+// releasedBinaryName returns the artifact name that GoReleaser writes for one platform.
 //
-// FR-prerelease-18 runs each released binary, and the cases read the list above rather than
-// the release. A workflow that adds a sixth artifact would otherwise publish a binary that
-// no case runs, and the pre-release summary would report a complete run over an incomplete
-// set.
-func TestTheReleaseWorkflowBuildsEveryBinaryThatTheCasesRead(t *testing.T) {
-	step := releaseWorkflowStep(t, releaseBuildStepName)
-
-	builds := releaseArtifactOutput.FindAllStringSubmatch(step, -1)
-	if len(builds) != len(releasedBinaries) {
-		t.Fatalf("the %q step of %s builds %d artifacts, and the cases read %d",
-			releaseBuildStepName, releaseWorkflowPath, len(builds), len(releasedBinaries))
+// It applies the template that `TestTheReleaseBuildsEveryBinaryThatTheCasesRead` proves, and
+// it appends `.exe` for Windows.
+func releasedBinaryName(goos, goarch string) string {
+	name := "ja4plus-" + goos + "-" + goarch
+	if goos == "windows" {
+		return name + ".exe"
 	}
 
-	for index, build := range builds {
-		binary := releasedBinaries[index]
-		if build[1] != binary.goos || build[2] != binary.goarch || build[3] != binary.file {
-			t.Errorf("the workflow builds %s for %s/%s, and the cases read %s for %s/%s",
-				build[3], build[1], build[2], binary.file, binary.goos, binary.goarch)
+	return name
+}
+
+// TestTheReleaseBuildsEveryBinaryThatTheCasesRead holds FR-prerelease-18 against the release
+// build.
+//
+// FR-prerelease-18 runs each released binary, and the cases read the list above rather than
+// the release. A build that adds a sixth artifact would otherwise publish a binary that no
+// case runs, and the pre-release summary would report a complete run over an incomplete set.
+func TestTheReleaseBuildsEveryBinaryThatTheCasesRead(t *testing.T) {
+	if !archiveNameTemplate.MatchString(readRepoFile(t, goreleaserConfigPath)) {
+		t.Fatalf("%s names no `ja4plus-{{ .Os }}-{{ .Arch }}` archive template, and the cases read that name",
+			goreleaserConfigPath)
+	}
+
+	built := goreleaserBuildPlatforms(t)
+	if len(built) != len(releasedBinaries) {
+		t.Fatalf("%s builds %d artifacts, and the cases read %d: %v",
+			goreleaserConfigPath, len(built), len(releasedBinaries), built)
+	}
+
+	held := map[string]bool{}
+	for _, pair := range built {
+		held[pair] = true
+	}
+
+	for _, binary := range releasedBinaries {
+		if !held[binary.goos+"/"+binary.goarch] {
+			t.Errorf("the cases read %s, and the release builds no %s/%s artifact",
+				binary.file, binary.goos, binary.goarch)
+			continue
+		}
+
+		if name := releasedBinaryName(binary.goos, binary.goarch); name != binary.file {
+			t.Errorf("the release publishes %s for %s/%s, and the cases read %s",
+				name, binary.goos, binary.goarch, binary.file)
 		}
 	}
 }
 
 // TestTheReleasePublishesTheChecksumFileThatTheCaseVerifies holds FR-prerelease-22 against
-// the workflow.
+// the release build.
 //
 // FR-prerelease-22 verifies each artifact against the published checksum file, and the case
 // reads that file by name. A renamed file would fail the case with a message about an absent
 // file rather than about a checksum, and this guard names the rename instead.
 func TestTheReleasePublishesTheChecksumFileThatTheCaseVerifies(t *testing.T) {
-	step := releaseWorkflowStep(t, releaseChecksumStepName)
-	if !strings.Contains(step, releaseChecksumFile) {
-		t.Errorf("the %q step of %s writes no %s, and FR-prerelease-22 reads that file",
-			releaseChecksumStepName, releaseWorkflowPath, releaseChecksumFile)
+	config := readRepoFile(t, goreleaserConfigPath)
+
+	if !strings.Contains(config, `name_template: "`+releaseChecksumFile+`"`) {
+		t.Errorf("%s writes no %s, and FR-prerelease-22 reads that file",
+			goreleaserConfigPath, releaseChecksumFile)
 	}
 
-	// The case computes a SHA-256 digest, so the workflow must publish that digest and no
-	// other. A step that wrote an MD5 file under the same name would pass the check above.
-	if !strings.Contains(step, "sha256sum") {
-		t.Errorf("the %q step of %s writes no SHA-256 digest, and FR-prerelease-22 computes one",
-			releaseChecksumStepName, releaseWorkflowPath)
-	}
-
-	workflow := readRepoFile(t, releaseWorkflowPath)
-	if !strings.Contains(workflow, "dist/"+releaseChecksumFile) {
-		t.Errorf("%s publishes no dist/%s, so the case reads a file that no release holds",
-			releaseWorkflowPath, releaseChecksumFile)
+	// The case computes a SHA-256 digest, so the release must publish that digest and no
+	// other. GoReleaser accepts several algorithms, and a config that named `md5` would pass
+	// the check above under the same file name.
+	if !regexp.MustCompile(`(?m)^\s*algorithm: sha256\s*$`).MatchString(config) {
+		t.Errorf("%s writes no SHA-256 digest, and FR-prerelease-22 computes one",
+			goreleaserConfigPath)
 	}
 }

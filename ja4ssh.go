@@ -87,10 +87,14 @@ type sshConnState struct {
 
 // HASSHResult holds a HASSH fingerprint and associated metadata.
 type HASSHResult struct {
+	// Fingerprint holds the HASSH value.
 	Fingerprint string
-	Banner      string
-	Type        string // "client" or "server"
-	ConnKey     string
+	// Banner holds the SSH identification string of the side.
+	Banner string
+	// Type is `client` or `server`.
+	Type string
+	// ConnKey names the connection that produced the value.
+	ConnKey string
 }
 
 // JA4SSHFingerprinter generates JA4SSH fingerprints from SSH traffic patterns.
@@ -910,14 +914,22 @@ func LookupHASSH(hassh string) string {
 
 // SSHSessionInfo holds the interpretation of a JA4SSH fingerprint.
 type SSHSessionInfo struct {
+	// SessionType names the class of the session.
 	SessionType string
+	// Description states the reading in one sentence.
 	Description string
-	ClientMode  int
-	ServerMode  int
-	ClientSSH   int
-	ServerSSH   int
-	ClientACK   int
-	ServerACK   int
+	// ClientMode is the mode of the client payload size.
+	ClientMode int
+	// ServerMode is the mode of the server payload size.
+	ServerMode int
+	// ClientSSH is the count of SSH packets the client sent.
+	ClientSSH int
+	// ServerSSH is the count of SSH packets the server sent.
+	ServerSSH int
+	// ClientACK is the count of bare acknowledgements the client sent.
+	ClientACK int
+	// ServerACK is the count of bare acknowledgements the server sent.
+	ServerACK int
 }
 
 // InterpretJA4SSH parses a JA4SSH fingerprint and classifies the session type.

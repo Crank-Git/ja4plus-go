@@ -15,7 +15,12 @@ import (
 
 // Fingerprinter is the interface that all JA4+ fingerprinters implement.
 type Fingerprinter interface {
+	// ProcessPacket reads one packet and returns each fingerprint of it, with any
+	// non-fatal error. An implementation returns an error and never a panic, because
+	// every packet is untrusted input.
 	ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error)
+	// Reset clears every state table of the fingerprinter. A caller reuses the
+	// fingerprinter on a second packet source after this call.
 	Reset()
 	// CleanupConnection removes internal state associated with a connection
 	// identified by the given 5-tuple. Each fingerprinter normalizes the tuple
@@ -73,20 +78,31 @@ type ConnectionWindowCloser interface {
 // per-stream set omits. Issue #290 recorded that the two sets differ, and issue #310 filled
 // `Raw`.
 type FingerprintResult struct {
+	// Fingerprint holds the value of the method.
 	Fingerprint string
-	Raw         string
+	// Raw holds the unhashed form of the value.
+	Raw string
 	// OriginalOrder holds `JA4_o`, which hashes each list of the wire-order raw form.
 	// `RawOriginalOrder` holds the same two lists unhashed, so the two fields read one
 	// input. `testdata/foxio/reference/python/ja4.py:291` states the rule, and issue #277
 	// records the field.
-	OriginalOrder    string
-	RawOriginalOrder string // JA4_ro: wire-order, no sorting, SNI/ALPN preserved
-	Type             string
-	SrcIP            string
-	DstIP            string
-	SrcPort          uint16
-	DstPort          uint16
-	Timestamp        time.Time
+	OriginalOrder string
+	// RawOriginalOrder holds the wire-order form unhashed, so it reads the same input as
+	// OriginalOrder. The form keeps the wire order, it sorts no list, and it preserves the
+	// SNI value and the ALPN value.
+	RawOriginalOrder string
+	// Type names the method that produced the value.
+	Type string
+	// SrcIP is the source address of the packet.
+	SrcIP string
+	// DstIP is the destination address of the packet.
+	DstIP string
+	// SrcPort is the source port of the packet.
+	SrcPort uint16
+	// DstPort is the destination port of the packet.
+	DstPort uint16
+	// Timestamp is the capture time of the packet.
+	Timestamp time.Time
 }
 
 // ErrNoSecret reports that no secret is available for the connection.
