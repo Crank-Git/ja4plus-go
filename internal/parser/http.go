@@ -78,9 +78,19 @@ var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 // now answers the question for every caller, so the JA4H value and the JA4L measurement
 // point read one rule.
 //
-// It converts no payload to text, because the JA4L packet path reads every payload that
-// starts with a request line. #685 measured one 8192-byte conversion at 8192 B and one
-// allocation on an Apple M4 on 2026-08-15 UTC.
+// **It converts no payload to text, and the JA4L packet path still pays one conversion
+// before it reaches this function.** `holdsACompleteHTTPRequest` in `ja4l.go` calls
+// `IsHTTPRequest` first on the same bytes, and `IsHTTPRequest` writes `s := string(payload)`.
+// Escape analysis of `IsHTTPRequest` reports `string(payload) escapes to heap`, measured on
+// an Apple M4 on 2026-08-15 UTC. **This citation names the function and no line.** The
+// `file:line` that `-gcflags='-m'` prints moves with every comment above it, and the #440
+// convention keeps a citation that a later edit cannot falsify. #685 measured one 8192-byte
+// conversion at 8192 B and one allocation on the same machine on the same day.
+//
+// **So the `[]byte` parameter saves a second conversion on the JA4L path.** It saves the
+// only conversion of a caller that reads no request line first. The doc comment of #685
+// named the JA4L path as the reason for the whole saving. Batch #708 measured that the path
+// already pays one. **Issue #685 is the reversal path.**
 func HoldsAHeaderBlockTerminator(payload []byte) bool {
 	return headerBlockEnd(payload) >= 0
 }
@@ -94,7 +104,7 @@ func headerBlockEnd(data []byte) int {
 
 // headerBlockTerminator returns the index of the empty line that ends the header block, and
 // the byte count of the terminator it reads.
-// It returns -1 and 0 when the text holds no such line.
+// It returns -1 and 0 when the payload holds no such line.
 //
 // The body starts at the sum of the two, so a caller that measures the body needs both.
 // A terminator holds 2, 3 or 4 bytes, so no caller computes the body start from a fixed
@@ -115,10 +125,18 @@ func headerBlockEnd(data []byte) int {
 //
 // **#298 declined that regular expression on cost.** One 8192-byte payload that holds no
 // terminator costs 84 microseconds under the regular expression, 247 nanoseconds under the
-// two literals this reader replaces, and 120 nanoseconds here, measured on an Apple M4 on
-// 2026-08-15 UTC. **Every payload of a capture reaches this function**, and an unterminated
-// stream reaches it again at each segment, so an attacker who never sends an empty line
-// chooses that cost. `Benchmark_headerBlockTerminator` holds the measurement.
+// two literals this reader replaces, and 120 nanoseconds here. #298 measured all three on an
+// Apple M4 on 2026-08-15 UTC, while this function took a `string`.
+//
+// **This function costs 91.43, 92.25 and 91.91 nanoseconds on that payload today**, at 0 B
+// and 0 allocations. Three runs of `Benchmark_headerBlockTerminator/8192` at `-benchtime=2s`
+// measured it, on an Apple M4 on 2026-08-15 UTC. **#685 moved the parameter from
+// `string` to `[]byte`, and that move is why the figure fell from 120.** The two comparators
+// above read the `string` form, so a reader who compares them to 92 compares two signatures.
+//
+// **Every payload of a capture reaches this function**, and an unterminated stream reaches
+// it again at each segment, so an attacker who never sends an empty line chooses that cost.
+// `Benchmark_headerBlockTerminator` holds the measurement.
 func headerBlockTerminator(data []byte) (int, int) {
 	for offset := 0; offset < len(data); {
 		feed := bytes.IndexByte(data[offset:], '\n')

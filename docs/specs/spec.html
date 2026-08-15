@@ -488,9 +488,13 @@ all three; the library appears not to. Epic 5 is sized after Epic 4 finishes.</p
 days on 2026-08-13. The community fork is <code>gopacket/gopacket</code>. This sentence read
 <em>in 2022</em> until 2026-08-13, and the Go module proxy reports
 <code>{"Version":"v1.1.19","Time":"2020-10-19T16:12:32Z"}</code>.
-<strong>Round 3 raises the cost of this question:</strong> Epic 13 builds on
-<code>pcapgo.NewEthernetHandle</code>, so a migration now moves the monitor as well as the
-parser. Deciding after Epic 13 is more expensive than deciding before it.</p>
+<strong>This box stated that Epic 13 raises the cost of this question until 2026-08-15, and
+that claim is false.</strong> Both candidates declare <code>pcapgo.NewEthernetHandle</code>
+with one signature, under one Linux-only build constraint, so Epic 13 costs the same under
+either one. <strong>The deadline was Epic 10, and never Epic 13</strong>, because
+<code>gopacket.Packet</code> is an interface whose methods return types of its own package.
+<strong>#438 carried the migration on 2026-08-13, before Epic 10</strong>, so this question
+holds no open deadline today. Issue #436 asked for this repair, and batch #708 made it.</p>
 </div>
 
 <div class="box ok">

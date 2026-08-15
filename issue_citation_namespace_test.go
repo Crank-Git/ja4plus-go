@@ -315,7 +315,14 @@ import (
 // reported 702 and 705. Round 65 of the `## Changelog` of `docs/specs/spec.md` cites pull
 // request #703 and pull request #704 by number, and the mark of 702 reddened this guard on
 // both. **The mark is a lower bound**, and 705 covers every citation the tree carries.
-const issueCitationHighWaterMark = 705
+//
+// **The documentation round of batch #708 re-measured the mark on 2026-08-15 UTC and it read
+// 711.** The same two commands reported issue 708 and pull request 711. **The round writes
+// all 5 citations that the mark of 705 reddened, and every one names #708**, which is the
+// batch this round closes. They sit in `docs/specs/spec.html`, in `docs/specs/spec.md`
+// twice, in `internal/parser/http.go` and in `ja4l_mixed_line_ending_test.go`. **The mark is
+// a lower bound**, and 711 covers every citation the tree carries.
+const issueCitationHighWaterMark = 711
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

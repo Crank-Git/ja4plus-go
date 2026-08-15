@@ -40,6 +40,12 @@ const mixedLineEndingRequest = "GET / HTTP/1.1\nHost: example.com\n\r\n"
 // buildJA4LPayloadACK builds the bare ACK of a handshake, and it carries one payload.
 // The initial sequence numbers of the connection are 0, so the absolute 1 that this packet
 // carries is the relative 1 that clientPoint reads.
+//
+// **`buildTCPStreamPacket` in `ja4l_test.go` builds the same packet, and it reads IPv6 as
+// well.** This helper fixes the sequence numbers and the ports that its own case needs, and
+// that caller takes both. **A later change may fold the two together.** Batch #708 recorded
+// the duplication and made no code change, because a consolidation of a test helper is no
+// documentation repair.
 func buildJA4LPayloadACK(t testing.TB, srcIP, dstIP net.IP, ttl uint8, payload string) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
