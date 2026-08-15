@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -545,7 +546,8 @@ func TestTheStopHandlerSetsTheStopRequestOnTheFirstSignal(t *testing.T) {
 
 	signals <- os.Interrupt
 
-	watchStopHandler(signals, stop, func() { reset = true }, func(sig os.Signal) error {
+	// The open channel never ends the handler, so the handler reads the signal above.
+	watchStopHandler(signals, make(chan struct{}), stop, func() { reset = true }, func(sig os.Signal) error {
 		raised = append(raised, sig)
 		return nil
 	}, func(status int) { exited = append(exited, status) })
@@ -580,7 +582,8 @@ func TestTheStopHandlerRaisesASecondSignalThatArrivedBeforeTheReset(t *testing.T
 	signals <- os.Interrupt
 	signals <- syscall.SIGTERM
 
-	watchStopHandler(signals, stop, func() {}, func(sig os.Signal) error {
+	// The open channel never ends the handler, so the handler reads the signals above.
+	watchStopHandler(signals, make(chan struct{}), stop, func() {}, func(sig os.Signal) error {
 		raised = append(raised, sig)
 		return nil
 	}, func(status int) { exited = append(exited, status) })
@@ -605,7 +608,8 @@ func TestTheStopHandlerExitsWhenThePlatformRaisesNoSignal(t *testing.T) {
 	signals <- os.Interrupt
 	signals <- os.Interrupt
 
-	watchStopHandler(signals, stop, func() {}, func(os.Signal) error {
+	// The open channel never ends the handler, so the handler reads the signals above.
+	watchStopHandler(signals, make(chan struct{}), stop, func() {}, func(os.Signal) error {
 		return errors.New("this platform raises no signal")
 	}, func(status int) { exited = append(exited, status) })
 
@@ -645,6 +649,117 @@ func TestTheTerminationSignalsNameSIGINTAndSIGTERM(t *testing.T) {
 
 	if signals[0] != os.Interrupt || signals[1] != syscall.SIGTERM {
 		t.Errorf("the monitor handles the signals %v, and FR-capture-18 names SIGINT and SIGTERM", signals)
+	}
+}
+
+// stopHandlerGoroutineCount reports how many goroutines stand in `watchStopHandler`.
+//
+// A dump of every goroutine stack names the function once for each parked handler, so the
+// count reads the leak that issue #612 records. The buffer holds 1 MB, which every stack
+// dump of this package fits.
+//
+// **A stack frame of this package opens with the import path, and never with `main`.** The
+// measured frame is
+// `github.com/Crank-Git/ja4plus-go/cmd/ja4plus.watchStopHandler(0x...)`, so a marker of
+// `main.watchStopHandler(` matches nothing and the count reports 0 for every run.
+func stopHandlerGoroutineCount() int {
+	buffer := make([]byte, 1<<20)
+	buffer = buffer[:runtime.Stack(buffer, true)]
+
+	return strings.Count(string(buffer), ".watchStopHandler(")
+}
+
+// noStopHandlerCall fails the test when the handler acts on a run that no signal stopped.
+// Issue #612 states that the release ends the handler, so a released handler restores no
+// default disposition and it raises no signal.
+func noStopHandlerCall(t *testing.T) (func(), func(os.Signal) error, func(int)) {
+	t.Helper()
+
+	reset := func() { t.Error("the handler restored the default disposition, and no signal arrived") }
+	raise := func(sig os.Signal) error {
+		t.Errorf("the handler raised the signal %v, and no signal arrived", sig)
+
+		return nil
+	}
+	exit := func(status int) { t.Errorf("the handler exited with the status %d, and no signal arrived", status) }
+
+	return reset, raise, exit
+}
+
+// TestTheStopHandlerReleaseEndsTheSignalRegistration reads issue #612. The registration
+// diverts SIGINT for the whole process, so a call that returns must end it.
+func TestTheStopHandlerReleaseEndsTheSignalRegistration(t *testing.T) {
+	var notified []chan<- os.Signal
+	var stopped []chan<- os.Signal
+
+	reset, raise, exit := noStopHandlerCall(t)
+
+	stop, release := installStopHandler(
+		func(channel chan<- os.Signal, _ ...os.Signal) { notified = append(notified, channel) },
+		func(channel chan<- os.Signal) { stopped = append(stopped, channel) },
+		reset,
+		raise,
+		exit,
+	)
+
+	release()
+
+	if len(notified) != 1 {
+		t.Fatalf("the function registered %d channels, and it registers 1", len(notified))
+	}
+	if len(stopped) != 1 {
+		t.Fatalf("the release ended %d registrations, and it ends 1", len(stopped))
+	}
+	if stopped[0] != notified[0] {
+		t.Error("the release ended a registration of another channel")
+	}
+	if stop.isRequested() {
+		t.Error("the release set the stop request, and no signal arrived")
+	}
+}
+
+// TestTheStopHandlerReleaseEndsTheHandlerGoroutine reads issue #612. A `signal.Stop` call
+// leaves the handler parked on the receive, so the release ends the goroutine too.
+func TestTheStopHandlerReleaseEndsTheHandlerGoroutine(t *testing.T) {
+	before := stopHandlerGoroutineCount()
+
+	reset, raise, exit := noStopHandlerCall(t)
+
+	_, release := installStopHandler(
+		func(chan<- os.Signal, ...os.Signal) {},
+		func(chan<- os.Signal) {},
+		reset,
+		raise,
+		exit,
+	)
+
+	release()
+
+	if after := stopHandlerGoroutineCount(); after != before {
+		t.Errorf("%d handler goroutines stand after the release, and %d stood before it", after, before)
+	}
+}
+
+// TestTheStopHandlerReleaseEndsTheRegistrationOnceForTwoCalls reads issue #612. A caller
+// defers the release and a later caller can call it again, so a second call is safe.
+func TestTheStopHandlerReleaseEndsTheRegistrationOnceForTwoCalls(t *testing.T) {
+	stopped := 0
+
+	reset, raise, exit := noStopHandlerCall(t)
+
+	_, release := installStopHandler(
+		func(chan<- os.Signal, ...os.Signal) {},
+		func(chan<- os.Signal) { stopped++ },
+		reset,
+		raise,
+		exit,
+	)
+
+	release()
+	release()
+
+	if stopped != 1 {
+		t.Errorf("two calls ended %d registrations, and they end 1", stopped)
 	}
 }
 
