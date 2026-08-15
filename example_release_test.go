@@ -83,8 +83,8 @@ func ExampleProcessor() {
 //
 // The example prints the result of a value that no database holds, and it does so for a
 // reason. Two databases answer this call: the embedded FoxIO mapping, and the cache file
-// that `ja4plus db update` writes. A machine that holds a cache file therefore answers a
-// hit differently from a machine that holds none, and an example checks its printed text
+// that `ja4plus db update` writes. A machine that holds a cache file answers a hit
+// differently from a machine that holds none. An example compares its printed text
 // exactly. A miss returns nil under every database, so this example states the one result
 // that each machine reproduces.
 //
