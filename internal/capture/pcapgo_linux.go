@@ -3,7 +3,11 @@
 package capture
 
 import (
+	"encoding/binary"
+	"errors"
 	"fmt"
+	"net"
+	"syscall"
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
@@ -17,6 +21,13 @@ import (
 // C. So this backend reaches Linux alone, and the default build holds no cgo.
 type ethernetHandle struct {
 	handle *pcapgo.EthernetHandle
+	// reader gives each read the deadline that `readDeadline` states, because
+	// `pcapgo.EthernetHandle` takes none. The doc comment of `deadlineReader` states the
+	// measurement.
+	reader *deadlineReader
+	// linkType holds the link type of the interface that `open` read. `open` refuses an
+	// interface whose hardware type reaches no link type, so this field is never zero.
+	linkType layers.LinkType
 	// drops holds the total drop count, because the packet socket reports a delta.
 	drops dropAccumulator
 }
@@ -27,10 +38,21 @@ type ethernetHandle struct {
 // errno of that refusal, and FR-capture-35 reads it.
 // It returns an error when the options carry a capture filter, because the maintainer
 // ruled on 2026-08-14 that the pure-Go backend applies none.
+// It returns an error when the interface carries no Ethernet header, and issue #609 states
+// the reason: a wrong link type emits a wrong fingerprint and reports no error.
 func open(opts Options) (Handle, error) {
 	handle, err := pcapgo.NewEthernetHandle(opts.Interface)
 	if err != nil {
 		return nil, openError(opts.Interface, err)
+	}
+
+	// This call comes after the open, because `NewEthernetHandle` reports the name failure
+	// and the permission failure that `openError` reads. A refusal here closes the packet
+	// socket, so the handle leaks no file descriptor.
+	linkType, err := readLinkType(opts.Interface)
+	if err != nil {
+		_ = handle.Close()
+		return nil, err
 	}
 
 	if opts.Filter != "" {
@@ -50,30 +72,100 @@ func open(opts Options) (Handle, error) {
 		}
 	}
 
-	return &ethernetHandle{handle: handle}, nil
+	// The read goroutine starts after the last refusal above, so a refused open starts no
+	// goroutine.
+	return &ethernetHandle{
+		handle:   handle,
+		reader:   newDeadlineReader(handle, readDeadline),
+		linkType: linkType,
+	}, nil
+}
+
+// readLinkType returns the link type of the bytes that the packet socket delivers for the
+// interface that the caller names.
+// It returns an error when the interface carries no Ethernet header.
+// It returns an error when the kernel states no hardware type for the interface.
+//
+// The kernel states the hardware type of an interface in the `ifi_type` field of
+// `struct ifinfomsg`, and `rtnetlink(7)` names that field `Device type`. A dump of
+// `RTM_GETLINK` answers with one `RTM_NEWLINK` message for each interface.
+// `net/interface_linux.go:17,31` of the standard library reads the same dump the same way,
+// at go1.26.5.
+// Verified against: <https://man7.org/linux/man-pages/man7/rtnetlink.7.html>, retrieved
+// 2026-08-14.
+//
+// It reads the two fields with `binary.NativeEndian` and never with `unsafe`, because
+// netlink writes each field in the byte order of the host. The offsets come from
+// `syscall.IfInfomsg`, and it holds the pad byte that the manual page leaves out.
+// `Family` sits at 0, the pad at 1, `Type` at 2 and `Index` at 4.
+func readLinkType(name string) (layers.LinkType, error) {
+	iface, err := net.InterfaceByName(name)
+	if err != nil {
+		return 0, fmt.Errorf("capture: the host states no index for the interface %s: %w", name, err)
+	}
+
+	dump, err := syscall.NetlinkRIB(syscall.RTM_GETLINK, syscall.AF_UNSPEC)
+	if err != nil {
+		return 0, fmt.Errorf("capture: the kernel lists no interface: %w", err)
+	}
+
+	messages, err := syscall.ParseNetlinkMessage(dump)
+	if err != nil {
+		return 0, fmt.Errorf("capture: the interface list of the kernel does not parse: %w", err)
+	}
+
+	for _, message := range messages {
+		if message.Header.Type != syscall.RTM_NEWLINK {
+			continue
+		}
+		if len(message.Data) < syscall.SizeofIfInfomsg {
+			continue
+		}
+		if int(int32(binary.NativeEndian.Uint32(message.Data[4:8]))) != iface.Index {
+			continue
+		}
+
+		return linkTypeForHardwareType(name, binary.NativeEndian.Uint16(message.Data[2:4]))
+	}
+
+	return 0, fmt.Errorf("capture: the kernel states no hardware type for the interface %s", name)
 }
 
 // ReadPacketData returns the bytes of the next packet, and the capture information of that
 // packet.
+// It returns `ErrReadTimeout` when the interface delivers no packet before the read
+// deadline.
 //
-// It calls `ReadPacketData` of `pcapgo.EthernetHandle`, which copies the bytes out of the
-// read buffer. `ZeroCopyReadPacketData` returns the buffer itself, and the next read
-// overwrites it, so this backend declines that method.
+// The read goroutine of `deadlineReader` calls `ReadPacketData` of
+// `pcapgo.EthernetHandle`, which copies the bytes out of the read buffer.
+// `ZeroCopyReadPacketData` returns the buffer itself, and the next read overwrites it, so
+// this backend declines that method.
 func (e *ethernetHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, error) {
-	data, info, err := e.handle.ReadPacketData()
+	data, info, err := e.reader.read()
+	if errors.Is(err, ErrReadTimeout) {
+		return nil, info, err
+	}
 	if err != nil {
 		return nil, info, fmt.Errorf("capture: the interface returns no packet: %w", err)
 	}
 	return data, info, nil
 }
 
-// LinkType returns `layers.LinkTypeEthernet`.
+// LinkType returns the link type that `open` read from the hardware type of the interface.
 //
 // `pcapgo.NewEthernetHandle` binds an `AF_PACKET` socket with the protocol `ETH_P_ALL`,
-// and that socket delivers the link-layer header of the interface. The name of the
-// constructor states the link layer the backend reads.
+// and that socket delivers the link-layer header of the interface. **So the interface
+// decides the link layer, and the name of the constructor decides nothing.** A `tun`
+// interface, a `sit` interface, a PPP interface and a WireGuard interface each carry no
+// Ethernet header.
+//
+// An earlier comment read the name of the constructor as the answer, and it returned
+// `layers.LinkTypeEthernet` for every interface. Issue #609 records that defect: the
+// monitor emitted a wrong fingerprint and it reported no error. `open` now refuses an
+// interface that carries no Ethernet header, so this method states a link type that
+// matches the interface.
 func (e *ethernetHandle) LinkType() layers.LinkType {
-	return layers.LinkTypeEthernet
+	return e.linkType
 }
 
 // DropCount returns the count of packets the packet socket dropped since the handle
@@ -90,6 +182,15 @@ func (e *ethernetHandle) LinkType() layers.LinkType {
 // accumulator holds the total that the statistics line reports.
 // Verified against: <https://pkg.go.dev/github.com/gopacket/gopacket/pcapgo>, read from
 // the module cache at `github.com/gopacket/gopacket@v1.6.1` on 2026-08-14.
+//
+// **The read goroutine of `deadlineReader` holds a read of the same socket while this
+// method runs, and the two reach the socket two ways.** `EthernetHandle.Stats` calls
+// `Control` of `syscall.RawConn`, and the read calls `Read` of the same interface. The
+// documentation of `Control` states `The file descriptor fd is guaranteed to remain valid
+// while f executes`, and `Stats` takes the mutex that the read holds never. So this method
+// blocks for no packet.
+// Verified against: <https://pkg.go.dev/syscall#RawConn>, read from `go doc syscall.RawConn`
+// at go1.26.5 on 2026-08-15.
 func (e *ethernetHandle) DropCount() (uint64, bool) {
 	stats, err := e.handle.Stats()
 	if err != nil {
@@ -99,8 +200,14 @@ func (e *ethernetHandle) DropCount() (uint64, bool) {
 	return e.drops.add(stats.Drops), true
 }
 
-// Close releases the packet socket.
+// Close releases the packet socket, and it ends the read goroutine of the backend.
+//
+// The reader stops before the socket closes, and the close ends the read that the goroutine
+// holds. So the goroutine ends, and it outlives the handle never. #612 records the cost of
+// a goroutine that outlives its owner.
 func (e *ethernetHandle) Close() error {
+	e.reader.stop()
+
 	if err := e.handle.Close(); err != nil {
 		return fmt.Errorf("capture: the packet socket does not close: %w", err)
 	}

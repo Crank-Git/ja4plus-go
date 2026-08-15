@@ -4,7 +4,10 @@ package capture
 
 import (
 	"strings"
+	"syscall"
 	"testing"
+
+	"github.com/gopacket/gopacket/layers"
 )
 
 // Every test of this file opens no interface that the host holds, so no test needs
@@ -21,6 +24,48 @@ func TestOpenNamesTheInterfaceThatTheHostDoesNotHold(t *testing.T) {
 	}
 	if handle != nil {
 		t.Errorf("Open returned the handle %v beside the error", handle)
+	}
+	if !strings.Contains(err.Error(), name) {
+		t.Errorf("the error %q names no interface", err)
+	}
+}
+
+// TestTheHardwareTypeConstantsHoldTheValueOfTheKernel reads the two constants of
+// `linktype.go` against `syscall`.
+//
+// `linktype.go` carries no build constraint, so it states each value rather than reading
+// `syscall.ARPHRD_ETHER`. This test holds the two together, and it fails when a later
+// kernel value leaves the map behind.
+func TestTheHardwareTypeConstantsHoldTheValueOfTheKernel(t *testing.T) {
+	if arphrdEther != uint16(syscall.ARPHRD_ETHER) {
+		t.Errorf("arphrdEther holds %d, and the kernel states %d", arphrdEther, syscall.ARPHRD_ETHER)
+	}
+	if arphrdLoopback != uint16(syscall.ARPHRD_LOOPBACK) {
+		t.Errorf("arphrdLoopback holds %d, and the kernel states %d", arphrdLoopback, syscall.ARPHRD_LOOPBACK)
+	}
+}
+
+// TestReadLinkTypeReadsTheLoopbackInterfaceAsEthernet reads the hardware type of a real
+// interface, so it covers the netlink dump that `readLinkType` parses.
+//
+// It reads the loopback device, because every host holds one and the read needs no
+// privilege. It opens no packet socket, so it needs no `CAP_NET_RAW`.
+func TestReadLinkTypeReadsTheLoopbackInterfaceAsEthernet(t *testing.T) {
+	linkType, err := readLinkType("lo")
+	if err != nil {
+		t.Fatalf("readLinkType returns no link type for the loopback device: %v", err)
+	}
+	if linkType != layers.LinkTypeEthernet {
+		t.Errorf("readLinkType states the link type %v for the loopback device", linkType)
+	}
+}
+
+func TestReadLinkTypeNamesTheInterfaceThatTheHostDoesNotHold(t *testing.T) {
+	const name = "an-interface-that-no-host-holds"
+
+	linkType, err := readLinkType(name)
+	if err == nil {
+		t.Fatalf("readLinkType states the link type %v for the interface %s", linkType, name)
 	}
 	if !strings.Contains(err.Error(), name) {
 		t.Errorf("the error %q names no interface", err)

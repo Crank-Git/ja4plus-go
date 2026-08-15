@@ -146,6 +146,64 @@ versions of that day.
 - **FR-capture-36** — The message names `CAP_NET_RAW` on Linux.
 - **FR-capture-37** — The command opens no interface until it has parsed every option.
 
+### The link type
+
+**Issue #609 built the link type on 2026-08-15 UTC, and this round writes the
+requirement.** The plan of #609 named no edit to this file, so the behavior reached no
+requirement number until the documentation round of batch #644. **Each requirement below
+states the behavior that the tree already holds, and this round changes no line of that
+behavior.**
+
+- **FR-capture-38** — The capture handle reports the link type of the interface that it
+  opened.
+- **FR-capture-39** — The pure-Go backend reads the hardware type of the interface from a
+  `RTM_GETLINK` netlink dump, and it maps that hardware type to the link type.
+- **FR-capture-40** — The pure-Go backend states `layers.LinkTypeEthernet` for the
+  hardware type `ARPHRD_ETHER` and for the hardware type `ARPHRD_LOOPBACK`.
+- **FR-capture-41** — The pure-Go backend opens no interface of another hardware type. The
+  message names the interface, the hardware type and the `libpcap` build command.
+- **FR-capture-42** — A refused open closes the packet socket, so the refusal leaks no file
+  descriptor.
+- **FR-capture-43** — The libpcap backend reads the link type from libpcap, and it states
+  no constant.
+- **FR-capture-44** — The monitor decodes each packet with the link type that the handle
+  reports.
+
+**FR-capture-41 costs the operator one interface, and it repairs a wrong fingerprint.** The
+backend stated `layers.LinkTypeEthernet` for every interface before #609. So a tunnel
+interface decoded as Ethernet, and the monitor emitted a wrong fingerprint without an
+error. `linkTypeForHardwareType` in `internal/capture/linktype.go` holds the map and the
+refusal, and `readLinkType` in `internal/capture/pcapgo_linux.go` reads the hardware type.
+
+**#609 measured the refusal on real Linux, against a real `sit` tunnel of hardware type
+776.** **Issue #609 is the reversal path.** A reversal adds a link type to the map, and it
+re-reads `map_arphrd_to_dlt` of `libpcap` at the tag of that day.
+
+### The read deadline
+
+**Issue #610 built the read deadline on 2026-08-15 UTC, and this round writes the
+requirement.** FR-capture-17 above states that the monitor reads the stop request after
+each packet, and it states nothing about a deadline. **A read that blocks forever gives the
+monitor no packet to read that stop request after.**
+
+- **FR-capture-45** — Each read of a capture handle carries a read deadline.
+- **FR-capture-46** — The read deadline is 250 milliseconds.
+- **FR-capture-47** — A backend that reaches the read deadline returns `ErrReadTimeout`.
+- **FR-capture-48** — `ErrReadTimeout` states no failure of the capture. The monitor reads
+  the stop request at that answer, and it reads the interface again.
+- **FR-capture-49** — The monitor reads `io.EOF` before it reads `ErrReadTimeout`, and it
+  reads `ErrReadTimeout` before it reads every other failure.
+
+**The two backends reach the deadline two ways, and each one reports the same error.** The
+libpcap backend passes the deadline to `pcap.OpenLive`, and `readError` in
+`internal/capture/libpcap.go` maps the timeout of libpcap to `ErrReadTimeout`.
+**`pcapgo.EthernetHandle` takes no read deadline**, measured on 2026-08-15 at gopacket
+v1.6.1 and at v1.7.1, so `deadlineReader` in `internal/capture/deadline.go` reads the
+source on one goroutine and it bounds each read.
+
+**Issue #610 is the reversal path.** A release of the capture library that takes a read
+deadline removes `deadlineReader`.
+
 ## User flows
 
 ### An operator watches an interface
@@ -156,6 +214,10 @@ versions of that day.
 4. The operator sends `SIGINT`.
 5. The program stops reading, prints the open windows, writes a final statistics line and
    exits with status 0.
+6. Step 5 holds for an interface that carries no traffic. Each read carries a deadline, and
+   the monitor reads the stop request at that deadline. So the operator sends one signal,
+   and the second signal of FR-capture-19 loses no open window. **Issue #610 built the
+   deadline on 2026-08-15, and it is the reversal path.**
 
 ### A macOS user runs the monitor
 
@@ -179,8 +241,11 @@ side by side, plus the permission failure and the unsupported-platform message.
 
 ## Behaviour rules
 
-- **The library opens no interface.** The monitor lives in `cmd/ja4plus` and in
-  `internal/capture`. The rule that the library performs no network input holds unchanged.
+- **The core package opens no interface.** The monitor lives in `cmd/ja4plus` and in
+  `internal/capture`, and `internal/capture` is inside the library. The maintainer ruled
+  that extent on 2026-08-15, and `docs/audit/network-boundary.md` holds the amendment.
+  **Issue #613 is the reversal path.** The rule that the library performs no remote lookup
+  outside `ja4db/` holds unchanged.
 - **The monitor sends no packet.** It reads an interface and writes nothing to it.
 - **A live capture never ends by itself.** Every bound is a bound the monitor sets: the
   idle timeout, the maximum entry count and the statistics interval.
@@ -230,11 +295,11 @@ earlier draft stated `// +build linux,go1.9`, and no file of v1.6.1 holds that t
 
 ## Edge cases & failures
 
-| Case | Expected behaviour |
+| Case | Expected behavior |
 |---|---|
 | The interface does not exist. | One message that names the interface. Exit status 1. No handle opened. |
 | The capture filter does not compile. | One message that holds the filter text and the parser error. Exit status 1. |
-| The interface carries no traffic. | The statistics line still appears each interval. The monitor does not block on a read forever. |
+| The interface carries no traffic. | The statistics line still appears each interval. Each read carries a deadline, so the monitor blocks on no read forever. `SIGINT` stops the run at the first signal, and the run prints the open windows. |
 | The process lacks `CAP_NET_RAW`. | FR-capture-35 and FR-capture-36 cover it. |
 | A packet arrives while the stop request is set. | The monitor reads it and then stops. No packet is half-processed. |
 | Two signals arrive quickly. | FR-capture-19 exits at once, and the open windows are lost. |
