@@ -1136,7 +1136,7 @@ measurement of each change, one entry for each issue.**
 | Method | What moves |
 |---|---|
 | JA4 | The QUIC branch reassembles the client hello across CRYPTO frames and across a coalesced datagram, and it steps over a leading non-handshake record. The `JA4_o` value reaches the `OriginalOrder` field, and a zero sentinel replaces an absent value. |
-| JA4S | The raw form `JA4S_r` reaches the `Raw` field. The QUIC branch reads the inner UDP layer of a tunneled packet. |
+| JA4S | The raw form `JA4S_r` reaches the `Raw` field. |
 | JA4H | The value emits at the packet that completes the request, and a repeated TCP segment produces one value rather than two. Part b hashes an empty header list. The request-line pattern admits a method outside a closed list of nine. The raw form `JA4H_ro` reaches the `Raw` field. |
 | JA4X | The method reads a reassembled stream. The raw form `JA4X_r` reaches the `Raw` field. |
 | JA4T | Part b holds one entry for each option byte the packet carries. A zero value takes the two-digit form. |
@@ -1147,14 +1147,20 @@ measurement of each change, one entry for each issue.**
 | JA4D | The library keeps the first Maximum DHCP Message Size on a repeated option 57. |
 | JA4D6 | No value moves, because `v0.3.0` implemented no such method. |
 
+**The table names a change that moves a value of the FoxIO corpus.** Two changes of the log
+above move no such value, and the table therefore holds neither one. The JA4 and JA4S QUIC
+branches now read the inner UDP layer of a tunneled packet, and no capture of the corpus
+carries QUIC inside a tunnel. The parser now declines a packet that nests more than four
+tunnel layers, and no capture of the corpus nests more than three.
+
 **The one JA4 value the log states in full**, for a reader who wants a worked example: on
 `chrome-cloudflare-quic-with-secrets.pcapng` stream 0 the JA4 value moves from
 `q12i030000_55b375c5d22e_000000000000` to `q13d0310h3_55b375c5d22e_cd85d2d88918`. Issue #42
 holds that measurement.
 
 **The conformance run of this head reports 1754 matches, 247 deviations, 605 accepted
-deviations and 637 register keys.** Two runs on `issue/104-v1-changelog` report those four
-figures. **This CHANGELOG change moves no fingerprint value**, and it adds, removes and
+deviations and 637 register keys.** Three runs on `issue/104-v1-changelog` report those four
+figures, and the third run read the tree that holds this section. **This CHANGELOG change moves no fingerprint value**, and it adds, removes and
 changes no exported name.
 
 ### A known cross-implementation difference
