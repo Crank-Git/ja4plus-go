@@ -29,8 +29,12 @@ Three issues wait on the answer.
 - **#164** reads an HTTP/3 request. It needs the QUIC 1-RTT keys, and a QPACK decoder
   above them.
 
-**Together the three hold about 91 of the 267 deviations that sit outside the register**,
-measured on 2026-08-15.
+**The conformance run of this branch reports 267 deviations that the register does not
+hold**, measured on 2026-08-15. **Epic 5b estimates that the three issues above hold about
+91 of those 267.** That estimate is the project manager's, and this page re-measured no part
+of it. **#529 states that the 80-deviation figure of `docs/audit/ja4h-deviation-cluster.md`
+predates the 89 comparisons that closed on 2026-08-14**, so a reader who needs the count
+re-measures it.
 
 ## The word `library` in this page
 
@@ -95,10 +99,16 @@ decrypted certificate reaches the JA4X value through a name the library exports 
 `internal/parser/http.go` matches a line of the form `<method> <path> HTTP/<digit>.<digit>`.
 An HTTP/2 request carries an HPACK header block instead. #529 states that cause.
 
-**HPACK holds a dynamic table for each connection**, and RFC 7541 Section 4 makes each
-header block depend on every header block before it on that connection. **QPACK holds the
-same kind of table**, and #164 states that a QPACK dynamic table is state that spans
-packets.
+**HPACK holds a dynamic table, and a decoder needs that table to decode a header block.**
+RFC 7541 Section 2.2 states it:
+
+> To decompress header blocks, a decoder only needs to maintain a dynamic table (see
+> Section 2.3.2) as a decoding context. No other dynamic state is needed.
+
+Section 2.3.2 states that the dynamic table is a list of header fields in first-in,
+first-out order, so a header block that references the table depends on the blocks that
+filled it. **QPACK holds the same kind of table**, and #164 states that a QPACK dynamic
+table is state that spans packets.
 
 **So a decoder that reads one header block in isolation produces a wrong header list.** JA4H
 hashes the header names in order, so a wrong list produces a wrong fingerprint rather than
@@ -468,6 +478,20 @@ and the freeze of Epic 10 closes that option permanently.**
   reaches this branch.
 - **It closes no deviation, and it moves no fingerprint value.**
 - **It changes no exported name.**
+
+## The external specifications this page reads
+
+`.claude/rules/external-apis.md` bars a description of an external interface from memory.
+This page reads three specifications, and it confirmed each reading against the published
+text on 2026-08-15.
+
+| Specification | What this page reads | Source |
+|---|---|---|
+| RFC 7541 | Section 2.2 states that a decoder needs the dynamic table as a decoding context. Section 2.3.2 states the first-in, first-out order. | <https://www.rfc-editor.org/rfc/rfc7541> |
+| RFC 8446 | Section 5.3 constructs the AEAD nonce from a 64-bit record sequence number and the write initialization vector. | <https://www.rfc-editor.org/rfc/rfc8446> |
+| RFC 9204 | The specification of QPACK. #164 reads it, and this page names it without a section claim. | <https://www.rfc-editor.org/rfc/rfc9204> |
+
+**This page quotes RFC 7541 Section 2.2 verbatim, and it paraphrases RFC 8446 Section 5.3.**
 
 ## The reversal path
 
