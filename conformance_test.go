@@ -3,6 +3,7 @@
 package ja4plus
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -241,6 +242,32 @@ func conformanceMethodOccurrence(method string, occurrence int) string {
 	return method + "." + strconv.Itoa(occurrence)
 }
 
+// conformanceKeyLog returns the TLS secrets that the Decryption Secrets Blocks of one
+// capture carry, and nil for a capture that carries none.
+//
+// A FoxIO reference implementation reads the plaintext that its host supplies, and that
+// host decrypts the capture from those blocks. So the suite gives the library the same key
+// material, and a capture without a block reaches the library unchanged.
+// #492 added this reader, because `http2-with-cookies.pcapng` writes the Certificate
+// message inside a protected TLS 1.3 record.
+func conformanceKeyLog(t *testing.T, capture string) *KeyLog {
+	t.Helper()
+
+	raw, err := os.ReadFile(filepath.Join(conformanceCaptureDir, capture))
+	if err != nil {
+		return nil
+	}
+
+	// A pcap file holds no Decryption Secrets Block, and the reader reports that format as
+	// an error. The suite reads the capture in both formats, so the error is expected.
+	keyLog, err := ReadKeyLogFromCapture(bytes.NewReader(raw))
+	if err != nil {
+		return nil
+	}
+
+	return keyLog
+}
+
 // conformanceProducedByFrame runs one Processor over every packet of the capture and
 // returns the value of every method the library produces, keyed by frame number.
 //
@@ -261,7 +288,7 @@ func conformanceProducedByFrame(
 	t.Helper()
 
 	produced := make(map[conformanceKey]string)
-	processor := NewProcessor()
+	processor := NewProcessor(WithKeyLog(conformanceKeyLog(t, capture)))
 
 	for index, packet := range packets {
 		frame := strconv.Itoa(index + 1)
@@ -436,7 +463,7 @@ func conformanceProducedByStream(
 	produced := make(map[conformanceKey]string)
 	occurrences := make(map[conformanceKey]int)
 	moved := newConformanceMovedPoints()
-	processor := NewProcessor()
+	processor := NewProcessor(WithKeyLog(conformanceKeyLog(t, capture)))
 
 	record := func(results []FingerprintResult) {
 		for _, result := range results {

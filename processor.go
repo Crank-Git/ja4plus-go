@@ -64,7 +64,14 @@ type ProcessorOption func(*Processor)
 // lock.
 func WithKeyLog(keyLog *KeyLog) ProcessorOption {
 	return func(p *Processor) {
+		// The option runs after the constructor fills every fingerprinter, and a caller who
+		// writes `var p Processor` reaches a nil fingerprinter instead. The call fills the
+		// nil one, so the route below holds under both orders. Issue #492 records the
+		// ordering, because `WithKeyLog` stored the key log and reached no reader until it.
+		p.ensure()
+
 		p.keyLog = keyLog
+		p.ja4x.setKeyLog(keyLog)
 	}
 }
 
