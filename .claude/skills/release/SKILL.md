@@ -38,7 +38,7 @@ These are not covered by the commands above. Check each one by hand.
 | `testdata/deviations.json` holds no entry whose comparison now matches. | `make conformance` fails if one does. |
 | Every register row of `features/08-python-parity.md` is closed. | Read the feature file. |
 | No tracked document applies the count of ten to methods. | `go test -run TestMethodCount ./...` |
-| Every `LIVED` mutation of the most recent sweep is settled. | Read `docs/mutation_settlements/`. |
+| The most recent sweep records every `LIVED` mutation as settled or as counted. | Read `docs/mutation_settlements/`. `make prerelease` fails when no record covers the most recent sweep. |
 | The README links to the documentation site, and the link resolves. | Read and follow it. |
 
 ## 3. Check the artifact configuration
