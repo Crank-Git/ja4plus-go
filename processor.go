@@ -34,22 +34,70 @@ type Processor struct {
 	ja4ssh *JA4SSHFingerprinter
 	ja4d   *JA4DFingerprinter
 	ja4d6  *JA4D6Fingerprinter
+
+	// keyLog holds the TLS secrets that WithKeyLog supplied, and nil when the caller
+	// supplied none.
+	// The constructor writes this field once, and every later reader reads it. A setter
+	// that writes it on a live Processor would break the lock-free contract above, and the
+	// package declares none.
+	keyLog *KeyLog
+}
+
+// ProcessorOption sets one option of a Processor at construction.
+//
+// The maintainer ruled this shape on 2026-08-15 UTC, and comment 5299963400 of issue #649
+// records the ruling. Epic 10 (#100) freezes the exported surface, so a later option costs
+// one more WithX function against this type rather than a new exported constructor.
+// Issue #649 is the reversal path.
+//
+// An option runs after the constructor fills every fingerprinter, so an option reads a
+// Processor that is complete.
+type ProcessorOption func(*Processor)
+
+// WithKeyLog returns the option that gives a Processor the key log.
+//
+// The Processor holds the pointer the caller supplies, and it writes nothing to the key
+// log. A fingerprinter that needs no secret ignores it.
+// A caller that supplies nil gives the Processor no key log.
+// The doc comment of KeyLog states that the value does not change after construction, so a
+// sharded caller gives one KeyLog to every Processor and the packet path takes no lock.
+func WithKeyLog(keyLog *KeyLog) ProcessorOption {
+	return func(p *Processor) {
+		p.keyLog = keyLog
+	}
 }
 
 // NewProcessor creates a Processor with all fingerprinters initialized.
-func NewProcessor() *Processor {
-	return &Processor{
-		ja4:    NewJA4(),
-		ja4s:   NewJA4S(),
-		ja4h:   NewJA4H(),
-		ja4t:   NewJA4T(),
-		ja4ts:  NewJA4TS(),
-		ja4l:   NewJA4L(),
-		ja4x:   NewJA4X(),
+// It applies each option in the order the caller states, so the last option that writes one
+// field decides that field.
+// It ignores a nil option, because a caller that builds an option slice leaves a slot empty.
+func NewProcessor(options ...ProcessorOption) *Processor {
+	processor := &Processor{
+		ja4:   NewJA4(),
+		ja4s:  NewJA4S(),
+		ja4h:  NewJA4H(),
+		ja4t:  NewJA4T(),
+		ja4ts: NewJA4TS(),
+		ja4l:  NewJA4L(),
+		ja4x:  NewJA4X(),
+		// TODO(#649): Give the caller a WithSSHWindow option that reaches this argument.
+		// NewJA4SSH accepts a window size, so a caller that builds the fingerprinter alone
+		// sets the window and a caller that holds a Processor cannot. ProcessorOption is the
+		// shape that closes the gap, and this issue declines the option itself.
 		ja4ssh: NewJA4SSH(0),
 		ja4d:   NewJA4D(),
 		ja4d6:  NewJA4D6(),
 	}
+
+	for _, option := range options {
+		if option == nil {
+			continue
+		}
+
+		option(processor)
+	}
+
+	return processor
 }
 
 // ensure fills each fingerprinter that the constructor fills.
