@@ -11,6 +11,10 @@ Issue #443 produced it, under Epic #441. `.claude/rules/rulings.md` states who r
 `## Cause 3 — the QUIC client measurement point, and a reference split` below records the
 ruling, the re-measurement and the three register entries it wrote.
 
+**The maintainer kept ruling #127 on 2026-08-15 UTC, so cause 1 is settled.** Comment
+5299851784 of issue #441 holds the decline of the reversal. Issue #682 wrote the 149 entries
+that record the price. Issue #127 is the reversal path.
+
 **The maintainer ruled causes 4, 5 and 6 on 2026-08-15 UTC.** Issue #229 holds cause 4,
 issue #249 holds cause 5 and issue #449 holds cause 6. Batch #668 wrote the seven register
 entries that the three rulings produce. **The cause 5 decline is provisional**, because
@@ -178,6 +182,83 @@ per-packet vector.
 **So the 149 deviations are the recorded price of two rulings, and they are not a defect.**
 This page reverses no ruling, and it recommends none. The measurement prices the ruling, so
 that the maintainer reads the cost against a number rather than against an estimate.
+
+#### The maintainer kept ruling #127 on 2026-08-15, and the register now records the price
+
+**The maintainer declined the reversal on 2026-08-15 UTC**, in comment 5299851784 of issue
+#441. Issue #127 is the reversal path, and the ruling stays reversible.
+
+**Issue #682 wrote one entry for each comparison the ruling reaches.** The library
+keeps the two parts it writes today, so no line of `ja4l.go` changes.
+`.claude/rules/rulings.md` `## Where a ruling is recorded` states the rule the entries
+satisfy: a ruling that a vector reaches carries an entry in `testdata/deviations.json`.
+
+**The round enumerated the set from one live run, and never from this page.**
+`docs/audit/conformance.md` truncates each deviation group to three rows, so no document of
+this repository ever held the list. `make conformance` runs `go test -tags conformance -v`.
+`conformanceRecordComparison` in `conformance_test.go` then writes one log line for every
+unaccepted deviation. **Issue #682 read the list from that output** on
+`issue/682-ruling-127-register-entries`, with the corpus at the pinned commit
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+
+| Measure | Before the entries | After the entries |
+|---|---|---|
+| Matches | 1754 | **1754** |
+| Deviations the register does not hold | 247 | **98** |
+| Accepted deviations | 605 | **754** |
+| Register keys | 637 | **786** |
+| Unaccepted uncovered values | 175 | 175 |
+| Accepted uncovered values | 32 | 32 |
+| Stale register entries | 0 | 0 |
+| Orphan register entries | 0 | 0 |
+
+**The match count does not move**, because a decline moves a comparison from unaccepted to
+accepted and it moves no output. **The identity holds on each side**: `605 + 32 = 637`, and
+`754 + 32 = 786`.
+
+**The enumeration returned 150 per-packet rows, and this cause holds 149 of them.** The 149
+each carry an entry now. **The 150th carries none.** That row is `tls3.pcapng/153/JA4L.1`,
+and `### The count of this ruling is 3, and the count above is 4` under cause 3 states why
+no reading explains it. **Issue #692 holds the row**, and it stays unaccepted.
+
+**Issue #652 already declined `browsers-x509.pcapng/128/JA4LS.1`**, at `5d3a650`, so the
+round did not re-enter it. **A duplicate key fails the conformance suite**, and
+`TestTheRegisterHoldsEachKeyOnce` in `deviations_test.go` holds that rule.
+
+#### The 149 rows hold two shapes, and the second one is not a pair
+
+`## The shape of the cluster` above states the pair: one difference produces two deviations.
+The suite reports the library value as a value the vector does not hold. It reports the
+vector value as a value the library does not produce. **138 of the 149 rows form 69 such
+pairs.** One more row, `browsers-x509.pcapng/121/JA4LS.1`, pairs with the cause 7 row that
+issue #652 already declined.
+
+**The remaining 10 rows carry a library value that the reference publishes nowhere.** Each
+one reads `the library produces a value the vector does not hold`. No vector row of the
+capture holds the same part a and part b on any frame.
+
+| Key | The library produces | The reference publishes |
+|---|---|---|
+| `chrome-cloudflare-quic-with-secrets.pcapng/2/JA4LS.1` | `5749_56` | (nothing for that connection) |
+| `chrome-cloudflare-quic-with-secrets.pcapng/3/JA4L.1` | `30_64` | (nothing for that connection) |
+| `latest.pcapng/111/JA4LS.1` | `3915_57` | (nothing for that connection) |
+| `latest.pcapng/112/JA4L.1` | `32_128` | (nothing for that connection) |
+| `ssh2.pcapng/370/JA4LS.1` | `6252_58` | (nothing for that connection) |
+| `ssh2.pcapng/371/JA4L.1` | `45_128` | (nothing for that connection) |
+| `ssh2.pcapng/954/JA4LS.1` | `4272_58` | (nothing for that connection) |
+| `ssh2.pcapng/955/JA4L.1` | `50_128` | (nothing for that connection) |
+| `tls3.pcapng/76/JA4LS.1` | `3181_57` | (nothing for that connection) |
+| `tls3.pcapng/77/JA4L.1` | `14_128` | (nothing for that connection) |
+
+**The emission frame explains the shape, and it is the same cause.**
+`wireshark/source/packet-ja4.c:1362-1394` writes on the `timestamp_F` frame alone, so a
+connection that never fills `timestamp_F` reaches no Wireshark value at all. **This library
+writes on the SYN-ACK frame and on the client measurement point.** Each of those frames
+comes before `timestamp_D`, so the connection reaches a library value.
+
+**The measurement that settles the attribution is the candidate of
+`### The count this cause closes` above: it closes 149.** That figure equals the 149 rows of
+this ruling, so every row of both shapes falls to the same change.
 
 ## Cause 2 — the JA4L-S emission frame on a QUIC connection
 
@@ -384,7 +465,7 @@ and the ruling alone holds three of them.**
 | `tls3.pcapng/147/JA4L.1` | `90_128_quic` | `59_128_quic` | `90_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/167/JA4L.1` | `81_128_quic` | `59_128_quic` | `81_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/312/JA4L.1` | `83_128_quic` | `45_128_quic` | `83_128_quic` | One entry under ruling #528. |
-| `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | No entry. |
+| `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | **No entry. Issue #692 holds the row.** |
 | `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` | `264_64_quic` | No entry under ruling #528. Ruling #229 holds it. |
 
 **The last two rows carry a second difference, so ruling #528 alone does not hold either
@@ -397,6 +478,22 @@ cause 4 on 2026-08-15 UTC.
 
 **An entry that named ruling #528 for either row would accept a difference the ruling does
 not decide.**
+
+**`tls3.pcapng/153/JA4L.1` carries no register entry, and issue #692 holds the row.** The
+same objection reaches ruling #127. Ruling #127 decides the part count on a TCP connection
+and the `quic` marker on a QUIC connection, and both sides of this comparison already write
+three parts and the marker. **So ruling #127 decides no part of this difference either.**
+
+**Issue #682 wrote an entry for this row on 2026-08-15 UTC, and it removed that entry on the
+same day.** The maintainer read the objection and declined the entry. **A row that no ruling
+explains stays unaccepted**, and it counts as one deviation.
+
+**The reason is that an entry is a record of a ruling.** An entry that names a ruling which
+decides none of the difference gives the register a false record, and the register is the
+one durable statement of why this library differs from the reference. Issue #692 asks for
+the reading that the row still needs.
+**Issue #127 is its reversal path**, and a later reading that explains the remainder moves
+the entry to the ruling that does decide it.
 
 **The row of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` is new.** The run of
 2026-08-13 attributed that comparison to cause 4 alone. The re-measurement moves its part a
@@ -1067,7 +1164,7 @@ each one.
 
 | Cause | Attributed | Measured close | Cost | Who decides |
 |---|---|---|---|---|
-| 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | The maintainer. Ruling #127 holds it. |
+| 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | **Kept on 2026-08-15 UTC. Ruling #127 holds it, and issue #682 wrote 149 register entries.** |
 | 2 — the QUIC `JA4L-S` emission frame | 16 | **15** | Opens none. Orphans 20 entries. | An engineer. The four implementations agree. |
 | 3 — the QUIC client measurement point | 4 | **3** | **The ruling costs nothing.** Answer 2 cost nothing on 2026-08-13, and it costs 5 stale entries on 2026-08-14. | **Ruled on 2026-08-14. Issue #528 holds it.** |
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | 2 register entries. | **Ruled on 2026-08-15 UTC. Issue #229 holds it.** |
@@ -1120,8 +1217,9 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
 
 ## What this page does not state
 
-- **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14, and causes 4,
-  5 and 6 on 2026-08-15 UTC.** Causes 1 and 7 each stay with the maintainer.
+- **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14, and causes 1,
+  4, 5 and 6 on 2026-08-15 UTC.** Cause 7 stays with the maintainer, and the decision it
+  needs arises only if the maintainer reverses ruling #127.
 - **It measured causes 1, 2, 3 and 6.** Causes 4 and 5 carry no measured count, because
   each one needs a ruling before a candidate exists. **Cause 7 carries no measured count
   either**, because ruling #127 bars the candidate that would produce one.
@@ -1133,5 +1231,9 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
   the ruling of 2026-08-14**, and `### The ruling of 2026-08-14` above names each one.
   **Batch #668 wrote seven more on 2026-08-15 UTC**, under the rulings of #229, #249 and
   #449. The register held 630 keys before that batch and it holds 637 after it, measured on
-  2026-08-15 UTC.
+  2026-08-15 UTC. **Issue #682 then wrote 149 more under ruling #127 on 2026-08-15 UTC**,
+  and the register holds 786 keys after it. **It declined a 150th**, because no ruling
+  explains `tls3.pcapng/153/JA4L.1` and issue #692 holds that row.
+  `#### The maintainer kept ruling #127 on 2026-08-15, and the register now records the price`
+  under cause 1 above holds that measurement.
 - **It states no count for the JA4H cluster.** #442 reads that cluster.
