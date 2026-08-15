@@ -190,7 +190,7 @@ that method.
 - **R26** — **Reference split.** Zeek and Wireshark write `00` for an empty option list,
   and Rust writes an empty field. Zeek writes `"00"` at `zeek/ja4t/main.zeek:201`.
   Wireshark writes `"00"` at `wireshark/source/packet-ja4.c:671`. Rust joins an empty
-  vector at `rust/ja4/src/tcp.rs:129`, which reaches the empty string. **Issue #125 holds
+  vector at `rust/ja4/src/tcp.rs:133`, which reaches the empty string. **Issue #125 holds
   the question.**
 - **R27** — **Reference split.** Zeek and Wireshark write a maximum segment size of zero as
   `00`, and Rust writes it as `0`. Zeek writes `fmt("%02d", ...)` at
@@ -199,13 +199,13 @@ that method.
   `rust/ja4/src/tcp.rs:139`. **Issue #125 holds the question.**
 - **R28** — **Reference split.** Zeek and Wireshark write a window scale of zero as `00`,
   and Rust writes it as `0`. Zeek writes `"00"` at `zeek/ja4t/main.zeek:207`. Wireshark
-  writes `"%02d"` at `wireshark/source/packet-ja4.c:673`. Rust writes
+  writes `"%02d"` at `wireshark/source/packet-ja4.c:670`. Rust writes
   `self.window_scale.unwrap_or(0)` at `rust/ja4/src/tcp.rs:140`. **Issue #125 holds the
   question.**
 - **R29** — **Reference split.** Rust reads a SYN that also carries the ECN flags, and Zeek
   and Wireshark decline it. Rust tests only the SYN bit and the ACK bit at
   `rust/ja4/src/tcp.rs:146`, and its own test asserts `is_initial_syn(0xC2)` at
-  `rust/ja4/src/tcp.rs:153`. Zeek requires `rph$tcp$flags != TH_SYN` to be false at
+  `rust/ja4/src/tcp.rs:154`. Zeek requires `rph$tcp$flags != TH_SYN` to be false at
   `zeek/ja4t/main.zeek:126`. Wireshark requires `tcp_flags == 0x02` at
   `wireshark/source/packet-ja4.c:1266`. **Issue #126 holds the question.**
 - **R30** — **Reference split.** Zeek reads any packet that carries the RST flag as the
