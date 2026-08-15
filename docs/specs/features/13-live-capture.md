@@ -179,8 +179,11 @@ side by side, plus the permission failure and the unsupported-platform message.
 
 ## Behaviour rules
 
-- **The library opens no interface.** The monitor lives in `cmd/ja4plus` and in
-  `internal/capture`. The rule that the library performs no network input holds unchanged.
+- **The core package opens no interface.** The monitor lives in `cmd/ja4plus` and in
+  `internal/capture`, and `internal/capture` is inside the library. The maintainer ruled
+  that extent on 2026-08-15, and `docs/audit/network-boundary.md` holds the amendment.
+  **Issue #613 is the reversal path.** The rule that the library performs no remote lookup
+  outside `ja4db/` holds unchanged.
 - **The monitor sends no packet.** It reads an interface and writes nothing to it.
 - **A live capture never ends by itself.** Every bound is a bound the monitor sets: the
   idle timeout, the maximum entry count and the statistics interval.
