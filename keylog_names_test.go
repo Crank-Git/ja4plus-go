@@ -16,12 +16,13 @@ import (
 // These two tests hold the FR-gaps-17 amendment of issue #171.
 //
 // The requirement held one sentence that states two facts. types.go holds eight exported
-// names for a key log, and no exported function accepts a KeyLog. A reader who reads the
+// names for a key log, and no exported function accepted a KeyLog. A reader who reads the
 // first fact alone expects a fingerprint that a secret decrypts. The library produces none.
 //
-// Issue #492 needs a key log that a fingerprinter reads, and Epic 10 (#100) freezes the
-// exported API. So the second fact is a boundary the maintainer moves, and never a defect.
-// A reversal of the amendment removes the second test.
+// The maintainer moved the second boundary on 2026-08-15 UTC, and comment 5299963400 of
+// issue #649 records the ruling. WithKeyLog is now the one route by which key material
+// reaches a Processor, and FR-gaps-17c states that route. Issue #649 is the reversal path,
+// and a reversal restores the earlier requirement and this test with it.
 
 // conformanceGapsPath names the page that FR-gaps-17 lives on.
 const conformanceGapsPath = "docs/specs/features/05-conformance-gaps.md"
@@ -61,12 +62,19 @@ func TestFRGaps17NamesEveryExportedKeyLogName(t *testing.T) {
 	}
 }
 
-// TestNoExportedFunctionAcceptsAKeyLog holds FR-gaps-17c: a caller passes no secret to the
-// Processor and to no fingerprinter.
+// keyLogRouteName states the one exported function that accepts a KeyLog.
+// The maintainer ruled the route on 2026-08-15 UTC, and issue #649 is the reversal path.
+const keyLogRouteName = "WithKeyLog"
+
+// TestWithKeyLogIsTheOneExportedFunctionThatAcceptsAKeyLog holds FR-gaps-17c: key material
+// reaches a Processor through one exported name.
 // It reads every parameter of every exported function and method of the package, because
 // the requirement binds the whole exported surface and not one file.
-func TestNoExportedFunctionAcceptsAKeyLog(t *testing.T) {
+// Epic 10 (#100) freezes that surface next, so a second route that lands before the freeze
+// is a second name the project cannot remove afterward.
+func TestWithKeyLogIsTheOneExportedFunctionThatAcceptsAKeyLog(t *testing.T) {
 	functions := 0
+	routes := 0
 
 	for _, file := range packageSourceFiles(t) {
 		parsed, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
@@ -87,14 +95,24 @@ func TestNoExportedFunctionAcceptsAKeyLog(t *testing.T) {
 					continue
 				}
 
-				t.Errorf("%s of %s accepts a KeyLog, and FR-gaps-17c states that no exported function does",
-					function.Name.Name, file)
+				if function.Name.Name == keyLogRouteName {
+					routes++
+
+					continue
+				}
+
+				t.Errorf("%s of %s accepts a KeyLog, and FR-gaps-17c names %s as the one route",
+					function.Name.Name, file, keyLogRouteName)
 			}
 		}
 	}
 
 	if functions == 0 {
 		t.Fatal("the package declares no exported function, so this test proves nothing")
+	}
+
+	if routes != 1 {
+		t.Errorf("%d exported functions named %s accept a KeyLog, want 1", routes, keyLogRouteName)
 	}
 }
 
