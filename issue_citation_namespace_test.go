@@ -229,7 +229,22 @@ import (
 // their pull requests after the inherited reading, so the tracker moved by 17 between the
 // two. **A member pays this maintenance cost exactly as a round does**, because the guard
 // reads the number and never the shape of the change that carries it.
-const issueCitationHighWaterMark = 663
+// #667 re-measured the mark on 2026-08-15 UTC, and it read 668. **#667 is the documentation
+// round of batch #644, and the merge of `origin/dev` into that batch met two readings.** The
+// batch branch carried 639 and `dev` carried 663, and git merged the constant without a
+// conflict because one side alone had moved it. **A resolver of that constant re-measures it
+// rather than take a side**, because the mark is a lower bound and a taken side records a
+// number that nobody measured. The round cites #667, #644 and the five members of the batch,
+// and every one of those numbers sits at or below the mark.
+//
+// **The round read 667 before it wrote the requirements of this batch, and it read 668
+// afterwards.** Two readings minutes apart differ, because another repository user allocates
+// a number at any moment. The constant holds the second reading.
+// The project manager re-measured the mark on 2026-08-15 UTC while it merged `origin/dev`
+// into `batch/668-route-and-declines`, and it read 675. **The merge reached NO conflict on this
+// line, and a clean merge is no measurement.** Git took one side because one side alone had
+// moved it. **A resolver re-measures**, so the constant holds 675 and not the 668 git chose.
+const issueCitationHighWaterMark = 675
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

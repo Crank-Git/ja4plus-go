@@ -118,6 +118,78 @@ holds three parts.
 **`TestTheNetworkBoundaryRecordNamesTheDecisionAndTheReason` reads this page.** It fails when
 the page names fewer than the three options of FR-lookup-2.
 
+## The amendment of 2026-08-15
+
+**The maintainer narrowed the boundary on 2026-08-15.** Comment 5299776533 of issue #613
+holds the ruling, and the ruling states:
+
+> **The boundary names an HTTP call and a remote lookup, and it never named a raw socket.**
+
+**The ruling keeps `internal/capture/` inside the library layout table of `CLAUDE.md`.** It
+moves no code, and it moves no fingerprint value.
+
+### The question the amendment answers
+
+**Epic 13 added `internal/capture`, and that package opens a raw socket in the default
+build.** `captureRefusal` in `internal/capture/permission_linux.go` calls `syscall.Socket`,
+and `open` in `internal/capture/pcapgo_linux.go` calls `pcapgo.NewEthernetHandle`. The Epic
+13 cross-member review found both calls on 2026-08-14, and issue #613 records the reading.
+
+**Each citation above names an identifier, and it names no line.**
+`.claude/rules/ste.md` `## How a citation names its target` states that rule for the code of
+this library. **The first draft of this page cited `pcapgo_linux.go` at line 31**, and the
+sub-merge of #609 moved that call to another line inside one batch. So this page carries the
+worked example of the rule it follows.
+`TestTheAmendmentCitesAnIdentifierThatTheCaptureBackendDeclares` holds each identifier.
+
+**A remote lookup and a raw capture socket are two reaches.** The decision above governs an
+outbound lookup at `ja4db.com`. A raw capture socket reads a local interface, and it reaches
+no remote host. So the amendment narrows the words of the rule, and the guard below states
+the narrowed extent.
+
+**The word `library` carried two extents before the ruling.** `CLAUDE.md` listed
+`internal/capture/` inside the library layout table, and
+`docs/specs/features/13-live-capture.md` placed the same package outside the library. The
+`## Terms` table of `docs/specs/spec.md` now holds one row for the word, and
+`.claude/rules/ste.md` rule 6 states one word, one meaning.
+
+### The guard
+
+**`TestNoProductionFileOutsideTheCaptureBackendOpensASocket` holds the amendment.** It reads
+each production Go file outside `cmd/` and `ja4db/`, and it reports each call of a function
+that opens a socket. It permits `internal/capture/` alone, so a second package that calls one
+of those functions fails the test.
+
+**The guard reads a call site, and it reads no import.** One import carries both meanings:
+`pcapgo.NewReader` reads a capture file, and `pcapgo.NewEthernetHandle` opens a packet
+socket.
+
+**A dot import writes a call as a bare identifier, and the guard reports the import instead.**
+`syscall.Socket` reads as a selector, and `import . "syscall"` makes the same call read as
+`Socket`. So the guard fails on a dot import of any package that
+`socketOpenFunction` names, and a dot import defeats it in no file.
+
+**The guard resolves no type, so it reaches a direct call alone.** A package that calls an
+exported helper of `internal/capture` opens a socket, and the guard reports nothing about it.
+**That limit is stated and it is not repaired**, because a type-resolving reader costs a
+second build of the module and it guards one hypothetical case.
+
+**Three tests prove that the guard reports something.** A permit list that permits every
+package guards nothing.
+
+1. `TestTheSocketReaderReportsAPackageOutsideTheCaptureBackendThatOpensASocket` builds a
+   second package that calls `syscall.Socket`, and it requires the report.
+2. `TestTheSocketPermitListNamesTheCaptureBackendAlone` requires the permit list to decline
+   the root package, `ja4db/` and `internal/parser/`.
+3. `TestTheCaptureBackendOpensASocket` requires the reader to find the call that
+   `internal/capture` holds today.
+
+### The reversal path
+
+**Issue #613 is the reversal path.** A reversal states that the boundary names every network
+reach. It then moves `internal/capture` out of the layout table of `CLAUDE.md`, and it
+removes the permit entry of the guard.
+
 ## A later decision
 
 **Only the maintainer changes the decision above.** `.claude/rules/rulings.md` holds that

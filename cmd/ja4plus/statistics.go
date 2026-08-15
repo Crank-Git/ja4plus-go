@@ -11,12 +11,18 @@ import (
 // The statistics line of issue #81. FR-capture-28 through FR-capture-34 of
 // `docs/specs/features/13-live-capture.md` state the work.
 //
-// **A second goroutine writes the line, and a measurement states the reason.** Both
-// capture backends block in `ReadPacketData` until the interface delivers a packet: #77
-// found that `pcapgo.EthernetHandle` exposes no read deadline, and #78 passed
-// `pcap.BlockForever` so that the two backends behave the same. A line that the packet
-// loop writes therefore reaches an idle interface never, and an idle interface is when an
-// operator most needs the line.
+// **A second goroutine writes the line, and a measurement states the reason.** The packet
+// loop wakes at each packet and at each read deadline, and `readDeadline` of
+// `internal/capture` states that deadline. Neither event follows the statistics interval,
+// so a line that the packet loop writes reports an interval that the traffic decides. An
+// idle interface is when an operator most needs the line, and the second goroutine holds the
+// line to the interval that FR-capture-8 states.
+//
+// **A read blocked forever until 2026-08-15**, and this comment stated that block as the
+// reason. #77 found that `pcapgo.EthernetHandle` exposes no read deadline, and #78 passed
+// `pcap.BlockForever` so that the two backends behaved the same. **Issue #610 gave each read
+// a deadline**, so the packet loop now wakes on an idle interface. The line still needs the
+// second goroutine, for the reason above.
 //
 // **That goroutine reads the counters of `monitorCounters` through their atomic methods,
 // and it reaches the `Processor`, the connection table and the capture handle never.**

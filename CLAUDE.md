@@ -81,10 +81,17 @@ A new fingerprinter file goes at the root. New protocol decoding goes in
 `internal/parser/`. Interface capture goes in `internal/capture/`. Nothing that reads a
 packet belongs in `cmd/`.
 
-**Every network call of the library goes in `ja4db/`.** The maintainer ruled that boundary
+**Every remote lookup of the library goes in `ja4db/`.** The maintainer ruled that boundary
 on 2026-08-14, and `docs/audit/network-boundary.md` holds the record. The core package
 imports no HTTP client, and `network_boundary_test.go` fails on an import that breaks the
 rule.
+
+**The boundary names an HTTP call and a remote lookup, and it names no raw socket.** The
+maintainer narrowed it on 2026-08-15, and `docs/audit/network-boundary.md` holds that
+amendment. A remote lookup reaches `ja4db.com`, and a raw capture socket reads a local
+interface. The two are different reaches, so `internal/capture/` stays in the layout table
+above. `network_boundary_test.go` permits a socket open in that directory alone, and it
+fails on a second package that opens one. **Issue #613 is the reversal path.**
 
 ## Commands
 
