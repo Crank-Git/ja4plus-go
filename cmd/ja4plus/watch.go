@@ -795,9 +795,9 @@ func (m *monitor) run(handle capture.Handle) error {
 // FR-capture-17 states, and it reads the stop request at each deadline too. One `SIGINT`
 // therefore stops the monitor on an interface that carries no traffic.
 //
-// **A read blocked forever until 2026-08-14**, and issue #610 measured what that cost the
-// operator: the run needed the second signal of FR-capture-19, and that signal exits at once
-// and loses every open window. Issue #610 is the reversal path.
+// **A read blocked forever until 2026-08-15.** Issue #610 measured the cost: the run needed
+// the second signal of FR-capture-19, and that signal exits at once and loses every open
+// window. Issue #610 is the reversal path.
 func (m *monitor) readPackets(handle capture.Handle) error {
 	linkType := handle.LinkType()
 

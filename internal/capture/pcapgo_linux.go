@@ -190,7 +190,7 @@ func (e *ethernetHandle) LinkType() layers.LinkType {
 // while f executes`, and `Stats` takes the mutex that the read holds never. So this method
 // blocks for no packet.
 // Verified against: <https://pkg.go.dev/syscall#RawConn>, read from `go doc syscall.RawConn`
-// at go1.26.5 on 2026-08-14.
+// at go1.26.5 on 2026-08-15.
 func (e *ethernetHandle) DropCount() (uint64, bool) {
 	stats, err := e.handle.Stats()
 	if err != nil {

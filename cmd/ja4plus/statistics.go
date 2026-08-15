@@ -18,7 +18,7 @@ import (
 // idle interface is when an operator most needs the line, and the second goroutine holds the
 // line to the interval that FR-capture-8 states.
 //
-// **A read blocked forever until 2026-08-14**, and this comment stated that block as the
+// **A read blocked forever until 2026-08-15**, and this comment stated that block as the
 // reason. #77 found that `pcapgo.EthernetHandle` exposes no read deadline, and #78 passed
 // `pcap.BlockForever` so that the two backends behaved the same. **Issue #610 gave each read
 // a deadline**, so the packet loop now wakes on an idle interface. The line still needs the

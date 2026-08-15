@@ -40,9 +40,9 @@ func open(opts Options) (Handle, error) {
 	// below returns `ErrReadTimeout` for it. **The two backends report an idle interface one
 	// way**, because the pure-Go backend reports the same answer at the same deadline.
 	//
-	// **This argument read `pcap.BlockForever` until 2026-08-14**, and #78 passed that value
+	// **This argument read `pcap.BlockForever` until 2026-08-15**, and #78 passed that value
 	// so that the two backends behaved the same. Issue #610 measured the cost of the shared
-	// answer: a read that blocks forever reaches the stop request never, so one `SIGINT`
+	// answer: a read that blocks forever reaches the stop request never. So one `SIGINT`
 	// stopped no monitor on an interface that carries no traffic. Issue #610 is the reversal
 	// path.
 	//
@@ -50,7 +50,7 @@ func open(opts Options) (Handle, error) {
 	// waits `timeoutMillis(p.timeout)` for one packet. `gopacket@v1.6.1/pcap/pcap.go:169`
 	// and `gopacket@v1.6.1/pcap/pcap_unix.go:700` hold the two readings.
 	// Verified against: <https://pkg.go.dev/github.com/gopacket/gopacket/pcap>, read from the
-	// module cache at `github.com/gopacket/gopacket@v1.6.1` on 2026-08-14.
+	// module cache at `github.com/gopacket/gopacket@v1.6.1` on 2026-08-15.
 	//
 	// The third argument sets promiscuous mode, and this backend takes none.
 	// `pcapgo.NewEthernetHandle` sets none either, so the two backends read one packet set.

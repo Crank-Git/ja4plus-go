@@ -158,8 +158,8 @@ versions of that day.
    exits with status 0.
 6. Step 5 holds for an interface that carries no traffic. Each read carries a deadline, and
    the monitor reads the stop request at that deadline. So the operator sends one signal,
-   and no open window is lost to the second signal of FR-capture-19. **Issue #610 built the
-   deadline on 2026-08-14, and it is the reversal path.**
+   and the second signal of FR-capture-19 loses no open window. **Issue #610 built the
+   deadline on 2026-08-15, and it is the reversal path.**
 
 ### A macOS user runs the monitor
 

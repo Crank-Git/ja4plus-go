@@ -151,8 +151,8 @@ holds eight files that ship and seven test files, measured on 2026-08-14 with
 `git ls-files internal/capture/`. **A test file carries no row**, because `goFilesOfRoots`
 in `audit_record_test.go` drops a file whose name ends in `_test.go`.
 
-**Issue #610 wrote the ninth row that names a file of `internal/capture/`, and the directory
-holds nine files that ship and eight test files**, measured on 2026-08-15 with
+**Issue #610 wrote the ninth row that names a file of `internal/capture/`.** The directory
+holds nine files that ship and eight test files, measured on 2026-08-15 with
 `git ls-files internal/capture/`. The measurement above reads 2026-08-14, and the two
 disagree because #610 added `internal/capture/deadline.go` and
 `internal/capture/deadline_test.go` between the two days.

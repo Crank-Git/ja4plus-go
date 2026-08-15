@@ -25,9 +25,9 @@ type packetRead struct {
 	err error
 }
 
-// deadlineReader gives a packet source that blocks one read deadline.
+// deadlineReader wraps a packet source, and it bounds each read to one deadline.
 //
-// **`pcapgo.EthernetHandle` takes no read deadline**, measured on 2026-08-14 at gopacket
+// **`pcapgo.EthernetHandle` takes no read deadline**, measured on 2026-08-15 at gopacket
 // v1.6.1 and at v1.7.1. It reads the packet socket through an `os.File` that it holds in an
 // unexported field, so no caller reaches that socket to set a deadline on it. #77 recorded
 // the same absence, and `statistics.go` of `cmd/ja4plus` states it.
@@ -117,6 +117,10 @@ func (r *deadlineReader) read() ([]byte, gopacket.CaptureInfo, error) {
 //
 // The read goroutine ends after the read that it holds returns, so the caller closes the
 // source after this call. A second call of this method ends nothing again.
+//
+// **This call discards one packet when the read goroutine holds a packet that no caller
+// took.** The monitor calls it from `Close`, so the run is over and the packet reaches no
+// fingerprint either way.
 func (r *deadlineReader) stop() {
 	r.stopOnce.Do(func() { close(r.done) })
 }

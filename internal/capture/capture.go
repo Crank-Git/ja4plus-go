@@ -35,7 +35,7 @@ import (
 // costs one more wakeup for each second of an idle interface, and it shortens no capture.
 const readDeadline = 250 * time.Millisecond
 
-// ErrReadTimeout reports that the interface delivered no packet before the read deadline.
+// ErrReadTimeout reports that the interface delivers no packet before the read deadline.
 //
 // **It states no failure of the capture.** `readPackets` of `cmd/ja4plus` reads the stop
 // request at this answer and it reads the interface again, and FR-capture-17 states that
