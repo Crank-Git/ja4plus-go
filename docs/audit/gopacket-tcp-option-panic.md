@@ -120,11 +120,11 @@ error layer: Invalid MPTCP option. Length 1 less than 3
 ```
 
 **So the direct call returns an error at `v1.7.1`, and it panics at `v1.6.1`.** The outer
-layer count also moves: `v1.6.1` writes a decode failure in place of the TCP layer, and
+decode path also moves: `v1.6.1` writes a decode failure in place of the TCP layer, and
 `v1.7.1` keeps the TCP layer and reports the error beside it.
 
-**This section moves no fingerprint value.** The conformance suite reports 1754 matches
-before the bump and 1754 after it, measured on 2026-08-15.
+**The bump moves no fingerprint value.** The conformance suite reports 1754 matches before
+the bump and 1754 after it, measured on 2026-08-15.
 
 ### The record page keeps the guard
 
@@ -180,7 +180,12 @@ memory.
 - **#510 moved no pin, and #721 moved it on 2026-08-15.** Issue #510 stated a third candidate
   answer: report the defect upstream and move the pin when a release repairs it. **The
   Dependabot pull request #721 took that answer**, and `## The repair at v1.7.1` above holds
-  the reading. **The bump is `go.mod` and `go.sum` alone.**
+  the reading. **The bump changes `go.mod` and `go.sum` alone, and it moves the Go language
+  version of this module from 1.24 to 1.25.** `github.com/gopacket/gopacket@v1.7.1` declares
+  `go 1.25.0` in its own `go.mod`, and Go requires the main module to declare a language
+  version at or above every dependency. **That move is a maintainer question, and this page
+  rules nothing.** Pull request #730 states the question, and #721 changed no requirement and
+  no guard that names 1.24.
 - **It vendors nothing, and it patches nothing.**
 - **It moves no fingerprint value.** The deviation count and the match count of the
   conformance suite are equal before this record and after it.
