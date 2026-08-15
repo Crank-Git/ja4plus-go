@@ -36,35 +36,39 @@ const ja4PlusMappingMaxBytes = dbcache.MaxBytes
 // The default client of net/http carries no timeout, so this program never uses it.
 const ja4PlusDownloadTimeout = 60 * time.Second
 
-// unsetVersion is the value of Version that no link flag has set.
+// statedVersion is the version that the program prints when it reads no other version.
 //
-// It names no tag of this repository, so a reader who sees it knows that the build came
-// from a working tree. `TestEveryReleasedBinaryPrintsTheTagVersion` reads the same value,
-// and it treats that value as a failure for a released artifact.
-const unsetVersion = "dev"
+// It names no tag of this repository, so a reader who sees it knows that the build states
+// no release. `TestEveryReleasedBinaryPrintsTheTagVersion` reads the same value, and it
+// treats that value as a failure for a released artifact.
+const statedVersion = "dev"
 
 // Version holds the version that a link flag sets at build time.
 // The `Build binaries` step of `.github/workflows/release.yml` sets it for every released
 // binary, and that value keeps precedence over the embedded build info.
-var Version = unsetVersion
+//
+// **It is empty when no link flag sets it.** An empty default separates the two cases that
+// one default value confuses: a build that sets no version, and a build that sets the
+// version `dev`.
+var Version = ""
 
 // resolveVersion returns the version that the program prints.
 //
 // It returns linked when a link flag set it, so a released binary prints the tag that the
 // release workflow read. It returns the module version of info when no link flag set it,
-// because `go install` stamps the tag and applies no link flag. It returns unsetVersion
+// because `go install` stamps the tag and applies no link flag. It returns statedVersion
 // when info is absent, when info holds no module version, and when the module version
 // reads `(devel)`.
 //
 // `go run` and `go test` each report `(devel)`, measured on 2026-08-14 with go1.26.5.
 // Issue #628 holds the measurement.
 func resolveVersion(linked string, info *debug.BuildInfo) string {
-	if linked != unsetVersion {
+	if linked != "" {
 		return linked
 	}
 
 	if info == nil || info.Main.Version == "" || info.Main.Version == "(devel)" {
-		return unsetVersion
+		return statedVersion
 	}
 
 	return info.Main.Version
