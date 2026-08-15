@@ -961,3 +961,35 @@ jobs:
           distribution: goreleaser
           version: 'v2.17.1'
           args: release --snapshot --clean
+
+      # **The step above built five binaries, and no step ran one of them.** So the job
+      # proved that the build succeeds, and it proved nothing about what the build stamps.
+      # #736 measured that gap on 2026-08-15 UTC: a snapshot binary printed `ja4plus v0.3.0`,
+      # which is the version of the previous release, and every case stayed green.
+      #
+      # This step reads real output, and the case in `release_snapshot_version_test.go` reads
+      # the template. **The two answer different questions**, and a template that GoReleaser
+      # renders differently than a reader expects reaches this step alone.
+      #
+      # The pattern holds two rulings. **The `v` prefix is #724, and the `-SNAPSHOT-` marker
+      # is #736.** A build for the runner's own platform is the one artifact this step can
+      # run, so it selects the Linux amd64 binary by path.
+      - name: Read the version line of the snapshot binary
+        run: |
+          set -euo pipefail
+          binary=dist/ja4plus_linux_amd64_v1/ja4plus
+          if [ ! -x "$binary" ]; then
+            echo "the snapshot build produced no runnable binary at $binary"
+            ls -R dist
+            exit 1
+          fi
+          line="$("$binary" --version)"
+          echo "the snapshot binary prints: $line"
+          case "$line" in
+            "ja4plus v"*-SNAPSHOT-*) ;;
+            *)
+              echo "a snapshot binary states no snapshot marker, and #736 rules that it states one"
+              echo "it must also keep the leading v that #724 rules"
+              exit 1
+              ;;
+          esac
