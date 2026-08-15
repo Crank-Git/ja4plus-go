@@ -169,7 +169,8 @@ var ja4tCitationContent = []ja4tCitation{
 // ja4tPageCitation returns every substantive citation of the page, in page order.
 //
 // A span that carries no `:line` suffix names a whole file, and this guard reads a line.
-// The page holds twelve such spans, and `foxioCitation.number` reads 0 for each one.
+// The page holds twelve such spans outside its preamble line, measured on 2026-08-15 UTC,
+// and `foxioCitation.number` reads 0 for each one.
 func ja4tPageCitation(t *testing.T) []foxioCitation {
 	t.Helper()
 
@@ -201,7 +202,7 @@ func ja4tSourceLine(t *testing.T, path string, number int) string {
 
 	file := filepath.Join(foxioCorpusReferenceDir, filepath.FromSlash(path))
 
-	content, err := os.ReadFile(file) //nolint:gosec // The path comes from the table above.
+	content, err := os.ReadFile(file)
 	if err != nil {
 		t.Fatalf("open %s: %v", file, err)
 	}
