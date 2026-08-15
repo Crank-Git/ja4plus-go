@@ -69,11 +69,22 @@ strict: true
 # #92 builds `docs/mutation_sweep.md`, which is published. **A link from that page into a
 # report is a link into an excluded file**, and the measured gap above states that MkDocs
 # does not fail it. `TestNoPublishedPageLinksIntoAnExcludedDirectory` fails it instead.
+#
+# `docs/mutation_settlements/` is the fifth pattern, and #92 added it under FR-mutation-13.
+# **A settlement is a recorded decision, and `docs/audit/` is the precedent.** Reason 2 of
+# the report exclusion above reaches it without a change: one settlement file lands for each
+# sweep round, so the directory grows without a bound and a `nav` entry for each one grows a
+# list with no reader. **A settlement records why one test gained an assertion**, which is
+# engineering evidence rather than a page a user of the library reads.
+#
+# `docs/mutation_sweep.md` is the published half, and it states the procedure. It names each
+# record as a path in a code span, and it never links into one.
 exclude_docs: |
   /specs/
   /audit/
   /requirements.txt
   /mutation_reports/
+  /mutation_settlements/
 
 # FR-documentation-5. A broken link and a broken anchor each reach `warn`, and `strict`
 # above turns each warning into a failed build.
@@ -195,6 +206,10 @@ nav:
       - Packet throughput: throughput.md
       - Implementation notes: implementation-notes.md
       - Parity with the port: parity.md
+      # #92 added this entry under FR-mutation-16. It sits last of the engineering pages,
+      # because a reader reaches the test method after every question about the output.
+      # The license page stays last of the section.
+      - Mutation sweep: mutation_sweep.md
       - License: licensing.md
   # #86 owns every entry between this line and the `Reference` marker below.
   #

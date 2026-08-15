@@ -183,8 +183,26 @@ func TestTheMakefileBuildsTheSite(t *testing.T) {
 // `mkdocs.yml` drops from the built site.
 //
 // One list serves every walker of `docs/`, so a fifth exclusion reaches each guard at once.
-// #91 added `mutation_reports` under FR-mutation-6.
-var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports"}
+// #91 added `mutation_reports` under FR-mutation-6, and #92 added `mutation_settlements`
+// under FR-mutation-13.
+var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports", "mutation_settlements"}
+
+// TestEveryExcludedDirectoryReachesTheSiteConfig binds the list above to `exclude_docs`.
+//
+// The list drives the guards of this file, and `exclude_docs` drives the built site. Nothing
+// held the two together until #92, so an entry added to one of them left the other behind.
+// A directory named in the list alone still publishes, and the walker guard then reports a
+// clean result for a page the site does hold.
+func TestEveryExcludedDirectoryReachesTheSiteConfig(t *testing.T) {
+	config := readTextFile(t, mkdocsConfigPath)
+	for _, excluded := range excludedDocumentationDirs {
+		pattern := "/" + excluded + "/"
+		if !regexp.MustCompile(`(?m)^\s+` + regexp.QuoteMeta(pattern) + `\s*$`).MatchString(config) {
+			t.Errorf("excludedDocumentationDirs names %s, and exclude_docs of %s holds no %s pattern",
+				excluded, mkdocsConfigPath, pattern)
+		}
+	}
+}
 
 // isExcludedDocumentationDir reports whether the site publishes no page of the directory.
 func isExcludedDocumentationDir(name string) bool {
