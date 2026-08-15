@@ -21,8 +21,8 @@ import (
 // ruled the header block terminator of `internal/parser/http.go`, which answers where a
 // JA4H value ends its header block. This gate answers a different question: does the
 // reference route the packet to a cache that holds no measurement point.
-// `python/common.py:78` routes on `hl`, and `python/ja4.py:398` sets `hl` from the layer
-// name that tshark reports. So the Wireshark HTTP dissector decides.
+// `python/common.py:78` routes on `hl`. `python/ja4.py:398` sets `hl` from the layer name
+// that tshark reports. So the Wireshark HTTP dissector decides.
 //
 // **Wireshark v4.6.0 reads `\n\r\n` as a complete header block.** `epan/tvbuff.c:4203`
 // compiles the line-end pattern over both `\r` and `\n`, so a bare line feed ends a line.
@@ -122,7 +122,10 @@ func TestTheRequestGateReadsEveryPairOfLineEndingsAsOneTerminator(t *testing.T) 
 	}
 }
 
-func TestAMixedLineEndingRequestMovesNoClientMeasurementPoint(t *testing.T) {
+// ja4lClientValueForPayload drives a whole handshake and returns the JA4L-C value that the
+// third packet produces. It returns the empty string when the packet produces none.
+func ja4lClientValueForPayload(t *testing.T, payload string) string {
+	t.Helper()
 	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	clientIP := net.IP{192, 168, 1, 1}
 	serverIP := net.IP{10, 0, 0, 1}
@@ -141,20 +144,37 @@ func TestAMixedLineEndingRequestMovesNoClientMeasurementPoint(t *testing.T) {
 		t.Fatalf("the SYN-ACK packet returned an error: %v", err)
 	}
 
-	request := buildJA4LPayloadACK(t, clientIP, serverIP, 64, mixedLineEndingRequest)
+	request := buildJA4LPayloadACK(t, clientIP, serverIP, 64, payload)
 	request.Metadata().Timestamp = base.Add(150 * time.Millisecond)
 	results, err := fingerprinter.ProcessPacket(request)
 	if err != nil {
 		t.Fatalf("the request packet returned an error: %v", err)
 	}
 
-	// The reference routes a packet that tshark reports as `http` to a cache that holds no
-	// measurement point, so the packet completes no JA4L-C value.
 	for _, result := range results {
 		if strings.HasPrefix(result.Fingerprint, "JA4L-C=") {
-			t.Errorf("the request packet produced %q, and the reading of #685 states that"+
-				" a whole request moves no client measurement point",
-				result.Fingerprint)
+			return result.Fingerprint
 		}
+	}
+
+	return ""
+}
+
+func TestAMixedLineEndingRequestMovesNoClientMeasurementPoint(t *testing.T) {
+	// The positive control proves that this harness reaches the client measurement point.
+	// A payload that ends no header block reaches the cache of any other TCP packet, so it
+	// moves the point and it completes a value. Without this control the negative case
+	// below would pass for any reason that produces no result at all.
+	partial := "GET / HTTP/1.1\r\nHost: example.com\r\n"
+	if value := ja4lClientValueForPayload(t, partial); value == "" {
+		t.Fatalf("the partial request produced no JA4L-C value, so this test proves nothing"+
+			" about the gate; the harness reaches no client measurement point for %q", partial)
+	}
+
+	// The reference routes a packet that tshark reports as `http` to a cache that holds no
+	// measurement point, so a whole request completes no JA4L-C value.
+	if value := ja4lClientValueForPayload(t, mixedLineEndingRequest); value != "" {
+		t.Errorf("the request packet produced %q, and the reading of #685 states that"+
+			" a whole request moves no client measurement point", value)
 	}
 }

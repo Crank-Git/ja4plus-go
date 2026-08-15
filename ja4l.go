@@ -293,9 +293,9 @@ func (c *connState) restart() {
 //
 // **The deciding source is the dissector of the reference, and never a terminator this
 // library chooses.** `python/common.py:78` routes a packet whose `hl` is `http` to a cache
-// that holds no measurement point, and `python/ja4.py:398` sets `hl` from the layer name
-// that tshark reports. So the question is whether the Wireshark HTTP dissector reads the
-// header block as complete in this one segment.
+// that holds no measurement point. `python/ja4.py:398` sets `hl` from the layer name that
+// tshark reports. So the question is whether the Wireshark HTTP dissector reads the header
+// block as complete in this one segment.
 //
 // **It reads `\n\r\n` as complete.** `epan/tvbuff.c:4203` of Wireshark v4.6.0 compiles the
 // line-end pattern over both `\r` and `\n`, so a bare line feed ends a line, and
