@@ -301,10 +301,16 @@ func publish(table *lookupTable) *lookupTable {
 // reads one consistent state.
 //
 // The check costs one os.Stat call for each lookup. A lookup measured 6.6 ns before #74
-// and 614 ns after it, on macOS 25.6.0 on 2026-08-14. The library holds no exported name
+// and 614 ns after it, on macOS 25.6.0 on 2026-08-14. #573 re-measured 459 ns on the same
+// machine on 2026-08-15, and it accepted that cost. The library holds no exported name
 // that a writer in another package calls, so a stat is the one way to see an update that
 // another program made. A writer inside this package calls invalidateLookupTable instead,
 // and it pays nothing.
+//
+// No fingerprinter reaches this path, and the four callers of LookupFingerprint all sit in
+// cmd/ja4plus. The measured `ja4plus analyze` run that emits the most fingerprints pays
+// 0.9 percent of its time here. docs/audit/lookup-stat-cost.md holds the measurement, and
+// issue #573 is the reversal path.
 func activeTable() *lookupTable {
 	table := loadedTable.Load()
 	if table != nil && statCache(table.cachePath).same(table.stamp) {
