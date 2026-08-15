@@ -33,6 +33,38 @@ type documentedName struct {
 	Doc string
 }
 
+// productionGoFilesOf returns the path of every Go file of one directory that is not a test
+// file. It sorts the result, so two walks of one directory read one order.
+//
+// It replaces `go/parser.ParseDir`, which Go 1.25 deprecates. The #725 ruling of 2026-08-15
+// moved the language version to 1.25, and `staticcheck` then reported `SA1019` on the two
+// call sites. The documented replacement is `golang.org/x/tools/go/packages`, and that
+// package would add a module dependency for a directory walk the standard library already
+// serves. **A caller that needs build tags takes the documented replacement instead.**
+func productionGoFilesOf(t *testing.T, dir string) []string {
+	t.Helper()
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("read the directory %s: %v", dir, err)
+	}
+
+	var paths []string
+
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+
+		paths = append(paths, filepath.Join(dir, name))
+	}
+
+	sort.Strings(paths)
+
+	return paths
+}
+
 // documentedNamesOf returns every exported name of one package directory, with its doc
 // comment.
 //
@@ -43,23 +75,21 @@ func documentedNamesOf(t *testing.T, dir string) []documentedName {
 
 	fset := token.NewFileSet()
 
-	packages, err := parser.ParseDir(fset, dir, func(info os.FileInfo) bool {
-		return !strings.HasSuffix(info.Name(), "_test.go")
-	}, parser.ParseComments)
-	if err != nil {
-		t.Fatalf("parse the package of %s: %v", dir, err)
-	}
-
 	var names []documentedName
 
-	for _, parsed := range packages {
-		if strings.HasSuffix(parsed.Name, "_test") {
+	for _, path := range productionGoFilesOf(t, dir) {
+		file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			t.Fatalf("parse the package of %s: %v", dir, err)
+		}
+
+		// An external test package declares the exported names of its own test helpers, and
+		// the record walks the library surface alone.
+		if strings.HasSuffix(file.Name.Name, "_test") {
 			continue
 		}
 
-		for _, file := range parsed.Files {
-			names = append(names, documentedNamesOfFile(file)...)
-		}
+		names = append(names, documentedNamesOfFile(file)...)
 	}
 
 	sort.Slice(names, func(i, j int) bool { return names[i].Key < names[j].Key })
