@@ -12,7 +12,7 @@ Issue #443 produced it, under Epic #441. `.claude/rules/rulings.md` states who r
 ruling, the re-measurement and the three register entries it wrote.
 
 **The maintainer kept ruling #127 on 2026-08-15 UTC, so cause 1 is settled.** Comment
-5299851784 of issue #441 holds the decline of the reversal, and the register round on
+5299851784 of issue #441 holds the decline of the reversal. The register round on
 `issue/682-ruling-127-register-entries` wrote the entries that record the price. Issue #127
 is the reversal path.
 
@@ -195,10 +195,10 @@ keeps the two parts it writes today, so no line of `ja4l.go` changes.
 `.claude/rules/rulings.md` `## Where a ruling is recorded` states the rule the entries
 satisfy: a ruling that a vector reaches carries an entry in `testdata/deviations.json`.
 
-**The set was enumerated from one live run, and never from this page.**
+**The round enumerated the set from one live run, and never from this page.**
 `docs/audit/conformance.md` truncates each deviation group to three rows, so no document of
-this repository ever held the list. `make conformance` runs `go test -tags conformance -v`,
-and `conformanceRecordComparison` in `conformance_test.go` writes one log line for every
+this repository ever held the list. `make conformance` runs `go test -tags conformance -v`.
+`conformanceRecordComparison` in `conformance_test.go` then writes one log line for every
 unaccepted deviation. **The round read the list from that output** on
 `issue/682-ruling-127-register-entries`, with the corpus at the pinned commit
 `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
@@ -223,9 +223,44 @@ them.** The 150th is `tls3.pcapng/153/JA4L.1`, and
 `### The count of this ruling is 3, and the count above is 4` under cause 3 states why no
 reading explains it. **The entry of that row says so, and it claims no cause.**
 
-**`browsers-x509.pcapng/128/JA4LS.1` was already declined**, by issue #652 at `5d3a650`, so
-the round did not re-enter it. **A duplicate key fails the conformance suite**, and
+**Issue #652 already declined `browsers-x509.pcapng/128/JA4LS.1`**, at `5d3a650`, so the
+round did not re-enter it. **A duplicate key fails the conformance suite**, and
 `TestTheRegisterHoldsEachKeyOnce` in `deviations_test.go` holds that rule.
+
+#### The 149 rows hold two shapes, and the second one is not a pair
+
+`## The shape of the cluster` above states the pair: one difference produces two deviations.
+The suite reports the library value as a value the vector does not hold. It reports the
+vector value as a value the library does not produce. **138 of the 149 rows form 69 such
+pairs.** One more row, `browsers-x509.pcapng/121/JA4LS.1`, pairs with the cause 7 row that
+issue #652 already declined.
+
+**The remaining 10 rows carry a library value that the reference publishes nowhere.** Each
+one reads `the library produces a value the vector does not hold`. No vector row of the
+capture holds the same part a and part b on any frame.
+
+| Key | The library produces | The reference publishes |
+|---|---|---|
+| `chrome-cloudflare-quic-with-secrets.pcapng/2/JA4LS.1` | `5749_56` | (nothing for that connection) |
+| `chrome-cloudflare-quic-with-secrets.pcapng/3/JA4L.1` | `30_64` | (nothing for that connection) |
+| `latest.pcapng/111/JA4LS.1` | `3915_57` | (nothing for that connection) |
+| `latest.pcapng/112/JA4L.1` | `32_128` | (nothing for that connection) |
+| `ssh2.pcapng/370/JA4LS.1` | `6252_58` | (nothing for that connection) |
+| `ssh2.pcapng/371/JA4L.1` | `45_128` | (nothing for that connection) |
+| `ssh2.pcapng/954/JA4LS.1` | `4272_58` | (nothing for that connection) |
+| `ssh2.pcapng/955/JA4L.1` | `50_128` | (nothing for that connection) |
+| `tls3.pcapng/76/JA4LS.1` | `3181_57` | (nothing for that connection) |
+| `tls3.pcapng/77/JA4L.1` | `14_128` | (nothing for that connection) |
+
+**The emission frame explains the shape, and it is the same cause.**
+`wireshark/source/packet-ja4.c:1362-1394` writes on the `timestamp_F` frame alone, so a
+connection that never fills `timestamp_F` reaches no Wireshark value at all. **This library
+writes on the SYN-ACK frame and on the client measurement point.** Each of those frames
+comes before `timestamp_D`, so the connection reaches a library value.
+
+**The measurement that settles the attribution is the candidate of
+`### The count this cause closes` above: it closes 149.** That figure equals the 149 rows of
+this ruling, so every row of both shapes falls to the same change.
 
 ## Cause 2 — the JA4L-S emission frame on a QUIC connection
 
@@ -448,11 +483,17 @@ not decide.**
 
 **`tls3.pcapng/153/JA4L.1` now carries one entry, and it names ruling #127 rather than
 ruling #528.** The register round on `issue/682-ruling-127-register-entries` wrote it on
-2026-08-15 UTC, and its reason states three things: ruling #127 decides the part count and
-the `quic` marker of the value and decides no part of this difference, ruling #528 closes
-part a only as far as `71_128_quic`, and no reading of this page explains the remainder.
-**The entry therefore claims no cause**, and it is the one entry of that round that this
-page does not attribute.
+2026-08-15 UTC. Its reason states two facts.
+
+1. **Ruling #127 decides no part of this difference.** The ruling decides the part count on
+   a TCP connection and the `quic` marker on a QUIC connection, and both sides of this
+   comparison already agree on each of those.
+2. **No reading of this page explains the remainder that ruling #528 leaves.** The table
+   above states that remainder: the candidate of ruling #528 produces `71_128_quic`, and
+   the vector holds `101_128_quic`.
+
+**The entry therefore claims no cause.** It is the one entry of that round that this page
+does not attribute.
 **Issue #127 is its reversal path**, and a later reading that explains the remainder moves
 the entry to the ruling that does decide it.
 
