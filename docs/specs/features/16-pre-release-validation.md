@@ -125,7 +125,7 @@ This feature set changes no screen.
 - **A binary case runs on the platform it tests.** A Linux runner cannot prove that the
   Darwin binary runs.
 - **The corpus is FoxIO-licensed material.** FR-prerelease-15 keeps it out of the
-  published module, and it is the licence rule as well as a size rule.
+  published module, and it is the license rule as well as a size rule.
 
 ## Data touched
 
@@ -153,7 +153,7 @@ the reason FR-prerelease-26 puts every case before the tag rather than after it.
 
 ## Edge cases & failures
 
-| Case | Expected behaviour |
+| Case | Expected behavior |
 |---|---|
 | The module proxy has not seen the tag yet. | The install case retries for a recorded time, then fails with a message that names the proxy. |
 | The clean environment inherits a `GOFLAGS` value from the host. | FR-prerelease-1 clears the environment. A leaked flag would invalidate the case. |
