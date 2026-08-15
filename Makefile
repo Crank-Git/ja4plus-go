@@ -135,7 +135,7 @@ docs:
 #
 # `-v` prints the summary that `TestThePrereleaseRunReportsOneSummary` writes. That summary
 # names one line for each case of `docs/specs/features/16-pre-release-validation.md`, and
-# it separates a case that runs from a case that no issue has built.
+# it separates a case that proves its requirement from a case that waits.
 #
 # Epic #94 built every case on 2026-08-14. `prereleaseCases` in
 # `prerelease_registry_test.go` states which case proves its requirement today, and the

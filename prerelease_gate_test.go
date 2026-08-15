@@ -76,7 +76,10 @@ func prereleaseSummaryRow(t *testing.T, report, measure string) int {
 // **This case runs no command.** `make prerelease` runs this file, so a case that ran the
 // target would call itself without a bound.
 //
-// The registry row of FR-prerelease-26 reads `built: false` until the maintainer answers.
+// The registry row of FR-prerelease-26 reads `proves: false` until the maintainer answers.
+// **The tree holds this case, and the row states that the case asserts nothing.** The Epic
+// 16 round renamed the field from `built` on 2026-08-14, because a summary that called this
+// case `absent` stated something the binary disproves.
 func TestThePrereleaseTargetPassesBeforeTheTag(t *testing.T) {
 	t.Skip("this case asserts nothing about FR-prerelease-26: the requirement and the " +
 		"maintainer ruling of 2026-08-14 on #94 disagree, and #99 returns the question")
