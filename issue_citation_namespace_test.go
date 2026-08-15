@@ -261,7 +261,10 @@ import (
 // 679. **That round cites no number above 678**, and it opens no pull request of its own,
 // because the project manager opens the batch pull request. **So the round re-measures to
 // keep the mark accurate rather than to repair a failure.**
-const issueCitationHighWaterMark = 679
+// #298 re-measured the mark on 2026-08-15 UTC, and it read 686. **#298 is a member of batch
+// #684, and it cites #685**, which is the issue it filed for the JA4L half of its own
+// finding. A member pays this maintenance cost exactly as a round does.
+const issueCitationHighWaterMark = 686
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

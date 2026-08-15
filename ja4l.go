@@ -291,6 +291,11 @@ func (c *connState) restart() {
 // of a request reaches the same cache as any other TCP packet, and it does move the point.
 //
 // `latest.pcapng` stream 6 and `http-empty-useragent.pcap` prove the two halves.
+//
+// TODO(#685): Read a header block terminator that mixes the two line endings. #298 ruled
+// that terminator for `internal/parser/http.go`, and this gate still reads two fixed byte
+// groups. So a request that ends `\n\r\n` reaches a JA4H value and it moves the JA4L
+// measurement point. No capture of the FoxIO corpus holds a mixed terminator.
 func holdsACompleteHTTPRequest(payload []byte) bool {
 	if !parser.IsHTTPRequest(payload) {
 		return false
