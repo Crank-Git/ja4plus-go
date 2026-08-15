@@ -47,8 +47,11 @@ strict: true
 # 2026-08-14 at `mkdocs==1.6.1`: a page that links to `specs/spec.md` builds and exits 0.
 #
 # `TestNoPublishedPageLinksIntoAnExcludedDirectory` in `mkdocs_config_test.go` holds that
-# gap. It fails when a published page links into `docs/specs/`, `docs/audit/` or
-# `docs/mutation_reports/`.
+# gap. It reads `excludedDocumentationDirs`, so it fails when a published page links into
+# `docs/specs/`, `docs/audit/`, `docs/mutation_reports/` or `docs/mutation_settlements/`.
+# **The list decides the count, and this comment does not.** #92 added the fourth directory,
+# and the enumeration above named three until round 59 of the `## Changelog` of
+# `docs/specs/spec.md`.
 #
 # `docs/requirements.txt` sits under `docs_dir` because it belongs to the site, and MkDocs
 # copies an unexcluded non-markdown file into the built site. The third pattern holds the

@@ -10,6 +10,19 @@ committed. That report holds the sweep of `./internal/parser` with `gremlins` v0
 later edit moves the line, and the position then names the mutation of the report rather than
 the code of today. Read the position against the report, and never against a later tree.
 
+**A citation of this library's own code names the identifier and the file, and it names no
+line.** `.claude/rules/ste.md` `## How a citation names its target` states that rule, because
+a line number finds the code until the next edit. **A mutation position is a coordinate, and
+that rule does not reach one.** The cross-member review of Epic 15 found five reader citations
+of the barred form in this record, and round 59 of the `## Changelog` of `docs/specs/spec.md`
+records the repair.
+
+**Each settlement below names its issue, and #92 is that issue for every one of them.**
+FR-mutation-14 states `Each settlement names the mutation and the issue that closed it.`
+**#92 wrote every settlement of this record**, so one issue closes all ten. The heading of
+each settlement carries the number, and the sentence above states the reason a reader sees
+one number ten times.
+
 ## The report, and what it asks for
 
 | Verdict | Count |
@@ -62,18 +75,19 @@ below is the record.
 of `icmp_quoted.go` is the measured case, and it decides nine mutations of this record.
 
 The function assigns nine TCP flag bits. `QuotedTCPHeader` returns the header to one caller,
-which is `ja4t.go:36`. `ja4t.go:50` reads `tcp.SYN` and `tcp.ACK`, and `generateTCPFingerprint`
-reads the window, the options, the maximum segment size and the window scale. **No line of
-that path reads the other seven bits.**
+which is `ProcessPacket` of `ja4t.go`. That method reads `tcp.SYN` and `tcp.ACK`, and
+`generateTCPFingerprint` reads the window, the options, the maximum segment size and the
+window scale. **No line of that path reads the other seven bits.**
 
 **The sweep measured the same split without the reading.** The report holds a surviving
 mutation for each of the seven bits that no caller reads. It holds no surviving mutation for
 `SYN` at `icmp_quoted.go:160`, and none for `ACK` at `icmp_quoted.go:163`. The suite kills
 those two, because JA4T reads those two.
 
-**`ja4ts.go:97` reads `tcp.RST`, and `ja4ssh.go` reads `FIN`, `RST`, `PSH` and `URG`.** Each
-of those readers calls `parser.GetTCPLayer`, and none of them calls `QuotedTCPHeader`. So a
-quoted header never reaches them, and the seven bits stay unread on this path.
+**`ProcessPacket` of `ja4ts.go` reads `tcp.RST`, and `ja4ssh.go` reads `FIN`, `RST`, `PSH`
+and `URG`.** Each of those readers calls `parser.GetTCPLayer`, and none of them calls
+`QuotedTCPHeader`. So a quoted header never reaches them, and the seven bits stay unread on
+this path.
 
 ## What the re-measurement found
 
@@ -114,7 +128,13 @@ The base run reports these figures.
 - 32 accepted uncovered values.
 - 0 stale register entries.
 - 0 orphan register entries.
-- 617 register keys.
+
+**The base run also reports 617 register keys, and that count is not one of the eight.** The
+list above held it as a ninth item until round 59 of the `## Changelog` of
+`docs/specs/spec.md`, so the sentence above named eight figures over a list of nine. The
+`## Parity with ja4plus` register of `docs/specs/spec.md` writes the eight out and then
+states the register key count separately, and this record now follows that form.
+`docs/mutation_sweep.md` states the same eight, and it enumerates none of them.
 
 **One mutation of the 43 moves a figure.** S2 below settles it.
 
@@ -131,7 +151,7 @@ The arithmetic of this record is therefore `3 + 3 + 41 = 47`, where the 41 holds
 E4. A reader who sizes the remaining work needs one number, and the counted table is that
 number.
 
-### S1 — a header that carries no option
+### S1 — a header that carries no option (#92)
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -144,14 +164,15 @@ number.
 `decodeQuotedTCPHeader` bounds the transport region at 20 bytes, and it bounds the data offset
 at five words. Each mutant turns the lower bound into an exclusion, so each one declines a
 quoted TCP header that carries no option. **A SYN that carries no option is well-formed**, and
-`ja4t.go:36` reads the quoted header, so each mutant moves a JA4T value to no value.
+`ProcessPacket` of `ja4t.go` reads the quoted header, so each mutant moves a JA4T value to no
+value.
 
 **Every other test of that file builds an option region**, so no test reached either lower
 bound. The new test builds a 20-byte header with a data offset of five words.
 
 **The test fails against each mutation, measured on 2026-08-14.** It passes against the tree.
 
-### S2 — the earliest terminator
+### S2 — the earliest terminator (#92)
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -175,7 +196,7 @@ separates it, and no assertion of this repository did.
 
 **Each test fails against the mutation, measured on 2026-08-14.** Both pass against the tree.
 
-### E1 — an equivalent mutation at the same position
+### E1 — an equivalent mutation at the same position (#92)
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -185,7 +206,7 @@ separates it, and no assertion of this repository did.
 the same terminator.** The two comparisons differ only when `index` equals `end`. That input
 needs one byte to be `\r` for one terminator and `\n` for the other.
 
-### E2 — an equivalent mutation at the request line limit
+### E2 — an equivalent mutation at the request line limit (#92)
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -195,7 +216,7 @@ needs one byte to be `\r` for one terminator and `\n` for the other.
 bytes under both comparisons.** The two differ only when `len(s)` equals `requestLineLimit`,
 and `s[:requestLineLimit]` is then `s`.
 
-### E3 — an equivalent mutation at the declared total length
+### E3 — an equivalent mutation at the declared total length (#92)
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -205,7 +226,7 @@ and `s[:requestLineLimit]` is then `s`.
 same offset.** The two differ only when `declared` equals `end`, and the branch then writes
 `end = declared`.
 
-### E4 — the four TIMED OUT mutations are non-terminating loops
+### E4 — the four TIMED OUT mutations are non-terminating loops (#92)
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -288,9 +309,10 @@ input.
 forbids that offset.** They sit at `internal/parser/http.go:95:54`,
 `internal/parser/http.go:95:67` and `internal/parser/http.go:201:14`.
 
-`requestLineRe` at `internal/parser/http.go:55` opens with `^`, so it matches a request line
+`requestLineRe` in `internal/parser/http.go` opens with `^`, so it matches a request line
 at offset zero alone, and it needs at least one method character. `ParseHTTPRequest` returns
-nil when that match fails, and `ja4h.go:130` reads a request that `ParseHTTPRequest` returned.
+nil when that match fails, and `ProcessPacket` of `ja4h.go` reads a request that
+`ParseHTTPRequest` returned.
 **So every payload that reaches either reader begins with a method character, and no header
 terminator begins at offset zero.** Each of the three mutations separates the original from
 the mutant at that offset alone.

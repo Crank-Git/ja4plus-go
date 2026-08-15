@@ -245,6 +245,15 @@ func latestMutationReport(t *testing.T) string {
 // A report holds one table row for each mutation, and `make mutate` writes one report for
 // each sweep. A published report that no `nav` entry names reaches
 // `validation.nav.omitted_files: warn`, and `strict` turns that warning into a failed build.
+//
+// `TestEveryExcludedDirectoryReachesTheSiteConfig` in `mkdocs_config_test.go` asserts the
+// same pattern shape, and the two tests guard different things. That test reads
+// `excludedDocumentationDirs`, so it holds `mkdocs.yml` against the list and it holds the
+// list against nothing. This test names `mutation_reports` as a literal, so it survives an
+// edit that drops the name from the list. Without this test one edit that removes the name
+// from both `excludedDocumentationDirs` and `mkdocs.yml` leaves every test green, and
+// `make docs` then fails on the first sweep. The cross-member review of Epic 15 asked which
+// test the tree keeps, and it keeps both for this reason.
 func TestTheSiteExcludesTheMutationReports(t *testing.T) {
 	if !regexp.MustCompile(`(?m)^\s+/mutation_reports/\s*$`).MatchString(readRepoFile(t, "mkdocs.yml")) {
 		t.Error("exclude_docs of mkdocs.yml names no /mutation_reports/ pattern, so make docs fails on the first sweep")

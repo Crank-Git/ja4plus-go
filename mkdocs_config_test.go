@@ -193,6 +193,11 @@ var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports", "
 // held the two together until #92, so an entry added to one of them left the other behind.
 // A directory named in the list alone still publishes, and the walker guard then reports a
 // clean result for a page the site does hold.
+//
+// This test holds no name of its own, so an edit that drops a name from the list leaves it
+// green. `TestTheSiteExcludesTheMutationReports` in `mutation_sweep_test.go` names
+// `mutation_reports` as a literal, and it covers that case for the one directory a sweep
+// writes to.
 func TestEveryExcludedDirectoryReachesTheSiteConfig(t *testing.T) {
 	config := readTextFile(t, mkdocsConfigPath)
 	for _, excluded := range excludedDocumentationDirs {
