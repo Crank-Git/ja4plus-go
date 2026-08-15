@@ -283,9 +283,9 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// connection on any port, and the port holds the same admission at
 	// `ja4plus/fingerprinters/ja4ssh.py:135`. The FoxIO Python and the Wireshark dissector
 	// each require port 22 instead. The maintainer ruled D2 beside the three-step client
-	// direction that `decideEndpoints` holds, because the endpoint rule without the port
-	// rule answers differently on a connection that uses no port 22. #129 is the reversal
-	// path, and a reversal changes the port as well.
+	// direction that `decideEndpoints` holds. The endpoint rule without the port rule
+	// answers differently on a connection that uses no port 22. #129 is the reversal path,
+	// and a reversal changes the port as well.
 	if !hasSSHData && !opensOnSSHPort && !exists {
 		return nil, nil
 	}
