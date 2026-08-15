@@ -197,7 +197,14 @@ import (
 // #637, which is its own issue, and 637 sits above the inherited mark of 635. **A round pays
 // this cost whether or not the project manager already paid it**, because the round allocates
 // a number after the resolution that raised the mark.
-const issueCitationHighWaterMark = 637
+//
+// **The round read 637 before it opened its pull request, and it read 639 after.** The pull
+// request is #639, and the constant holds the second reading. **A mark that a later
+// allocation passes stays safe**, because the mark is a lower bound and this repository only
+// allocates upward. The #556 hotfix recorded the same pair of readings on the same day.
+//
+// **No tracked file cites a number above 637**, so either reading leaves this guard green.
+const issueCitationHighWaterMark = 639
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
