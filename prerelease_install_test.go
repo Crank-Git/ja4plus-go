@@ -43,16 +43,20 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 
 // prereleaseInstallVersion names the tag that each case reads.
 //
-// **The proxy holds `v0.3.0`, `v0.2.0` and `v0.1.0` on 2026-08-14**, and it holds no
-// `v1.0.0`. #100 cuts the release tag, and a later session moves this constant to it.
+// **#106 moved this constant from `v0.3.0` to `v1.0.0` on 2026-08-15 UTC**, under Epic 10.
 // FR-prerelease-7 matches the printed version against this tag, so a reader knows which
 // artifact every measurement below describes.
 //
+// **The proxy holds no `v1.0.0` until the maintainer pushes the tag**, so each case of this
+// file fails until then. FR-prerelease-26 states that order: the maintainer pushes the tag,
+// runs `make prerelease` against it, and promotes only when every case passes or carries a
+// recorded reason.
+//
 // # Five constants carry the module path and the tag
 //
-// **A session that moves one of them leaves the others at `v0.3.0`, and no guard compares
-// them.** The Epic 16 cross-member review measured the hazard on 2026-08-14, and the round
-// recorded it here, and it repaired none of the five. The five are these.
+// **A session that moves one of them leaves the others behind.** The Epic 16 cross-member
+// review measured the hazard on 2026-08-14, and the round recorded it here. The five are
+// these.
 //
 //   - `prereleaseModulePath`, above.
 //   - `publishedModulePath`, in `prerelease_module_contents_test.go`.
@@ -60,15 +64,13 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 //   - `publishedModuleVersion`, in `prerelease_module_contents_test.go`.
 //   - `defaultReleaseTag`, in `prerelease_binaries_test.go`.
 //
-// **Three of the five hold `v0.3.0`**: this constant, `publishedModuleVersion` and
-// `defaultReleaseTag`. Each doc comment promises a single edit at the next tag, and each one
-// describes its own file alone.
+// **Three of the five hold the tag**: this constant, `publishedModuleVersion` and
+// `defaultReleaseTag`. Each doc comment describes its own file alone.
 //
-// **The issue that cuts the tag moves all three, and it owns the guard that compares them.**
-// #100 cuts the tag, under Epic 10. A guard written before the tag would compare three
-// constants that no session has reason to move, so it would prove nothing until the day it
-// matters. The round states that reading, and it builds no guard.
-const prereleaseInstallVersion = "v0.3.0"
+// **`release_tag_constants_test.go` now compares all five, and #106 built that guard.** It
+// reads each declaration as text, so it runs without the `prerelease` build tag. A run that
+// read two tags would report a green gate for an artifact nobody published.
+const prereleaseInstallVersion = "v1.0.0"
 
 // prereleaseExpectedJA4 states the JA4 value of the capture that `prereleaseCaptureFrame`
 // builds.
@@ -334,6 +336,30 @@ func isInside(path string, parent string) bool {
 // The case installs the command from the module proxy into a clean environment, and it
 // then runs the installed program. Each step reports its own failure, so one broken step
 // does not hide the next one.
+//
+// # FR-prerelease-7 needs no amendment, and #106 read it on 2026-08-15 UTC
+//
+// **#105 decided FR-release-35g on 2026-08-15 UTC**, and comment 5301284764 of #105 holds
+// the decision. The commit and the build date of a released binary reach the Go build info,
+// and a reader takes them with `go version -m <binary>`. **That decision named #106 as the
+// issue that would carry any amendment to FR-prerelease-7.**
+//
+// **#106 read the requirement against the program, and the requirement holds without a
+// change.** FR-prerelease-7 compares one printed version against the tag, and the program
+// prints one name and one version. Measured on 2026-08-15 UTC with go1.26.5 on
+// darwin/arm64, over a build of this tree:
+//
+//	$ ja4plus --version
+//	ja4plus v0.3.1-0.20260815043125-3bf88a84a5c4
+//	$ go version -m ja4plus
+//		build	vcs.revision=3bf88a84a5c4eb46bc59959ee57a27f2de79b00c
+//		build	vcs.time=2026-08-15T04:31:25Z
+//
+// **The printed line carries no commit field and no date field**, so the comparison below
+// reads one version. `TestThePrintedLineHoldsOneNameAndOneVersion` in
+// `cmd/ja4plus/version_test.go` holds that shape, and `versionLine` in
+// `cmd/ja4plus/main.go` writes it. A second field would break this comparison, and #105
+// declined the two answers that add one.
 func TestTheInstalledProgramFingerprintsACaptureFromThePublishedModule(t *testing.T) {
 	frame := prereleaseCaptureFrame(t)
 	target := prereleaseModulePath + "/cmd/ja4plus@" + prereleaseInstallVersion
