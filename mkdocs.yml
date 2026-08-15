@@ -72,10 +72,10 @@ strict: true
 #
 # `docs/mutation_settlements/` is the fifth pattern, and #92 added it under FR-mutation-13.
 # **A settlement is a recorded decision, and `docs/audit/` is the precedent.** Reason 2 of
-# the report exclusion above reaches it without a change: one settlement file lands for each
-# sweep round, so the directory grows without a bound and a `nav` entry for each one grows a
-# list with no reader. **A settlement records why one test gained an assertion**, which is
-# engineering evidence rather than a page a user of the library reads.
+# the report exclusion above reaches it without a change. One settlement file lands for each
+# sweep round, so the directory grows without a bound. A `nav` entry for each one then grows
+# a list with no reader. **A settlement records why one test gained an assertion.** That is
+# engineering evidence, and it is not a page a user of the library reads.
 #
 # `docs/mutation_sweep.md` is the published half, and it states the procedure. It names each
 # record as a path in a code span, and it never links into one.

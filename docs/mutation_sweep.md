@@ -124,13 +124,13 @@ amendment.
 > **A LIVED mutation on code that can move a fingerprint value is settled. Every other LIVED mutation is counted and recorded.**
 
 **The reason is reviewability.** One package of this project holds 227 surviving rows. A
-worker that writes `equivalent mutation` 227 times produces a record nobody can check, and a
-rubber stamp hides the weak test that the sweep exists to find.
+worker that writes `equivalent mutation` 227 times produces a record nobody can check. A
+rubber stamp then hides the weak test that the sweep exists to find.
 
 ### The rule, in three tests
 
 Apply these in order to each surviving mutation. **The rule reads the mutated expression, and
-it reads no list of file names**, so it applies to a package that no sweep has reached yet.
+it reads no list of file names.** So it applies to a package that no sweep has reached yet.
 
 **Test 1 — the scope test.** Apply the mutation and run every package that imports the mutated
 package. If a test fails, record the mutation as killed at the wider scope. It needs no
@@ -156,7 +156,7 @@ value to the fingerprinter that reads it, and never stop at the struct field tha
 
 `readQuotedTCPFields` of `icmp_quoted.go` is the measured case. It assigns nine TCP flag
 bits, and `ja4t.go` reads two of them. The sweep of 2026-08-14 reported a surviving mutation
-for each of the seven bits that no caller reads, and it reported none for the two that JA4T
+for each of the seven bits that no caller reads. It reported none for the two that JA4T
 reads. **The suite killed exactly the two bits that reach a fingerprint value.**
 
 ### Why a bounds check is counted and not settled
@@ -167,8 +167,8 @@ bounds-checked before a slice. **The fuzz suite proves that no input panics**, a
 `.coverage-floor` proves that a test reaches the line. Neither property is a fingerprint
 value, so the mutation sweep is the wrong instrument for it.
 
-A settlement that added an assertion there would assert the error path of a malformed packet,
-which the fuzz targets already reach with far more inputs than one assertion holds.
+A settlement that added an assertion there would assert the error path of a malformed packet.
+The fuzz targets already reach that path with far more inputs than one assertion holds.
 
 ### A non-terminating loop mutation
 
@@ -191,8 +191,8 @@ assertion improves on the verdict. Record the reading, and count the mutation.
 9. Count every remaining mutation, by file and by mutation type, in the same record.
 
 **Never weaken a test to kill a mutation.** A mutation that a weakened test kills is worse
-than one that survives, because the report then reads green over a test that asserts less than
-it did. **A settlement adds an assertion to a test. It changes no line of the library.**
+than one that survives. The report then reads green over a test that asserts less than it did.
+**A settlement adds an assertion to a test. It changes no line of the library.**
 
 **An equivalence claim states its reason in one sentence.** Write the reason that a reader can
 check against the code, and never the claim alone.

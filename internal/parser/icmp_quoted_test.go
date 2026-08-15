@@ -318,7 +318,7 @@ func TestQuotedTCPHeaderReadsATruncatedMultipathOption(t *testing.T) {
 // wire permits. The header holds 20 bytes, and its data offset states five words.
 //
 // The mutation sweep of 2026-08-14 earned this test. Every other test of this file builds an
-// option region, so no test reached the lower bound of either length guard, and two surviving
+// option region, so no test reached the lower bound of either length guard. Two surviving
 // mutations named that gap. `docs/mutation_settlements/2026-08-14-internal-parser.md` records
 // them as S1.
 //

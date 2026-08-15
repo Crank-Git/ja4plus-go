@@ -67,9 +67,9 @@ reads the window, the options, the maximum segment size and the window scale. **
 that path reads the other seven bits.**
 
 **The sweep measured the same split without the reading.** The report holds a surviving
-mutation for each of the seven bits that no caller reads, and it holds no surviving mutation
-for `SYN` at `icmp_quoted.go:160` or for `ACK` at `icmp_quoted.go:163`. The suite kills those
-two, because JA4T reads those two.
+mutation for each of the seven bits that no caller reads. It holds no surviving mutation for
+`SYN` at `icmp_quoted.go:160`, and none for `ACK` at `icmp_quoted.go:163`. The suite kills
+those two, because JA4T reads those two.
 
 **`ja4ts.go:97` reads `tcp.RST`, and `ja4ssh.go` reads `FIN`, `RST`, `PSH` and `URG`.** Each
 of those readers calls `parser.GetTCPLayer`, and none of them calls `QuotedTCPHeader`. So a
@@ -101,10 +101,20 @@ behind the `conformance` build tag, `.gremlins.yaml` sets no `tags` key, and a p
 #92 measured the second half. **So #92 ran the suite against each of the 43 survivors.**
 
 **The suite fails at base, under the known Epic #441 backlog, so its exit code decides
-nothing.** The run reads the eight reported figures instead, and it reports a mutation as
-moved when one figure differs. The base figures are 38 captures, 1754 matches, 267 deviations
-the register does not hold, 585 accepted, 175 unaccepted uncovered, 32 accepted uncovered, 0
-stale and 0 orphan, at 617 register keys.
+nothing.** The run reads the eight reported figures instead. It reports a mutation as moved
+when one figure differs.
+
+The base run reports these figures.
+
+- 38 captures.
+- 1754 matches.
+- 267 deviations that the register does not hold.
+- 585 accepted deviations.
+- 175 unaccepted uncovered values.
+- 32 accepted uncovered values.
+- 0 stale register entries.
+- 0 orphan register entries.
+- 617 register keys.
 
 **One mutation of the 43 moves a figure.** S2 below settles it.
 
@@ -121,7 +131,7 @@ The arithmetic of this record is therefore `3 + 3 + 41 = 47`, where the 41 holds
 E4. A reader who sizes the remaining work needs one number, and the counted table is that
 number.
 
-### S1 — the shortest quoted TCP header
+### S1 — a header that carries no option
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -141,7 +151,7 @@ bound. The new test builds a 20-byte header with a data offset of five words.
 
 **The test fails against each mutation, measured on 2026-08-14.** It passes against the tree.
 
-### S2 — the earliest header block terminator
+### S2 — the earliest terminator
 
 | Position | Type | Rewrite |
 |---|---|---|
@@ -160,8 +170,8 @@ moves a complete request to an incomplete one, and the JA4H value disappears.
 **No test named `headerBlockTerminator` or `HTTPMessageIsComplete` before #92.** Both are
 reached through the root package alone, which is why the sweep reported the mutation as LIVED.
 
-**This is the one mutation of the 43 that moves a conformance figure**, so the FoxIO corpus
-separates it and no assertion of this repository did.
+**This is the one mutation of the 43 that moves a conformance figure.** The FoxIO corpus
+separates it, and no assertion of this repository did.
 
 **Each test fails against the mutation, measured on 2026-08-14.** Both pass against the tree.
 
@@ -172,8 +182,8 @@ separates it and no assertion of this repository did.
 | `internal/parser/http.go:95:80` | `CONDITIONALS_BOUNDARY` | `<` to `<=` |
 
 **`\r\n\r\n` and `\n\n` cannot begin at one index, so `index < end` and `index <= end` choose
-the same terminator.** The two comparisons differ only when `index` equals `end`, and that
-input needs the byte at that index to be `\r` for one terminator and `\n` for the other.
+the same terminator.** The two comparisons differ only when `index` equals `end`. That input
+needs one byte to be `\r` for one terminator and `\n` for the other.
 
 ### E2 — an equivalent mutation at the request line limit
 
@@ -257,9 +267,9 @@ record.
 
 **The 24 of `quic.go` guard a bounds check.** `ParseQUICInitial` and
 `DecryptQUICInitialCrypto` read a length field of an untrusted datagram, and each counted
-mutation moves one bound of that read. Every one fails test 3: a datagram that separates the
-original from the mutant is truncated, and a truncated datagram yields no QUIC client hello
-and therefore no JA4 value. **A bounds check of this library is a safety requirement, and a
+mutation moves one bound of that read. Every one fails test 3. A datagram that separates the
+original from the mutant is truncated. A truncated datagram yields no QUIC client hello, so
+it yields no JA4 value. **A bounds check of this library is a safety requirement, and a
 different gate owns it.** `CLAUDE.md` states that every packet is untrusted input, the fuzz
 suite proves that no input panics, and `.coverage-floor` proves that a test reaches the line.
 
@@ -286,10 +296,9 @@ terminator begins at offset zero.** Each of the three mutations separates the or
 the mutant at that offset alone.
 
 **One counts under test 3 for a different reason.** `internal/parser/http.go:235:44` reads the
-`=` of a cookie pair, and it separates the two only on a cookie name of zero length.
-**RFC 6265 Section 4.1.1 states that a cookie name is a token, and a token holds at least one
-character**, so `=value` is a malformed cookie pair rather than an input the wire format
-permits.
+`=` of a cookie pair. It separates the two only on a cookie name of zero length.
+**RFC 6265 Section 4.1.1 states that a cookie name is a token.** A token holds at least one
+character. So `=value` is a malformed cookie pair, and the wire format does not permit it.
 
 **The 4 non-terminating loops are E4 above**, and they are counted as well as settled.
 
