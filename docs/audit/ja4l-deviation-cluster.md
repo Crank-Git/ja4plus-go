@@ -634,9 +634,8 @@ on 2026-08-15, and this section holds the reading. **The reading decides no valu
 **Ruling #127 declines part c on a TCP connection.** The maintainer ruled it on 2026-08-12,
 re-ruled the same question as #247 on the same day, and kept it on 2026-08-15. So the
 library writes two parts on a TCP connection, and `emitResult` in `ja4l.go` writes them on
-the SYN-ACK frame. **The library therefore produces `2948_229` on frame 121**, and the
-conformance suite reports that value as a second deviation of the pair that
-`## The shape of the cluster` above describes.
+the SYN-ACK frame. **The library therefore produces `2948_229` on frame 121.** The conformance suite reports
+that value as a second deviation. `## The shape of the cluster` above describes that pair.
 
 **Cause 1 above prices a reversal of ruling #127, and its candidate left this row open.**
 `### The count this cause closes` records the measurement: the candidate closes 149
@@ -729,10 +728,10 @@ does.
 | Implementation | What it reads | Evidence |
 |---|---|---|
 | Wireshark | The `nsecs` field of the delta. | `wireshark/source/packet-ja4.c:1373` |
-| Zeek | The whole timestamp, in microseconds. | `zeek/ja4l/main.zeek:72`, `zeek/ja4l/main.zeek:125` |
+| Zeek | The whole timestamp, in microseconds. | `zeek/ja4l/main.zeek:74`, `zeek/ja4l/main.zeek:125` |
 | FoxIO's reference Python | The `microseconds` field of the delta. | `python/common.py:182` |
 
-`zeek/ja4l/main.zeek:72` returns `cp$ts_sec * 1000000.0 + cp$ts_usec`, so the Zeek package
+`zeek/ja4l/main.zeek:74` returns `cp$ts_sec * 1000000.0 + cp$ts_usec`, so the Zeek package
 keeps the whole interval. **FoxIO's reference Python carries the same defect as Wireshark**,
 and #253 holds that reading.
 
@@ -740,9 +739,9 @@ and #253 holds that reading.
 
 **Yes.** The port writes two parts on a TCP connection, so it produces no part c at all.
 `ja4plus/fingerprinters/ja4l.py:482` at the tag `v1.1.0` writes the client value with two
-parts, and `:447` and `:467` write the server value with two parts. `_one_way_latency` at
-`ja4plus/fingerprinters/ja4l.py:348` returns `int((end - start) / LATENCY_DIVISOR)` over
-whole microsecond timestamps, so the port discards no second.
+parts, and `:446` and `:466` write the server value with two parts.
+`ja4plus/fingerprinters/ja4l.py:358` returns `int((end - start) / LATENCY_DIVISOR)` over
+whole microsecond timestamps, so `_one_way_latency` discards no second.
 
 **A reversal of ruling #127 therefore reaches both repositories**, and this row needs a
 second decision after that reversal.
@@ -756,8 +755,10 @@ measurement, and it recommends no change.
 **The decision is not needed while ruling #127 stands.** Ruling #127 gives the library two
 parts on a TCP connection, so no part c of the library can reach this vector. **The decision
 is needed only if the maintainer reverses ruling #127.** The reversal then asks one further
-question: does the library reproduce the seconds truncation of the dissector, or does it
-write the whole interval and decline this vector?
+question, and it holds two answers.
+
+1. The library reproduces the seconds truncation of the dissector.
+2. The library writes the whole interval, and it declines this vector.
 
 ## What #253 and #249 explain
 

@@ -18,7 +18,7 @@ put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issu
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, and issue #127 put 1
 more.
 Issue #652 wrote the 1 entry of the ruling #127 count on 2026-08-15. The maintainer kept
-ruling #127 on that day, so the library writes two parts on a TCP connection and it
+ruling #127 on that day, so the library writes two parts on a TCP connection. It therefore
 produces no value on frame 128 of `browsers-x509.pcapng`.
 Issue #543 wrote the 6 entries of the ruling #126 count. The maintainer ruled on 2026-08-14
 that the SYN bit test of ruling #126 reaches JA4L, and `docs/specs/foxio/JA4L.md` R36 holds

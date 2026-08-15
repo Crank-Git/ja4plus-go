@@ -222,12 +222,27 @@ import (
 // mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
 // takes the union of the two histories and one constant.
 //
+// #649 re-measured the mark on 2026-08-15 and it read 656. #649 is the Epic 5b reading of
+// the key-material route, and `docs/audit/key-material-route.md` cites its own issue number
+// and cites #644. Both numbers sit above the inherited mark of 639, which is the case the
+// paragraph above names. The highest number this repository had allocated is #656, which is
+// the tracking issue of the batch that carries #649.
+//
 // **#652 re-measured the mark on 2026-08-15 and it read 661.** #652 cites its own number in
 // `ja4ls_seconds_truncation_test.go`, in `testdata/deviations.json` and in
 // `docs/audit/ja4l-deviation-cluster.md`. That number sits above the inherited mark of 639.
 // **A member pays this cost exactly as a round does**, because the guard reads the number
 // and never the shape of the change that carries it.
-const issueCitationHighWaterMark = 661
+//
+// **#652 read 661 before it opened its pull request, and it read 665 after.** The pull
+// request is #664, and the constant holds the second reading. The paragraph below cites that
+// number, so the first reading no longer covers this file. **The #556 hotfix and the Epic 16
+// round each recorded the same pair of readings**, and the paragraphs above name both.
+//
+// **The merge of batch #656 into #652 met the readings 656 and 665, and it keeps 665.** #649
+// read the tracker before #652 opened pull request #664, so the two members read one tracker
+// at two moments. **A mark is a lower bound, so 665 covers every citation that 656 covers.**
+const issueCitationHighWaterMark = 665
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
