@@ -1984,6 +1984,14 @@
     "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
   },
   {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_cd85d2d88918",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
     "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S",
     "capability": false,
     "ours": "q130200_1301_234ea6891581",
@@ -1995,6 +2003,30 @@
     "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4S_r",
     "capability": false,
     "ours": "q130200_1301_0033,002b",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4_o",
+    "capability": false,
+    "ours": "q13d0310h3_55b375c5d22e_045e0fa1773b",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4_r",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_000a,000d,001b,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201",
+    "theirs": "",
+    "ruling": "#42",
+    "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4_ro",
+    "capability": false,
+    "ours": "q13d0310h3_1301,1302,1303_0010,0000,002d,001b,000a,0033,002b,0039,4469,000d_0403,0804,0401,0503,0805,0501,0806,0601,0201",
     "theirs": "",
     "ruling": "#42",
     "reason": "The FoxIO Python implementation reads no QUIC handshake, so its expected-output file omits the stream."
