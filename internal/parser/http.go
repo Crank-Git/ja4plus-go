@@ -69,6 +69,17 @@ const requestLineLimit = 8192
 // its issue #193.
 var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 
+// HoldsAHeaderBlockTerminator reports whether the payload holds the empty line that ends an
+// HTTP header block.
+//
+// `ja4l.go` reads this function to decide whether one TCP payload carries a whole request.
+// That gate held its own pair of fixed byte groups until #685, and the pair declined the
+// terminator `\n\r\n`. One reader now answers the question for every caller, so the JA4H
+// value and the JA4L measurement point read one rule.
+func HoldsAHeaderBlockTerminator(payload []byte) bool {
+	return headerBlockEnd(string(payload)) >= 0
+}
+
 // headerBlockEnd returns the index of the empty line that ends the header block.
 // It returns -1 when the text holds no such line.
 func headerBlockEnd(text string) int {

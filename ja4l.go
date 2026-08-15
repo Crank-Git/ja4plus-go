@@ -1,7 +1,6 @@
 package ja4plus
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -292,16 +291,29 @@ func (c *connState) restart() {
 //
 // `latest.pcapng` stream 6 and `http-empty-useragent.pcap` prove the two halves.
 //
-// TODO(#685): Read a header block terminator that mixes the two line endings. #298 ruled
-// that terminator for `internal/parser/http.go`, and this gate still reads two fixed byte
-// groups. So a request that ends `\n\r\n` reaches a JA4H value and it moves the JA4L
-// measurement point. No capture of the FoxIO corpus holds a mixed terminator.
+// **The deciding source is the dissector of the reference, and never a terminator this
+// library chooses.** `python/common.py:78` routes a packet whose `hl` is `http` to a cache
+// that holds no measurement point, and `python/ja4.py:398` sets `hl` from the layer name
+// that tshark reports. So the question is whether the Wireshark HTTP dissector reads the
+// header block as complete in this one segment.
+//
+// **It reads `\n\r\n` as complete.** `epan/tvbuff.c:4203` of Wireshark v4.6.0 compiles the
+// line-end pattern over both `\r` and `\n`, so a bare line feed ends a line, and
+// `epan/req_resp_hdrs.c:143` breaks out of the header loop on the first line of length 0.
+// `docs/audit/upstream-versions.md` records why v4.6.0 is the version this project reads.
+//
+// **#685 read that source and repaired the gate on 2026-08-15 UTC.** The gate held its own
+// pair of fixed byte groups, `\r\n\r\n` and `\n\n`, and the pair declined `\n\r\n`. So the
+// library moved the measurement point on a request that the reference routes away from it.
+// No capture of the FoxIO corpus holds a mixed terminator, so the four conformance figures
+// do not move. `ja4l_mixed_line_ending_test.go` builds the separating packet, and issue
+// #685 is the reversal path.
 func holdsACompleteHTTPRequest(payload []byte) bool {
 	if !parser.IsHTTPRequest(payload) {
 		return false
 	}
 
-	return bytes.Contains(payload, []byte("\r\n\r\n")) || bytes.Contains(payload, []byte("\n\n"))
+	return parser.HoldsAHeaderBlockTerminator(payload)
 }
 
 // clientPoint moves the client measurement point to this packet, and it returns the JA4L-C
