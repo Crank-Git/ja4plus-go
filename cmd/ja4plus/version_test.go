@@ -23,9 +23,9 @@ func buildInfoWithVersion(version string) *debug.BuildInfo {
 
 // TestTheVersionKeepsTheLinkFlagValue holds step 1 of the version order.
 //
-// The `Build binaries` step of `.github/workflows/release.yml` sets `main.Version` for every
-// released binary, and a released binary prints the tag that the workflow read. The module
-// version of the build info never displaces it.
+// The `ldflags` key of `.goreleaser.yaml` sets `main.Version` for every released binary,
+// and a released binary prints the tag that GoReleaser read. The module version of the
+// build info never displaces it.
 func TestTheVersionKeepsTheLinkFlagValue(t *testing.T) {
 	resolved := resolveVersion("v1.0.0", buildInfoWithVersion("v0.9.9"))
 
@@ -137,5 +137,20 @@ func TestTheVersionLineOfThisTestBinaryNamesNoRelease(t *testing.T) {
 
 	if line != "ja4plus "+statedVersion {
 		t.Errorf("the test binary prints %q, and a build from a working tree names no release", line)
+	}
+}
+
+// TestThePrintedLineHoldsOneNameAndOneVersion holds the shape that FR-prerelease-7 reads.
+//
+// FR-prerelease-7 compares the printed line against the tag, so a third field fails that
+// case with the wrong reason. **FR-release-35g stamps the commit and the build date**, and
+// #105 measured on 2026-08-15 that a stamp into a variable the program never reads reaches
+// nothing. So the commit and the build date live in the build info of the binary, and
+// `go version -m <binary>` prints them. This case holds the printed line against a later
+// change that adds one of them to it.
+func TestThePrintedLineHoldsOneNameAndOneVersion(t *testing.T) {
+	if fields := strings.Fields(versionLine()); len(fields) != 2 {
+		t.Errorf("the printed line holds %d fields, and FR-prerelease-7 reads one name and one version",
+			len(fields))
 	}
 }

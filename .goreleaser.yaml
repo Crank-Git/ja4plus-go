@@ -1,0 +1,133 @@
+# GoReleaser builds every released binary of this repository.
+#
+# FR-release-35a of `docs/specs/features/10-release.md` names this file, and it states that
+# `.github/workflows/release.yml` holds no inline build matrix. #105 built the file on
+# 2026-08-15. The workflow held five `go build` commands until that date.
+#
+# **No pull request published a release from this file.** A tag push is the only trigger of
+# the release workflow, so the `goreleaser` job of `.github/workflows/ci.yml` is the one
+# reader before a tag. That job runs `goreleaser check` and
+# `goreleaser release --snapshot --clean`, and it publishes nothing.
+#
+# `release_cgo_test.go` reads this file as text, because no test of this module parses YAML
+# and the module depends on no YAML package.
+#
+# Verified against <https://goreleaser.com/customization/builds/go/>,
+# <https://goreleaser.com/customization/archive/>,
+# <https://goreleaser.com/customization/checksum/>,
+# <https://goreleaser.com/customization/sbom/> and
+# <https://goreleaser.com/customization/release/>, each retrieved 2026-08-15.
+version: 2
+
+project_name: ja4plus
+
+builds:
+  # FR-release-35c sets `CGO_ENABLED=0` for every artifact, and this key is where the
+  # setting belongs.
+  #
+  # **The setting reaches the build alone, and it reaches no other step.** The `Run tests`
+  # step of `.github/workflows/release.yml` runs `go test -race`, and the race detector
+  # needs cgo there. Measured on 2026-08-14 for the runner's platform:
+  #
+  #   $ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -race -o /dev/null ./cmd/ja4plus
+  #   go: -race requires cgo
+  #
+  # So a workflow-level or job-level setting turns the release red at the test step, and it
+  # never reaches the build it was written for. #583 measured the same trap on 2026-08-14,
+  # and issue #583 is the reversal path.
+  #
+  # A released binary that links the C name resolver reads `nsswitch.conf` and the glibc
+  # modules of the machine that runs it. A static binary does not, so a user on a musl
+  # distribution or in a `scratch` container gets one behavior from every artifact.
+  #
+  # FR-release-35d keeps the `libpcap` build tag out of every artifact. That tagged path
+  # imports cgo, and no `tags` key below names it.
+  - id: ja4plus
+    main: ./cmd/ja4plus
+    binary: ja4plus
+    env:
+      - CGO_ENABLED=0
+    # FR-release-35b names five artifacts, and this cross product names six. The `ignore`
+    # entry below removes Windows arm64, which no requirement names.
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags:
+      - -trimpath
+    # FR-release-35g stamps the version, the commit and the build date into the program.
+    # **This key stamps the version, and it stamps neither of the other two.** The commit
+    # and the build date reach the program through the build info that the Go command
+    # writes, and `go version -m <binary>` prints them as `vcs.revision` and `vcs.time`.
+    #
+    # **A link flag that names a variable the program never reads reaches nothing.** The
+    # linker removes the variable, and it reports no error. #105 measured it on 2026-08-15
+    # with go1.26.5 on darwin/arm64. A build that added `var Commit = ""` to
+    # `cmd/ja4plus/main.go` and passed `-X main.Commit=ZZZTESTZZZ` produced a binary that
+    # holds no `ZZZTESTZZZ`:
+    #
+    #   $ go build -trimpath -ldflags "-s -w -X main.Commit=ZZZTESTZZZ" -o probe ./cmd/ja4plus
+    #   $ grep -c -a ZZZTESTZZZ probe
+    #   0
+    #
+    # The same build without `-trimpath` reports 2, and `go version -m probe` shows why:
+    # both hits are the `build -ldflags=` line of the build info, and neither one is the
+    # variable. `-trimpath` removes that line, and no build of the three holds the value.
+    #
+    # `main.Version` is different, because `resolveVersion` in `cmd/ja4plus/main.go` reads
+    # it and `ja4plus --version` prints it. The snapshot of 2026-08-15 printed
+    # `ja4plus 0.3.0-SNAPSHOT-8f0418c`.
+    #
+    # **`ja4plus` prints no commit and no build date today**, and FR-prerelease-7 reads the
+    # printed line against the tag. So a printed field is a change to the program, and #105
+    # asked the maintainer to rule it.
+    ldflags:
+      - -s -w -X main.Version={{ .Version }}
+    # A reproducible build needs one timestamp that the commit decides, and never the wall
+    # clock of the runner.
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+# The release publishes the raw binary and no archive, because every published release of
+# this repository has published raw binaries and the pre-release cases read them by name.
+# `releasedBinaries` in `prerelease_binaries_registry_test.go` holds the five names.
+#
+# The `binary` format appends the binary extension to the name that this template writes,
+# so the Windows artifact reads `ja4plus-windows-amd64.exe`. `internal/pipe/archive/archive.go`
+# of `goreleaser/goreleaser` at `v2.17.1` states it: `finalName := name + binary.Ext()`.
+archives:
+  - id: ja4plus
+    formats: [binary]
+    name_template: "ja4plus-{{ .Os }}-{{ .Arch }}"
+
+# FR-release-35e writes one checksum file for every artifact. FR-prerelease-22 verifies each
+# artifact against `checksums.txt`, and `releaseChecksumFile` holds that name.
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+# FR-release-35f writes a software bill of materials for every artifact.
+#
+# `artifacts: binary` selects the binary-like artifacts, which is what a `binary` archive
+# produces. `internal/pipe/sbom/sbom.go` of `goreleaser/goreleaser` at `v2.17.1` maps that
+# value to `artifact.ByBinaryLikeArtifacts`. This block names no `documents` key, so the
+# tool writes its documented default name for that value.
+#
+# The release workflow installs `syft` before it runs GoReleaser, because `syft` is the
+# default generator and no runner image holds it.
+sboms:
+  - id: ja4plus
+    artifacts: binary
+
+# FR-release-38 attaches `LICENSE` and `NOTICE` to the release. `NOTICE` holds the FoxIO
+# License 1.1 terms, and FoxIO licenses ten of the eleven methods that this project
+# implements under non-commercial terms. A release without it states the wrong license.
+release:
+  extra_files:
+    - glob: ./LICENSE
+    - glob: ./NOTICE

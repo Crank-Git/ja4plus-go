@@ -44,8 +44,8 @@ const ja4PlusDownloadTimeout = 60 * time.Second
 const statedVersion = "dev"
 
 // Version holds the version that a link flag sets at build time.
-// The `Build binaries` step of `.github/workflows/release.yml` sets it for every released
-// binary, and that value keeps precedence over the embedded build info.
+// The `ldflags` key of `.goreleaser.yaml` sets it for every released binary, and that value
+// keeps precedence over the embedded build info.
 //
 // **It is empty when no link flag sets it.** An empty default separates the two cases that
 // one default value confuses: a build that sets no version, and a build that sets the
