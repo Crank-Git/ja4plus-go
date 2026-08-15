@@ -24,19 +24,38 @@ func readRepoFile(t *testing.T, path string) string {
 	return string(content)
 }
 
-// TestGoModDeclaresGo124 holds the Go 1.24 language version that FR-foundation-1 names.
+// TestGoModDeclaresGo125 holds the Go 1.25 language version that FR-foundation-1 names.
 // The citation named FR-foundation-2 until 2026-08-13. That requirement now names the
 // toolchain of the workflow, and FR-foundation-1 names this directive.
-// `github.com/gopacket/gopacket@v1.6.1` states `go 1.24.0` in its own `go.mod`, so the
-// toolchain writes that longer form here and it refuses `go 1.24`. #438 measured it.
+// `github.com/gopacket/gopacket@v1.7.1` states `go 1.25.0` in its own `go.mod`, so the
+// toolchain writes that longer form here and it refuses `go 1.25`. #438 measured the same
+// mechanism at `go 1.24.0`.
 // Go states that the two forms name one language version:
 // `1.21, 1.21rc2, and 1.21.3 all implement language version 1.21`.
-// The pattern accepts each 1.24 release, and it still fails for `go 1.25`.
-func TestGoModDeclaresGo124(t *testing.T) {
+// The pattern accepts each 1.25 release, and it still fails for `go 1.26`.
+//
+// **This test is the durable record of the #725 ruling of 2026-08-15.**
+// `.claude/rules/rulings.md` `## Where a ruling is recorded` is satisfied by a test, and no
+// vector separates this question, so no entry of `testdata/deviations.json` records it.
+// The test named `TestGoModDeclaresGo124` until that date.
+//
+// The maintainer ruled ACCEPT. `github.com/gopacket/gopacket` v1.7.1 declares `go 1.25.0`,
+// and Go requires the main module to declare a language version at or above every
+// dependency, so the move is forced. `GHSA-6h9g-cjv3-pg2c` decided it: v1.7.1 repairs a
+// panic on the TCP MPTCP option, on the path every fingerprint of this library reads. No
+// patch release of the 1.6 line carries that repair. **Every Go 1.24 consumer is dropped**,
+// and the ruling lands in v1.1.0.
+//
+// **The ruling moves a language version and no build toolchain**, so `goToolchainRange`
+// below stays at its own value.
+//
+// **Issue #725 is the reversal path.** A reversal pins `gopacket` at v1.6.1, restores this
+// test to the 1.24 pattern, and records that #510 stays open.
+func TestGoModDeclaresGo125(t *testing.T) {
 	goMod := readRepoFile(t, "go.mod")
 
-	if !regexp.MustCompile(`(?m)^go 1\.24(\.\d+)?$`).MatchString(goMod) {
-		t.Errorf("go.mod does not declare the Go 1.24 language version:\n%s", goMod)
+	if !regexp.MustCompile(`(?m)^go 1\.25(\.\d+)?$`).MatchString(goMod) {
+		t.Errorf("go.mod does not declare the Go 1.25 language version:\n%s", goMod)
 	}
 }
 

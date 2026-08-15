@@ -40,7 +40,7 @@ ClientHello inside.
 
 ## Installation
 
-The module requires Go 1.24 or later. **That sentence states a language version, and the
+The module requires Go 1.25 or later. **That sentence states a language version, and the
 `or later` names the toolchain that compiles the module.** It names no toolchain that
 builds a binary free of a called vulnerability, and the section below names that one.
 
@@ -63,9 +63,16 @@ lands. A command that names an unpublished tag fails, and the module proxy holds
 - **A language version decides which consumer compiles the module.**
 - **A build toolchain decides which standard library a built binary links.**
 
-**The language version is 1.24.** `go.mod` declares `go 1.24.0`, and a language version is
-not a toolchain. So a consumer on a Go 1.24 toolchain compiles this module, and this
-section does not narrow who consumes the library.
+**The language version is 1.25.** `go.mod` declares `go 1.25.0`, and a language version is
+not a toolchain. So a consumer on a Go 1.25 toolchain compiles this module.
+
+**The maintainer moved the version from 1.24 to 1.25 on 2026-08-15, and #725 holds the
+ruling.** `github.com/gopacket/gopacket` v1.7.1 declares `go 1.25.0` in its own `go.mod`,
+and Go requires the main module to declare a language version at or above every dependency.
+**v1.7.1 repairs a decoder panic on untrusted input, under `GHSA-6h9g-cjv3-pg2c`.** No patch
+release of the 1.6 line carries that repair, so the choice was binary. **A Go 1.24 consumer
+no longer compiles this module**, and that cost is the accepted one. The ruling lands in
+v1.1.0, because a minimum language version raise is a minor version change.
 
 **The minimum build toolchain is go1.25.13.** A user who builds a binary from this source
 takes go1.25.13 or a later toolchain, and the measurement below states why. `go1.25.13` is
@@ -88,6 +95,10 @@ and it carries four. So a user on the Go 1.26 line takes go1.26.6 or later.
 
 **No Go 1.24 patch clears the 13.** go1.24.13 is the newest Go 1.24 patch, and each
 advisory names a fix in a go1.25.x release or a later one.
+
+**The go1.24.13 row is a record of the 2026-08-14 measurement, and it names no toolchain a
+builder may use today.** The language version moved to 1.25 on 2026-08-15, so a Go 1.24
+toolchain compiles no source of this module.
 
 **Every count above moves without a change to this repository**, because the vulnerability
 database is live. Run `make vuln` to re-take the measurement on your own toolchain.

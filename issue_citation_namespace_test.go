@@ -322,7 +322,19 @@ import (
 // batch this round closes. They sit in `docs/specs/spec.html`, in `docs/specs/spec.md`
 // twice, in `internal/parser/http.go` and in `ja4l_mixed_line_ending_test.go`. **The mark is
 // a lower bound**, and 711 covers every citation the tree carries.
-const issueCitationHighWaterMark = 711
+//
+// **#721 re-measured the mark on 2026-08-15 UTC and it read 730.** The same two commands
+// reported issue 728 and pull request 730. **#721 writes 6 citations that the mark of 711
+// reddened, and all 6 sit in `docs/audit/gopacket-tcp-option-panic.md`.** Five name #721,
+// which is the Dependabot pull request this member merges, and one names #730, which is the
+// pull request of this member.
+//
+// **The member measured the mark twice, and the first reading of 728 went stale before the
+// commit.** The self-review of #721 added the citation of #730, and creating that pull
+// request allocated the number that the citation names. **A member that cites its own pull
+// request must measure the mark after it opens that pull request.** **The mark is a lower
+// bound**, and 730 covers every citation the tree carries.
+const issueCitationHighWaterMark = 730
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

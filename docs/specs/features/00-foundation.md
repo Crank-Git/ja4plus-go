@@ -52,7 +52,23 @@ today.** Read a row as a start state, and never as a claim about the present tre
 
 ## Functional requirements
 
-- **FR-foundation-1** — `go.mod` declares `go 1.24`.
+- **FR-foundation-1** — `go.mod` declares `go 1.25`.
+
+  **The maintainer ruled this version on 2026-08-15, and issue #725 holds the ruling.** The
+  requirement named `go 1.24` until that date. `github.com/gopacket/gopacket` v1.7.1 declares
+  `go 1.25.0` in its own `go.mod`, and Go requires the main module to declare a language
+  version at or above every dependency. **So the move is forced and never chosen.**
+
+  **`GHSA-6h9g-cjv3-pg2c` decided it.** v1.7.1 repairs a panic on the TCP MPTCP option, on
+  the ordinary Ethernet to IP to TCP path that every fingerprint of this library reads. **No
+  patch release of the 1.6 line carries that repair**, so the choice was v1.7.1 with Go 1.25
+  or v1.6.1 with the panic.
+
+  **Every Go 1.24 consumer is dropped, and that cost is the accepted one.** The ruling lands
+  in v1.1.0, because a minimum language version raise is a minor version change.
+  **`goToolchainRange` does not move**, because this ruling moves a language version and no
+  build toolchain. `TestGoModDeclaresGo125` in `foundation_test.go` holds the ruling, and
+  **issue #725 is the reversal path**.
 - **FR-foundation-2** — `.github/workflows/ci.yml` builds and tests on Go 1.26 only.
 
   **The maintainer amended this requirement on 2026-08-13, and the amendment is
@@ -61,8 +77,9 @@ today.** Read a row as a start state, and never as a claim about the present tre
   that this library calls, measured on 2026-08-13. Each one names a fix in a go1.25.x
   release, and none names a fix in a go1.24.x release. So no Go 1.24 patch clears them.
   Comment 5286440152 of #65 holds the decision, and issue #65 is the reversal path.
-  **FR-foundation-1 does not move**, because `go.mod` states a language version and never
-  a toolchain.
+  **This amendment does not move FR-foundation-1**, because `go.mod` states a language
+  version and never a toolchain. **A separate ruling moved FR-foundation-1 to `go 1.25` on
+  2026-08-15**, and issue #725 holds it.
 
   **That count carries its date, because the vulnerability database is live.** The same
   command on the same toolchain reported 13 on 2026-08-14, and #472 measured it. **No line
@@ -102,9 +119,14 @@ today.** Read a row as a start state, and never as a claim about the present tre
 
   **The maintainer ruled this question on 2026-08-14, and issue #472 holds the ruling.** The
   ruling picked candidate answer 1 of #472: the two pages state a minimum build toolchain,
-  and `go.mod` does not move. **So FR-foundation-1 does not move**, and the language version
-  stays at 1.24. **The ruling reaches no part of Epic 10 (#100)**, because it changes nothing
-  a consumer needs. **Issue #472 is the reversal path.**
+  and `go.mod` does not move. **So the #472 ruling moved FR-foundation-1 nowhere**, and it
+  left the language version at 1.24. **The ruling reaches no part of Epic 10 (#100)**,
+  because it changes nothing a consumer needs. **Issue #472 is the reversal path.**
+
+  **A later ruling moved the language version to 1.25 on 2026-08-15, and issue #725 holds
+  it.** That ruling moves no build toolchain, so this requirement and `goToolchainRange`
+  each stay where #472 left them. **The two rulings answer two different questions**, and a
+  reader who conflates them draws the wrong conclusion about vulnerability exposure.
 
   `go_toolchain_statement_test.go` holds this requirement.
 
@@ -153,7 +175,7 @@ No entity changes. The following files change.
 
 | File | Change |
 |---|---|
-| `go.mod` | The `go` directive moves to `1.24`. |
+| `go.mod` | The `go` directive moves to `1.25`. **It read `1.24` until the #725 ruling of 2026-08-15.** |
 | `.github/workflows/ci.yml` | The matrix reduces to one Go version. The linter version pins. The `dev` branch joins the triggers. |
 | `.golangci.yml` | New. |
 | `.gitignore` | The `CLAUDE.md` and `.claude/` lines are removed. The Claude Code block is appended. |
@@ -190,8 +212,8 @@ The Go toolchain interfaces are `go build`, `go test`, `go test -bench`,
 
 ## Acceptance criteria
 
-- [ ] `go build ./...` succeeds on Go 1.24.
-- [ ] `go build ./...` fails on Go 1.23 with a message that names the required version.
+- [ ] `go build ./...` succeeds on Go 1.25.
+- [ ] `go build ./...` fails on Go 1.24 with a message that names the required version.
 - [ ] `make lint` runs the pinned linter version and reports nothing.
 - [ ] `git check-ignore CLAUDE.md` reports no match.
 - [ ] `git check-ignore .claude/settings.json` reports no match.
