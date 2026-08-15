@@ -244,7 +244,16 @@ import (
 // into `batch/656-epic-5b-readings`, and it read 675. **The batch carried 666 and `dev`
 // carried 668**, and neither side is the answer. **A resolver re-measures rather than take a
 // side**, and #650 wrote that rule into this tree.
-const issueCitationHighWaterMark = 675
+// #676 re-measured the mark twice on 2026-08-15 UTC, and it read 676 and then 677. **#676
+// is the documentation round of batch #656, and its `## Changelog` row cites both its own
+// issue number and pull request #677.** The inherited mark of 675 sits below each of them,
+// so the round pays the maintenance cost that #351 named. **A round pays it at every batch.**
+//
+// **The two readings differ because the round opened its own pull request between them.**
+// The tracker numbers an issue and a pull request from one sequence, so a round that cites
+// its own pull request must measure the mark after it opens one. **The constant holds the
+// second reading**, and the mark is a lower bound.
+const issueCitationHighWaterMark = 677
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
