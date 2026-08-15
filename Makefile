@@ -1,9 +1,72 @@
-.PHONY: build test lint lint-cache-check bench clean corpus conformance cover docs fuzz vuln
+.PHONY: build test lint lint-cache-check bench clean corpus conformance cover docs fuzz mutate vuln
 
 # The generator of the documentation site. `docs/requirements.txt` pins it.
 # Override it to reach a virtual environment that the PATH does not hold:
 #   make docs MKDOCS=.venv/bin/mkdocs
 MKDOCS ?= mkdocs
+
+# FR-mutation-2 pins the mutation tool, and this variable is the pin. A minor release of
+# `gremlins` can change a configuration key, and it can change a mutation set. So an
+# unpinned tool measures a different thing on each run.
+#
+# The pin lives here and not in `.gremlins.yaml`, because the documented configuration
+# schema holds no version key. Verified against
+# <https://gremlins.dev/latest/usage/configuration/>, retrieved 2026-08-14.
+#
+# `v0.6.0` was published 2025-12-05, and the module proxy states that date.
+#
+# The `go.mod` of `gremlins` v0.6.0 declares `go 1.25`, so a toolchain below go1.25 installs
+# no such binary. `CLAUDE.md` `## Stack` names go1.25.13 as the minimum build toolchain of
+# this repository, so the two agree. **That figure is a toolchain and never the language
+# version**, and `go.mod` of this repository still declares `go 1.24.0`.
+GREMLINS_VERSION ?= v0.6.0
+
+# `go install` writes the binary into the `bin` directory of `GOPATH`, and a developer PATH
+# need not hold that directory. So the `mutate` recipe names the binary by its path.
+GREMLINS ?= $(shell go env GOPATH)/bin/gremlins
+
+# FR-mutation-4 names the package set, and FR-mutation-5 sweeps one package. This variable
+# carries both: the default is the named set, and a command line overrides it.
+#   make mutate PKG=./internal/parser
+#
+# The path argument of `gremlins unleash` reads a whole directory tree, so `.` names every
+# package of the module. The `exclude-files` list of `.gremlins.yaml` holds `cmd/` and
+# `examples/` back, and `docs/specs/features/15-mutation-sweep.md` `## Out of scope` states
+# the reason for `cmd/`.
+PKG ?= .
+
+# FR-mutation-6 sends the report to `docs/mutation_reports/`, and FR-mutation-10 tracks it.
+#
+# `gremlins` writes the machine-readable half, and `internal/mutationreport` renders the
+# tracked half. Two steps exist because the JSON of `gremlins` v0.6.0 records no tool version
+# and no date, and FR-mutation-9 needs both. The doc comment of `internal/mutationreport`
+# holds the reading, with the source citations.
+#
+# The JSON is scratch. `.gitignore` holds `.gremlins/` back, and a reader who wants the
+# machine-readable form runs the sweep again.
+MUTATION_SCRATCH ?= .gremlins
+MUTATION_JSON ?= $(MUTATION_SCRATCH)/last-run.json
+MUTATION_REPORT_DIR ?= docs/mutation_reports
+
+# `$(PKG)` reaches both commands below without a quotation, and `$(MUTATION_EXCLUDED)` needs
+# one. `PKG` holds a Go package path, which carries no space. `MUTATION_EXCLUDED` holds
+# prose, which carries a space and a backtick, so a single quotation stops the shell from
+# reading the backtick as a command substitution.
+#
+# The report states which paths the sweep does not read, under the edge case of
+# `docs/specs/features/15-mutation-sweep.md` that names an unswept package.
+#
+# `TestTheMutationReportNamesEveryExcludedPath` in `mutation_sweep_test.go` fails when this
+# value and the `exclude-files` list of `.gremlins.yaml` disagree.
+MUTATION_EXCLUDED ?= `cmd/` and `examples/`
+
+# **Never set a threshold key of `.gremlins.yaml` without a change to this recipe.** `Do` in
+# `internal/report/report.go` of `gremlins` v0.6.0 calls `reportFindings` before `assess`, so
+# the sweep writes a complete JSON file and then exits non-zero when a configured efficacy
+# threshold or coverage threshold is not met. make halts a recipe on the first non-zero
+# command, so the render step below would never run and the sweep would produce no tracked
+# report. FR-mutation-19 states that the sweep blocks no merge, so this repository sets no
+# threshold today and `assess` returns nil.
 
 build:
 	go build -o bin/ja4plus ./cmd/ja4plus
@@ -84,6 +147,85 @@ fuzz:
 			go test -run '^$$' -fuzz "^$$target$$" -fuzztime 30s -fuzzminimizetime 5s $$package || exit 1; \
 		done; \
 	done
+
+# FR-mutation-1 names `gremlins` as the mutation tool, and FR-mutation-3 names this target.
+# The sweep changes one expression, runs the test suite, and records whether a test failed.
+# A mutation that survives names a test that runs a line and asserts nothing about it.
+#
+# This target gates nothing. `CLAUDE.md` `## A change is done when` names six steps, and
+# this target is none of them. `docs/specs/features/15-mutation-sweep.md` FR-mutation-19
+# states that the sweep does not block a merge.
+#
+# This recipe installs the pinned tool, and the `vuln` recipe below installs nothing. The
+# two differ because a `gremlins` binary cannot report its own version. `go install` of the
+# module writes no version stamp, so the installed `v0.6.0` binary reports
+# `gremlins version dev darwin/arm64`, measured on 2026-08-14. A recipe therefore cannot
+# check the binary on the PATH against `GREMLINS_VERSION`. An install of the pin is the one
+# path that makes the pin bind.
+#
+# `go install` reads the module cache on a second run, so it reaches the network once.
+#
+# The measurement of the first sweep, on 2026-08-14, at `gremlins` v0.6.0, on a 10-core
+# machine. `docs/specs/features/15-mutation-sweep.md` `## Open questions` question 1 asked
+# for it, and `internal/parser` is the package that question names.
+#
+#   | Path                 | Mutations | Wall clock | Killed | Lived | Not covered | Timed out |
+#   |----------------------|-----------|------------|--------|-------|-------------|-----------|
+#   | `./internal/dbcache` | 16        | 3s         | 15     | 1     | 0           | 0         |
+#   | `./ja4db`            | 31        | 16s        | 26     | 1     | 4           | 0         |
+#   | `./internal/parser`  | 882       | 2m47s      | 493    | 223   | 162         | 4         |
+#   | the root package     | 663       | 15m24s     | 484    | 162   | 16          | 1         |
+#
+# A second sweep of `./internal/parser` ran on 2026-08-14, and it reports 289 s.
+# `docs/mutation_reports/2026-08-14-internal-parser.md` holds that figure. **Both figures are
+# wall clock, and neither one is a transcription defect.** `Run` in
+# `internal/engine/engine.go` of `gremlins` v0.6.0 sets `Elapsed` from `time.Since`.
+# `newReport` in `internal/report/report.go` parses that one value, and two readers report it.
+# `fullRunReport` prints `Mutation testing completed in %s`, and `fileReport` writes the
+# `elapsed_time` field of the JSON. `Duration` of `hako/durafmt` returns the parsed value
+# without a rounding, so the two readers report one number. So one run reports one number, and
+# two numbers name two runs. The four verdict counts agree, because the mutation set and its
+# verdicts are deterministic. Wall clock is not deterministic, because the machine load moves
+# it. Round 59 of the `## Changelog` of `docs/specs/spec.md` holds the reading.
+#
+# So `gremlins` completes a run over `internal/parser` in between 2m47s and 289 s on a
+# 10-core machine. Question 1 asks for a run within the CI job limit, and
+# `.github/workflows/mutation.yml` sets that limit at 60 minutes. Both runs meet it, so
+# question 1 has its answer: the tool is viable for this repository.
+#
+# The root package costs 1.39 seconds for each mutation, and `internal/parser` costs between
+# 0.19 and 0.33 seconds. That is a ratio of between about four and about seven. The reason is
+# the suite and not the file count. `go test .` reported `ok 3.941s` and
+# `go test ./internal/parser` reported under one second, measured on 2026-08-14. **The
+# conformance suite does not reach the sweep**, because it sits behind the `conformance`
+# build tag and `.gremlins.yaml` sets no `tags` key.
+#
+# The whole named set holds 1675 mutations, measured with `gremlins unleash --dry-run .` on
+# 2026-08-14: 1473 runnable and 202 not covered. The four rows above hold 1592 of them, and
+# the difference of 83 is `internal/capture` at 29, `internal/keylog` at 45 and
+# `internal/fuzzprop` at 9. No sweep of those three has run.
+#
+# The four `TIMED OUT` verdicts of `internal/parser` are real hangs, and not tool artifacts.
+# `internal/parser/x509_utils.go:64` holds `for val > 0`, and a `CONDITIONALS_BOUNDARY`
+# mutation of it never terminates. The three others sit at
+# `internal/parser/ssh_tracker.go:317` and `internal/parser/ssh_tracker.go:318`, which hold
+# the loop of `readMessages` and its guard.
+#
+# **The sweep loads the machine.** The default worker count is the core count, and each
+# worker runs its own `go test`. The load average reached 39.67 on a 10-core machine during
+# the root sweep, measured on 2026-08-14. A developer who needs a quieter machine sets the
+# `workers` key of `.gremlins.yaml`. This repository sets no such key. The schedule of #93
+# runs the sweep on a CI runner, and a fixed count would bound that runner too.
+mutate:
+	go install github.com/go-gremlins/gremlins/cmd/gremlins@$(GREMLINS_VERSION)
+	mkdir -p $(MUTATION_SCRATCH) $(MUTATION_REPORT_DIR)
+	$(GREMLINS) unleash $(PKG) --output $(MUTATION_JSON)
+	go run ./internal/mutationreport \
+		-input $(MUTATION_JSON) \
+		-dir $(MUTATION_REPORT_DIR) \
+		-tool-version $(GREMLINS_VERSION) \
+		-packages $(PKG) \
+		-excluded '$(MUTATION_EXCLUDED)'
 
 # FR-supply-4 holds the command that the `vuln` job of `.github/workflows/ci.yml` runs, so
 # that job and a developer run one command.

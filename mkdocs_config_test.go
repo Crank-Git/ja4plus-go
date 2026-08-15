@@ -179,6 +179,47 @@ func TestTheMakefileBuildsTheSite(t *testing.T) {
 	}
 }
 
+// excludedDocumentationDirs names every directory of `docs/` that `exclude_docs` of
+// `mkdocs.yml` drops from the built site.
+//
+// One list serves every walker of `docs/`, so a fifth exclusion reaches each guard at once.
+// #91 added `mutation_reports` under FR-mutation-6, and #92 added `mutation_settlements`
+// under FR-mutation-13.
+var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports", "mutation_settlements"}
+
+// TestEveryExcludedDirectoryReachesTheSiteConfig binds the list above to `exclude_docs`.
+//
+// The list drives the guards of this file, and `exclude_docs` drives the built site. Nothing
+// held the two together until #92, so an entry added to one of them left the other behind.
+// A directory named in the list alone still publishes, and the walker guard then reports a
+// clean result for a page the site does hold.
+//
+// This test holds no name of its own, so an edit that drops a name from the list leaves it
+// green. `TestTheSiteExcludesTheMutationReports` in `mutation_sweep_test.go` names
+// `mutation_reports` as a literal, and it covers that case for the one directory a sweep
+// writes to.
+func TestEveryExcludedDirectoryReachesTheSiteConfig(t *testing.T) {
+	config := readTextFile(t, mkdocsConfigPath)
+	for _, excluded := range excludedDocumentationDirs {
+		pattern := "/" + excluded + "/"
+		if !regexp.MustCompile(`(?m)^\s+` + regexp.QuoteMeta(pattern) + `\s*$`).MatchString(config) {
+			t.Errorf("excludedDocumentationDirs names %s, and exclude_docs of %s holds no %s pattern",
+				excluded, mkdocsConfigPath, pattern)
+		}
+	}
+}
+
+// isExcludedDocumentationDir reports whether the site publishes no page of the directory.
+func isExcludedDocumentationDir(name string) bool {
+	for _, excluded := range excludedDocumentationDirs {
+		if name == excluded {
+			return true
+		}
+	}
+
+	return false
+}
+
 // TestNoPublishedPageLinksIntoAnExcludedDirectory holds the edge case of #84: a page that
 // links to `docs/specs/` fails.
 //
@@ -194,7 +235,7 @@ func TestNoPublishedPageLinksIntoAnExcludedDirectory(t *testing.T) {
 	// A markdown link or a markdown image whose target opens with an excluded directory.
 	// The pattern reads a relative target alone, because an absolute URL to the GitHub
 	// blob view is a link to another site and never a link into the built site.
-	intoExcluded := regexp.MustCompile(`]\(\.?/?(?:specs|audit)/`)
+	intoExcluded := regexp.MustCompile(`]\(\.?/?(?:` + strings.Join(excludedDocumentationDirs, "|") + `)/`)
 
 	pages := 0
 	err := filepath.WalkDir(documentationRoot, func(path string, entry os.DirEntry, err error) error {
@@ -202,8 +243,8 @@ func TestNoPublishedPageLinksIntoAnExcludedDirectory(t *testing.T) {
 			return err
 		}
 		if entry.IsDir() {
-			// `docs/specs/` and `docs/audit/` publish no page, so the rule binds neither.
-			if path != documentationRoot && (entry.Name() == "specs" || entry.Name() == "audit") {
+			// An excluded directory publishes no page, so the rule binds none of them.
+			if path != documentationRoot && isExcludedDocumentationDir(entry.Name()) {
 				return filepath.SkipDir
 			}
 			return nil

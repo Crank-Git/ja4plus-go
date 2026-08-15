@@ -172,7 +172,19 @@ import (
 // `.claude/rules/rulings.md` `## A citation names its repository` already bars it. This guard
 // enforces the bare form for this repository, and
 // `TestEveryPortIssueCitationCarriesARecordedForm` reads the qualified form.
-const issueCitationHighWaterMark = 622
+//
+// #92 re-measured the mark on 2026-08-14 and it read 635. The highest number this repository
+// had allocated is #635, which is the pull request of #93. #92 cites #634, which is the
+// issue that carries the FR-mutation-11 amendment of the maintainer's ruling, and that
+// number sits above the inherited mark of 622. **#634 names an issue of this repository**,
+// and its title is `Amend FR-mutation-11 to settle by fingerprint risk and count the
+// remainder`.
+// #638 re-measured the mark on 2026-08-14 and it read 639. #638 is the Epic 15 documentation
+// round, and it cites its own number in round 59 of the `## Changelog` of
+// `docs/specs/spec.md`. That number sits above the inherited mark of 635, which is the case
+// the paragraph above names. The highest number this repository had allocated is #639, which
+// is the pull request of the Epic 16 documentation round.
+const issueCitationHighWaterMark = 639
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
