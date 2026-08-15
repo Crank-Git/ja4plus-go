@@ -790,11 +790,14 @@ func (m *monitor) run(handle capture.Handle) error {
 // It returns the error of a failed read, and it returns nil for a run that the stop
 // request stopped. It writes no statistics line, because `run` owns that line.
 //
-// **A read blocks until the interface delivers a packet.** Both capture backends block,
-// because #78 passed `pcap.BlockForever` deliberately so that the two behave the same.
-// So the loop reads the stop request after each packet, which FR-capture-17 states, and
-// an interface that carries no traffic reaches that read never. The second signal of
-// FR-capture-19 is the exit of that run.
+// **Each read carries a deadline, and both capture backends report `capture.ErrReadTimeout`
+// when they reach it.** So the loop reads the stop request after each packet, which
+// FR-capture-17 states, and it reads the stop request at each deadline too. One `SIGINT`
+// therefore stops the monitor on an interface that carries no traffic.
+//
+// **A read blocked forever until 2026-08-15.** Issue #610 measured the cost: the run needed
+// the second signal of FR-capture-19, and that signal exits at once and loses every open
+// window. Issue #610 is the reversal path.
 func (m *monitor) readPackets(handle capture.Handle) error {
 	linkType := handle.LinkType()
 
@@ -809,6 +812,19 @@ func (m *monitor) readPackets(handle capture.Handle) error {
 		// it never, and a test handle reports it after the last canned packet.
 		if errors.Is(err, io.EOF) {
 			break
+		}
+
+		// A read that reaches its deadline delivers no packet, and it states no failure.
+		// The loop reads the stop request and it reads the interface again, so a quiet
+		// interface stops at the first signal. This branch precedes the failure branch
+		// below, because a deadline that reached that branch would exit with status 1 on
+		// every quiet interface.
+		if errors.Is(err, capture.ErrReadTimeout) {
+			if m.stop.isRequested() {
+				break
+			}
+
+			continue
 		}
 
 		if err != nil {

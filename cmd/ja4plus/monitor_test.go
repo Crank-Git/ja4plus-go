@@ -16,6 +16,8 @@ import (
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
+
+	"github.com/Crank-Git/ja4plus-go/internal/capture"
 )
 
 // The monitor loop of issue #80. Every test of this file drives the loop with a stub
@@ -237,6 +239,49 @@ func TestTheMonitorStopsAfterThePacketThatFollowsTheStopRequest(t *testing.T) {
 
 	if strings.Contains(out.String(), ":54122") {
 		t.Errorf("standard output holds a fingerprint of the third packet: %q", out.String())
+	}
+}
+
+// TestTheMonitorReadsTheStopRequestAfterAReadDeadline reads issue #610. An interface that
+// carries no traffic delivers no packet, and each read of it reaches the read deadline. The
+// monitor reads the stop request at that deadline, so one `SIGINT` stops the monitor.
+//
+// The read deadline is no failure of the capture. A monitor that reported it as one would
+// exit with status 1 on every quiet interface.
+func TestTheMonitorReadsTheStopRequestAfterAReadDeadline(t *testing.T) {
+	// The handle holds no packet, so every read reports the read deadline.
+	handle := newStubCaptureHandle(nil)
+	handle.end = capture.ErrReadTimeout
+
+	instance, out, _ := newTestMonitor(t, watchOptions{iface: "lo"}, steadyClock())
+
+	// readBound stops a loop that reads the deadline as a packet, so a regression fails the
+	// test rather than hanging the suite.
+	const readBound = 100
+
+	reads := 0
+	handle.beforeRead = func(int) {
+		reads++
+
+		if reads == 3 || reads >= readBound {
+			instance.stop.request()
+		}
+	}
+
+	if err := instance.run(handle); err != nil {
+		t.Fatalf("the monitor returns the error %v for a read deadline", err)
+	}
+
+	if reads != 3 {
+		t.Errorf("the monitor read the interface %d times, and the stop request arrived at read 3", reads)
+	}
+
+	if instance.counters.packets.Load() != 0 {
+		t.Errorf("the monitor counted %d packets, and the interface delivered none", instance.counters.packets.Load())
+	}
+
+	if strings.Contains(out.String(), "ja4") {
+		t.Errorf("standard output holds a fingerprint of a read deadline: %q", out.String())
 	}
 }
 

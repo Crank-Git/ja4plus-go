@@ -3,6 +3,7 @@
 package capture
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gopacket/gopacket"
@@ -34,14 +35,26 @@ type pcapHandle struct {
 // errno of that refusal, and FR-capture-35 reads it.
 // It returns an error when libpcap compiles no program for the capture filter.
 func open(opts Options) (Handle, error) {
-	// `pcap.BlockForever` makes each read block until the interface delivers a packet, and
-	// the doc comment of Handle states that contract. A positive timeout would make
-	// `ReadPacketData` return `pcap.NextErrorTimeoutExpired` on an idle interface, and the
-	// two backends would then report an idle interface two ways.
+	// The fourth argument is the read deadline, and `readDeadline` states it. libpcap then
+	// returns `pcap.NextErrorTimeoutExpired` on an idle interface, and `ReadPacketData`
+	// below returns `ErrReadTimeout` for it. **The two backends report an idle interface one
+	// way**, because the pure-Go backend reports the same answer at the same deadline.
+	//
+	// **This argument read `pcap.BlockForever` until 2026-08-15**, and #78 passed that value
+	// so that the two backends behaved the same. Issue #610 measured the cost of the shared
+	// answer: a read that blocks forever reaches the stop request never. So one `SIGINT`
+	// stopped no monitor on an interface that carries no traffic. Issue #610 is the reversal
+	// path.
+	//
+	// `OpenLive` sets non-blocking mode for a deadline above zero, and `waitForPacket` then
+	// waits `timeoutMillis(p.timeout)` for one packet. `gopacket@v1.6.1/pcap/pcap.go:169`
+	// and `gopacket@v1.6.1/pcap/pcap_unix.go:700` hold the two readings.
+	// Verified against: <https://pkg.go.dev/github.com/gopacket/gopacket/pcap>, read from the
+	// module cache at `github.com/gopacket/gopacket@v1.6.1` on 2026-08-15.
 	//
 	// The third argument sets promiscuous mode, and this backend takes none.
 	// `pcapgo.NewEthernetHandle` sets none either, so the two backends read one packet set.
-	handle, err := pcap.OpenLive(opts.Interface, snapshotLength, false, pcap.BlockForever)
+	handle, err := pcap.OpenLive(opts.Interface, snapshotLength, false, readDeadline)
 	if err != nil {
 		return nil, openError(opts.Interface, err)
 	}
@@ -72,6 +85,8 @@ func filterError(filter string, cause error) error {
 
 // ReadPacketData returns the bytes of the next packet, and the capture information of that
 // packet.
+// It returns `ErrReadTimeout` when the interface delivers no packet before the read
+// deadline.
 //
 // It calls `ReadPacketData` of `pcap.Handle`, which copies the bytes out of the read
 // buffer. `ZeroCopyReadPacketData` returns the buffer itself, and the next read overwrites
@@ -79,9 +94,27 @@ func filterError(filter string, cause error) error {
 func (p *pcapHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, error) {
 	data, info, err := p.handle.ReadPacketData()
 	if err != nil {
-		return nil, info, fmt.Errorf("capture: the interface returns no packet: %w", err)
+		return nil, info, readError(err)
 	}
 	return data, info, nil
+}
+
+// readError returns the error that ReadPacketData reports for the failure that libpcap
+// returned.
+//
+// It returns `ErrReadTimeout` for the read deadline, because a deadline states no failure
+// of the capture. `pcap.NextErrorTimeoutExpired` is the value that libpcap returns for it,
+// and `gopacket@v1.6.1/pcap/pcap.go:335` returns that value when the deadline is above
+// zero.
+//
+// The caller calls this function inside the branch of a failed read, so the failure is
+// never nil.
+func readError(cause error) error {
+	if errors.Is(cause, pcap.NextErrorTimeoutExpired) {
+		return ErrReadTimeout
+	}
+
+	return fmt.Errorf("capture: the interface returns no packet: %w", cause)
 }
 
 // LinkType returns the link type that libpcap reports for the interface.

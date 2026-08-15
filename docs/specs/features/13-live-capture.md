@@ -156,6 +156,10 @@ versions of that day.
 4. The operator sends `SIGINT`.
 5. The program stops reading, prints the open windows, writes a final statistics line and
    exits with status 0.
+6. Step 5 holds for an interface that carries no traffic. Each read carries a deadline, and
+   the monitor reads the stop request at that deadline. So the operator sends one signal,
+   and the second signal of FR-capture-19 loses no open window. **Issue #610 built the
+   deadline on 2026-08-15, and it is the reversal path.**
 
 ### A macOS user runs the monitor
 
@@ -237,7 +241,7 @@ earlier draft stated `// +build linux,go1.9`, and no file of v1.6.1 holds that t
 |---|---|
 | The interface does not exist. | One message that names the interface. Exit status 1. No handle opened. |
 | The capture filter does not compile. | One message that holds the filter text and the parser error. Exit status 1. |
-| The interface carries no traffic. | The statistics line still appears each interval. The monitor does not block on a read forever. |
+| The interface carries no traffic. | The statistics line still appears each interval. Each read carries a deadline, so the monitor blocks on no read forever. `SIGINT` stops the run at the first signal, and the run prints the open windows. |
 | The process lacks `CAP_NET_RAW`. | FR-capture-35 and FR-capture-36 cover it. |
 | A packet arrives while the stop request is set. | The monitor reads it and then stops. No packet is half-processed. |
 | Two signals arrive quickly. | FR-capture-19 exits at once, and the open windows are lost. |
