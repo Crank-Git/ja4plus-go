@@ -32,8 +32,12 @@ const theBritishAcknowledgmentWord = "acknowledg" + "ement"
 //
 // `docs/specs/foxio/README.md` states that the page is a verbatim copy of a section of the
 // port's specification, and `.claude/rules/rulings.md` `## A citation names its repository`
-// states `Never edit the copy.` The page carries British prose outside a code span today,
-// so a hit there would report a defect that no repair reaches.
+// states `Never edit the copy.` So a hit there would report a defect that no repair
+// reaches.
+//
+// The page holds no occurrence of this word today, and it holds one British spelling of
+// another word outside a code span. So the exemption is inert today, and the port decides
+// when it is not.
 const theVerbatimCopyPage = "docs/specs/foxio/port-register.md"
 
 // TestNoTrackedFileWritesTheBritishAcknowledgmentSpelling fails when a tracked file writes

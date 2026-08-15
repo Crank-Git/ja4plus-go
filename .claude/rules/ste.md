@@ -59,20 +59,21 @@ heading count is the count this file states.** Round 45 of the `## Changelog` of
 `docs/specs/spec.md` measured 17 and recorded the disagreement, and #486 repaired this
 sentence.
 
-**`misspell` reads a Go file alone, so no check of this repository reads a document.**
+**`misspell` reads a Go file alone, so that linter reads no document.**
 `.golangci.yml:32` states `# The maintainer writes US English.`, and `locale: US` on the
 next line binds the Go files. Round 39 of the `## Changelog` of `docs/specs/spec.md`
-records the same reading.
+records the same reading. **The sentence read `so no check of this repository reads a
+document` until #697**, and the guard below falsified that wider claim.
 
 **One word carries a guard, and every other British spelling carries none.**
 `TestNoTrackedFileWritesTheBritishAcknowledgmentSpelling` in
-`us_english_acknowledgment_test.go` reads every tracked file and it fails on the British
-form of `acknowledgment` as prose. #697 built it, because `misspell` at `locale: US` flags
-neither spelling of that word and round 48 had already converted it once. **The guard
-accepts an occurrence inside a code span and an occurrence in a block-quote line**, which
-are the two forms `## What is verbatim, and never rewritten` below holds unchanged. It
-exempts `docs/specs/foxio/port-register.md`, because that page is a verbatim copy that no
-change of this repository may edit. **Issue #697 is the reversal path.**
+`us_english_acknowledgment_test.go` reads every tracked file, and it fails on the British
+spelling of `acknowledgment` as prose. #697 built it, because `misspell` at `locale: US`
+flags neither spelling of that word and round 48 had already converted it once. **The guard
+accepts an occurrence inside a code span, and it accepts one in a block-quote line.**
+`## What is verbatim, and never rewritten` below holds both forms unchanged. It exempts
+`docs/specs/foxio/port-register.md`, because that page is a verbatim copy that no change of
+this repository may edit. **Issue #697 is the reversal path.**
 
 ## What is verbatim, and never rewritten
 
