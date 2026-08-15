@@ -89,17 +89,24 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1754 matches, 2
-deviations, 850 accepted deviations and 882 register keys. The run also reports 175 unaccepted
+reports 1754 matches, 0
+deviations, 852 accepted deviations and 884 register keys. The run also reports 175 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 850 and
-32 add up to the 882 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 852 and
+32 add up to the 884 register keys. A count that an entry below states therefore differs from
 a fresh run.
-**The 2 deviations that the register does not hold are two per-stream `JA4L-S` comparisons**,
-and issue #675 and issue #686 hold them. Issue #701 wrote no entry for either one, because no
-ruling covers them. **Batch #701 reached this paragraph holding 3 such rows, and issue #692
-closed one of them on 2026-08-15 UTC.** That row is `tls3.pcapng/153/JA4L.1`, and its entry
-carries ruling #449.
+**The register now holds every deviation the run reports, so the run exits 0.**
+`.github/workflows/release.yml` gates its release job on `make conformance`, and that exit
+status unblocks the `v1.0.0` tag.
+The last 2 rows are two per-stream `JA4L-S` comparisons, and the maintainer declined each one
+provisionally on 2026-08-15 UTC at comment 5303123055 of #701. Issue #675 put 1 more entry
+into the register, and issue #686 put 1 more. **The entry of #675 names the point C
+fall-through of `processUDP`, and the entry of #686 names the unruled point B reference
+split.** Each issue stays open, and each one is the reversal path of its own entry.
+**The 2 entries moved no fingerprint value**, because the run reports 1754 matches before the
+change and 1754 after it. **Batch #701 reached this paragraph holding 3 such rows, and issue
+#692 closed one of them on 2026-08-15 UTC.** That row is `tls3.pcapng/153/JA4L.1`, and its
+entry carries ruling #449.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against
