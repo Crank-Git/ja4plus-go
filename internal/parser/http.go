@@ -81,9 +81,11 @@ var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 // **It converts no payload to text, and the JA4L packet path still pays one conversion
 // before it reaches this function.** `holdsACompleteHTTPRequest` in `ja4l.go` calls
 // `IsHTTPRequest` first on the same bytes, and `IsHTTPRequest` writes `s := string(payload)`.
-// Escape analysis reports `internal/parser/http.go:212:14: string(payload) escapes to heap`,
-// measured on an Apple M4 on 2026-08-15 UTC. #685 measured one 8192-byte conversion at
-// 8192 B and one allocation on the same machine on the same day.
+// Escape analysis of `IsHTTPRequest` reports `string(payload) escapes to heap`, measured on
+// an Apple M4 on 2026-08-15 UTC. **This citation names the function and no line.** The
+// `file:line` that `-gcflags='-m'` prints moves with every comment above it, and the #440
+// convention keeps a citation that a later edit cannot falsify. #685 measured one 8192-byte
+// conversion at 8192 B and one allocation on the same machine on the same day.
 //
 // **So the `[]byte` parameter saves a second conversion on the JA4L path.** It saves the
 // only conversion of a caller that reads no request line first. The doc comment of #685
