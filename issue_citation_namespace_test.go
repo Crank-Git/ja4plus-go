@@ -743,7 +743,7 @@ func TestNoBareIssueCitationNamesANumberAboveTheHighWaterMark(t *testing.T) {
 		}
 
 		t.Errorf("%s:%d writes a bare #%d, and this repository had allocated %d numbers on "+
-			"2026-08-14.\n\tThe line reads: %s\n\tEither the citation names the port, and "+
+			"2026-08-15 UTC.\n\tThe line reads: %s\n\tEither the citation names the port, and "+
 			"the repair writes `Crank-Git/ja4plus#%d`, or this repository has allocated "+
 			"more numbers since, and the repair re-measures %s.",
 			citation.file, citation.line, citation.number, issueCitationHighWaterMark,

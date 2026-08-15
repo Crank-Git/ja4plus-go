@@ -277,6 +277,15 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// byte test denies a record the reference counts. A payload on a connection the library
 	// already reads still carries SSH. Issue #200 records the 42 comparisons that a stricter
 	// guard cost.
+	//
+	// This guard also carries divergence D2 of the port, which the maintainer ruled on
+	// 2026-08-11 UTC in the second comment of #129. A payload that carries SSH opens a
+	// connection on any port, and the port holds the same admission at
+	// `ja4plus/fingerprinters/ja4ssh.py:135`. The FoxIO Python and the Wireshark dissector
+	// each require port 22 instead. The maintainer ruled D2 beside the three-step client
+	// direction that `decideEndpoints` holds, because the endpoint rule without the port
+	// rule answers differently on a connection that uses no port 22. #129 is the reversal
+	// path, and a reversal changes the port as well.
 	if !hasSSHData && !opensOnSSHPort && !exists {
 		return nil, nil
 	}
