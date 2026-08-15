@@ -323,8 +323,14 @@ func TestTheWatchPermissionMessageNamesTheBpfDeviceOnDarwin(t *testing.T) {
 // `TestRunWatchOpensTheInterfaceThatEveryParsedOptionNames` each reach `runMonitor` and
 // return, and each one left one parked goroutine and one signal registration before #612.
 // So the test binary swallowed the first Ctrl-C of the run.
+// This test is the last test of the last test file of the package, and the count of parked
+// handlers therefore reads every earlier test too. So a leak of any test of this binary
+// fails this test.
 func TestWatchInterfaceLeavesNoHandlerGoroutine(t *testing.T) {
 	before := stopHandlerGoroutineCount()
+	if before != 0 {
+		t.Errorf("%d handler goroutines stand before this test, and an earlier test leaked each one", before)
+	}
 
 	// The stub fails the first read, so the monitor loop returns at once.
 	_ = watchInterface(watchOptions{iface: "eth0"},
