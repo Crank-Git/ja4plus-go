@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // DHCP message type to JA4D abbreviation mapping (DHCPv4).
@@ -40,6 +40,12 @@ var dhcpExcludedOptions = map[byte]bool{
 	81: true,
 }
 
+// dhcpFQDNNameOffset is the count of bytes that option 81 holds before the domain name.
+// Section 2 of RFC 4702 puts the domain name after one flags byte and two rcode bytes, and
+// it states that the minimum value of the length field is 3. So an option of exactly 3
+// bytes carries no name. The port holds the same value as `_DHCP_FQDN_NAME_OFFSET`.
+const dhcpFQDNNameOffset = 3
+
 // JA4DFingerprinter generates JA4D DHCP fingerprints (FoxIO PR #267/#270).
 //
 // Format: {type:5}{size:4}{ip:1}{fqdn:1}_{options}_{request_list}
@@ -47,13 +53,15 @@ var dhcpExcludedOptions = map[byte]bool{
 //   - type: 5-char DHCP message type abbreviation (from option 53)
 //   - size: 4-digit Maximum DHCP Message Size (option 57), capped 9999, default "0000"
 //   - ip:   'i' if Requested IP Address (option 50) is present, else 'n'
-//   - fqdn: 'd' if Client FQDN (option 81) is present, else 'n'
+//   - fqdn: 'd' if Client FQDN (option 81) carries a domain name, else 'n'
 //   - options: dash-joined option type codes in PRESENCE ORDER, excluding
 //     Pad (0), MessageType (53), Requested IP (50), FQDN (81). Default "00".
 //   - request_list: dash-joined items of the Parameter Request List (option 55)
 //     in original order. Default "00".
+//
+// One JA4DFingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4DFingerprinter struct {
-	results []FingerprintResult
 }
 
 // NewJA4D creates a new JA4D fingerprinter.
@@ -68,7 +76,12 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	if udpLayer == nil {
 		return nil, nil
 	}
-	udp := udpLayer.(*layers.UDP)
+	// A caller that supplies a custom decoder can register another concrete type under
+	// the UDP layer type. A fingerprinter returns a non-fatal error for it.
+	udp, ok := udpLayer.(*layers.UDP)
+	if !ok {
+		return nil, fmt.Errorf("the UDP layer carries the type %T", udpLayer)
+	}
 
 	if udp.SrcPort != 67 && udp.SrcPort != 68 && udp.DstPort != 67 && udp.DstPort != 68 {
 		return nil, nil
@@ -79,7 +92,11 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	if dhcpLayer == nil {
 		return nil, nil
 	}
-	dhcp := dhcpLayer.(*layers.DHCPv4)
+	// The DHCPv4 layer type carries the same risk as the UDP layer type above.
+	dhcp, ok := dhcpLayer.(*layers.DHCPv4)
+	if !ok {
+		return nil, fmt.Errorf("the DHCPv4 layer carries the type %T", dhcpLayer)
+	}
 
 	var msgType byte
 	var msgTypeSet bool
@@ -104,14 +121,33 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 				msgTypeSet = true
 			}
 		case layers.DHCPOptMaxMessageSize: // 57
-			if len(opt.Data) >= 2 {
+			// R2 of `docs/specs/foxio/JA4D.md` gives subfield 2 four characters, so one
+			// occurrence decides it. `wireshark/source/packet-ja4.c:1508-1512` appends
+			// every occurrence and reaches a part a of fifteen characters, and this
+			// project declines that defect. FR-parity-51 states the rule, and the port's
+			// register row `Subfield 2 of JA4D when a message repeats option 57` holds the
+			// reading. The port decided it as D4 of its issue #231 on 2026-08-08.
+			if len(opt.Data) >= 2 && !maxMsgSizeSet {
 				maxMsgSize = uint16(opt.Data[0])<<8 | uint16(opt.Data[1])
 				maxMsgSizeSet = true
 			}
 		case layers.DHCPOptRequestIP: // 50
 			hasRequestIP = true
 		case 81: // Client FQDN
-			hasFQDN = true
+			// The maintainer ruled issue #371 on 2026-08-14. The name inside option 81
+			// decides the flag. The presence of the option decides nothing. R16 of
+			// `docs/specs/foxio/JA4D.md` records the rank 1 image label
+			// `Has a Domain name (d) or No domain (n)`.
+			// `wireshark/source/packet-ja4.c:1521` tests the field `dhcp.fqdn.name`, and
+			// `zeek/ja4d/main.zeek:73` tests the presence. The ruling declines the Zeek
+			// answer, because an image outranks an implementation. The port holds the same
+			// rule at `ja4plus/fingerprinters/ja4d.py:161-165` of tag `v1.1.0`, and the
+			// port half is `Crank-Git/ja4plus#615`. A reversal restores `hasFQDN = true`
+			// in both repositories together.
+			//
+			// The option data holds a length that the packet states, so the comparison
+			// below reads that length and it slices no byte.
+			hasFQDN = hasFQDN || len(opt.Data) > dhcpFQDNNameOffset
 		case layers.DHCPOptParamsRequest: // 55
 			paramList = opt.Data
 		}
@@ -165,13 +201,13 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		Timestamp:   parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears accumulated results.
+// Reset clears the state of the fingerprinter.
+// JA4D holds no state, so this method changes nothing. It keeps the Fingerprinter
+// interface whole. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4DFingerprinter) Reset() {
-	f.results = nil
 }
 
 // CleanupConnection is a no-op for JA4D (stateless per-packet fingerprinter).
@@ -191,7 +227,7 @@ func ja4dFormatList(values []byte) string {
 	return strings.Join(parts, "-")
 }
 
-// ComputeJA4D is a convenience function that computes the JA4D fingerprint for a single packet.
+// ComputeJA4D is a one-shot function that computes the JA4D fingerprint for a single packet.
 func ComputeJA4D(packet gopacket.Packet) string {
 	fp := NewJA4D()
 	results, _ := fp.ProcessPacket(packet)

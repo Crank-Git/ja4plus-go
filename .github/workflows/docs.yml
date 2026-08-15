@@ -1,0 +1,183 @@
+name: Docs publish
+
+# FR-documentation-31 states that this workflow publishes the site to GitHub Pages on a
+# push to `master`. FR-documentation-32 states that it calls `docs-build.yml` and holds no
+# second build recipe. So this file names no build command and no generator.
+# `TestTheDocsPublishWorkflowCallsTheBuildWorkflow` holds that rule.
+#
+# The workflow runs three jobs in order.
+#
+#   1. `pages-setting` reads the Pages setting, under FR-documentation-34.
+#   2. `build` calls `.github/workflows/docs-build.yml`, which builds the site.
+#   3. `deploy` publishes the artifact that the build uploaded.
+#
+# FR-documentation-37 pins every `uses:` reference to a 40-character commit hash. #88
+# resolved each hash from the GitHub API on 2026-08-14, and never from memory. The trailing
+# comment names the version tag that points at the same commit.
+#
+# **A push to a branch other than `master` reaches no job of this file.** The epic that
+# added this workflow merges to `dev`, so no run of this workflow can prove the publish
+# path before `dev` reaches `master`.
+#
+# Verified against:
+#   <https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax>,
+#   <https://docs.github.com/en/actions/reference/workflows-and-actions/reusable-workflows>,
+#   <https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows>,
+#   <https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site>,
+#   <https://docs.github.com/en/rest/pages/pages>,
+#   <https://github.com/actions/deploy-pages>. Each one retrieved 2026-08-14.
+
+on:
+  push:
+    branches: [master]
+
+# FR-documentation-35 gives the two Pages permissions to the `deploy` job alone. This block
+# serves a job that declares no block of its own.
+#
+# **A job block replaces this block, and it never adds to it.** The workflow-syntax
+# reference states that a job block configures a different set of permissions for that job,
+# so a scope this block names is absent from a job that does not name it again. Each of the
+# three jobs below therefore states every scope it needs. A later step that reads the
+# repository needs `contents: read` in its own job block.
+permissions:
+  contents: read
+
+# FR-documentation-36 runs one deployment at a time, and it cancels no run in progress.
+# `cancel-in-progress: false` is what holds the second half. The workflow-syntax reference
+# states the default: `By default, any existing pending job or workflow in the same
+# concurrency group will be canceled`. A canceled deployment can leave the site at the
+# older commit, so the second push waits instead.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # FR-documentation-34 reads the Pages setting first. The `build` job names this job in
+  # `needs`, so a wrong setting fails the run before it builds anything.
+  #
+  # **A wrong setting is silent without this job.** The port found that a publish workflow
+  # ran green for two days and published nothing, and
+  # `docs/specs/features/14-documentation.md` records that measurement.
+  pages-setting:
+    runs-on: ubuntu-latest
+    # The REST reference states no fine-grained permission for this endpoint, and it states
+    # that a classic token needs the `repo` scope. So this job grants the narrowest scope
+    # that names the resource it reads. A token that still cannot read the endpoint answers
+    # 403, and the branch that reads a status other than 200 and 404 reports it without a
+    # claim about the setting.
+    permissions:
+      pages: read
+    steps:
+      - name: Read the Pages setting
+        env:
+          # The script reads each value through an environment variable, and it expands no
+          # expression into shell text.
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_URL: https://crank-git.github.io/ja4plus-go/
+        # The step names its shell, because the branches below depend on the shell options.
+        # The workflow-syntax reference states the invocation of an explicit `bash`:
+        # `bash --noprofile --norc -eo pipefail {0}`. So `-e` ends the step at the first
+        # command that fails, and each read below holds its own exit status. Without the
+        # three guards, a `curl` that cannot connect would end the step before the branch
+        # that names the reason.
+        shell: bash
+        run: |
+          # `--write-out` prints the status code, and it prints `000` when the connection
+          # fails. `|| true` holds that status back, so the branches below report it.
+          status=$(curl --silent --show-error --location \
+            --write-out '%{http_code}' --output pages.json \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages" || true)
+
+          if [ -z "$status" ]; then
+            status="000"
+          fi
+
+          if [ "$status" = "404" ]; then
+            echo "GitHub Pages is not enabled for this repository, so this run publishes nothing." >&2
+            echo "The repair: open Settings, click Pages under \"Code and automation\", and under \"Build and deployment\" set \"Source\" to \"GitHub Actions\"." >&2
+            exit 1
+          fi
+
+          if [ "$status" != "200" ]; then
+            # This branch claims nothing about the setting. The status names a failure of
+            # the read, and a failed read is not an absent site.
+            echo "The Pages API answered $status, so this run did not read the setting." >&2
+            echo "The response body:" >&2
+            if [ -f pages.json ]; then
+              cat pages.json >&2
+            else
+              echo "the read wrote no body" >&2
+            fi
+            echo >&2
+            echo "This message states no reading of the Pages setting. Read the status above first." >&2
+            exit 1
+          fi
+
+          # A body that holds no JSON fails `jq`, and `-e` would then end the step without
+          # a message. Each read holds that status back, and the value falls to `none`.
+          build_type=$(jq -r '.build_type // "none"' pages.json 2>/dev/null || echo none)
+          html_url=$(jq -r '.html_url // "none"' pages.json 2>/dev/null || echo none)
+
+          # A 200 that holds no `build_type` reads the same way as a failed read, and it
+          # states nothing about the setting. So this branch names no repair of the setting.
+          if [ "$build_type" = "none" ]; then
+            echo "The Pages API answered 200, and the body names no build_type." >&2
+            echo "The response body:" >&2
+            cat pages.json >&2
+            echo >&2
+            echo "This message states no reading of the Pages setting." >&2
+            exit 1
+          fi
+
+          echo "The Pages site builds from \"$build_type\", and it serves $html_url."
+
+          if [ "$build_type" != "workflow" ]; then
+            echo "GitHub Pages builds this site from \"$build_type\", and this workflow publishes an artifact." >&2
+            echo "The repair: open Settings, click Pages under \"Code and automation\", and under \"Build and deployment\" set \"Source\" to \"GitHub Actions\"." >&2
+            exit 1
+          fi
+
+          # FR-documentation-38 states the site URL. A custom domain changes `html_url`, and
+          # that is a setting the maintainer owns. So a difference warns here, and it fails
+          # no publish.
+          if [ "$html_url" != "$EXPECTED_URL" ]; then
+            echo "::warning title=Pages URL::The Pages API reports $html_url, and FR-documentation-38 names $EXPECTED_URL. Read the site_url of mkdocs.yml and the README link against the setting."
+          fi
+
+  # FR-documentation-32 holds the one build recipe in `docs-build.yml`. The reusable
+  # workflow reference states the form for a workflow of the same repository:
+  # `./.github/workflows/{filename}`. It states that the called workflow then comes from the
+  # same commit as the caller, so this reference carries no ref and it needs no pin.
+  #
+  # This job declares `contents: read` and nothing more. The reference states that a called
+  # workflow can only reduce the permissions of the caller, so no page of this repository
+  # can widen the token from here.
+  build:
+    needs: pages-setting
+    permissions:
+      contents: read
+    uses: ./.github/workflows/docs-build.yml
+    with:
+      upload-artifact: true
+
+  # FR-documentation-35 names this job. `actions/deploy-pages` states that it needs
+  # `pages: write` and `id-token: write`, and that it needs the `github-pages` environment
+  # with the `page_url` output as the environment URL.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # The action reads the `github-pages` artifact that `docs-build.yml` uploaded, and it
+      # needs no checkout of the repository.
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

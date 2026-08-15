@@ -5,12 +5,27 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // buildSSHPacket creates a synthetic TCP packet with the given parameters.
+// It names the sequence number 1, so a test that sends more than one payload segment in one
+// direction calls buildSSHSegment instead.
 func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte, ack bool) gopacket.Packet {
+	return buildSSHSegment(srcIP, dstIP, srcPort, dstPort, payload, 1)
+}
+
+// buildSSHSegment returns one synthetic TCP packet at the sequence number the caller names.
+//
+// `parser.SSHMessageTracker` reads the sequence number, because it follows the SSH message
+// boundary across two segments. A direction that repeats one sequence number sends one
+// segment and then a retransmission of it, and FoxIO counts a retransmission once. A test
+// that sends more than one payload segment in one direction therefore names an advancing
+// number.
+func buildSSHSegment(
+	srcIP, dstIP string, srcPort, dstPort uint16, payload []byte, seq uint32,
+) gopacket.Packet {
 	ip := &layers.IPv4{
 		SrcIP:    net.ParseIP(srcIP),
 		DstIP:    net.ParseIP(dstIP),
@@ -22,6 +37,7 @@ func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte
 		SrcPort: layers.TCPPort(srcPort),
 		DstPort: layers.TCPPort(dstPort),
 		ACK:     true,
+		Seq:     seq,
 	}
 	_ = tcp.SetNetworkLayerForChecksum(ip)
 
@@ -39,8 +55,11 @@ func buildSSHPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte
 	return pkt
 }
 
+// TestJA4SSH_WindowTrigger holds the emission at the window threshold.
+// Issue #53 removed the upper cap that this test read at 10, and
+// TestJA4SSHEmitsAtThePacketCountAndHoldsNoUpperCap holds the default window of 200.
 func TestJA4SSH_WindowTrigger(t *testing.T) {
-	fp := NewJA4SSH(200) // default window, early trigger at 10
+	fp := NewJA4SSH(10)
 
 	clientIP := "192.168.1.100"
 	serverIP := "10.0.0.1"
@@ -51,7 +70,8 @@ func TestJA4SSH_WindowTrigger(t *testing.T) {
 
 	// Send 9 packets — should NOT trigger yet
 	for i := 0; i < 9; i++ {
-		results, err := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, sshPayload, false))
+		results, err := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, clientPort, serverPort,
+			sshPayload, sshSeqOfPacket(i, sshPayload)))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -61,7 +81,8 @@ func TestJA4SSH_WindowTrigger(t *testing.T) {
 	}
 
 	// 10th packet should trigger
-	results, err := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, sshPayload, false))
+	results, err := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, clientPort, serverPort,
+		sshPayload, sshSeqOfPacket(9, sshPayload)))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -74,28 +95,27 @@ func TestJA4SSH_WindowTrigger(t *testing.T) {
 }
 
 func TestJA4SSH_DirectionPort22(t *testing.T) {
-	fp := NewJA4SSH(10) // window of 10, early trigger at 10
+	fp := NewJA4SSH(10) // The window holds ten SSH packets.
 
 	clientIP := "192.168.1.100"
 	serverIP := "10.0.0.1"
 	clientPort := uint16(54321)
 	serverPort := uint16(22)
 
-	clientPayload := make([]byte, 36)
-	copy(clientPayload, "SSH-2.0-client")
-
-	serverPayload := make([]byte, 100)
-	copy(serverPayload, "SSH-2.0-server")
+	clientPayload := sshPayloadOfSize(36)
+	serverPayload := sshPayloadOfSize(100)
 
 	// 5 client packets (size 36 each)
 	for i := 0; i < 5; i++ {
-		_, _ = fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, clientPort, serverPort, clientPayload, false))
+		_, _ = fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, clientPort, serverPort,
+			clientPayload, sshSeqOfPacket(i, clientPayload)))
 	}
 
 	// 5 server packets (size 100 each) — should trigger
 	var lastResults []FingerprintResult
 	for i := 0; i < 5; i++ {
-		results, _ := fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, serverPort, clientPort, serverPayload, false))
+		results, _ := fp.ProcessPacket(buildSSHSegment(serverIP, clientIP, serverPort, clientPort,
+			serverPayload, sshSeqOfPacket(i, serverPayload)))
 		if len(results) > 0 {
 			lastResults = results
 		}
@@ -147,16 +167,16 @@ func TestJA4SSH_Reset(t *testing.T) {
 
 	fp.Reset()
 
+	// Issue #25 removed the results slice, so the connection table is the only state that
+	// Reset clears.
 	if len(fp.connections) != 0 {
 		t.Error("expected connections to be cleared after reset")
 	}
-	if len(fp.results) != 0 {
-		t.Error("expected results to be cleared after reset")
-	}
 }
 
+// TestJA4SSH_EarlyTrigger holds the emission at a window that the caller names.
+// Issue #53 removed the upper cap of 10, so the threshold reads the window alone.
 func TestJA4SSH_EarlyTrigger(t *testing.T) {
-	// With packet count=5, early trigger = min(5, 10) = 5
 	fp := NewJA4SSH(5)
 
 	clientIP := "192.168.1.100"
@@ -164,20 +184,25 @@ func TestJA4SSH_EarlyTrigger(t *testing.T) {
 	sshPayload := []byte("SSH-2.0-OpenSSH_8.9\r\n")
 
 	for i := 0; i < 4; i++ {
-		results, _ := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+		results, _ := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, 54321, 22, sshPayload,
+			sshSeqOfPacket(i, sshPayload)))
 		if len(results) > 0 {
 			t.Fatalf("unexpected trigger at packet %d", i+1)
 		}
 	}
 
-	results, _ := fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+	results, _ := fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, 54321, 22, sshPayload,
+		sshSeqOfPacket(4, sshPayload)))
 	if len(results) == 0 {
 		t.Fatal("expected fingerprint at packet 5")
 	}
 }
 
+// TestJA4SSH_ACKCounting holds the two bare ACK fields of the value.
+// A bare ACK does not advance the window, so the window holds seven SSH packets.
+// Issue #53 removed the bare ACK count from the threshold, and FR-parity-28 states the rule.
 func TestJA4SSH_ACKCounting(t *testing.T) {
-	fp := NewJA4SSH(10)
+	fp := NewJA4SSH(7)
 
 	clientIP := "192.168.1.100"
 	serverIP := "10.0.0.1"
@@ -185,7 +210,8 @@ func TestJA4SSH_ACKCounting(t *testing.T) {
 
 	// 5 SSH data packets from client
 	for i := 0; i < 5; i++ {
-		_, _ = fp.ProcessPacket(buildSSHPacket(clientIP, serverIP, 54321, 22, sshPayload, false))
+		_, _ = fp.ProcessPacket(buildSSHSegment(clientIP, serverIP, 54321, 22, sshPayload,
+			sshSeqOfPacket(i, sshPayload)))
 	}
 
 	// 3 pure ACKs from server
@@ -193,11 +219,12 @@ func TestJA4SSH_ACKCounting(t *testing.T) {
 		_, _ = fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, 22, 54321, nil, true))
 	}
 
-	// 2 more SSH data from server — should hit 10 total
+	// 2 more SSH data from server — the window reaches seven SSH packets
 	serverPayload := []byte("SSH-2.0-ServerSSH\r\n")
 	var lastResults []FingerprintResult
 	for i := 0; i < 2; i++ {
-		results, _ := fp.ProcessPacket(buildSSHPacket(serverIP, clientIP, 22, 54321, serverPayload, false))
+		results, _ := fp.ProcessPacket(buildSSHSegment(serverIP, clientIP, 22, 54321, serverPayload,
+			sshSeqOfPacket(i, serverPayload)))
 		if len(results) > 0 {
 			lastResults = results
 		}
@@ -323,21 +350,21 @@ func TestJA4SSH_GetHASSHFingerprints(t *testing.T) {
 	// Build a synthetic KEXINIT payload as an SSH binary packet.
 	// Format: 4-byte packet_length | 1-byte padding_length | 1-byte msg_type(20) | 16-byte cookie | 10 name-lists
 	nameListValues := []string{
-		"curve25519-sha256",  // kex algorithms
-		"ssh-ed25519",        // server host key algorithms
-		"aes128-ctr",         // encryption c2s
-		"aes128-ctr",         // encryption s2c
-		"hmac-sha2-256",      // mac c2s
-		"hmac-sha2-256",      // mac s2c
-		"none",               // compression c2s
-		"none",               // compression s2c
-		"",                   // languages c2s
-		"",                   // languages s2c
+		"curve25519-sha256", // kex algorithms
+		"ssh-ed25519",       // server host key algorithms
+		"aes128-ctr",        // encryption c2s
+		"aes128-ctr",        // encryption s2c
+		"hmac-sha2-256",     // mac c2s
+		"hmac-sha2-256",     // mac s2c
+		"none",              // compression c2s
+		"none",              // compression s2c
+		"",                  // languages c2s
+		"",                  // languages s2c
 	}
 
 	// Build the KEXINIT message body: msg_type + cookie + name-lists
 	var kexBody []byte
-	kexBody = append(kexBody, 20) // msg_type = SSH_MSG_KEXINIT
+	kexBody = append(kexBody, 20)                  // msg_type = SSH_MSG_KEXINIT
 	kexBody = append(kexBody, make([]byte, 16)...) // cookie (zeros)
 	for _, nl := range nameListValues {
 		nlLen := make([]byte, 4)

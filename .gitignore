@@ -1,19 +1,44 @@
 # Build output
 bin/
 dist/
+# `go build ./internal/mutationreport` writes the binary of that main package into the
+# current directory. `go build ./...` writes none, so the gate of `CLAUDE.md` never produces
+# this file and a hand-run build does.
+/mutationreport
+
+# The linter cache. `make lint` holds one for each checkout, so a cached issue never
+# carries a path into another checkout. See #257.
+.golangci-cache/
+
+# The coverage profile that `make cover` and the CI test job write.
+coverage.out
 
 # Captures
 *.pcap
 *.pcapng
 
+# Constructed captures are tracked. Several rulings are separated by no FoxIO vector, so a
+# test builds its own packet and commits it. The rule above would swallow those files.
+# The fetched FoxIO corpus stays ignored: it is FoxIO-licensed material.
+!testdata/rulings/*.pcap
+!testdata/rulings/*.pcapng
+!testdata/prerelease/*.pcap
+!testdata/prerelease/*.pcapng
+
 # Dependencies
 vendor/
 
-# Claude Code / OMC
+# Claude Code
+# CLAUDE.md and .claude/ are tracked: issue-flow workers run in git worktrees, which
+# contain tracked files only, so ignored project rules are invisible to them.
 .omc/
-.claude/
-CLAUDE.md
 AGENTS.md
+.claude/settings.local.json
+.claude/worktrees/
+.claude/agent-memory-local/
+CLAUDE.local.md
+.claude.local.md
+.issue-flow.local.json
 
 # Superpowers artifacts
 docs/superpowers/
@@ -21,6 +46,18 @@ docs/superpowers/
 # Dev notes (not part of the library)
 PYTHON_ISSUES.md
 TODOS.md
+
+# Documentation site build output. The pages under docs/ are tracked; the built site is not.
+site/
+# Two virtual environment names reach the documentation build, and this file covers both.
+# `python3 -m venv` writes a `.gitignore` holding `*` inside the directory it creates, so an
+# environment ignores itself today. A release that stops writing that file would let
+# `git add -A` stage a whole virtual environment, and these two lines hold without it.
+.venv/
+.venv-docs/
+
+# Mutation sweep scratch. The reports under docs/mutation_reports/ are tracked.
+.gremlins/
 
 # OS
 .DS_Store

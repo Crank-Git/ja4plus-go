@@ -37,7 +37,10 @@ func IsSSHPacket(payload []byte) bool {
 
 	paddingLength := payload[4]
 	// Padding length must be less than packet length
-	if paddingLength >= byte(packetLength) {
+	// The comparison reads the whole 32-bit length. A conversion to a byte kept the low
+	// 8 bits. Every packet length whose low byte was at or below the padding length then
+	// failed this test.
+	if uint32(paddingLength) >= packetLength {
 		return false
 	}
 
@@ -76,7 +79,10 @@ func ParseSSHPacket(payload []byte) *SSHPacketInfo {
 	}
 
 	paddingLength := payload[4]
-	if paddingLength >= byte(packetLength) {
+	// The comparison reads the whole 32-bit length. A conversion to a byte kept the low
+	// 8 bits. Every packet length whose low byte was at or below the padding length then
+	// failed this test.
+	if uint32(paddingLength) >= packetLength {
 		return nil
 	}
 
@@ -101,14 +107,14 @@ func ParseSSHPacket(payload []byte) *SSHPacketInfo {
 // encryption_c2s, encryption_s2c, mac_c2s, mac_s2c,
 // compression_c2s, compression_s2c, languages_c2s, languages_s2c.
 type KEXINITInfo struct {
-	KexAlgorithms          string // index 0
+	KexAlgorithms           string // index 0
 	ServerHostKeyAlgorithms string // index 1
-	EncryptionC2S          string // index 2
-	EncryptionS2C          string // index 3
-	MACC2S                 string // index 4
-	MACS2C                 string // index 5
-	CompressionC2S         string // index 6
-	CompressionS2C         string // index 7
+	EncryptionC2S           string // index 2
+	EncryptionS2C           string // index 3
+	MACC2S                  string // index 4
+	MACS2C                  string // index 5
+	CompressionC2S          string // index 6
+	CompressionS2C          string // index 7
 }
 
 // ParseKEXINIT parses algorithm name-lists from an SSH KEXINIT message.
@@ -177,8 +183,9 @@ func ComputeHASSH(info *KEXINITInfo, isServer bool) string {
 	return fmt.Sprintf("%x", hash)
 }
 
-// ParseKEXINITFromPacket is a convenience function that extracts KEXINIT info
-// from an SSH binary packet payload (starting from the 4-byte packet length).
+// ParseKEXINITFromPacket returns the KEXINIT fields of one SSH binary packet payload.
+// The payload starts at the 4-byte packet length.
+// It returns nil when the payload holds no KEXINIT that this parser reads.
 func ParseKEXINITFromPacket(data []byte) *KEXINITInfo {
 	if len(data) < 6 {
 		return nil

@@ -1,28 +1,127 @@
 name: CI
 
+# FR-supply-12 pins every `uses:` reference to a 40-character commit hash, because a tag
+# moves and a hash does not. FR-supply-13 gives each one a trailing comment that names the
+# version the hash carries.
+#
+# #67 resolved each hash from the GitHub API on 2026-08-13, and never from memory. The
+# trailing comment names the semantic version tag that points at the same commit. Read a
+# hash as the truth and the comment as a label, because a later release moves the label.
+#
+# To move a pin, resolve the tag again and write both the new hash and the new version.
+
 on:
   push:
     branches: [main, master]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, dev]
 
+# FR-supply-15 gives this workflow `contents: read` and no other permission. Every job
+# here reads the repository, and no job writes to it. A pull request from a fork controls
+# the code these jobs run, so the token gets no write scope.
+#
+# The block sits at the workflow level, so a job that a later issue adds inherits the
+# floor rather than restating it. #65, #68 and #69 each add a job to this file.
+#
+# `actions/upload-artifact` needs no entry of its own. Its README states no permission
+# requirement, and run 31740846163 uploaded the conformance log under this same
+# `contents: read` scope.
+permissions:
+  contents: read
+
+# Every job of this workflow names the same Go version, and this block states why the
+# version is `~1.26.6`.
+#
+# **The maintainer decided on 2026-08-13 that every job moves to Go 1.26.** Comment
+# 5286440152 of #65 holds the decision. On go1.24.13, the newest Go 1.24 patch,
+# `govulncheck` v1.6.0 reported 9 called standard library vulnerabilities and exited 3,
+# measured on 2026-08-13. Each one names a fix in a go1.25.x release, and none names a fix in
+# a go1.24.x release. So no Go 1.24 patch clears them, and a Go 1.24 build of this library
+# calls a vulnerable function.
+#
+# **That count carries its date, because the vulnerability database is live.** The same
+# command on the same toolchain reported 13 on 2026-08-14, and #472 measured it. No line of
+# this repository changed between the two measurements. So read the figure as a measurement
+# of one day, and never as a property of go1.24.13. `CLAUDE.md` `## Conventions` states the
+# rule that a ruling record quotes no live measurement without its date.
+#
+# **`go.mod` does not move, and it states a language version rather than a toolchain.**
+# #438 established that reading, and Go states it: `The language version for a Go version
+# is the result of truncating everything after the N: 1.21, 1.21rc2, and 1.21.3 all
+# implement language version 1.21.` So the `go 1.24.0` directive and this Go 1.26 build are
+# independent, and `CLAUDE.md` still states `Go 1.24 or later`.
+#
+# **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.** GO-2026-5856
+# names a fix at 1.26.5. GO-2026-6218, GO-2026-6090, GO-2026-5972 and GO-2026-5026 each name
+# a fix at 1.26.6. So a go1.26.0 through go1.26.5 toolchain still calls a vulnerable
+# function. A bare `1.26` does not exclude those six, because `actions/setup-go` reads the
+# tool cache of the runner before it reads the release list. `installer.ts` at the pinned
+# hash calls `tc.find('go', versionSpec, arch)` first, and it returns a cached version that
+# satisfies the range. A runner that caches go1.26.3 alone would therefore resolve `1.26` to
+# a toolchain that fails this gate. `~1.26.6` excludes every one of the six, and it still
+# takes each later 1.26 patch.
+#
+# `actions/setup-go` passes this string to `semver.satisfies`, so it reads any node-semver
+# range. The README names `'^1.13.1'` and `'>=1.17.0'` as supported forms.
+#
+# **The measurement on 2026-08-13 at `govulncheck` v1.6.0**: go1.26.5 reports 4 called
+# standard library vulnerabilities and exits 3, and go1.26.6 reports 0 and exits 0. Each of
+# the four names a fix at go1.26.6. go1.26.6 is the newest published Go 1.26 patch, and
+# <https://go.dev/dl/?mode=json&include=all> names it, retrieved 2026-08-13.
+#
+# **This range moved once already, and a new advisory moved it.** The `vuln` job passed at
+# `~1.26.5` on go1.26.5 at commit `83f2127`, and it failed on the same toolchain at commit
+# `7210e80` about one hour later. No line of this repository changed between the two runs.
+# The comment above the `vuln` job below states that property in full.
+#
+# **`foundation_test.go` holds `goToolchainRange`, and that constant is the one source for
+# this range.** To move the range, or to reverse the decision and restore `'1.24'`, edit
+# these four places together:
+#
+#   1. The `goToolchainRange` constant in `foundation_test.go`.
+#   2. Every `go-version` input of this file, and the `go-version` matrix of the `test` job.
+#   3. The `go-version` input of `.github/workflows/release.yml`.
+#   4. Every `go-version` input of `.github/workflows/fuzz.yml`. #47 added that workflow on
+#      2026-08-14, and `TestTheNightlyFuzzWorkflowNamesTheGoToolchainRange` of
+#      `fuzz_job_test.go` reads it against the constant.
+#
+# **Count no jobs here, because a later issue adds one.** #68 and #69 each added a job after
+# #65 wrote this block, and the instruction that named three jobs then named the wrong
+# number. `TestCIWorkflowNamesOneGoVersion` reads every site of this file against the
+# constant, and `TestReleaseWorkflowNamesTheGoToolchainRange` reads the release workflow. So
+# a site left behind fails a test in the tree.
+#
+# A reversal to Go 1.24 returns the called vulnerabilities of the Go 1.24 standard library.
+# Comment 5286440152 of #65 measured nine of them on 2026-08-13, and #472 measured 13 on
+# 2026-08-14. A reversal re-takes the measurement, because the database is live.
 jobs:
   test:
     strategy:
       matrix:
-        go-version: ['1.22', '1.23', '1.24']
+        go-version: ['~1.26.6']
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Build
         run: go build ./...
+
+      # FR-documentation-27 of #87 states that this command gates every pull request.
+      #
+      # The `Build` step above already reaches `examples/`, because `./...` names every
+      # package of the module. **This step is not that step, and it is not decoration.**
+      # It names the command the requirement names. So a reader of a red run reads which
+      # requirement failed. A later edit of the `Build` step then drops no gate.
+      #
+      # #88 owns `docs.yml` and `docs-build.yml`, and it owns no step of this file.
+      - name: Build the examples
+        run: go build ./examples/...
 
       - name: Test
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -33,16 +132,832 @@ jobs:
       - name: Verify CLI
         run: ./bin/ja4plus --version
 
+  # FR-conformance-34 runs the conformance suite on every pull request this workflow
+  # covers. The maintainer ruled on 2026-08-11 that the job reports and does not block.
+  # #33 measured 302 matches and 1858 deviations against an empty register. A job that
+  # blocks stays red on every pull request until Epic 5 closes the list, and a permanently
+  # red job teaches every reader to ignore it. Epic 5 makes the job fail on a deviation.
+  conformance:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and FR-supply-15 permits no other permission here.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # The cache key and the job summary both name the pinned commit, so read it once.
+      - name: Read the corpus pin
+        id: pin
+        run: echo "commit=$(tr -d '[:space:]' < testdata/foxio.pin)" >> "$GITHUB_OUTPUT"
+
+      # FR-conformance-37 keys the cache by the pinned commit and by the hash of
+      # `scripts/fetch-corpus.sh`. A pin move misses the cache, so the next run fetches the
+      # new corpus.
+      #
+      # The hash names the corpus layout, because that script decides which directories a
+      # complete corpus holds. `actions/cache@v4` writes no entry when the key matches an
+      # entry that already exists, and GitHub states that the content of an entry never
+      # changes. A layout change under an unmoved pin would therefore restore a corpus that
+      # `scripts/fetch-corpus.sh` rejects, download the archive again, and write nothing
+      # back. #165 added `testdata/foxio/reference/` and moved no pin, so this cache saved
+      # nothing until the hash arrived. The commit that changes the script changes the key,
+      # and the key needs no version number that a reader must remember.
+      #
+      # `corpus_fetch_test.go` holds both halves of the key.
+      - name: Restore the corpus
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: testdata/foxio
+          key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
+
+      # `make corpus` reads the FoxIO repository over the network, and it downloads nothing
+      # when the cache restored the corpus. The default job bound is 360 minutes, so this
+      # step carries its own bound and a stalled download cannot hold the runner.
+      - name: Fetch the corpus
+        timeout-minutes: 10
+        run: make corpus
+
+      # FR-conformance-36 fails the job when the corpus is absent. #33 makes the suite skip
+      # in that case, and a skipped suite that reports success hides every deviation.
+      - name: Verify the corpus is present
+        run: |
+          captures=$(find testdata/foxio/pcap -type f | wc -l | tr -d '[:space:]')
+          if [ "$captures" -eq 0 ]; then
+            echo "testdata/foxio/pcap holds no capture, so the conformance suite skips" >&2
+            exit 1
+          fi
+          echo "testdata/foxio/pcap holds $captures captures."
+
+      # The `conformance` build tag hides ten test files from every other job, so no
+      # other job compiles them. `go vet` type-checks them, and a compile error fails here
+      # rather than reaching the run below, which holds the exit status back.
+      - name: Vet the conformance suite
+        run: go vet -tags conformance ./...
+
+      # The suite exits 2 on a deviation, and this job holds that status back, because the
+      # deviation count is not the gate today. The next step reads the log and fails on
+      # every other kind of failure.
+      - name: Run the conformance suite
+        run: |
+          set -o pipefail
+          status=0
+          make conformance 2>&1 | tee conformance.log || status=$?
+          echo "the conformance suite exited with status $status"
+
+      # `TestConformance` is the one test that fails on a deviation. Every other failure is
+      # a real defect, and the job must report it. A held-back exit status hides all of
+      # them, so the job reads the log instead.
+      - name: Fail on a failure that is not a deviation
+        run: |
+          if grep -qE '\[build failed\]|\[setup failed\]' conformance.log; then
+            echo "the conformance suite did not build" >&2
+            exit 1
+          fi
+
+          others=$(grep -E '^[[:space:]]*--- FAIL: ' conformance.log |
+            grep -vE '^[[:space:]]*--- FAIL: TestConformance[/ ]' || true)
+
+          if [ -n "$others" ]; then
+            echo "the conformance run holds a failure that is not a deviation:" >&2
+            echo "$others" >&2
+            exit 1
+          fi
+
+      # The suite writes a marker line when it finds no corpus. The step above proves the
+      # corpus directory holds a capture, so this check catches a skip the directory
+      # check cannot see.
+      #
+      # The check reads the marker and not the skip message. `make conformance` runs the
+      # untagged tests too, and three of them write the same skip message when one
+      # capture is absent. A pin move that renames one capture would then fail this job
+      # with the wrong reason. `conformance_skip_marker_test.go` holds the marker and the
+      # tests that keep the two cases apart.
+      - name: Fail when the conformance suite skips
+        run: |
+          if grep -q 'conformance-suite-skip: the corpus is absent' conformance.log; then
+            echo "the conformance suite skipped, and FR-conformance-36 fails the job" >&2
+            exit 1
+          fi
+
+      # The suite rewrites `docs/audit/conformance.md` on every run, and it writes the file
+      # before it reports a deviation. The file on disk is therefore current whenever the
+      # suite runs, and a difference against the commit means the commit holds a stale
+      # report.
+      #
+      # #197 and #211 each moved a value and regenerated no report, so the tracked file
+      # held the counts of an older tree until #227 measured it. No test pins a report
+      # count, so a stale report stays invisible until a reader trusts it.
+      #
+      # This step adds one failure, and it reads no exit status of the run above. An honest
+      # exit 2 on a deviation therefore still reports a deviation.
+      #
+      # The four steps above fail first when the suite skips or does not build. The suite
+      # writes no report in those cases, and this step must not report the reason instead.
+      - name: Fail when the tracked conformance report is stale
+        run: |
+          if ! git diff --exit-code -- docs/audit/conformance.md; then
+            echo "the run rewrote docs/audit/conformance.md, so this commit holds a stale report" >&2
+            echo "run \`make corpus\` and \`make conformance\`, then commit the file" >&2
+            exit 1
+          fi
+
+      # A reader of the pull request reaches the job summary from the checks tab.
+      #
+      # A pull request from a fork controls `testdata/foxio.pin`, so the pin is untrusted
+      # input. The step reads it through an environment variable, because an expression
+      # that expands into the script would run the shell text the pin holds.
+      - name: Publish the conformance counts
+        env:
+          PIN_COMMIT: ${{ steps.pin.outputs.commit }}
+        run: |
+          # `sed` exits 0 on an empty input, so the fallback needs the status of `grep`.
+          set -o pipefail
+          {
+            echo "## Conformance"
+            echo
+            echo "The corpus is at FoxIO commit \`$PIN_COMMIT\`."
+            echo
+            grep -E 'the run read [0-9]+ captures|the run reports [0-9]+ matches' conformance.log |
+              sed 's/^ *[^ ]*: /- /' ||
+              echo "- The suite printed no summary line."
+            echo
+            echo "This job reports the counts. It does not fail on a deviation, and Epic 5 makes the job fail on one."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # The log names every deviation, and Epic 5 reads it to size the work.
+      - name: Upload the conformance log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: conformance-log
+          path: conformance.log
+          if-no-files-found: error
+
+  # FR-capture-12 puts the libpcap capture backend behind the `libpcap` build tag, and that
+  # backend is the one path of this module that uses cgo. This job compiles it on macOS,
+  # because macOS is the platform the tag exists for.
+  #
+  # **This job gates nothing else, and no release artifact carries the tag.**
+  # `docs/specs/features/13-live-capture.md` `## The cgo containment` states the three
+  # containment rules, and `.github/workflows/release.yml` builds five artifacts with no
+  # `-tags` flag. The `test` job above proves the other half: it builds every package with
+  # no tag, so the default build stays free of cgo.
+  #
+  # This job declares no `permissions` block of its own, and FR-supply-15 permits one block
+  # for the whole workflow.
+  libpcap:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      - name: Build the tagged path
+        run: go build -tags libpcap ./cmd/ja4plus
+
+      - name: Test the capture package with the tag
+        run: go test -tags libpcap ./internal/capture/
+
+      - name: Prove that the default build holds no cgo
+        run: CGO_ENABLED=0 go build ./...
+
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-go@v5
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '1.24'
+          go-version: '~1.26.6'
 
+      # This step carries two pins, and they name two different things. The hash on the
+      # `uses:` line names the action, and FR-supply-12 states it. The `version:` input
+      # names the linter binary, and it holds the linter result steady. A linter release
+      # must never fail a pull request that changes no code. Move the `version:` input and
+      # `.golangci.yml` together, and leave the hash alone.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: latest
+          version: v2.12.2
+
+  # FR-supply-1 runs the vulnerability scanner on every pull request this workflow covers.
+  # The job runs the `vuln` target, and FR-supply-4 holds the command there, so this job
+  # and a developer can never measure two different commands.
+  #
+  # FR-supply-2 fails the job on a vulnerability that the library calls, and FR-supply-5
+  # keeps an uncalled one out of the exit status. The scanner separates the two by itself,
+  # and the `vuln` target of `Makefile` cites the source that states the rule. So one run
+  # meets both requirements, and no second run is needed.
+  #
+  # The scan reads the public vulnerability database at https://vuln.go.dev over the
+  # network. A database outage fails this job, and it reports a defect of neither the
+  # library nor the pull request.
+  #
+  # **This gate goes red with no change to the tree, and that is a property of the gate.**
+  # The database is live, so a new advisory fails this job on a commit that passed one hour
+  # earlier. The measurement on 2026-08-13: the `vuln` job passed at commit `83f2127`, and
+  # it failed at commit `7210e80` about one hour later. Both runs installed go1.26.5 from
+  # the same `~1.26.5` range, and no line of this repository changed between them. Four
+  # advisories arrived in that hour.
+  #
+  # **So never read a red `vuln` job as a regression of the pull request by default.** Read
+  # the advisory list first, and take one of these three actions.
+  #
+  #   1. Every advisory names a fix in a later Go patch. Move `goToolchainRange` in
+  #      `foundation_test.go`, and move both workflows with it.
+  #   2. An advisory names a fix in a dependency. Raise that dependency.
+  #   3. No fix exists yet. The maintainer rules, because a decline needs a person.
+  #
+  # **The base branch separates the two causes.** A scan of the base branch that reports the
+  # same advisory names a change of the database. A scan that reports it on the head alone
+  # names a change of the pull request.
+  vuln:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads the repository and a public database
+    # alone.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The scanner reads the Go version of the `go` command on the PATH, and it reports
+      # the standard library of that version. **This job therefore names the range that
+      # every other job of this workflow names**, so the gate measures the Go version that
+      # builds and tests the library. A gate that reads a second Go version would describe
+      # an artifact this workflow never produces.
+      #
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # FR-supply-3 pins the scanner version. `golang.org/x/vuln` v1.6.0 declares
+      # `go 1.25.0`, and the step above installs Go 1.26, so this command needs no
+      # toolchain download.
+      #
+      # No tool watches this pin. #66 configures Dependabot for the `gomod` and the
+      # `github-actions` ecosystem, and a Go program that a step installs belongs to
+      # neither. A person moves this version.
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
+
+      # The version line names the Go version, the scanner version and the date of the
+      # database. A reader of a failed run needs all three to reproduce it. **The Go version
+      # it prints is the patch that `~1.26.6` resolved to on this runner.**
+      - name: Report the scanner version
+        run: govulncheck -version
+
+      - name: Scan for a vulnerability
+        run: |
+          set -o pipefail
+          make vuln 2>&1 | tee govulncheck.log
+
+      # FR-supply-5 records the note. The summary line counts every vulnerability that
+      # reaches the build without a call, and the step runs after a pass and after a
+      # failure.
+      #
+      # An earlier step can fail before the scan writes the log, and this step must report
+      # no second reason for that failure. So it reads the log only when the file is
+      # present.
+      - name: Publish the vulnerability counts
+        if: always()
+        run: |
+          summary=""
+          if [ -f govulncheck.log ]; then
+            summary=$(sed -n '/^Your code /,$p' govulncheck.log)
+          fi
+          if [ -z "$summary" ]; then
+            summary="The scanner printed no summary line."
+          fi
+          {
+            echo "## Vulnerabilities"
+            echo
+            echo '```'
+            echo "$summary"
+            echo '```'
+            echo
+            echo "A called vulnerability fails this job. A vulnerability that reaches the build without a call is a note."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # FR-supply-16 measures total statement coverage on every pull request this workflow
+  # covers. The job runs the `cover` target. FR-foundation-17 holds the command there, so
+  # this job and a developer can never measure two different commands.
+  #
+  # FR-supply-17 fails the job when the measured coverage falls below `.coverage-floor`.
+  # #68 created that file on 2026-08-13, and FR-supply-31 states that the first value is
+  # the coverage `make cover` reported at the creating commit.
+  #
+  # **FR-supply-19 is a rule for a person, and this job builds no mechanism for it.** A
+  # mechanism that raises the tracked floor from a run needs `contents: write`, and
+  # FR-supply-15 gives this workflow `contents: read` and nothing more. So the job prints
+  # the instruction, and the contributor writes the new value.
+  #
+  # **`.coverage-floor` describes the whole suite, so this job fetches the corpus.** The
+  # corpus is FoxIO-licensed material, `.gitignore` holds it out of the tree, and the root
+  # package covers 93.2 percent with it and 92.0 percent without it. The measurement on
+  # 2026-08-13, at commit `83f2127` and at commit `7210e80`: `make cover` reports 75.0
+  # percent with the corpus and 74.4 percent without it, at both commits.
+  #
+  # **#68 measured 75.0 with the corpus, and this job ran without it, so the floor was
+  # unmeetable on the day it was written.** The first full run of the epic failed on that
+  # difference. The repair fetches the corpus here, and it leaves the floor at the number
+  # that the whole suite reaches.
+  #
+  # **The corpus-free floor of 74.4 was the other candidate, and this job declines it** for
+  # three reasons. It leaves the 0.6 points that the corpus reaches outside every gate.
+  # `CLAUDE.md` tells a contributor to run `make corpus` before `make conformance`, so that
+  # contributor reads 75.0 while this job reads 74.4. FR-supply-19 then tells the contributor
+  # to write the number they measured, and the value they write fails this job at once. A
+  # floor that two environments read as two numbers regenerates this defect.
+  coverage:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads the repository and writes no ref.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # The four steps below match the corpus steps of the `conformance` job, and they read
+      # the same cache key. The two jobs therefore share one entry, and one runner downloads
+      # the archive once. `actions/cache` writes no entry when the key matches an entry that
+      # already exists, so the second job to finish saves nothing and it fails nothing.
+      - name: Read the corpus pin
+        id: pin
+        run: echo "commit=$(tr -d '[:space:]' < testdata/foxio.pin)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the corpus
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: testdata/foxio
+          key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
+
+      # `make corpus` reads the FoxIO repository over the network, and it downloads nothing
+      # when the cache restored the corpus. The default job bound is 360 minutes, so this
+      # step carries its own bound and a stalled download cannot hold the runner.
+      - name: Fetch the corpus
+        timeout-minutes: 10
+        run: make corpus
+
+      # **An absent corpus must name itself here.** Without this step it lowers the total by
+      # 0.6 points, the comparison below fails, and that failure tells the reader to add a
+      # test that the tree already holds. A gate that names the wrong repair is worse than a
+      # gate that names none.
+      - name: Verify the corpus is present
+        run: |
+          captures=$(find testdata/foxio/pcap -type f | wc -l | tr -d '[:space:]')
+          if [ "$captures" -eq 0 ]; then
+            echo "testdata/foxio/pcap holds no capture, so the coverage total reads 0.6 points low" >&2
+            echo "this job measures nothing about the tests, and the floor describes the whole suite" >&2
+            exit 1
+          fi
+          echo "testdata/foxio/pcap holds $captures captures."
+
+      # `make cover` writes `coverage.out` and it prints one line for each package. The
+      # per-package summary below reads those lines, so the step keeps the output.
+      - name: Measure the coverage
+        run: |
+          set -o pipefail
+          make cover 2>&1 | tee coverage.log
+
+      # FR-supply-18 prints the measured coverage and the floor, and this step prints both
+      # on a pass and on a failure.
+      #
+      # `go tool cover -func` writes the total as a percentage, so the comparison strips
+      # the sign and reads both values as numbers. The shell compares integers alone, and
+      # a coverage total carries one decimal place, so `awk` makes the comparison.
+      #
+      # The step reads each value into a variable and it tests both for the empty string,
+      # because `awk` reads an empty value as `0`. An absent `.coverage-floor` would then
+      # compare against a floor of zero, and the gate would pass on every total. This step
+      # needs no `set -o pipefail` for that reason: an empty value fails the step here.
+      - name: Compare the coverage with the floor
+        run: |
+          floor=$(tr -d '[:space:]' < .coverage-floor)
+          measured=$(go tool cover -func=coverage.out |
+            awk '/^total:/ { print $NF }' | tr -d '%')
+
+          if [ -z "$floor" ]; then
+            echo ".coverage-floor is absent or holds no value, so this gate measures nothing" >&2
+            exit 1
+          fi
+
+          if [ -z "$measured" ]; then
+            echo "go tool cover printed no total line" >&2
+            exit 1
+          fi
+
+          echo "the coverage is $measured percent, and the floor is $floor percent"
+
+          if awk -v m="$measured" -v f="$floor" 'BEGIN { exit (m + 0 < f + 0) ? 0 : 1 }'; then
+            echo "the coverage fell below the floor in .coverage-floor" >&2
+            echo "add the missing tests, and never lower the floor" >&2
+            exit 1
+          fi
+
+          # FR-supply-19 raises the floor in a commit that does nothing else. A person
+          # writes that commit, so the job names the new value here.
+          if awk -v m="$measured" -v f="$floor" 'BEGIN { exit (m + 0 > f + 0) ? 0 : 1 }'; then
+            echo "the coverage rose above the floor, so write $measured into .coverage-floor"
+            echo "raise the floor in a commit that does nothing else"
+          fi
+
+      # FR-supply-20 reports per-package coverage as a build summary. A reader of the pull
+      # request reaches the summary from the checks tab.
+      #
+      # The step runs after a pass and after a failure, because a reader of a failed run
+      # needs the package that fell. An earlier step can fail before `make cover` writes
+      # the log, so the step reads the log only when the file is present.
+      #
+      # This step needs no `set -o pipefail`, and it must not fail the job. An earlier step
+      # already reported the reason for a failed run, and a second reason hides the first.
+      # The `-f` tests hold each read, so a missing file writes a summary that says so.
+      - name: Publish the coverage counts
+        if: always()
+        run: |
+          floor=$(tr -d '[:space:]' < .coverage-floor)
+          measured=""
+          if [ -f coverage.out ]; then
+            measured=$(go tool cover -func=coverage.out |
+              awk '/^total:/ { print $NF }' | tr -d '%')
+          fi
+          if [ -z "$measured" ]; then
+            measured="none"
+          fi
+
+          {
+            echo "## Coverage"
+            echo
+            echo "The total statement coverage is $measured percent, and the floor is $floor percent."
+            echo
+            echo "| Package | Coverage |"
+            echo "|---|---|"
+            if [ -f coverage.log ]; then
+              awk '
+                $1 == "ok" && $0 ~ /coverage:/ {
+                  for (i = 1; i <= NF; i++) {
+                    if ($i == "coverage:") {
+                      print "| `" $2 "` | " $(i + 1) " |"
+                    }
+                  }
+                }
+                $1 == "?" { print "| `" $2 "` | no test file |" }
+                $1 == "FAIL" { print "| `" $2 "` | the tests failed |" }
+              ' coverage.log
+            fi
+            echo
+            echo "The job fails when the coverage falls below the floor. A person raises the floor, in a commit that does nothing else."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # FR-supply-21 measures the benchmarks on every pull request this workflow covers. The
+  # job runs the `bench` target, and FR-foundation-19 with FR-foundation-20 hold the
+  # command there, so this job and a developer can never measure two different commands.
+  #
+  # **FR-supply-21 names `go test -bench=. -benchmem ./...`, and the `bench` target adds
+  # `-run '^$'`.** That pattern matches no test name, so the target measures the benchmarks
+  # and it runs no unit test. `TestMakefileBenchTargetRunsNoUnitTest` states the reason: a
+  # unit test of this package spawns `bash`, `curl` and `tar`, and one test resolves a
+  # reserved name. This job measures two commits, so the literal command would run the
+  # whole suite twice and it would report a test failure as a benchmark result.
+  #
+  # **FR-supply-22 compares the head with the base branch, and this repository stores no
+  # base result.** So the job measures the base branch itself, in a second checkout. Both
+  # runs then use one runner and one CPU, and a comparison across two runners measures the
+  # runner. The second checkout reads the repository and it writes no artifact, so
+  # `contents: read` covers it. A run that is not a pull request reaches no base branch, and
+  # the job then reports the head results alone.
+  #
+  # **FR-supply-23 writes the comparison to the build summary, and it prints one warning
+  # annotation. It promises no pull-request comment.** #69 amended the requirement on
+  # 2026-08-13, and the amendment is provisional. A comment needs `pull-requests: write`,
+  # FR-supply-15 gives this workflow `contents: read` and nothing more, and a fork pull
+  # request gets a read-only token whatever the block states. So a widening buys a comment
+  # on a branch pull request alone, and it gives a write scope to six jobs.
+  # `docs/specs/features/07-supply-chain.md` holds the amendment, the quoted fork limit and
+  # the three declined options. Comment 5286981123 of #69 holds the decision, and issue #69
+  # is the reversal path.
+  #
+  # FR-supply-24 warns and never fails the build, because runner variance produces a false
+  # regression. Every step below that measures or compares exits 0.
+  benchmark:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads two commits of the repository.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # FR-supply-24 holds the exit status back, so a benchmark that panics warns here and
+      # it fails no build. The compare step reads the log, and an empty log reports itself.
+      - name: Measure the head benchmarks
+        run: |
+          status=0
+          make bench > bench-head.log 2>&1 || status=$?
+          echo "the head benchmark run exited with status $status"
+          cat bench-head.log
+
+      # `github.base_ref` names the target branch of the pull request, and the documentation
+      # states that the property reaches a `pull_request` event alone. So the two steps below
+      # run on a pull request and never on a push.
+      #
+      # **The author of a pull request from a fork chooses the target branch, so this value
+      # is untrusted input.** Three things bound it. It reaches the `ref` input of the
+      # action, and it reaches no shell. The action checks out the repository this workflow
+      # belongs to, so the value names a branch of this repository and it never names the
+      # code of the fork. The `branches` filter of the `pull_request` trigger above reads
+      # the target branch, so the value is `main`, `master` or `dev` and never another name.
+      # The documentation states the filter: `You can use the branches or branches-ignore
+      # filter to configure your workflow to only run on pull requests that target specific
+      # branches.`
+      #
+      # The default `fetch-depth` of 1 takes the tip of that branch, and the comparison needs
+      # no history.
+      #
+      # `path` places the second checkout under `base`. A nested module carries its own
+      # `go.mod`, so the `./...` pattern of the root module never reaches it. The measurement
+      # on 2026-08-13: `go list ./...` at the root named four packages, and it named no
+      # package of a nested module.
+      - name: Check out the base branch
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+          # `actions/checkout` writes the job token into `base/.git/config` by default, and
+          # no step of this job removes it. The one step that reads this checkout runs
+          # `make -C base bench`, which reaches no remote, so the credential serves nothing
+          # after the fetch. The input holds the credential out of the config file, and it
+          # does not change the fetch: the README states that the input decides
+          # `Whether to configure the token or SSH key with the local git config`.
+          #
+          # The cross-member review of Epic 7 recorded this on 2026-08-13, and it recorded
+          # no finding. The token carries `contents: read` and the runner is ephemeral, so
+          # this line is a hardening rather than a repair.
+          #
+          # Verified against <https://github.com/actions/checkout>, retrieved 2026-08-13.
+          persist-credentials: false
+
+      # `make -C base bench` reads the `Makefile` of the base checkout, so the base commit
+      # states its own benchmark command.
+      - name: Measure the base benchmarks
+        if: github.event_name == 'pull_request'
+        run: |
+          status=0
+          make -C base bench > bench-base.log 2>&1 || status=$?
+          echo "the base benchmark run exited with status $status"
+          cat bench-base.log
+
+      # FR-supply-23 and FR-supply-24 both land here. The step writes the comparison, it
+      # warns on a regression of more than 20 percent, and it exits 0 on every path.
+      #
+      # The step runs after a failed step too, because a reader of a failed run needs the
+      # head results.
+      - name: Compare the head with the base
+        if: always()
+        run: |
+          # `awk` reads the first file as the base, and an empty first file would make it
+          # read the head as the base. So the branch below counts the base results first.
+          base_count=0
+          if [ -f bench-base.log ]; then
+            base_count=$(grep -c '^Benchmark' bench-base.log || true)
+          fi
+
+          head_count=0
+          if [ -f bench-head.log ]; then
+            head_count=$(grep -c '^Benchmark' bench-head.log || true)
+          fi
+
+          echo "## Benchmarks" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$head_count" -eq 0 ]; then
+            echo "The head run measured no benchmark. Read the log of the measure step." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # The edge case that `docs/specs/features/07-supply-chain.md` names: the comparison
+          # has no base result, so the job posts the head results and it does not warn.
+          if [ "$base_count" -eq 0 ]; then
+            {
+              echo "This run measured no base result, so it reports the head results alone."
+              echo
+              echo '```'
+              grep '^Benchmark' bench-head.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # `go test` writes the name with a `-N` suffix that names the parallelism, and the
+          # two runners can differ. The program strips that suffix, so the two runs compare
+          # by benchmark name.
+          #
+          # A benchmark that the base does not hold is new, and it compares with nothing. A
+          # benchmark that the head does not hold is removed or renamed, and the table names
+          # it too. The program reads an order for each side, because `for (name in array)`
+          # of `awk` names no order and a table that moves between runs is unreadable.
+          awk -v threshold=1.20 '
+            /^Benchmark/ {
+              name = $1
+              sub(/-[0-9]+$/, "", name)
+
+              ns = ""
+              for (i = 2; i <= NF; i++) {
+                if ($i == "ns/op") { ns = $(i - 1) }
+              }
+              if (ns == "" || ns + 0 <= 0) { next }
+
+              if (FNR == NR) { base[name] = ns + 0; baseOrder[++baseCount] = name }
+              else { head[name] = ns + 0; order[++count] = name }
+            }
+
+            END {
+              print "| Benchmark | Base ns/op | Head ns/op | Change |"
+              print "|---|---|---|---|"
+
+              for (i = 1; i <= count; i++) {
+                name = order[i]
+
+                if (!(name in base)) {
+                  printf "| `%s` | none | %s | the base branch holds no such benchmark |\n",
+                    name, head[name]
+                  continue
+                }
+
+                change = (head[name] - base[name]) * 100 / base[name]
+                mark = ""
+                if (head[name] > base[name] * threshold) { mark = " **slower**" }
+
+                # The change carries two decimal places, because one place prints a change
+                # of 19.99 percent and a change of 20.00 percent as the same number.
+                printf "| `%s` | %s | %s | %+.2f percent%s |\n",
+                  name, base[name], head[name], change, mark
+              }
+
+              # A benchmark the head does not hold is removed or renamed. It reaches no
+              # comparison, and a table that drops it reports a silent loss of measurement.
+              # It carries no mark, because a benchmark that no longer runs cannot be slower.
+              for (i = 1; i <= baseCount; i++) {
+                name = baseOrder[i]
+                if (name in head) { continue }
+
+                printf "| `%s` | %s | none | the head holds no such benchmark |\n",
+                  name, base[name]
+              }
+            }
+          ' bench-base.log bench-head.log > comparison.md
+
+          cat comparison.md >> "$GITHUB_STEP_SUMMARY"
+
+          # The pattern reads the mark and never the benchmark name. A benchmark named
+          # `BenchmarkSlowerPath` would otherwise warn on every run.
+          slower=$(grep -c '\*\*slower\*\*' comparison.md || true)
+
+          {
+            echo
+            # The sentence states two measurements, and it states no count of comparisons.
+            # A benchmark that the base branch does not hold reaches the head count and it
+            # compares with nothing, so one number would misreport the table above.
+            echo "The job measured $head_count benchmarks on the head and $base_count on the base branch, on one runner."
+            echo
+            echo "A benchmark more than 20 percent slower than the base branch warns, and it fails no build. Runner variance produces a false regression, so confirm each one by hand."
+            echo
+            echo "This job posts no pull-request comment, and FR-supply-23 asks for none. A comment needs \`pull-requests: write\`, FR-supply-15 gives this workflow \`contents: read\` and nothing more, and a fork pull request gets a read-only token whatever the block states."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$slower" -gt 0 ]; then
+            # The count opens a noun phrase, because a count of 1 makes a plural verb wrong.
+            echo "::warning title=Benchmark regression::Benchmarks more than 20 percent slower than the base branch: $slower. Read the build summary, and confirm each one by hand."
+          fi
+
+          exit 0
+
+  # FR-fuzz-25 runs each fuzz target for 30 seconds on every pull request. FR-fuzz-26 fails
+  # this job when a target finds a crash.
+  #
+  # **This job adds no trigger, and it takes the two triggers at the head of this file.** So
+  # it runs on a push to `main` or `master`, and on a pull request into `main`, `master` or
+  # `dev`. #47 added the job on 2026-08-14, and it changed no existing job.
+  #
+  # **A member pull request of a batch never starts this job, and that is the design of this
+  # project.** A member targets an integration branch, and the `branches` filter of the
+  # `pull_request` trigger names no integration branch. Every member commit also carries
+  # `[skip ci]`, and the documentation states that a skip instruction reaches a `push` event
+  # and a `pull_request` event: `Skip instructions only apply to the push and pull_request
+  # events.` So this job reads the batch pull request into `dev`, which is the pull request
+  # that FR-fuzz-25 gates.
+  # Verified against
+  # <https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs>,
+  # retrieved 2026-08-14.
+  #
+  # **`make fuzz` holds the command, so this job and a developer run one thing.** The recipe
+  # runs each target for 30 seconds, and it exits 1 on the first target that fails. That exit
+  # status is what FR-fuzz-26 asks for, and this job adds no branch of its own.
+  #
+  # The tree holds 15 fuzz targets on 2026-08-14, so the run costs 7.5 minutes of fuzz time
+  # plus one build for each target. `timeout-minutes` bounds a target that stalls without an
+  # exit. Issue #568 records one measured stall of
+  # `FuzzParseCryptoFramesReadsAnyPayload`, and that issue is not a member of Epic 6.
+  fuzz:
+    runs-on: ubuntu-latest
+    # A job of a GitHub-hosted runner runs for up to 6 hours, and a stalled target would hold
+    # a runner for that whole time. 30 minutes covers 7.5 minutes of fuzz time and 15 builds.
+    # Verified against <https://docs.github.com/en/actions/reference/limits>, retrieved
+    # 2026-08-14: `Each job in a workflow can run for up to 6 hours of execution time.`
+    timeout-minutes: 30
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and this job reads the repository and writes nothing.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # `JA4PLUS_SEEDGEN=1` turns the seed corpus guard of `fuzz_seed_corpus_test.go` from a
+      # comparison into a write. A run that sets it rewrites every seed to match the code,
+      # and the guard then reports success whatever the code does. No line of this file sets
+      # it, and this step proves that the runner environment does not set it either.
+      #
+      # The step refuses any value, and the guard reads the value `1` alone. A second value
+      # names an environment this project does not describe, and a run under one is worth a
+      # stop.
+      - name: Refuse a seed corpus write
+        run: |
+          if [ -n "${JA4PLUS_SEEDGEN:-}" ]; then
+            echo "JA4PLUS_SEEDGEN is set, and it rewrites the seed corpus instead of reading it." >&2
+            exit 1
+          fi
+
+      - name: Fuzz each target for 30 seconds
+        run: make fuzz
+
+  # FR-release-35h gates every pull request that touches `.goreleaser.yaml` with
+  # `goreleaser check`, and FR-release-35i runs `goreleaser release --snapshot --clean` on a
+  # pull request. #105 added this job on 2026-08-15.
+  #
+  # **This job reads every pull request, and not the ones that touch the file.** A `paths`
+  # filter would answer the requirement for a change to the configuration alone, and the
+  # build also breaks when the program moves under an unchanged configuration. A job that
+  # reads every pull request covers both, and it covers the case the requirement names.
+  #
+  # **A tag push is the only trigger of `.github/workflows/release.yml`**, so no pull request
+  # runs the release. This job is therefore the one reader of the build before a tag, and a
+  # snapshot publishes nothing.
+  goreleaser:
+    runs-on: ubuntu-latest
+    # This job declares no `permissions` block of its own. The workflow-level block above
+    # gives it `contents: read`, and a snapshot writes to `dist/` and to no release.
+    steps:
+      # GoReleaser reads the tag history to compute the snapshot version, so the checkout
+      # takes the whole history rather than one commit.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # `.goreleaser.yaml` writes a software bill of materials with `syft`, and no runner
+      # image holds it. A snapshot that cannot reach the generator fails on the tool rather
+      # than on the configuration.
+      - uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      # FR-release-35h. `goreleaser check` reads the configuration and it builds nothing, so
+      # it names a schema defect before the build spends five cross compilations on it.
+      #
+      # FR-release-35j pins the GoReleaser version, and this job names the pin that
+      # `.github/workflows/release.yml` names. Two versions would check one configuration and
+      # release with another.
+      - name: Check the GoReleaser configuration
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: 'v2.17.1'
+          args: check
+
+      # FR-release-35i. A snapshot runs every build, every checksum and every bill of
+      # materials, and it publishes nothing. The step passes no token for that reason.
+      - name: Build a snapshot release
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: 'v2.17.1'
+          args: release --snapshot --clean

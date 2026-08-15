@@ -57,18 +57,65 @@ func IsTLSHandshake(payload []byte) bool {
 	return ht == TLSHandshakeClientHello || ht == TLSHandshakeServerHello
 }
 
+// handshakeRecordOffset returns the offset of the first handshake record of the payload.
+// It returns -1 when the payload holds no handshake record.
+//
+// A TLS 1.3 client in compatibility mode sends a ChangeCipherSpec record before its second
+// client hello. One TCP segment carries both records. A reader that reads only the first
+// byte of that segment misses the second hello. Issue #295 records the 40 absent values.
+// `testdata/foxio/pcap/tls-handshake.pcapng` packet 125 holds the two records.
+//
+// The walk steps over a record of any type that is not a handshake record. A peer may send
+// a record other than a ChangeCipherSpec record first.
+// `ja4plus/utils/tls_utils.py:76-103` walks the same way in the Python port.
+//
+// Every payload is untrusted input. The walk advances by at least 5 bytes for each record.
+// It stops at a length field that passes the end of the payload.
+func handshakeRecordOffset(payload []byte) int {
+	for pos := 0; pos+5 <= len(payload); {
+		if payload[pos] == TLSRecordTypeHandshake {
+			return pos
+		}
+
+		recordLength := int(payload[pos+3])<<8 | int(payload[pos+4])
+
+		// A step needs the whole record. The walk stops at a length that passes the
+		// end of the payload.
+		next := pos + 5 + recordLength
+		if next > len(payload) {
+			return -1
+		}
+
+		pos = next
+	}
+
+	return -1
+}
+
 // ParseClientHello parses a TLS ClientHello from raw TCP payload bytes.
 // Returns nil, nil if the payload is not a TLS ClientHello.
 // Returns nil, error if it looks like a ClientHello but is truncated/malformed.
+//
+// It reads the first handshake record of the payload. It steps over each record in front
+// of that one. A TLS 1.3 client sends a ChangeCipherSpec record before its second client
+// hello. Issue #295 records the values that the first-byte reader missed.
 func ParseClientHello(payload []byte) (*ClientHello, error) {
-	if len(payload) < 5 {
+	offset := handshakeRecordOffset(payload)
+	if offset < 0 {
 		return nil, nil
 	}
-	if payload[0] != TLSRecordTypeHandshake {
+	payload = payload[offset:]
+
+	if len(payload) < 5 {
 		return nil, nil
 	}
 
 	recordLength := int(payload[3])<<8 | int(payload[4])
+
+	// recordEnd bounds every later read. A TCP payload can carry more than one TLS
+	// record, and a length field of this record must not reach into the next one.
+	recordEnd := 5 + recordLength
+
 	if len(payload) < 5+recordLength {
 		return nil, errors.New("TLS record truncated")
 	}
@@ -128,8 +175,8 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 	extensionsLen := int(payload[pos])<<8 | int(payload[pos+1])
 	pos += 2
 	extensionsEnd := pos + extensionsLen
-	if extensionsEnd > len(payload) {
-		extensionsEnd = len(payload)
+	if extensionsEnd > recordEnd {
+		extensionsEnd = recordEnd
 	}
 
 	for pos+4 <= extensionsEnd {
@@ -137,8 +184,8 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 		extLen := int(payload[pos+2])<<8 | int(payload[pos+3])
 		extDataStart := pos + 4
 		extDataEnd := extDataStart + extLen
-		if extDataEnd > len(payload) {
-			extDataEnd = len(payload)
+		if extDataEnd > recordEnd {
+			extDataEnd = recordEnd
 		}
 
 		ch.Extensions = append(ch.Extensions, extType)
@@ -173,6 +220,11 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 	}
 
 	recordLength := int(payload[3])<<8 | int(payload[4])
+
+	// recordEnd bounds every later read. A TCP payload can carry more than one TLS
+	// record, and a length field of this record must not reach into the next one.
+	recordEnd := 5 + recordLength
+
 	if len(payload) < 5+recordLength {
 		return nil, errors.New("TLS record truncated")
 	}
@@ -220,8 +272,8 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 	extensionsLen := int(payload[pos])<<8 | int(payload[pos+1])
 	pos += 2
 	extensionsEnd := pos + extensionsLen
-	if extensionsEnd > len(payload) {
-		extensionsEnd = len(payload)
+	if extensionsEnd > recordEnd {
+		extensionsEnd = recordEnd
 	}
 
 	for pos+4 <= extensionsEnd {
@@ -229,8 +281,8 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 		extLen := int(payload[pos+2])<<8 | int(payload[pos+3])
 		extDataStart := pos + 4
 		extDataEnd := extDataStart + extLen
-		if extDataEnd > len(payload) {
-			extDataEnd = len(payload)
+		if extDataEnd > recordEnd {
+			extDataEnd = recordEnd
 		}
 
 		sh.Extensions = append(sh.Extensions, extType)
@@ -244,7 +296,12 @@ func ParseServerHello(payload []byte) (*ServerHello, error) {
 			}
 		case ExtSupportedVersions:
 			// Server selects ONE version -- 2 bytes directly, no list length byte
-			if extLen >= 2 {
+			//
+			// The guard reads the length of extData, and never extLen. extLen is the
+			// length the wire declares, and the clamp above shortens extData to the end
+			// of the record. A crafted record makes the two disagree, and #556 records
+			// the panic that the declared length produced.
+			if len(extData) >= 2 {
 				sv := uint16(extData[0])<<8 | uint16(extData[1])
 				sh.SupportedVersions = []uint16{sv}
 			}
@@ -292,13 +349,27 @@ func TLSVersionString(version uint16) string {
 	}
 }
 
-// ALPNValue computes the 2-char ALPN field for JA4 from ALPN protocols.
+// ALPNValue returns the two ALPN characters that JA4 and JA4S carry.
 //
-// Per FoxIO PR #277: if the first OR last byte of the first ALPN value is not
-// ASCII alphanumeric (0x30-0x39, 0x41-0x5A, 0x61-0x7A), the result is the
-// first and last character of the lowercase hex representation of the entire
-// first ALPN string. Otherwise it is the first byte followed by the last byte
-// of the ALPN string (or that byte twice for single-byte ALPNs).
+// It returns `00` when the protocol list is empty, and when the first ALPN value is empty.
+// It returns the first byte and the last byte when both bytes fall inside the printable
+// ASCII range 0x20-0x7E. It repeats the byte when the first ALPN value holds one
+// alphanumeric byte. It returns `99` in every other case.
+//
+// The FoxIO prose states a different rule, and a measurement contradicts the prose.
+// `technical_details/JA4.md:95` states the first and last character of the hexadecimal
+// form of the whole first ALPN value. The FoxIO vector `tls-non-ascii-alpn.pcapng` holds
+// `99` for the first ALPN value `0xba 0xad`, and `.claude/rules/parity.md` rule 1 states
+// that the vector decides. `docs/specs/foxio/JA4.md` R18 and R19 record the split, and
+// Reading 5 records the tshark text form that causes it.
+//
+// The port issues `Crank-Git/ja4plus#127`, `Crank-Git/ja4plus#141` and
+// `Crank-Git/ja4plus#162` hold the ruling, and `ja4_alpn_parity_test.go` holds the
+// separating packets. Issue #50 adopted the rule here.
+//
+// Every `%c` below writes a byte of 0x7E or lower, and each guard keeps that true. `%c`
+// reads its argument as a code point, so a byte above 0x7F would reach the fingerprint as
+// two UTF-8 bytes. A guard that widens past 0x7E must build the string from a byte slice.
 func ALPNValue(protocols []string) string {
 	if len(protocols) == 0 {
 		return "00"
@@ -311,26 +382,38 @@ func ALPNValue(protocols []string) string {
 	firstByte := first[0]
 	lastByte := first[len(first)-1]
 
-	if alpnIsAlnum(firstByte) && alpnIsAlnum(lastByte) {
-		if len(first) == 1 {
+	// The two FoxIO implementations dispute every one-byte value, so this case keeps the
+	// alphanumeric test. `rust/ja4/src/tls.rs:334` writes `0` for the absent last
+	// character. `python/ja4.py:276` leaves a one-byte value at one character, because its
+	// condition `len(alpn) > 2` is false.
+	if len(first) == 1 {
+		if alpnIsAlnum(firstByte) {
 			return fmt.Sprintf("%c%c", firstByte, firstByte)
 		}
+		return "99"
+	}
+
+	// Both FoxIO implementations pass a printable ASCII byte through, whether or not that
+	// byte is alphanumeric. The range stops at 0x7E, because the two implementations agree
+	// only inside it.
+	if alpnIsPrintableASCII(firstByte) && alpnIsPrintableASCII(lastByte) {
 		return fmt.Sprintf("%c%c", firstByte, lastByte)
 	}
 
-	// Non-alphanumeric path: hex-encode the entire first ALPN string and
-	// take its first and last characters.
-	hexStr := fmt.Sprintf("%x", []byte(first))
-	if hexStr == "" {
-		return "00"
-	}
-	return fmt.Sprintf("%c%c", hexStr[0], hexStr[len(hexStr)-1])
+	return "99"
 }
 
 // alpnIsAlnum reports whether b is an ASCII alphanumeric byte:
 // 0x30-0x39 ('0'-'9'), 0x41-0x5A ('A'-'Z'), or 0x61-0x7A ('a'-'z').
 func alpnIsAlnum(b byte) bool {
 	return (b >= '0' && b <= '9') || (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
+}
+
+// alpnIsPrintableASCII reports whether b falls inside the printable ASCII range
+// 0x20-0x7E. A byte outside that range reaches the two FoxIO implementations as tshark
+// text rather than as a byte, and they then disagree.
+func alpnIsPrintableASCII(b byte) bool {
+	return b >= 0x20 && b <= 0x7E
 }
 
 // parseSNI extracts the hostname from SNI extension data.

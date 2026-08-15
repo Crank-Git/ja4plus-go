@@ -2,13 +2,17 @@ package ja4plus
 
 import (
 	"encoding/binary"
+	goast "go/ast"
+	goparser "go/parser"
+	gotoken "go/token"
+	"strings"
 	"testing"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
-func buildTCPPacket(t *testing.T, srcPort, dstPort uint16, syn, ack bool, window uint16, options []layers.TCPOption) gopacket.Packet {
+func buildTCPPacket(t testing.TB, srcPort, dstPort uint16, syn, ack bool, window uint16, options []layers.TCPOption) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
@@ -58,8 +62,11 @@ func TestJA4T_SYNWithFullOptions(t *testing.T) {
 	}
 	pkt := buildTCPPacket(t, 12345, 443, true, false, 29200, options)
 
+	// The option list reaches 23 bytes, so gopacket adds one zero pad byte. The packet
+	// therefore carries two End-of-Option-List bytes, and ruling #297 writes one entry for
+	// each of them.
 	result := ComputeJA4T(pkt)
-	expected := "29200_2-1-3-1-1-8-4-0_1460_7"
+	expected := "29200_2-1-3-1-1-8-4-0-0_1460_7"
 	if result != expected {
 		t.Errorf("JA4T full options: got %q, want %q", result, expected)
 	}
@@ -86,7 +93,9 @@ func TestJA4T_SYNACKPacket(t *testing.T) {
 func TestJA4T_NoOptions(t *testing.T) {
 	pkt := buildTCPPacket(t, 12345, 80, true, false, 65535, nil)
 	result := ComputeJA4T(pkt)
-	expected := "65535_0_0_0"
+	// Ruling #125 writes each zero part as two digits. `ja4t_two_digit_test.go` holds the
+	// evidence and the port issue.
+	expected := "65535_00_00_00"
 	if result != expected {
 		t.Errorf("JA4T no options: got %q, want %q", result, expected)
 	}
@@ -98,21 +107,142 @@ func TestJA4T_MSSOnly(t *testing.T) {
 	}
 	pkt := buildTCPPacket(t, 12345, 80, true, false, 8192, options)
 	result := ComputeJA4T(pkt)
-	expected := "8192_2_1400_0"
+	// Ruling #125 writes the absent window scale as two digits.
+	expected := "8192_2_1400_00"
 	if result != expected {
 		t.Errorf("JA4T MSS only: got %q, want %q", result, expected)
 	}
 }
 
+// ja4tHeaderThatStatesALengthItDoesNotHold returns a TCP header whose data offset states a
+// header the contents do not hold. `tcpOptionRegion` returns nil for it, so
+// `tcpOptionEntries` reads no option byte.
+func ja4tHeaderThatStatesALengthItDoesNotHold() *layers.TCP {
+	return &layers.TCP{BaseLayer: layers.BaseLayer{Contents: make([]byte, 20)}, DataOffset: 15}
+}
+
+// ja4tHeaderWithATruncatedOption returns a TCP header whose option region ends inside one
+// option. `tcpOptionEntries` breaks on that length, so it reaches the empty entry list.
+func ja4tHeaderWithATruncatedOption() *layers.TCP {
+	contents := make([]byte, 24)
+	contents[20] = byte(layers.TCPOptionKindMSS)
+	contents[21] = 8
+	return &layers.TCP{BaseLayer: layers.BaseLayer{Contents: contents}, DataOffset: 6}
+}
+
+// TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket holds the non-nil contract of
+// generateTCPFingerprint. Issue #508 deleted the dead nil test of both callers, and this test
+// fails when a later change makes the function return nil.
+//
+// It reads both call sites, because one function serves both and the type name is the one
+// argument that separates them.
+//
+// No test reaches either deleted branch, because no input reaches one. This test therefore
+// asserts the contract that made both branches dead.
+func TestGenerateTCPFingerprintReturnsANonNilResultForEveryPacket(t *testing.T) {
+	synPacket := buildTCPPacket(t, 12345, 80, true, false, 65535, nil)
+	synHeader, held := synPacket.Layer(layers.LayerTypeTCP).(*layers.TCP)
+	if !held {
+		t.Fatalf("the serialized SYN packet carries no TCP layer")
+	}
+	// A packet that carries no address layer reads no source address, so `GetIPInfo` reports
+	// false and the function writes the empty string.
+	emptyPacket := gopacket.NewPacket(nil, layers.LayerTypeEthernet, gopacket.Default)
+
+	cases := []struct {
+		name   string
+		packet gopacket.Packet
+		tcp    *layers.TCP
+	}{
+		{"a SYN packet that carries no option", synPacket, synHeader},
+		{"a zero-valued header on a packet that carries no address layer", emptyPacket, &layers.TCP{}},
+		{"a header that states a length it does not hold", emptyPacket, ja4tHeaderThatStatesALengthItDoesNotHold()},
+		{"a header with a truncated option", emptyPacket, ja4tHeaderWithATruncatedOption()},
+	}
+
+	// The two names are the two call sites. `ProcessPacket` of `ja4t.go` passes `ja4t`, and
+	// `ProcessPacket` of `ja4ts.go` passes `ja4ts`.
+	for _, fpType := range []string{"ja4t", "ja4ts"} {
+		for _, one := range cases {
+			t.Run(fpType+"/"+one.name, func(t *testing.T) {
+				fp := generateTCPFingerprint(one.packet, one.tcp, fpType)
+				if fp == nil {
+					t.Fatalf("generateTCPFingerprint of type %s returns nil for %s", fpType, one.name)
+				}
+				if fp.Type != fpType {
+					t.Errorf("the result reports type %q, want %q", fp.Type, fpType)
+				}
+				if parts := strings.Split(fp.Fingerprint, "_"); len(parts) != 4 {
+					t.Errorf("the value %q holds %d parts, want 4", fp.Fingerprint, len(parts))
+				}
+			})
+		}
+	}
+}
+
+// TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress reads the source of
+// generateTCPFingerprint, and it reads no packet. The Go specification states that the
+// address of a composite literal allocates storage for a variable, so that address is never
+// nil.
+//
+// Issue #508 deleted the dead nil test of both callers. This test fails when a later change
+// adds a second return statement to the function, or when it returns anything other than the
+// address of a composite literal.
+func TestGenerateTCPFingerprintHoldsOneReturnOfACompositeLiteralAddress(t *testing.T) {
+	file, err := goparser.ParseFile(gotoken.NewFileSet(), "ja4t.go", nil, 0)
+	if err != nil {
+		t.Fatalf("the parse of ja4t.go failed: %v", err)
+	}
+
+	var body *goast.BlockStmt
+	for _, decl := range file.Decls {
+		fn, held := decl.(*goast.FuncDecl)
+		if held && fn.Name.Name == "generateTCPFingerprint" {
+			body = fn.Body
+		}
+	}
+	if body == nil {
+		t.Fatalf("ja4t.go holds no declaration of generateTCPFingerprint")
+	}
+
+	var returns []*goast.ReturnStmt
+	goast.Inspect(body, func(node goast.Node) bool {
+		if ret, held := node.(*goast.ReturnStmt); held {
+			returns = append(returns, ret)
+		}
+		return true
+	})
+
+	if len(returns) != 1 {
+		t.Fatalf("generateTCPFingerprint holds %d return statements, want 1", len(returns))
+	}
+	if len(returns[0].Results) != 1 {
+		t.Fatalf("the return holds %d results, want 1", len(returns[0].Results))
+	}
+	address, held := returns[0].Results[0].(*goast.UnaryExpr)
+	if !held || address.Op != gotoken.AND {
+		t.Fatalf("the return does not take an address, and the contract needs one")
+	}
+	if _, held := address.X.(*goast.CompositeLit); !held {
+		t.Errorf("the return takes the address of something other than a composite literal")
+	}
+}
+
 func TestJA4T_Reset(t *testing.T) {
+	// JA4T holds no state, so Reset changes no result. Issue #25 removed the results
+	// slice, which grew without a bound and which no exported method read.
 	fp := NewJA4T()
 	pkt := buildTCPPacket(t, 12345, 80, true, false, 65535, nil)
-	_, _ = fp.ProcessPacket(pkt)
-	if len(fp.results) != 1 {
-		t.Fatalf("expected 1 result, got %d", len(fp.results))
+
+	before, _ := fp.ProcessPacket(pkt)
+	if len(before) != 1 {
+		t.Fatalf("the SYN packet produced %d results, want 1", len(before))
 	}
+
 	fp.Reset()
-	if len(fp.results) != 0 {
-		t.Errorf("expected 0 results after reset, got %d", len(fp.results))
+
+	after, _ := fp.ProcessPacket(pkt)
+	if len(after) != 1 || after[0].Fingerprint != before[0].Fingerprint {
+		t.Errorf("the read after Reset produces %v, and the read before it produces %v", after, before)
 	}
 }

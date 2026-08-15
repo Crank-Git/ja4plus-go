@@ -1,13 +1,11 @@
 module github.com/Crank-Git/ja4plus-go
 
-go 1.22
+go 1.24.0
 
 require (
-	github.com/google/gopacket v1.1.19
-	golang.org/x/crypto v0.28.0
+	github.com/gopacket/gopacket v1.6.1
+	golang.org/x/crypto v0.37.0
+	golang.org/x/net v0.39.0
 )
 
-require (
-	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-)
+require golang.org/x/sys v0.32.0 // indirect

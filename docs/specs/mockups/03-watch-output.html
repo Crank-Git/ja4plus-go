@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The monitor output — ja4plus-go</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --ink: #16181d; --muted: #5b6270; --line: #e3e5ea;
+    --term-bg: #15181e; --term-ink: #d8dce4; --term-dim: #7e8899;
+    --term-prompt: #6fc396; --term-key: #7fb3e8; --term-val: #e4c07a; --term-bad: #ef8a96;
+    --term-err: #c98fd8;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #101216; --ink: #e6e8ec; --muted: #99a1b0; --line: #262b34; --term-bg: #0b0d11; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px 20px 64px;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+  h2 { font-size: 14px; margin: 30px 0 4px; letter-spacing: -0.005em; }
+  .cap { color: var(--muted); font-size: 12.5px; margin: 0 0 10px; }
+  .term {
+    background: var(--term-bg); color: var(--term-ink); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden;
+  }
+  .bar {
+    background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 7px 12px; font: 11.5px var(--mono); color: var(--term-dim);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #3a4150; }
+  pre {
+    margin: 0; padding: 14px 16px; font: 12.5px/1.7 var(--mono);
+    white-space: pre; overflow-x: auto;
+  }
+  .p { color: var(--term-prompt); }
+  .k { color: var(--term-key); }
+  .v { color: var(--term-val); }
+  .d { color: var(--term-dim); }
+  .e { color: var(--term-err); }
+  .x { color: var(--term-bad); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  code { font: 12px var(--mono); background: rgba(127,140,160,0.14); padding: 1px 5px; border-radius: 4px; }
+  .note {
+    border-left: 3px solid var(--line); padding: 2px 0 2px 12px;
+    color: var(--muted); font-size: 13px; margin: 14px 0 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The monitor output</h1>
+<p class="sub">
+  <code>ja4plus watch</code> — Epic 13, <code>features/13-live-capture.md</code>.
+  Fingerprints go to standard output. The statistics line goes to standard error.
+</p>
+
+<h2>A normal run</h2>
+<p class="cap">
+  The two streams are shown interleaved, as a terminal shows them. A redirect of standard
+  output holds the fingerprint lines alone.
+</p>
+<div class="term">
+  <div class="bar"><span class="dot"></span>operator@host — ja4plus watch</div>
+<pre><span class="p">$</span> sudo ja4plus watch --interface eth0 --bpf <span class="v">"tcp port 443 or udp port 443"</span>
+
+<span class="k">ja4</span>   10.0.2.15:54120 -> 104.18.32.7:443    <span class="v">t13d1517h2_8daaf6152771_b0da82dd1658</span>
+<span class="k">ja4s</span>  104.18.32.7:443 -> 10.0.2.15:54120    <span class="v">t130200_1301_a56c5b993250</span>
+<span class="k">ja4l</span>  10.0.2.15:54120 -> 104.18.32.7:443    <span class="v">8137_11</span>
+<span class="k">ja4ls</span> 104.18.32.7:443 -> 10.0.2.15:54120    <span class="v">4021_53</span>
+<span class="k">ja4t</span>  10.0.2.15:54120 -> 104.18.32.7:443    <span class="v">64240_2-1-3-1-1-4_1460_7</span>
+<span class="k">ja4ts</span> 104.18.32.7:443 -> 10.0.2.15:54120    <span class="v">65535_2-1-3-1-1-4_1460_7</span>
+<span class="k">ja4</span>   10.0.2.15:54121 -> 172.64.41.3:443    <span class="v">q13d0312h3_55b375c5d22e_cd85d2d88918</span>
+<span class="k">ja4l</span>  10.0.2.15:54121 -> 172.64.41.3:443    <span class="v">2244_9_quic</span>
+<span class="d">ja4plus: uptime=60s packets=18422 fingerprints=214 dropped=0 connections=57</span>
+<span class="k">ja4h</span>  10.0.2.15:54130 -> 93.184.216.34:80  <span class="v">ge11cr04da00_8ddaef5d77af_280f366eaa04_c2fb0fe53442</span>
+<span class="k">ja4ssh</span> 10.0.2.15:54144 -> 10.0.2.9:22        <span class="v">c36s52_c42s76_c51s2</span>
+<span class="d">ja4plus: uptime=120s packets=41907 fingerprints=498 dropped=12 connections=63</span>
+<span class="p">^C</span>
+<span class="d">ja4plus: stopping, closing open windows</span>
+<span class="k">ja4ssh</span> 10.0.2.15:54144 -> 10.0.2.9:22        <span class="v">c28s44_c31s58_c40s1</span>
+<span class="d">ja4plus: uptime=147s packets=52310 fingerprints=511 dropped=12 connections=64</span>
+<span class="p">$</span> </pre>
+</div>
+
+<p class="note">
+  The line after <code>^C</code> is FR-capture-20. The monitor calls
+  <code>Processor.CloseOpenWindows</code> and prints the JA4SSH window that the
+  connection held open. Without that call the last window is lost.
+</p>
+
+<h2>The statistics line</h2>
+<p class="cap">FR-capture-28 through FR-capture-34. Every field, and where it comes from.</p>
+<table>
+  <tr><th>Field</th><th>Meaning</th><th>Source</th></tr>
+  <tr><td><code>uptime</code></td><td>Whole seconds since the monitor started.</td><td>The monitor.</td></tr>
+  <tr><td><code>packets</code></td><td>Packets the monitor read.</td><td>The monitor loop.</td></tr>
+  <tr><td><code>fingerprints</code></td><td>Results the processor returned.</td><td>The processor.</td></tr>
+  <tr><td><code>dropped</code></td><td>Packets the capture backend dropped. Reads <code>unknown</code> when the backend reports none.</td><td>The packet socket, on Linux.</td></tr>
+  <tr><td><code>connections</code></td><td>Entries the connection table holds.</td><td>The monitor.</td></tr>
+</table>
+
+<h2>The two failures an operator meets first</h2>
+<div class="grid">
+  <div>
+    <p class="cap">No permission. FR-capture-35 and FR-capture-36.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span>standard error</div>
+<pre><span class="p">$</span> ja4plus watch --interface eth0
+<span class="x">ja4plus: cannot open eth0: operation not permitted</span>
+<span class="e">The monitor needs CAP_NET_RAW on this host.</span>
+<span class="e">Run the command with sudo, or grant the</span>
+<span class="e">capability to the program:</span>
+<span class="d">  sudo setcap cap_net_raw+ep $(which ja4plus)</span>
+<span class="p">$</span> echo $?
+2</pre>
+    </div>
+  </div>
+  <div>
+    <p class="cap">macOS without the build tag. FR-capture-24.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span>standard error</div>
+<pre><span class="p">$</span> ja4plus watch --interface en0
+<span class="x">ja4plus: the monitor is unavailable in this build</span>
+<span class="e">The pure-Go capture backend supports Linux</span>
+<span class="e">only. On macOS the monitor needs libpcap,</span>
+<span class="e">which is an opt-in build:</span>
+<span class="d">  go build -tags libpcap ./cmd/ja4plus</span>
+<span class="e">Reading a capture file needs no build tag.</span>
+<span class="p">$</span> echo $?
+1</pre>
+    </div>
+  </div>
+</div>
+
+<p class="note">
+  Both messages name the repair rather than the fault alone. The second one also states
+  what still works, because a user who cannot run <code>watch</code> can still run
+  <code>ja4plus capture.pcap</code>.
+</p>
+
+<h2>What this mockup does not decide</h2>
+<table>
+  <tr><th>Item</th><th>Where it is decided</th></tr>
+  <tr><td>The fingerprint line format.</td><td><code>mockups/02-cli-output.html</code>. The monitor reuses it.</td></tr>
+  <tr><td>The <code>json</code> and <code>csv</code> formats.</td><td><code>features/09-database-lookup.md</code> and the output work.</td></tr>
+  <tr><td>The values shown above.</td><td>They are illustrative. The conformance suite decides every real value.</td></tr>
+</table>
+
+</div>
+</body>
+</html>

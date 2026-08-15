@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("\x40\x11\x22\x33\x44\x55")

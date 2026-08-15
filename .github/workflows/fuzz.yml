@@ -1,0 +1,371 @@
+name: Nightly fuzz
+
+# FR-fuzz-27 runs each fuzz target for 10 minutes on a nightly schedule. FR-fuzz-28 opens an
+# issue when a target finds a crash, and FR-fuzz-29 attaches the crashing input to it.
+#
+# FR-supply-12 pins every `uses:` reference to a 40-character commit hash, because a tag
+# moves and a hash does not. FR-supply-13 gives each one a trailing comment that names the
+# version the hash carries. Each hash below is the hash that `.github/workflows/ci.yml`
+# already holds, so this repository states one pin for one action.
+#
+# **A scheduled workflow runs on the default branch alone**, and the default branch of this
+# repository is `master`. So this file starts no run until it reaches `master`. The
+# documentation states both halves:
+# `Scheduled workflows run on the latest commit on the default branch.` and
+# `This event will only trigger a workflow run if the workflow file exists on the default
+# branch.`
+# Verified against
+# <https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows>,
+# retrieved 2026-08-14.
+#
+# **A `[skip ci]` commit message does not hold this workflow back**, because a skip
+# instruction reaches a `push` event and a `pull_request` event alone. The documentation
+# states it: `Skip instructions only apply to the push and pull_request events.` So the
+# batch commit style of this project does not disable the nightly run.
+# Verified against
+# <https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs>,
+# retrieved 2026-08-14.
+
+on:
+  schedule:
+    # 05:17 UTC each day. The documentation states
+    # `The shortest interval you can run scheduled workflows is once every 5 minutes.`, and
+    # a daily run is far above that floor. The minute is not `0`, because every workflow
+    # that names the top of an hour queues at the same moment.
+    - cron: '17 5 * * *'
+  # A maintainer starts a nightly fuzz run by hand from the Actions page with this trigger,
+  # and the trigger costs nothing when nobody uses it.
+  workflow_dispatch:
+
+# FR-supply-15 gives a workflow the smallest permission set that its jobs need. This floor
+# reads the repository, and the `fuzz` job below widens it to `issues: write` for itself
+# alone. The documentation states why the floor is safe to widen in one place:
+# `If you specify the access for any of these permissions, all of those that are not
+# specified are set to none.`
+# Verified against
+# <https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax>,
+# retrieved 2026-08-14.
+permissions:
+  contents: read
+
+jobs:
+  # This job names each fuzz target of the module, and the `fuzz` job below builds one
+  # matrix job for each name.
+  #
+  # **A hard-coded list of targets goes stale without a signal.** Epic 6 added 15 targets in
+  # one batch, and a later issue adds more. A list in this file would leave a new target
+  # unfuzzed, and no check would report it. `go test -list` reads the tree instead, so the
+  # nightly fuzz run covers every target the tree holds.
+  targets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      entries: ${{ steps.list.outputs.entries }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` of `.github/workflows/ci.yml` states why the range reads
+      # `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # The step writes a JSON array of strings, and each string holds one import path and
+      # one target name, separated by one space. The `fuzz` job splits the two halves in the
+      # shell. The documentation states the matrix form this output feeds:
+      # `color: ${{ fromJSON(needs.define-matrix.outputs.colors) }}`.
+      # Verified against
+      # <https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations>,
+      # retrieved 2026-08-14.
+      #
+      # A package that does not compile fails `go test -list`, and the shell then leaves this
+      # step with a non-zero status. `make fuzz` takes the same reading, and a silent skip of
+      # a broken package would report a nightly fuzz run that never ran.
+      - name: List every fuzz target
+        id: list
+        run: |
+          entries='['
+          separator=''
+          for package in $(go list ./...); do
+            targets=$(go test -list '^Fuzz' "$package")
+            for target in $(echo "$targets" | grep '^Fuzz' || true); do
+              entries="$entries$separator\"$package $target\""
+              separator=', '
+            done
+          done
+          entries="$entries]"
+
+          # An empty array makes the matrix of the next job invalid, and the run then fails
+          # with a message about the matrix rather than about the tree. This branch names the
+          # real fact instead.
+          if [ "$entries" = '[]' ]; then
+            echo "the module holds no fuzz target, and FR-fuzz-27 has nothing to run" >&2
+            exit 1
+          fi
+
+          echo "$entries"
+          echo "entries=$entries" >> "$GITHUB_OUTPUT"
+
+  # Each matrix job fuzzes one target for 10 minutes.
+  #
+  # **The cost is 150 minutes of fuzz time each night**, at 15 targets on 2026-08-14. The
+  # matrix runs the targets at the same time, so the wall time is about 12 minutes and the
+  # billed time is about 165 minutes. One job for each target buys two things that one
+  # sequential job does not. A target that stalls holds back no other target, and a crash
+  # reaches an issue that names one target.
+  #
+  # **A timeout is not a crash, and this job reports the two differently.** Issue #568
+  # records a measured stall of `FuzzParseCryptoFramesReadsAnyPayload`: one run reported
+  # `context deadline exceeded` at 0 execs/sec, and a later run of the same target reported
+  # 59517 execs/sec. A stall leaves no file in the seed corpus directory, so the classify
+  # step below reads the directory rather than the exit status alone. A stall fails this job
+  # and it opens no issue, because an issue for each stalled night is a false report.
+  fuzz:
+    needs: targets
+    runs-on: ubuntu-latest
+    # 10 minutes of fuzz time, one build, and the minimization of a failing input. The
+    # documentation of `go help testflag` states that minimization takes up to
+    # `-fuzzminimizetime`, whose default is 60s.
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      # The edge case of `docs/specs/features/06-fuzz-testing.md`: the nightly job runs on a
+      # repository with no open-issue permission, and the job then fails and names the
+      # permission. This block is the repair, and it reaches this job alone.
+      issues: write
+    strategy:
+      # A crash in one target must not cancel the run of the other 14. The documentation
+      # states the behavior this line turns off:
+      # `If a job in a matrix fails, any remaining jobs in the matrix are also canceled.`
+      fail-fast: false
+      matrix:
+        entry: ${{ fromJSON(needs.targets.outputs.entries) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` of `.github/workflows/ci.yml` states why the range reads
+      # `~1.26.6`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # `JA4PLUS_SEEDGEN=1` turns the seed corpus guard of `fuzz_seed_corpus_test.go` from a
+      # comparison into a write. A run that sets it rewrites every seed to match the code,
+      # and the guard then reports success whatever the code does. No line of this file sets
+      # it, and this step proves that the runner environment does not set it either.
+      - name: Refuse a seed corpus write
+        run: |
+          if [ -n "${JA4PLUS_SEEDGEN:-}" ]; then
+            echo "JA4PLUS_SEEDGEN is set, and it rewrites the seed corpus instead of reading it." >&2
+            exit 1
+          fi
+
+      # The matrix value reaches the shell through the environment, and never through a
+      # template in the command. `go list` and `go test -list` produced it, so it names a
+      # package of this module and a function of this module.
+      #
+      # **`-timeout 0` is load-bearing.** `go help testflag` states
+      # `-timeout d ... The default is 10 minutes (10m).`, so a 10-minute fuzz run under the
+      # default timeout panics before the run ends. `make fuzz` runs 30 seconds and never
+      # meets this limit.
+      #
+      # The step holds the exit status rather than failing, because the classify step below
+      # separates a crash from a stall.
+      - name: Fuzz the target for 10 minutes
+        id: run
+        env:
+          ENTRY: ${{ matrix.entry }}
+        run: |
+          # The split of the entry into two words is the purpose of this line, and `go list`
+          # and `go test -list` produced both words.
+          # shellcheck disable=SC2086
+          set -- $ENTRY
+          package=$1
+          target=$2
+
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+
+          status=0
+          go test -run '^$' -fuzz "^$target\$" -fuzztime 10m -timeout 0 "$package" > fuzz.log 2>&1 || status=$?
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "the fuzz run of $target exited with status $status"
+          cat fuzz.log
+
+      # **The fuzzing engine writes a crashing input to the package directory, and that file
+      # is the discriminator.** The `testing` package documentation states it:
+      # `If the fuzz target fails for a given input, the fuzzing engine writes the inputs
+      # that caused the failure to a file in the directory testdata/fuzz/<Name> within the
+      # package directory. This file later serves as a seed input. If the file can't be
+      # written at that location (for example, because the directory is read-only), the
+      # fuzzing engine writes the file to the fuzz cache directory within the build cache
+      # instead.` The workspace of a runner is writable, so the file lands in the checkout.
+      #
+      # A measurement on 2026-08-14 at go1.26.5 confirms the path and the exit status. A
+      # throwaway target that panics reported
+      # `Failing input written to testdata/fuzz/FuzzPanicsOnLongInput/06ba4bdb19de593e` and
+      # `exit status 1`.
+      #
+      # The step reads three results.
+      #
+      #   1. `clean` — the run exited 0. The job passes.
+      #   2. `crash` — the run failed and the tree gained an input file. The job opens an
+      #      issue, and it fails.
+      #   3. `failure` — the run failed and the tree gained no input file. A stall, a build
+      #      failure and a failing seed each reach this result. The job opens no issue, and
+      #      it fails.
+      #
+      # `git ls-files --others` names an untracked file, and every tracked seed stays out of
+      # the list. The checkout is clean before the run, so a file in the list is a file the
+      # fuzzing engine wrote.
+      - name: Classify the result
+        id: classify
+        env:
+          STATUS: ${{ steps.run.outputs.status }}
+          TARGET: ${{ steps.run.outputs.target }}
+        run: |
+          mkdir -p report
+          cp fuzz.log report/fuzz.log
+
+          crasher=$(git ls-files --others --exclude-standard -- '*testdata/fuzz/*' | head -1)
+
+          if [ "$STATUS" = '0' ]; then
+            kind=clean
+          elif [ -n "$crasher" ]; then
+            kind=crash
+            cp "$crasher" "report/$(basename "$crasher")"
+          else
+            kind=failure
+          fi
+
+          {
+            echo "kind=$kind"
+            echo "crasher=$crasher"
+            echo "hash=$(basename "$crasher")"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "the run of $TARGET reads as $kind"
+
+      # The artifact holds the whole log and the crashing input. An artifact name repeats no
+      # other name of this run, because the target name is unique across the module.
+      - name: Upload the report
+        if: steps.classify.outputs.kind != 'clean'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fuzz-${{ steps.run.outputs.target }}
+          path: report/
+
+      # FR-fuzz-28 opens the issue, and FR-fuzz-29 attaches the crashing input to it.
+      #
+      # **The title names the target and the hash of the input, so the same crash opens one
+      # issue and never one for each night.** The fuzzing engine names the file after the
+      # input, and a measurement on 2026-08-14 recorded the property: a second run over the
+      # same input wrote no second file, and the name stayed
+      # `testdata/fuzz/FuzzPanicsOnLongInput/06ba4bdb19de593e`. A different input reaches a
+      # different name, so it reaches a new issue.
+      #
+      # **The body carries the input as base64, and never as raw bytes.** A crashing input is
+      # attacker-controlled, and a Markdown code fence ends at a line of three backticks. The
+      # base64 alphabet holds no backtick, so an input cannot break out of the block. The
+      # decoded bytes are exact, which a rendered block does not promise.
+      #
+      # The artifact above holds the same input for 90 days, and the issue body outlives it.
+      #
+      # `gh` reads no untrusted template. Each value reaches the shell through the
+      # environment, and the body reaches `gh` through a file.
+      #
+      # The documentation states the authentication:
+      # `For each step that uses GitHub CLI, you must set an environment variable called
+      # GH_TOKEN to a token with the required scopes.` and
+      # `GitHub CLI is preinstalled on all GitHub-hosted runners.`
+      # Verified against
+      # <https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-github-cli>,
+      # retrieved 2026-08-14.
+      #
+      # The `bug` label exists in this repository, measured on 2026-08-14. `gh issue create`
+      # fails on a label that does not exist, so this step names one label and no more. The
+      # issue carries no `status:` label, and the project manager triages it.
+      - name: Open an issue for the crash
+        if: steps.classify.outputs.kind == 'crash'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PACKAGE: ${{ steps.run.outputs.package }}
+          TARGET: ${{ steps.run.outputs.target }}
+          CRASHER: ${{ steps.classify.outputs.crasher }}
+          HASH: ${{ steps.classify.outputs.hash }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="fuzz: $TARGET fails on input $HASH"
+
+          # `grep -F -x` reads the title as a fixed whole line, so no character of the title
+          # reads as a pattern.
+          open=$(gh issue list --repo "$REPOSITORY" --state open --limit 200 --json title --jq '.[].title' | grep -c -F -x "$title" || true)
+          if [ "$open" -gt 0 ]; then
+            echo "an open issue already names $HASH, so this run opens none"
+            echo "An open issue already names the input \`$HASH\`. Read $RUN_URL." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "The nightly fuzz run found a crashing input."
+            echo
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Target | \`$TARGET\` |"
+            echo "| Package | \`$PACKAGE\` |"
+            echo "| Input file | \`$CRASHER\` |"
+            echo "| Run | $RUN_URL |"
+            echo "| Artifact | \`fuzz-$TARGET\` |"
+            echo
+            echo "## The crashing input"
+            echo
+            echo "The block below holds the input file as base64. A crashing input is attacker-controlled, so this body carries no raw bytes."
+            echo
+            echo '```'
+            base64 < "$CRASHER"
+            echo '```'
+            echo
+            echo "## How to reproduce it"
+            echo
+            echo "Decode the block above into the file, then run the target. \`go test\` printed the second command itself."
+            echo
+            echo '```'
+            echo "base64 -d > $CRASHER"
+            echo "go test -run=$TARGET/$HASH $PACKAGE"
+            echo '```'
+            echo
+            echo "FR-fuzz-24 states that a crashing input joins the seed corpus. Commit the file above with the repair."
+            echo
+            echo "**Rename the file before you commit it.** The engine writes a hex name, and"
+            echo "\`seedCorpusHoldsNoOtherFile\` of \`internal/parser/fuzz_seed_corpus_test.go\`"
+            echo "fails on a seed file that no test builds. It prints"
+            echo "\`the seed corpus holds <path>, and no test builds it\`."
+            echo "The guard admits a name that starts \`issue-\`, so name the file"
+            echo "\`issue-<n>-<what-it-crashes>\` and keep it in the same directory."
+            echo "\`testdata/fuzz/README.md\` states the naming rule."
+            echo
+            echo "The run log sits in the artifact \`fuzz-$TARGET\` of $RUN_URL, and the artifact expires before this issue does."
+          } > body.md
+
+          gh issue create --repo "$REPOSITORY" --title "$title" --body-file body.md --label bug
+
+      # A red job is the report that a reader of the Actions page sees. This step states the
+      # result in one line, and it separates the two failures.
+      - name: Fail on a crash or a failed run
+        if: steps.classify.outputs.kind != 'clean'
+        env:
+          KIND: ${{ steps.classify.outputs.kind }}
+          TARGET: ${{ steps.run.outputs.target }}
+          HASH: ${{ steps.classify.outputs.hash }}
+        run: |
+          if [ "$KIND" = 'crash' ]; then
+            echo "::error title=Fuzz crash::$TARGET fails on input $HASH. An issue holds the input."
+            echo "\`$TARGET\` fails on input \`$HASH\`." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error title=Fuzz run failed::$TARGET wrote no crashing input, so this is not a crash. Read the log, and read #568 for a measured stall."
+            echo "\`$TARGET\` failed and wrote no crashing input. This run opened no issue." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          exit 1

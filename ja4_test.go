@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 func TestComputeJA4FromClientHello_TLS13(t *testing.T) {
@@ -15,9 +15,9 @@ func TestComputeJA4FromClientHello_TLS13(t *testing.T) {
 		Version:      0x0303,
 		CipherSuites: []uint16{0x1301, 0x1302, 0x1303, 0xc02c},
 		Extensions: []uint16{
-			parser.ExtSNI,                // 0x0000
-			parser.ExtALPN,               // 0x0010
-			parser.ExtSupportedVersions,  // 0x002b
+			parser.ExtSNI,                 // 0x0000
+			parser.ExtALPN,                // 0x0010
+			parser.ExtSupportedVersions,   // 0x002b
 			parser.ExtSignatureAlgorithms, // 0x000d
 			0x0017,                        // extended_master_secret
 		},
@@ -95,11 +95,18 @@ func TestJA4_EmptyCiphers(t *testing.T) {
 	}
 }
 
-// TestJA4_ALPNNonAlphanumeric verifies FoxIO PR #277 spec: when the first or
-// last byte of the first ALPN value is not ASCII alphanumeric, the ALPN field
-// is the first and last character of the lowercase hex representation of the
-// entire first ALPN string.
-func TestJA4_ALPNNonAlphanumeric(t *testing.T) {
+// TestJA4WritesTheMeasuredValueForEachPR277Example holds the eight example inputs of FoxIO
+// PR #277 at the unit level, and it asserts the measured value of each one.
+//
+// The prose of the pull request states the first and last character of the hexadecimal
+// form of the whole first ALPN value. Issue #50 withdrew that rule, because no FoxIO
+// implementation produces it and the FoxIO vector `tls-non-ascii-alpn.pcapng` contradicts
+// it. `internal/parser/tls.go` states the rule the library follows, and
+// `docs/specs/foxio/JA4.md` R18, R19 and Reading 5 record the evidence.
+//
+// `ja4_alpn_parity_test.go` holds FR-parity-8, FR-parity-9 and FR-parity-10 at the packet
+// level. This test reads `ALPNValue` directly, so it separates the rule from the parser.
+func TestJA4WritesTheMeasuredValueForEachPR277Example(t *testing.T) {
 	tests := []struct {
 		name string
 		in   []string
@@ -112,14 +119,15 @@ func TestJA4_ALPNNonAlphanumeric(t *testing.T) {
 		{"two-alnum-bytes", []string{"h2"}, "h2"},
 		{"http/1.1-alnum-ends", []string{"http/1.1"}, "h1"},
 
-		// Non-alphanumeric: byte sequences from FoxIO PR #277 examples.
-		{"0xAB", []string{"\xab"}, "ab"},
-		{"0x20", []string{"\x20"}, "20"},
-		{"0xAB 0xCD", []string{"\xab\xcd"}, "ad"},
-		{"0x20 0x61", []string{"\x20\x61"}, "21"},
-		{"0x30 0xAB", []string{"\x30\xab"}, "3b"},
-		{"0x61 0x20", []string{"\x61\x20"}, "60"},
-		{"0x30 0x31 0xAB 0xCD", []string{"\x30\x31\xab\xcd"}, "3d"},
+		// The eight FoxIO PR #277 examples. The `want` value of each row is the value the
+		// port measured, and the prose value of the pull request follows it in a comment.
+		{"0xAB", []string{"\xab"}, "99"},                            // the prose states `ab`
+		{"0x20", []string{"\x20"}, "99"},                            // the prose states `20`
+		{"0xAB 0xCD", []string{"\xab\xcd"}, "99"},                   // the prose states `ad`
+		{"0x20 0x61", []string{"\x20\x61"}, "\x20a"},                // the prose states `21`
+		{"0x30 0xAB", []string{"\x30\xab"}, "99"},                   // the prose states `3b`
+		{"0x61 0x20", []string{"\x61\x20"}, "a\x20"},                // the prose states `60`
+		{"0x30 0x31 0xAB 0xCD", []string{"\x30\x31\xab\xcd"}, "99"}, // the prose states `3d`
 		{"0x30 0xAB 0xCD 0x31", []string{"\x30\xab\xcd\x31"}, "01"},
 	}
 	for _, tt := range tests {
@@ -197,8 +205,8 @@ func TestJA4_ExtensionHash_SNIAndALPNExcluded(t *testing.T) {
 		Version:      0x0303,
 		CipherSuites: []uint16{0x002f},
 		Extensions: []uint16{
-			parser.ExtSNI,                // should be excluded from hash
-			parser.ExtALPN,               // should be excluded from hash
+			parser.ExtSNI,                 // should be excluded from hash
+			parser.ExtALPN,                // should be excluded from hash
 			0x0017,                        // should be included
 			parser.ExtSignatureAlgorithms, // should be included
 		},
@@ -394,11 +402,11 @@ func TestJA4_RawOriginalOrder(t *testing.T) {
 	// The ciphers are intentionally unsorted so Raw (sorted) differs from RawOriginalOrder.
 	ciphers := []uint16{0x1303, 0x1301, 0x1302}
 	exts := []parser.TLSExtension{
-		parser.MakeSNIExtension("example.com"),               // 0x0000
-		parser.MakeALPNExtension("h2", "http/1.1"),           // 0x0010
+		parser.MakeSNIExtension("example.com"),                      // 0x0000
+		parser.MakeALPNExtension("h2", "http/1.1"),                  // 0x0010
 		parser.MakeSupportedVersionsClientExtension(0x0304, 0x0303), // 0x002b
 		parser.MakeSignatureAlgorithmsExtension(0x0403, 0x0804),     // 0x000d
-		{Typ: 0x0017, Data: []byte{}},                                // extended_master_secret
+		{Typ: 0x0017, Data: []byte{}},                               // extended_master_secret
 	}
 	tlsPayload := parser.BuildClientHello(0x0303, ciphers, exts)
 

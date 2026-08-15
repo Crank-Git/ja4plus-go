@@ -1,0 +1,57 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(go vet:*)",
+      "Bash(go doc:*)",
+      "Bash(go fmt:*)",
+      "Bash(gofmt:*)",
+      "Bash(go mod tidy)",
+      "Bash(go mod download)",
+      "Bash(go mod verify)",
+      "Bash(go tool cover:*)",
+      "Bash(go run ./cmd/ja4plus:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(govulncheck:*)",
+      "Bash(make:*)",
+      "Bash(./scripts/fetch-corpus.sh:*)",
+      "Bash(goreleaser check)",
+      "Bash(goreleaser release --snapshot --clean)",
+      "Bash(gremlins unleash:*)",
+      "Bash(mkdocs build --strict:*)",
+      "Bash(mkdocs serve:*)",
+      "Bash(gh api repos/FoxIO-LLC/ja4:*)",
+      "Bash(gh api repos/Crank-Git/ja4plus:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(gh issue edit:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr comment:*)",
+      "Bash(gh pr ready:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh label list:*)",
+      "Bash(git:*)"
+    ],
+    "deny": [
+      "Bash(git stash:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v gofmt >/dev/null || exit 0; for f in $CLAUDE_FILE_PATHS; do case \"$f\" in *.go) gofmt -w \"$f\" 2>/dev/null || true ;; esac; done"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -4,8 +4,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 func buildIPv4Packet(t *testing.T, srcIP, dstIP string, ttl uint8) gopacket.Packet {

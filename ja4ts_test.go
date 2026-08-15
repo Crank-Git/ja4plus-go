@@ -3,7 +3,7 @@ package ja4plus
 import (
 	"testing"
 
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket/layers"
 )
 
 func TestJA4TS_SYNACKWithOptions(t *testing.T) {
@@ -19,8 +19,11 @@ func TestJA4TS_SYNACKWithOptions(t *testing.T) {
 	}
 	pkt := buildTCPPacket(t, 443, 12345, true, true, 29200, options)
 
+	// The option list reaches 23 bytes, so gopacket adds one zero pad byte. The packet
+	// therefore carries two End-of-Option-List bytes, and ruling #297 writes one entry for
+	// each of them.
 	result := ComputeJA4TS(pkt)
-	expected := "29200_2-1-3-1-1-8-4-0_1460_7"
+	expected := "29200_2-1-3-1-1-8-4-0-0_1460_7"
 	if result != expected {
 		t.Errorf("JA4TS SYN-ACK with options: got %q, want %q", result, expected)
 	}
@@ -45,14 +48,22 @@ func TestJA4TS_ACKOnly(t *testing.T) {
 }
 
 func TestJA4TS_Reset(t *testing.T) {
+	// Reset drops the state table, so the second read sees the packet as the first
+	// SYN-ACK of a new connection and writes no part e. Without Reset the second read
+	// writes the delay `0`, which `TestJA4TS_WritesOnePartEDelayWhenTheServerAnswersTwice`
+	// holds.
 	fp := NewJA4TS()
 	pkt := buildTCPPacket(t, 443, 12345, true, true, 29200, nil)
-	_, _ = fp.ProcessPacket(pkt)
-	if len(fp.results) != 1 {
-		t.Fatalf("expected 1 result, got %d", len(fp.results))
+
+	before, _ := fp.ProcessPacket(pkt)
+	if len(before) != 1 {
+		t.Fatalf("the SYN-ACK packet produced %d results, want 1", len(before))
 	}
+
 	fp.Reset()
-	if len(fp.results) != 0 {
-		t.Errorf("expected 0 results after reset, got %d", len(fp.results))
+
+	after, _ := fp.ProcessPacket(pkt)
+	if len(after) != 1 || after[0].Fingerprint != before[0].Fingerprint {
+		t.Errorf("the read after Reset produces %v, and the read before it produces %v", after, before)
 	}
 }

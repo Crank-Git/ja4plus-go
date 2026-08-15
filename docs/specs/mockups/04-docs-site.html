@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The documentation site — ja4plus-go</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --ink: #16181d; --muted: #5b6270; --line: #e3e5ea;
+    --panel: #ffffff; --accent: #3f51b5; --accent-soft: #e8eaf6;
+    --code-bg: #f4f5f7;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101216; --ink: #e6e8ec; --muted: #99a1b0; --line: #262b34;
+      --panel: #171a20; --accent: #9fa8da; --accent-soft: #232838; --code-bg: #1c2029;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px 20px 64px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+  h2 { font-size: 14px; margin: 32px 0 4px; }
+  .cap { color: var(--muted); font-size: 12.5px; margin: 0 0 10px; }
+
+  .browser { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .chrome {
+    background: var(--code-bg); border-bottom: 1px solid var(--line);
+    padding: 8px 12px; display: flex; gap: 8px; align-items: center;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #c9ced8; }
+  .url {
+    flex: 1; font: 11.5px var(--mono); color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 5px; padding: 3px 9px;
+  }
+  .site { display: grid; grid-template-columns: 200px 1fr; min-height: 380px; }
+  @media (max-width: 720px) { .site { grid-template-columns: 1fr; } }
+  .nav { border-right: 1px solid var(--line); padding: 14px 0; font-size: 13px; }
+  .nav .sec { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 10px 16px 4px; }
+  .nav a { display: block; padding: 4px 16px; color: var(--ink); text-decoration: none; }
+  .nav a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; border-left: 2px solid var(--accent); padding-left: 14px; }
+  .nav .in { padding-left: 28px; color: var(--muted); }
+  .page { padding: 20px 24px; }
+  .page h3 { margin: 0 0 2px; font-size: 19px; }
+  .page .lede { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
+  .fp {
+    font: 13px var(--mono); background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 7px; padding: 12px 14px; margin: 0 0 14px; overflow-x: auto;
+  }
+  .fp .a { color: #b06f2e; } .fp .b { color: #2f7d5a; } .fp .c { color: #3f51b5; }
+  @media (prefers-color-scheme: dark) {
+    .fp .a { color: #e4c07a; } .fp .b { color: #6fc396; } .fp .c { color: #9fa8da; }
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 11.5px; }
+  code { font: 12px var(--mono); background: rgba(127,140,160,0.14); padding: 1px 5px; border-radius: 4px; }
+  .note { border-left: 3px solid var(--line); padding: 2px 0 2px 12px; color: var(--muted); font-size: 13px; margin: 16px 0 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 10px; }
+  @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The documentation site</h1>
+<p class="sub">
+  Epic 14, <code>features/14-documentation.md</code>. MkDocs with the Material theme,
+  published to GitHub Pages. The navigation shape matches the port's site, so a reader
+  finds the same page in the same place in both repositories.
+</p>
+
+<h2>A method page</h2>
+<p class="cap">
+  FR-documentation-17. Eleven methods reach eleven pages, because JA4L and JA4LS each hold
+  one.
+</p>
+<div class="browser">
+  <div class="chrome">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="url">https://crank-git.github.io/ja4plus-go/methods/ja4ls/</span>
+  </div>
+  <div class="site">
+    <div class="nav">
+      <a href="#">Home</a>
+      <a href="#">Usage guide</a>
+      <a href="#">Output schema</a>
+      <a href="#">Concurrency</a>
+      <a href="#">Live capture</a>
+      <a href="#">Packet throughput</a>
+      <div class="sec">Methods</div>
+      <a class="in" href="#">Overview</a>
+      <a class="in" href="#">JA4</a>
+      <a class="in" href="#">JA4S</a>
+      <a class="in" href="#">JA4H</a>
+      <a class="in" href="#">JA4L</a>
+      <a class="on" href="#">JA4LS</a>
+      <a class="in" href="#">JA4X</a>
+      <a class="in" href="#">JA4SSH</a>
+      <a class="in" href="#">JA4T</a>
+      <a class="in" href="#">JA4TS</a>
+      <a class="in" href="#">JA4D</a>
+      <a class="in" href="#">JA4D6</a>
+      <div class="sec">API reference</div>
+      <a class="in" href="#">Processor</a>
+      <a class="in" href="#">Result</a>
+      <a class="in" href="#">Fingerprinters</a>
+      <a class="in" href="#">Lookup</a>
+      <div class="sec">Project</div>
+      <a class="in" href="#">Licensing</a>
+      <a class="in" href="#">Implementation notes</a>
+      <a class="in" href="#">The mutation sweep</a>
+    </div>
+    <div class="page">
+      <h3>JA4LS — server latency and distance</h3>
+      <p class="lede">
+        JA4LS measures the server side of a connection. <code>JA4LFingerprinter</code>
+        writes it, and the same fingerprinter writes JA4L for the client side.
+      </p>
+      <div class="fp"><span class="a">4021</span>_<span class="b">53</span>_<span class="c">quic</span></div>
+      <table>
+        <tr><th>Part</th><th>Meaning</th></tr>
+        <tr><td><code>a</code></td><td>The measured time divided by the propagation factor for the hop count.</td></tr>
+        <tr><td><code>b</code></td><td>The hop count: the initial time-to-live minus the observed time-to-live.</td></tr>
+        <tr><td><code>c</code></td><td>The protocol marker. Present on a QUIC connection only, and its value is <code>quic</code>.</td></tr>
+      </table>
+      <p class="note">
+        <strong>No FoxIO image specifies JA4LS.</strong> <code>JA4L.png</code> states no
+        server rule, so every rule on this page cites a FoxIO implementation.
+        <code>docs/specs/foxio/JA4L.md</code> names the sources.
+      </p>
+    </div>
+  </div>
+</div>
+
+<h2>What each page holds</h2>
+<div class="cols">
+  <table>
+    <tr><th>Page</th><th>What it answers</th></tr>
+    <tr><td>Home</td><td>What the library is, how to install it, eleven methods and ten fingerprinters.</td></tr>
+    <tr><td>Usage guide</td><td>Reading a capture, filtering methods, choosing an output format.</td></tr>
+    <tr><td>Output schema</td><td>Every field of a result, and the JSON and CSV forms.</td></tr>
+    <tr><td>Concurrency</td><td>One processor per goroutine, <code>GetShardKey</code>, <code>SyncProcessor</code>.</td></tr>
+    <tr><td>Live capture</td><td>The monitor, the build tags, the statistics line.</td></tr>
+  </table>
+  <table>
+    <tr><th>Page</th><th>What it answers</th></tr>
+    <tr><td>Packet throughput</td><td>The measured rate on one named capture and one named host.</td></tr>
+    <tr><td>Methods (11)</td><td>The form of one method, and what each part means.</td></tr>
+    <tr><td>API reference</td><td>The contract of each type, with a link to <code>pkg.go.dev</code>.</td></tr>
+    <tr><td>Licensing</td><td>The BSD 3-Clause code, the FoxIO License 1.1 methods, the notice.</td></tr>
+    <tr><td>The mutation sweep</td><td>The report, the settlements, the procedure.</td></tr>
+  </table>
+</div>
+
+<p class="note">
+  <strong>The API reference is hand-written, and that is the one deliberate difference
+  from the port.</strong> The port generates its reference from docstrings with
+  <code>mkdocstrings</code>. Go already publishes a generated surface at
+  <code>pkg.go.dev</code>, built from the same doc comments. A second generated copy would
+  drift, so these pages explain the contract and link out for the signatures.
+</p>
+
+<h2>What is not published</h2>
+<table>
+  <tr><th>Excluded</th><th>Why</th></tr>
+  <tr><td><code>docs/specs/</code></td><td>Design material. It links outside <code>docs_dir</code>, so a strict build could never resolve it. FR-documentation-6.</td></tr>
+  <tr><td><code>docs/audit/</code></td><td>The findings report and the recorded decisions. FR-documentation-7.</td></tr>
+</table>
+
+</div>
+</body>
+</html>

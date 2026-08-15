@@ -4,29 +4,85 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
+// maxJA4QUICFragmentConnections bounds the fragment table and the two indexes that name it.
+// Every packet is untrusted input. A sender names a new connection identifier on each datagram
+// at no cost, so the three maps need a bound.
+// No FoxIO source addresses a state table. `.claude/rules/parity.md` rule 2 gives the port the
+// interface this project shipped without one.
+// `ja4plus/fingerprinters/ja4.py:26` of tag `v1.1.0` states the same reason and the same value.
+// That value sits below the default of the port's state table.
+const maxJA4QUICFragmentConnections = 1000
+
+// ja4QUICFragmentAge drops a connection that added no CRYPTO fragment for 30 seconds.
+// A client hello that spans several datagrams arrives inside one round trip, so a connection
+// that adds no fragment for this long abandoned its handshake.
+// `ja4plus/fingerprinters/ja4.py:31` of tag `v1.1.0` states the value and the same reason.
+const ja4QUICFragmentAge = 30 * time.Second
+
+// ja4QUICFragmentEvictionInterval runs the age pass on each datagram that carries a fragment.
+// An age pass that waits longer than the age it applies removes nothing from a connection that
+// sends few packets. `ja4plus/fingerprinters/ja4.py:47` of tag `v1.1.0` passes
+// `eviction_interval=1` for that reason. The table it bounds holds 1000 entries at most, so one
+// pass reads 1000 keys at most.
+const ja4QUICFragmentEvictionInterval = 1
+
 // JA4Fingerprinter computes JA4 TLS Client Hello fingerprints.
+//
+// One JA4Fingerprinter serves one goroutine. It holds state that no lock guards.
+// Give each goroutine its own instance, or share one SyncProcessor.
 type JA4Fingerprinter struct {
-	results       []FingerprintResult
 	quicFragments map[string][]parser.CryptoFragment // DCID hex -> accumulated fragments
-	dcidToTuple   map[string]string                  // DCID hex -> 5-tuple key for cleanup
+	dcidToTuple   map[string]string                  // DCID hex -> grouping key for cleanup
+	// dcidToReported reads the reported key of a connection from the same DCID hex.
+	// A caller of CleanupConnection holds the address pair that a FingerprintResult carries,
+	// and a tunneled connection groups under the inner pair. Without this map the caller
+	// names a key that `dcidToTuple` never holds. FR-gaps-14d states the rule.
+	// This map runs from the DCID hex to the reported key, and the `groupingKeys` map of
+	// `ja4l.go` runs from the reported key to the grouping key. The two directions differ
+	// because CleanupConnection reads every entry of `dcidToTuple` already.
+	dcidToReported map[string]string
+	// keys holds the recency order of the fragment table, and it names the connection that
+	// the entry bound and the age bound remove.
+	keys boundedKeys
 }
 
 // NewJA4 creates a new JA4Fingerprinter.
 func NewJA4() *JA4Fingerprinter {
 	return &JA4Fingerprinter{
-		quicFragments: make(map[string][]parser.CryptoFragment),
-		dcidToTuple:   make(map[string]string),
+		quicFragments:  make(map[string][]parser.CryptoFragment),
+		dcidToTuple:    make(map[string]string),
+		dcidToReported: make(map[string]string),
+	}
+}
+
+// ensure fills the state maps that the constructor fills.
+// A caller who writes `var f JA4Fingerprinter` reaches a nil map, and a write to a nil
+// map panics. Every entry point calls this method first.
+func (f *JA4Fingerprinter) ensure() {
+	if f.quicFragments == nil {
+		f.quicFragments = make(map[string][]parser.CryptoFragment)
+	}
+
+	if f.dcidToTuple == nil {
+		f.dcidToTuple = make(map[string]string)
+	}
+
+	if f.dcidToReported == nil {
+		f.dcidToReported = make(map[string]string)
 	}
 }
 
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
 func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error) {
+	f.ensure()
+
 	var ch *parser.ClientHello
 	var srcPort, dstPort uint16
 
@@ -45,35 +101,72 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 
 	// Try QUIC in UDP packets with multi-packet CRYPTO frame accumulation
 	if ch == nil {
-		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
-			udp := udpLayer.(*layers.UDP)
-			if len(udp.Payload) > 0 {
-				frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
+		// The helper reads the UDP layer of the innermost packet. A tunnel carries its own
+		// UDP header, and that header names the tunnel and not the connection.
+		udp := parser.GetUDPLayer(packet)
+		if udp == nil {
+			return nil, foreignUDPLayerError(packet)
+		}
+
+		if len(udp.Payload) > 0 {
+			// DecryptQUICInitialCrypto returns the fragments it read beside a truncation
+			// error. The fingerprinter keeps them, because a whole client hello can sit
+			// in front of the truncated frame.
+			frags, dcid, err := parser.DecryptQUICInitialCrypto(udp.Payload)
+			if len(frags) == 0 && err != nil {
+				return nil, err
+			}
+			if len(frags) > 0 && len(dcid) > 0 {
+				dcidKey := fmt.Sprintf("%x", dcid)
+
+				// The bound precedes every write below, because the three maps name one
+				// connection and one eviction removes all three.
+				f.openConnection(dcidKey, parser.GetPacketTimestamp(packet))
+
+				// The entry holds the grouping key, so it reads the inner address pair.
+				// GetShardKey reads the same pair, and a tunneled connection would
+				// otherwise reach one shard under two names.
+				groupSrcIP, groupDstIP, _ := parser.GetGroupingIPInfo(packet)
+				tupleKey := fmt.Sprintf("%s:%d-%s:%d", groupSrcIP, uint16(udp.SrcPort), groupDstIP, uint16(udp.DstPort))
+				f.dcidToTuple[dcidKey] = tupleKey
+
+				// The index reads the outer address pair with the inner port pair, which is the
+				// pair every result of this connection reports. CleanupConnection reaches the
+				// entry from it. Issue #193 records the leak that the absent index caused.
+				if reportedSrcIP, reportedDstIP, _, held := parser.GetIPInfo(packet); held {
+					f.dcidToReported[dcidKey] = fmt.Sprintf("%s:%d-%s:%d",
+						reportedSrcIP, uint16(udp.SrcPort), reportedDstIP, uint16(udp.DstPort))
+				}
+
+				// A sender that never completes a client hello reaches the fragment
+				// buffer bound. The fingerprinter then drops the connection state,
+				// because an unbounded buffer is a memory-exhaustion path.
+				collected, err := parser.CollectCryptoFragments(f.quicFragments[dcidKey], frags)
 				if err != nil {
+					f.dropConnection(dcidKey)
+
 					return nil, err
 				}
-				if len(frags) > 0 && len(dcid) > 0 {
-					dcidKey := fmt.Sprintf("%x", dcid)
-					f.quicFragments[dcidKey] = append(f.quicFragments[dcidKey], frags...)
 
-					// Record DCID-to-tuple mapping for cleanup and shard routing
-					srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
-					tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, uint16(udp.SrcPort), dstIP, uint16(udp.DstPort))
-					f.dcidToTuple[dcidKey] = tupleKey
+				f.quicFragments[dcidKey] = collected
 
-					// Try to parse ClientHello from accumulated fragments
-					ch, err = parser.ClientHelloFromCryptoFragments(f.quicFragments[dcidKey])
-					if err != nil {
-						return nil, err
-					}
-					if ch != nil {
-						delete(f.quicFragments, dcidKey)
-						delete(f.dcidToTuple, dcidKey)
-					}
+				// Try to parse ClientHello from accumulated fragments
+				ch, err = parser.ClientHelloFromCryptoFragments(collected)
+				if err != nil {
+					// ClientHelloFromCryptoFragments returns nil and no error while a fragment is
+					// missing. So an error names a handshake message that holds every byte its
+					// length field counts. No later packet repairs that message. The entries then
+					// leak in a monitor that calls no CleanupConnection. Issue #533 records the leak.
+					f.dropConnection(dcidKey)
+
+					return nil, err
 				}
-				srcPort = uint16(udp.SrcPort)
-				dstPort = uint16(udp.DstPort)
+				if ch != nil {
+					f.dropConnection(dcidKey)
+				}
 			}
+			srcPort = uint16(udp.SrcPort)
+			dstPort = uint16(udp.DstPort)
 		}
 	}
 
@@ -88,12 +181,14 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 
 	raw := computeJA4RawFromClientHello(ch)
 	rawOO := computeJA4RawOriginalOrder(ch)
+	originalOrder := computeJA4OriginalOrder(ch)
 
 	srcIP, dstIP, _, _ := parser.GetIPInfo(packet)
 
 	result := FingerprintResult{
 		Fingerprint:      fingerprint,
 		Raw:              raw,
+		OriginalOrder:    originalOrder,
 		RawOriginalOrder: rawOO,
 		Type:             "ja4",
 		SrcIP:            srcIP,
@@ -103,31 +198,66 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		Timestamp:        parser.GetPacketTimestamp(packet),
 	}
 
-	f.results = append(f.results, result)
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears all stored results.
+// Reset clears the QUIC fragment table and the connection identifier table.
+// The fingerprinter keeps no result, because ProcessPacket returns each result to the
+// caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4Fingerprinter) Reset() {
-	f.results = nil
+	f.ensure()
+
 	f.quicFragments = make(map[string][]parser.CryptoFragment)
 	f.dcidToTuple = make(map[string]string)
+	f.dcidToReported = make(map[string]string)
+	f.keys.reset()
+}
+
+// openConnection records one datagram of the connection, and it holds the two bounds.
+// The removal path of this fingerprinter reaches all three maps, so an eviction removes every
+// entry the connection holds.
+func (f *JA4Fingerprinter) openConnection(dcidKey string, now time.Time) {
+	f.keys.admit(dcidKey, now, maxJA4QUICFragmentConnections, ja4QUICFragmentAge,
+		ja4QUICFragmentEvictionInterval, f.dropConnection)
+}
+
+// dropConnection removes every table entry that one connection identifier holds.
+// One removal path keeps the three tables in step, because a table this method skips leaks
+// in a long-running monitor.
+func (f *JA4Fingerprinter) dropConnection(dcidKey string) {
+	delete(f.quicFragments, dcidKey)
+	delete(f.dcidToTuple, dcidKey)
+	delete(f.dcidToReported, dcidKey)
+	f.keys.remove(dcidKey)
 }
 
 // CleanupConnection removes internal state for the given connection.
 // JA4 QUIC state is keyed by DCID hex. This method looks up the DCID
 // via the dcidToTuple reverse map and cleans the corresponding fragments.
+// The caller names the two endpoints in either order, because the reverse map holds the
+// order of the datagram that carried the client hello.
+// The caller names the address pair that a FingerprintResult carries, which is the
+// reported key. JA4L holds the same contract.
+// A tunneled connection groups under the inner address pair, so this method reads the
+// reported key of each connection as well as the grouping key. It falls back to the
+// grouping key, because a caller of GetShardKey holds that key instead.
+// FR-gaps-14e states the fallback, and `ja4plus/fingerprinters/ja4l.py:216` holds it too.
+// Issue #193 records the leak that the absent index caused.
 func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
-	tupleKey := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	f.ensure()
+
+	forward := fmt.Sprintf("%s:%d-%s:%d", srcIP, srcPort, dstIP, dstPort)
+	reverse := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+
 	for dcid, tuple := range f.dcidToTuple {
-		if tuple == tupleKey {
-			delete(f.quicFragments, dcid)
-			delete(f.dcidToTuple, dcid)
+		reported := f.dcidToReported[dcid]
+		if tuple == forward || tuple == reverse || reported == forward || reported == reverse {
+			f.dropConnection(dcid)
 		}
 	}
 }
 
-// ComputeJA4 is a convenience function that extracts a JA4 fingerprint from a packet.
+// ComputeJA4 is a one-shot function that extracts a JA4 fingerprint from a packet.
 // Returns an empty string if the packet is not a TLS ClientHello.
 func ComputeJA4(packet gopacket.Packet) string {
 	payload := parser.GetTCPPayload(packet)
@@ -173,9 +303,11 @@ func computeJA4RawFromClientHello(ch *parser.ClientHello) string {
 	sort.Slice(sortedExts, func(i, j int) bool { return sortedExts[i] < sortedExts[j] })
 	extList := formatHexList(sortedExts)
 
-	// Signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgList := formatHexList(ch.SignatureAlgorithms)
+	// Signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgList := formatHexList(sigAlgs)
 		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
 	}
 	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
@@ -241,8 +373,13 @@ func ja4CipherHash(ch *parser.ClientHello) string {
 	return parser.TruncatedHash(formatHexList(sorted))
 }
 
-// ja4ExtensionHash generates the extension hash section.
-func ja4ExtensionHash(ch *parser.ClientHello) string {
+// ja4SortedExtensionString returns the sorted extension string that `JA4` part c hashes.
+//
+// `JA4_o` reads the same string, because
+// `testdata/foxio/reference/python/ja4.py:248` tests it for the zero sentinel of the
+// wire-order part. One builder therefore serves the two values, and a second builder would
+// let the two rules drift apart.
+func ja4SortedExtensionString(ch *parser.ClientHello) string {
 	extensions := parser.FilterGreaseValues(ch.Extensions)
 
 	// Remove SNI and ALPN
@@ -258,34 +395,100 @@ func ja4ExtensionHash(ch *parser.ClientHello) string {
 
 	extStr := formatHexList(filtered)
 
-	// Append signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgStr := formatHexList(ch.SignatureAlgorithms)
+	// Append signature algorithms in original order.
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		sigAlgStr := formatHexList(sigAlgs)
 		extStr = extStr + "_" + sigAlgStr
 	}
 
-	return parser.TruncatedHash(extStr)
+	return extStr
+}
+
+// ja4ExtensionHash generates the extension hash section.
+func ja4ExtensionHash(ch *parser.ClientHello) string {
+	return parser.TruncatedHash(ja4SortedExtensionString(ch))
+}
+
+// ja4OriginalOrderLists returns the wire-order cipher list and the wire-order extension
+// list of a client hello.
+//
+// `JA4_o` hashes each of the two lists, and `JA4_ro` writes each one unhashed, so one
+// function builds both. Two builders drift apart, and a reader then cannot tell which of
+// the two values is wrong.
+//
+// The extension list keeps SNI and ALPN, because
+// `testdata/foxio/reference/python/common.py:144` removes the two only when it sorts. It
+// carries the signature algorithms after a `_` separator, which
+// `testdata/foxio/reference/python/ja4.py:246` appends before it hashes.
+func ja4OriginalOrderLists(ch *parser.ClientHello) (string, string) {
+	cipherList := formatHexList(parser.FilterGreaseValues(ch.CipherSuites))
+	extList := formatHexList(parser.FilterGreaseValues(ch.Extensions))
+
+	// `docs/specs/foxio/JA4.md` R31 states that the list skips a GREASE value.
+	sigAlgs := parser.FilterGreaseValues(ch.SignatureAlgorithms)
+	if len(sigAlgs) > 0 {
+		extList = extList + "_" + formatHexList(sigAlgs)
+	}
+
+	return cipherList, extList
 }
 
 // computeJA4RawOriginalOrder generates the original wire-order raw JA4 fingerprint.
 // Unlike the sorted raw variant, this preserves wire order and keeps SNI/ALPN in extensions.
 func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
-	partA := ja4PartA(ch)
+	cipherList, extList := ja4OriginalOrderLists(ch)
 
-	// Cipher list: GREASE filtered, original wire order (no sorting)
-	ciphers := parser.FilterGreaseValues(ch.CipherSuites)
-	cipherList := formatHexList(ciphers)
+	return fmt.Sprintf("%s_%s_%s", ja4PartA(ch), cipherList, extList)
+}
 
-	// Extension list: GREASE filtered, original wire order, SNI/ALPN PRESERVED
-	extensions := parser.FilterGreaseValues(ch.Extensions)
-	extList := formatHexList(extensions)
+// computeJA4OriginalOrder generates the FoxIO `JA4_o` value of a client hello.
+//
+// The value carries the part a of `JA4`, a hash of the wire-order cipher list and a hash of
+// the wire-order extension list. `testdata/foxio/reference/python/ja4.py:291` states the
+// form. An empty list reaches `parser.EmptyHash`.
+//
+// The extension part reads the sorted extension string for that sentinel, and never the
+// wire-order string. `testdata/foxio/reference/python/ja4.py:248` tests the sorted string,
+// and `testdata/foxio/reference/python/ja4.py:253` writes `000000000000` into the
+// wire-order part from that test. The Rust reference hashes the wire-order string on its
+// own at `testdata/foxio/reference/rust/ja4/src/tls.rs:363`, so the two references answer a
+// client hello whose sorted list is empty differently. The maintainer ruled the split on
+// 2026-08-12 in issue #287, and this library follows the Python reference.
+func computeJA4OriginalOrder(ch *parser.ClientHello) string {
+	cipherList, extList := ja4OriginalOrderLists(ch)
 
-	// Signature algorithms in original order
-	if len(ch.SignatureAlgorithms) > 0 {
-		sigAlgList := formatHexList(ch.SignatureAlgorithms)
-		return fmt.Sprintf("%s_%s_%s_%s", partA, cipherList, extList, sigAlgList)
+	extHash := parser.TruncatedHash(extList)
+	if ja4SortedExtensionString(ch) == "" {
+		extHash = parser.EmptyHash
 	}
-	return fmt.Sprintf("%s_%s_%s", partA, cipherList, extList)
+
+	return fmt.Sprintf("%s_%s_%s", ja4PartA(ch),
+		parser.TruncatedHash(cipherList), extHash)
+}
+
+// foreignUDPLayerError returns a non-fatal error when the packet holds a UDP layer type
+// that carries another concrete type. It returns nil for every other packet.
+// JA4 and JA4S both call it.
+//
+// A caller that supplies a custom decoder registers such a type, and parser.GetUDPLayer
+// returns nil for it. Finding F-24-1 requires the error, because a silent skip tells the
+// caller nothing about the layer the fingerprinter declined to read.
+//
+// It reads the outermost UDP layer type. A foreign type inside a tunnel therefore reaches
+// no error, because the tunnel carries a genuine UDP header that matches first.
+func foreignUDPLayerError(packet gopacket.Packet) error {
+	udpLayer := packet.Layer(layers.LayerTypeUDP)
+	if udpLayer == nil {
+		return nil
+	}
+
+	if _, held := udpLayer.(*layers.UDP); held {
+		return nil
+	}
+
+	return fmt.Errorf("the UDP layer carries the type %T", udpLayer)
 }
 
 // formatHexList formats a slice of uint16 as comma-separated 4-char lowercase hex.

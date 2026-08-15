@@ -1,0 +1,61 @@
+# FR-supply-6 creates this file. FR-supply-7 and FR-supply-8 name the two ecosystems.
+# FR-supply-9 names the target branch, and FR-supply-10 names the interval.
+#
+# #66 read every key below in the GitHub documentation on 2026-08-13, and never from
+# memory. `.claude/rules/external-apis.md` names that page as the pinned interface.
+#
+# `.claude/rules/external-apis.md` pins the options reference at this address:
+#   https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+#
+# GitHub now serves that page under `/reference/supply-chain-security/`. The pinned
+# address answers `301` to the address below, measured on 2026-08-13. So the two name one
+# page, and the pinned table needs no repair.
+#
+# Documentation:
+#   https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+#   https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories
+#   https://docs.github.com/en/actions/reference/security/secure-use
+#
+# Two limits bind this configuration. Read them before you read full coverage into the
+# file.
+#
+# 1. `target-branch` moves a version update, and it moves no security update. The
+#    reference states `All options marked with a security updates icon also change how
+#    Dependabot creates pull requests for security updates, except where `target-branch`
+#    is used.` So a security update targets the default branch of the repository.
+# 2. The `github-actions` ecosystem watches an action. It watches no tool that a job
+#    installs, so no update reaches the `govulncheck` version that #65 pins.
+
+version: 2
+
+updates:
+  # FR-supply-7. `gomod` is the documented value for Go modules, and `/` reads `go.mod`
+  # at the root of the repository.
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # FR-supply-9. The documentation states `Specify the branch to target for version
+    # updates.` The default branch of this repository is `master`, and `dev` receives
+    # every change first.
+    target-branch: "dev"
+
+  # FR-supply-8. #67 pinned every `uses:` reference to a 40-character commit hash with a
+  # trailing version comment, and this ecosystem reads that form. The documentation
+  # states `Dependabot updates the version documentation of GitHub Actions when the
+  # comment is on the same line, such as `actions/checkout@<commit> #<tag or link>` or
+  # `actions/checkout@<tag> #<tag or link>`.` So an update rewrites the hash and the
+  # comment together.
+  #
+  # A hash pin carries one limit, and the documentation states it: `Dependabot only
+  # creates alerts for vulnerable actions that use semantic versioning and will not
+  # create alerts for actions pinned to SHA values.` A version update still arrives.
+  #
+  # The documentation states the directory value for this ecosystem: `For GitHub Actions,
+  # use the value `/`. Dependabot will search the `/.github/workflows` directory, as well
+  # as the `action.yml/action.yaml` file from the root directory.`
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"

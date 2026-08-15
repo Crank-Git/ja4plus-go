@@ -1,0 +1,441 @@
+package ja4plus
+
+import (
+	"encoding/asn1"
+	"encoding/binary"
+	"encoding/hex"
+	"strings"
+	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/parser"
+)
+
+// These tests hold the parser findings of issue #22. `docs/audit/findings.md` records each
+// one, and the identifier in each test name points at the row.
+//
+// Every test below asserts the value the library produces today, which is the wrong value.
+// The audit changes no code, so a test that asserts the right value would fail on this
+// branch and hide every other finding. Issue #25 owns the repair under FR-audit-25, and it
+// inverts each assertion in the same commit that closes the finding.
+//
+// `.claude/rules/rulings.md` asks for a test that builds the separating packet where no
+// FoxIO vector reaches the value. F-22-2, F-22-3, F-22-6, F-22-7, F-22-8, F-22-11,
+// F-22-12 and F-22-13 are those findings, and the tests below build their input.
+
+// auditParserGreaseSigAlg is the GREASE signature algorithm that F-22-11, F-22-12 and
+// F-22-13 use. RFC 8701 reserves it, and `docs/specs/foxio/JA4.md` R31 states that the
+// signature algorithm list skips it.
+const auditParserGreaseSigAlg = 0x0a0a
+
+// auditParserClientHello builds a ClientHello that carries the extensions the caller
+// names. It exists so that no test below reaches a helper of another audit file.
+func auditParserClientHello(t *testing.T, extensions []parser.TLSExtension) []byte {
+	t.Helper()
+
+	return parser.BuildClientHello(0x0303, []uint16{0x1301, 0x1302}, extensions)
+}
+
+func TestF22_1_ALPNValueWritesTheValueTheFoxioVectorHolds(t *testing.T) {
+	// **F-22-1 is closed, and issue #50 closed it.** The finding recorded that the library
+	// wrote the first and last character of the hexadecimal form of the whole first ALPN
+	// value. No FoxIO implementation writes that value.
+	//
+	// The FoxIO vector for `tls-non-ascii-alpn.pcapng` stream 0 holds
+	// `t13d151699_8daaf6152771_e5627efa2ab1`. The library wrote
+	// `t13d1516bd_8daaf6152771_e5627efa2ab1` before the repair, and only the two ALPN
+	// characters differed. `docs/audit/conformance.md:410` records the pair.
+	//
+	// `docs/specs/foxio/JA4.md` R19 records a reference split of four results for a
+	// non-alphanumeric ALPN value. `.claude/rules/parity.md` rule 1 settles it, because a
+	// vector reaches the value, and the vector holds `99`. `python/ja4.py:279-280` and
+	// `wireshark/source/packet-ja4.c:1027-1028` both write `99`.
+	//
+	// The `hexForm` column records the value the finding measured. This test asserts the
+	// FoxIO value, so it fails when a reader restores the hexadecimal rule.
+	cases := []struct {
+		alpn    string
+		hexForm string
+		foxio   string
+	}{
+		{"\xbd\x99", "b9", "99"},
+		{"\x99", "99", "99"},
+		{"\x00h2", "02", "99"},
+	}
+
+	for _, testCase := range cases {
+		got := parser.ALPNValue([]string{testCase.alpn})
+		if got != testCase.foxio {
+			t.Errorf("ALPNValue(%q) = %q, the FoxIO reference writes %q, and F-22-1 measured %q",
+				testCase.alpn, got, testCase.foxio, testCase.hexForm)
+		}
+	}
+}
+
+func TestF22_2_ParseClientHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-2 is closed. `ParseClientHello` read the record length and then bounded every
+	// later slice by the payload length. A payload that holds two TLS records therefore
+	// let the first record's extensions length reach into the second record. The parser
+	// then read `0x1603` as an extension type. The bound is now the end of the record.
+	hello := auditParserClientHello(t, []parser.TLSExtension{parser.MakeSNIExtension("a.example")})
+	second := parser.BuildServerHello(0x0303, 0x1302, []parser.TLSExtension{parser.MakeALPNExtension("h2")})
+
+	payload := make([]byte, 0, len(hello)+len(second))
+	payload = append(payload, hello...)
+	payload = append(payload, second...)
+
+	honest, err := parser.ParseClientHello(payload)
+	if err != nil {
+		t.Fatalf("the honest payload: %v", err)
+	}
+
+	if len(honest.Extensions) != 1 || honest.Extensions[0] != parser.ExtSNI {
+		t.Fatalf("the honest payload produces the extensions %v, and the ClientHello holds one",
+			honest.Extensions)
+	}
+
+	// The extensions length field sits after the record header, the handshake header, the
+	// version, the random, the session identifier, the cipher suite list and the
+	// compression method list.
+	const extensionsLengthOffset = 5 + 4 + 2 + 32 + 1 + 2 + 4 + 2
+
+	crafted := make([]byte, len(payload))
+	copy(crafted, payload)
+
+	grown := int(crafted[extensionsLengthOffset])<<8 | int(crafted[extensionsLengthOffset+1])
+	grown += len(second)
+	crafted[extensionsLengthOffset] = byte(grown >> 8)
+	crafted[extensionsLengthOffset+1] = byte(grown)
+
+	got, err := parser.ParseClientHello(crafted)
+	if err != nil {
+		t.Fatalf("the crafted payload: %v", err)
+	}
+
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
+	}
+
+	// 0x1603 is the content type and the first version byte of the second record. The
+	// parser read the two bytes as an extension type, and it now stops before them.
+	for _, extension := range got.Extensions {
+		if extension == 0x1603 {
+			t.Errorf("the crafted payload produces the extension 0x1603, which is the header of the second record")
+		}
+	}
+}
+
+func TestF22_3_ParseServerHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-3 is closed. `ParseServerHello` held the same shape, so a ServerHello whose
+	// extensions length reached past its own record read the next record as extension
+	// bytes. The bound is now the end of the record.
+	hello := parser.BuildServerHello(0x0303, 0x1301, []parser.TLSExtension{
+		parser.MakeSupportedVersionsServerExtension(0x0304),
+	})
+	second := auditParserClientHello(t, []parser.TLSExtension{parser.MakeALPNExtension("h2")})
+
+	payload := make([]byte, 0, len(hello)+len(second))
+	payload = append(payload, hello...)
+	payload = append(payload, second...)
+
+	honest, err := parser.ParseServerHello(payload)
+	if err != nil {
+		t.Fatalf("the honest payload: %v", err)
+	}
+
+	// The ServerHello holds no cipher suite list and no compression method list, so its
+	// extensions length field sits closer to the start than the ClientHello's.
+	const extensionsLengthOffset = 5 + 4 + 2 + 32 + 1 + 2 + 1
+
+	crafted := make([]byte, len(payload))
+	copy(crafted, payload)
+
+	grown := int(crafted[extensionsLengthOffset])<<8 | int(crafted[extensionsLengthOffset+1])
+	grown += len(second)
+	crafted[extensionsLengthOffset] = byte(grown >> 8)
+	crafted[extensionsLengthOffset+1] = byte(grown)
+
+	got, err := parser.ParseServerHello(crafted)
+	if err != nil {
+		t.Fatalf("the crafted payload: %v", err)
+	}
+
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
+	}
+}
+
+func TestF22_4_IsSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-4 is closed. `IsSSHPacket` compared the padding length against
+	// `byte(packetLength)`, and that conversion kept the low 8 bits of a 32-bit length. A
+	// packet whose length was 1024 and whose padding length was 8 therefore failed the
+	// comparison, because the low byte of 1024 is 0.
+	//
+	// The comparison now reads the whole 32-bit length, so the guard declines only the
+	// packet whose padding length reaches its packet length.
+	accepted := []uint32{256, 260, 264, 300, 512, 1024, 1035}
+
+	for _, length := range accepted {
+		if !parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
+			t.Errorf("IsSSHPacket declines the packet length %d, and the padding length 8 is below it",
+				length)
+		}
+	}
+
+	// A padding length at or above the packet length is still malformed.
+	for _, length := range []uint32{2, 8} {
+		if parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
+			t.Errorf("IsSSHPacket accepts the packet length %d, and the padding length 8 is not below it",
+				length)
+		}
+	}
+}
+
+func TestF22_5_ParseSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-5 is closed. `ParseSSHPacket` held the same comparison, so the KEXINIT of a
+	// connection whose packet length ended in a low byte at or below the padding length
+	// reached no fingerprinter.
+	for _, length := range []uint32{1024, 1035} {
+		info := parser.ParseSSHPacket(auditParserSSHPacket(length, 8, 20))
+		if info == nil || info.Type != "kexinit" {
+			t.Errorf("ParseSSHPacket declines the packet length %d, and the padding length 8 is below it",
+				length)
+		}
+	}
+
+	if parser.ParseSSHPacket(auditParserSSHPacket(8, 8, 20)) != nil {
+		t.Error("ParseSSHPacket accepts the packet length 8, and the padding length 8 is not below it")
+	}
+}
+
+// auditParserSSHPacket builds an SSH binary packet header with the length, the padding
+// length and the message type the caller names.
+func auditParserSSHPacket(length uint32, padding byte, messageType byte) []byte {
+	packet := make([]byte, 64)
+	binary.BigEndian.PutUint32(packet[:4], length)
+	packet[4] = padding
+	packet[5] = messageType
+
+	return packet
+}
+
+func TestF22_6_OIDToHexEncodesTheFirstTwoArcsAsAVariableLengthQuantity(t *testing.T) {
+	// F-22-6 is closed. `OIDToHex` wrote `byte(nums[0]*40 + nums[1])`, and X.690 encodes
+	// that sum as a variable-length quantity. A sum at or above 128 therefore lost its
+	// high bits. `encoding/asn1` of the standard library is the reference here, because it
+	// encodes the same identifier.
+	cases := []asn1.ObjectIdentifier{
+		{2, 5, 4, 3},
+		{2, 100, 3},
+		{2, 999, 1},
+		{1, 2, 840, 113549, 1, 1, 11},
+	}
+
+	for _, oid := range cases {
+		text := oid.String()
+
+		der, err := asn1.Marshal(oid)
+		if err != nil {
+			t.Fatalf("asn1.Marshal(%v): %v", oid, err)
+		}
+
+		// The first two bytes hold the tag and the length of these short identifiers.
+		wanted := hex.EncodeToString(der[2:])
+
+		if got := parser.OIDToHex(text); got != wanted {
+			t.Errorf("OIDToHex(%q) = %q, and X.690 encodes it as %q", text, got, wanted)
+		}
+	}
+
+	// The truncation made two identifiers collide, so one certificate reached the JA4X
+	// value of another. The two now differ.
+	if parser.OIDToHex("2.999.1") == parser.OIDToHex("0.55")+"01" {
+		t.Errorf("OIDToHex(%q) = %q and OIDToHex(%q) = %q, and the closure of F-22-6 separates them",
+			"2.999.1", parser.OIDToHex("2.999.1"), "0.55", parser.OIDToHex("0.55"))
+	}
+}
+
+func TestF22_7_AddSegmentEvictsNoStreamWhenTheOrderSliceIsEmpty(t *testing.T) {
+	// F-22-7 is closed. The eviction indexed `r.order[0]` after a comparison that a stream
+	// limit of 0 makes true on the first segment, and `r.order` held nothing yet. The
+	// eviction now reads the order slice only when it holds a key.
+	var recovered any
+
+	func() {
+		defer func() { recovered = recover() }()
+
+		reassembler := parser.NewTCPStreamReassembler(0, 4096)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+		reassembler.AddSegment("two", 1, []byte("world"))
+
+		if stream := reassembler.GetStream("two"); string(stream) != "world" {
+			t.Errorf("GetStream returns %q for the second key, and AddSegment stored %q",
+				stream, "world")
+		}
+	}()
+
+	if recovered != nil {
+		t.Errorf("AddSegment panics with %v, and the closure of F-22-7 stores the segment",
+			recovered)
+	}
+}
+
+func TestF22_8_GetStreamReturnsNoByteWhenTheByteLimitIsBelowZero(t *testing.T) {
+	// F-22-8 is closed. The slice expression `result[:r.MaxBytes]` panicked for every
+	// non-empty result when the byte limit was below 0. A negative maximum holds no byte,
+	// so the bound is now 0 and `GetStream` returns nil.
+	var recovered any
+
+	func() {
+		defer func() { recovered = recover() }()
+
+		reassembler := parser.NewTCPStreamReassembler(10, -1)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+
+		if stream := reassembler.GetStream("one"); stream != nil {
+			t.Errorf("GetStream returns %q, and a byte limit below 0 holds no byte", stream)
+		}
+	}()
+
+	if recovered != nil {
+		t.Errorf("GetStream panics with %v, and the closure of F-22-8 returns no byte",
+			recovered)
+	}
+}
+
+func TestF22_9_ParseCryptoFramesReturnsTheFragmentsItHoldsWithTheTruncationError(t *testing.T) {
+	// `internal/parser/quic.go:553` returns the collected fragments beside the error.
+	// `internal/parser/quic.go:337` and `internal/parser/quic.go:803` then answer
+	// `return nil, err`, so a complete client hello in an earlier frame reaches no
+	// fingerprinter. Issue #42 owns the repair under FR-gaps-21.
+	//
+	// The frame below carries a one-byte CRYPTO frame at offset 0 and a second CRYPTO
+	// frame whose length field names more bytes than the payload holds.
+	payload := []byte{
+		0x06, 0x00, 0x01, 0x01, // CRYPTO, offset 0, length 1, one byte of data
+		0x06, 0x01, 0x08, 0x02, // CRYPTO, offset 1, length 8, one byte of data
+	}
+
+	fragments, err := parser.ParseCryptoFrames(payload)
+	if err == nil {
+		t.Fatalf("ParseCryptoFrames reaches no error, and the payload holds a truncated frame")
+	}
+
+	if len(fragments) != 1 {
+		t.Fatalf("ParseCryptoFrames returns %d fragments, and the finding F-22-9 records one",
+			len(fragments))
+	}
+
+	if fragments[0].Offset != 0 || len(fragments[0].Data) != 1 {
+		t.Errorf("ParseCryptoFrames returns the fragment %+v, and the payload holds one byte at offset 0",
+			fragments[0])
+	}
+}
+
+func TestF22_11_TheRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-11 is closed. `docs/specs/foxio/JA4.md` R31 states that the signature algorithm
+	// list skips a GREASE value, and `computeJA4RawFromClientHello` wrote the list with no
+	// filter. No FoxIO vector reaches this input, so this test is the separating packet
+	// that `.claude/rules/rulings.md` asks for.
+	hello := auditParserGreaseClientHello(t)
+
+	raw := computeJA4RawFromClientHello(hello)
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it", raw)
+	}
+
+	// The two remaining values stay, and they keep the wire order.
+	if !strings.Contains(raw, "0403,0804") {
+		t.Errorf("the raw JA4 %q holds no signature algorithm list, and the ClientHello carries two",
+			raw)
+	}
+}
+
+func TestF22_12_TheJA4ExtensionHashSkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-12 is closed. `ja4ExtensionHash` wrote the same unfiltered list into the hashed
+	// string, so the third part of the JA4 differed from the value that R31 states. A
+	// ClientHello that carries one GREASE value now hashes to the value of the same
+	// ClientHello with no GREASE value.
+	withGrease := ja4ExtensionHash(auditParserGreaseClientHello(t))
+	withoutGrease := ja4ExtensionHash(auditParserPlainClientHello(t))
+
+	if withGrease != withoutGrease {
+		t.Errorf("the hash with the GREASE value is %q, and the hash without it is %q",
+			withGrease, withoutGrease)
+	}
+}
+
+func TestF22_13_TheWireOrderRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-13 is closed. `computeJA4RawOriginalOrder` wrote the same unfiltered list into
+	// the wire-order raw JA4.
+	raw := computeJA4RawOriginalOrder(auditParserGreaseClientHello(t))
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the wire-order raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it",
+			raw)
+	}
+}
+
+// auditParserGreaseClientHello returns a ClientHello whose signature algorithm list opens
+// with a GREASE value.
+func auditParserGreaseClientHello(t *testing.T) *parser.ClientHello {
+	t.Helper()
+
+	payload := auditParserClientHello(t, []parser.TLSExtension{
+		parser.MakeSignatureAlgorithmsExtension(auditParserGreaseSigAlg, 0x0403, 0x0804),
+	})
+
+	hello, err := parser.ParseClientHello(payload)
+	if err != nil {
+		t.Fatalf("the GREASE ClientHello: %v", err)
+	}
+
+	if len(hello.SignatureAlgorithms) != 3 || hello.SignatureAlgorithms[0] != auditParserGreaseSigAlg {
+		t.Fatalf("the GREASE ClientHello holds the signature algorithms %v", hello.SignatureAlgorithms)
+	}
+
+	return hello
+}
+
+// auditParserPlainClientHello returns the same ClientHello with no GREASE signature
+// algorithm.
+func auditParserPlainClientHello(t *testing.T) *parser.ClientHello {
+	t.Helper()
+
+	payload := auditParserClientHello(t, []parser.TLSExtension{
+		parser.MakeSignatureAlgorithmsExtension(0x0403, 0x0804),
+	})
+
+	hello, err := parser.ParseClientHello(payload)
+	if err != nil {
+		t.Fatalf("the plain ClientHello: %v", err)
+	}
+
+	return hello
+}
+
+func TestF22_14_TheQUICHeaderGuardsDeclineAnUnreadableDatagramWithNoError(t *testing.T) {
+	// The thirteen `nilerr` sites of `internal/parser/quic.go` are correct as written, and
+	// the report records them as `no change needed`. The port collapses "not QUIC" and
+	// "QUIC but unreadable" onto one return, and this test holds that shape so that a
+	// later change cannot move it without a failing test.
+	//
+	// The datagram below is a QUIC version 1 long header whose token length varint runs
+	// past the end of the datagram.
+	datagram := []byte{
+		0xc0,                   // long header, Initial, version 1
+		0x00, 0x00, 0x00, 0x01, // version 1
+		0x00, // DCID length 0
+		0x00, // SCID length 0
+		0x7f, // token length varint, prefix 1, and the second byte is absent
+	}
+
+	hello, err := parser.ParseQUICInitial(datagram)
+	if err != nil {
+		t.Errorf("ParseQUICInitial returns the error %v, and the record holds a decline with no error", err)
+	}
+
+	if hello != nil {
+		t.Errorf("ParseQUICInitial returns the ClientHello %+v, and the datagram holds none", hello)
+	}
+}

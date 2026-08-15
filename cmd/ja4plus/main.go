@@ -4,25 +4,82 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
+	"github.com/Crank-Git/ja4plus-go/internal/dbcache"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
+	"github.com/gopacket/gopacket/pcapgo"
 )
 
 const ja4PlusMappingURL = "https://github.com/FoxIO-LLC/ja4/raw/main/ja4plus-mapping.csv"
 
-// Version is set via -ldflags at build time.
-var Version = "dev"
+// ja4PlusMappingMaxBytes bounds the mapping download.
+// An unbounded copy writes whatever the server sends, and the mapping file is far below
+// this size. `.claude/rules/external-apis.md` states the rule.
+//
+// The library states the value, and FR-lookup-25 states 16 MB. This program held 64 MB
+// until #75, and a bound in two places with two values rejects two different files.
+const ja4PlusMappingMaxBytes = dbcache.MaxBytes
+
+// ja4PlusDownloadTimeout bounds the whole mapping download.
+// The default client of net/http carries no timeout, so this program never uses it.
+const ja4PlusDownloadTimeout = 60 * time.Second
+
+// statedVersion is the version that the program prints when it reads no other version.
+//
+// It names no tag of this repository, so a reader who sees it knows that the build states
+// no release. `TestEveryReleasedBinaryPrintsTheTagVersion` reads the same value, and it
+// treats that value as a failure for a released artifact.
+const statedVersion = "dev"
+
+// Version holds the version that a link flag sets at build time.
+// The `ldflags` key of `.goreleaser.yaml` sets it for every released binary, and that value
+// keeps precedence over the embedded build info.
+//
+// **It is empty when no link flag sets it.** An empty default separates the two cases that
+// one default value confuses: a build that sets no version, and a build that sets the
+// version `dev`.
+var Version = ""
+
+// resolveVersion returns the version that the program prints.
+//
+// It returns linked when a link flag set it, so a released binary prints the tag that the
+// release workflow read. It returns the module version of info when no link flag set it,
+// because `go install` stamps the tag and applies no link flag. It returns statedVersion
+// when info is absent, when info holds no module version, and when the module version
+// reads `(devel)`.
+//
+// `go run` and `go test` each report `(devel)`, measured on 2026-08-14 with go1.26.5.
+// Issue #628 holds the measurement.
+func resolveVersion(linked string, info *debug.BuildInfo) string {
+	if linked != "" {
+		return linked
+	}
+
+	if info == nil || info.Main.Version == "" || info.Main.Version == "(devel)" {
+		return statedVersion
+	}
+
+	return info.Main.Version
+}
+
+// versionLine returns the one line that `ja4plus --version` prints.
+func versionLine() string {
+	info, _ := debug.ReadBuildInfo()
+
+	return "ja4plus " + resolveVersion(Version, info)
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -32,11 +89,16 @@ func main() {
 
 	switch os.Args[1] {
 	case "--version", "-v", "version":
-		fmt.Printf("ja4plus %s\n", Version)
+		fmt.Println(versionLine())
 	case "--help", "-h", "help":
 		printUsage()
 	case "analyze":
 		if err := runAnalyze(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+	case "watch":
+		if err := runWatch(os.Args[2:]); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
@@ -58,10 +120,13 @@ func main() {
 }
 
 func printUsage() {
+	// The usage names every token, because `--types` refuses a token that names no method
+	// and the user needs the list before the refusal.
 	fmt.Fprintf(os.Stderr, `ja4plus - JA4+ network fingerprinting tool
 
 Usage:
   ja4plus analyze <pcap-file> [options]
+  ja4plus watch --interface <name> [options]
   ja4plus cert <cert-file>
   ja4plus db update
   ja4plus db info
@@ -71,12 +136,24 @@ Analyze options:
   --json          Output as JSON
   --csv           Output as CSV
   --types <list>  Comma-separated fingerprint types (e.g. ja4,ja4t)
+                  Types: %s
+                  ja4l prints the client value and the server value.
+                  ja4ls prints the server value alone.
   --lookup        Include application lookup for each fingerprint
+
+Watch options:
+  --interface <name>       The interface the monitor reads
+  --bpf <filter>           A capture filter. The libpcap build applies it, and the
+                           default build declines it.
+  --stats-interval <secs>  The seconds between two statistics lines. The default is 60,
+                           and 0 writes one line at exit.
+  --json, --csv, --types <list>, --lookup
+                           The options of the analyze command, with the same meaning.
 
 Database commands:
   db update       Download the latest ja4plus-mapping.csv from FoxIO
   db info         Print info about the active database (embedded vs cached)
-`)
+`, strings.Join(methodTokens, ", "))
 }
 
 // packetReader abstracts over pcap and pcapng readers.
@@ -92,10 +169,10 @@ func runAnalyze(args []string) error {
 
 	pcapFile := args[0]
 	var (
-		outputJSON bool
-		outputCSV  bool
+		outputJSON  bool
+		outputCSV   bool
 		typesFilter map[string]bool
-		doLookup   bool
+		doLookup    bool
 	)
 
 	// Parse flags manually after the pcap file argument.
@@ -110,13 +187,11 @@ func runAnalyze(args []string) error {
 			if i >= len(args) {
 				return fmt.Errorf("--types requires a comma-separated list")
 			}
-			typesFilter = make(map[string]bool)
-			for _, t := range strings.Split(args[i], ",") {
-				t = strings.TrimSpace(strings.ToLower(t))
-				if t != "" {
-					typesFilter[t] = true
-				}
+			filter, err := parseTypes(args[i])
+			if err != nil {
+				return err
 			}
+			typesFilter = filter
 		case "--lookup":
 			doLookup = true
 		default:
@@ -129,7 +204,7 @@ func runAnalyze(args []string) error {
 	if err != nil {
 		return fmt.Errorf("cannot open file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var reader packetReader
 	ext := strings.ToLower(filepath.Ext(pcapFile))
@@ -148,25 +223,56 @@ func runAnalyze(args []string) error {
 	}
 
 	proc := ja4plus.NewProcessor()
-	var results []ja4plus.FingerprintResult
+
+	var (
+		results     []ja4plus.FingerprintResult
+		packetFails int
+	)
 
 	for {
 		data, ci, err := reader.ReadPacketData()
-		if err != nil {
+
+		// The reader reports the end of the capture with io.EOF. Every other error names a
+		// truncated or corrupt file, and the program must not report success for it.
+		if errors.Is(err, io.EOF) {
 			break
 		}
+
+		if err != nil {
+			return fmt.Errorf("read %s: %w", pcapFile, err)
+		}
+
 		pkt := gopacket.NewPacket(data, reader.LinkType(), gopacket.Default)
 		pkt.Metadata().Timestamp = ci.Timestamp
 		pkt.Metadata().CaptureLength = ci.CaptureLength
 		pkt.Metadata().Length = ci.Length
 
-		fpResults, _ := proc.ProcessPacket(pkt)
+		fpResults, errs := proc.ProcessPacket(pkt)
+		packetFails += len(errs)
+
 		for _, r := range fpResults {
-			if typesFilter != nil && !typesFilter[strings.ToLower(r.Type)] {
+			if !admitsResult(typesFilter, r) {
 				continue
 			}
 			results = append(results, r)
 		}
+	}
+
+	// The capture ends, so a connection whose last JA4SSH window never reached the threshold
+	// holds that window open. FR-parity-32 emits it here, because no packet triggers it.
+	for _, r := range proc.CloseOpenWindows() {
+		if !admitsResult(typesFilter, r) {
+			continue
+		}
+
+		results = append(results, r)
+	}
+
+	// A fingerprinter returns a non-fatal error for a record it cannot read. One line for
+	// the whole capture reaches standard error, so standard output holds the results
+	// alone. The exit code stays 0, because the capture itself is sound.
+	if packetFails > 0 {
+		fmt.Fprintf(os.Stderr, "note: %d packets carried a record that no fingerprinter read\n", packetFails)
 	}
 
 	// Output results.
@@ -217,7 +323,6 @@ func writeJSON(results []ja4plus.FingerprintResult, doLookup bool) error {
 
 func writeCSV(results []ja4plus.FingerprintResult, doLookup bool) error {
 	w := csv.NewWriter(os.Stdout)
-	defer w.Flush()
 
 	header := []string{"type", "src_ip", "src_port", "dst_ip", "dst_port", "fingerprint", "timestamp"}
 	if doLookup {
@@ -248,16 +353,21 @@ func writeCSV(results []ja4plus.FingerprintResult, doLookup bool) error {
 			return err
 		}
 	}
-	return nil
+
+	// Flush reports a write failure through Error. A discarded failure makes the program
+	// exit 0 after standard output took no row.
+	w.Flush()
+
+	return w.Error()
 }
 
 func writeTable(results []ja4plus.FingerprintResult, doLookup bool) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
 
 	if doLookup {
-		fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint\tApplication")
+		_, _ = fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint\tApplication")
 	} else {
-		fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint")
+		_, _ = fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint")
 	}
 
 	for _, r := range results {
@@ -268,9 +378,9 @@ func writeTable(results []ja4plus.FingerprintResult, doLookup bool) error {
 			if lr := ja4plus.LookupFingerprint(r.Fingerprint); lr != nil {
 				app = lr.Application
 			}
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint, app)
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint, app)
 		} else {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint)
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint)
 		}
 	}
 	return w.Flush()
@@ -336,35 +446,38 @@ func runDBUpdate() error {
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	// The default client of net/http carries no timeout, so this program holds its own.
+	client := &http.Client{Timeout: ja4PlusDownloadTimeout}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("download: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download: HTTP %d", resp.StatusCode)
 	}
 
-	tmp := cachePath + ".tmp"
-	out, err := os.Create(tmp)
+	// The read takes one byte more than the limit, so a body that reaches the limit is a
+	// body the program declines rather than a file it truncates.
+	body, err := io.ReadAll(io.LimitReader(resp.Body, ja4PlusMappingMaxBytes+1))
 	if err != nil {
-		return fmt.Errorf("create %s: %w", tmp, err)
+		return fmt.Errorf("download: %w", err)
 	}
-	n, err := io.Copy(out, resp.Body)
-	if cerr := out.Close(); err == nil {
-		err = cerr
-	}
-	if err != nil {
-		_ = os.Remove(tmp)
-		return fmt.Errorf("write: %w", err)
-	}
-	if err := os.Rename(tmp, cachePath); err != nil {
-		_ = os.Remove(tmp)
-		return fmt.Errorf("install: %w", err)
+	if len(body) > ja4PlusMappingMaxBytes {
+		return fmt.Errorf("download: the body exceeds the limit of %d bytes", ja4PlusMappingMaxBytes)
 	}
 
-	fmt.Printf("downloaded %d bytes to %s\n", n, cachePath)
-	fmt.Println("note: existing processes must be restarted to pick up the new database")
+	// The library validates the database and renames last, so a failed update leaves the
+	// previous cache file unchanged.
+	if err := dbcache.Write(cachePath, body); err != nil {
+		return fmt.Errorf("update the database: %w", err)
+	}
+
+	fmt.Printf("downloaded %d bytes to %s\n", len(body), cachePath)
+	// #74 made the library reload the table when the cache file changes, so a running
+	// process needs no restart.
+	fmt.Println("note: a running process reads the new database at its next lookup")
 	return nil
 }
 
@@ -387,4 +500,3 @@ func runDBInfo() error {
 	}
 	return nil
 }
-

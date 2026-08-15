@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
 // buildTCPPayloadPacket creates a gopacket with the given bytes as TCP payload.
-func buildTCPPayloadPacket(t *testing.T, payload []byte) gopacket.Packet {
+func buildTCPPayloadPacket(t testing.TB, payload []byte) gopacket.Packet {
 	t.Helper()
 	eth := &layers.Ethernet{
 		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
@@ -288,15 +288,22 @@ func TestJA4SFingerprinter_GREASEInPacket(t *testing.T) {
 }
 
 func TestJA4S_Reset(t *testing.T) {
+	// Issue #25 removed the results slice, so the QUIC connection identifier table is the
+	// only state that Reset clears.
 	f := NewJA4S()
-	f.results = []FingerprintResult{{Type: "ja4s"}}
+	f.quicDCIDs["10.0.0.1:443-10.0.0.2:40000"] = []byte{0x01, 0x02}
+
 	f.Reset()
-	if f.results != nil {
-		t.Errorf("expected nil results after reset, got %v", f.results)
+
+	if len(f.quicDCIDs) != 0 {
+		t.Errorf("Reset leaves %d entries in the QUIC connection identifier table", len(f.quicDCIDs))
 	}
 }
 
-func TestComputeJA4S_Convenience(t *testing.T) {
+// The one-shot function reaches a fingerprint of three parts. #399 renamed this test from
+// `TestComputeJA4S_Convenience`, because the `## Terms` table of `docs/specs/spec.md`
+// declines that word for this concept.
+func TestComputeJA4SReturnsAThreePartFingerprintForAServerHello(t *testing.T) {
 	extensions := []uint16{parser.ExtSupportedVersions, 0x0033}
 	payload := buildServerHelloPayload(0x1301, extensions, "")
 	packet := buildTCPPayloadPacket(t, payload)
@@ -377,5 +384,125 @@ func TestComputeJA4S_NilPacket(t *testing.T) {
 	fp := ComputeJA4S(pkt)
 	if fp != "" {
 		t.Errorf("expected empty fingerprint for non-TCP packet, got %q", fp)
+	}
+}
+
+// TestTheJA4SRawFormHoldsTheExtensionsInTheWireOrder reproduces a published FoxIO value.
+//
+// `testdata/foxio/python/badcurveball.pcap.json:18` holds `JA4S_r`, and the extension list
+// of it is not sorted. A sorted list reads `0000,000b,0010,0023,ff01`, so this vector
+// separates the wire order from the sorted order. `rust/ja4/src/tls.rs:467` and
+// `wireshark/source/packet-ja4.c:547` each build the raw form from the string the
+// fingerprint hashes. `ja4plus/fingerprinters/ja4s.py:179` states the same rule for the
+// Python port. Issue #275 records the measurement.
+func TestTheJA4SRawFormHoldsTheExtensionsInTheWireOrder(t *testing.T) {
+	sh := &parser.ServerHello{
+		Version:      0x0303,
+		CipherSuite:  0xc02b,
+		Extensions:   []uint16{0x0000, 0xff01, 0x000b, 0x0023, 0x0010},
+		ALPNProtocol: "http/1.1",
+	}
+
+	fingerprint, raw := computeJA4SPair(sh)
+
+	const wantRaw = "t1205h1_c02b_0000,ff01,000b,0023,0010"
+	if raw != wantRaw {
+		t.Errorf("raw = %q, want %q", raw, wantRaw)
+	}
+
+	const wantFingerprint = "t1205h1_c02b_845f7282a956"
+	if fingerprint != wantFingerprint {
+		t.Errorf("fingerprint = %q, want %q", fingerprint, wantFingerprint)
+	}
+}
+
+// TestTheJA4SRawFormSharesThePrefixOfTheFingerprint holds the two values to one prefix.
+//
+// The raw form and the fingerprint differ on the last part alone, so a change to the
+// prefix moves both. The raw form counts GREASE and keeps the wire order, as the
+// fingerprint does. Issue #275 records the rule.
+func TestTheJA4SRawFormSharesThePrefixOfTheFingerprint(t *testing.T) {
+	sh := &parser.ServerHello{
+		Version:           0x0304,
+		CipherSuite:       0x1301,
+		Extensions:        []uint16{0x0A0A, 0x002b, 0x3A3A, 0x0033},
+		SupportedVersions: []uint16{0x0304},
+	}
+
+	fingerprint, raw := computeJA4SPair(sh)
+
+	const wantRaw = "t130400_1301_0a0a,002b,3a3a,0033"
+	if raw != wantRaw {
+		t.Errorf("raw = %q, want %q", raw, wantRaw)
+	}
+
+	if fingerprint != computeJA4SFromServerHello(sh) {
+		t.Errorf("computeJA4SPair and computeJA4SFromServerHello disagree: %q", fingerprint)
+	}
+
+	wantFingerprint := "t130400_1301_" + parser.TruncatedHash("0a0a,002b,3a3a,0033")
+	if fingerprint != wantFingerprint {
+		t.Errorf("fingerprint = %q, want %q", fingerprint, wantFingerprint)
+	}
+}
+
+// TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension holds the
+// empty case to the reference form.
+//
+// `rust/ja4/src/tls.rs:462` joins an empty extension list to an empty string, and
+// `rust/ja4/src/tls.rs:467` appends that string after the separator. The fingerprint
+// reaches `parser.EmptyHash` on the same input. Issue #275 records the rule.
+func TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension(t *testing.T) {
+	sh := &parser.ServerHello{
+		Version:     0x0303,
+		CipherSuite: 0x002f,
+	}
+
+	fingerprint, raw := computeJA4SPair(sh)
+
+	const wantRaw = "t120000_002f_"
+	if raw != wantRaw {
+		t.Errorf("raw = %q, want %q", raw, wantRaw)
+	}
+
+	if fingerprint != "t120000_002f_"+parser.EmptyHash {
+		t.Errorf("fingerprint = %q, want %q", fingerprint, "t120000_002f_"+parser.EmptyHash)
+	}
+}
+
+// TestTheJA4SResultCarriesTheRawFormAndLeavesRawOriginalOrderEmpty holds the two raw
+// fields of a JA4S result.
+//
+// FoxIO publishes `JA4S_r` and publishes no `JA4S_ro`, so `RawOriginalOrder` stays empty.
+// `conformance_adapters_test.go:58` names `JA4S_r` and names no `JA4S_ro`, so a value in
+// `RawOriginalOrder` emits a key the vector never holds.
+// `ja4plus/fingerprinters/ja4s.py:179` states the same rule. The Python port fills its own
+// `raw_original_order` field with the raw form at `ja4plus/fingerprinters/ja4s.py:182`, and
+// it emits no `JA4S_ro` key from it. Issue #275 records the rule.
+func TestTheJA4SResultCarriesTheRawFormAndLeavesRawOriginalOrderEmpty(t *testing.T) {
+	payload := buildServerHelloPayload(0xc02b, []uint16{0x0000, 0xff01, 0x000b}, "")
+	packet := buildTCPPayloadPacket(t, payload)
+
+	results, err := NewJA4S().ProcessPacket(packet)
+	if err != nil {
+		t.Fatalf("ProcessPacket: %v", err)
+	}
+
+	if len(results) != 1 {
+		t.Fatalf("results = %d, want 1", len(results))
+	}
+
+	const wantRaw = "t120300_c02b_0000,ff01,000b"
+	if results[0].Raw != wantRaw {
+		t.Errorf("Raw = %q, want %q", results[0].Raw, wantRaw)
+	}
+
+	if results[0].RawOriginalOrder != "" {
+		t.Errorf("RawOriginalOrder = %q, want the empty string", results[0].RawOriginalOrder)
+	}
+
+	wantFingerprint := "t120300_c02b_" + parser.TruncatedHash("0000,ff01,000b")
+	if results[0].Fingerprint != wantFingerprint {
+		t.Errorf("Fingerprint = %q, want %q", results[0].Fingerprint, wantFingerprint)
 	}
 }

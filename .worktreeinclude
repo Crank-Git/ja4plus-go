@@ -1,0 +1,17 @@
+# Claude Code copies a gitignored file that matches a pattern here into a new worktree.
+# The format is the `.gitignore` format. See <https://code.claude.com/docs/en/worktrees.md>.
+
+# `.gitignore` ignores the FoxIO corpus, because the corpus is FoxIO-licensed material.
+# A new worktree therefore holds no corpus.
+# Without the corpus, `make conformance` skips and `make cover` reads 0.6 points low.
+# The measurement on 2026-08-13, at commit `83f2127` and at commit `7210e80`: `make cover`
+# reports 75.0 percent with the corpus and 74.4 percent without it, at both commits.
+# This comment read `coverage reads 2 points low` until then, and no measurement held it.
+testdata/foxio/
+
+# `.gitignore` ignores the operator-local permission file.
+# A background worker cannot answer a permission prompt, so every command it runs must already
+# be allowed. Without this line a worktree holds the committed `.claude/settings.json` alone,
+# and a worker of Epic 14 or of Epic 15 returns `blocked` on its first `pip` or `go install`.
+# The maintainer approved this form on 2026-08-14, and declined widening the committed file.
+.claude/settings.local.json

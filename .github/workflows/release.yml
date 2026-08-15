@@ -1,53 +1,166 @@
 name: Release
 
+# FR-supply-12 pins every `uses:` reference to a 40-character commit hash, because a tag
+# moves and a hash does not. FR-supply-13 gives each one a trailing comment that names the
+# version the hash carries. FR-release-35k states the same rule for this file.
+#
+# #67 resolved the first three hashes from the GitHub API on 2026-08-13, and #105 resolved
+# two more on 2026-08-15. Neither one read a hash from memory. The trailing comment names
+# the semantic version tag that points at the same commit.
+#
+# No pull request runs this workflow, because a tag push is its only trigger. So CI proves
+# nothing about these pins, and the first tag after this commit is the first run that reads
+# them. The `goreleaser` job of `.github/workflows/ci.yml` reads `.goreleaser.yaml` on every
+# pull request, and it reads no line of this file.
 on:
   push:
     tags:
       - 'v*'
 
+# FR-supply-14 gives this workflow the least permission set that it needs.
+# `contents: write` is that set, and the `Run GoReleaser` step is the one step that needs
+# it. GoReleaser creates the release and uploads every artifact through the GitHub API, and
+# its documentation states that the token needs write access to the repository contents.
+#
+# Verified against <https://goreleaser.com/ci/actions/>, retrieved 2026-08-15.
 permissions:
   contents: write
 
 jobs:
-  release:
+  # FR-release-35 runs the conformance suite before the build, and FR-release-36 fails the
+  # workflow when the suite reports a deviation.
+  #
+  # **This suite runs in a job of its own, and the reason is not tidiness.** The suite
+  # rewrites `docs/audit/conformance.md` on every run, so a run in the release job would
+  # leave the git tree dirty. GoReleaser refuses to release from a dirty tree, and the
+  # failure would name the tree rather than the report.
+  #
+  # The `release` job below names this job in `needs:`, so a deviation stops the build
+  # before it starts.
+  conformance:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # The comment above `jobs:` of `.github/workflows/ci.yml` states why the range reads
+      # `~1.26.6`, and `goToolchainRange` in `foundation_test.go` states the range once for
+      # every workflow.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '~1.26.6'
+
+      # `make corpus` reads the FoxIO repository over the network. The default job bound is
+      # 360 minutes, so this step carries its own bound and a stalled download cannot hold
+      # the runner.
+      - name: Fetch the corpus
+        timeout-minutes: 10
+        run: make corpus
+
+      # The suite skips when the corpus is absent, and a skipped suite that reports success
+      # hides every deviation. FR-conformance-36 states the rule, and this step holds it.
+      - name: Verify the corpus is present
+        run: |
+          captures=$(find testdata/foxio/pcap -type f | wc -l | tr -d '[:space:]')
+          if [ "$captures" -eq 0 ]; then
+            echo "testdata/foxio/pcap holds no capture, so the conformance suite skips" >&2
+            exit 1
+          fi
+          echo "testdata/foxio/pcap holds $captures captures."
+
+      # FR-release-36. The suite exits 2 on a deviation, and this step holds back no exit
+      # status. The `conformance` job of `.github/workflows/ci.yml` reports and does not
+      # block, and this job blocks. The two jobs answer two different questions: a pull
+      # request reads the deviation count, and a release refuses one.
+      - name: Run the conformance suite
+        run: make conformance
+
+  release:
+    needs: conformance
+    runs-on: ubuntu-latest
+    steps:
+      # GoReleaser reads the tag history to compute the version, so the checkout takes the
+      # whole history rather than one commit.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v5
+      # This workflow builds every released binary, so it names the range that
+      # `.github/workflows/ci.yml` names. The two files held different versions until
+      # 2026-08-13: CI proved that the library calls no vulnerable function, and this
+      # workflow built the artifact that does. On go1.24.13, the newest Go 1.24 patch,
+      # `govulncheck` v1.6.0 reported 9 called standard library vulnerabilities on
+      # 2026-08-13, and 13 on 2026-08-14. No line of this repository changed between the
+      # two runs, and `CLAUDE.md` states that every live figure carries its date. Each one
+      # names a fix in a go1.25.x release or later, so no Go 1.24 patch clears them.
+      #
+      # **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.**
+      # GO-2026-5856 names a fix at 1.26.5, and GO-2026-6218, GO-2026-6090, GO-2026-5972
+      # and GO-2026-5026 each name a fix at 1.26.6. A bare `1.26` accepts go1.26.0 through
+      # go1.26.5, because `actions/setup-go` reads the tool cache of the runner before it
+      # reads the release list. The comment above `jobs:` of `.github/workflows/ci.yml`
+      # states the full reading, and `foundation_test.go` holds every file at one range.
+      #
+      # **`go.mod` does not move.** Its `go 1.24.0` directive states a language version
+      # rather than a toolchain, and #438 established that reading.
+      #
+      # **A stale range here costs more than a stale range in CI.** The cross-member review
+      # of Epic 7 measured the case on 2026-08-13. `~1.26.5` reached this file, the `vuln`
+      # job of CI failed on go1.26.5, and no run reported this file at all. Every released
+      # binary would carry four called standard library vulnerabilities, and the tag that
+      # builds it is the first reader. So a move of the range in `foundation_test.go` reads
+      # this file too.
+      #
+      # Verified against <https://github.com/actions/setup-go>, retrieved 2026-08-13. The
+      # README states the range syntax: `SemVer version range syntax: ^1.25.1, ~1.24.1,
+      # >=1.25.0-rc.1, <1.25.0, >=1.22.0 <1.24.0`.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version: '1.23'
+          go-version: '~1.26.6'
 
+      # The race detector needs cgo, and no line of this workflow sets `CGO_ENABLED`.
+      # `.goreleaser.yaml` sets it for the build alone, so this step keeps the default of
+      # the runner and the build stays static.
       - name: Run tests
         run: go test -v -race ./...
 
-      - name: Build binaries
+      # FR-release-35f writes a software bill of materials for every artifact, and `syft` is
+      # the generator that `.goreleaser.yaml` names. No runner image holds it.
+      - uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      # FR-release-39 reads the release notes from `CHANGELOG.md`.
+      #
+      # The file writes one `## [<tag>]` heading for each release, and the heading of
+      # `v0.3.0` carries a date after the bracket. So the reader matches the bracket and it
+      # ignores the rest of the line.
+      #
+      # **The notes go to the runner temporary directory, and never to the workspace.**
+      # GoReleaser refuses to release from a dirty git tree, and a new file in the workspace
+      # makes the tree dirty.
+      - name: Read the release notes from the CHANGELOG
         run: |
-          VERSION=${GITHUB_REF_NAME}
-          LDFLAGS="-s -w -X main.Version=${VERSION}"
+          notes="${RUNNER_TEMP}/release-notes.md"
+          awk -v heading="## [${GITHUB_REF_NAME}]" '
+            index($0, heading) == 1 { inside = 1; next }
+            inside && /^## / { exit }
+            inside { print }
+          ' CHANGELOG.md > "$notes"
 
-          # Linux amd64
-          GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/ja4plus-linux-amd64 ./cmd/ja4plus
-          # Linux arm64
-          GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/ja4plus-linux-arm64 ./cmd/ja4plus
-          # Darwin amd64
-          GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/ja4plus-darwin-amd64 ./cmd/ja4plus
-          # Darwin arm64
-          GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/ja4plus-darwin-arm64 ./cmd/ja4plus
-          # Windows amd64
-          GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/ja4plus-windows-amd64.exe ./cmd/ja4plus
+          if [ ! -s "$notes" ]; then
+            echo "CHANGELOG.md holds no section for ${GITHUB_REF_NAME}, and FR-release-39 reads one" >&2
+            exit 1
+          fi
 
-      - name: Create checksums
-        run: |
-          cd dist
-          sha256sum * > checksums.txt
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      # FR-release-35a builds the release with GoReleaser, and FR-release-35j pins the
+      # GoReleaser version. A range would move the build tool under an unchanged tree.
+      #
+      # Verified against <https://github.com/goreleaser/goreleaser-action>, retrieved
+      # 2026-08-15. The README states the `distribution`, `version` and `args` inputs, and
+      # it states that `version` accepts a fixed release tag.
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
-          generate_release_notes: true
-          files: |
-            dist/ja4plus-*
-            dist/checksums.txt
+          distribution: goreleaser
+          version: 'v2.17.1'
+          args: release --clean --release-notes=${{ runner.temp }}/release-notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 
@@ -35,8 +36,15 @@ var (
 // QUIC frame type constants.
 const (
 	quicFramePadding = 0x00
+	quicFramePing    = 0x01
 	quicFrameCrypto  = 0x06
 )
+
+// MaxCryptoBufferBytes is the highest number of bytes one connection collects from CRYPTO
+// frames. RFC 9000 Section 16 lets a CRYPTO frame offset reach 4611686018427387903, and
+// ReassembleCryptoFrames allocates a buffer that reaches the highest offset. A client
+// hello reaches a few kilobytes, so this bound holds every real handshake message.
+const MaxCryptoBufferBytes = 16384
 
 // DecodeVarint decodes a QUIC variable-length integer from data at position pos.
 // Returns the decoded value and the new position after the varint, or an error.
@@ -163,9 +171,48 @@ type CryptoFragment struct {
 	Data   []byte
 }
 
+// HasQUICLongHeader reports whether a UDP payload carries a QUIC long-header packet.
+// It returns false for each of these payloads:
+//   - a payload shorter than 5 bytes;
+//   - a payload that carries a short header;
+//   - a payload that carries a version negotiation packet.
+//
+// It reads no packet type, because a version this parser does not know still carries a
+// long header. RFC 9000 Section 17.2 states the form.
+func HasQUICLongHeader(payload []byte) bool {
+	if len(payload) < 5 {
+		return false
+	}
+	if payload[0]&0x80 == 0 {
+		return false
+	}
+	return binary.BigEndian.Uint32(payload[1:5]) != 0
+}
+
+// IsQUICHandshakePacket reports whether a UDP payload carries a QUIC Handshake packet.
+// It returns false for every payload that HasQUICLongHeader returns false for.
+// A version this parser does not know reads the version 1 type values, because RFC 9000
+// Section 17.2 states them and only RFC 9369 Section 3.2 moves them.
+func IsQUICHandshakePacket(payload []byte) bool {
+	if !HasQUICLongHeader(payload) {
+		return false
+	}
+
+	version := binary.BigEndian.Uint32(payload[1:5])
+	if version == quicV2 {
+		return payload[0]&0x30 == 0x30
+	}
+
+	return payload[0]&0x30 == 0x20
+}
+
 // ParseQUICInitial parses a QUIC Initial packet and extracts the TLS ClientHello.
 // Returns nil, nil if the payload is not a QUIC Initial packet.
 // Returns nil, error if it looks like a QUIC Initial but decryption/parsing fails.
+// Returns nil, nil when the CRYPTO fragments of the packet cover no complete handshake
+// message. It reads one datagram, so a client that splits a client hello across two
+// datagrams reaches this decline. ClientHelloFromCryptoFragments serves the caller that
+// collects the fragments of several packets.
 func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 	if len(payload) < 5 {
 		return nil, nil
@@ -332,51 +379,40 @@ func ParseQUICInitial(payload []byte) (*ClientHello, error) {
 		return nil, err
 	}
 
-	// Parse CRYPTO frames from plaintext
+	// Parse CRYPTO frames from plaintext.
+	// ParseCryptoFrames returns the fragments it read beside a truncation error, and a
+	// whole client hello can sit in front of the truncated frame. The reader therefore
+	// keeps the fragments, and reports the error only when it read none.
 	fragments, err := ParseCryptoFrames(plaintext)
-	if err != nil {
-		return nil, err
-	}
 	if len(fragments) == 0 {
-		return nil, nil
-	}
-
-	// Reassemble CRYPTO frame data
-	assembled := ReassembleCryptoFrames(fragments)
-	if len(assembled) == 0 {
-		return nil, nil
-	}
-
-	// The reassembled data should be a TLS Handshake message.
-	// Check for ClientHello (type 0x01)
-	if assembled[0] != TLSHandshakeClientHello {
-		return nil, nil
-	}
-
-	// Wrap in a fake TLS record header so ParseClientHello can process it.
-	// TLS record: content_type(1) + version(2) + length(2) + handshake data
-	tlsRecord := make([]byte, 5+len(assembled))
-	tlsRecord[0] = TLSRecordTypeHandshake // 0x16
-	tlsRecord[1] = 0x03
-	tlsRecord[2] = 0x01
-	tlsRecord[3] = byte(len(assembled) >> 8)
-	tlsRecord[4] = byte(len(assembled))
-	copy(tlsRecord[5:], assembled)
-
-	ch, err := ParseClientHello(tlsRecord)
-	if err != nil {
 		return nil, err
 	}
-	if ch != nil {
-		ch.IsQUIC = true
-	}
-	return ch, nil
+
+	// ClientHelloFromCryptoFragments holds the reassembly, the completeness check and the
+	// record wrapper, so one reader holds every rule. A second copy of the completeness
+	// check drifts from this one. #532 records the design decision.
+	return ClientHelloFromCryptoFragments(fragments)
 }
 
 // DecryptQUICInitialCrypto decrypts a QUIC Initial packet and returns the raw
 // CRYPTO frame fragments without attempting to parse a ClientHello.
 // Returns the DCID for key correlation across packets.
 // Returns nil, nil, nil if the payload is not a QUIC Initial.
+//
+// It declines a packet that the derived key does not authenticate, and it returns no error
+// for one. It derives the client keys of the Destination Connection ID that the packet
+// holds, so it authenticates a client Initial packet alone. The server derives its own keys
+// from the Destination Connection ID that the client sent, and RFC 9001 Section 5.2 states
+// that derivation input. So a server Initial packet is a packet of the other role, and never
+// a defect of the input. Issue #501 records the decline, and it is the reversal path.
+//
+// The decline also covers a corrupted client Initial packet. `crypto/cipher` reports one
+// error value for every failure of Open, so this function separates a wrong role from a
+// corrupted packet at no point after Open.
+//
+// It reports an error for a malformed packet that it reads before Open, and for a malformed
+// frame that it reads after Open. A payload shorter than the authentication tag reaches the
+// first case. A truncated CRYPTO frame reaches the second case.
 func DecryptQUICInitialCrypto(payload []byte) (fragments []CryptoFragment, dcid []byte, err error) {
 	if len(payload) < 5 {
 		return nil, nil, nil
@@ -485,22 +521,102 @@ func DecryptQUICInitialCrypto(payload []byte) (fragments []CryptoFragment, dcid 
 	if e != nil {
 		return nil, dcid, e
 	}
+
+	// The Length field of the packet counts the authentication tag, so a payload below the
+	// tag length is malformed. crypto/cipher reports one error value for every failure of
+	// Open, so this guard runs first and it keeps the two cases apart.
+	if encLen < aead.Overhead() {
+		return nil, dcid, errors.New("QUIC Initial payload shorter than the authentication tag")
+	}
+
 	plaintext, e := aead.Open(nil, nonce, ciphertext, ad)
 	if e != nil {
-		return nil, dcid, e
+		// The derived key authenticates no packet of the server role, and such a packet is
+		// no defect of the input. Issue #501 holds the decline, and the doc comment states
+		// the corrupted client packet that the decline also covers.
+		return nil, dcid, nil
 	}
 	fragments, e = ParseCryptoFrames(plaintext)
 	return fragments, dcid, e
 }
 
+// CollectCryptoFragments adds the fragments of one packet to the fragments the caller
+// holds, and returns the whole set.
+// It drops a fragment that names an offset above MaxCryptoBufferBytes, because such a
+// fragment describes no real client hello.
+// It returns an error when the collected bytes reach MaxCryptoBufferBytes. The caller then
+// drops the connection state, because the sender never completes a client hello.
+func CollectCryptoFragments(collected []CryptoFragment, fragments []CryptoFragment) ([]CryptoFragment, error) {
+	held := 0
+	for _, fragment := range collected {
+		held += len(fragment.Data)
+	}
+
+	for _, fragment := range fragments {
+		if cryptoFragmentPassesBound(fragment) {
+			continue
+		}
+
+		// A sender that repeats one fragment grows the set without a bound, so the reader
+		// stops before it passes the bound rather than after.
+		if held+len(fragment.Data) > MaxCryptoBufferBytes {
+			return collected, errors.New("CRYPTO fragments reach the buffer bound")
+		}
+
+		collected = append(collected, fragment)
+		held += len(fragment.Data)
+	}
+
+	return collected, nil
+}
+
+// cryptoFragmentsReach returns the count of bytes the fragments cover from offset 0 with
+// no gap.
+// ReassembleCryptoFrames writes a zero byte over a range that no fragment covers, so a
+// reader that measures the highest offset alone reads a message the sender never sent. The
+// caller passes fragments that ReassembleCryptoFrames already sorted by offset.
+// It drops the fragment that ReassembleCryptoFrames drops. A reach past the buffer that
+// ReassembleCryptoFrames returns reports a message that the buffer does not hold.
+func cryptoFragmentsReach(fragments []CryptoFragment) uint64 {
+	var reach uint64
+
+	for _, fragment := range fragments {
+		if cryptoFragmentPassesBound(fragment) {
+			continue
+		}
+
+		if fragment.Offset > reach {
+			break
+		}
+
+		if end := fragment.Offset + uint64(len(fragment.Data)); end > reach {
+			reach = end
+		}
+	}
+
+	return reach
+}
+
 // ClientHelloFromCryptoFragments reassembles CRYPTO fragments and parses a ClientHello.
 // Returns nil, nil if the data is not a ClientHello.
+// Returns nil, nil while a fragment of the handshake message is still missing, so that the
+// caller collects the fragments of another QUIC Initial packet.
 func ClientHelloFromCryptoFragments(fragments []CryptoFragment) (*ClientHello, error) {
+	// ReassembleCryptoFrames sorts the fragments by offset, so cryptoFragmentsReach below
+	// reads them in order.
 	assembled := ReassembleCryptoFrames(fragments)
-	if len(assembled) == 0 {
+	reach := cryptoFragmentsReach(fragments)
+	if len(assembled) < 4 || reach < 4 {
 		return nil, nil
 	}
 	if assembled[0] != TLSHandshakeClientHello {
+		return nil, nil
+	}
+	// The handshake message holds a 24-bit length at bytes 1 to 3. A reader that parses a
+	// part of the message produces a fingerprint of a cipher list that the client never
+	// sent, so the reader waits for every byte the length names.
+	messageLength := int(assembled[1])<<16 | int(assembled[2])<<8 | int(assembled[3])
+	if uint64(4+messageLength) > reach {
 		return nil, nil
 	}
 	tlsRecord := make([]byte, 5+len(assembled))
@@ -528,7 +644,10 @@ func ParseCryptoFrames(data []byte) ([]CryptoFragment, error) {
 	for pos < len(data) {
 		frameType := data[pos]
 
-		if frameType == quicFramePadding {
+		// RFC 9000 Section 19.2 gives the PING frame no field, so the reader steps over one
+		// byte. A client that fragments its client hello puts a PING frame in front of the
+		// CRYPTO frames, and a reader that stops there reads no client hello at all.
+		if frameType == quicFramePadding || frameType == quicFramePing {
 			pos++
 			continue
 		}
@@ -628,34 +747,60 @@ func ParseCryptoFrames(data []byte) ([]CryptoFragment, error) {
 
 // ReassembleCryptoFrames reassembles potentially fragmented CRYPTO frame data
 // into a contiguous byte slice ordered by offset.
+// It drops a fragment that reaches past MaxCryptoBufferBytes, so the buffer it returns
+// holds MaxCryptoBufferBytes bytes at most.
+// The port drops one fragment and keeps the rest at
+// `ja4plus/utils/quic_utils.py:322`, and this reader matches that rule.
 func ReassembleCryptoFrames(fragments []CryptoFragment) []byte {
 	if len(fragments) == 0 {
 		return nil
 	}
 
-	// Sort by offset
-	sort.Slice(fragments, func(i, j int) bool {
+	// Sort by offset.
+	// The sort is stable, because the offset alone is the key and two fragments can share
+	// one offset. An unstable sort left such a pair in an order that the wire does not
+	// state. The copy loop below then wrote the bytes of either fragment.
+	sort.SliceStable(fragments, func(i, j int) bool {
 		return fragments[i].Offset < fragments[j].Offset
 	})
 
 	// Calculate total size
 	var totalLen uint64
 	for _, f := range fragments {
+		if cryptoFragmentPassesBound(f) {
+			continue
+		}
 		end := f.Offset + uint64(len(f.Data))
 		if end > totalLen {
 			totalLen = end
 		}
 	}
 
-	if totalLen == 0 || totalLen > 1<<20 { // sanity limit: 1MB
+	if totalLen == 0 {
 		return nil
 	}
 
 	result := make([]byte, totalLen)
 	for _, f := range fragments {
+		if cryptoFragmentPassesBound(f) {
+			continue
+		}
 		copy(result[f.Offset:], f.Data)
 	}
 	return result
+}
+
+// cryptoFragmentPassesBound reports whether the fragment reaches past
+// MaxCryptoBufferBytes.
+// A fragment that reaches past the bound describes no real handshake message.
+// ReassembleCryptoFrames allocates one byte of buffer for each byte up to the highest
+// offset. #168 measured an amplification of about 10000 to 1 from one datagram of 100
+// bytes.
+// The reader tests the offset before it adds the length. RFC 9000 Section 16 lets an
+// offset reach 4611686018427387903, so the sum wraps in a uint64 addition.
+func cryptoFragmentPassesBound(fragment CryptoFragment) bool {
+	return fragment.Offset > MaxCryptoBufferBytes ||
+		fragment.Offset+uint64(len(fragment.Data)) > MaxCryptoBufferBytes
 }
 
 // ParseQUICServerInitial parses a QUIC server Initial packet and extracts the TLS ServerHello.
@@ -800,12 +945,12 @@ func ParseQUICServerInitial(payload []byte, clientDCID []byte) (*ServerHello, er
 		return nil, err
 	}
 
+	// ParseCryptoFrames returns the fragments it read beside a truncation error, and a
+	// whole server hello can sit in front of the truncated frame. The reader therefore
+	// keeps the fragments, and reports the error only when it read none.
 	fragments, err := ParseCryptoFrames(plaintext)
-	if err != nil {
-		return nil, err
-	}
 	if len(fragments) == 0 {
-		return nil, nil
+		return nil, err
 	}
 
 	assembled := ReassembleCryptoFrames(fragments)
@@ -835,4 +980,245 @@ func ParseQUICServerInitial(payload []byte, clientDCID []byte) (*ServerHello, er
 		sh.IsQUIC = true
 	}
 	return sh, nil
+}
+
+// ErrNoSecret reports that the caller supplied no secret for the connection.
+var ErrNoSecret = errors.New("parser: the caller supplied no secret for the connection")
+
+// The packet protection sizes of TLS_AES_128_GCM_SHA256, which RFC 9001 Section 5.1
+// derives from the cipher suite.
+const (
+	// quicSecretLength is the byte count of a SHA-256 traffic secret.
+	quicSecretLength = 32
+	// quicKeyLength is the byte count of an AES-128 key.
+	quicKeyLength = 16
+	// quicIVLength is the byte count of the initialization vector.
+	quicIVLength = 12
+	// quicSampleLength is the byte count of the header protection sample.
+	quicSampleLength = 16
+	// quicTagLength is the byte count of the AEAD tag.
+	quicTagLength = 16
+)
+
+// quicMaxConnectionIDLength is the largest Destination Connection ID that RFC 9000
+// Section 17.2 allows.
+const quicMaxConnectionIDLength = 20
+
+// quicPacketTypeRetry names the long header packet type that carries no protection.
+const quicPacketTypeRetry = 0x30
+
+// DeriveQUICKeys returns the packet protection key, the initialization vector and the
+// header protection key of one TLS traffic secret.
+// RFC 9001 Section 5.1 states the three labels `quic key`, `quic iv` and `quic hp`.
+// It returns an error for a secret of another length, because the library reads the
+// SHA-256 key schedule of TLS_AES_128_GCM_SHA256 only.
+func DeriveQUICKeys(secret []byte) (key, iv, hpKey []byte, err error) {
+	if len(secret) == 0 {
+		return nil, nil, nil, ErrNoSecret
+	}
+
+	if len(secret) != quicSecretLength {
+		return nil, nil, nil, fmt.Errorf("parser: the secret holds %d bytes, and the library reads %d",
+			len(secret), quicSecretLength)
+	}
+
+	key, err = hkdfExpandLabel(secret, "quic key", nil, quicKeyLength)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	iv, err = hkdfExpandLabel(secret, "quic iv", nil, quicIVLength)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	hpKey, err = hkdfExpandLabel(secret, "quic hp", nil, quicKeyLength)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return key, iv, hpKey, nil
+}
+
+// DecryptQUICPacketWithSecret returns the frame bytes of one QUIC packet, which the
+// caller's traffic secret protects.
+// The payload starts at the first byte of the packet, and a longer buffer is allowed,
+// because one datagram carries more than one packet.
+// connectionIDLength states the Destination Connection ID length of a short header
+// packet. A long header packet carries its own lengths, so it ignores that argument.
+// It returns ErrNoSecret when the caller supplies no secret.
+// It returns a non-fatal error for a packet it cannot read, and it never panics.
+func DecryptQUICPacketWithSecret(payload, secret []byte, connectionIDLength int) ([]byte, error) {
+	if len(secret) == 0 {
+		return nil, ErrNoSecret
+	}
+
+	pnOffset, end, headerMask, err := quicProtectedRange(payload, connectionIDLength)
+	if err != nil {
+		return nil, err
+	}
+
+	key, iv, hpKey, err := DeriveQUICKeys(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	sampleOffset := pnOffset + 4
+	if sampleOffset+quicSampleLength > end {
+		return nil, fmt.Errorf("parser: the packet holds %d bytes, and the header protection sample needs %d",
+			end, sampleOffset+quicSampleLength)
+	}
+
+	mask, err := aesECBEncryptBlock(hpKey, payload[sampleOffset:sampleOffset+quicSampleLength])
+	if err != nil {
+		return nil, err
+	}
+
+	header := make([]byte, end)
+	copy(header, payload[:end])
+	header[0] ^= mask[0] & headerMask
+
+	packetNumberLength := int(header[0]&0x03) + 1
+	if pnOffset+packetNumberLength > end {
+		return nil, errors.New("parser: the packet number passes the packet")
+	}
+
+	var packetNumber uint64
+
+	for i := range packetNumberLength {
+		header[pnOffset+i] ^= mask[1+i]
+		packetNumber = packetNumber<<8 | uint64(header[pnOffset+i])
+	}
+
+	nonce := make([]byte, len(iv))
+	copy(nonce, iv)
+
+	for i := range 8 {
+		nonce[len(nonce)-1-i] ^= byte(packetNumber >> (8 * i))
+	}
+
+	start := pnOffset + packetNumberLength
+	if end-start <= quicTagLength {
+		return nil, errors.New("parser: the packet carries no protected frame")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	plaintext, err := aead.Open(nil, nonce, payload[start:end], header[:start])
+	if err != nil {
+		return nil, fmt.Errorf("parser: the secret does not open the packet: %w", err)
+	}
+
+	return plaintext, nil
+}
+
+// quicProtectedRange returns the packet number offset, the end of the packet and the
+// first-byte mask of the header protection.
+// RFC 9001 Section 5.4.1 masks four bits of the first byte of a long header packet, and
+// five bits of the first byte of a short header packet.
+func quicProtectedRange(payload []byte, connectionIDLength int) (pnOffset, end int, headerMask byte, err error) {
+	if len(payload) < 1 {
+		return 0, 0, 0, errors.New("parser: the packet holds no byte")
+	}
+
+	if payload[0]&0x80 == 0 {
+		if connectionIDLength < 0 || connectionIDLength > quicMaxConnectionIDLength {
+			return 0, 0, 0, fmt.Errorf("parser: the caller states the connection identifier length %d",
+				connectionIDLength)
+		}
+
+		pnOffset = 1 + connectionIDLength
+		if pnOffset >= len(payload) {
+			return 0, 0, 0, errors.New("parser: the connection identifier passes the packet")
+		}
+
+		return pnOffset, len(payload), 0x1f, nil
+	}
+
+	if len(payload) < 5 {
+		return 0, 0, 0, errors.New("parser: the long header holds no version")
+	}
+
+	version := binary.BigEndian.Uint32(payload[1:5])
+	if version != quicV1 && version != quicV2 {
+		return 0, 0, 0, fmt.Errorf("parser: the packet states the QUIC version %#08x", version)
+	}
+
+	if quicIsRetry(payload[0], version) {
+		return 0, 0, 0, errors.New("parser: a Retry packet carries no protected frame")
+	}
+
+	pos := 5
+
+	for range 2 {
+		if pos >= len(payload) {
+			return 0, 0, 0, errors.New("parser: the connection identifier length passes the packet")
+		}
+
+		length := int(payload[pos])
+		if length > quicMaxConnectionIDLength {
+			return 0, 0, 0, fmt.Errorf("parser: the packet states the connection identifier length %d", length)
+		}
+
+		pos += 1 + length
+		if pos > len(payload) {
+			return 0, 0, 0, errors.New("parser: the connection identifier passes the packet")
+		}
+	}
+
+	// An Initial packet carries a token, and every other long header packet carries none.
+	if quicIsInitial(payload[0], version) {
+		tokenLength, next, e := DecodeVarint(payload, pos)
+		if e != nil {
+			return 0, 0, 0, fmt.Errorf("parser: the token length is unreadable: %w", e)
+		}
+
+		pos = next
+		if tokenLength > uint64(len(payload)-pos) {
+			return 0, 0, 0, errors.New("parser: the token passes the packet")
+		}
+
+		pos += int(tokenLength)
+	}
+
+	length, next, err := DecodeVarint(payload, pos)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("parser: the length is unreadable: %w", err)
+	}
+
+	pos = next
+	if length > uint64(len(payload)-pos) {
+		return 0, 0, 0, errors.New("parser: the length passes the packet")
+	}
+
+	return pos, pos + int(length), 0x0f, nil
+}
+
+// quicIsRetry reports whether the first byte names a Retry packet.
+// RFC 9369 Section 3.2 states the type `0b00` for QUIC version 2, and RFC 9000
+// Section 17.2 states the type `0b11` for QUIC version 1.
+func quicIsRetry(firstByte byte, version uint32) bool {
+	if version == quicV2 {
+		return firstByte&0x30 == 0x00
+	}
+
+	return firstByte&0x30 == quicPacketTypeRetry
+}
+
+// quicIsInitial reports whether the first byte names an Initial packet.
+// RFC 9369 Section 3.2 gives QUIC version 2 another type value for each packet type.
+func quicIsInitial(firstByte byte, version uint32) bool {
+	if version == quicV2 {
+		return firstByte&0x30 == 0x10
+	}
+
+	return firstByte&0x30 == 0x00
 }

@@ -2,22 +2,29 @@ package ja4plus
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
+	"github.com/gopacket/gopacket/pcapgo"
 )
 
-type expectedResult struct {
-	PacketIndex int    `json:"packet_index"`
-	Type        string `json:"type"`
-	Fingerprint string `json:"fingerprint"`
-}
+// The integration test reads the FoxIO corpus.
+//
+// `docs/specs/features/04-conformance-harness.md` passes the role of
+// `scripts/gen_expected.py` and `testdata/http1-with-cookies.expected.json` to the corpus,
+// and the two files are removed. The conformance suite of the `conformance` build tag
+// compares every value against the FoxIO vector, so this test proves that the library reads
+// a corpus capture and produces a value.
+//
+// `loadPCAP` stays in this file, because `conformance_test.go` reads it. The corpus is not
+// tracked, so the test below skips until `make corpus` fetches it.
+
+// corpusCaptureDir holds the fetched FoxIO captures. `.gitignore` keeps them out of git.
+const corpusCaptureDir = "testdata/foxio/pcap"
 
 // packetReader abstracts over pcap and pcapng readers.
 type packetReader interface {
@@ -72,82 +79,55 @@ func loadPCAP(t *testing.T, path string) []gopacket.Packet {
 	return packets
 }
 
-func loadExpected(t *testing.T, path string) []expectedResult {
-	t.Helper()
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Skipf("Expected results not found: %s", path)
-		return nil
+// The corpus replaces the removed fixture. `http1-with-cookies.pcapng` is the capture the
+// fixture named, and the per-packet vector for it holds a `ja4.ja4t` value and a
+// `ja4.ja4ts` value.
+//
+// This test compares no value. The conformance suite compares every value against the
+// FoxIO vector, and a second comparison here would state the expected value twice.
+func TestTheLibraryProducesAJA4TValueAndAJA4TSValueOnACorpusCapture(t *testing.T) {
+	capture := filepath.Join(corpusCaptureDir, "http1-with-cookies.pcapng")
+
+	if _, err := os.Stat(capture); err != nil {
+		t.Skipf("%s is absent, so run `make corpus` to fetch the FoxIO corpus", capture)
 	}
-	var results []expectedResult
-	if err := json.Unmarshal(data, &results); err != nil {
-		t.Fatalf("failed to parse expected results: %v", err)
+
+	packets := loadPCAP(t, capture)
+	if len(packets) == 0 {
+		t.Fatalf("%s holds no packet", capture)
 	}
-	return results
+
+	ja4t := NewJA4T()
+	ja4ts := NewJA4TS()
+	clients, servers := 0, 0
+
+	for _, packet := range packets {
+		results, _ := ja4t.ProcessPacket(packet)
+		clients += len(results)
+
+		results, _ = ja4ts.ProcessPacket(packet)
+		servers += len(results)
+	}
+
+	if clients == 0 {
+		t.Errorf("the library produces no JA4T value on %s, and the FoxIO vector holds one", capture)
+	}
+
+	if servers == 0 {
+		t.Errorf("the library produces no JA4TS value on %s, and the FoxIO vector holds one", capture)
+	}
 }
 
-func TestIntegration_JA4T_JA4TS(t *testing.T) {
-	matches, _ := filepath.Glob("testdata/*.expected.json")
-	if len(matches) == 0 {
-		t.Skip("No test fixtures in testdata/. Run: python scripts/gen_expected.py <pcap> > testdata/<name>.expected.json")
-	}
-
-	for _, expectedPath := range matches {
-		name := filepath.Base(expectedPath)
-		pcapBase := expectedPath[:len(expectedPath)-len(".expected.json")]
-
-		// Try .pcap then .pcapng
-		pcapPath := pcapBase + ".pcap"
-		if _, err := os.Stat(pcapPath); os.IsNotExist(err) {
-			pcapPath = pcapBase + ".pcapng"
+// The removal cluster of `docs/specs/features/04-conformance-harness.md` states two files
+// as removed. A file that returns gives the expected value a second source, and the corpus
+// is the source this project reads.
+func TestTheRepositoryHoldsNoGeneratedExpectedOutputFile(t *testing.T) {
+	for _, path := range []string{
+		"scripts/gen_expected.py",
+		"testdata/http1-with-cookies.expected.json",
+	} {
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("%s is present, and the feature file states it as removed", path)
 		}
-
-		t.Run(name, func(t *testing.T) {
-			packets := loadPCAP(t, pcapPath)
-			expected := loadExpected(t, expectedPath)
-			if packets == nil || expected == nil {
-				return
-			}
-
-			ja4t := NewJA4T()
-			ja4ts := NewJA4TS()
-
-			var goResults []expectedResult
-			for i, pkt := range packets {
-				if results, _ := ja4t.ProcessPacket(pkt); len(results) > 0 {
-					goResults = append(goResults, expectedResult{
-						PacketIndex: i,
-						Type:        "ja4t",
-						Fingerprint: results[0].Fingerprint,
-					})
-				}
-				if results, _ := ja4ts.ProcessPacket(pkt); len(results) > 0 {
-					goResults = append(goResults, expectedResult{
-						PacketIndex: i,
-						Type:        "ja4ts",
-						Fingerprint: results[0].Fingerprint,
-					})
-				}
-			}
-
-			if len(goResults) != len(expected) {
-				t.Errorf("result count: Go=%d, Python=%d", len(goResults), len(expected))
-				for i, e := range expected {
-					if i < len(goResults) {
-						t.Logf("  [%d] Go=%s Python=%s", i, goResults[i].Fingerprint, e.Fingerprint)
-					} else {
-						t.Logf("  [%d] Go=MISSING Python=%s", i, e.Fingerprint)
-					}
-				}
-				return
-			}
-
-			for i, exp := range expected {
-				got := goResults[i]
-				if got.Fingerprint != exp.Fingerprint {
-					t.Errorf("packet %d (%s): Go=%q, Python=%q", exp.PacketIndex, exp.Type, got.Fingerprint, exp.Fingerprint)
-				}
-			}
-		})
 	}
 }
