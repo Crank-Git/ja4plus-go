@@ -317,6 +317,24 @@ func TestTheWatchPermissionMessageNamesTheBpfDeviceOnDarwin(t *testing.T) {
 	}
 }
 
+// TestWatchInterfaceLeavesNoHandlerGoroutine reads issue #612.
+//
+// `TestWatchInterfaceClosesTheHandleThatItOpens` and
+// `TestRunWatchOpensTheInterfaceThatEveryParsedOptionNames` each reach `runMonitor` and
+// return, and each one left one parked goroutine and one signal registration before #612.
+// So the test binary swallowed the first Ctrl-C of the run.
+func TestWatchInterfaceLeavesNoHandlerGoroutine(t *testing.T) {
+	before := stopHandlerGoroutineCount()
+
+	// The stub fails the first read, so the monitor loop returns at once.
+	_ = watchInterface(watchOptions{iface: "eth0"},
+		func(capture.Options) (capture.Handle, error) { return &stubHandle{}, nil })
+
+	if after := stopHandlerGoroutineCount(); after != before {
+		t.Errorf("%d handler goroutines stand after the run, and %d stood before it", after, before)
+	}
+}
+
 func TestTheWatchPermissionMessageNamesEveryPlatformThatHoldsNoBranch(t *testing.T) {
 	message := watchPermissionMessage("windows", "Ethernet")
 

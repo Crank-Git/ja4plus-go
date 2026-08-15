@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -245,10 +246,14 @@ func watchPermissionMessage(goos string, iface string) string {
 // table of `docs/specs/features/13-live-capture.md` names for an interface that the host
 // removes. It returns nil for a run that a termination signal stopped, so the exit status
 // of that run is 0.
-// It installs one handler for each termination signal, and it removes no handler, because
-// the process ends when this function returns.
+// It installs one handler for each termination signal, and it removes every handler before
+// it returns. A test binary calls this function and continues, and issue #612 records the
+// signal registration that outlived such a call.
 func runMonitor(handle capture.Handle, options watchOptions) error {
-	return newMonitor(options, installWatchStopHandler(), os.Stdout, os.Stderr, time.Now).run(handle)
+	stop, release := installWatchStopHandler()
+	defer release()
+
+	return newMonitor(options, stop, os.Stdout, os.Stderr, time.Now).run(handle)
 }
 
 // The monitor loop, the signals and the connection table. Issue #80 builds them, and
@@ -299,26 +304,68 @@ func (s *stopRequest) isRequested() bool {
 	return s.requested.Load()
 }
 
-// installWatchStopHandler returns the stop request that a termination signal sets, and it
-// starts the goroutine that reads the signals.
-func installWatchStopHandler() *stopRequest {
+// installWatchStopHandler returns the stop request that a termination signal sets, and the
+// release that ends the registration and the handler goroutine.
+//
+// The caller calls the release on every path. A signal registration reaches the whole
+// process, so a registration that outlives the call diverts SIGINT and SIGTERM from every
+// later caller. Issue #612 measured that diversion in the `cmd/ja4plus` test binary.
+func installWatchStopHandler() (*stopRequest, func()) {
+	return installStopHandler(
+		signal.Notify,
+		signal.Stop,
+		func() { signal.Reset(terminationSignals()...) },
+		raiseSignal,
+		os.Exit,
+	)
+}
+
+// installStopHandler starts the handler goroutine, and it returns the stop request and the
+// release.
+//
+// The release ends the signal registration, it ends the handler goroutine, and it waits
+// for that goroutine. Two calls of one release end the registration once.
+//
+// The parameters carry the signal registration, the reset, the raise and the exit, so a
+// test drives this function without a real signal. `installWatchStopHandler` above states
+// the values that a live run passes.
+func installStopHandler(
+	notify func(chan<- os.Signal, ...os.Signal),
+	stopNotify func(chan<- os.Signal),
+	reset func(),
+	raise func(os.Signal) error,
+	exit func(int),
+) (*stopRequest, func()) {
 	stop := &stopRequest{}
 
 	// The buffer holds two signals. The handler reads the first one, and it then drains a
 	// second one that arrived before the reset. `os/signal` states that Notify never
 	// blocks on the send, so a smaller buffer drops the second signal.
 	signals := make(chan os.Signal, 2)
-	signal.Notify(signals, terminationSignals()...)
+	notify(signals, terminationSignals()...)
 
-	go watchStopHandler(
-		signals,
-		stop,
-		func() { signal.Reset(terminationSignals()...) },
-		raiseSignal,
-		os.Exit,
-	)
+	// The handler blocks on a receive, so an end of the registration leaves it parked
+	// forever. The release closes this channel, and the handler reads that close as the
+	// end of the run.
+	quit := make(chan struct{})
+	finished := make(chan struct{})
 
-	return stop
+	go func() {
+		defer close(finished)
+
+		watchStopHandler(signals, quit, stop, reset, raise, exit)
+	}()
+
+	var once sync.Once
+
+	return stop, func() {
+		once.Do(func() {
+			stopNotify(signals)
+			close(quit)
+		})
+
+		<-finished
+	}
 }
 
 // watchStopHandler reads the termination signals of the channel, and it stops the run.
@@ -339,14 +386,23 @@ func installWatchStopHandler() *stopRequest {
 // A second signal that arrives before the reset lands in the channel buffer, and the
 // reset then ends the delivery of it. The drain reads that signal and raises it again, so
 // the window between the two calls loses no second signal.
+//
+// A close of `quit` ends the handler, and the handler then sets no stop request and it
+// restores no default disposition. The release of `installStopHandler` closes that
+// channel, because the run ended before a termination signal arrived.
 func watchStopHandler(
 	signals <-chan os.Signal,
+	quit <-chan struct{},
 	stop *stopRequest,
 	reset func(),
 	raise func(os.Signal) error,
 	exit func(int),
 ) {
-	<-signals
+	select {
+	case <-signals:
+	case <-quit:
+		return
+	}
 
 	stop.request()
 	reset()
