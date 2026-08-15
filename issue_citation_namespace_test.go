@@ -221,7 +221,26 @@ import (
 // 639.** Epic 15 and Epic 16 each ran a round on 2026-08-14, and each round re-measured the
 // mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
 // takes the union of the two histories and one constant.
-const issueCitationHighWaterMark = 639
+//
+// #642 re-measured the mark on 2026-08-15 UTC and it read 656. **#642 is the first issue
+// of batch #645 that cites its own number above the inherited mark of 639**, and it cites
+// that number in `prerelease_gate_test.go`, in `prerelease_registry_test.go` and in
+// `docs/specs/features/16-pre-release-validation.md`. Batch #645 opened its members and
+// their pull requests after the inherited reading, so the tracker moved by 17 between the
+// two. **A member pays this maintenance cost exactly as a round does**, because the guard
+// reads the number and never the shape of the change that carries it.
+// #667 re-measured the mark on 2026-08-15 UTC, and it read 668. **#667 is the documentation
+// round of batch #644, and the merge of `origin/dev` into that batch met two readings.** The
+// batch branch carried 639 and `dev` carried 663, and git merged the constant without a
+// conflict because one side alone had moved it. **A resolver of that constant re-measures it
+// rather than take a side**, because the mark is a lower bound and a taken side records a
+// number that nobody measured. The round cites #667, #644 and the five members of the batch,
+// and every one of those numbers sits at or below the mark.
+//
+// **The round read 667 before it wrote the requirements of this batch, and it read 668
+// afterwards.** Two readings minutes apart differ, because another repository user allocates
+// a number at any moment. The constant holds the second reading.
+const issueCitationHighWaterMark = 668
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

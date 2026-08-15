@@ -147,15 +147,29 @@ issue that added the file after the audit of Epic 2.
 - Issue #610 added `internal/capture/deadline.go`.
 
 **Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
-holds eight files that ship and seven test files, measured on 2026-08-14 with
+held eight files that ship and seven test files, measured on 2026-08-15 with
 `git ls-files internal/capture/`. **A test file carries no row**, because `goFilesOfRoots`
 in `audit_record_test.go` drops a file whose name ends in `_test.go`.
 
 **Issue #610 wrote the ninth row that names a file of `internal/capture/`.** The directory
 holds nine files that ship and eight test files, measured on 2026-08-15 with
-`git ls-files internal/capture/`. The measurement above reads 2026-08-14, and the two
+`git ls-files internal/capture/`. **The two measurements read one UTC day**, and they
 disagree because #610 added `internal/capture/deadline.go` and
-`internal/capture/deadline_test.go` between the two days.
+`internal/capture/deadline_test.go` between them.
+
+**The first measurement read `2026-08-14` until the documentation round of batch #644, and
+that date stated the local day.** `CLAUDE.md` `## Conventions` states that every date of
+this repository states the UTC calendar day. The round of #667 repaired the date from the
+tree rather than from the clock of the worker.
+
+- **Commit `bbbbc74` of #611 states the measurement**, and it carries the author timestamp
+  `2026-08-14T21:53:03-04:00`, which is `2026-08-15T01:53:03Z`.
+- **That commit already holds the row `| internal/capture/linktype.go | #609 |`.** The row
+  names a file that #609 added, and the sub-merge of pull request #654 carried that file to
+  the integration branch at commit `ac7e5c5`, `2026-08-14T21:43:24-04:00`, which is
+  `2026-08-15T01:43:24Z`.
+- **So the measurement ran after `2026-08-15T01:43:24Z`**, and it ran on the UTC day
+  `2026-08-15`.
 
 **The merge of `dev` into `epic/76-live-capture` met two tables, and it holds the union of
 them.** `dev` carried the row of #565, and the integration branch carried the row of #79 and
