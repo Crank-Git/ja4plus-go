@@ -119,7 +119,8 @@ frame.
 
 **28 per-packet deviations remain, and 27 of them carry the marker `quic`.** Causes 2, 3
 and 4 below hold those 27. **One TCP deviation remains**, and
-`## The unattributed deviation` below names it.
+`## Cause 7 — the seconds component of the Wireshark delta` below names it. **Cause 7
+states why that row survives this candidate**, so the candidate closes 149 of 150 TCP rows.
 
 ### Does the change move a value the register already accepts
 
@@ -457,7 +458,8 @@ reading.** #449 produced it, under batch #536.
 
 **The two counts differ because #443 measured the cluster before #447 landed.** #443 left
 the two `JA4L` rows unattributed, and this section holds them now.
-`## The unattributed deviation` below records that move. #447 then moved the QUIC `JA4L-S`
+`## The last deviation, and where its reading lives` below records that move. #447 then
+moved the QUIC `JA4L-S`
 emission to the point D frame, and two `JA4LS` rows joined the two `JA4L` rows. **This
 section states the reading that #443 asked for, and it decides no value.**
 
