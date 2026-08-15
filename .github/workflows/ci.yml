@@ -103,7 +103,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
@@ -142,7 +142,7 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and FR-supply-15 permits no other permission here.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -312,7 +312,7 @@ jobs:
   libpcap:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -331,7 +331,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -385,7 +385,7 @@ jobs:
     # gives it `contents: read`, and this job reads the repository and a public database
     # alone.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The scanner reads the Go version of the `go` command on the PATH, and it reports
       # the standard library of that version. **This job therefore names the range that
@@ -481,7 +481,7 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and this job reads the repository and writes no ref.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -654,7 +654,7 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and this job reads two commits of the repository.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -693,7 +693,7 @@ jobs:
       # package of a nested module.
       - name: Check out the base branch
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.base_ref }}
           path: base
@@ -882,7 +882,7 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and this job reads the repository and writes nothing.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
@@ -926,7 +926,7 @@ jobs:
     steps:
       # GoReleaser reads the tag history to compute the snapshot version, so the checkout
       # takes the whole history rather than one commit.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
