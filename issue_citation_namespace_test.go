@@ -336,14 +336,19 @@ import (
 //
 // **The mark of 711 reddened this guard on the 2 citations of #727 that #439 wrote**, in
 // `docs/specs/spec.md` and in `docs/specs/spec.html`. #727 is the batch that carries #439.
-// **The mark of 730 that #727 measured covers those 2 citations as well**, so #439 raises
-// the mark for a second reason: pull request 732 is the pull request of #439, and it stands
-// above 730. **The mark is a lower bound**, and 733 covers every citation the tree carries.
+// **The mark of 730 that #727 measured covers those 2 citations as well.** #439 raises the
+// mark for a second reason. Pull request 732 is the pull request of #439, and it stands
+// above 730. **The mark is a lower bound**, and 733 covered every citation of that day.
 //
-// **Two re-measurements in one batch is the expected cost of this guard**, because a member
-// that cites its own batch allocates a number while it works. A later member re-measures
-// again rather than transcribing 733.
-const issueCitationHighWaterMark = 733
+// **The documentation round of batch #727 re-measured the mark on 2026-08-15 UTC, and it
+// read 737.** The same two commands reported issue 736 and pull request 737. **The round
+// raises the mark because its `## Changelog` row cites #735**, and 735 stands above 733.
+// #735 is the pull request of #724, which is the third member of this batch.
+//
+// **Three re-measurements in one batch is the expected cost of this guard.** A member that
+// cites its own batch allocates a number while it works. A later member re-measures again
+// rather than transcribing 737.
+const issueCitationHighWaterMark = 737
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
