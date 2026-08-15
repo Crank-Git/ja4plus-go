@@ -35,8 +35,12 @@ type prereleaseCase struct {
 	// Epic 16 round renamed this field from `built` on 2026-08-14, because the cross-member
 	// review measured the third meaning. The FR-prerelease-26 case and
 	// `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` each stand in
-	// `prerelease_gate_test.go`, each one runs, and each one skips with a stated reason. So
-	// a summary that called either case `absent` stated something the binary disproves.
+	// `prerelease_gate_test.go`, and each one runs. So a summary that called either case
+	// `absent` stated something the binary disproves.
+	//
+	// **Every row reads `true` on 2026-08-15 UTC**, because #642 completed the last case.
+	// The field stays, because a later requirement reaches the feature file before its
+	// case reaches the tree.
 	//
 	// **A red case proves its requirement, and it never waits.** #633 flipped the
 	// FR-prerelease-26 row on 2026-08-15 UTC, and
@@ -121,11 +125,18 @@ var prereleaseCases = []prereleaseCase{
 		issue:        prereleaseAmendmentIssue,
 		proves:       true,
 	},
+	// #642 completed this case on 2026-08-15 UTC, and it flipped this row. Epic 15 landed
+	// the sweep, so `docs/mutation_reports/` and `docs/mutation_settlements/` each hold the
+	// document that `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` reads. #634
+	// amended FR-mutation-11 before that, and the case reads the amended rule.
+	//
+	// **This row reads no tag, so it waits on Epic 10 for nothing.** The case reads two
+	// tracked documents, and it passed on 2026-08-15 UTC.
 	{
 		name:         "the mutation sweep report",
 		requirements: []string{"FR-prerelease-28"},
-		issue:        99,
-		proves:       false,
+		issue:        642,
+		proves:       true,
 	},
 }
 
@@ -191,9 +202,9 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // built the module install, #97 built the published module contents, #98 built the
 // binaries, and #99 built the documentation site and the release gate.
 //
-// **Seven rows of the registry prove a requirement, and one waits.** `the mutation sweep
-// report` waits on Epic #89. **So this list holds seven names and the registry holds eight
-// rows**, and a reader who counts one against the other reads no disagreement.
+// **Every row of the registry proves a requirement, and none waits.** **So this list holds
+// eight names and the registry holds eight rows.** #642 closed the last gap on 2026-08-15
+// UTC. `the mutation sweep report` waited on Epic #89, and Epic 15 landed the sweep.
 //
 // **#633 flipped `the pre-release run against the tag` on 2026-08-15 UTC**, and it added
 // the name to the list below. The maintainer amended FR-prerelease-26 on that day, and the
@@ -221,6 +232,10 @@ func TestThePrereleaseRegistryNamesEveryCaseThatProvesItsRequirement(t *testing.
 		"the release gate",              // #99
 		// #633 flipped this row on 2026-08-15 UTC, and it appended this name.
 		"the pre-release run against the tag",
+		// #642 flipped this row on 2026-08-15 UTC, and it appended this name after the
+		// name above. `slices.Equal` reads the order, so a name in another position
+		// reports a disagreement that the registry does not hold.
+		"the mutation sweep report",
 	}
 
 	if !slices.Equal(proved, expected) {

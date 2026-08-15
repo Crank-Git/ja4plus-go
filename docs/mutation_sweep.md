@@ -186,9 +186,16 @@ assertion improves on the verdict. Record the reading, and count the mutation.
 6. For a mutation that reaches a fingerprint value, read the test that covers the line.
 7. Add the assertion that the test lacks. **Run the test against the mutation first, and
    confirm that it fails.** An assertion that passes against the mutation settles nothing.
-8. Write the settlement in `docs/mutation_settlements/`. Name the mutation, name the issue,
-   and name the assertion.
-9. Count every remaining mutation, by file and by mutation type, in the same record.
+8. Write the settlement in `docs/mutation_settlements/`, under a `## The settlements`
+   heading. Name the mutation, name the issue, and name the assertion.
+9. Count every remaining mutation, by file and by mutation type, in the same record, under
+   a `## The counted remainder` heading.
+
+**The record carries the name of the report it reads, and it states the count of each
+verdict that FR-mutation-11 reads.** `TestEveryLivedMutationOfTheMostRecentSweepIsSettled`
+holds FR-prerelease-28 against those three facts, so a record that names an earlier sweep
+reddens `make prerelease`. The two headings above are the two dispositions of the rule, and
+the same case reads them.
 
 **Never weaken a test to kill a mutation.** A mutation that a weakened test kills is worse
 than one that survives. The report then reads green over a test that asserts less than it did.

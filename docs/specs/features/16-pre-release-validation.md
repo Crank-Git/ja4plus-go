@@ -101,12 +101,31 @@ reads that tag, and the promotion waits on the result. **#633 is the reversal pa
   promotes the release only when every case passes or carries a recorded reason.
 - **FR-prerelease-27** — A case asserts that `testdata/deviations.json` holds no entry
   whose comparison now matches.
-- **FR-prerelease-28** — A case asserts that every `LIVED` mutation of the most recent
-  sweep is settled.
+- **FR-prerelease-28** — A case asserts that the most recent sweep records every `LIVED`
+  mutation as settled or as counted. FR-mutation-11 states which of the two each mutation
+  takes.
 - **FR-prerelease-29** — A case asserts that no tracked document states a method count
   that `features/12-ja4ls.md` forbids.
 - **FR-prerelease-30** — A case asserts that the README links to the documentation site
   and that the link resolves.
+
+**FR-prerelease-28 follows FR-mutation-11, and #642 aligned the two on 2026-08-15 UTC.**
+The maintainer amended FR-mutation-11 on 2026-08-14, and #634 carried that amendment into
+`docs/specs/features/15-mutation-sweep.md`. The pre-amendment requirement read as follows.
+
+> A case asserts that every `LIVED` mutation of the most recent sweep is settled.
+
+That requirement asked for a settlement for each of the 223 `LIVED` mutations that
+`docs/mutation_reports/2026-08-14-internal-parser.md` holds. **The amended
+FR-mutation-11 asks for a settlement on code that can move a fingerprint value, and it
+counts every other mutation.** So a case that demanded 223 settlements would read the
+tracked record as incomplete work. **#642 is the reversal path**, and a reversal restores
+the sentence above.
+
+**No case decides the fingerprint risk of one mutation.** That reading is a person's work,
+and `docs/mutation_settlements/` holds the record of it.
+`TestEveryLivedMutationOfTheMostRecentSweepIsSettled` holds the property a machine holds:
+the record covers the sweep that the tree carries today.
 
 ## User flows
 
