@@ -1,8 +1,13 @@
 <p align="center"><img src="assets/logo.png" width="300"></p>
 
-A Go library and CLI for JA4+ network fingerprinting. Implements eleven JA4+ methods for identifying and classifying network traffic based on TLS, TCP, HTTP, SSH, X.509, and DHCP characteristics. Supports QUIC Initial packet parsing.
+`ja4plus-go` is a Go library and a command-line program for JA4+ network fingerprinting.
+It implements eleven JA4+ methods, and ten fingerprinters carry them. It reads TLS, TCP,
+HTTP, SSH, X.509 and DHCP characteristics, and it decodes a QUIC Initial packet.
 
-JA4+ is a set of network fingerprinting standards created by [FoxIO](https://foxio.io). This library is an independent Go implementation of the published specification. For the original spec, see the [FoxIO JA4+ repository](https://github.com/FoxIO-LLC/ja4).
+JA4+ is a set of network fingerprinting standards that [FoxIO](https://foxio.io)
+publishes. This library is an independent Go implementation. The
+[FoxIO JA4+ repository](https://github.com/FoxIO-LLC/ja4) holds the original
+specification.
 
 [![CI](https://github.com/Crank-Git/ja4plus-go/actions/workflows/ci.yml/badge.svg)](https://github.com/Crank-Git/ja4plus-go/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/Crank-Git/ja4plus-go.svg)](https://pkg.go.dev/github.com/Crank-Git/ja4plus-go)
@@ -26,7 +31,12 @@ JA4+ is a set of network fingerprinting standards created by [FoxIO](https://fox
 | JA4D | DHCPv4 | Per-packet DHCPv4 fingerprint (FoxIO PR #267/#270) |
 | JA4D6 | DHCPv6 | Per-packet DHCPv6 fingerprint |
 
-QUIC Initial packets (RFC 9001/9369) are automatically decrypted to extract TLS ClientHellos.
+The table above holds eleven rows, and ten fingerprinters carry those methods.
+`JA4LFingerprinter` writes JA4L and it writes JA4LS, so one fingerprinter carries two of
+the rows. Read the ten as a count of fingerprinters, and never as a count of methods.
+
+The library decrypts a QUIC Initial packet (RFC 9001 and RFC 9369) and it reads the TLS
+ClientHello inside.
 
 ## Installation
 
@@ -35,8 +45,11 @@ The module requires Go 1.24 or later. **That sentence states a language version,
 builds a binary free of a called vulnerability, and the section below names that one.
 
 ```bash
-go get github.com/Crank-Git/ja4plus-go
+go get github.com/Crank-Git/ja4plus-go@v1.0.0
 ```
+
+`v1.0.0` freezes the exported API. `docs/api/v1.md` records every exported name with its
+signature, and a test fails when the surface and that record differ.
 
 ### The language version and the build toolchain
 
@@ -83,7 +96,7 @@ database is live. Run `make vuln` to re-take the measurement on your own toolcha
 Pre-built binaries are available on the [Releases](https://github.com/Crank-Git/ja4plus-go/releases) page. Or build from source:
 
 ```bash
-go install github.com/Crank-Git/ja4plus-go/cmd/ja4plus@latest
+go install github.com/Crank-Git/ja4plus-go/cmd/ja4plus@v1.0.0
 ```
 
 ```bash
@@ -119,6 +132,26 @@ ja4plus cert server.pem
 ja4plus db update
 ja4plus db info
 ```
+
+### One run, and the output it writes
+
+`make corpus` fetches the FoxIO corpus, and the capture below comes from it. Run the
+command from the repository root:
+
+```bash
+ja4plus analyze testdata/foxio/pcap/tls12.pcap
+```
+
+The program writes these two lines:
+
+```text
+Type  Source                 Destination         Fingerprint
+ja4   192.168.133.129:36372  34.117.237.239:443  t13d1715h2_5b57614c22b0_3d5424432f57
+```
+
+`TestTheReadmeCommandLineOutputMatchesTheProgram` in `readme_code_blocks_test.go` runs
+that command and it compares the output to the block above. The test skips when the
+worktree holds no corpus.
 
 ### The capture filter of `ja4plus watch`
 
@@ -275,10 +308,27 @@ reads the embedded table or the cache file, and it makes no request.
 service for one record. A caller reaches it only when it imports that package.
 
 ```go
-import "github.com/Crank-Git/ja4plus-go/ja4db"
+import (
+	"context"
+	"net/http"
+	"time"
 
-cfg := &ja4db.RemoteLookupConfig{HTTPClient: &http.Client{Timeout: 10 * time.Second}}
-result, err := ja4db.LookupFingerprintRemote(ctx, cfg, "t13d1516h2_8daaf6152771_02713d6af862")
+	"github.com/Crank-Git/ja4plus-go/ja4db"
+)
+
+// lookupRemote asks the ja4db.com service for the record of one fingerprint.
+// The caller supplies the client, so the caller owns the timeout.
+func lookupRemote(ctx context.Context, fingerprint string) error {
+	cfg := &ja4db.RemoteLookupConfig{HTTPClient: &http.Client{Timeout: 10 * time.Second}}
+
+	result, err := ja4db.LookupFingerprintRemote(ctx, cfg, fingerprint)
+	if err != nil {
+		return err
+	}
+	_ = result
+
+	return nil
+}
 ```
 
 The command-line program carries its own HTTP client, and `ja4plus db update` downloads the
@@ -446,6 +496,33 @@ by `-`. A RST that the server sends on such a connection appends `-R` and the de
 RST, which gives `65535_2-1-3-1-1-4_65495_8_1-2-4-8-R6`. One `JA4TSFingerprinter` reads
 every packet of the connection, and `ComputeJA4TS` reads one packet and writes four parts.
 
+## Conformance
+
+`make conformance` tests this library against the FoxIO corpus at commit
+[`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`](https://github.com/FoxIO-LLC/ja4/tree/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8).
+`testdata/foxio.pin` holds that commit, and `make corpus` fetches the corpus at it. The
+corpus is FoxIO-licensed material, so this repository tracks the pin and never the
+captures.
+
+The suite compares every value this library computes against the FoxIO vector for the
+same packet, and it reports one entry for each difference. `testdata/deviations.json` is the register: it holds one entry for each
+accepted difference, with the issue that ruled it. The suite fails on a difference that
+the register does not hold, and it fails on a register entry whose comparison now
+matches.
+
+The run reports these figures, measured on 2026-08-15 UTC at the pinned commit:
+
+| Figure | Count |
+|---|---|
+| Matches | 1754 |
+| Deviations | 247 |
+| Accepted deviations | 605 |
+| Register keys | 637 |
+
+**The FoxIO reference decides every disputed value.** Where this library and a FoxIO
+vector disagree, this library is wrong. `docs/specs/foxio/` transcribes each FoxIO image
+as numbered rules, and every ruling of this project cites one of them.
+
 ## Known Limitations
 
 **QUIC multi-packet ClientHello reassembly:** When a QUIC ClientHello is large enough to span multiple QUIC Initial packets (e.g., with many extensions or a pre_shared_key extension), the CRYPTO frame reassembly may not recover the complete handshake message. This can result in a slightly different extension count and hash compared to the Python reference implementation. In practice this affects a small number of QUIC connections with unusually large ClientHellos. TCP/TLS fingerprinting is unaffected.
@@ -465,6 +542,20 @@ git clone https://github.com/Crank-Git/ja4plus-go.git
 cd ja4plus-go
 go test -v -race ./...
 ```
+
+## Security
+
+Report a vulnerability privately at
+<https://github.com/Crank-Git/ja4plus-go/security/advisories/new>. The report reaches the
+maintainer, and it reaches no public page. Never open a public issue for a vulnerability.
+
+**Every packet this library reads is untrusted input.** A fingerprinter parses a header
+that an attacker writes, so a bounds defect there is reachable from the network. Report a
+crash, a hang, an out-of-range read, or a value that escapes its documented format.
+
+Private vulnerability reporting is enabled on this repository, measured 2026-08-15 UTC. A
+repository setting moves without a change to this repository, so that sentence carries its
+date.
 
 ## License
 
