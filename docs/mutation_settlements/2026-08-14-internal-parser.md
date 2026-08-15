@@ -113,7 +113,13 @@ loop, so the run costs the timeout and it returns no figure. E4 below states the
 
 ## The settlements
 
-**Six mutations are settled. Three gain an assertion, and three state a reason.**
+**Ten mutations carry a settlement of the 47 that survive.** Three gain an assertion, three
+state an equivalence reason, and four state the non-termination reading.
+
+**The four of E4 also appear in the counted table below, so the two sets overlap by four.**
+The arithmetic of this record is therefore `3 + 3 + 41 = 47`, where the 41 holds the four of
+E4. A reader who sizes the remaining work needs one number, and the counted table is that
+number.
 
 ### S1 — the shortest quoted TCP header
 
@@ -206,8 +212,8 @@ advances `position` through the payload, and each mutant leaves `position` where
 **No assertion improves on the timeout.** A test that reaches a non-terminating loop never
 returns a value to assert against, so the `TIMED OUT` verdict is the detection.
 
-**The record counts these four in the table below as well**, because a reader who sizes the
-remaining work needs one number.
+**The counted table below holds these four as well**, and `## The settlements` above states
+that overlap.
 
 ## The counted remainder
 
