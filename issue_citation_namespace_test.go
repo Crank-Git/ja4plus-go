@@ -300,7 +300,13 @@ import (
 // re-measurement**, and the round pays the measurement to keep the mark tight rather than to
 // repair a failure. **The opening sentence of this comment read 2026-08-14 until this
 // round**, and each of the four readings above it was measured on 2026-08-15 UTC.
-const issueCitationHighWaterMark = 696
+//
+// **#701 re-measured the mark on 2026-08-15 UTC and it read 702.** The inherited mark of 696
+// predates issue #701, so the two `CHANGELOG.md` citations of #701 reddened the guard. #701
+// writes 91 register entries under ruling #529, ruling #492 and ruling #164, and the
+// changelog preamble names the issue that wrote them. **The mark is a lower bound**, and 702
+// covers every citation the tree carries.
+const issueCitationHighWaterMark = 702
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
