@@ -47,15 +47,47 @@ strict: true
 # 2026-08-14 at `mkdocs==1.6.1`: a page that links to `specs/spec.md` builds and exits 0.
 #
 # `TestNoPublishedPageLinksIntoAnExcludedDirectory` in `mkdocs_config_test.go` holds that
-# gap. It fails when a published page links into `docs/specs/` or `docs/audit/`.
+# gap. It reads `excludedDocumentationDirs`, so it fails when a published page links into
+# `docs/specs/`, `docs/audit/`, `docs/mutation_reports/` or `docs/mutation_settlements/`.
+# **The list decides the count, and this comment does not.** #92 added the fourth directory,
+# and the enumeration above named three until round 59 of the `## Changelog` of
+# `docs/specs/spec.md`.
 #
 # `docs/requirements.txt` sits under `docs_dir` because it belongs to the site, and MkDocs
 # copies an unexcluded non-markdown file into the built site. The third pattern holds the
 # pin list back, so the site publishes documentation alone.
+#
+# `docs/mutation_reports/` is the fourth pattern, and #91 added it under FR-mutation-6.
+# **A mutation report is a measurement artifact, and `docs/audit/` is the precedent.** Three
+# facts decide the exclusion.
+#
+#   1. One report names every mutation of the swept path, so it holds one table row for each.
+#      The `internal/parser` report of 2026-08-14 holds 882 rows.
+#   2. `make mutate` writes one report for each sweep, so the directory grows without a
+#      bound. A `nav` entry for each one grows a list with no reader.
+#   3. A report that no `nav` entry names reaches `validation.nav.omitted_files: warn`, and
+#      `strict` above turns that warning into a failed build. So an unexcluded report breaks
+#      `make docs` on the first sweep.
+#
+# #92 builds `docs/mutation_sweep.md`, which is published. **A link from that page into a
+# report is a link into an excluded file**, and the measured gap above states that MkDocs
+# does not fail it. `TestNoPublishedPageLinksIntoAnExcludedDirectory` fails it instead.
+#
+# `docs/mutation_settlements/` is the fifth pattern, and #92 added it under FR-mutation-13.
+# **A settlement is a recorded decision, and `docs/audit/` is the precedent.** Reason 2 of
+# the report exclusion above reaches it without a change. One settlement file lands for each
+# sweep round, so the directory grows without a bound. A `nav` entry for each one then grows
+# a list with no reader. **A settlement records why one test gained an assertion.** That is
+# engineering evidence, and it is not a page a user of the library reads.
+#
+# `docs/mutation_sweep.md` is the published half, and it states the procedure. It names each
+# record as a path in a code span, and it never links into one.
 exclude_docs: |
   /specs/
   /audit/
   /requirements.txt
+  /mutation_reports/
+  /mutation_settlements/
 
 # FR-documentation-5. A broken link and a broken anchor each reach `warn`, and `strict`
 # above turns each warning into a failed build.
@@ -177,6 +209,10 @@ nav:
       - Packet throughput: throughput.md
       - Implementation notes: implementation-notes.md
       - Parity with the port: parity.md
+      # #92 added this entry under FR-mutation-16. It sits last of the engineering pages,
+      # because a reader reaches the test method after every question about the output.
+      # The license page stays last of the section.
+      - Mutation sweep: mutation_sweep.md
       - License: licensing.md
   # #86 owns every entry between this line and the `Reference` marker below.
   #

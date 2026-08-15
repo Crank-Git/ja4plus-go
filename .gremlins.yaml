@@ -1,0 +1,52 @@
+# The `gremlins` configuration of this repository. Epic 15 (#89) adds it, and #90 built it.
+#
+# `gremlins` reads this file from the current directory, and then from the module root.
+# Verified against <https://gremlins.dev/latest/usage/configuration/>, retrieved 2026-08-14.
+#
+# This file states no tool version, because the documented schema holds no version key.
+# `GREMLINS_VERSION` in the `Makefile` pins the version, and FR-mutation-2 permits either
+# place.
+
+unleash:
+  # `gremlins` measures the test suite once, and it multiplies that measurement by this
+  # coefficient to reach the timeout of one mutation. The measurement reads a `go test` run
+  # that the Go build cache serves, so it collapses to the cache-hit time.
+  #
+  # The measurement on 2026-08-14, at `gremlins` v0.6.0, on `internal/dbcache`: coverage
+  # gathering reported `done in 66.799333ms`, and all 16 mutations reported `TIMED OUT`. The
+  # default coefficient is 3, so the timeout of one mutation was about 200 milliseconds. That
+  # figure is below the startup cost of one `go test` process.
+  #
+  # The coefficient sweep of 2026-08-14 measured the value that settles each package.
+  #
+  #   | Path                | 10       | 30       | 60       | 120      | 240      |
+  #   |---------------------|----------|----------|----------|----------|----------|
+  #   | `./internal/dbcache`| 15 timed | 0 timed  | 0 timed  | 0 timed  | not run  |
+  #   | `./ja4db`           | 22 timed | 4 timed  | 4 timed  | 0 timed  | 0 timed  |
+  #
+  # `./ja4db` needs 120, and 240 reports the same verdicts as 120. So 120 is the lowest
+  # value that this repository settles at, and a higher value buys nothing.
+  #
+  # A generous coefficient costs nothing on a mutation that does not hang. The timeout bounds
+  # the run, and it never extends one.
+  timeout-coefficient: 120
+
+  # `gremlins unleash <path>` reads the whole directory tree under the path, and never one
+  # package. The measurement on 2026-08-14 records the recursion: `./internal` reported 799
+  # runnable mutations, and `./internal/parser` alone reported 720 of them.
+  #
+  # So `make mutate` names `.` and this list holds the two trees back.
+  #
+  # `docs/specs/features/15-mutation-sweep.md` `## Out of scope` states the reason for the
+  # first one, and this quotation is verbatim:
+  #
+  #   Sweeping `cmd/ja4plus`. The command-line program is covered by the integration test, and
+  #   a sweep there measures the test harness more than the program.
+  #
+  # `examples/` holds one program for each documented pattern, and no test reaches it. A
+  # sweep there reports every mutation as `NOT COVERED`, which measures nothing.
+  #
+  # The regexp reads a path relative to the module root.
+  exclude-files:
+    - '^cmd/'
+    - '^examples/'

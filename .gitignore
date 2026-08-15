@@ -1,6 +1,10 @@
 # Build output
 bin/
 dist/
+# `go build ./internal/mutationreport` writes the binary of that main package into the
+# current directory. `go build ./...` writes none, so the gate of `CLAUDE.md` never produces
+# this file and a hand-run build does.
+/mutationreport
 
 # The linter cache. `make lint` holds one for each checkout, so a cached issue never
 # carries a path into another checkout. See #257.

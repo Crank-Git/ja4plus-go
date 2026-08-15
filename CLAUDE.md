@@ -100,7 +100,7 @@ rule.
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
-| `make mutate` | **Not built yet.** #90 adds the target, under Epic #89. It runs the mutation sweep over the named package set. Slow. Gates nothing. |
+| `make mutate` | Run the mutation sweep with `gremlins` over the named package set. #90 added the target on 2026-08-14, under Epic #89. It installs the pinned tool first. Slow. Gates nothing. |
 | `make prerelease` | Run the pre-release cases behind the `prerelease` build tag. Epic #94 built the target and the cases on 2026-08-14. It prints one summary line for each case, and `prereleaseCases` in `prerelease_registry_test.go` states which case proves its requirement today. |
 | `make docs` | Build the documentation site with `mkdocs build --strict`. #84 added the target on 2026-08-14. Install the pins of `docs/requirements.txt` first, or override the generator: `make docs MKDOCS=.venv/bin/mkdocs`. |
 
@@ -116,15 +116,71 @@ that the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` and
 **One run of `make fuzz` takes about 8 minutes**, because it fuzzes 15 targets in turn for
 30 seconds each.
 
-**The `Makefile` defines every row of this table except the `mutate` row.** An absent
-target is work a later issue does, and never a broken target.
+**`make mutate` sweeps every package of the module except `cmd/ja4plus` and `examples/`.**
+That set is the named set of FR-mutation-4, and #90 concluded it from a measurement rather
+than from an assumption. `PKG` in the `Makefile` holds the set, and the `exclude-files` list
+of `.gremlins.yaml` holds the two exclusions.
+`docs/specs/features/15-mutation-sweep.md` `## Out of scope` declines `cmd/ja4plus`, and no
+test reaches `examples/`.
 
-- `make mutate` exits 2. It prints one line that names the target:
-  ``make: *** No rule to make target `mutate'.  Stop.``
+**The set holds 1675 mutations**, measured on 2026-08-14 with `gremlins` v0.6.0: 1473
+runnable and 202 not covered. **One run of the whole set takes about 20 minutes on a 10-core
+machine, and that figure adds the four rows below.** It is an extrapolation, and never a
+measurement. Sweep one package instead with `make mutate PKG=./internal/parser`.
+
+| Path | Mutations | Wall clock | Killed | Lived | Not covered | Timed out |
+|---|---|---|---|---|---|---|
+| `./internal/dbcache` | 16 | 3s | 15 | 1 | 0 | 0 |
+| `./ja4db` | 31 | 16s | 26 | 1 | 4 | 0 |
+| `./internal/parser` | 882 | 2m47s | 493 | 223 | 162 | 4 |
+| The root package | 663 | 15m24s | 484 | 162 | 16 | 1 |
+
+**Each `Wall clock` cell names one run, and it names no property of the swept path.** A
+second sweep of `./internal/parser` ran on 2026-08-14, and it reports 289 s.
+`docs/mutation_reports/2026-08-14-internal-parser.md` holds that figure, and the row above
+holds 2m47s. **Both figures are wall clock, and neither one is a transcription defect.** One
+run of `gremlins` v0.6.0 reports one elapsed value to the console and to the JSON, so two
+values name two runs. The four verdict counts agree, because the mutation set and its
+verdicts are deterministic. Wall clock is not deterministic, because the machine load moves
+it. The `mutate` comment of the `Makefile` holds the reading, and round 59 of the
+`## Changelog` of `docs/specs/spec.md` records it.
+
+**The four rows hold 1592 mutations, and the set holds 1675.** The difference of 83 is
+`internal/capture` at 29, `internal/keylog` at 45 and `internal/fuzzprop` at 9, each
+measured with `gremlins unleash --dry-run` on 2026-08-14. **No sweep of those three has
+run**, so no row above names one.
+
+**The root package costs 1.39 seconds for each mutation, and `internal/parser` costs between
+0.19 and 0.33 seconds.** That is a ratio of between about four and about seven, and the suite
+is the reason rather than the file count. The two `internal/parser` figures divide the two
+measured runs above by 882. **The conformance suite does not reach the sweep**, because it
+sits behind the `conformance` build tag and `.gremlins.yaml` sets no `tags` key.
+
+**`gremlins` reports a false `TIMED OUT` at its default timeout coefficient of 3.** It
+estimates the timeout of one mutation from a `go test` run. The Go build cache serves that
+run, so the estimate collapses to the cache-hit time. All 16 mutations of `internal/dbcache`
+reported `TIMED OUT`, measured on 2026-08-14. `.gremlins.yaml` sets the coefficient to 120,
+which is the lowest value that settles every measured package.
+
+**A `gremlins` binary reports no version of its own.** `go install` writes no version stamp,
+so the installed v0.6.0 binary prints `gremlins version dev darwin/arm64`, measured on
+2026-08-14. So `make mutate` installs the pin instead of checking the PATH, and it differs
+from `make vuln` for that reason.
+
+**The `Makefile` now defines every row of this table.** Epic #89 built `mutate` and Epic #94
+built `prerelease`, both on 2026-08-14, and this table names no absent target today. **The two
+epics ran at the same time**, so each branch held one target and read the other as absent. The
+merge of `dev` into `epic/94-prerelease-validation` is where the two readings met.
+
 - **`make prerelease` needs the `prerelease` entry of the `.PHONY` line.** #95 added the
   target on 2026-08-14, and no directory of that name exists today. A later commit that
   adds one would stop the target, and the entry holds the recipe against that.
   `TestTheMakefileRunsThePrereleaseCases` in `prerelease_registry_test.go` holds the entry.
+- **`make mutate` needs the `mutate` entry of the `.PHONY` line, and the reason differs
+  from the `docs` reason below.** The repository root holds no path named `mutate`, so the
+  trap that `docs/` produces does not apply today. The entry guards a later change that
+  adds such a path. `TestTheMutateTargetIsPhony` in `mutation_sweep_test.go` holds the
+  entry, and it also holds the reading: it fails when a path named `mutate` appears.
 - **`make docs` needs the `docs` entry of the `.PHONY` line, and that entry is not
   decoration.** `docs/` is a directory of this repository, so make reads the bare target
   name as that directory and finds it already up to date. Without the `.PHONY` entry it
