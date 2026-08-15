@@ -719,6 +719,13 @@ six per-stream entries records the JA4S key list as empty for every one.
 | `ssh2.pcapng` | 12 | present | none |
 | `browsers-x509.pcapng` | 0 | present | none |
 
+**#650 measured a candidate change on 2026-08-15, and the measurement falsifies the
+sentence below.** The bound repair closes 0 per-packet deviations and it opens 24, because
+the library publishes the value on the frame that carries the ServerHello and the Wireshark
+reference publishes it on the frame that completes the record.
+**`docs/audit/ja4s-segment-span-measurement.md` holds the measurement**, and it states that
+no candidate change reaches a positive net.
+
 **So a candidate change closes 12 per-packet deviations and opens about 12 per-stream
 deviations**, one JA4S key and one JA4S_r key for each of the 6 streams. **So the cause closes about nothing without a register
 entry**, and the shape is the shape of cause 4 of
@@ -744,6 +751,11 @@ count depends on how the conformance suite keys a per-stream JA4S value that the
   entry names one of the 6 streams above.**
 - **The cost is one reassembler and about 12 register entries.** The library already holds a
   TCP reassembler for JA4H and for JA4X, so the work reuses it.
+  **#650 measured this sentence on 2026-08-15, and it reads two costs into one.** The
+  ServerHello stays whole in the first TCP segment, so no reassembler reaches the value.
+  The record length is the field that declines the hello. **A reassembler buys the frame
+  the reference names, and it buys no value.**
+  `docs/audit/ja4s-segment-span-measurement.md` holds the measurement.
 
 ---
 
@@ -811,7 +823,9 @@ reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and t
   or `x509ce`. `python/ja4.py:430-431` reads the first element of a handshake type list, and
   that element is `2`. **The two facts do not compose into one reason**, and this page runs
   the reference never.
-- **The exact per-stream cost of cause 6.** The page states about 12, and it builds no
+- **The exact per-stream cost of cause 6. #650 measured it on 2026-08-15, and it is 12.**
+  `docs/audit/ja4s-segment-span-measurement.md` holds the measurement. The sentence below
+  states what this page did, and it no longer states an open question. The page states about 12, and it builds no
   candidate change.
 - **Whether cause 4 moves the value of a register entry.** The `## Cause 4` section names the
   entry and the risk, and no measurement settles it. **The cause 4 ruling of 2026-08-14 needs no

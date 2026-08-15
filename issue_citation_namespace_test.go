@@ -221,7 +221,13 @@ import (
 // 639.** Epic 15 and Epic 16 each ran a round on 2026-08-14, and each round re-measured the
 // mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
 // takes the union of the two histories and one constant.
-const issueCitationHighWaterMark = 639
+//
+// **#650 re-measured the mark on 2026-08-15 and it read 660.**
+// `docs/audit/ja4s-segment-span-measurement.md` cites #650, which is the issue that carries
+// the JA4S segment span measurement, and 650 sits above the inherited mark of 639. **A member
+// pays this cost before its round does**, because the member writes the page that cites its
+// own number.
+const issueCitationHighWaterMark = 660
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
