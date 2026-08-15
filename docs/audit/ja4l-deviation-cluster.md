@@ -609,6 +609,11 @@ moved the QUIC `JA4L-S`
 emission to the point D frame, and two `JA4LS` rows joined the two `JA4L` rows. **This
 section states the reading that #443 asked for, and it decides no value.**
 
+**The two counts above name the rows where this mechanism empties a value, and they name no
+other row.** `### The remainder of tls3.pcapng/153/JA4L.1` below holds one more row, where the
+mechanism moves a value instead. **Neither count above moves for it**, because cause 3 already
+counts that row in the 177. `## The whole attribution` below states the reconciliation.
+
 ### The measurement of this section
 
 **Every number of this section comes from one run of `make conformance` on
