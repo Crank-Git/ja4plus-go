@@ -10,14 +10,27 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Every measurement in this section names the base of the run that produced it. **The
 enumeration below states the count that the register holds today under each ruling.** It
 never states the count that the issue first wrote, so the enumeration is a statement of the
-present and never a history. Issue #42 put 250
+present and never a history. Issue #42 put 254
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
 put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 142 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
-issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, and issue #127 put 1
+issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, and issue #127 put 150
 more.
+Issue #682 wrote 149 of the 150 entries of the ruling #127 count on 2026-08-15 UTC, and
+issue #652 wrote the 150th. **That 150 counts register entries.** The maintainer kept
+ruling #127 on that day.
+The library therefore writes two parts on a TCP connection, and the Wireshark dissector
+writes three parts on the `timestamp_F` frame. **The round enumerated the set from one
+`make conformance` run, and never from a document.** The reason is that
+`docs/audit/conformance.md` truncates each deviation group to three rows.
+`docs/audit/ja4l-deviation-cluster.md` `## Cause 1 — the emission frame and part c on a TCP
+connection` holds the reading for all 149. **The cause 1 enumeration returned 150 per-packet rows, and
+that 150 counts a different set from the 150 register entries above.** 149 of those rows
+carry an entry, and the 150th carries none. That row is `tls3.pcapng/153/JA4L.1`, no ruling explains its
+difference, and issue #692 holds it. **A row that no ruling explains stays unaccepted**,
+because an entry records a ruling.
 Issue #229 wrote the 2 entries of its own count. The maintainer ruled on 2026-08-15 that
 this library writes the observed time-to-live, and the per-packet vector set writes `0` on
 a second QUIC connection over one four-tuple.
@@ -28,7 +41,13 @@ reference publishes none for the same six. **The same ruling kept the source ran
 `.claude/rules/rulings.md` unchanged**, so this library keeps its own record-length bound and
 declines the bound that `Crank-Git/ja4plus#151` gave the port.
 `docs/audit/ja4s-segment-span-measurement.md` holds the measurement that both halves rest on.
-Issue #652 wrote the 1 entry of the ruling #127 count on 2026-08-15. The maintainer kept
+Issue #683 wrote 4 of the 254 entries of the ruling #42 count on 2026-08-15 UTC. The
+maintainer confirmed ruling #42 on that day for the four per-stream JA4 comparisons of
+`chrome-cloudflare-quic-with-secrets.pcapng/0:50280`, at comment 5300957840 of #441. The
+FoxIO Python vector for that stream holds `JA4L-S` and `JA4L-C` alone, so it publishes no
+JA4 value to compare against. **The four entries carry ruling #42 and never a new number**,
+because ruling #42 already declines this cause for 250 other comparisons.
+Issue #652 wrote 1 of the 150 entries of the ruling #127 count on 2026-08-15. The maintainer kept
 ruling #127 on that day, so the library writes two parts on a TCP connection. It therefore
 produces no value on frame 128 of `browsers-x509.pcapng`.
 `docs/audit/ja4l-deviation-cluster.md` `## Cause 7 — the seconds component of the Wireshark
@@ -55,11 +74,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1754 matches, 247
-deviations, 605 accepted deviations and 637 register keys. The run also reports 175 unaccepted
+reports 1754 matches, 94
+deviations, 758 accepted deviations and 790 register keys. The run also reports 175 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 605 and
-32 add up to the 637 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 758 and
+32 add up to the 790 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
@@ -472,6 +491,33 @@ that the interface declares.
 
 ### Fixed
 
+- **The library now reads a header block terminator that mixes the two line endings, and it
+  read two fixed byte groups before.** The maintainer ruled the pattern on 2026-08-13 UTC, in
+  the port, and re-confirmed it on 2026-08-15 UTC at #298. `Crank-Git/ja4plus#614` and
+  `Crank-Git/ja4plus#604` hold the Python half. **The terminator is one line ending followed
+  by another**, and `headerBlockTerminator` of `internal/parser/http.go` reads that pattern
+  with a byte scan. It returns the first line ending that another line ending follows.
+  **#298 declined the regular expression `(?:\r\n|\n)(?:\r\n|\n)` on cost**, and the doc
+  comment of that function holds the benchmark. **A caller of `v0.3.0` who upgrades reads
+  two changes.** A request whose header
+  block ends `\n\r\n` now reaches a JA4H value, and it reached none before, because neither
+  `\r\n\r\n` nor `\n\n` matched that terminator. A request whose header block ends `\r\n\n`
+  now matches at the carriage return, and it matched one byte later before. **The second
+  change removes a coincidence.** `\n\n` is a substring of `\r\n\n`, so the old search left
+  the carriage return on the last header line and the value trim removed it. A later change
+  to the value handling would have broken that path without a test to report it. **The change
+  moves no measured fingerprint value**, because no capture of the FoxIO corpus holds a mixed
+  terminator. The run reports 1754 matches, 247 deviations, 605 accepted deviations and 637
+  register keys before the change, and the same four figures after it, measured on
+  2026-08-15 UTC. **The body boundary moves on one shape, and that shape mixes the two line
+  endings.** A request whose last header line ends with one line feed, and which carries two
+  empty lines, now starts its body at the second empty line. The two literals read `\r\n\r\n`
+  across both empty lines, so they started the body two bytes late. **A differential run of
+  3000000 random texts moved the body start on 75302 of them, and every one of those mixes
+  the two line endings.** No text of one line ending moved.
+  `TestHeaderBlockTerminatorEndsTheBlockAtTheFirstEmptyLine` holds that shape. **The parity
+  difference this change opens is latent and never measured**, and it closes when the port
+  half lands.
 - **The library now reads the TCP header that an ICMP error message quotes, and it read the
   outer layer list alone before.** The maintainer ruled split T1 on 2026-08-14, at #484, and
   #494 built it. `QuotedTCPHeader` of `internal/parser/icmp_quoted.go` reads the ICMP payload
