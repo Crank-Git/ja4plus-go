@@ -55,7 +55,13 @@ of that register name a change to this repository. Read
   that range once for both workflows.
 - `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
   `github.com/google/gopacket` on 2026-08-13, and #438 carried it.
-- `golang.org/x/crypto` for SSH and hashing.
+- **`golang.org/x/crypto` for one package, and that package is `hkdf`.**
+  `internal/parser/quic.go` imports `golang.org/x/crypto/hkdf` for QUIC key derivation, and
+  no other file of the tree imports the module, measured on 2026-08-15 UTC. **This library
+  decodes SSH in `internal/parser/`, and it imports `golang.org/x/crypto/ssh` nowhere.** So
+  an `x/crypto` bump reaches no JA4SSH value and no JA4 value. **The bullet read
+  `golang.org/x/crypto` for SSH and hashing until batch #725**, and that sentence made every
+  `x/crypto` bump read as a JA4SSH risk.
 - **The default build holds no cgo, and it cross-compiles to five platforms.** Every
   released binary is built with `CGO_ENABLED=0`.
 - **One build path uses cgo, and the `libpcap` build tag selects it.** It exists so that
