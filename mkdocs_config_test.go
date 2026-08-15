@@ -182,10 +182,10 @@ func TestTheMakefileBuildsTheSite(t *testing.T) {
 // excludedDocumentationDirs names every directory of `docs/` that `exclude_docs` of
 // `mkdocs.yml` drops from the built site.
 //
-// One list serves every walker of `docs/`, so a fifth exclusion reaches each guard at once.
-// #91 added `mutation_reports` under FR-mutation-6, and #92 added `mutation_settlements`
-// under FR-mutation-13.
-var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports", "mutation_settlements"}
+// One list serves every walker of `docs/`, so a sixth exclusion reaches each guard at once.
+// #91 added `mutation_reports` under FR-mutation-6, #92 added `mutation_settlements`
+// under FR-mutation-13, and #101 added `api` under FR-release-1.
+var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports", "mutation_settlements", "api"}
 
 // TestEveryExcludedDirectoryReachesTheSiteConfig binds the list above to `exclude_docs`.
 //
