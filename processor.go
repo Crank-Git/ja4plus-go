@@ -59,8 +59,9 @@ type ProcessorOption func(*Processor)
 // The Processor holds the pointer the caller supplies, and it writes nothing to the key
 // log. A fingerprinter that needs no secret ignores it.
 // A caller that supplies nil gives the Processor no key log.
-// The doc comment of KeyLog states that the value does not change after construction, so a
-// sharded caller gives one KeyLog to every Processor and the packet path takes no lock.
+// The doc comment of KeyLog states that the value does not change after construction.
+// So a sharded caller gives one KeyLog to every Processor, and the packet path takes no
+// lock.
 func WithKeyLog(keyLog *KeyLog) ProcessorOption {
 	return func(p *Processor) {
 		p.keyLog = keyLog

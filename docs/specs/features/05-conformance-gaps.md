@@ -94,9 +94,14 @@ exported function accepts one.** Comment 5288776881 of #441, dated 2026-08-14, s
 API, so a `KeyLog` parameter needs a ruling of the maintainer.**
 
 **The maintainer ruled that question on 2026-08-15 UTC, and comment 5299963400 of issue #649
-records the ruling.** `docs/audit/key-material-route.md` holds the reading behind it. The
-ruling accepts candidate 1, form 1b: a `Processor` takes a functional option at
-construction. **So FR-gaps-17c now states one route rather than no route**, and issue #649
+records the ruling.** The ruling accepts candidate 1, form 1b: a `Processor` takes a
+functional option at construction.
+
+**Issue #649 holds the reading behind the ruling, on the page `docs/audit/key-material-route.md`.**
+That page reaches `dev` when batch #656 merges, and it is not in this tree yet. A reader
+before that merge reads the page on the branch `batch/656-epic-5b-readings`.
+
+**So FR-gaps-17c now states one route rather than no route**, and issue #649
 is its reversal path. A reversal removes the three names below and restores the earlier
 requirement.
 
@@ -122,8 +127,8 @@ that fact.
 
 **The concurrency contract is unchanged.** The constructor writes the key log once, and
 every later reader reads it. The doc comment of `KeyLog` in `types.go` states that the value
-does not change after construction, so a sharded caller gives one `KeyLog` to every
-`Processor` and the packet path takes no lock. **No setter writes the field on a live
+does not change after construction. So a sharded caller gives one `KeyLog` to every
+`Processor`, and the packet path takes no lock. **No setter writes the field on a live
 `Processor`.**
 
 **No fingerprint value moves under this ruling**, because no fingerprinter reads the key log

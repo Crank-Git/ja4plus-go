@@ -16,7 +16,7 @@ import (
 // These two tests hold the FR-gaps-17 amendment of issue #171.
 //
 // The requirement held one sentence that states two facts. types.go holds eight exported
-// names for a key log, and no exported function accepts a KeyLog. A reader who reads the
+// names for a key log, and no exported function accepted a KeyLog. A reader who reads the
 // first fact alone expects a fingerprint that a secret decrypts. The library produces none.
 //
 // The maintainer moved the second boundary on 2026-08-15 UTC, and comment 5299963400 of
