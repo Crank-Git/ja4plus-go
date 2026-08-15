@@ -15,6 +15,7 @@ package ja4plus
 // reaches the module graph of every consumer of `v1.0.0`.
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/build"
@@ -254,19 +255,56 @@ func apiReceiverName(fset *token.FileSet, recv *ast.FieldList) string {
 //
 // A struct and an interface record as the bare word, because the record names each member
 // on a row of its own. Every other type records its declared right side.
+//
+// The result opens with the type parameter list when the type declares one. A change from
+// `[T any]` to `[T comparable]` breaks a caller that instantiates the type, so a signature
+// that drops the list hides a breaking change.
 func apiTypeSignature(fset *token.FileSet, spec *ast.TypeSpec) string {
+	parameters := renderAPITypeParams(fset, spec.TypeParams)
+
 	if spec.Assign.IsValid() {
-		return "= " + renderAPINode(fset, spec.Type)
+		return parameters + "= " + renderAPINode(fset, spec.Type)
 	}
 
 	switch spec.Type.(type) {
 	case *ast.StructType:
-		return "struct"
+		return parameters + "struct"
 	case *ast.InterfaceType:
-		return "interface"
+		return parameters + "interface"
 	}
 
-	return renderAPINode(fset, spec.Type)
+	return parameters + renderAPINode(fset, spec.Type)
+}
+
+// renderAPITypeParams returns the type parameter list of a type declaration, and it
+// returns the empty string when the declaration states none.
+//
+// `go/printer` prints no bare `*ast.FieldList`, so this function joins the fields itself.
+// A result that holds a list ends with one space, so a caller writes it as a prefix.
+func renderAPITypeParams(fset *token.FileSet, params *ast.FieldList) string {
+	if params == nil || len(params.List) == 0 {
+		return ""
+	}
+
+	fields := make([]string, 0, len(params.List))
+
+	for _, field := range params.List {
+		names := make([]string, 0, len(field.Names))
+		for _, name := range field.Names {
+			names = append(names, name.Name)
+		}
+
+		constraint := renderAPINode(fset, field.Type)
+		if len(names) == 0 {
+			fields = append(fields, constraint)
+
+			continue
+		}
+
+		fields = append(fields, strings.Join(names, ", ")+" "+constraint)
+	}
+
+	return "[" + strings.Join(fields, ", ") + "] "
 }
 
 // apiValueSignature returns the declared type of one constant or variable, or its value
@@ -296,6 +334,48 @@ func renderAPINode(fset *token.FileSet, node ast.Node) string {
 	}
 
 	return strings.Join(strings.Fields(out.String()), " ")
+}
+
+// apiCellEscape returns the record-cell form of a signature.
+//
+// A markdown table splits a row on the pipe, so a signature that holds one would split its
+// own row. A union type constraint holds one: `func[T int | string](v T) T` is a legal
+// signature of this module. So the record writes `\|`, and `apiCellUnescape` reverses it.
+func apiCellEscape(signature string) string {
+	return strings.ReplaceAll(signature, "|", `\|`)
+}
+
+// apiCellUnescape returns the signature that a record cell holds.
+func apiCellUnescape(cell string) string {
+	return strings.ReplaceAll(cell, `\|`, "|")
+}
+
+// apiSplitRow returns the cells of one record row.
+//
+// It splits on an unescaped pipe alone, so a signature that holds `\|` stays in one cell.
+func apiSplitRow(line string) []string {
+	const placeholder = "\x00"
+
+	guarded := strings.ReplaceAll(line, `\|`, placeholder)
+
+	cells := strings.Split(strings.Trim(guarded, "|"), "|")
+	for index, cell := range cells {
+		cells[index] = strings.TrimSpace(strings.ReplaceAll(cell, placeholder, `\|`))
+	}
+
+	return cells
+}
+
+// apiIsAlignmentRow reports whether the cell is the alignment cell of a markdown table.
+//
+// A table writes the alignment with a dash, and it may write a colon on either side. Both
+// forms are alignment, and neither one is a record.
+func apiIsAlignmentRow(cell string) bool {
+	if cell == "" {
+		return false
+	}
+
+	return strings.Trim(cell, "-: ") == ""
 }
 
 // measureAPI returns the exported surface of one published package.
@@ -343,26 +423,22 @@ func parseAPIRecordBlock(t *testing.T, block string, importPath string) []apiEnt
 			continue
 		}
 
-		cells := strings.Split(strings.Trim(line, "|"), "|")
+		cells := apiSplitRow(line)
 		if len(cells) != 4 {
-			t.Errorf("%s block %s holds a row of %d cells, and a row holds 4: %s",
+			t.Errorf("%s block %s holds a row of %d cells, and a row holds 4. Escape a pipe of a signature as \\|: %s",
 				apiRecordFile, importPath, len(cells), line)
 
 			continue
 		}
 
-		for index, cell := range cells {
-			cells[index] = strings.TrimSpace(cell)
-		}
-
-		if cells[0] == "Kind" || strings.HasPrefix(cells[0], "---") {
+		if cells[0] == "Kind" || apiIsAlignmentRow(cells[0]) {
 			continue
 		}
 
 		entries = append(entries, apiEntry{
 			Kind:      strings.Trim(cells[0], "`"),
 			Name:      strings.Trim(cells[1], "`"),
-			Signature: strings.Trim(cells[2], "`"),
+			Signature: apiCellUnescape(strings.Trim(cells[2], "`")),
 			Sentence:  cells[3],
 		})
 	}
@@ -388,6 +464,46 @@ func readAPIRecord(t *testing.T) map[string][]apiEntry {
 	}
 
 	return recorded
+}
+
+// TestARecordCellCarriesASignatureThatHoldsAPipe holds the escape of the record format.
+//
+// A union type constraint holds a pipe, and a markdown table splits a row on the pipe. The
+// self-review of #101 measured the case: `func[T int | string](v T) T` split its own row
+// into five cells and failed a test that no API change had touched.
+func TestARecordCellCarriesASignatureThatHoldsAPipe(t *testing.T) {
+	const signature = "func[T int | string](v T) T"
+
+	row := "| `func` | `Union` | `" + apiCellEscape(signature) + "` | One sentence. |"
+
+	cells := apiSplitRow(row)
+	if len(cells) != 4 {
+		t.Fatalf("apiSplitRow returned %d cells for %s, and a row holds 4", len(cells), row)
+	}
+
+	if got := apiCellUnescape(strings.Trim(cells[2], "`")); got != signature {
+		t.Errorf("the record round trip returned %q, and the signature is %q", got, signature)
+	}
+}
+
+// TestTheRecordReaderSkipsEveryAlignmentRow holds the second row of a markdown table.
+//
+// A table writes the alignment with a dash, and a formatter may add a colon on either
+// side. An alignment row that reads as a record produces a row the package does not
+// export.
+func TestTheRecordReaderSkipsEveryAlignmentRow(t *testing.T) {
+	alignment := []string{"---", ":---", "---:", ":---:", " --- "}
+	for _, cell := range alignment {
+		if !apiIsAlignmentRow(strings.TrimSpace(cell)) {
+			t.Errorf("apiIsAlignmentRow(%q) reports false, and the cell is an alignment cell", cell)
+		}
+	}
+
+	for _, cell := range []string{"`type`", "Kind", "", "-a-"} {
+		if apiIsAlignmentRow(cell) {
+			t.Errorf("apiIsAlignmentRow(%q) reports true, and the cell is not an alignment cell", cell)
+		}
+	}
 }
 
 // TestTheApiRecordExists holds FR-release-1.
@@ -427,8 +543,9 @@ func TestTheApiRecordHoldsEveryExportedName(t *testing.T) {
 		for _, entry := range measured {
 			found, held := recordedByKey[entry.key()]
 			if !held {
-				t.Errorf("%s exports %s %s, and %s records no row for it. Add the row, or unexport the name.",
-					pkg.ImportPath, entry.Kind, entry.Name, apiRecordFile)
+				t.Errorf("%s exports %s %s, and %s records no row for it. Add this row, or unexport the name:\n| `%s` | `%s` | `%s` | <one sentence> |",
+					pkg.ImportPath, entry.Kind, entry.Name, apiRecordFile,
+					entry.Kind, entry.Name, apiCellEscape(entry.Signature))
 
 				continue
 			}
@@ -687,11 +804,29 @@ func TestEveryImportablePackageIsRecordedOrDeclined(t *testing.T) {
 
 		built, buildErr := build.Default.ImportDir(path, 0)
 		if buildErr != nil {
-			// The directory holds no Go file of this platform. It publishes no name.
+			var noGo *build.NoGoError
+			if !errors.As(buildErr, &noGo) {
+				// A conflicting package clause reaches this branch, and it is a defect
+				// rather than a platform mismatch. An earlier version swallowed it.
+				t.Errorf("read the package of %s: %v", path, buildErr)
+
+				return nil
+			}
+
+			// The directory builds no package on this platform. It still publishes a name
+			// on the platform its build constraints name, so a gated-out directory needs a
+			// decision rather than silence.
+			if !pathHoldsInternalElement(path) && dirHoldsGoFile(t, path) {
+				t.Errorf("%s holds a Go file that no build constraint of this platform selects, so this test cannot classify it. Add it to publishedPackages and to %s, or decline it.",
+					path, apiRecordFile)
+			}
+
 			return nil
 		}
 
 		if len(built.GoFiles) == 0 {
+			// The directory holds test files alone. A test file exports no name a consumer
+			// reaches.
 			return nil
 		}
 
@@ -709,6 +844,30 @@ func TestEveryImportablePackageIsRecordedOrDeclined(t *testing.T) {
 	if err != nil {
 		t.Fatalf("walk the module: %v", err)
 	}
+}
+
+// dirHoldsGoFile reports whether the directory holds a file that ends `.go`.
+//
+// `build.Default.ImportDir` returns a `*build.NoGoError` for a directory with no Go file
+// and for a directory whose every Go file the build constraints exclude. This function
+// separates the two.
+func dirHoldsGoFile(t *testing.T, dir string) bool {
+	t.Helper()
+
+	listed, err := os.ReadDir(dir)
+	if err != nil {
+		t.Errorf("read the directory %s: %v", dir, err)
+
+		return false
+	}
+
+	for _, entry := range listed {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".go") {
+			return true
+		}
+	}
+
+	return false
 }
 
 // pathHoldsInternalElement reports whether the `go` command bars an import of the path
