@@ -543,10 +543,14 @@ each one reads `the vector holds a value the library does not produce`.
 | `ssh2.pcapng/33/JA4L-S` | `16192_57` | (none) |
 | `tls3.pcapng/25/JA4L-S` | `3583_57` | (none) |
 
-**The two per-stream rows are exact analogues, and this page named one of them until
-2026-08-15.** #449 measured the pair, and batch #668 records both here.
-`### Where the library stands` above states the mechanism that empties each one: the
-connection fills no point D, so the library publishes no `JA4L-S` value for it.
+**This page named one of the two rows until 2026-08-15.** #449 measured the pair, and batch
+#668 records both here. `### Where the library stands` above states the mechanism that
+empties each one: the connection fills no point D, so the library publishes no `JA4L-S`
+value for it.
+
+**The two rows are not exact analogues, and #675 measured the difference on 2026-08-15.**
+`### The reading of #675` below states it. `ssh2.pcapng/33/JA4L-S` carries one difference
+from the reference, and `tls3.pcapng/25/JA4L-S` carries two.
 
 **`tls3.pcapng/25/JA4L-S` is one of the two per-stream deviations of the count of 177**, and
 `## The measurement` above names it. Cause 5 held it until 2026-08-15, and
@@ -691,6 +695,158 @@ produces the per-stream set and `python/ja4.py:403-404` drops every QUIC layer a
 first. **So the ruled rule cannot produce the per-stream difference**, and a decline there
 would hide the fall-through of `processUDP` behind a ruling that does not reach it.
 **Issue #675 holds that fall-through.**
+
+### The reading of #675
+
+**#675 read the two per-stream rows on 2026-08-15, and it names the fall-through.** It
+writes no register entry, and it changes no line of `ja4l.go`.
+
+**The measured yield is 2, and it is not attributed.** One run of `make conformance` on
+`issue/675-processudp-per-stream-ja4ls` reports 1754 matches, 247 deviations, 605 accepted
+deviations and 637 register keys. Two comparisons of the whole corpus read
+`the vector holds a value the library does not produce` for a per-stream `JA4L-S` key.
+**They are the two rows of `### The four rows` above.**
+
+#### The emission point is not the difference
+
+**The reference computes the QUIC server value inside its point D branch, and the library
+does the same.** `python/ja4.py:585-587` calls `calculate_ja4_latency` only when
+`cache_update` fills point `D`:
+
+```python
+                if x['packet_type'] == '2' and x['dstport'] == '443':
+                    if (cache_update(x, 'D', x['timestamp'], STREAM)):
+                        calculate_ja4_latency(x, 'quic', STREAM) 
+```
+
+**`calculate_ja4_latency` then writes the server value from point A and point B alone.**
+`python/ja4.py:154-157` reads no point C and no point D:
+
+```python
+            if 'B' in conn and 'A' in conn:
+                diff = epoch_diff(conn['A'], conn['B'])
+                ttl = conn['server_ttl']
+                cache_update(x, 'JA4L-S',  f"{diff}_{ttl}", STREAM)
+```
+
+**The client value needs point C and point D**, at `python/ja4.py:162-164`. So a connection
+that fills point D and no point C reaches one value and not two, which is what each vector
+holds.
+
+#### The fall-through: the library gates point D on point C
+
+**The reference fills point D on a client Handshake packet, and it reads no point C.**
+`python/ja4.py:585` tests the packet type and the destination port, and nothing else.
+
+**`processUDP` in `ja4l.go` fills point D only when point C is present.** Its point D branch
+opens with a test of `conn.timestamps["C"]`. A connection with no point C therefore reaches
+the end of the method, and it returns no result. **That test is the fall-through, and it is
+the whole cause of `ssh2.pcapng/33/JA4L-S`.**
+
+**#447 created these two rows, and the fall-through was harmless before it.** The library
+published the QUIC server value on the frame that fills point B until #447, so a connection
+that never fills point D still reached a value. `## Cause 2 — the JA4L-S emission frame on a
+QUIC connection` above records that behavior, and it names `16192_57_quic` on frame 1042 of
+`ssh2.pcapng`. **That is the same connection this section reads.** #447 moved the emission to
+the point D frame, and the point C gate then emptied both rows.
+
+**Point C stays empty for a lawful reason, and the reference agrees with the library
+there.** `IsQUICHandshakePacket` in `internal/parser/quic.go` reads `payload[0]`, so a
+coalesced datagram that leads with an Initial packet fills no point C. The reference reads
+the first QUIC packet alone as well, and neither vector holds a `JA4L-C` value for these two
+streams. **So `IsQUICHandshakePacket` empties point C, and it produces no deviation.** The
+ruling of 2026-08-15 keeps that behavior, and #675 does not change it.
+
+#### One cause, and one second difference on one row
+
+**A probe ran `JA4LFingerprinter` over each capture on 2026-08-15 and read the connection
+state.** Exactly one connection of each capture reaches point A and point B and no further.
+
+| Capture | Connection | Points | Server TTL | `(B-A)/2` | The vector holds |
+|---|---|---|---|---|---|
+| `ssh2.pcapng` | `142.251.32.74:443` and `172.16.225.48:51810` | A and B | 57 | 16192 | `16192_57` |
+| `tls3.pcapng` | `104.21.234.234:443` and `192.168.1.169:61884` | A and B | 57 | 3051 | `3583_57` |
+
+**`ssh2.pcapng/33` carries one difference.** The library already holds the value the vector
+states, and the fall-through above is the only reason it publishes nothing.
+
+**`tls3.pcapng/25` carries a second difference, and the fall-through does not reach it.**
+The library reads point B at the first server Initial packet, and the reference reads it at
+the Initial packet that carries the ServerHello. `python/ja4.py:580-581` states the
+reference rule:
+
+```python
+                if x['packet_type'] == '0' and 'type' in x and x['type'] == '2':
+                    cache_update(x, 'B', x['timestamp'], STREAM) 
+```
+
+**`python/common.py:101` names `B` among the fields the reference never updates**, so the
+first Initial packet that carries a ServerHello fixes the point.
+
+**The probe read the packet sequence of that connection.** The server sends two Initial
+packets, 6102 µs and 7166 µs after the client Initial packet. Half of each delay is 3051 and
+3583. **The library takes the first, and the vector holds the second.** So the reference
+reads a ServerHello in the second Initial packet and not in the first.
+
+**That second difference is a reference split, and it belongs to the maintainer.** The
+per-packet set holds `3051_57_quic` for `tls3.pcapng/297/JA4LS.1`, which is the first server
+Initial packet. So Wireshark reads the first packet and FoxIO's Python reads the ServerHello
+packet. `.claude/rules/rulings.md` `## Stop conditions` reserves that question. **Issue #686
+holds it, and #675 rules nothing.**
+
+#### The port does not carry this gap
+
+**The port publishes the QUIC server value at point B, and never at point D.**
+`ja4plus/fingerprinters/ja4l.py:547-550` of tag `v1.1.0` fills the point and returns the
+value in one step:
+
+```python
+    timestamps["B"] = now
+    conn["ttls"]["server"] = ttl
+    return "JA4L-S={}_{}_{}".format(
+        _one_way_latency(timestamps["A"], timestamps["B"]), ttl, QUIC_MARKER
+```
+
+**So the fall-through of `processUDP` has no analogue in the port.** The port reaches a
+server value on a connection that fills no point C and no point D, and this library does
+not.
+
+**The port also reads the reference point B rule.** `ja4plus/fingerprinters/ja4l.py:543` of
+tag `v1.1.0` returns until `server_hello_is_complete` holds, so the port takes the Initial
+packet that carries the ServerHello.
+
+**This section states what the port's code does, and it states no value the port produces.**
+`.claude/rules/parity.md` `## Never run the port from a test` bars a run.
+`ja4plus/fingerprinters/ja4l.py:538` of tag `v1.1.0` gates point B on a decryption, and this
+reading did not measure that decryption.
+
+**`### Does the port carry the same gap` above answers a different question.** It reads the
+coalesced datagram, and the port carries that reading. This section reads the emission point
+and the point B rule, and the port carries neither gap.
+
+#### Why no register entry cites ruling #449
+
+**Both sides of a per-stream comparison read the first QUIC packet of a datagram**, so the
+ruled rule produces no difference between them. A decline that cites #449 would state a
+false cause, and it would hide the fall-through above. **#675 therefore writes no entry in
+`testdata/deviations.json`.**
+
+#### A repair moves a fingerprint value
+
+**A repair of the fall-through is not a documentation change, and #675 builds none of it.**
+`.claude/rules/rulings.md` `## Stop conditions` and the body of #675 each bar it. Three
+values move.
+
+- **`ssh2.pcapng/33/JA4L-S` changes state, and it does not close.** The library would
+  publish `16192_57_quic`, and the vector holds `16192_57`. The row reads
+  `the two values differ` after the repair.
+- **`tls3.pcapng/25/JA4L-S` changes state, and the second difference survives.** The library
+  would publish `3051_57_quic`, and the vector holds `3583_57`.
+- **The per-packet set gains a `JA4LS.1` value on each of the two captures.** A point D that
+  fills without point C emits on a frame that publishes nothing today.
+
+**`CHANGELOG.md` holds a guard that reads the match count and the deviation count.**
+`### The count this cause closes` above records that the candidate of #449 reddened it.
 
 ## Cause 7 — the seconds component of the Wireshark delta
 
