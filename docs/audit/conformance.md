@@ -12,11 +12,11 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1754 |
-| Deviations | 267 |
-| Accepted deviations | 585 |
+| Deviations | 263 |
+| Accepted deviations | 589 |
 | Unaccepted uncovered values | 175 |
 | Accepted uncovered values | 32 |
-| Accepted comparisons | 617 |
+| Accepted comparisons | 621 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -27,7 +27,7 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
 | per-stream | 1116 | 44 | 281 | 147 | 14 |
-| per-packet | 638 | 223 | 304 | 28 | 18 |
+| per-packet | 638 | 219 | 308 | 28 | 18 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -173,10 +173,10 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `ssh2.pcapng` | per-packet | JA4H | 91 | `ssh2.pcapng/1025/JA4H.1` | the vector holds a value the library does not produce (accepted) | `ms11nn050000_2ba00a982a15_000000000000_000000000000` | (none) |
 | `ssh2.pcapng` | per-packet | JA4H | 91 | `ssh2.pcapng/1025/JA4H_r.1` | the vector holds a value the library does not produce (accepted) | `ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__` | (none) |
 | `ssh2.pcapng` | per-packet | JA4H | 91 | `ssh2.pcapng/1025/JA4H_ro.1` | the vector holds a value the library does not produce (accepted) | `ms11nn050000_HOST,MAN,MX,ST,USER-AGENT__` | (none) |
-| `ssh2.pcapng` | per-packet | JA4L | 21 | `ssh2.pcapng/1046/JA4L.1` | the vector holds a value the library does not produce | `279_128_quic` | (none) |
+| `ssh2.pcapng` | per-packet | JA4L | 21 | `ssh2.pcapng/1046/JA4L.1` | the vector holds a value the library does not produce (accepted) | `279_128_quic` | (none) |
 | `ssh2.pcapng` | per-packet | JA4L | 21 | `ssh2.pcapng/158/JA4L.1` | the library produces a value the vector does not hold | (none) | `56_128` |
 | `ssh2.pcapng` | per-packet | JA4L | 21 | `ssh2.pcapng/159/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `234_128` |
-| `ssh2.pcapng` | per-packet | JA4LS | 15 | `ssh2.pcapng/1046/JA4LS.1` | the vector holds a value the library does not produce | `16192_57_quic` | (none) |
+| `ssh2.pcapng` | per-packet | JA4LS | 15 | `ssh2.pcapng/1046/JA4LS.1` | the vector holds a value the library does not produce (accepted) | `16192_57_quic` | (none) |
 | `ssh2.pcapng` | per-packet | JA4LS | 15 | `ssh2.pcapng/157/JA4LS.1` | the library produces a value the vector does not hold | (none) | `55492_235` |
 | `ssh2.pcapng` | per-packet | JA4LS | 15 | `ssh2.pcapng/170/JA4LS.1` | the vector holds a value the library does not produce | `55492_235_57471` | (none) |
 | `ssh2.pcapng` | per-packet | JA4S | 4 | `ssh2.pcapng/237/JA4S.1` | the vector holds a value the library does not produce | `t120300_c030_09f674154ab3` | (none) |

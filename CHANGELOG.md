@@ -15,13 +15,17 @@ entries into `testdata/deviations.json`, and the register held no entry before t
 put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 142 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
-issue #503 put 1 more, issue #126 put 6 more, and issue #528 put 3 more.
+issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, and issue #449 put 4
+more.
 Issue #543 wrote the 6 entries of the ruling #126 count. The maintainer ruled on 2026-08-14
 that the SYN bit test of ruling #126 reaches JA4L, and `docs/specs/foxio/JA4L.md` R36 holds
 that ruling.
 Issue #528 wrote the 3 entries of its own count. The maintainer ruled on 2026-08-14 that
 JA4L point C is the last QUIC server handshake packet, and the per-packet vector set reads
 the first one.
+Issue #449 wrote the 4 entries of its own count. The maintainer ruled on 2026-08-15 that
+the library reads the first QUIC packet of a coalesced datagram, and the Wireshark
+dissector reads every packet of that datagram.
 Issue #527 wrote the last 2 entries of the ruling #285 count. The maintainer ruled on
 2026-08-14 that JA4H part b hashes an empty header list, and frame 4 of
 `gre-erspan-vxlan.pcap` then reached a value and revealed the #285 difference in its two
@@ -34,11 +38,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1754 matches, 267
-deviations, 585 accepted deviations and 617 register keys. The run also reports 175 unaccepted
+reports 1754 matches, 263
+deviations, 589 accepted deviations and 621 register keys. The run also reports 175 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 585 and
-32 add up to the 617 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 589 and
+32 add up to the 621 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**

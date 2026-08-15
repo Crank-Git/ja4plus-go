@@ -4934,5 +4934,37 @@
     "theirs": "83_128_quic",
     "ruling": "#528",
     "reason": "The maintainer ruled in issue #528 on 2026-08-14 that JA4L point C is the last QUIC server handshake packet, and `wireshark/source/packet-ja4.c:1426-1430` pins the first one."
+  },
+  {
+    "key": "ssh2.pcapng/1046/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "279_128_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, as `python/ja4.py:403-404` does."
+  },
+  {
+    "key": "ssh2.pcapng/1046/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "16192_57_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, as `python/ja4.py:403-404` does."
+  },
+  {
+    "key": "tls3.pcapng/297/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "271_128_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, as `python/ja4.py:403-404` does."
+  },
+  {
+    "key": "tls3.pcapng/297/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "3051_57_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, as `python/ja4.py:403-404` does."
   }
 ]
