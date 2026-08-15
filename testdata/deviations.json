@@ -5008,6 +5008,14 @@
     "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, and `wireshark/source/packet-ja4.c:1408` reads every packet."
   },
   {
+    "key": "tls3.pcapng/153/JA4L.1",
+    "capability": false,
+    "ours": "40_128_quic",
+    "theirs": "101_128_quic",
+    "ruling": "#449",
+    "reason": "Ruling #449 of 2026-08-15 reads the first QUIC packet of frame 149 alone, so the Handshake packet behind its Initial packet fills no point C, and ruling #528 of 2026-08-14 then moves point C to frame 151."
+  },
+  {
     "key": "tls3.pcapng/147/JA4L.1",
     "capability": false,
     "ours": "59_128_quic",
@@ -6318,5 +6326,733 @@
     "theirs": "36498_35_37058",
     "ruling": "#127",
     "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes three parts on this frame and this library writes two parts earlier."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4H",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20nn12enus_60f823d07c94_000000000000_000000000000",
+    "ruling": "#164",
+    "reason": "The library reads no HTTP/3 request, because a QPACK header block travels inside a protected QUIC packet that the library does not decode."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4H_ro",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20nn12enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_",
+    "ruling": "#164",
+    "reason": "The library reads no HTTP/3 request, because a QPACK header block travels inside a protected QUIC packet that the library does not decode."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4X.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "a373a9f83c6b_2bab15409345_7bf9a7bf7029",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because the QUIC handshake carries the compressed certificate of RFC 8879, and the library holds no decoder for it."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:57098/JA4X.2",
+    "capability": true,
+    "ours": "",
+    "theirs": "7d5dbb3783b4_a373a9f83c6b_44440d41940c",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because the QUIC handshake carries the compressed certificate of RFC 8879, and the library holds no decoder for it."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/12/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20nn12enus_60f823d07c94_000000000000_000000000000",
+    "ruling": "#164",
+    "reason": "The library reads no HTTP/3 request, because a QPACK header block travels inside a protected QUIC packet that the library does not decode."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/12/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20nn12enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language__",
+    "ruling": "#164",
+    "reason": "The library reads no HTTP/3 request, because a QPACK header block travels inside a protected QUIC packet that the library does not decode."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/12/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20nn12enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language__",
+    "ruling": "#164",
+    "reason": "The library reads no HTTP/3 request, because a QPACK header block travels inside a protected QUIC packet that the library does not decode."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn19enus_cb83bf27b7a9_c7713052b7e4_348cad68b6fb",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.10",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.11",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.12",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.13",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.14",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.15",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.2",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn13enus_8e33b43baae9_e43af2e8abfe_015bb0ca5596",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.3",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.4",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.5",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.6",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.7",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.8",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H.9",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn19enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-ch-ua-arch,sec-ch-ua-platform-version,sec-ch-ua-model,sec-ch-ua-bitness,sec-ch-ua-wow64,sec-ch-ua-full-version-list,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSIDCC=APoG2W80ReNqY71qp2I8hZk8BsmVmWk_ejh3LtS-HuboNyHI73aZAnaQhqTWkTHUiz45rCPv",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.10",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.11",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.12",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.13",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.14",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.15",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.2",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn13enus_upgrade-insecure-requests,user-agent,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SIDCC=APoG2W9RK6clrsnkAMIVg0rYm3am1HkEfg8dAPun6iMCVEt_0tkuDFLdjjiADNirDnahrwzeAQ,__Secure-1PSIDCC=APoG2W81CyAxqg4qdIqnAV5zkvXLzRfSMgA4mkydeWg9IeL-6814d1G7t95sNNSRTqgzkZji,__Secure-3PSIDCC=APoG2W_WfImJeKcVAH4O7muEBxWxwaZd-WwKWyO1PfcqO-vHYfyX0O9GCzXU0t6LNlvXg9w7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.3",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.4",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.5",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.6",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.7",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.8",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4H_ro.9",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4X.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "a373a9f83c6b_7022c563de38_2e3757343cb0",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4X.2",
+    "capability": true,
+    "ours": "",
+    "theirs": "a373a9f83c6b_a373a9f83c6b_5d71497f7704",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/0/JA4X.3",
+    "capability": true,
+    "ours": "",
+    "theirs": "7d5dbb3783b4_a373a9f83c6b_2fbee3f04f3b",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/10/JA4X.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "a373a9f83c6b_7022c563de38_2e3757343cb0",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/10/JA4X.2",
+    "capability": true,
+    "ours": "",
+    "theirs": "a373a9f83c6b_a373a9f83c6b_5d71497f7704",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/10/JA4X.3",
+    "capability": true,
+    "ours": "",
+    "theirs": "7d5dbb3783b4_a373a9f83c6b_2fbee3f04f3b",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/10/JA4X_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "550406,55040a,550403_550403_551d0f,551d25,551d13,551d0e,551d23,2b06010505070101,551d11,551d20,551d1f,2b06010401d679020402",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/10/JA4X_r.2",
+    "capability": true,
+    "ours": "",
+    "theirs": "550406,55040a,550403_550406,55040a,550403_551d0f,551d25,551d13,551d0e,551d23,2b06010505070101,551d1f,551d20",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/10/JA4X_r.3",
+    "capability": true,
+    "ours": "",
+    "theirs": "550406,55040a,55040b,550403_550406,55040a,550403_551d0f,551d13,551d0e,551d23,2b06010505070101,551d1f,551d20",
+    "ruling": "#492",
+    "reason": "The library reads no certificate, because a TLS 1.3 server writes the Certificate message inside a protected record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/15/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn19enus_cb83bf27b7a9_c7713052b7e4_348cad68b6fb",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/15/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn19enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-ch-ua-arch,sec-ch-ua-platform-version,sec-ch-ua-model,sec-ch-ua-bitness,sec-ch-ua-wow64,sec-ch-ua-full-version-list,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SSID,VISITOR_INFO1_LIVE,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W80ReNqY71qp2I8hZk8BsmVmWk_ejh3LtS-HuboNyHI73aZAnaQhqTWkTHUiz45rCPv,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/15/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn19enus_sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,upgrade-insecure-requests,user-agent,accept,sec-ch-ua-arch,sec-ch-ua-platform-version,sec-ch-ua-model,sec-ch-ua-bitness,sec-ch-ua-wow64,sec-ch-ua-full-version-list,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSIDCC=APoG2W80ReNqY71qp2I8hZk8BsmVmWk_ejh3LtS-HuboNyHI73aZAnaQhqTWkTHUiz45rCPv,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/27/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn13enus_8e33b43baae9_e43af2e8abfe_015bb0ca5596",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/27/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn13enus_upgrade-insecure-requests,user-agent,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W9RK6clrsnkAMIVg0rYm3am1HkEfg8dAPun6iMCVEt_0tkuDFLdjjiADNirDnahrwzeAQ,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W81CyAxqg4qdIqnAV5zkvXLzRfSMgA4mkydeWg9IeL-6814d1G7t95sNNSRTqgzkZji,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W_WfImJeKcVAH4O7muEBxWxwaZd-WwKWyO1PfcqO-vHYfyX0O9GCzXU0t6LNlvXg9w7,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/27/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cn13enus_upgrade-insecure-requests,user-agent,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-user,sec-fetch-dest,sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SIDCC=APoG2W9RK6clrsnkAMIVg0rYm3am1HkEfg8dAPun6iMCVEt_0tkuDFLdjjiADNirDnahrwzeAQ,__Secure-1PSIDCC=APoG2W81CyAxqg4qdIqnAV5zkvXLzRfSMgA4mkydeWg9IeL-6814d1G7t95sNNSRTqgzkZji,__Secure-3PSIDCC=APoG2W_WfImJeKcVAH4O7muEBxWxwaZd-WwKWyO1PfcqO-vHYfyX0O9GCzXU0t6LNlvXg9w7,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/37/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/37/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/37/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/38/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/38/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/38/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/39/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/39/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/39/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/43/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/43/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/43/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/47/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/47/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/47/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/78/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/78/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/78/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/79/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/79/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/79/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/80/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/80/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/80/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/81/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/81/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/81/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/82/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/82/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/82/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/83/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/83/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/83/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/84/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/84/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/84/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/85/JA4H.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/85/JA4H_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_APISID,HSID,LOGIN_INFO,SAPISID,SID,SIDCC,SSID,VISITOR_INFO1_LIVE,VISITOR_PRIVACY_METADATA,YSC,__Secure-1PAPISID,__Secure-1PSID,__Secure-1PSIDCC,__Secure-1PSIDTS,__Secure-3PAPISID,__Secure-3PSID,__Secure-3PSIDCC,__Secure-3PSIDTS_APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,HSID=AOF5tyazl7ZAKFyZY,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,SSID=AqFHwVpJHIK9H1lfZ,VISITOR_INFO1_LIVE=5CuVaSL9wDE,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,YSC=fmJvKZ98ZzM,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/85/JA4H_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "ge20cr18enus_sec-ch-ua,sec-ch-ua-mobile,user-agent,sec-ch-ua-arch,sec-ch-ua-full-version,sec-ch-ua-platform-version,sec-ch-ua-full-version-list,sec-ch-ua-bitness,sec-ch-ua-model,sec-ch-ua-wow64,sec-ch-ua-platform,accept,x-client-data,sec-fetch-site,sec-fetch-mode,sec-fetch-dest,accept-encoding,accept-language_VISITOR_INFO1_LIVE,LOGIN_INFO,SID,__Secure-1PSIDTS,__Secure-3PSIDTS,__Secure-1PSID,__Secure-3PSID,HSID,SSID,APISID,SAPISID,__Secure-1PAPISID,__Secure-3PAPISID,YSC,VISITOR_PRIVACY_METADATA,SIDCC,__Secure-1PSIDCC,__Secure-3PSIDCC_VISITOR_INFO1_LIVE=5CuVaSL9wDE,LOGIN_INFO=AFmmF2swRgIhAOltLQJUxXKDwpOeYd1REmFWIv-SZOX5_Mt3l8dB8TUyAiEAq9Hxidx9TIYr9Usi0QvZwoAY7hWdD0TrwUBJ-vDNhFw:QUQ3MjNmeHlXOVFoOGc1bWNjT2VKNnZPVlJzVktiM3pXc2ExNENfTkFqZzh6SEFIODBCWUo2d0hZU1preThtcjVjNW1oV1NXX2dXbV9laUsxN2gxNlRMZGM4QlVEMkJNVFR3UWpfbWtoSTdXSlVYUnRIekJiVmxXT0NLMklXRmxDSEZ1M2xDYkZjYld5NTg2azdMOTRuSFg0SEQ1NmhCcXJR,SID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3oyvm4YN6azbdj99oAEv6g.,__Secure-1PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-3PSIDTS=sidts-CjEB3e41hfRDIv3qE6IhIGL4regkBrZQzMepIsMI60XzPXMHjuDBFb8Jzi6e3Q_XguntEAA,__Secure-1PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK3ZH4QQAFpOKIred2Wu8QgA.,__Secure-3PSID=bAiSGpEASIdYDutJlWaOLSpT-A0OtSymfAqQHglc8wCyKvJK9erTPZ3XpDCPS4p8f5PnjQ.,HSID=AOF5tyazl7ZAKFyZY,SSID=AqFHwVpJHIK9H1lfZ,APISID=pEXHoyISD5STpHG9/AajENhWjLXnfNmbhI,SAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-1PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,__Secure-3PAPISID=_4e9wsQoZw81B655/A2zwmxsRQhzaXtNW0,YSC=fmJvKZ98ZzM,VISITOR_PRIVACY_METADATA=CgJDQRICGgA%3D,SIDCC=APoG2W_-Qsh5iRlLVDzN2OkIW0cAz_0yN7-rr-KCkBL1IXxKRG0CdQP6-ZkTxzy7D4H-DselDw,__Secure-1PSIDCC=APoG2W-ysomredm6Llr5hD-_lAbJvmQ7uTdjhZQS5pPUXf4Avu9tKLhKjZXAlGhtseKPB6dC,__Secure-3PSIDCC=APoG2W-TOlRHTYrgLGQiaBdvBhHjJ9JVpf6IZAguDfwj958a7ObWfITcu9ql2EdL0cxQ_e33,",
+    "ruling": "#529",
+    "reason": "The library reads no HTTP/2 request, because an HPACK header block travels inside a protected TLS record that the library does not decrypt."
   }
 ]
