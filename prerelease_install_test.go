@@ -363,10 +363,10 @@ func TestTheInstalledProgramFingerprintsACaptureFromThePublishedModule(t *testin
 			t.Errorf("FR-prerelease-7 cannot run %s --version: %v\n%s", program, err, version)
 		} else if printed := strings.TrimSpace(version); printed != "ja4plus "+prereleaseInstallVersion {
 			t.Errorf("FR-prerelease-7 fails at %s: the installed program prints %q, and the tag is %s.\n"+
-				"The program reads the `Version` variable of `cmd/ja4plus/main.go`, and "+
-				".github/workflows/release.yml:118 sets that variable with `-ldflags`. "+
-				"`go install` applies no link flag, so no install of any tag prints the tag. "+
-				"Issue #628 turns this case green.",
+				"`resolveVersion` in `cmd/ja4plus/main.go` reads the module version of the embedded "+
+				"build info when no link flag sets `Version`, and "+
+				".github/workflows/release.yml:118 sets that variable for a released binary. "+
+				"Issue #628 added that read on 2026-08-14, so a tag published before #628 prints `dev` here.",
 				prereleaseInstallVersion, printed, prereleaseInstallVersion)
 		}
 
