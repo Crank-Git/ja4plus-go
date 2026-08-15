@@ -1,6 +1,39 @@
 // Package ja4plus computes JA4+ network fingerprints from the packets that gopacket
 // decodes.
 //
+// # Methods
+//
+// This package implements eleven methods, and ten fingerprinters carry them.
+// JA4LFingerprinter writes both JA4L and JA4LS, so the count of fingerprinters is one
+// below the count of methods. Read the ten as a count of fingerprinters, and never as a
+// count of methods.
+//
+// The list below names each method and the input it reads.
+//
+//   - JA4 reads a TLS client hello. A TCP connection carries one, and a QUIC initial
+//     packet carries one.
+//   - JA4S reads a TLS server hello.
+//   - JA4H reads an HTTP request.
+//   - JA4X reads an X.509 certificate.
+//   - JA4SSH reads a window of SSH packets.
+//   - JA4T reads a TCP SYN packet.
+//   - JA4TS reads a TCP SYN-ACK packet.
+//   - JA4L reads the client timing of a TCP handshake, or of a QUIC exchange.
+//   - JA4LS reads the server timing of the same exchange.
+//   - JA4D reads a DHCP packet.
+//   - JA4D6 reads a DHCPv6 packet.
+//
+// The list above names what this package implements, and it names no FoxIO list. Three
+// FoxIO records at commit 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 name three different
+// sets of methods, so no single FoxIO record states the set above.
+// testdata/foxio.pin holds that commit.
+//
+// Processor holds the ten fingerprinters, and it gives every packet to each one. The list
+// above holds eleven rows, because JA4LFingerprinter carries two of them. A caller that
+// wants one method alone builds the fingerprinter that carries it. A
+// fingerprinter returns a non-fatal error, and it returns no panic, because every packet
+// is untrusted input.
+//
 // # Build toolchain
 //
 // The language version and the build toolchain answer two different questions, and this
