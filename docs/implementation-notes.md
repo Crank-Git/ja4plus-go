@@ -122,10 +122,15 @@ time. That is what makes the five-way build cheap.
 artifact holds the setting, and the default of the build machine decides nothing.
 `.goreleaser.yaml` states it in the build environment, and `release_cgo_test.go` guards it.
 
-**No workflow of this repository sets that variable.** The release workflow runs
-`go test -race`, and the race detector needs cgo. A workflow-level setting would stop that
-step before it reached the build, so `.goreleaser.yaml` owns the variable alone.
-`TestNoWorkflowSetsCgoEnabled` holds that property.
+**No workflow of this repository sets that variable as a workflow-level, job-level or
+step-level `env` key.** The release workflow runs `go test -race`, and the race detector
+needs cgo. Such a setting would stop that step before it reached the build, so
+`.goreleaser.yaml` owns the release build alone. `TestNoWorkflowSetsCgoEnabled` holds that
+property, and it reads every workflow rather than the release workflow alone.
+
+**One `run` line of `.github/workflows/ci.yml` still prefixes one `go build` command with
+`CGO_ENABLED=0`.** A shell prefix binds one command, so it reaches no other step of the
+job and it builds no release artifact. The guard permits it for that reason.
 
 **#583 measured a gap on 2026-08-14, and #105 closed it on 2026-08-15 UTC.** The release
 job ran on `ubuntu-latest`, so the `linux/amd64` build was native and it took the Go

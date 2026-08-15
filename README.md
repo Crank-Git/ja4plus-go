@@ -544,10 +544,12 @@ as numbered rules, and every ruling of this project cites one of them.
 - No cgo required for PCAP file analysis (uses pure Go `pcapgo`)
 - Every released binary is built with `CGO_ENABLED=0`. `.goreleaser.yaml` sets it in the
   build environment, and `release_cgo_test.go` guards it. **No workflow of this repository
-  sets that variable.** The release workflow runs `go test -race`, the race detector needs
-  cgo, and a workflow-level setting would stop that step before it reached the build.
-  `TestNoWorkflowSetsCgoEnabled` holds that property. #105 moved the setting on
-  2026-08-15 UTC.
+  sets that variable as a workflow-level, job-level or step-level `env` key.** The release
+  workflow runs `go test -race`, the race detector needs cgo, and such a setting would stop
+  that step before it reached the build. `TestNoWorkflowSetsCgoEnabled` holds that property.
+  **One `run` line of `.github/workflows/ci.yml` still prefixes one `go build` command with
+  `CGO_ENABLED=0`.** A shell prefix binds one command, so it reaches no other step and the
+  guard permits it. #105 moved the release setting on 2026-08-15 UTC.
 
 ## Development
 
