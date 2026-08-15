@@ -119,9 +119,19 @@ go: upgraded golang.org/x/net v0.30.0 => v0.39.0
 go: upgraded golang.org/x/sys v0.26.0 => v0.32.0
 ```
 
-**`golang.org/x/crypto` decodes the SSH handshake that JA4SSH reads**, so the upgrade is a
-second variable. **No fingerprint value moved under both changes together**, so this
+**`golang.org/x/crypto` reaches one package of this library, and that package is `hkdf`.**
+`internal/parser/quic.go` imports it for QUIC key derivation, and no file of the tree
+imports `golang.org/x/crypto/ssh`. **So the `x/crypto` upgrade is no second variable for a
+fingerprint value.** **No fingerprint value moved under both changes together**, so this
 measurement runs no attribution.
+
+**Batch #725 repaired the sentence above on 2026-08-15 UTC.** It read:
+
+> **`golang.org/x/crypto` decodes the SSH handshake that JA4SSH reads**, so the upgrade is a
+> second variable.
+
+**That sentence is false**, because this library decodes SSH in `internal/parser/`. The
+sentence made every `x/crypto` bump read as a JA4SSH risk.
 
 ### The exported surface keeps every name and every shape
 
@@ -592,9 +602,11 @@ go: upgraded golang.org/x/sys v0.26.0 => v0.32.0
 
 **The fork requires `golang.org/x/net@v0.39.0`, and that module requires
 `golang.org/x/crypto@v0.37.0`.** The command is `go mod graph`, and it reports
-`golang.org/x/net@v0.39.0 golang.org/x/crypto@v0.37.0`. **`golang.org/x/crypto` decodes the
-SSH handshake that JA4SSH reads**, so the upgrade is a second variable and it is not
-optional.
+`golang.org/x/net@v0.39.0 golang.org/x/crypto@v0.37.0`. **The upgrade is not optional**, and
+**it is no second variable for a fingerprint value.** `golang.org/x/crypto` reaches one
+package of this library, and that package is `hkdf`.
+`### The migration moves three more modules` above holds the measurement and the repaired
+sentence.
 
 **No fingerprint value moved under both changes together, so this measurement needs no
 attribution run.** A later measurement that finds a moved value must separate the two
