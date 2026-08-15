@@ -30,7 +30,7 @@ import (
 //
 //   - A block of `docs/` is mirrored by `examples/<name>/main.go` and by a testable
 //     example, so the compiler reads it.
-//   - A block of `README.md` has no mirror. The four tests below read the block itself.
+//   - A block of `README.md` has no mirror. The six tests below read the block itself.
 //
 // **This file adds no mirror, and that is deliberate.** A mirror for each README block
 // would duplicate the concurrency functions that `concurrency_doc_test.go` already holds
@@ -355,6 +355,12 @@ func readmeRunProgram(t *testing.T, ctx context.Context, block readmeBlock, dir 
 //
 // A method, a field and an interface method each belong to a value, so `ja4plus.Name`
 // never reads one. `api_test.go` states the kind set of `apiEntry.Kind`.
+//
+// **`topLevelAPIKinds` in `api_test.go` names one more kind, and that difference is
+// deliberate.** It holds `method`, because FR-release-3 enumerates every kind the API record
+// carries. This map holds no `method`, because a README block writes `ja4plus.Name` and
+// never `ja4plus.Processor.Reset`. **The two sets answer two questions, so neither one may
+// adopt the members of the other.**
 var readmeTopLevelKinds = map[string]bool{
 	"func":  true,
 	"type":  true,
