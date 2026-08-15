@@ -150,12 +150,22 @@ the narrowed extent.
 
 **`TestNoProductionFileOutsideTheCaptureBackendOpensASocket` holds the amendment.** It reads
 each production Go file outside `cmd/` and `ja4db/`, and it reports each call of a function
-that opens a socket. It permits `internal/capture/` alone, so a second package that opens a
-socket fails the test.
+that opens a socket. It permits `internal/capture/` alone, so a second package that calls one
+of those functions fails the test.
 
 **The guard reads a call site, and it reads no import.** One import carries both meanings:
 `pcapgo.NewReader` reads a capture file, and `pcapgo.NewEthernetHandle` opens a packet
 socket.
+
+**A dot import writes a call as a bare identifier, and the guard reports the import instead.**
+`syscall.Socket` reads as a selector, and `import . "syscall"` makes the same call read as
+`Socket`. So the guard fails on a dot import of any package that
+`socketOpenFunction` names, and a dot import defeats it in no file.
+
+**The guard resolves no type, so it reaches a direct call alone.** A package that calls an
+exported helper of `internal/capture` opens a socket, and the guard reports nothing about it.
+**That limit is stated and it is not repaired**, because a type-resolving reader costs a
+second build of the module and it guards one hypothetical case.
 
 **Three tests prove that the guard reports something.** A permit list that permits every
 package guards nothing.

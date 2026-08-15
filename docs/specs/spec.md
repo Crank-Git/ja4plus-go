@@ -603,8 +603,11 @@ command-line program owns all output. **The statistics line is command-line outp
 
 ### Security posture
 
-- The library performs no network input and no network output, except the opt-in database
-  lookup that `features/09-database-lookup.md` covers.
+- The library performs no network input and no network output, except two reaches. The
+  first is the opt-in database lookup that `features/09-database-lookup.md` covers. The
+  second is the raw capture socket of `internal/capture`, which reads a local interface.
+  The maintainer ruled that second exception on 2026-08-15, and
+  `docs/audit/network-boundary.md` holds the amendment. **Issue #613 is the reversal path.**
 - **The monitor is the one component that opens an interface.** It reads packets and
   sends none. `features/13-live-capture.md` states that boundary.
 - The library reads no key material outside a capture file. **It reads a pcapng

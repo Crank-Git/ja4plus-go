@@ -278,7 +278,14 @@ func TestTheNetworkBoundaryRecordNamesTheDecisionAndTheReason(t *testing.T) {
 // reach is outside the boundary.
 //
 // The guard below holds the narrowed rule. It permits `internal/capture/` alone, so a second
-// package that opens a socket fails the test. Issue #613 is the reversal path.
+// package that calls one of the functions of `socketOpenFunction` fails the test. Issue #613
+// is the reversal path.
+//
+// The guard reads one call site, and it resolves no type. So it reaches a direct call, and it
+// reaches no call that a helper of a permitted package wraps. A package that calls an
+// exported helper of `internal/capture` opens a socket, and this guard reports nothing about
+// it. `docs/audit/network-boundary.md` states that limit, and no sentence of this file claims
+// a reach the guard does not hold.
 
 // socketOpenFunction names each function that opens a socket, keyed by the import path of
 // the package that declares it.
@@ -374,9 +381,23 @@ func socketOpenSite(t *testing.T, root string, skipDir map[string]bool) map[stri
 				continue
 			}
 
-			if functions, named := socketOpenFunction[importPath]; named {
-				opener[importedPackageName(spec, importPath)] = functions
+			functions, named := socketOpenFunction[importPath]
+			if !named {
+				continue
 			}
+
+			localName := importedPackageName(spec, importPath)
+
+			// A dot import writes a call as a bare identifier, so the reader below reads no
+			// selector for it. The guard reports the import itself, because a silent pass is
+			// worse than a report of an import that opens no socket.
+			if localName == "." {
+				site[walkPath] = append(site[walkPath], fset.Position(spec.Pos()).Line)
+
+				continue
+			}
+
+			opener[localName] = functions
 		}
 
 		if len(opener) == 0 {
@@ -462,6 +483,32 @@ func probe() (int, error) {
 
 		if len(lines) != 1 {
 			t.Errorf("the reader reports %v for %s, and the fixture holds one call", lines, reported)
+		}
+	}
+}
+
+// TestTheSocketReaderReportsADotImportOfASocketPackage holds the one bypass that the selector
+// reader cannot see. A dot import writes the call as a bare identifier, so the guard reports
+// the import and it passes no file silently.
+func TestTheSocketReaderReportsADotImportOfASocketPackage(t *testing.T) {
+	root := writeSocketGuardFixture(t, "internal/other", "probe.go", `package other
+
+import . "syscall"
+
+func probe() (int, error) {
+	return Socket(AF_INET, SOCK_RAW, 0)
+}
+`)
+
+	site := socketOpenSite(t, root, map[string]bool{})
+
+	if len(site) != 1 {
+		t.Fatalf("the reader reports %d file for a dot import, and the fixture holds one", len(site))
+	}
+
+	for reported, lines := range site {
+		if len(lines) != 1 || lines[0] != 3 {
+			t.Errorf("the reader reports %v for %s, and the dot import sits at line 3", lines, reported)
 		}
 	}
 }
@@ -577,10 +624,38 @@ func TestNoPageStatesThatTheCaptureBackendSitsOutsideTheLibrary(t *testing.T) {
 		"CLAUDE.md",
 		networkBoundaryRecordPage,
 		"docs/specs/features/13-live-capture.md",
+		termsTableFile,
 	} {
 		if strings.Contains(readRepoFile(t, page), falsifiedSentence) {
 			t.Errorf("%s states %q, and the ruling of #613 places internal/capture inside the library",
 				page, falsifiedSentence)
+		}
+	}
+}
+
+// TestTheSecurityPostureNamesTheRawCaptureSocket holds the second acceptance criterion of
+// #613. The `### Security posture` list states what the library reaches, and the raw capture
+// socket is one of the two reaches it now names.
+func TestTheSecurityPostureNamesTheRawCaptureSocket(t *testing.T) {
+	const securityPostureHeading = "\n### Security posture\n"
+
+	page := readRepoFile(t, termsTableFile)
+
+	start := strings.Index(page, securityPostureHeading)
+	if start < 0 {
+		t.Fatalf("%s holds no %q heading, and the security posture list sits under it",
+			termsTableFile, "### Security posture")
+	}
+
+	section := page[start+len(securityPostureHeading):]
+	if end := strings.Index(section, "\n### "); end >= 0 {
+		section = section[:end]
+	}
+
+	for _, named := range []string{"internal/capture", "#613"} {
+		if !strings.Contains(section, named) {
+			t.Errorf("the `### Security posture` list of %s names no %s, and the ruling of #613 makes the raw capture socket the second reach of the library",
+				termsTableFile, named)
 		}
 	}
 }
