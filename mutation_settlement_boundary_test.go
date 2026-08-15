@@ -38,10 +38,14 @@ var mutationSettlementRuleFiles = []string{
 // preAmendmentSettlementStatements names each sentence that states the rule FR-mutation-11
 // held before the ruling.
 //
-// **The edge-case table of `docs/specs/features/15-mutation-sweep.md` states
-// `It is settled like a `LIVED` mutation.`, and no entry below matches it.** That sentence
-// states which verdicts the rule reads, and it states no settlement scope. `unsettledVerdicts`
-// of `internal/mutationdiff` quotes it verbatim, so a repair of it would destroy evidence.
+// **The list holds one entry for each sentence the amendment repaired**, so a revert of any
+// one of them reddens this guard. The last two entries are table cells of
+// `docs/mutation_sweep.md`, which asked for a settlement against a verdict rather than a
+// settlement or a count.
+//
+// **`unsettledVerdicts` of `internal/mutationdiff` quotes the edge-case table of
+// `docs/specs/features/15-mutation-sweep.md` verbatim.** A repair of that table therefore
+// carries a repair of the quotation, and the amendment made both.
 var preAmendmentSettlementStatements = []string{
 	"Every mutation with the verdict `LIVED` is settled.",
 	"every `LIVED` mutation is settled",
@@ -52,6 +56,9 @@ var preAmendmentSettlementStatements = []string{
 	"FR-mutation-11 settles a `LIVED` mutation by reading",
 	"FR-mutation-11 settles each row below, and",
 	"Every `LIVED` mutation of the most recent report has a settlement.",
+	"It is settled like a `LIVED` mutation.",
+	"| A settlement. |",
+	"| A settlement, as for `LIVED`. |",
 }
 
 // TestTheSettlementRuleReadsTheFingerprintRisk holds the amendment of FR-mutation-11.

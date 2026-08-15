@@ -54,8 +54,8 @@ after which a defect is expensive to correct.
   that can move a fingerprint value.
 - **FR-mutation-12** — A settlement is an added assertion, or a recorded reason why the
   mutation changes no observable behaviour.
-- **FR-mutation-13** — `docs/mutation_settlements/` records each settlement and the count
-  of each `LIVED` mutation that no settlement covers.
+- **FR-mutation-13** — `docs/mutation_settlements/` records each settlement and one count
+  of every `LIVED` mutation that no settlement covers.
 - **FR-mutation-14** — Each settlement names the mutation and the issue that closed it.
 - **FR-mutation-15** — A settlement that says "equivalent mutation" states the reason in
   one sentence.
@@ -73,7 +73,7 @@ states the procedure that applies the rule.
 **Before the ruling, FR-mutation-11 settled every `LIVED` mutation.** `./internal/parser`
 alone holds 223 `LIVED` and 4 `TIMED OUT` mutations of 882, measured on 2026-08-14. **The
 reason for the ruling is reviewability.** A worker that writes `equivalent mutation` 227
-times produces a record nobody can check, and a rubber stamp hides the weak test that the
+times produces a record nobody can check. A rubber stamp then hides the weak test that the
 sweep exists to find.
 
 **The reversal path is issue #92.** A reversal restores the rule that every `LIVED`
@@ -148,7 +148,7 @@ not archived.
 | Case | Expected behaviour |
 |---|---|
 | The sweep takes longer than the CI job limit. | FR-mutation-4 narrows the package set. The report records which packages were swept and which were not. |
-| A mutation makes the suite hang. | The verdict is `TIMED OUT`. It is settled like a `LIVED` mutation. |
+| A mutation makes the suite hang. | The verdict is `TIMED OUT`. FR-mutation-11 reads it like a `LIVED` mutation. |
 | A mutation does not compile. | The verdict is `NOT VIABLE`. No settlement is needed. |
 | A line is not covered at all. | The verdict is `NOT COVERED`. The coverage floor of `features/07-supply-chain.md` owns that gap, not this feature set. |
 | The tool changes its verdict names in a minor release. | The pin holds. A bump is a commit that does nothing else. |

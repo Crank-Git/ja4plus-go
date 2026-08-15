@@ -265,7 +265,7 @@ func TestTheReportReportsAnAmbiguousBaseName(t *testing.T) {
 // TestTheReportStatesTheAmendedSettlementRule holds the FR-mutation-11 amendment of #634.
 //
 // **The maintainer ruled the settlement scope on 2026-08-14, in issue #92.** This command
-// writes the rule into every report it renders, so a repair of a tracked report leaves the
+// writes the rule into every report it renders. So a repair of a tracked report leaves the
 // next sweep to write the pre-amendment sentence again.
 func TestTheReportStatesTheAmendedSettlementRule(t *testing.T) {
 	report := render(sampleInput(t))

@@ -158,8 +158,9 @@ func (m mutation) key() mutation {
 //
 // **FR-mutation-18 names `LIVED`, and the edge-case table of
 // `docs/specs/features/15-mutation-sweep.md` adds `TIMED OUT`.** That table states it
-// verbatim: `The verdict is `TIMED OUT`. It is settled like a `LIVED` mutation.` So a
-// detector that reads `LIVED` alone leaves a mutation that needs a settlement unreported.
+// verbatim: `The verdict is `TIMED OUT`. FR-mutation-11 reads it like a `LIVED` mutation.`
+// So a detector that reads `LIVED` alone leaves a mutation that FR-mutation-11 reaches
+// unreported.
 //
 // `NOT COVERED` is not here. The same table sends that gap to the coverage floor of
 // `docs/specs/features/07-supply-chain.md`, and `.coverage-floor` already guards it.
