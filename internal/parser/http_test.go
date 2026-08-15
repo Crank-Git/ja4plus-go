@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -161,6 +162,34 @@ func TestHeaderBlockTerminatorReadsEachPairOfLineEndings(t *testing.T) {
 	}
 }
 
+// TestHeaderBlockTerminatorEndsTheBlockAtTheFirstEmptyLine holds the body boundary of a
+// request whose body starts with a line ending.
+//
+// The last header line of this request ends with one line feed, and two empty lines follow
+// it. **The header block ends at the first of those two, and the second one is the first two
+// bytes of the body.** The two literals read `\r\n\r\n` across both empty lines, so they
+// started the body two bytes late.
+//
+// **This is the one shape where the ruling of #298 moves the body boundary.** A differential
+// run of 3000000 random texts on 2026-08-15 UTC moved the body start on 75302 of them, and
+// every one of those mixes the two line endings. **No text of one line ending moved.**
+// #298 and `Crank-Git/ja4plus#614` hold the ruling, and each one is the reversal path.
+func TestHeaderBlockTerminatorEndsTheBlockAtTheFirstEmptyLine(t *testing.T) {
+	const head = "GET / HTTP/1.1\r\nHost: a"
+	text := head + "\n\r\n" + "\r\nbody"
+
+	end, length := headerBlockTerminator(text)
+	if end != len(head) {
+		t.Fatalf("headerBlockTerminator read the terminator at %d, and the first empty line starts at %d", end, len(head))
+	}
+	if length != 3 {
+		t.Fatalf("headerBlockTerminator read a terminator of %d bytes, and `\\n\\r\\n` holds 3", length)
+	}
+	if body := text[end+length:]; body != "\r\nbody" {
+		t.Fatalf("the body is %q, and the second empty line is the first two bytes of it", body)
+	}
+}
+
 // TestHTTPMessageIsCompleteMeasuresTheBodyAfterAMixedTerminator holds the completeness gate
 // against a terminator of three bytes.
 //
@@ -185,6 +214,30 @@ func TestHTTPMessageIsCompleteMeasuresTheBodyAfterAMixedTerminator(t *testing.T)
 	}
 	if HTTPMessageIsComplete(short, shortReq) {
 		t.Fatalf("HTTPMessageIsComplete admitted a request whose body holds 3 of the declared 4 bytes")
+	}
+}
+
+// Benchmark_headerBlockTerminator measures the reader against the payload that costs the
+// most: one that holds no terminator at all.
+//
+// **Every payload of a capture reaches this function, and an unterminated stream reaches it
+// again at each segment.** So an attacker who never sends an empty line chooses this cost.
+// #298 declined a regular expression for that reason, and this benchmark is the measurement.
+// The self-review of #298 measured `(?:\r\n|\n)(?:\r\n|\n)` at 84 microseconds for the 8192
+// byte case, against 247 nanoseconds for the two-literal reader it replaced, on 2026-08-15
+// UTC.
+func Benchmark_headerBlockTerminator(b *testing.B) {
+	sizes := []int{8192, 1 << 20}
+	for _, size := range sizes {
+		text := strings.Repeat("A", size)
+		b.Run(strconv.Itoa(size), func(b *testing.B) {
+			b.SetBytes(int64(size))
+			for i := 0; i < b.N; i++ {
+				if end, _ := headerBlockTerminator(text); end >= 0 {
+					b.Fatalf("the benchmark payload holds a terminator at %d, and it must hold none", end)
+				}
+			}
+		})
 	}
 }
 

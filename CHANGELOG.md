@@ -487,10 +487,15 @@ that the interface declares.
   moves no measured fingerprint value**, because no capture of the FoxIO corpus holds a mixed
   terminator. The run reports 1754 matches, 247 deviations, 605 accepted deviations and 637
   register keys before the change, and the same four figures after it, measured on
-  2026-08-15 UTC. **The body boundary does not move on any input**, because a caller adds the
-  offset and the byte count of the terminator, and a terminator now holds 2, 3 or 4 bytes.
-  **The parity difference this change opens is latent and never measured**, and it closes
-  when the port half lands.
+  2026-08-15 UTC. **The body boundary moves on one shape, and that shape mixes the two line
+  endings.** A request whose last header line ends with one line feed, and which carries two
+  empty lines, now starts its body at the second empty line. The two literals read `\r\n\r\n`
+  across both empty lines, so they started the body two bytes late. **A differential run of
+  3000000 random texts moved the body start on 75302 of them, and every one of those mixes
+  the two line endings.** No text of one line ending moved.
+  `TestHeaderBlockTerminatorEndsTheBlockAtTheFirstEmptyLine` holds that shape. **The parity
+  difference this change opens is latent and never measured**, and it closes when the port
+  half lands.
 - **The library now reads the TCP header that an ICMP error message quotes, and it read the
   outer layer list alone before.** The maintainer ruled split T1 on 2026-08-14, at #484, and
   #494 built it. `QuotedTCPHeader` of `internal/parser/icmp_quoted.go` reads the ICMP payload

@@ -69,23 +69,6 @@ const requestLineLimit = 8192
 // its issue #193.
 var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 
-// headerBlockTerminatorRe matches the empty line that ends the header block.
-//
-// The maintainer ruled the pattern on 2026-08-13 UTC, in the port, and re-confirmed it on
-// 2026-08-15 UTC at issue #298. `Crank-Git/ja4plus#614` and `Crank-Git/ja4plus#604` hold
-// the Python half. **The terminator is one line ending followed by another**, and a sender
-// may write a different line ending on each of the two.
-//
-// A pair of literals reads three of the four combinations, and it declines `\n\r\n`.
-// `ja4plus/utils/http_utils.py:43` of the port at tag `v1.1.0` holds that pair as
-// `HEADER_BLOCK_TERMINATORS = (b"\r\n\r\n", b"\n\n")`.
-//
-// The alternation is leftmost-first, so each half reads `\r\n` before it reads `\n`. The
-// match therefore starts at the carriage return of a `\r\n\n` terminator, and the header
-// block keeps no trailing carriage return. The two literals started that match one byte
-// later, and the value trim removed the carriage return by coincidence.
-var headerBlockTerminatorRe = regexp.MustCompile(`(?:\r\n|\n)(?:\r\n|\n)`)
-
 // headerBlockEnd returns the index of the empty line that ends the header block.
 // It returns -1 when the text holds no such line.
 func headerBlockEnd(text string) int {
@@ -100,12 +83,53 @@ func headerBlockEnd(text string) int {
 // The body starts at the sum of the two, so a caller that measures the body needs both.
 // A terminator holds 2, 3 or 4 bytes, so no caller computes the body start from a fixed
 // count.
+//
+// **The terminator is one line ending followed by another**, and a sender may write a
+// different line ending on each of the two. The maintainer ruled that pattern on 2026-08-13
+// UTC, in the port, and re-confirmed it on 2026-08-15 UTC at issue #298.
+// `Crank-Git/ja4plus#614` and `Crank-Git/ja4plus#604` hold the Python half.
+//
+// A pair of literals reads three of the four combinations, and it declines `\n\r\n`.
+// `ja4plus/utils/http_utils.py:43` of the port at tag `v1.1.0` holds that pair as
+// `HEADER_BLOCK_TERMINATORS = (b"\r\n\r\n", b"\n\n")`.
+//
+// **This reader answers exactly as the regular expression `(?:\r\n|\n)(?:\r\n|\n)` does.**
+// #298 proved that on 349525 strings of length 0 through 9 over the four deciding bytes, and
+// on 2000000 random strings, on 2026-08-15 UTC. The two disagree on none of them.
+//
+// **#298 declined that regular expression on cost.** One 8192-byte payload that holds no
+// terminator costs 84 microseconds under the regular expression, 247 nanoseconds under the
+// two literals this reader replaces, and 120 nanoseconds here, measured on an Apple M4 on
+// 2026-08-15 UTC. **Every payload of a capture reaches this function**, and an unterminated
+// stream reaches it again at each segment, so an attacker who never sends an empty line
+// chooses that cost. `Benchmark_headerBlockTerminator` holds the measurement.
 func headerBlockTerminator(text string) (int, int) {
-	span := headerBlockTerminatorRe.FindStringIndex(text)
-	if span == nil {
-		return -1, 0
+	for offset := 0; offset < len(text); {
+		feed := strings.IndexByte(text[offset:], '\n')
+		if feed < 0 {
+			return -1, 0
+		}
+		feed += offset
+		offset = feed + 1
+
+		// The first line ending starts at the carriage return when one precedes the line
+		// feed, because the alternation reads `\r\n` before it reads `\n`. So the header
+		// block keeps no part of the line ending, and no value trim is load-bearing.
+		start := feed
+		if feed > 0 && text[feed-1] == '\r' {
+			start = feed - 1
+		}
+
+		// The second line ending starts at the byte after the first one, and it ends the
+		// header block. A line feed that no line ending follows ends a header line instead.
+		if offset < len(text) && text[offset] == '\n' {
+			return start, offset + 1 - start
+		}
+		if offset+1 < len(text) && text[offset] == '\r' && text[offset+1] == '\n' {
+			return start, offset + 2 - start
+		}
 	}
-	return span[0], span[1] - span[0]
+	return -1, 0
 }
 
 // HTTPMessageIsComplete reports whether the payload holds the whole HTTP request.
