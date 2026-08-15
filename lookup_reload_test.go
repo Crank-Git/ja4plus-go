@@ -260,6 +260,19 @@ func BenchmarkLookupFingerprint(b *testing.B) {
 	}
 }
 
+// BenchmarkLookupTableRead measures the map read with no stat, which is the shape the
+// library held before #74. A reader runs it beside BenchmarkLookupFingerprint to
+// re-measure the ratio that docs/audit/lookup-stat-cost.md records for issue #573.
+func BenchmarkLookupTableRead(b *testing.B) {
+	table := activeTable()
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_ = table.entries["t13d1516h2_8daaf6152771_02713d6af862"]
+	}
+}
+
 // TestTheLookupSource_HoldsNoSyncOnce holds FR-lookup-19. The reload needs a mechanism
 // that runs more than once, and `sync.Once` runs exactly once.
 func TestTheLookupSource_HoldsNoSyncOnce(t *testing.T) {
