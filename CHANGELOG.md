@@ -481,6 +481,30 @@ that the interface declares.
 
 ### Fixed
 
+- **The library now reads a header block terminator that mixes the two line endings, and it
+  read two fixed byte groups before.** The maintainer ruled the pattern on 2026-08-13 UTC, in
+  the port, and re-confirmed it on 2026-08-15 UTC at #298. `Crank-Git/ja4plus#614` and
+  `Crank-Git/ja4plus#604` hold the Python half. **The terminator is one line ending followed
+  by another**, and `headerBlockTerminatorRe` of `internal/parser/http.go` states that
+  pattern. **A caller of `v0.3.0` who upgrades reads two changes.** A request whose header
+  block ends `\n\r\n` now reaches a JA4H value, and it reached none before, because neither
+  `\r\n\r\n` nor `\n\n` matched that terminator. A request whose header block ends `\r\n\n`
+  now matches at the carriage return, and it matched one byte later before. **The second
+  change removes a coincidence.** `\n\n` is a substring of `\r\n\n`, so the old search left
+  the carriage return on the last header line and the value trim removed it. A later change
+  to the value handling would have broken that path without a test to report it. **The change
+  moves no measured fingerprint value**, because no capture of the FoxIO corpus holds a mixed
+  terminator. The run reports 1754 matches, 247 deviations, 605 accepted deviations and 637
+  register keys before the change, and the same four figures after it, measured on
+  2026-08-15 UTC. **The body boundary moves on one shape, and that shape mixes the two line
+  endings.** A request whose last header line ends with one line feed, and which carries two
+  empty lines, now starts its body at the second empty line. The two literals read `\r\n\r\n`
+  across both empty lines, so they started the body two bytes late. **A differential run of
+  3000000 random texts moved the body start on 75302 of them, and every one of those mixes
+  the two line endings.** No text of one line ending moved.
+  `TestHeaderBlockTerminatorEndsTheBlockAtTheFirstEmptyLine` holds that shape. **The parity
+  difference this change opens is latent and never measured**, and it closes when the port
+  half lands.
 - **The library now reads the TCP header that an ICMP error message quotes, and it read the
   outer layer list alone before.** The maintainer ruled split T1 on 2026-08-14, at #484, and
   #494 built it. `QuotedTCPHeader` of `internal/parser/icmp_quoted.go` reads the ICMP payload
