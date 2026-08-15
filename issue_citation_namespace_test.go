@@ -283,9 +283,10 @@ import (
 // **The resolver re-measured the mark at the merge**, which is the rule session 16 earned: a
 // conflict resolution writes prose, prose cites an issue, so the resolver re-measures.
 // #682 re-measured the mark on 2026-08-15 UTC after it merged `batch/684` into its branch,
-// and it read 692. **#682 cites #692**, which holds the one row of the JA4L cluster that
-// reaches no ruling: `tls3.pcapng/153/JA4L.1`. The maintainer read #682 and declined a
-// register entry for that row, so the row stays unaccepted and the issue holds it.
+// and it read 692. **#682 cites #692**, which held the one row of the JA4L cluster that
+// reached no ruling: `tls3.pcapng/153/JA4L.1`. The maintainer read #682 and declined a
+// register entry for that row on 2026-08-15 UTC. **#692 then read the row on the same day**,
+// and the register carries one entry for it under ruling #449 now.
 //
 // **#682 is the third member of batch #684 to pay this cost**, after #298 and #675. The
 // mark read 679 when #682 branched, and the two earlier members moved it to 686 while #682

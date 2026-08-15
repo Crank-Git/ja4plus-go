@@ -486,9 +486,9 @@ cause 4 on 2026-08-15 UTC.
 **An entry that named ruling #528 for either row would accept a difference the ruling does
 not decide.**
 
-**Ruling #127 reaches no part of this difference.** Ruling #127 decides the part count on a
-TCP connection and the `quic` marker on a QUIC connection, and both sides of this comparison
-already write three parts and the marker.
+**Ruling #127 reaches no part of this difference.** It decides the part count on a TCP
+connection and the `quic` marker on a QUIC connection. **Both sides of this comparison
+already write three parts and the marker.**
 
 **Issue #682 wrote an entry under ruling #127 for this row on 2026-08-15 UTC, and it removed
 that entry on the same day.** The maintainer read the objection and declined the entry.
@@ -871,6 +871,11 @@ walk, and `wireshark/source/packet-ja4.c:1408` matches each `quic.long.packet_ty
 it. A coalesced datagram carries one such field for each QUIC packet, so the Handshake packet
 of frame 149 reaches the point C branch at `wireshark/source/packet-ja4.c:1426-1430`.
 
+**Each side subtracts one pair of frames, and this is the pair.**
+`wireshark/source/packet-ja4.c:1445` subtracts point C from point D, which is frame 149 from
+frame 153. **`processUDP` in `ja4l.go` subtracts frame 151 from frame 153**, because its
+point C branch moves the point to each server Handshake packet until point D fills.
+
 **That is the mechanism of cause 6, and this row is a fourth consequence of it.**
 `### The four rows` above holds the rows where the mechanism empties a value. **This row is
 the case where the connection still fills point D**, so the mechanism moves a value rather
@@ -906,7 +911,7 @@ this row is the remainder of ruling #528.
 
 **The row carries one entry now, and the entry names ruling #449.** Both rulings already
 exist, so this reading writes no ruling. Ruling #449 of 2026-08-15 UTC decides that the
-library reads the first QUIC packet of a coalesced datagram, and ruling #528 of 2026-08-14
+library reads the first QUIC packet of a coalesced datagram. Ruling #528 of 2026-08-14
 decides that point C is the last QUIC server handshake packet. **The `reason` of the entry
 names both**, as the entry of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` does.
 

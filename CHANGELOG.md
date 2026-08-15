@@ -72,9 +72,9 @@ Issue #449 wrote 4 of the 5 entries of its own count, and issue #692 wrote the 5
 2026-08-15 UTC. The maintainer ruled on 2026-08-15 that
 the library reads the first QUIC packet of a coalesced datagram, and the Wireshark
 dissector reads every packet. The 5th entry is `tls3.pcapng/153/JA4L.1`, and **two rulings
-reach that one row**: frame 149 of its connection coalesces a server Handshake packet behind
-a server Initial packet, so the library fills no point C there, and ruling #528 then moves
-point C to frame 151. `docs/audit/ja4l-deviation-cluster.md`
+reach that one row**. Frame 149 of its connection coalesces a server Handshake packet behind
+a server Initial packet, so the library fills no point C there. Ruling #528 then moves point
+C to frame 151. `docs/audit/ja4l-deviation-cluster.md`
 `### The remainder of tls3.pcapng/153/JA4L.1` holds the reading, and issue #692 wrote no
 ruling.
 Issue #527 wrote the last 2 entries of the ruling #285 count. The maintainer ruled on
