@@ -50,6 +50,11 @@ import (
 //     program defines.
 //   - The output that the README shows for one run equals the output that the program
 //     writes for that run.
+//
+// One test of this file reads no block, and #702 built it.
+// TestTheReadmeNameWalkReadsTheSameSurfaceAsTheApiRecord holds the name set of
+// `readmeExportedNames` equal to the top-level surface of the API record, so the guard
+// above cannot pass over a name it never read.
 
 const (
 	// readmeOutputSection heads the one section whose output block is compared against a
@@ -346,52 +351,44 @@ func readmeRunProgram(t *testing.T, ctx context.Context, block readmeBlock, dir 
 	}
 }
 
+// readmeTopLevelKinds names each kind of the API record that a package qualifier reaches.
+//
+// A method, a field and an interface method each belong to a value, so `ja4plus.Name`
+// never reads one. `api_test.go` states the kind set of `apiEntry.Kind`.
+var readmeTopLevelKinds = map[string]bool{
+	"func":  true,
+	"type":  true,
+	"const": true,
+	"var":   true,
+}
+
 // readmeExportedNames returns every exported top-level name that the package in one
-// directory declares, from the files that are not tests.
+// directory declares.
+//
+// It reads the surface through `collectPackageAPI`, so one walk feeds this guard and the
+// API record together. #702 replaced a second walk here. That walk globbed `*.go`, so it
+// applied no build constraint and it read a file that the API record never reads.
+//
+// **The two walks read one file set at the merge of #702, and the defect was latent.**
+// Measured on 2026-08-15 UTC: `go list` reports 16 files for the root package and 2 for
+// `ja4db`, and a glob of each directory that drops a test file reports the same two counts.
+// Each `IgnoredGoFiles` entry of the two packages is a test file. The `libpcap` build tag
+// selects a file of `internal/capture/`, which no published package holds, so no constraint
+// separated the two walks. The separation lands the first time a published package carries
+// a constrained file or a file with a platform name suffix.
 func readmeExportedNames(t *testing.T, dir string) map[string]bool {
 	t.Helper()
 
-	names, err := filepath.Glob(filepath.Join(dir, "*.go"))
+	recorded, err := collectPackageAPI(dir)
 	if err != nil {
-		t.Fatalf("list the Go files of %s: %v", dir, err)
+		t.Fatalf("measure the API of %s: %v", dir, err)
 	}
 
 	exported := map[string]bool{}
-	for _, name := range names {
-		if strings.HasSuffix(name, "_test.go") {
-			continue
-		}
 
-		set := token.NewFileSet()
-		file, parseErr := parser.ParseFile(set, name, readTextFile(t, name), parser.SkipObjectResolution)
-		if parseErr != nil {
-			t.Fatalf("parse %s: %v", name, parseErr)
-		}
-
-		for _, declaration := range file.Decls {
-			switch typed := declaration.(type) {
-			case *ast.FuncDecl:
-				// A method belongs to its receiver, and a package qualifier never reaches
-				// one.
-				if typed.Recv == nil && typed.Name.IsExported() {
-					exported[typed.Name.Name] = true
-				}
-			case *ast.GenDecl:
-				for _, spec := range typed.Specs {
-					switch declared := spec.(type) {
-					case *ast.TypeSpec:
-						if declared.Name.IsExported() {
-							exported[declared.Name.Name] = true
-						}
-					case *ast.ValueSpec:
-						for _, ident := range declared.Names {
-							if ident.IsExported() {
-								exported[ident.Name] = true
-							}
-						}
-					}
-				}
-			}
+	for _, entry := range recorded {
+		if readmeTopLevelKinds[entry.Kind] {
+			exported[entry.Name] = true
 		}
 	}
 
@@ -400,6 +397,45 @@ func readmeExportedNames(t *testing.T, dir string) map[string]bool {
 	}
 
 	return exported
+}
+
+// A name that the README walk never reads makes TestEveryLibraryNameOfTheReadmeIsExported
+// pass over that name, so this test holds the walked name set equal to the top-level
+// surface of the API record. #702 built it.
+//
+// **This test selects a top-level entry by its name, and `readmeExportedNames` selects one
+// by its kind.** The two criteria are independent, so a kind that leaves
+// `readmeTopLevelKinds` fails this test. A test that read the same constant would move
+// both sides together and it would report a pass over the dropped kind. `apiEntry` states
+// the naming rule: an owner and a period precede the name of a method, of a field and of an
+// interface method, and a top-level name carries no prefix.
+func TestTheReadmeNameWalkReadsTheSameSurfaceAsTheApiRecord(t *testing.T) {
+	for _, pkg := range publishedPackages {
+		recorded, err := collectPackageAPI(pkg.Dir)
+		if err != nil {
+			t.Fatalf("measure the API of %s: %v", pkg.ImportPath, err)
+		}
+
+		walked := readmeExportedNames(t, pkg.Dir)
+
+		for _, entry := range recorded {
+			if strings.Contains(entry.Name, ".") {
+				continue
+			}
+
+			if !walked[entry.Name] {
+				t.Errorf("%s: the README name walk reads no %s, and the API measurement records it",
+					pkg.ImportPath, entry.key())
+			}
+
+			delete(walked, entry.Name)
+		}
+
+		for name := range walked {
+			t.Errorf("%s: the README name walk reads %s, and the API measurement records no top-level name of it",
+				pkg.ImportPath, name)
+		}
+	}
 }
 
 // TestEveryLibraryNameOfTheReadmeIsExported holds FR-release-28 against the API freeze.
