@@ -125,9 +125,10 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `internal/capture/permission_linux.go` | #82 |
 | `internal/capture/permission_other.go` | #82 |
 | `internal/capture/linktype.go` | #609 |
+| `internal/capture/deadline.go` | #610 |
 <!-- added-files:end -->
 
-**The table holds 15 rows, and no audit reads any of the 15 files.** Each row names the
+**The table holds 16 rows, and no audit reads any of the 16 files.** Each row names the
 issue that added the file after the audit of Epic 2.
 
 - Issue #200 added `internal/parser/ssh_tracker.go`.
@@ -143,11 +144,18 @@ issue that added the file after the audit of Epic 2.
 - Issue #82 added `internal/capture/permission_darwin.go`,
   `internal/capture/permission_linux.go` and `internal/capture/permission_other.go`.
 - Issue #609 added `internal/capture/linktype.go`.
+- Issue #610 added `internal/capture/deadline.go`.
 
 **Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
 holds eight files that ship and seven test files, measured on 2026-08-14 with
 `git ls-files internal/capture/`. **A test file carries no row**, because `goFilesOfRoots`
 in `audit_record_test.go` drops a file whose name ends in `_test.go`.
+
+**Issue #610 wrote the ninth row that names a file of `internal/capture/`, and the directory
+holds nine files that ship and eight test files**, measured on 2026-08-15 with
+`git ls-files internal/capture/`. The measurement above reads 2026-08-14, and the two
+disagree because #610 added `internal/capture/deadline.go` and
+`internal/capture/deadline_test.go` between the two days.
 
 **The merge of `dev` into `epic/76-live-capture` met two tables, and it holds the union of
 them.** `dev` carried the row of #565, and the integration branch carried the row of #79 and

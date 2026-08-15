@@ -42,6 +42,19 @@ func (s *stubPacketSource) ReadPacketData() ([]byte, gopacket.CaptureInfo, error
 	return answer.data, answer.info, answer.err
 }
 
+func TestTheReadDeadlineIsPositiveForEveryBackend(t *testing.T) {
+	// Each backend reads `readDeadline`. The libpcap backend passes it to `pcap.OpenLive`,
+	// and `pcap.BlockForever` is negative: that value makes each read block until the
+	// interface delivers a packet. Issue #610 measured the cost of a read that blocks
+	// forever, so this test fails when a later change restores a value of zero or below.
+	//
+	// This test carries no build constraint, because one constant serves the two backends
+	// and the default build of macOS selects neither one.
+	if readDeadline <= 0 {
+		t.Fatalf("the read deadline is %v, and each read then blocks until a packet arrives", readDeadline)
+	}
+}
+
 func TestTheReadDeadlineReportsATimeoutWhenTheSourceDeliversNoPacket(t *testing.T) {
 	// Issue #610 records the cost of a read that blocks forever: one `SIGINT` did not stop
 	// the monitor on an interface that carries no traffic.
