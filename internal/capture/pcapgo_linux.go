@@ -41,9 +41,9 @@ func open(opts Options) (Handle, error) {
 		return nil, openError(opts.Interface, err)
 	}
 
-	// The hardware type is read after the open, because `NewEthernetHandle` reports the
-	// name failure and the permission failure that `openError` reads. A refusal here closes
-	// the packet socket, so the handle leaks no file descriptor.
+	// This call comes after the open, because `NewEthernetHandle` reports the name failure
+	// and the permission failure that `openError` reads. A refusal here closes the packet
+	// socket, so the handle leaks no file descriptor.
 	linkType, err := readLinkType(opts.Interface)
 	if err != nil {
 		_ = handle.Close()
@@ -77,15 +77,16 @@ func open(opts Options) (Handle, error) {
 //
 // The kernel states the hardware type of an interface in the `ifi_type` field of
 // `struct ifinfomsg`, and `rtnetlink(7)` names that field `Device type`. A dump of
-// `RTM_GETLINK` answers with one `RTM_NEWLINK` message for each interface, and
-// `net/interface_linux.go` of the standard library reads the same dump the same way.
+// `RTM_GETLINK` answers with one `RTM_NEWLINK` message for each interface.
+// `net/interface_linux.go:17,31` of the standard library reads the same dump the same way,
+// at go1.26.5.
 // Verified against: <https://man7.org/linux/man-pages/man7/rtnetlink.7.html>, retrieved
 // 2026-08-14.
 //
 // It reads the two fields with `binary.NativeEndian` and never with `unsafe`, because
 // netlink writes each field in the byte order of the host. The offsets come from
-// `syscall.IfInfomsg`, which holds the pad byte that the manual page leaves out: `Family`
-// at 0, the pad at 1, `Type` at 2 and `Index` at 4.
+// `syscall.IfInfomsg`, and it holds the pad byte that the manual page leaves out.
+// `Family` sits at 0, the pad at 1, `Type` at 2 and `Index` at 4.
 func readLinkType(name string) (layers.LinkType, error) {
 	iface, err := net.InterfaceByName(name)
 	if err != nil {
