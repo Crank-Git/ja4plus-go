@@ -69,15 +69,25 @@ const requestLineLimit = 8192
 // its issue #193.
 var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 
+// headerBlockTerminatorRe matches the empty line that ends the header block.
+//
+// The maintainer ruled the pattern on 2026-08-13 UTC, in the port, and re-confirmed it on
+// 2026-08-15 UTC at issue #298. `Crank-Git/ja4plus#614` and `Crank-Git/ja4plus#604` hold
+// the Python half. **The terminator is one line ending followed by another**, and a sender
+// may write a different line ending on each of the two.
+//
+// A pair of literals reads three of the four combinations, and it declines `\n\r\n`.
+// `ja4plus/utils/http_utils.py:43` of the port at tag `v1.1.0` holds that pair as
+// `HEADER_BLOCK_TERMINATORS = (b"\r\n\r\n", b"\n\n")`.
+//
+// The alternation is leftmost-first, so each half reads `\r\n` before it reads `\n`. The
+// match therefore starts at the carriage return of a `\r\n\n` terminator, and the header
+// block keeps no trailing carriage return. The two literals started that match one byte
+// later, and the value trim removed the carriage return by coincidence.
+var headerBlockTerminatorRe = regexp.MustCompile(`(?:\r\n|\n)(?:\r\n|\n)`)
+
 // headerBlockEnd returns the index of the empty line that ends the header block.
 // It returns -1 when the text holds no such line.
-//
-// It reads the two terminators `\r\n\r\n` and `\n\n`, and it returns the earlier of the two.
-// `ja4plus/utils/http_utils.py:43` of the Python port holds the same two, so both
-// implementations answer alike.
-//
-// TODO(#298): Read a terminator that mixes the two line endings. A block that ends
-// `\n\r\n` matches neither literal, and it reaches no value.
 func headerBlockEnd(text string) int {
 	end, _ := headerBlockTerminator(text)
 	return end
@@ -88,16 +98,14 @@ func headerBlockEnd(text string) int {
 // It returns -1 and 0 when the text holds no such line.
 //
 // The body starts at the sum of the two, so a caller that measures the body needs both.
+// A terminator holds 2, 3 or 4 bytes, so no caller computes the body start from a fixed
+// count.
 func headerBlockTerminator(text string) (int, int) {
-	end := -1
-	length := 0
-	for _, terminator := range []string{"\r\n\r\n", "\n\n"} {
-		if index := strings.Index(text, terminator); index >= 0 && (end < 0 || index < end) {
-			end = index
-			length = len(terminator)
-		}
+	span := headerBlockTerminatorRe.FindStringIndex(text)
+	if span == nil {
+		return -1, 0
 	}
-	return end, length
+	return span[0], span[1] - span[0]
 }
 
 // HTTPMessageIsComplete reports whether the payload holds the whole HTTP request.
@@ -202,8 +210,9 @@ func ParseHTTPRequest(payload []byte) *HTTPRequest {
 		return nil
 	}
 	// The body holds any byte, so the header parse reads the header block alone.
-	// A block that ends `\r\n\n` keeps the carriage return of the last line ending, so the
-	// last header line carries one trailing carriage return. The value trim below removes it.
+	// The terminator match starts at the first line ending of the empty line, so the last
+	// header line carries no part of that line ending. The ruling of #298 removed the
+	// trailing carriage return that a `\r\n\n` block used to leave.
 	text = text[:blockEnd]
 
 	req := &HTTPRequest{
