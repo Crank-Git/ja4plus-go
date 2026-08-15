@@ -4934,5 +4934,101 @@
     "theirs": "83_128_quic",
     "ruling": "#528",
     "reason": "The maintainer ruled in issue #528 on 2026-08-14 that JA4L point C is the last QUIC server handshake packet, and `wireshark/source/packet-ja4.c:1426-1430` pins the first one."
+  },
+  {
+    "key": "browsers-x509.pcapng/8/JA4S.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t1206h2_c030_044dc9b3196d",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "browsers-x509.pcapng/8/JA4S_r.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t1206h2_c030_0005,0023,0010,0017,ff01,0000",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "latest.pcapng/163/JA4S.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120300_c030_09f674154ab3",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "latest.pcapng/163/JA4S_r.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120300_c030_0005,0017,ff01",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "latest.pcapng/197/JA4S.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120300_c030_09f674154ab3",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "latest.pcapng/197/JA4S_r.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120300_c030_0005,0017,ff01",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "ssh2.pcapng/237/JA4S.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120300_c030_09f674154ab3",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "ssh2.pcapng/237/JA4S_r.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120300_c030_0005,0017,ff01",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "ssh2.pcapng/259/JA4S.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t1205h2_c030_015e35fdd027",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "ssh2.pcapng/259/JA4S_r.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t1205h2_c030_0005,0023,0010,0017,ff01",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "tls-handshake.pcapng/151/JA4S.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120400_c030_4e8089b08790",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "tls-handshake.pcapng/151/JA4S_r.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "t120400_c030_0005,0017,ff01,0000",
+    "ruling": "#650",
+    "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
   }
 ]

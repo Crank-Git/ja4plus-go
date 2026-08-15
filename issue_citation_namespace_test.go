@@ -227,7 +227,13 @@ import (
 // the JA4S segment span measurement, and 650 sits above the inherited mark of 639. **A member
 // pays this cost before its round does**, because the member writes the page that cites its
 // own number.
-const issueCitationHighWaterMark = 660
+//
+// **#650 re-measured the mark a second time on 2026-08-15 and it read 663.** The maintainer
+// ruled the two questions of #650 between the two readings, and the member then wrote the
+// register entries and the parity row that the ruling ordered. **A member that pauses for a
+// ruling re-measures the mark when it resumes**, because the tracker moves while the member
+// waits. The second reading covers every citation the first one covers.
+const issueCitationHighWaterMark = 663
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
