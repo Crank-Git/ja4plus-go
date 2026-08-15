@@ -2048,6 +2048,22 @@
     "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
   },
   {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/52/JA4LS.1",
+    "capability": false,
+    "ours": "9285_56_quic",
+    "theirs": "9285_0_quic",
+    "ruling": "#229",
+    "reason": "The maintainer ruled in issue #229 on 2026-08-15 that this library writes the observed time-to-live, because the vector time-to-live `0` on a second QUIC connection over one four-tuple describes the capture rather than the connection."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1",
+    "capability": false,
+    "ours": "113_64_quic",
+    "theirs": "264_0_quic",
+    "ruling": "#229",
+    "reason": "The maintainer ruled in issue #229 on 2026-08-15 that this library writes the observed time-to-live, and ruling #528 of 2026-08-14 decides part a because JA4L point C is the last QUIC server handshake packet."
+  },
+  {
     "key": "CVE-2018-6794.pcap/2/JA4LS.1",
     "capability": false,
     "ours": "2219_255",
@@ -2342,6 +2358,14 @@
     "theirs": "113_64",
     "ruling": "#197",
     "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the protocol marker `quic`, and part a and the time-to-live agree exactly."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4L-S",
+    "capability": false,
+    "ours": "9285_56_quic",
+    "theirs": "10990_56",
+    "ruling": "#249",
+    "reason": "The maintainer ruled in issue #249 on 2026-08-15 that this library keeps the latency of the per-packet set `9285_0_quic`, because the two FoxIO vector sets disagree."
   },
   {
     "key": "ssh2.pcapng/36/JA4L-C",
@@ -4918,6 +4942,38 @@
     "theirs": "",
     "ruling": "#126",
     "reason": "The maintainer ruled in issue #543 on 2026-08-14 that ruling #126 reaches JA4L, and `wireshark/source/packet-ja4.c:1266` reads the whole flag byte of this SYN for equality."
+  },
+  {
+    "key": "ssh2.pcapng/1046/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "279_128_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, and `wireshark/source/packet-ja4.c:1408` reads every packet."
+  },
+  {
+    "key": "ssh2.pcapng/1046/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "16192_57_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, and `wireshark/source/packet-ja4.c:1408` reads every packet."
+  },
+  {
+    "key": "tls3.pcapng/297/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "271_128_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, and `wireshark/source/packet-ja4.c:1408` reads every packet."
+  },
+  {
+    "key": "tls3.pcapng/297/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "3051_57_quic",
+    "ruling": "#449",
+    "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, and `wireshark/source/packet-ja4.c:1408` reads every packet."
   },
   {
     "key": "tls3.pcapng/147/JA4L.1",
