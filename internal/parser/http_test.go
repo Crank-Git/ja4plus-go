@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"strconv"
 	"strings"
 	"testing"
@@ -32,7 +33,7 @@ func TestHeaderBlockTerminatorReadsTheEarliestTerminator(t *testing.T) {
 			later, want)
 	}
 
-	end, length := headerBlockTerminator(text)
+	end, length := headerBlockTerminator([]byte(text))
 	if end != want {
 		t.Fatalf("headerBlockTerminator read the terminator at %d, and the earliest one sits at %d", end, want)
 	}
@@ -106,7 +107,7 @@ func TestParseHTTPRequestReadsABlockThatEndsLineFeedThenCarriageReturnLineFeed(t
 func TestParseHTTPRequestReadsABlockThatEndsCarriageReturnLineFeedThenLineFeed(t *testing.T) {
 	text := "GET / HTTP/1.1\r\nHost: a\r\n\n"
 
-	end, length := headerBlockTerminator(text)
+	end, length := headerBlockTerminator([]byte(text))
 	want := strings.Index(text, "\r\n\n")
 	if end != want {
 		t.Fatalf("headerBlockTerminator read the terminator at %d, and the empty line starts at %d", end, want)
@@ -150,7 +151,7 @@ func TestHeaderBlockTerminatorReadsEachPairOfLineEndings(t *testing.T) {
 		t.Run(one.name, func(t *testing.T) {
 			text := head + one.terminator + "body"
 
-			end, length := headerBlockTerminator(text)
+			end, length := headerBlockTerminator([]byte(text))
 			if end != len(head) {
 				t.Fatalf("headerBlockTerminator read the terminator at %d, and the empty line starts at %d", end, len(head))
 			}
@@ -180,7 +181,7 @@ func TestHeaderBlockTerminatorEndsTheBlockAtTheFirstEmptyLine(t *testing.T) {
 	const head = "GET / HTTP/1.1\r\nHost: a"
 	text := head + "\n\r\n" + "\r\nbody"
 
-	end, length := headerBlockTerminator(text)
+	end, length := headerBlockTerminator([]byte(text))
 	if end != len(head) {
 		t.Fatalf("headerBlockTerminator read the terminator at %d, and the first empty line starts at %d", end, len(head))
 	}
@@ -231,11 +232,14 @@ func TestHTTPMessageIsCompleteMeasuresTheBodyAfterAMixedTerminator(t *testing.T)
 func Benchmark_headerBlockTerminator(b *testing.B) {
 	sizes := []int{8192, 1 << 20}
 	for _, size := range sizes {
-		text := strings.Repeat("A", size)
+		// #685 moved the reader to bytes, and the conversion sits outside the timed loop so
+		// that this benchmark still measures the scan alone.
+		payload := bytes.Repeat([]byte("A"), size)
 		b.Run(strconv.Itoa(size), func(b *testing.B) {
 			b.SetBytes(int64(size))
+			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				if end, _ := headerBlockTerminator(text); end >= 0 {
+				if end, _ := headerBlockTerminator(payload); end >= 0 {
 					b.Fatalf("the benchmark payload holds a terminator at %d, and it must hold none", end)
 				}
 			}
