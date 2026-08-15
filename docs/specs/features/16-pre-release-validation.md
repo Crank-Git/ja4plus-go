@@ -30,7 +30,8 @@ site builds from its committed pins alone.
   from source.
 - As a maintainer, I want the release blocked when the artifact is broken, so that I do
   not publish a tag I must delete.
-- As a maintainer, I want the check to run before the tag, not after it.
+- As a maintainer, I want the check to read the tag I pushed, so that I promote no broken
+  release.
 
 ## Functional requirements
 
@@ -85,32 +86,64 @@ site builds from its committed pins alone.
 
 ### The release gate
 
-- **FR-prerelease-26** — `make prerelease` passes before the maintainer creates the tag.
+**FR-prerelease-26 carries an amendment that the maintainer ruled on 2026-08-15 UTC**, and
+#633 applies it. The ruling stands at
+https://github.com/Crank-Git/ja4plus-go/issues/633#issuecomment-5299776974. **The
+pre-amendment requirement named a moment at which no tag exists.** It read
+`make prerelease` passes before the maintainer creates the tag, and five of the cases read
+a published release. So the requirement asked a case to read something the moment does not
+hold, and the case asserted nothing for that reason. #633 renamed that case to
+`TestTheReleaseGateRunsAgainstTheTagUnderTest`, and the case now reads the tag.
+**The amended requirement names the release gate**: the maintainer pushes the tag, the run
+reads that tag, and the promotion waits on the result. **#633 is the reversal path.**
+
+- **FR-prerelease-26** — `make prerelease` runs against the tag under test. The maintainer
+  promotes the release only when every case passes or carries a recorded reason.
 - **FR-prerelease-27** — A case asserts that `testdata/deviations.json` holds no entry
   whose comparison now matches.
-- **FR-prerelease-28** — A case asserts that every `LIVED` mutation of the most recent
-  sweep is settled.
+- **FR-prerelease-28** — A case asserts that the most recent sweep records every `LIVED`
+  mutation as settled or as counted. FR-mutation-11 states which of the two each mutation
+  takes.
 - **FR-prerelease-29** — A case asserts that no tracked document states a method count
   that `features/12-ja4ls.md` forbids.
 - **FR-prerelease-30** — A case asserts that the README links to the documentation site
   and that the link resolves.
 
+**FR-prerelease-28 follows FR-mutation-11, and #642 aligned the two on 2026-08-15 UTC.**
+The maintainer amended FR-mutation-11 on 2026-08-14, and #634 carried that amendment into
+`docs/specs/features/15-mutation-sweep.md`. The pre-amendment requirement read as follows.
+
+> A case asserts that every `LIVED` mutation of the most recent sweep is settled.
+
+That requirement asked for a settlement for each of the 223 `LIVED` mutations that
+`docs/mutation_reports/2026-08-14-internal-parser.md` holds. **The amended
+FR-mutation-11 asks for a settlement on code that can move a fingerprint value, and it
+counts every other mutation.** So a case that demanded 223 settlements would read the
+tracked record as incomplete work. **#642 is the reversal path**, and a reversal restores
+the sentence above.
+
+**No case decides the fingerprint risk of one mutation.** That reading is a person's work,
+and `docs/mutation_settlements/` holds the record of it.
+`TestEveryLivedMutationOfTheMostRecentSweepIsSettled` holds the property a machine holds:
+the record covers the sweep that the tree carries today.
+
 ## User flows
 
 ### A maintainer prepares a release
 
-1. The maintainer runs `make prerelease` on the release commit.
-2. Every case passes.
-3. The maintainer creates the tag.
-4. GoReleaser builds the artifacts and publishes the release.
-5. The maintainer runs the binary cases against the published artifacts.
+1. The maintainer pushes the tag on the release commit.
+2. GoReleaser builds the artifacts and publishes the release.
+3. The maintainer downloads the artifacts and runs `make prerelease` against that tag.
+4. Every case passes.
+5. The maintainer promotes the release.
 
 ### A case finds a broken artifact
 
 1. `go install` in the clean environment fails, because the module publishes no embedded
    database.
 2. The case reports the missing path.
-3. The maintainer repairs the module and creates no tag.
+3. The maintainer promotes no release, and it records the reason.
+4. The maintainer repairs the module, and the next attempt takes the next version.
 
 ## Screens & states
 
@@ -120,8 +153,9 @@ This feature set changes no screen.
 
 - **A case that reads the working tree proves nothing.** FR-prerelease-11 is the rule that
   makes the rest meaningful.
-- **The check runs before the tag.** A published tag cannot be moved, and a deleted tag
-  stays in the module proxy cache.
+- **The check gates the promotion.** A published tag cannot be moved, and a deleted tag
+  stays in the module proxy cache. So the maintainer pushes the tag, the run reads it, and
+  a failing case stops the promotion.
 - **A binary case runs on the platform it tests.** A Linux runner cannot prove that the
   Darwin binary runs.
 - **The corpus is FoxIO-licensed material.** FR-prerelease-15 keeps it out of the
@@ -149,7 +183,8 @@ This feature set changes no screen.
 Retrieved 2026-08-11.
 
 **A published module is immutable and a deleted tag stays in the proxy cache.** That is
-the reason FR-prerelease-26 puts every case before the tag rather than after it.
+the reason the amended FR-prerelease-26 gates the promotion. The maintainer spends one tag
+on each attempt, and a failing case costs no published release.
 
 ## Edge cases & failures
 
@@ -161,6 +196,8 @@ the reason FR-prerelease-26 puts every case before the tag rather than after it.
 | `go install` succeeds and the program cannot find the embedded database. | FR-prerelease-13 fails first and names the missing path. |
 | The site build reaches the network for an unpinned package. | FR-prerelease-25 fails. |
 | The tag exists and a case fails. | The maintainer deletes the release, and the tag stays in the proxy. The next release takes the next version. |
+| The tag exists, a case fails, and the maintainer accepts the failure. | The maintainer records the reason and promotes the release. FR-prerelease-26 permits one recorded reason for each failing case. |
+| The run reads no tag under test. | The release gate case fails and it names the tag it looked for. A run that reads no release proves nothing about the artifact. |
 
 ## Acceptance criteria
 
