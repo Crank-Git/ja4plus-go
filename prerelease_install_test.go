@@ -365,7 +365,7 @@ func TestTheInstalledProgramFingerprintsACaptureFromThePublishedModule(t *testin
 			t.Errorf("FR-prerelease-7 fails at %s: the installed program prints %q, and the tag is %s.\n"+
 				"`resolveVersion` in `cmd/ja4plus/main.go` reads the module version of the embedded "+
 				"build info when no link flag sets `Version`, and "+
-				".github/workflows/release.yml:118 sets that variable for a released binary. "+
+				"the `ldflags` key of `.goreleaser.yaml` sets that variable for a released binary. "+
 				"Issue #628 added that read on 2026-08-14, so a tag published before #628 prints `dev` here.",
 				prereleaseInstallVersion, printed, prereleaseInstallVersion)
 		}
