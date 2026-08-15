@@ -2437,7 +2437,7 @@
     "ours": "",
     "theirs": "3583_57",
     "ruling": "#686",
-    "reason": "The point B reference split is unruled, and the point C fall-through of issue #675 also empties this row, so the maintainer declined it provisionally on 2026-08-15 until issue #686 closes."
+    "reason": "The point B reference split is unruled, and the point C fall-through of issue #675 also empties this row, so the maintainer declined this row provisionally on 2026-08-15 until issue #686 closes."
   },
   {
     "key": "tls3.pcapng/21/JA4L-S",
