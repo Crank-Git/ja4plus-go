@@ -993,6 +993,211 @@ that the interface declares.
 - The module needs Go 1.24 or later. It needed Go 1.22 before this change, so a consumer
   on Go 1.22 or Go 1.23 must move to Go 1.24.
 
+## [v1.0.0]
+
+This section is the release record of `v1.0.0`. It carries no date, because FR-release-40
+creates the tag and no tag exists at this head. **The `## [Unreleased]` section above holds
+the per-issue log of the same work, and this section states the release position.** A
+reader who wants one entry reads the log above. A reader who wants the release position
+reads this section.
+
+**Every measurement below names its base.** The base is `epic/100-api-freeze` at `e596366`,
+and the corpus is the FoxIO repository at the pinned commit
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which `testdata/foxio.pin` holds.
+
+**This project implements eleven methods, and ten fingerprinters carry them.**
+`JA4LFingerprinter` writes both JA4L and JA4LS. The eleven are JA4, JA4S, JA4H, JA4T,
+JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6. `method_count_test.go` holds both counts,
+and it reads every tracked document and every Go comment.
+
+**This project's method list is not FoxIO's method list.** Three FoxIO records at the pinned
+commit name three different sets. `License FAQ.md:5` names twelve methods, the FoxIO
+`README.md:293` names nine, and `LICENSE:3` names thirteen and spells the scanner
+`JA4SScan`. `NOTICE` records that reading, and this release names the methods that this
+project implements.
+
+**`v1.0.0` names JA4LS as a method of this library for the first time.** `v0.3.0` emitted
+the `JA4L-S` result type, and it named no method of that name. So no license record of
+`v0.3.0` covered JA4LS, and `NOTICE`, `README.md` and `doc.go` each name it now.
+
+### Added
+
+**This release adds 45 exported names, and it removes none.** The count reads the whole
+exported surface of the two published packages against the `v0.3.0` tag, with `go/parser`
+over every non-test file. `docs/api/v1.md` records the surface that the release freezes:
+144 names, of which 140 sit in the root package and 4 sit in `ja4db`. `api_test.go` fails
+when a name and that record disagree.
+
+The JA4D6 method, which reads a DHCPv6 message. `v0.3.0` implemented no such method.
+
+- `JA4D6Fingerprinter`, `NewJA4D6` and `ComputeJA4D6`.
+- `JA4D6Fingerprinter.ProcessPacket`, `JA4D6Fingerprinter.Reset` and
+  `JA4D6Fingerprinter.CleanupConnection`.
+
+The window close, which emits the JA4SSH window that a connection holds open. Both
+interfaces are optional, and the processor discovers each one with a type assertion.
+
+- `WindowCloser`, and its method `CloseOpenWindows`.
+- `ConnectionWindowCloser`, and its method `CloseConnectionWindow`.
+- `JA4SSHFingerprinter.CloseOpenWindows` and `JA4SSHFingerprinter.CloseConnectionWindow`.
+- `Processor.CloseOpenWindows` and `Processor.CloseConnectionWindow`.
+
+The synchronized processor, which serves several goroutines under one lock. One `Processor`
+still serves one goroutine, and `.claude/rules/concurrency.md` states the contract.
+
+- `SyncProcessor` and `NewSyncProcessor`.
+- `SyncProcessor.ProcessPacket`, `SyncProcessor.Reset`, `SyncProcessor.CleanupConnection`,
+  `SyncProcessor.GetShardKey`, `SyncProcessor.CloseOpenWindows` and
+  `SyncProcessor.CloseConnectionWindow`.
+
+The processor option, which configures a processor at construction.
+
+- `ProcessorOption` and `WithKeyLog`.
+
+The key log, which reads TLS secrets and decrypts one QUIC packet.
+
+- `KeyLog`, `ParseKeyLog`, `ReadKeyLogFromCapture` and `DecryptQUICPacket`.
+- `KeyLog.Secret`, `KeyLog.ClientRandoms` and `KeyLog.Len`.
+- `ErrNoSecret`.
+
+The local database records, which report the active database and the SSH name table.
+
+- `DatabaseInfo`, and its fields `Path`, `Source`, `Entries` and `ModTime`.
+- `GetDatabaseInfo`, `CachedDatabasePath` and `LookupHASSH`.
+
+The FoxIO `JA4_o` order.
+
+- `FingerprintResult.OriginalOrder`.
+
+The package `ja4db`, which `v0.3.0` did not hold. **It is the one package of the library
+that reaches the network**, and `network_boundary_test.go` holds that boundary.
+
+- `LookupFingerprintRemote`.
+- `RemoteLookupConfig`, and its fields `Endpoint` and `HTTPClient`.
+
+### Removed
+
+**This release removes no exported name.** The measurement compares the exported surface of
+the `v0.3.0` tag against this head, and every one of the 99 names that `v0.3.0` exported is
+present. So a `v0.3.0` caller reaches every name it already calls.
+
+### Changed
+
+**The exported `Fingerprinter` interface does not change.** Its three methods are
+`ProcessPacket`, `Reset` and `CleanupConnection`, and the declaration in `types.go` is the
+declaration that `v0.3.0` shipped. **`CloseOpenWindows` joins the new optional interface
+`WindowCloser`, and it does not join `Fingerprinter`.** So a caller's own implementation of
+`Fingerprinter` still satisfies the interface, and this release breaks no such
+implementation.
+
+`NewProcessor` takes options. It was `func NewProcessor() *Processor` in `v0.3.0`, and it is
+`func NewProcessor(options ...ProcessorOption) *Processor` now. **A call `NewProcessor()`
+compiles unchanged.** One form does not: an assignment of `NewProcessor` to a variable of
+type `func() *Processor` no longer compiles, because a variadic function has a different
+type.
+
+#### The license position
+
+**The repository states two licenses, and it names which material each one covers.** The
+original Go code carries the BSD 3-Clause license. **FoxIO License 1.1 covers ten of the
+eleven methods that this project implements, and that license permits non-commercial use
+only.** JA4 is the one method that FoxIO licenses under the BSD 3-Clause license, and FoxIO
+publishes that text as `LICENSE-JA4`. `NOTICE` enumerates the ten, and it holds the FoxIO
+terms verbatim.
+
+**Earlier releases named the BSD 3-Clause license alone**, so a commercial user read a
+permission that FoxIO does not grant. `docs/audit/license-decision.md` records the decision
+behind the correction, and FR-release-42 holds the release until that record exists.
+
+#### The Go version floor
+
+**The module needs Go 1.24 or later.** It needed Go 1.22 in `v0.3.0`, so a consumer on Go
+1.22 or Go 1.23 moves to Go 1.24. `go.mod` declares `go 1.24.0`.
+
+**That sentence states a language version, and it states no build toolchain.** A language
+version decides which consumer compiles the module. A build toolchain decides which standard
+library a built binary links, and the two answer different questions.
+
+**The minimum build toolchain is go1.25.13.** `govulncheck` v1.6.0 reported 13 called
+standard-library vulnerabilities on a go1.24.13 toolchain and 0 on go1.25.13, measured on
+2026-08-14 against the vulnerability database that <https://vuln.go.dev> published at
+2026-08-13 21:43:54 UTC. **Each count moves without a change to this repository**, because
+the database moves. `README.md` and `doc.go` state the measurement with its date, and #472
+holds the ruling and the reversal path.
+
+#### The fingerprint values that move
+
+**A user who upgrades from `v0.3.0` reads different values for ten of the eleven methods.**
+JA4D6 is the one method that no row moves, because `v0.3.0` implemented no such method.
+Each row below is a breaking behavior change under Semantic Versioning, because a released
+version produced the earlier value. **The `## [Unreleased]` section above holds the
+measurement of each change, one entry for each issue.**
+
+| Method | What moves |
+|---|---|
+| JA4 | The QUIC branch reassembles the client hello across CRYPTO frames and across a coalesced datagram, and it steps over a leading non-handshake record. The `JA4_o` value reaches the `OriginalOrder` field, and a zero sentinel replaces an absent value. |
+| JA4S | The raw form `JA4S_r` reaches the `Raw` field. |
+| JA4H | The value emits at the packet that completes the request, and a repeated TCP segment produces one value rather than two. Part b hashes an empty header list. The request-line pattern admits a method outside a closed list of nine. The raw form `JA4H_ro` reaches the `Raw` field. |
+| JA4X | The method reads a reassembled stream. The raw form `JA4X_r` reaches the `Raw` field. |
+| JA4T | Part b holds one entry for each option byte the packet carries. A zero value takes the two-digit form. |
+| JA4TS | Part b holds one entry for each option byte the packet carries. Part e holds the retransmission delays, a zero value takes the two-digit form, and a RST produces its own value. |
+| JA4L | Every latency value moves, because the library reports half the measured time. The third part carries the marker `quic` on a QUIC connection. The library fills the TCP client measurement point and the two QUIC client measurement points from the reference packets, it reads a UDP flow only when the flow carries QUIC, and it times a second connection on one grouping key from the points of that connection. |
+| JA4LS | Every latency value moves, for the reasons of the JA4L row. `JA4L-S` reaches the frame that fills point D, and it reached the point B frame before. |
+| JA4SSH | Part c counts the bare ACK of the TCP handshake. The window counts the SSH packets that FoxIO counts, it emits at the packet count the caller names, and a packet that carries the FIN flag emits the open window. |
+| JA4D | The library keeps the first Maximum DHCP Message Size on a repeated option 57. |
+| JA4D6 | No value moves, because `v0.3.0` implemented no such method. |
+
+**The table names a change that moves a value of the FoxIO corpus.** Two changes of the log
+above move no such value, and the table therefore holds neither one. The JA4 and JA4S QUIC
+branches now read the inner UDP layer of a tunneled packet, and no capture of the corpus
+carries QUIC inside a tunnel. The parser now declines a packet that nests more than four
+tunnel layers, and no capture of the corpus nests more than three.
+
+**The one JA4 value the log states in full**, for a reader who wants a worked example: on
+`chrome-cloudflare-quic-with-secrets.pcapng` stream 0 the JA4 value moves from
+`q12i030000_55b375c5d22e_000000000000` to `q13d0310h3_55b375c5d22e_cd85d2d88918`. Issue #42
+holds that measurement.
+
+**The conformance run of this head reports 1754 matches, 247 deviations, 605 accepted
+deviations and 637 register keys.** Three runs on `issue/104-v1-changelog` report those four
+figures, and the third run read the tree that holds this section. **This CHANGELOG change moves no fingerprint value**, and it adds, removes and
+changes no exported name.
+
+### A known cross-implementation difference
+
+**This library and the Python port produce different JA4LS values for one connection, and
+neither one is wrong.** The fourth condition of `v1.0.0` is that this library and the port
+produce the same fingerprint. **This is the one measured connection where they do not**, and
+the release states the exception rather than leaving a reader to find it.
+
+The capture is `chrome-cloudflare-quic-with-secrets.pcapng`, and the connection is stream
+`0:50280`.
+
+| Implementation | Value | The reference set it scores against |
+|---|---|---|
+| `Crank-Git/ja4plus-go` | `9285_56_quic` | the Wireshark per-packet set |
+| `Crank-Git/ja4plus` | `10990_56_quic` | the Python per-stream set |
+
+**The two FoxIO vector sets disagree with each other on this connection.** The per-stream
+set holds `10990_56` and the per-packet set holds `9285_0_quic`. Each project declined its
+difference from the reference set it names, and each decline is correct against that
+reference. **No change to either implementation closes the difference.**
+
+**The maintainer ruled on 2026-08-15 UTC that `v1.0.0` ships with this question open.**
+Comment 5300906419 of issue #249 holds that ruling, and comment 5299851698 of the same issue
+holds the ruling that this library keeps the value it produces. `Crank-Git/ja4plus#622` asks
+which FoxIO vector set is authoritative for JA4L timing, and nobody has answered it.
+
+**The decline is provisional.** `testdata/deviations.json` holds one entry for
+`chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4L-S`, and the run reports that
+comparison as accepted. **The reversal path is issue #249 and `Crank-Git/ja4plus#622`,
+together.** `docs/audit/ja4l-deviation-cluster.md` holds the measurement that both halves
+rest on.
+
+**A `v1.1.0` entry records the answer.** `Crank-Git/ja4plus#622` carries a request, added on
+2026-08-15 UTC: when the Python changes land, the port re-reads this library and states
+whether the difference closed, widened or held.
+
 ## [v0.3.0] - 2026-04-08
 
 ### Added
