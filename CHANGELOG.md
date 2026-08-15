@@ -16,8 +16,17 @@ put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issu
 142 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
-issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, and issue #127 put 150
-more.
+issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, issue #127 put 150
+more, issue #529 put 75 more, issue #492 put 11 more, and issue #164 put 5 more.
+Issue #701 wrote the 75 entries of the ruling #529 count, the 11 entries of the ruling #492
+count and the 5 entries of the ruling #164 count on 2026-08-15 UTC. The maintainer deferred
+each of those three decoding capabilities to `v1.1.0` on 2026-08-15, so each of the 91
+entries is a capability decline. Ruling #529 declines an HTTP/2 request under HPACK, ruling
+#492 declines the certificate of a protected TLS 1.3 record, and ruling #164 declines an
+HTTP/3 request under QPACK. **The 11 entries of the ruling #492 count hold 9 comparisons of
+`http2-with-cookies.pcapng` and 2 of `chrome-cloudflare-quic-with-secrets.pcapng`**, and the
+body of issue #492 states that same split. **The 91 entries moved no fingerprint value**,
+because the run reports 1754 matches before the change and 1754 after it.
 Issue #682 wrote 149 of the 150 entries of the ruling #127 count on 2026-08-15 UTC, and
 issue #652 wrote the 150th. **That 150 counts register entries.** The maintainer kept
 ruling #127 on that day.
@@ -74,12 +83,15 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1754 matches, 94
-deviations, 758 accepted deviations and 790 register keys. The run also reports 175 unaccepted
+reports 1754 matches, 3
+deviations, 849 accepted deviations and 881 register keys. The run also reports 175 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 758 and
-32 add up to the 790 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 849 and
+32 add up to the 881 register keys. A count that an entry below states therefore differs from
 a fresh run.
+**The 3 deviations that the register does not hold are three JA4L comparisons**, and issue
+#675, issue #686 and issue #692 hold them. Issue #701 wrote no entry for any one of the
+three, because no ruling covers them.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against
