@@ -1060,8 +1060,15 @@ and the point B rule, and the port carries neither gap.
 
 **Both sides of a per-stream comparison read the first QUIC packet of a datagram**, so the
 ruled rule produces no difference between them. A decline that cites #449 would state a
-false cause, and it would hide the fall-through above. **#675 therefore writes no entry in
-`testdata/deviations.json`.**
+false cause, and it would hide the fall-through above. **#675 therefore writes no entry that
+cites ruling #449.**
+
+**The maintainer ruled the two rows on 2026-08-15 UTC, and each one now carries its own
+entry.** Comment 5303123055 of #701 holds the ruling. The entry of `ssh2.pcapng/33/JA4L-S`
+cites ruling #675 and it names the fall-through above. The entry of `tls3.pcapng/25/JA4L-S`
+cites ruling #686 and it names the point B reference split. **Each entry is provisional, and
+each issue stays open as the reversal path of its own entry.** **The ruling changes no
+behavior**, so every sentence above it holds without a change.
 
 #### A repair moves a fingerprint value
 

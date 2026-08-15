@@ -2408,6 +2408,14 @@
     "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
   },
   {
+    "key": "ssh2.pcapng/33/JA4L-S",
+    "capability": false,
+    "ours": "",
+    "theirs": "16192_57",
+    "ruling": "#675",
+    "reason": "The point C fall-through of `processUDP` in `ja4l.go` gates point D on point C, so the library publishes no value on this connection, and the maintainer declined this row provisionally on 2026-08-15 until issue #675 closes."
+  },
+  {
     "key": "ssh2.pcapng/36/JA4L-S",
     "capability": false,
     "ours": "5389_57_quic",
@@ -2422,6 +2430,14 @@
     "theirs": "59_128",
     "ruling": "#197",
     "reason": "The maintainer ruled in issue #197 on 2026-08-12 that a QUIC value carries the marker `quic`, and the per-stream vector holds two parts."
+  },
+  {
+    "key": "tls3.pcapng/25/JA4L-S",
+    "capability": false,
+    "ours": "",
+    "theirs": "3583_57",
+    "ruling": "#686",
+    "reason": "The point B reference split is unruled, and the point C fall-through of issue #675 also empties this row, so the maintainer declined it provisionally on 2026-08-15 until issue #686 closes."
   },
   {
     "key": "tls3.pcapng/21/JA4L-S",

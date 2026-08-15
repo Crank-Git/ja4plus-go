@@ -12,11 +12,11 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1754 |
-| Deviations | 2 |
-| Accepted deviations | 850 |
+| Deviations | 0 |
+| Accepted deviations | 852 |
 | Unaccepted uncovered values | 175 |
 | Accepted uncovered values | 32 |
-| Accepted comparisons | 882 |
+| Accepted comparisons | 884 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -26,7 +26,7 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1116 | 2 | 323 | 147 | 14 |
+| per-stream | 1116 | 0 | 325 | 147 | 14 |
 | per-packet | 638 | 0 | 527 | 28 | 18 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
@@ -186,7 +186,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `ssh2.pcapng` | per-stream | JA4 | 8 | `ssh2.pcapng/33/JA4_o` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0312h3_55b375c5d22e_fde15aea1603` |
 | `ssh2.pcapng` | per-stream | JA4 | 8 | `ssh2.pcapng/33/JA4_r` | the library produces a value the vector does not hold (accepted) | (none) | `q13d0312h3_1301,1302,1303_000a,000d,001b,0029,002a,002b,002d,0033,0039,4469_0403,0804,0401,0503,0805,0501,0806,0601,0201` |
 | `ssh2.pcapng` | per-stream | JA4L | 1 | `ssh2.pcapng/36/JA4L-C` | the two values differ (accepted) | `169_128` | `169_128_quic` |
-| `ssh2.pcapng` | per-stream | JA4LS | 2 | `ssh2.pcapng/33/JA4L-S` | the vector holds a value the library does not produce | `16192_57` | (none) |
+| `ssh2.pcapng` | per-stream | JA4LS | 2 | `ssh2.pcapng/33/JA4L-S` | the vector holds a value the library does not produce (accepted) | `16192_57` | (none) |
 | `ssh2.pcapng` | per-stream | JA4LS | 2 | `ssh2.pcapng/36/JA4L-S` | the two values differ (accepted) | `5389_57` | `5389_57_quic` |
 | `ssh2.pcapng` | per-stream | JA4S | 4 | `ssh2.pcapng/33/JA4S` | the library produces a value the vector does not hold (accepted) | (none) | `q130300_1301_6bbbaf601ed8` |
 | `ssh2.pcapng` | per-stream | JA4S | 4 | `ssh2.pcapng/33/JA4S_r` | the library produces a value the vector does not hold (accepted) | (none) | `q130300_1301_0029,0033,002b` |
