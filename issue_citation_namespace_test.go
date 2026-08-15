@@ -195,8 +195,8 @@ import (
 //
 // **The Epic 16 round re-measured the mark on 2026-08-14 and it read 637.** The round cites
 // #637, which is its own issue, and 637 sits above the inherited mark of 635. **A round pays
-// this cost whether or not the project manager already paid it**, because the round allocates
-// a number after the resolution that raised the mark.
+// this cost after the project manager pays it.** The round allocates its own number after the
+// resolution that raised the mark.
 //
 // **The round read 637 before it opened its pull request, and it read 639 after.** The pull
 // request is #639, and the constant holds the second reading. **A mark that a later

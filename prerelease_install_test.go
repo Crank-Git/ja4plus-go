@@ -52,7 +52,7 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 //
 // **A session that moves one of them leaves the others at `v0.3.0`, and no guard compares
 // them.** The Epic 16 cross-member review measured the hazard on 2026-08-14, and the round
-// recorded it here rather than repairing it. The five are these.
+// recorded it here, and it repaired none of the five. The five are these.
 //
 //   - `prereleaseModulePath`, above.
 //   - `publishedModulePath`, in `prerelease_module_contents_test.go`.
@@ -310,8 +310,8 @@ func requireModuleCacheHoldsThePublishedModule(t *testing.T, environment *cleanE
 //
 // **Two cases call `os.Getwd` inline for the same value**, in `prerelease_test.go` and in
 // `prerelease_site_test.go`. The Epic 16 cross-member review measured that on 2026-08-14,
-// and the round recorded it rather than repairing it. A caller that adopts this helper reads
-// one failure message rather than three.
+// and the round recorded it here. The round changed no caller. A caller that adopts this
+// helper reads one failure message rather than three.
 func prereleaseRepositoryRoot(t *testing.T) string {
 	t.Helper()
 

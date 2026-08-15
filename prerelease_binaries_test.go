@@ -68,7 +68,7 @@ const releaseTagVariable = "JA4PLUS_RELEASE_TAG"
 // `prereleaseInstallVersion` in `prerelease_install_test.go` and `publishedModuleVersion` in
 // `prerelease_module_contents_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
-// states the hazard and it names #100 as the issue that repairs it.
+// states the hazard. That section names #100 as the issue that repairs it.
 const defaultReleaseTag = "v0.3.0"
 
 // releaseIssue names the issue that publishes a release for a tag under test.

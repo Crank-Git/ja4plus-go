@@ -62,7 +62,7 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // `prereleaseInstallVersion` in `prerelease_install_test.go` and `defaultReleaseTag` in
 // `prerelease_binaries_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
-// states the hazard and it names #100 as the issue that repairs it.
+// states the hazard. That section names #100 as the issue that repairs it.
 const publishedModuleVersion = "v0.3.0"
 
 // embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
