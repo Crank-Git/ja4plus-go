@@ -11,6 +11,13 @@ Issue #443 produced it, under Epic #441. `.claude/rules/rulings.md` states who r
 `## Cause 3 — the QUIC client measurement point, and a reference split` below records the
 ruling, the re-measurement and the three register entries it wrote.
 
+**The maintainer ruled causes 4, 5 and 6 on 2026-08-15 UTC.** Issue #229 holds cause 4,
+issue #249 holds cause 5 and issue #449 holds cause 6. Batch #668 wrote the seven register
+entries that the three rulings produce. **The cause 5 decline is provisional**, because
+`Crank-Git/ja4plus#622` asks which FoxIO vector set is authoritative for JA4L timing and
+that question is open. **Each section below states its ruling, its re-measurement and its
+reversal path.**
+
 ## The measurement
 
 Every number of this section and of causes 1, 2, 4 and 5 comes from one run of
@@ -378,14 +385,15 @@ and the ruling alone holds three of them.**
 | `tls3.pcapng/167/JA4L.1` | `81_128_quic` | `59_128_quic` | `81_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/312/JA4L.1` | `83_128_quic` | `45_128_quic` | `83_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | No entry. |
-| `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` | `264_64_quic` | No entry. |
+| `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` | `264_64_quic` | No entry under ruling #528. Ruling #229 holds it. |
 
 **The last two rows carry a second difference, so ruling #528 alone does not hold either
 one.** `tls3.pcapng/153/JA4L.1` reads `71_128_quic` under the candidate, and the vector holds
 `101_128_quic`. No reading of this page states that remainder.
 
 Part a of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` agrees exactly under the
-candidate. The time-to-live `0` of that vector stays open under cause 4.
+candidate. The time-to-live `0` of that vector reaches cause 4, and the maintainer ruled
+cause 4 on 2026-08-15 UTC.
 
 **An entry that named ruling #528 for either row would accept a difference the ruling does
 not decide.**
@@ -426,7 +434,12 @@ no issue of the port.**
 
 ## Cause 4 — the time-to-live of a second QUIC connection on one four-tuple
 
-**This cause holds 3 deviations, all on `chrome-cloudflare-quic-with-secrets.pcapng`.**
+**This cause held 3 deviations on 2026-08-13, and it holds 2 today.** Every one sits on
+`chrome-cloudflare-quic-with-secrets.pcapng`. **The maintainer ruled the cause on
+2026-08-15 UTC**, and `### The ruling of 2026-08-15` below states the ruling and the two
+register entries it wrote.
+
+### The reading of 2026-08-13
 
 | Key | The vector holds | The library produces |
 |---|---|---|
@@ -448,8 +461,36 @@ The reading of #229 needs the correction, and this page records it.
 
 **A vector that writes `0` for an observed time-to-live describes the capture rather than
 the connection.** `.claude/rules/parity.md` `## Where a difference comes from` names that
-shape a proven reference defect, and it reserves the decline to the maintainer. **This page
-declines nothing.**
+shape a proven reference defect, and it reserved the decline to the maintainer.
+
+### The re-measurement of 2026-08-15
+
+**The first two rows above are one row today, so this cause holds 2 deviations.** #447
+moved the QUIC `JA4LS` emission to the point D frame, so the library writes its `JA4LS`
+value on frame 52 rather than on frame 48. **The frame difference of cause 2 closed, and
+the time-to-live difference stayed.**
+
+| Key | The vector holds | The library produces |
+|---|---|---|
+| `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4LS.1` | `9285_0_quic` | `9285_56_quic` |
+| `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` |
+
+**The run reports no deviation on frame 48.** Two runs of `make conformance` on
+`batch/668-route-and-declines` produced both rows above, on 2026-08-15 UTC, with the corpus
+present at the pinned commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+`docs/audit/conformance.md` holds each row.
+
+### The ruling of 2026-08-15
+
+**The maintainer ruled on 2026-08-15 UTC that this library writes the observed
+time-to-live.** Comment 5299851633 of issue #229 holds the ruling, and issue #229 is the
+reversal path. The ruling states the reason:
+
+> **A time-to-live of `0` on a second connection over one four-tuple describes the capture, and it does not describe the connection.**
+
+**The library keeps the value it produces today, so no line of `ja4l.go` changes.** #229
+wrote one entry in `testdata/deviations.json` for each row of the table above, and the run
+reports both comparisons as accepted.
 
 ## Cause 6 — the coalesced QUIC datagram, and a second reference split
 
@@ -494,8 +535,22 @@ reaches one point today. A repair needs the walk and the fall-through together.
 | `tls3.pcapng/297/JA4L.1` | `271_128_quic` | (none) |
 | `tls3.pcapng/297/JA4LS.1` | `3051_57_quic` | (none) |
 
-**Each row reproduces on the base of this section.** The per-stream set adds one row:
-`ssh2.pcapng/33/JA4L-S` reads `the vector holds a value the library does not produce`.
+**Each row reproduces on the base of this section.** The per-stream set adds two rows, and
+each one reads `the vector holds a value the library does not produce`.
+
+| Key | The vector holds | The library produces |
+|---|---|---|
+| `ssh2.pcapng/33/JA4L-S` | `16192_57` | (none) |
+| `tls3.pcapng/25/JA4L-S` | `3583_57` | (none) |
+
+**The two per-stream rows are exact analogues, and this page named one of them until
+2026-08-15.** #449 measured the pair, and batch #668 records both here.
+`### Where the library stands` above states the mechanism that empties each one: the
+connection fills no point D, so the library publishes no `JA4L-S` value for it.
+
+**`tls3.pcapng/25/JA4L-S` is one of the two per-stream deviations of the count of 177**, and
+`## The measurement` above names it. Cause 5 held it until 2026-08-15, and
+`## What #253 and #249 explain` below states why it moved.
 
 ### The count this cause closes
 
@@ -619,6 +674,23 @@ the library then follows Wireshark on this question and the three on cause 3.
 datagram, and `ja4plus/utils/quic_utils.py:64` reads `udp_payload[0]`. **The port therefore
 writes answer 2**, and a ruling for answer 1 is a change in both repositories.
 `Crank-Git/ja4plus#613` holds the other half.
+
+### The ruling of 2026-08-15
+
+**The maintainer ruled answer 2 on 2026-08-15 UTC.** The library reads the first QUIC packet
+of a coalesced datagram. Comment 5299851551 of issue #449 holds the ruling, and issue #449
+is the reversal path.
+
+**The library keeps the packet it reads today, so no line of `internal/parser/quic.go` and
+no line of `ja4l.go` changes.** #449 wrote 4 entries in `testdata/deviations.json`, one for
+each row of `### The four rows` above, and the run reports all four as accepted.
+
+**The ruling reaches the four per-packet rows, and it reaches neither per-stream row.** Both
+sides of a per-stream comparison read the first QUIC packet alone, because FoxIO's Python
+produces the per-stream set and `python/ja4.py:403-404` drops every QUIC layer after the
+first. **So the ruled rule cannot produce the per-stream difference**, and a decline there
+would hide the fall-through of `processUDP` behind a ruling that does not reach it.
+**Issue #675 holds that fall-through.**
 
 ## Cause 7 — the seconds component of the Wireshark delta
 
@@ -792,12 +864,48 @@ vector agrees with the library and the per-stream vector does not.**
 **So the two FoxIO vector sets disagree with each other on the latency, and this library
 matches Wireshark on it.** #249 reads the per-stream value alone, and it concludes that
 nothing explains the difference. The per-packet value explains the latency: Wireshark and
-this library read one pair of points, and Python reads another. **The time-to-live `0` of
-the per-packet value stays unexplained, and cause 4 above holds it.**
+this library read one pair of points, and Python reads another. **Cause 4 above holds the
+time-to-live `0` of the per-packet value, and the maintainer ruled cause 4 on 2026-08-15
+UTC.**
 
-`tls3.pcapng/25/JA4L-S` carries the same shape. The per-stream vector reads `3583_57` and
-the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on frame 297.
-**So the second per-stream deviation of this cluster has the same reading as #249.**
+**The maintainer ruled the latency question on 2026-08-15 UTC.** This library keeps the
+value it produces, and this project declines the disagreement between the two vector sets.
+Comment 5299851698 of issue #249 holds the ruling. #249 wrote one entry in
+`testdata/deviations.json` for `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4L-S`,
+and the run reports that comparison as accepted.
+
+**The decline is provisional.** `Crank-Git/ja4plus#622` asks which FoxIO vector set is
+authoritative for JA4L timing, and that question is open. **The maintainer ruled on
+2026-08-15 UTC that v1.0.0 ships with it open**, and the release records the divergence as
+a known cross-implementation difference: this library writes `9285_56_quic` and the port
+writes `10990_56_quic` for that connection. **The reversal path is issue #249 and
+`Crank-Git/ja4plus#622`.**
+
+**`tls3.pcapng/25/JA4L-S` does not carry that shape, and an earlier sentence of this page
+stated that it does.** Batch #668 re-measured the row on 2026-08-15 UTC, and the library
+produces no value there at all.
+
+| Source | The value for that connection |
+|---|---|
+| The per-stream vector set | `3583_57` |
+| The per-packet vector set, on frame 297 | `3051_57_quic` |
+| **This library** | **(none)** |
+
+Two runs of `make conformance` on `batch/668-route-and-declines` report
+`the vector holds a value the library does not produce` for the per-stream row, with the
+corpus present at the pinned commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+`testdata/foxio/python/tls3.pcapng.json` holds `"JA4L-S": "3583_57"` for stream 25 and no
+`JA4L-C`, and `testdata/foxio/wireshark/tls3.pcapng.json` holds `ja4.ja4ls`
+`3051_57_quic` on frame 297.
+
+**A row where the library produces nothing matches neither vector set, so the reading of
+#249 does not reach it.** #249 reads a connection where the two sets disagree and the
+library matches one of them. **`## Cause 6 — the coalesced QUIC datagram, and a second
+reference split` above holds this row**, together with its analogue
+`ssh2.pcapng/33/JA4L-S`. Issue #675 holds the fall-through of `processUDP` that empties
+each one.
+
+**So cause 5 holds one per-stream deviation, and it held two until 2026-08-15.**
 
 ## The whole attribution
 
@@ -806,9 +914,9 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 | 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | The maintainer. Ruling #127 holds it. |
 | 2 — the QUIC `JA4L-S` emission frame | 16 | **15** | Opens none. Orphans 20 entries. | An engineer. The four implementations agree. |
 | 3 — the QUIC client measurement point | 4 | **3** | **The ruling costs nothing.** Answer 2 cost nothing on 2026-08-13, and it costs 5 stale entries on 2026-08-14. | **Ruled on 2026-08-14. Issue #528 holds it.** |
-| 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | — | The maintainer. A reference defect. |
-| 5 — the two vector sets disagree | 2 | Not measured. Each set holds a different value. | — | The maintainer. #249 holds it. |
-| 6 — the coalesced QUIC datagram | 2 | **4**, on a later base. Opens 2. | None. | The maintainer. A reference split, 2 against 2. |
+| 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | 2 register entries. | **Ruled on 2026-08-15 UTC. Issue #229 holds it.** |
+| 5 — the two vector sets disagree | 1 | Not measured. Each set holds a different value. | 1 register entry. | **Ruled on 2026-08-15 UTC. Issue #249 holds it. Provisional.** |
+| 6 — the coalesced QUIC datagram | 3 | **4**, on a later base. Opens 2. | 4 register entries. | **Ruled on 2026-08-15 UTC. Issue #449 holds it.** |
 | 7 — the seconds component of the Wireshark delta | 1 | Not measured. Ruling #127 bars a candidate. | — | The maintainer. A proven reference defect. |
 | **Total** | **177** | | | |
 
@@ -823,6 +931,18 @@ moved, so its count of 4 counts two rows that the base of this page does not hol
 who buys two causes measures the pair.
 
 **Every deviation of the cluster reaches a cause.**
+
+**The `Attributed` column reads the base of `## The measurement` above, and the `Cost`
+column reads the tree of 2026-08-15 UTC.** The two columns therefore name two moments, and
+a reader adds no figure across them. **Batch #668 moved one attributed row on 2026-08-15
+UTC**, from cause 5 to cause 6. `tls3.pcapng/25/JA4L-S` is that row, and
+`## What #253 and #249 explain` above states the measurement that moved it. **The total of
+177 does not change**, because the move takes one row from one cause and gives it to
+another.
+
+**Cause 4 states 3 in the `Attributed` column and it holds 2 today.**
+`### The re-measurement of 2026-08-15` above states the reason: #447 collapsed two rows of
+the 2026-08-13 reading into one comparison on frame 52.
 
 ## The last deviation, and where its reading lives
 
@@ -844,8 +964,8 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
 
 ## What this page does not state
 
-- **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14**, and causes
-  1, 4, 5, 6 and 7 each stay with the maintainer.
+- **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14, and causes 4,
+  5 and 6 on 2026-08-15 UTC.** Causes 1 and 7 each stay with the maintainer.
 - **It measured causes 1, 2, 3 and 6.** Causes 4 and 5 carry no measured count, because
   each one needs a ruling before a candidate exists. **Cause 7 carries no measured count
   either**, because ruling #127 bars the candidate that would produce one.
@@ -855,4 +975,7 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
 - **It ran no Python.** The port was read as text. `.claude/rules/parity.md` states the rule.
 - **The reading of #443 writes no register entry.** **Issue #528 wrote three entries under
   the ruling of 2026-08-14**, and `### The ruling of 2026-08-14` above names each one.
+  **Batch #668 wrote seven more on 2026-08-15 UTC**, under the rulings of #229, #249 and
+  #449. The register held 630 keys before that batch and it holds 637 after it, measured on
+  2026-08-15 UTC.
 - **It states no count for the JA4H cluster.** #442 reads that cluster.

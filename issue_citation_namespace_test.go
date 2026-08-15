@@ -257,7 +257,11 @@ import (
 // into `batch/668-route-and-declines` a SECOND time, after batch #656 landed, and it read
 // 678. **The batch carried 675 and `dev` carried 677.** **A resolver re-measures rather than
 // take a side.**
-const issueCitationHighWaterMark = 678
+// The documentation round of batch #668 re-measured the mark on 2026-08-15 UTC and it read
+// 679. **That round cites no number above 678**, and it opens no pull request of its own,
+// because the project manager opens the batch pull request. **So the round re-measures to
+// keep the mark accurate rather than to repair a failure.**
+const issueCitationHighWaterMark = 679
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
