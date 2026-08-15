@@ -45,11 +45,16 @@ The module requires Go 1.24 or later. **That sentence states a language version,
 builds a binary free of a called vulnerability, and the section below names that one.
 
 ```bash
-go get github.com/Crank-Git/ja4plus-go@v1.0.0
+go get github.com/Crank-Git/ja4plus-go@latest
 ```
 
 `v1.0.0` freezes the exported API. `docs/api/v1.md` records every exported name with its
 signature, and a test fails when the surface and that record differ.
+
+**The command states `@latest`, and it states no version.** `@latest` resolves to the
+newest published tag, so the command works before the `v1.0.0` tag exists and after it
+lands. A command that names an unpublished tag fails, and the module proxy holds no
+`v1.0.0` tag on 2026-08-15 UTC. `docs/index.md` and `docs/usage.md` state the same form.
 
 ### The language version and the build toolchain
 
@@ -96,7 +101,7 @@ database is live. Run `make vuln` to re-take the measurement on your own toolcha
 Pre-built binaries are available on the [Releases](https://github.com/Crank-Git/ja4plus-go/releases) page. Or build from source:
 
 ```bash
-go install github.com/Crank-Git/ja4plus-go/cmd/ja4plus@v1.0.0
+go install github.com/Crank-Git/ja4plus-go/cmd/ja4plus@latest
 ```
 
 ```bash
@@ -234,6 +239,7 @@ All fingerprinters share a common interface:
 |--------|-------------|
 | `ProcessPacket(pkt)` | Process a packet, returns `[]FingerprintResult` or nil |
 | `Reset()` | Clears all collected state |
+| `CleanupConnection(srcIP, srcPort, dstIP, dstPort, proto)` | Removes the state that the named connection holds |
 
 `JA4SSHFingerprinter` also implements `WindowCloser` and `ConnectionWindowCloser`. **Each
 interface carries one method**, so a type that implements one of them reaches that method's
@@ -515,9 +521,13 @@ The run reports these figures, measured on 2026-08-15 UTC at the pinned commit:
 | Figure | Count |
 |---|---|
 | Matches | 1754 |
-| Deviations | 247 |
-| Accepted deviations | 605 |
-| Register keys | 637 |
+| Deviations | 2 |
+| Accepted deviations | 850 |
+| Register keys | 882 |
+
+**The 2 deviations are the two comparisons that the register does not hold**, and each one
+awaits a maintainer ruling. They are `ssh2.pcapng/33/JA4L-S` and `tls3.pcapng/25/JA4L-S`.
+Issue #675 and issue #686 hold them, so `make conformance` exits 2 on this tree.
 
 **The FoxIO reference decides every disputed value.** Where this library and a FoxIO
 vector disagree, this library is wrong. `docs/specs/foxio/` transcribes each FoxIO image
@@ -532,8 +542,14 @@ as numbered rules, and every ruling of this project cites one of them.
 - [gopacket](https://github.com/gopacket/gopacket) for packet capture and dissection
 - [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto) for QUIC HKDF key derivation
 - No cgo required for PCAP file analysis (uses pure Go `pcapgo`)
-- Every released binary is built with `CGO_ENABLED=0`. `.github/workflows/release.yml`
-  sets it, and `release_cgo_test.go` guards it.
+- Every released binary is built with `CGO_ENABLED=0`. `.goreleaser.yaml` sets it in the
+  build environment, and `release_cgo_test.go` guards it. **No workflow of this repository
+  sets that variable as a workflow-level, job-level or step-level `env` key.** The release
+  workflow runs `go test -race`, the race detector needs cgo, and such a setting would stop
+  that step before it reached the build. `TestNoWorkflowSetsCgoEnabled` holds that property.
+  **One `run` line of `.github/workflows/ci.yml` still prefixes one `go build` command with
+  `CGO_ENABLED=0`.** A shell prefix binds one command, so it reaches no other step and the
+  guard permits it. #105 moved the release setting on 2026-08-15 UTC.
 
 ## Development
 
