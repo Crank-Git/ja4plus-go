@@ -134,7 +134,7 @@ func TestAMutationThatStopsBeingKilledIsReported(t *testing.T) {
 
 // TestANewTimedOutMutationIsReported holds the edge case of
 // `docs/specs/features/15-mutation-sweep.md`, which states
-// `The verdict is `TIMED OUT`. It is settled like a `LIVED` mutation.`
+// `The verdict is `TIMED OUT`. FR-mutation-11 reads it like a `LIVED` mutation.`
 //
 // **This is the case that the `mutants_total` field of `gremlins` v0.6.0 hides.** #91
 // measured it on 2026-08-14: `fileReport` at `internal/report/report.go:178` sums the

@@ -221,7 +221,15 @@ import (
 // 639.** Epic 15 and Epic 16 each ran a round on 2026-08-14, and each round re-measured the
 // mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
 // takes the union of the two histories and one constant.
-const issueCitationHighWaterMark = 639
+//
+// #642 re-measured the mark on 2026-08-15 UTC and it read 656. **#642 is the first issue
+// of batch #645 that cites its own number above the inherited mark of 639**, and it cites
+// that number in `prerelease_gate_test.go`, in `prerelease_registry_test.go` and in
+// `docs/specs/features/16-pre-release-validation.md`. Batch #645 opened its members and
+// their pull requests after the inherited reading, so the tracker moved by 17 between the
+// two. **A member pays this maintenance cost exactly as a round does**, because the guard
+// reads the number and never the shape of the change that carries it.
+const issueCitationHighWaterMark = 663
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

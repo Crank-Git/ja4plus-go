@@ -146,8 +146,7 @@ func run(input, dir string, meta reportInput) error {
 //
 // So a report of the whole named set writes `lookup.go` for two different files: the one at
 // the module root and the one in `ja4db/`. `doc.go` collides the same way. FR-mutation-11
-// settles a `LIVED` mutation by reading the line it names, and an ambiguous name names no
-// line to read.
+// reads the line that a `LIVED` mutation names, and an ambiguous name names no line to read.
 //
 // This walk resolves the name where exactly one file carries it. Where two files carry it,
 // `pathOf` keeps the base name and the report reports the collision.
@@ -312,8 +311,10 @@ func render(meta reportInput) string {
 	fmt.Fprintf(&b, "# Mutation report — %s — `%s`\n\n", meta.date, meta.packages)
 	b.WriteString("<!-- This file is generated. `make mutate` writes it. Do not edit it by hand. -->\n\n")
 	b.WriteString("**A mutation that survives names a test that runs a line and asserts nothing about it.**\n")
-	b.WriteString("It is not always a defect. `docs/specs/features/15-mutation-sweep.md` holds the requirements,\n")
-	b.WriteString("and FR-mutation-11 states that every `LIVED` mutation is settled.\n\n")
+	b.WriteString("It is not always a defect. `docs/specs/features/15-mutation-sweep.md` holds the requirements.\n")
+	b.WriteString("**FR-mutation-11 settles a `LIVED` mutation on code that can move a fingerprint value.**\n")
+	b.WriteString("It counts and records every other `LIVED` mutation. The maintainer ruled that boundary\n")
+	b.WriteString("on 2026-08-14, and `docs/mutation_sweep.md` states the procedure that applies it.\n\n")
 
 	fmt.Fprintf(&b, "## The run\n\n")
 	b.WriteString("| Field | Value |\n|---|---|\n")
@@ -333,7 +334,8 @@ func render(meta reportInput) string {
 	b.WriteString("unmeasured rather than effective.\n\n")
 
 	fmt.Fprintf(&b, "## The verdict counts\n\n")
-	fmt.Fprintf(&b, "**LIVED: %d.** That count sizes the settlement work of FR-mutation-11.\n\n", counts["LIVED"])
+	fmt.Fprintf(&b, "**LIVED: %d.** FR-mutation-11 reads each mutation of that count against "+
+		"the fingerprint risk.\n\n", counts["LIVED"])
 	b.WriteString("| Verdict | Count | What it means |\n|---|---|---|\n")
 	for _, verdict := range verdictOrder {
 		fmt.Fprintf(&b, "| `%s` | %d | %s |\n", verdict, counts[verdict], verdictMeaning[verdict])
@@ -371,9 +373,9 @@ func render(meta reportInput) string {
 // v0.6.0, and none of them reads the tool's website.
 var verdictMeaning = map[string]string{
 	"KILLED":      "A test failed, so the suite catches the change. `go test` exited 1.",
-	"LIVED":       "Every test passed, so no test asserts on the change. FR-mutation-11 settles it.",
+	"LIVED":       "Every test passed, so no test asserts on the change. FR-mutation-11 settles it when it can move a fingerprint value, and counts it otherwise.",
 	"NOT COVERED": "No test reaches the line, so the tool ran nothing.",
-	"TIMED OUT":   "The suite did not finish, and FR-mutation-11 settles it like a `LIVED` mutation.",
+	"TIMED OUT":   "The suite did not finish, and FR-mutation-11 reads it like a `LIVED` mutation.",
 	"NOT VIABLE":  "The mutated package did not compile. `go test` exited 2. No settlement is needed.",
 	"SKIPPED":     "The mutation sits outside the configured diff. This repository configures none.",
 	"RUNNABLE":    "A dry run identified the mutation and ran no test. `make mutate` performs no dry run.",
