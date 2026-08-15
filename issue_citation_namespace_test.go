@@ -322,7 +322,15 @@ import (
 // batch this round closes. They sit in `docs/specs/spec.html`, in `docs/specs/spec.md`
 // twice, in `internal/parser/http.go` and in `ja4l_mixed_line_ending_test.go`. **The mark is
 // a lower bound**, and 711 covers every citation the tree carries.
-const issueCitationHighWaterMark = 711
+//
+// **#439 re-measured the mark on 2026-08-15 UTC and it read 732.** `gh issue list` reported
+// issue 728 and `gh pr list` reported pull request 732, so the higher of the two is the
+// mark. **The mark of 711 reddened this guard on the 2 citations of #727 that #439 wrote**,
+// and they sit in `docs/specs/spec.md` and in `docs/specs/spec.html`. #727 is the batch that
+// carries #439, and 732 is the pull request of #439. **#439 opened that pull request before
+// it measured**, so the new mark covers the number that the measurement itself allocated.
+// **The mark is a lower bound**, and 732 covers every citation the tree carries.
+const issueCitationHighWaterMark = 732
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
