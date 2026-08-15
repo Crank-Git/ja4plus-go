@@ -162,17 +162,19 @@ type packetReader interface {
 }
 
 // pcapngMagic is the first four bytes of a pcapng Section Header Block.
-// A classic pcap file carries a1b2c3d4 or its byte-swapped form, and the classic reader
-// accepts every one of those forms, so this program matches the one pcapng value.
+// The four bytes read the same in each byte order, so one value matches both.
+// A classic pcap file carries a different magic number, in one of four forms.
+// `pcapgo.NewReader` accepts all four, so this program matches the one pcapng value.
 var pcapngMagic = [4]byte{0x0a, 0x0d, 0x0d, 0x0a}
 
 // newPacketReader returns the reader that matches the first four bytes of the file.
-// It returns an error when the file holds fewer than four bytes, and it returns an error
-// when the reader rejects the file.
+// It returns an error when the file holds fewer than four bytes.
+// It returns an error when the reader rejects the file.
 //
-// A capture file names its own format in those four bytes, and a file extension is a
-// convention that a writer may not follow. The FoxIO corpus ships a classic pcap under the
-// name http1.pcapng, and issue #727 records the refusal that the extension check produced.
+// A capture file names its own format in those four bytes.
+// A file extension is a convention that a writer may not follow.
+// The FoxIO corpus ships a classic pcap under the name http1.pcapng.
+// Issue #727 records the refusal that the extension check produced.
 // `loadPCAP` in `integration_test.go` already reads the magic number for the same reason.
 func newPacketReader(f *os.File, path string) (packetReader, error) {
 	var magic [4]byte

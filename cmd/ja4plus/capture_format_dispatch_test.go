@@ -13,11 +13,12 @@ import (
 	"github.com/gopacket/gopacket/pcapgo"
 )
 
-// These tests hold the closure of issue #727. The analyze command dispatched on the file
-// extension, so it refused a classic pcap named `.pcapng`. A capture file names its own
-// format in its first four bytes, and a file extension is a convention that a writer may
-// not follow. The FoxIO corpus ships one such file, and `loadPCAP` in `integration_test.go`
-// already sniffs the magic number for that reason.
+// These tests hold the closure of issue #727.
+// The analyze command dispatched on the file extension, so it refused a classic pcap named
+// `.pcapng`. A capture file names its own format in its first four bytes.
+// A file extension is a convention that a writer may not follow.
+// The FoxIO corpus ships one such file, and `loadPCAP` in `integration_test.go` reads the
+// magic number for that reason.
 //
 // Each test fails when the extension reaches the dispatch again.
 
@@ -151,6 +152,10 @@ func dispatchCaptureStandardOutput(t *testing.T, call func()) string {
 		t.Fatalf("open the pipe: %v", err)
 	}
 
+	// The read end holds a file descriptor for the whole test binary, so the helper closes
+	// it. Five cases call this helper, and each one leaks a descriptor without the close.
+	defer func() { _ = read.Close() }()
+
 	stdout := os.Stdout
 	os.Stdout = write
 
@@ -225,7 +230,7 @@ func TestRunAnalyzeReadsACaptureThatCarriesNoExtension(t *testing.T) {
 func TestRunAnalyzeReturnsAnErrorForAFileShorterThanFourBytes(t *testing.T) {
 	// The sniff reads four bytes, and a shorter file gives it fewer. The command reports
 	// the error, and it never panics.
-	for _, content := range [][]byte{nil, {0x0a}, {0x0a, 0x0d, 0x0d}} {
+	for _, content := range [][]byte{nil, {0x0a}, {0x0a, 0x0d}, {0x0a, 0x0d, 0x0d}} {
 		path := dispatchWriteCapture(t, "short.pcap", content)
 
 		if err := runAnalyze([]string{path}); err == nil {
