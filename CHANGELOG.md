@@ -25,7 +25,7 @@ JA4L point C is the last QUIC server handshake packet, and the per-packet vector
 the first one.
 Issue #449 wrote the 4 entries of its own count. The maintainer ruled on 2026-08-15 that
 the library reads the first QUIC packet of a coalesced datagram, and the Wireshark
-dissector reads every packet of that datagram.
+dissector reads every packet.
 Issue #527 wrote the last 2 entries of the ruling #285 count. The maintainer ruled on
 2026-08-14 that JA4H part b hashes an empty header list, and frame 4 of
 `gre-erspan-vxlan.pcap` then reached a value and revealed the #285 difference in its two
