@@ -11,6 +11,10 @@ Issue #443 produced it, under Epic #441. `.claude/rules/rulings.md` states who r
 `## Cause 3 — the QUIC client measurement point, and a reference split` below records the
 ruling, the re-measurement and the three register entries it wrote.
 
+**The maintainer kept ruling #127 on 2026-08-15 UTC, so cause 1 is settled.** Comment
+5299851784 of issue #441 holds the decline of the reversal. Issue #682 wrote the 149 entries
+that record the price. Issue #127 is the reversal path.
+
 **The maintainer ruled causes 4, 5 and 6 on 2026-08-15 UTC.** Issue #229 holds cause 4,
 issue #249 holds cause 5 and issue #449 holds cause 6. Batch #668 wrote the seven register
 entries that the three rulings produce. **The cause 5 decline is provisional**, because
@@ -178,6 +182,83 @@ per-packet vector.
 **So the 149 deviations are the recorded price of two rulings, and they are not a defect.**
 This page reverses no ruling, and it recommends none. The measurement prices the ruling, so
 that the maintainer reads the cost against a number rather than against an estimate.
+
+#### The maintainer kept ruling #127 on 2026-08-15, and the register now records the price
+
+**The maintainer declined the reversal on 2026-08-15 UTC**, in comment 5299851784 of issue
+#441. Issue #127 is the reversal path, and the ruling stays reversible.
+
+**Issue #682 wrote one entry for each comparison the ruling reaches.** The library
+keeps the two parts it writes today, so no line of `ja4l.go` changes.
+`.claude/rules/rulings.md` `## Where a ruling is recorded` states the rule the entries
+satisfy: a ruling that a vector reaches carries an entry in `testdata/deviations.json`.
+
+**The round enumerated the set from one live run, and never from this page.**
+`docs/audit/conformance.md` truncates each deviation group to three rows, so no document of
+this repository ever held the list. `make conformance` runs `go test -tags conformance -v`.
+`conformanceRecordComparison` in `conformance_test.go` then writes one log line for every
+unaccepted deviation. **Issue #682 read the list from that output** on
+`issue/682-ruling-127-register-entries`, with the corpus at the pinned commit
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+
+| Measure | Before the entries | After the entries |
+|---|---|---|
+| Matches | 1754 | **1754** |
+| Deviations the register does not hold | 247 | **98** |
+| Accepted deviations | 605 | **754** |
+| Register keys | 637 | **786** |
+| Unaccepted uncovered values | 175 | 175 |
+| Accepted uncovered values | 32 | 32 |
+| Stale register entries | 0 | 0 |
+| Orphan register entries | 0 | 0 |
+
+**The match count does not move**, because a decline moves a comparison from unaccepted to
+accepted and it moves no output. **The identity holds on each side**: `605 + 32 = 637`, and
+`754 + 32 = 786`.
+
+**The enumeration returned 150 per-packet rows, and this cause holds 149 of them.** The 149
+each carry an entry now. **The 150th carries none.** That row is `tls3.pcapng/153/JA4L.1`,
+and `#### The count of this ruling is 3, and the count above is 4` under cause 3 states why
+no reading explains it. **Issue #692 holds the row**, and it stays unaccepted.
+
+**Issue #652 already declined `browsers-x509.pcapng/128/JA4LS.1`**, at `5d3a650`, so the
+round did not re-enter it. **A duplicate key fails the conformance suite**, and
+`TestTheRegisterHoldsEachKeyOnce` in `deviations_test.go` holds that rule.
+
+#### The 149 rows hold two shapes, and the second one is not a pair
+
+`## The shape of the cluster` above states the pair: one difference produces two deviations.
+The suite reports the library value as a value the vector does not hold. It reports the
+vector value as a value the library does not produce. **138 of the 149 rows form 69 such
+pairs.** One more row, `browsers-x509.pcapng/121/JA4LS.1`, pairs with the cause 7 row that
+issue #652 already declined.
+
+**The remaining 10 rows carry a library value that the reference publishes nowhere.** Each
+one reads `the library produces a value the vector does not hold`. No vector row of the
+capture holds the same part a and part b on any frame.
+
+| Key | The library produces | The reference publishes |
+|---|---|---|
+| `chrome-cloudflare-quic-with-secrets.pcapng/2/JA4LS.1` | `5749_56` | (nothing for that connection) |
+| `chrome-cloudflare-quic-with-secrets.pcapng/3/JA4L.1` | `30_64` | (nothing for that connection) |
+| `latest.pcapng/111/JA4LS.1` | `3915_57` | (nothing for that connection) |
+| `latest.pcapng/112/JA4L.1` | `32_128` | (nothing for that connection) |
+| `ssh2.pcapng/370/JA4LS.1` | `6252_58` | (nothing for that connection) |
+| `ssh2.pcapng/371/JA4L.1` | `45_128` | (nothing for that connection) |
+| `ssh2.pcapng/954/JA4LS.1` | `4272_58` | (nothing for that connection) |
+| `ssh2.pcapng/955/JA4L.1` | `50_128` | (nothing for that connection) |
+| `tls3.pcapng/76/JA4LS.1` | `3181_57` | (nothing for that connection) |
+| `tls3.pcapng/77/JA4L.1` | `14_128` | (nothing for that connection) |
+
+**The emission frame explains the shape, and it is the same cause.**
+`wireshark/source/packet-ja4.c:1362-1394` writes on the `timestamp_F` frame alone, so a
+connection that never fills `timestamp_F` reaches no Wireshark value at all. **This library
+writes on the SYN-ACK frame and on the client measurement point.** Each of those frames
+comes before `timestamp_D`, so the connection reaches a library value.
+
+**The measurement that settles the attribution is the candidate of
+`### The count this cause closes` above: it closes 149.** That figure equals the 149 rows of
+this ruling, so every row of both shapes falls to the same change.
 
 ## Cause 2 — the JA4L-S emission frame on a QUIC connection
 
@@ -384,7 +465,7 @@ and the ruling alone holds three of them.**
 | `tls3.pcapng/147/JA4L.1` | `90_128_quic` | `59_128_quic` | `90_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/167/JA4L.1` | `81_128_quic` | `59_128_quic` | `81_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/312/JA4L.1` | `83_128_quic` | `45_128_quic` | `83_128_quic` | One entry under ruling #528. |
-| `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | No entry. |
+| `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | **No entry. Issue #692 holds the row.** |
 | `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` | `264_64_quic` | No entry under ruling #528. Ruling #229 holds it. |
 
 **The last two rows carry a second difference, so ruling #528 alone does not hold either
@@ -397,6 +478,22 @@ cause 4 on 2026-08-15 UTC.
 
 **An entry that named ruling #528 for either row would accept a difference the ruling does
 not decide.**
+
+**`tls3.pcapng/153/JA4L.1` carries no register entry, and issue #692 holds the row.** The
+same objection reaches ruling #127. Ruling #127 decides the part count on a TCP connection
+and the `quic` marker on a QUIC connection, and both sides of this comparison already write
+three parts and the marker. **So ruling #127 decides no part of this difference either.**
+
+**Issue #682 wrote an entry for this row on 2026-08-15 UTC, and it removed that entry on the
+same day.** The maintainer read the objection and declined the entry. **A row that no ruling
+explains stays unaccepted**, and it counts as one deviation.
+
+**The reason is that an entry is a record of a ruling.** An entry that names a ruling which
+decides none of the difference gives the register a false record, and the register is the
+one durable statement of why this library differs from the reference. Issue #692 asks for
+the reading that the row still needs.
+**Issue #127 is its reversal path.** The register holds no entry for this row today, so a
+later reading that explains the remainder writes one, under the ruling that decides it.
 
 **The row of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` is new.** The run of
 2026-08-13 attributed that comparison to cause 4 alone. The re-measurement moves its part a
@@ -543,10 +640,14 @@ each one reads `the vector holds a value the library does not produce`.
 | `ssh2.pcapng/33/JA4L-S` | `16192_57` | (none) |
 | `tls3.pcapng/25/JA4L-S` | `3583_57` | (none) |
 
-**The two per-stream rows are exact analogues, and this page named one of them until
-2026-08-15.** #449 measured the pair, and batch #668 records both here.
-`### Where the library stands` above states the mechanism that empties each one: the
-connection fills no point D, so the library publishes no `JA4L-S` value for it.
+**This page named one of the two rows until 2026-08-15.** #449 measured the pair, and batch
+#668 records both here. `### Where the library stands` above states the mechanism that
+empties each one: the connection fills no point D, so the library publishes no `JA4L-S`
+value for it.
+
+**The two rows are not exact analogues, and #675 measured the difference on 2026-08-15.**
+`### The reading of #675` below states it. `ssh2.pcapng/33/JA4L-S` carries one difference
+from the reference, and `tls3.pcapng/25/JA4L-S` carries two.
 
 **`tls3.pcapng/25/JA4L-S` is one of the two per-stream deviations of the count of 177**, and
 `## The measurement` above names it. Cause 5 held it until 2026-08-15, and
@@ -691,6 +792,166 @@ produces the per-stream set and `python/ja4.py:403-404` drops every QUIC layer a
 first. **So the ruled rule cannot produce the per-stream difference**, and a decline there
 would hide the fall-through of `processUDP` behind a ruling that does not reach it.
 **Issue #675 holds that fall-through.**
+
+### The reading of #675
+
+**#675 read the two per-stream rows on 2026-08-15, and it names the fall-through.** It
+writes no register entry, and it changes no line of `ja4l.go`.
+
+**The measured yield is 2, and it is not attributed.** One run of `make conformance` on
+`issue/675-processudp-per-stream-ja4ls` reports 1754 matches, 247 deviations, 605 accepted
+deviations and 637 register keys. Two comparisons of the whole corpus read
+`the vector holds a value the library does not produce` for a per-stream `JA4L-S` key.
+**They are the two rows of `### The four rows` above.**
+
+#### The emission point is not the difference
+
+**The reference computes the QUIC server value inside its point D branch, and the library
+does the same.** `python/ja4.py:585-587` calls `calculate_ja4_latency` only when
+`cache_update` fills point `D`:
+
+```python
+                if x['packet_type'] == '2' and x['dstport'] == '443':
+                    if (cache_update(x, 'D', x['timestamp'], STREAM)):
+                        calculate_ja4_latency(x, 'quic', STREAM) 
+```
+
+**`calculate_ja4_latency` then writes the server value from point A and point B alone.**
+`python/ja4.py:154-157` reads no point C and no point D:
+
+```python
+            if 'B' in conn and 'A' in conn:
+                diff = epoch_diff(conn['A'], conn['B'])
+                ttl = conn['server_ttl']
+                cache_update(x, 'JA4L-S',  f"{diff}_{ttl}", STREAM)
+```
+
+**The client value needs point C and point D**, at `python/ja4.py:162-164`. So a connection
+that fills point D and no point C reaches one value and not two, which is what each vector
+holds.
+
+#### The fall-through: the library gates point D on point C
+
+**The reference fills point D on a client Handshake packet, and it reads no point C.**
+`python/ja4.py:585` tests the packet type and the destination port, and nothing else.
+
+**`processUDP` in `ja4l.go` fills point D only when point C is present.** Its point D branch
+opens with a test of `conn.timestamps["C"]`. A connection with no point C therefore reaches
+the end of the method, and it returns no result. **That test is the fall-through, and it is
+the whole cause of `ssh2.pcapng/33/JA4L-S`.**
+
+**#447 created these two rows, and the fall-through was harmless before it.** The library
+published the QUIC server value on the frame that fills point B until #447, so a connection
+that never fills point D still reached a value. `## Cause 2 — the JA4L-S emission frame on a
+QUIC connection` above records that behavior, and it names `16192_57_quic` on frame 1042 of
+`ssh2.pcapng`. **That is the same connection this section reads.** #447 moved the emission to
+the point D frame, and the point C gate then emptied both rows.
+
+**Point C stays empty for a lawful reason, and the reference agrees with the library
+there.** `IsQUICHandshakePacket` in `internal/parser/quic.go` reads `payload[0]`, so a
+coalesced datagram that leads with an Initial packet fills no point C. The reference reads
+the first QUIC packet alone as well, and neither vector holds a `JA4L-C` value for these two
+streams. **So `IsQUICHandshakePacket` empties point C, and it produces no deviation.** The
+ruling of 2026-08-15 keeps that behavior, and #675 does not change it.
+
+#### One cause, and one second difference on one row
+
+**A probe ran `JA4LFingerprinter` over each capture on 2026-08-15 and read the connection
+state.** Exactly one connection of each capture reaches point A and point B and no further.
+
+| Capture | Connection | Points | Server TTL | `(B-A)/2` | The vector holds |
+|---|---|---|---|---|---|
+| `ssh2.pcapng` | `142.251.32.74:443` and `172.16.225.48:51810` | A and B | 57 | 16192 | `16192_57` |
+| `tls3.pcapng` | `104.21.234.234:443` and `192.168.1.169:61884` | A and B | 57 | 3051 | `3583_57` |
+
+**`ssh2.pcapng/33` carries one difference.** The library already holds the value the vector
+states, and the fall-through above is the only reason it publishes nothing.
+
+**`tls3.pcapng/25` carries a second difference, and the fall-through does not reach it.**
+The library reads point B at the first server Initial packet, and the reference reads it at
+the Initial packet that carries the ServerHello. `python/ja4.py:580-581` states the
+reference rule:
+
+```python
+                if x['packet_type'] == '0' and 'type' in x and x['type'] == '2':
+                    cache_update(x, 'B', x['timestamp'], STREAM) 
+```
+
+**`python/common.py:101` names `B` among the fields the reference never updates**, so the
+first Initial packet that carries a ServerHello fixes the point.
+
+**Two different files state a JA4L rule at lines 580 and 581, and both citations are
+right.** `python/ja4.py:580-581` above names the FoxIO reference. `ja4plus/fingerprinters/ja4l.py:580-581`
+in the comment of `processUDP` in `ja4l.go` names the port at tag `v1.1.0`, and it states
+that the two client points read a Handshake packet only. The batch #684 round read both
+files and confirmed each one on 2026-08-15 UTC. **The shared line pair is a coincidence,
+and it is no mis-citation.** `docs/specs/foxio/README.md` `## How to read a citation` states
+the base that separates the two.
+
+**The probe read the packet sequence of that connection.** The server sends two Initial
+packets, 6102 µs and 7166 µs after the client Initial packet. Half of each delay is 3051 and
+3583. **The library takes the first, and the vector holds the second.** So the reference
+reads a ServerHello in the second Initial packet and not in the first.
+
+**That second difference is a reference split, and it belongs to the maintainer.** The
+per-packet set holds `3051_57_quic` for `tls3.pcapng/297/JA4LS.1`, which is the first server
+Initial packet. So Wireshark reads the first packet and FoxIO's Python reads the ServerHello
+packet. `.claude/rules/rulings.md` `## Stop conditions` reserves that question. **Issue #686
+holds it, and #675 rules nothing.**
+
+#### The port does not carry this gap
+
+**The port publishes the QUIC server value at point B, and never at point D.**
+`ja4plus/fingerprinters/ja4l.py:547-550` of tag `v1.1.0` fills the point and returns the
+value in one step:
+
+```python
+    timestamps["B"] = now
+    conn["ttls"]["server"] = ttl
+    return "JA4L-S={}_{}_{}".format(
+        _one_way_latency(timestamps["A"], timestamps["B"]), ttl, QUIC_MARKER
+```
+
+**So the fall-through of `processUDP` has no analogue in the port.** The port reaches a
+server value on a connection that fills no point C and no point D, and this library does
+not.
+
+**The port also reads the reference point B rule.** `ja4plus/fingerprinters/ja4l.py:543` of
+tag `v1.1.0` returns until `server_hello_is_complete` holds, so the port takes the Initial
+packet that carries the ServerHello.
+
+**This section states what the port's code does, and it states no value the port produces.**
+`.claude/rules/parity.md` `## Never run the port from a test` bars a run.
+`ja4plus/fingerprinters/ja4l.py:538` of tag `v1.1.0` gates point B on a decryption, and this
+reading did not measure that decryption.
+
+**`### Does the port carry the same gap` above answers a different question.** It reads the
+coalesced datagram, and the port carries that reading. This section reads the emission point
+and the point B rule, and the port carries neither gap.
+
+#### Why no register entry cites ruling #449
+
+**Both sides of a per-stream comparison read the first QUIC packet of a datagram**, so the
+ruled rule produces no difference between them. A decline that cites #449 would state a
+false cause, and it would hide the fall-through above. **#675 therefore writes no entry in
+`testdata/deviations.json`.**
+
+#### A repair moves a fingerprint value
+
+**A repair of the fall-through is not a documentation change, and #675 builds none of it.**
+`.claude/rules/rulings.md` `## Stop conditions` and the body of #675 each bar it. Three
+values move.
+
+- **`ssh2.pcapng/33/JA4L-S` changes state, and it does not close.** The library would
+  publish `16192_57_quic`, and the vector holds `16192_57`. The row reads
+  `the two values differ` after the repair.
+- **`tls3.pcapng/25/JA4L-S` changes state, and the second difference survives.** The library
+  would publish `3051_57_quic`, and the vector holds `3583_57`.
+- **The per-packet set gains a `JA4LS.1` value on each of the two captures.** A point D that
+  fills without point C emits on a frame that publishes nothing today.
+
+**`CHANGELOG.md` holds a guard that reads the match count and the deviation count.**
+`### The count this cause closes` above records that the candidate of #449 reddened it.
 
 ## Cause 7 — the seconds component of the Wireshark delta
 
@@ -911,7 +1172,7 @@ each one.
 
 | Cause | Attributed | Measured close | Cost | Who decides |
 |---|---|---|---|---|
-| 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | The maintainer. Ruling #127 holds it. |
+| 1 — the TCP emission frame and part c | 149 | **149** | Opens 100. Orphans 41 entries. | **Kept on 2026-08-15 UTC. Ruling #127 holds it, and issue #682 wrote 149 register entries.** |
 | 2 — the QUIC `JA4L-S` emission frame | 16 | **15** | Opens none. Orphans 20 entries. | An engineer. The four implementations agree. |
 | 3 — the QUIC client measurement point | 4 | **3** | **The ruling costs nothing.** Answer 2 cost nothing on 2026-08-13, and it costs 5 stale entries on 2026-08-14. | **Ruled on 2026-08-14. Issue #528 holds it.** |
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | 2 register entries. | **Ruled on 2026-08-15 UTC. Issue #229 holds it.** |
@@ -964,8 +1225,9 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
 
 ## What this page does not state
 
-- **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14, and causes 4,
-  5 and 6 on 2026-08-15 UTC.** Causes 1 and 7 each stay with the maintainer.
+- **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14, and causes 1,
+  4, 5 and 6 on 2026-08-15 UTC.** Cause 7 stays with the maintainer, and the decision it
+  needs arises only if the maintainer reverses ruling #127.
 - **It measured causes 1, 2, 3 and 6.** Causes 4 and 5 carry no measured count, because
   each one needs a ruling before a candidate exists. **Cause 7 carries no measured count
   either**, because ruling #127 bars the candidate that would produce one.
@@ -977,5 +1239,12 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
   the ruling of 2026-08-14**, and `### The ruling of 2026-08-14` above names each one.
   **Batch #668 wrote seven more on 2026-08-15 UTC**, under the rulings of #229, #249 and
   #449. The register held 630 keys before that batch and it holds 637 after it, measured on
-  2026-08-15 UTC.
+  2026-08-15 UTC. **Issue #682 then wrote 149 more under ruling #127 on 2026-08-15 UTC**,
+  and the register holds 786 keys after it. **It declined a 150th**, because no ruling
+  explains `tls3.pcapng/153/JA4L.1` and issue #692 holds that row.
+  `#### The maintainer kept ruling #127 on 2026-08-15, and the register now records the price`
+  under cause 1 above holds that measurement. **Issue #683 then wrote 4 more under ruling
+  #42 in the same batch, on 2026-08-15 UTC**, and the register holds 790 keys after it. Each
+  of the four names the QUIC connection that the FoxIO Python reference omits. **790 is the
+  count of the merged batch**, and each 786 above is scoped to #682 alone.
 - **It states no count for the JA4H cluster.** #442 reads that cluster.

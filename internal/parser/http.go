@@ -71,13 +71,6 @@ var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 
 // headerBlockEnd returns the index of the empty line that ends the header block.
 // It returns -1 when the text holds no such line.
-//
-// It reads the two terminators `\r\n\r\n` and `\n\n`, and it returns the earlier of the two.
-// `ja4plus/utils/http_utils.py:43` of the Python port holds the same two, so both
-// implementations answer alike.
-//
-// TODO(#298): Read a terminator that mixes the two line endings. A block that ends
-// `\n\r\n` matches neither literal, and it reaches no value.
 func headerBlockEnd(text string) int {
 	end, _ := headerBlockTerminator(text)
 	return end
@@ -88,16 +81,55 @@ func headerBlockEnd(text string) int {
 // It returns -1 and 0 when the text holds no such line.
 //
 // The body starts at the sum of the two, so a caller that measures the body needs both.
+// A terminator holds 2, 3 or 4 bytes, so no caller computes the body start from a fixed
+// count.
+//
+// **The terminator is one line ending followed by another**, and a sender may write a
+// different line ending on each of the two. The maintainer ruled that pattern on 2026-08-13
+// UTC, in the port, and re-confirmed it on 2026-08-15 UTC at issue #298.
+// `Crank-Git/ja4plus#614` and `Crank-Git/ja4plus#604` hold the Python half.
+//
+// A pair of literals reads three of the four combinations, and it declines `\n\r\n`.
+// `ja4plus/utils/http_utils.py:43` of the port at tag `v1.1.0` holds that pair as
+// `HEADER_BLOCK_TERMINATORS = (b"\r\n\r\n", b"\n\n")`.
+//
+// **This reader answers exactly as the regular expression `(?:\r\n|\n)(?:\r\n|\n)` does.**
+// #298 proved that on 349525 strings of length 0 through 9 over the four deciding bytes, and
+// on 2000000 random strings, on 2026-08-15 UTC. The two disagree on none of them.
+//
+// **#298 declined that regular expression on cost.** One 8192-byte payload that holds no
+// terminator costs 84 microseconds under the regular expression, 247 nanoseconds under the
+// two literals this reader replaces, and 120 nanoseconds here, measured on an Apple M4 on
+// 2026-08-15 UTC. **Every payload of a capture reaches this function**, and an unterminated
+// stream reaches it again at each segment, so an attacker who never sends an empty line
+// chooses that cost. `Benchmark_headerBlockTerminator` holds the measurement.
 func headerBlockTerminator(text string) (int, int) {
-	end := -1
-	length := 0
-	for _, terminator := range []string{"\r\n\r\n", "\n\n"} {
-		if index := strings.Index(text, terminator); index >= 0 && (end < 0 || index < end) {
-			end = index
-			length = len(terminator)
+	for offset := 0; offset < len(text); {
+		feed := strings.IndexByte(text[offset:], '\n')
+		if feed < 0 {
+			return -1, 0
+		}
+		feed += offset
+		offset = feed + 1
+
+		// The first line ending starts at the carriage return when one precedes the line
+		// feed, because the alternation reads `\r\n` before it reads `\n`. So the header
+		// block keeps no part of the line ending, and no value trim is load-bearing.
+		start := feed
+		if feed > 0 && text[feed-1] == '\r' {
+			start = feed - 1
+		}
+
+		// The second line ending starts at the byte after the first one, and it ends the
+		// header block. A line feed that no line ending follows ends a header line instead.
+		if offset < len(text) && text[offset] == '\n' {
+			return start, offset + 1 - start
+		}
+		if offset+1 < len(text) && text[offset] == '\r' && text[offset+1] == '\n' {
+			return start, offset + 2 - start
 		}
 	}
-	return end, length
+	return -1, 0
 }
 
 // HTTPMessageIsComplete reports whether the payload holds the whole HTTP request.
@@ -202,8 +234,9 @@ func ParseHTTPRequest(payload []byte) *HTTPRequest {
 		return nil
 	}
 	// The body holds any byte, so the header parse reads the header block alone.
-	// A block that ends `\r\n\n` keeps the carriage return of the last line ending, so the
-	// last header line carries one trailing carriage return. The value trim below removes it.
+	// The terminator match starts at the first line ending of the empty line, so the last
+	// header line carries no part of that line ending. The ruling of #298 removed the
+	// trailing carriage return that a `\r\n\n` block used to leave.
 	text = text[:blockEnd]
 
 	req := &HTTPRequest{

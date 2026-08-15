@@ -36,7 +36,7 @@ import (
 )
 
 // issueCitationHighWaterMark is the highest number this repository had allocated on
-// 2026-08-14. GitHub allocates one number sequence to issues and to pull requests. So every
+// 2026-08-15 UTC. GitHub allocates one number sequence to issues and to pull requests. So every
 // number at or below the mark names something of this repository, and no number above it does.
 //
 // The command that produced it:
@@ -261,7 +261,46 @@ import (
 // 679. **That round cites no number above 678**, and it opens no pull request of its own,
 // because the project manager opens the batch pull request. **So the round re-measures to
 // keep the mark accurate rather than to repair a failure.**
-const issueCitationHighWaterMark = 679
+// #298 and #675 EACH re-measured the mark on 2026-08-15 UTC, and each one read 686. The two
+// members of batch #684 met in a merge conflict here, and this comment holds both readings
+// rather than one.
+//
+// **#298 cites #685**, which is the issue it filed for the JA4L half of its own finding:
+// `holdsACompleteHTTPRequest` in `ja4l.go` holds a duplicate of the terminator reading that
+// #298 replaced, and it gates a JA4L measurement point the line-ending ruling does not reach.
+//
+// **#675 cites #686**, which holds the point B reference split it found. Wireshark and the
+// FoxIO Python disagree on `tls3.pcapng/25`, so #675 ruled nothing and filed the split.
+//
+// **The guard reddened for each member in turn, and it behaves as it is designed to.** A
+// member pays this maintenance cost exactly as a documentation round does.
+//
+// **This comment names no number above 686 on purpose.** Each member opened its pull request
+// after its own reading, so the tracker allocated numbers above the mark. A citation of a
+// pull-request number would redden the guard and cost a further reading. **The mark is a
+// LOWER BOUND, and 686 covers every citation the tree carries.**
+//
+// **The resolver re-measured the mark at the merge**, which is the rule session 16 earned: a
+// conflict resolution writes prose, prose cites an issue, so the resolver re-measures.
+// #682 re-measured the mark on 2026-08-15 UTC after it merged `batch/684` into its branch,
+// and it read 692. **#682 cites #692**, which holds the one row of the JA4L cluster that
+// reaches no ruling: `tls3.pcapng/153/JA4L.1`. The maintainer read #682 and declined a
+// register entry for that row, so the row stays unaccepted and the issue holds it.
+//
+// **#682 is the third member of batch #684 to pay this cost**, after #298 and #675. The
+// mark read 679 when #682 branched, and the two earlier members moved it to 686 while #682
+// ran. **A member that files an issue moves the mark past its own citation every time.**
+//
+// **692 is the number of the issue itself, and #682 opened its pull request before it.** So
+// this reading covers every citation the tree carries, and it names no pull-request number.
+//
+// **The documentation round of batch #684 re-measured the mark on 2026-08-15 UTC and it read
+// 696.** The round cites #298, #675, #682, #683, #685, #686 and #692, and the inherited mark
+// of 692 already covered every one of them. **So the guard was green before this
+// re-measurement**, and the round pays the measurement to keep the mark tight rather than to
+// repair a failure. **The opening sentence of this comment read 2026-08-14 until this
+// round**, and each of the four readings above it was measured on 2026-08-15 UTC.
+const issueCitationHighWaterMark = 696
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
