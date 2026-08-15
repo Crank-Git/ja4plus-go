@@ -235,9 +235,14 @@ func TestEveryReleasedBinaryRunsOnItsOwnPlatform(t *testing.T) {
 // TestEveryReleasedBinaryPrintsTheTagVersion holds FR-prerelease-19.
 //
 // The release workflow builds each artifact with `-X main.Version=${GITHUB_REF_NAME}`, so
-// the version of a released binary is the tag. A binary built from an untagged tree prints
-// `ja4plus dev`, which #95 measured on 2026-08-14. **So this case separates a released
-// artifact from a local build**, and a `dev` value is a failure rather than a pass.
+// the version of a released binary is the tag. **So this case separates a released artifact
+// from a local build**, and a `dev` value is a failure rather than a pass.
+//
+// #95 measured `ja4plus dev` for a local build on 2026-08-14, and #628 moved that value on
+// the same day. A local `go build` now prints the pseudo-version that the toolchain stamps,
+// such as `ja4plus v0.3.1-0.20260815010712-5cf4a407ddd3`. `go run` and `go test` still print
+// `ja4plus dev`. **Each of the three values names no tag**, so this case still separates the
+// two kinds of build.
 func TestEveryReleasedBinaryPrintsTheTagVersion(t *testing.T) {
 	directory, tag := releaseUnderTest(t)
 	binary, path := nativeBinary(t, directory, tag)
