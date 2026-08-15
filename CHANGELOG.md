@@ -18,15 +18,17 @@ put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issu
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
 issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, and issue #127 put 150
 more.
-Issue #682 wrote 149 of the 150 entries of the ruling #127 count on 2026-08-15 UTC. The
-maintainer kept ruling #127 on that day.
+Issue #682 wrote 149 of the 150 entries of the ruling #127 count on 2026-08-15 UTC, and
+issue #652 wrote the 150th. **That 150 counts register entries.** The maintainer kept
+ruling #127 on that day.
 The library therefore writes two parts on a TCP connection, and the Wireshark dissector
 writes three parts on the `timestamp_F` frame. **The round enumerated the set from one
 `make conformance` run, and never from a document.** The reason is that
 `docs/audit/conformance.md` truncates each deviation group to three rows.
 `docs/audit/ja4l-deviation-cluster.md` `## Cause 1 — the emission frame and part c on a TCP
-connection` holds the reading for all 149. **The enumeration returned 150 rows, and the
-150th carries no entry.** That row is `tls3.pcapng/153/JA4L.1`, no ruling explains its
+connection` holds the reading for all 149. **The cause 1 enumeration returned 150 per-packet rows, and
+that 150 counts a different set from the 150 register entries above.** 149 of those rows
+carry an entry, and the 150th carries none. That row is `tls3.pcapng/153/JA4L.1`, no ruling explains its
 difference, and issue #692 holds it. **A row that no ruling explains stays unaccepted**,
 because an entry records a ruling.
 Issue #229 wrote the 2 entries of its own count. The maintainer ruled on 2026-08-15 that
@@ -493,8 +495,11 @@ that the interface declares.
   read two fixed byte groups before.** The maintainer ruled the pattern on 2026-08-13 UTC, in
   the port, and re-confirmed it on 2026-08-15 UTC at #298. `Crank-Git/ja4plus#614` and
   `Crank-Git/ja4plus#604` hold the Python half. **The terminator is one line ending followed
-  by another**, and `headerBlockTerminatorRe` of `internal/parser/http.go` states that
-  pattern. **A caller of `v0.3.0` who upgrades reads two changes.** A request whose header
+  by another**, and `headerBlockTerminator` of `internal/parser/http.go` reads that pattern
+  with a byte scan. It returns the first line ending that another line ending follows.
+  **#298 declined the regular expression `(?:\r\n|\n)(?:\r\n|\n)` on cost**, and the doc
+  comment of that function holds the benchmark. **A caller of `v0.3.0` who upgrades reads
+  two changes.** A request whose header
   block ends `\n\r\n` now reaches a JA4H value, and it reached none before, because neither
   `\r\n\r\n` nor `\n\n` matched that terminator. A request whose header block ends `\r\n\n`
   now matches at the carriage return, and it matched one byte later before. **The second

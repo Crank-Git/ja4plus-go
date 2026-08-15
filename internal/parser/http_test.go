@@ -19,8 +19,10 @@ import (
 // offset. A reader that takes a later terminator therefore moves the JA4H completeness gate.
 //
 // **The comparison that the sweep of 2026-08-14 mutated no longer exists.** #298 replaced the
-// two-literal loop with `headerBlockTerminatorRe`, and the leftmost match of that expression
-// now states the choice. This test holds the behavior, and it holds no mutant.
+// two-literal loop with a byte scan, and `headerBlockTerminator` now states the choice. It
+// returns the first line ending that another line ending follows. **#298 declined a regular
+// expression on cost**, and the doc comment of that function holds the benchmark. This test
+// holds the behavior, and it holds no mutant.
 func TestHeaderBlockTerminatorReadsTheEarliestTerminator(t *testing.T) {
 	text := "POST /x HTTP/1.1\r\nHost: example.com\r\n\r\nfirst\n\nsecond"
 

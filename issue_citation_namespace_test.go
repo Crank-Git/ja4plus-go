@@ -36,7 +36,7 @@ import (
 )
 
 // issueCitationHighWaterMark is the highest number this repository had allocated on
-// 2026-08-14. GitHub allocates one number sequence to issues and to pull requests. So every
+// 2026-08-15 UTC. GitHub allocates one number sequence to issues and to pull requests. So every
 // number at or below the mark names something of this repository, and no number above it does.
 //
 // The command that produced it:
@@ -293,7 +293,14 @@ import (
 //
 // **692 is the number of the issue itself, and #682 opened its pull request before it.** So
 // this reading covers every citation the tree carries, and it names no pull-request number.
-const issueCitationHighWaterMark = 692
+//
+// **The documentation round of batch #684 re-measured the mark on 2026-08-15 UTC and it read
+// 696.** The round cites #298, #675, #682, #683, #685, #686 and #692, and the inherited mark
+// of 692 already covered every one of them. **So the guard was green before this
+// re-measurement**, and the round pays the measurement to keep the mark tight rather than to
+// repair a failure. **The opening sentence of this comment read 2026-08-14 until this
+// round**, and each of the four readings above it was measured on 2026-08-15 UTC.
+const issueCitationHighWaterMark = 696
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

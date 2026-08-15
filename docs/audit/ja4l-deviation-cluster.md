@@ -218,7 +218,7 @@ accepted and it moves no output. **The identity holds on each side**: `605 + 32 
 
 **The enumeration returned 150 per-packet rows, and this cause holds 149 of them.** The 149
 each carry an entry now. **The 150th carries none.** That row is `tls3.pcapng/153/JA4L.1`,
-and `### The count of this ruling is 3, and the count above is 4` under cause 3 states why
+and `#### The count of this ruling is 3, and the count above is 4` under cause 3 states why
 no reading explains it. **Issue #692 holds the row**, and it stays unaccepted.
 
 **Issue #652 already declined `browsers-x509.pcapng/128/JA4LS.1`**, at `5d3a650`, so the
@@ -492,8 +492,8 @@ explains stays unaccepted**, and it counts as one deviation.
 decides none of the difference gives the register a false record, and the register is the
 one durable statement of why this library differs from the reference. Issue #692 asks for
 the reading that the row still needs.
-**Issue #127 is its reversal path**, and a later reading that explains the remainder moves
-the entry to the ruling that does decide it.
+**Issue #127 is its reversal path.** The register holds no entry for this row today, so a
+later reading that explains the remainder writes one, under the ruling that decides it.
 
 **The row of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` is new.** The run of
 2026-08-13 attributed that comparison to cause 4 alone. The re-measurement moves its part a
@@ -880,6 +880,14 @@ reference rule:
 **`python/common.py:101` names `B` among the fields the reference never updates**, so the
 first Initial packet that carries a ServerHello fixes the point.
 
+**Two different files state a JA4L rule at lines 580 and 581, and both citations are
+right.** `python/ja4.py:580-581` above names the FoxIO reference. `ja4plus/fingerprinters/ja4l.py:580-581`
+in the comment of `processUDP` in `ja4l.go` names the port at tag `v1.1.0`, and it states
+that the two client points read a Handshake packet only. The batch #684 round read both
+files and confirmed each one on 2026-08-15 UTC. **The shared line pair is a coincidence,
+and it is no mis-citation.** `docs/specs/foxio/README.md` `## How to read a citation` states
+the base that separates the two.
+
 **The probe read the packet sequence of that connection.** The server sends two Initial
 packets, 6102 µs and 7166 µs after the client Initial packet. Half of each delay is 3051 and
 3583. **The library takes the first, and the vector holds the second.** So the reference
@@ -1235,5 +1243,8 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
   and the register holds 786 keys after it. **It declined a 150th**, because no ruling
   explains `tls3.pcapng/153/JA4L.1` and issue #692 holds that row.
   `#### The maintainer kept ruling #127 on 2026-08-15, and the register now records the price`
-  under cause 1 above holds that measurement.
+  under cause 1 above holds that measurement. **Issue #683 then wrote 4 more under ruling
+  #42 in the same batch, on 2026-08-15 UTC**, and the register holds 790 keys after it. Each
+  of the four names the QUIC connection that the FoxIO Python reference omits. **790 is the
+  count of the merged batch**, and each 786 above is scoped to #682 alone.
 - **It states no count for the JA4H cluster.** #442 reads that cluster.
