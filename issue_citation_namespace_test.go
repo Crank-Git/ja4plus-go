@@ -261,7 +261,14 @@ import (
 // 679. **That round cites no number above 678**, and it opens no pull request of its own,
 // because the project manager opens the batch pull request. **So the round re-measures to
 // keep the mark accurate rather than to repair a failure.**
-const issueCitationHighWaterMark = 679
+// #675 re-measured the mark on 2026-08-15 UTC and it read 686. That issue reads the two
+// per-stream `JA4L-S` rows, and its reading names #686, which holds the point B reference
+// split it found. **The guard reported the citation and the test failed**, which is the
+// guard doing its work. **#675 opened its pull request after this reading**, so the tracker
+// allocated one number above the mark. **This comment names no number above 686 on purpose**,
+// because a citation of that pull request would redden the guard and cost a third reading.
+// The mark is a lower bound, and 686 covers every citation the tree carries.
+const issueCitationHighWaterMark = 686
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
