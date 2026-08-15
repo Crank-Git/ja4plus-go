@@ -964,7 +964,7 @@ jobs:
 
       # **The step above built five binaries, and no step ran one of them.** So the job
       # proved that the build succeeds, and it proved nothing about what the build stamps.
-      # #736 measured that gap on 2026-08-15 UTC: a snapshot binary printed `ja4plus v0.3.0`,
+      # #736 measured that gap on 2026-08-15 UTC. A snapshot binary printed `ja4plus v0.3.0`,
       # which is the version of the previous release, and every case stayed green.
       #
       # This step reads real output, and the case in `release_snapshot_version_test.go` reads
