@@ -32,10 +32,15 @@ name one machine, and `25.6.0` is the Darwin kernel version.
 |---|---|---|
 | One lookup, at the user cache path, with no cache file | **459 ns/op** | `BenchmarkLookupFingerprint` of `lookup_reload_test.go` |
 | One lookup, at a short path, with a cache file present | **660 ns/op** | Issue #573, a scratch benchmark |
-| The map read alone, with no stat | **6.2 ns/op** | `BenchmarkLookupTableRead` of `lookup_reload_test.go` |
+| The map read alone, with no stat | **5.7 ns/op** | `BenchmarkLookupTableRead` of `lookup_reload_test.go` |
 
-**The map read reproduces the 6.6 ns/op that #74 recorded before its change.** So the stat
-is the whole of the added cost, and #74 read it correctly.
+**A scratch benchmark of the map read measured 6.2 ns/op under a temporary home
+directory**, and `BenchmarkLookupTableRead` measures 5.7 ns/op under the user cache path.
+**Both figures reproduce the 6.6 ns/op that #74 recorded before its change.** So the stat is
+the whole of the added cost, and #74 read it correctly.
+
+**The compiler does not remove the map read of `BenchmarkLookupTableRead`.** A removed read
+would report a fraction of one nanosecond, and 5.7 ns/op is the cost of one map hash.
 
 **The recorded 614 ns/op of #74 sits inside the measured range, so this measurement confirms
 that figure.**
