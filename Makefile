@@ -135,12 +135,15 @@ docs:
 #
 # `-v` prints the summary that `TestThePrereleaseRunReportsOneSummary` writes. That summary
 # names one line for each case of `docs/specs/features/16-pre-release-validation.md`, and
-# it separates a case that runs from a case that no issue has built.
+# it separates a case that proves its requirement from a case that waits.
 #
-# #95 built the clean environment on 2026-08-14. #96 through #99 add the cases that read a
-# published tag, a published module or a released binary, and this project has cut no tag
-# since `v0.3.0`. So this target runs the clean environment case alone today, and the
-# summary says so.
+# Epic #94 built every case on 2026-08-14. `prereleaseCases` in
+# `prerelease_registry_test.go` states which case proves its requirement today, and the
+# summary prints that state. A count here would go stale at each such change, so the
+# registry states the count and this comment states none.
+#
+# A case that reads a published tag reads `v0.3.0`, because this project has cut no tag
+# since it. So a case can report a failure that the next tag repairs.
 #
 # FR-prerelease-26 states that this target passes before the maintainer creates the tag.
 prerelease:

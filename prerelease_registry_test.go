@@ -19,8 +19,9 @@ const prereleaseFeatureFile = "docs/specs/features/16-pre-release-validation.md"
 
 // prereleaseCase names one case of `docs/specs/features/16-pre-release-validation.md`.
 //
-// A case that no issue has built carries `built: false`. The summary of the pre-release
-// run names it, so a reader separates an unbuilt case from a case that passed.
+// A case that asserts nothing today carries `proves: false`. The summary of the
+// pre-release run names it, so a reader separates a case that waits from a case that
+// passed.
 type prereleaseCase struct {
 	// name states the case in the words of the feature file.
 	name string
@@ -28,8 +29,15 @@ type prereleaseCase struct {
 	requirements []string
 	// issue names the issue that builds the case.
 	issue int
-	// built states whether the tree holds the case today.
-	built bool
+	// proves states whether the case asserts its requirement today.
+	//
+	// **The tree holds a Go case for every row, and this field reads no absence.** The
+	// Epic 16 round renamed this field from `built` on 2026-08-14, because the cross-member
+	// review measured the third meaning. `TestThePrereleaseTargetPassesBeforeTheTag` and
+	// `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` each stand in
+	// `prerelease_gate_test.go`, each one runs, and each one skips with a stated reason. So
+	// a summary that called either case `absent` stated something the binary disproves.
+	proves bool
 }
 
 // prereleaseCases holds one row for each case of the feature set.
@@ -40,8 +48,9 @@ type prereleaseCase struct {
 //
 // A row that reads a published tag reads `v0.3.0`, because this project has cut no tag
 // since it. The maintainer ruled that scope on 2026-08-14, at #94: a member writes its
-// case against `v0.3.0` and it records each expected failure. So a built row can report a
-// failure that the next tag repairs, and `make prerelease` is red until Epic 10 ships one.
+// case against `v0.3.0` and it records each expected failure. So a row that proves its
+// requirement can report a failure that the next tag repairs, and `make prerelease` is red
+// until Epic 10 ships one.
 //
 // **A row that reads no tag does not wait.** The documentation site reads
 // `docs/requirements.txt`, and the release gate reads the tracked tree. **Two rows of #99
@@ -51,41 +60,41 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the clean environment",
 		requirements: []string{"FR-prerelease-1", "FR-prerelease-2", "FR-prerelease-3", "FR-prerelease-4", "FR-prerelease-5"},
 		issue:        95,
-		built:        true,
+		proves:       true,
 	},
 	{
 		name:         "the module install",
 		requirements: []string{"FR-prerelease-6", "FR-prerelease-7", "FR-prerelease-8", "FR-prerelease-9", "FR-prerelease-10", "FR-prerelease-11"},
 		issue:        96,
-		built:        true,
+		proves:       true,
 	},
 	{
 		name:         "the published module contents",
 		requirements: []string{"FR-prerelease-12", "FR-prerelease-13", "FR-prerelease-14", "FR-prerelease-15", "FR-prerelease-16", "FR-prerelease-17"},
 		issue:        97,
-		built:        true,
+		proves:       true,
 	},
 	{
 		name:         "the binaries",
 		requirements: []string{"FR-prerelease-18", "FR-prerelease-19", "FR-prerelease-20", "FR-prerelease-21", "FR-prerelease-22"},
 		issue:        98,
-		built:        true,
+		proves:       true,
 	},
 	{
 		name:         "the documentation site",
 		requirements: []string{"FR-prerelease-23", "FR-prerelease-24", "FR-prerelease-25"},
 		issue:        99,
-		built:        true,
+		proves:       true,
 	},
 	{
 		name:         "the release gate",
 		requirements: []string{"FR-prerelease-27", "FR-prerelease-29", "FR-prerelease-30"},
 		issue:        99,
-		built:        true,
+		proves:       true,
 	},
 	// #99 split the two requirements below out of the release gate row on 2026-08-14.
 	//
-	// The `built` field states one fact for a whole row, and the release gate held five
+	// The `proves` field states one fact for a whole row, and the release gate held five
 	// requirements in three states. Three of them run, one waits on a maintainer answer, and
 	// one waits on a second epic. One row would have reported all five as one state, and the
 	// summary of FR-prerelease-5 exists to separate a case that runs from a case that does
@@ -97,13 +106,13 @@ var prereleaseCases = []prereleaseCase{
 		name:         "the pre-release run before the tag",
 		requirements: []string{"FR-prerelease-26"},
 		issue:        99,
-		built:        false,
+		proves:       false,
 	},
 	{
 		name:         "the mutation sweep report",
 		requirements: []string{"FR-prerelease-28"},
 		issue:        99,
-		built:        false,
+		proves:       false,
 	},
 }
 
@@ -150,10 +159,10 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 	}
 }
 
-// TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt holds FR-prerelease-1 through
-// FR-prerelease-4 against the registry.
+// TestThePrereleaseRegistryNamesEveryCaseThatProvesItsRequirement holds FR-prerelease-1
+// through FR-prerelease-4 against the registry.
 //
-// A row that reports a case as built while the tree holds no case is the failure this
+// A row that reports a case as proved while the case asserts nothing is the failure this
 // guard prevents.
 //
 // **Every member of Epic 16 edits the list below, and that is by construction.** A member
@@ -169,15 +178,21 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // built the module install, #97 built the published module contents, #98 built the
 // binaries, and #99 built the documentation site and the release gate.
 //
-// **Six rows of the registry are built, and two are not.** `the pre-release run before the
-// tag` waits on the maintainer answer that #633 carries, and `the mutation sweep report`
-// waits on Epic #89. **So this list holds six names and the registry holds eight rows**, and
-// a reader who counts one against the other reads no disagreement.
-func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
-	built := []string{}
+// **Six rows of the registry prove a requirement, and two wait.** `the pre-release run
+// before the tag` waits on the maintainer answer that #633 carries, and `the mutation sweep
+// report` waits on Epic #89. **So this list holds six names and the registry holds eight
+// rows**, and a reader who counts one against the other reads no disagreement.
+//
+// **This guard reads the registry against a written list, and it reads no Go case.** So it
+// reports a row that claims the wrong state against this list, and it reports no row that
+// disagrees with the tree. The Epic 16 round recorded that limit on 2026-08-14, and it built
+// no wider guard. A guard that reads the tree needs a case name on each row, and the issue
+// that flips a row to `proves: true` is the issue that adds one.
+func TestThePrereleaseRegistryNamesEveryCaseThatProvesItsRequirement(t *testing.T) {
+	proved := []string{}
 	for _, prereleaseCase := range prereleaseCases {
-		if prereleaseCase.built {
-			built = append(built, prereleaseCase.name)
+		if prereleaseCase.proves {
+			proved = append(proved, prereleaseCase.name)
 		}
 	}
 
@@ -190,8 +205,8 @@ func TestThePrereleaseRegistryNamesTheCaseThisSliceBuilt(t *testing.T) {
 		"the release gate",              // #99
 	}
 
-	if !slices.Equal(built, expected) {
-		t.Errorf("the registry reports %v as built, and the tree holds %v", built, expected)
+	if !slices.Equal(proved, expected) {
+		t.Errorf("the registry reports %v as proved, and the tree holds %v", proved, expected)
 	}
 }
 

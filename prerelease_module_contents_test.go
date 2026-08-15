@@ -47,12 +47,22 @@ import (
 // Every other case of this file passes against `v0.3.0`.
 
 // publishedModulePath names the module that the proxy publishes.
+//
+// `prereleaseModulePath` in `prerelease_install_test.go` holds the same string. Its
+// `# Five constants carry the module path and the tag` section states the hazard.
 const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 
 // publishedModuleVersion names the tag that these cases read.
 //
 // `v0.3.0` is the latest tag on 2026-08-14, and Epic 10 cuts the next one. A reader who
-// moves this constant moves every case of this file to the new tag.
+// moves this constant moves every case of this file to the new tag, and it moves no case of
+// another file.
+//
+// **Two other constants hold `v0.3.0`, and no guard compares the three.**
+// `prereleaseInstallVersion` in `prerelease_install_test.go` and `defaultReleaseTag` in
+// `prerelease_binaries_test.go` are the two. The
+// `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
+// states the hazard. That section names #100 as the issue that repairs it.
 const publishedModuleVersion = "v0.3.0"
 
 // embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
@@ -60,9 +70,18 @@ const embeddedDatabase = "data/ja4plus-mapping.csv"
 
 // publishedModuleSizeCeiling is the ceiling of FR-prerelease-17, in bytes.
 //
-// The module zip of `v0.3.0` measures 2253962 bytes on 2026-08-14, and `assets/logo.png`
-// is 2192430 bytes of it. So one image carries 97 percent of the module, and the ceiling
-// has to sit above it.
+// The module zip of `v0.3.0` measures 2253962 bytes compressed and 2444024 bytes
+// uncompressed on 2026-08-14. `assets/logo.png` is 2192430 uncompressed bytes, which is
+// 89.7 percent of the uncompressed total. So one image carries the module size, and the
+// ceiling has to sit above it.
+//
+// **Read the percentage against the uncompressed total, and never against the zip size.**
+// `readZip` reads `file.UncompressedSize64` for an entry and `info.Size()` for the zip, so
+// a ratio of the two divides two different measurements. The Epic 16 round repaired that
+// ratio on 2026-08-14, and pull request #627 holds both totals.
+//
+// **The ceiling reads the zip size, and this repair does not move it.** The case below
+// compares `listing.zipSize` against the ceiling, and each side is one measurement.
 //
 // 4 MiB leaves the tag room to grow. It still catches the two defects that this feature
 // set guards. A corpus capture and a built site each add more than 2 MiB, so either one

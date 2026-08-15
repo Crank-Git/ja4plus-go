@@ -546,19 +546,24 @@ func requireAbsent(t *testing.T, path string) {
 // TestThePrereleaseRunReportsOneSummary holds FR-prerelease-5.
 //
 // `make prerelease` runs every case of the feature set, and this slice ships the cases it
-// has. The summary names each case that no issue has built yet, so a reader separates an
-// unbuilt case from a case that passed.
+// has. The summary names each case that asserts nothing today, so a reader separates a case
+// that waits from a case that passed.
+//
+// **The summary printed `absent` for a case that runs, until 2026-08-14.** The Epic 16
+// cross-member review measured it: `TestThePrereleaseTargetPassesBeforeTheTag` and
+// `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` each stand in the tree and each one
+// skips. So the round renamed the state to `waits`, which is what each of the two does.
 func TestThePrereleaseRunReportsOneSummary(t *testing.T) {
-	built, absent := 0, 0
+	proved, waiting := 0, 0
 
 	t.Log("pre-release summary — one line for each case of features/16-pre-release-validation.md")
 	for _, prereleaseCase := range prereleaseCases {
-		state := "absent"
-		if prereleaseCase.built {
-			state = "runs"
-			built++
+		state := "waits"
+		if prereleaseCase.proves {
+			state = "proves"
+			proved++
 		} else {
-			absent++
+			waiting++
 		}
 
 		t.Logf("  %-30s %-6s issue #%d  %s",
@@ -566,9 +571,9 @@ func TestThePrereleaseRunReportsOneSummary(t *testing.T) {
 			strings.Join(prereleaseCase.requirements, " "))
 	}
 
-	t.Logf("pre-release summary — %d case(s) run, %d case(s) absent", built, absent)
+	t.Logf("pre-release summary — %d case(s) prove a requirement, %d case(s) wait", proved, waiting)
 
-	if built == 0 {
-		t.Error("the registry names no case that runs, and this target then proves nothing")
+	if proved == 0 {
+		t.Error("the registry names no case that proves a requirement, and this target then proves nothing")
 	}
 }

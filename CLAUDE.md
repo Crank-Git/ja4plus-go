@@ -101,7 +101,7 @@ rule.
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
 | `make mutate` | **Not built yet.** #90 adds the target, under Epic #89. It runs the mutation sweep over the named package set. Slow. Gates nothing. |
-| `make prerelease` | Run the pre-release cases behind the `prerelease` build tag. #95 added the target on 2026-08-14, under Epic #94. It runs the clean environment case alone today, and it prints one summary line for each case. |
+| `make prerelease` | Run the pre-release cases behind the `prerelease` build tag. Epic #94 built the target and the cases on 2026-08-14. It prints one summary line for each case, and `prereleaseCases` in `prerelease_registry_test.go` states which case proves its requirement today. |
 | `make docs` | Build the documentation site with `mkdocs build --strict`. #84 added the target on 2026-08-14. Install the pins of `docs/requirements.txt` first, or override the generator: `make docs MKDOCS=.venv/bin/mkdocs`. |
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
