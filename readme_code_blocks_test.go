@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -40,7 +41,7 @@ import (
 //
 //   - Every fence names a language, and the language is one this file checks. A block
 //     with no language reaches no check, so an unchecked block cannot enter the page.
-//   - Every Go block parses.
+//   - Every Go block parses, and every block that declares `package main` compiles.
 //   - Every exported name that a Go block reads through `ja4plus.` or through `ja4db.`
 //     is a name that the package declares. **This is the API freeze guard for the
 //     README.** A rename that `api_test.go` catches in the record, this test catches in
@@ -159,19 +160,10 @@ func readmeSortedLanguages(checked map[string]string) string {
 	for name := range checked {
 		names = append(names, strconv.Quote(name))
 	}
-	sortStrings(names)
+	// A map iterates in no order, so the sort keeps one failure message stable.
+	slices.Sort(names)
 
 	return strings.Join(names, ", ")
-}
-
-// sortStrings sorts the names in place. It is an insertion sort, because the list holds
-// three names and a dependency for that is noise.
-func sortStrings(names []string) {
-	for i := 1; i < len(names); i++ {
-		for j := i; j > 0 && names[j] < names[j-1]; j-- {
-			names[j], names[j-1] = names[j-1], names[j]
-		}
-	}
 }
 
 // parseReadmeGoBlock returns the syntax tree of one Go block.
@@ -223,6 +215,73 @@ func TestEveryGoBlockOfTheReadmeParses(t *testing.T) {
 
 	if seen == 0 {
 		t.Fatalf("%s holds no Go block, and this guard then reads nothing", readmeFile)
+	}
+}
+
+// TestEveryProgramBlockOfTheReadmeCompiles holds FR-release-20.
+//
+// FR-release-20 states that the README holds a library example that compiles, and a parse
+// is weaker than a compile. A parse reads the grammar alone, so it passes a block that
+// names a function this library dropped, or that leaves an import unused.
+//
+// The build directory sits under the repository root, because the block imports this
+// module and a directory outside the module resolves no import. `go build` writes the
+// binary to the null device, so the run leaves no artifact.
+func TestEveryProgramBlockOfTheReadmeCompiles(t *testing.T) {
+	var seen int
+	for _, block := range readmeBlocks(t) {
+		if block.language != "go" {
+			continue
+		}
+
+		file, _, err := parseReadmeGoBlock(block)
+		if err != nil {
+			// TestEveryGoBlockOfTheReadmeParses reports the parse failure.
+			continue
+		}
+		// A shape that this function added declares `package p`, so a block that declares
+		// `package main` is the whole program the reader copies.
+		if file.Name.Name != "main" || findFunction(file, "main") == nil {
+			continue
+		}
+		seen++
+
+		readmeCompileProgram(t, block)
+	}
+
+	if seen == 0 {
+		t.Fatalf("%s holds no Go block that declares package main, and FR-release-20 "+
+			"requires a library example", readmeFile)
+	}
+}
+
+// readmeCompileProgram builds one program block, and it reports the compiler output on a
+// failure.
+func readmeCompileProgram(t *testing.T, block readmeBlock) {
+	t.Helper()
+
+	//nolint:usetesting // t.TempDir returns a path outside the module, and the block imports this module.
+	dir, err := os.MkdirTemp(".", "readmebuild")
+	if err != nil {
+		t.Fatalf("create the build directory for %s: %v", block.name(), err)
+	}
+	t.Cleanup(func() {
+		if removeErr := os.RemoveAll(dir); removeErr != nil {
+			t.Errorf("remove the build directory %s: %v", dir, removeErr)
+		}
+	})
+
+	if writeErr := os.WriteFile(filepath.Join(dir, "main.go"), []byte(block.source), 0o600); writeErr != nil {
+		t.Fatalf("write the program of %s: %v", block.name(), writeErr)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	build := exec.CommandContext(ctx, "go", "build", "-o", os.DevNull, "./"+dir)
+
+	if report, buildErr := build.CombinedOutput(); buildErr != nil {
+		t.Errorf("%s does not compile: %v\n%s", block.name(), buildErr, report)
 	}
 }
 
