@@ -52,9 +52,10 @@ var dhcpMessageMap = map[byte]string{
 // the entry for code 0 follows `wireshark/source/packet-ja4.c:1526` against the image.
 //
 // No reference value separates the two sets, and the port marks the same rule uncertain at
-// R10 of the port's `docs/specs/foxio/JA4D.md`. The maintainer asked for a record that
-// names this tension, so a later reader reverses the set with a new fact. #130 is the
-// reversal path, and a reversal changes the port as well.
+// R10 of the port's `docs/specs/foxio/JA4D.md`. The maintainer asked for a reading that
+// names this tension, so a later reader reverses the set with a new fact. This paragraph
+// and the one above it are that reading. #130 is the reversal path, and a reversal changes
+// the port as well.
 var dhcpExcludedOptions = map[byte]bool{
 	0:  true,
 	53: true,
