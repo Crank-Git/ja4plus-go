@@ -227,7 +227,31 @@ import (
 // and cites #644. Both numbers sit above the inherited mark of 639, which is the case the
 // paragraph above names. The highest number this repository had allocated is #656, which is
 // the tracking issue of the batch that carries #649.
-const issueCitationHighWaterMark = 656
+//
+// **#650 re-measured the mark on 2026-08-15 and it read 660.**
+// `docs/audit/ja4s-segment-span-measurement.md` cites #650, which is the issue that carries
+// the JA4S segment span measurement, and 650 sits above the inherited mark of 639. **A member
+// pays this cost before its round does**, because the member writes the page that cites its
+// own number.
+//
+// **#650 re-measured the mark a second time on 2026-08-15 and it read 663.** The maintainer
+// ruled the two questions of #650 between the two readings, and the member then wrote the
+// register entries and the parity row that the ruling ordered. **A member that pauses for a
+// ruling re-measures the mark when it resumes**, because the tracker moves while the member
+// waits. The second reading covers every citation the first one covers.
+//
+// **The merge of `batch/656-epic-5b-readings` into #650 met the readings 656 and 663, and it
+// keeps neither.** #650 re-measured the mark a third time at the resolution on 2026-08-15 and
+// it read 666. **A conflict resolution re-measures the mark, and it never picks the larger
+// side.** Both sides were stale, because the tracker allocated numbers while #650 waited for
+// the ruling and while #649 sub-merged. **The rule is that the resolver re-measures**, and a
+// resolution that picks a side writes a mark that no reading of that day produced.
+//
+// **A merge that meets two readings keeps both histories.** #649 and #650 each measured one
+// tracker on one day, and neither paragraph describes the other member's citation. The mark
+// stays a lower bound, so 666 covers every citation that 656 covers and every citation that
+// 663 covers.
+const issueCitationHighWaterMark = 666
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
