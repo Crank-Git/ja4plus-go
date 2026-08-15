@@ -16,7 +16,7 @@ put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issu
 142 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
-issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, issue #127 put 150
+issue #249 put 1 more, issue #449 put 5 more, issue #650 put 12 more, issue #127 put 150
 more, issue #529 put 75 more, issue #492 put 11 more, and issue #164 put 5 more.
 Issue #701 wrote the 75 entries of the ruling #529 count, the 11 entries of the ruling #492
 count and the 5 entries of the ruling #164 count on 2026-08-15 UTC. The maintainer deferred
@@ -37,9 +37,9 @@ writes three parts on the `timestamp_F` frame. **The round enumerated the set fr
 `docs/audit/ja4l-deviation-cluster.md` `## Cause 1 — the emission frame and part c on a TCP
 connection` holds the reading for all 149. **The cause 1 enumeration returned 150 per-packet rows, and
 that 150 counts a different set from the 150 register entries above.** 149 of those rows
-carry an entry, and the 150th carries none. That row is `tls3.pcapng/153/JA4L.1`, no ruling explains its
-difference, and issue #692 holds it. **A row that no ruling explains stays unaccepted**,
-because an entry records a ruling.
+carry an entry under ruling #127, and the 150th is `tls3.pcapng/153/JA4L.1`. Ruling #127
+reaches no part of that row. **Issue #692 read it on 2026-08-15 UTC**, and the row carries
+one entry under ruling #449 now.
 Issue #229 wrote the 2 entries of its own count. The maintainer ruled on 2026-08-15 that
 this library writes the observed time-to-live, and the per-packet vector set writes `0` on
 a second QUIC connection over one four-tuple.
@@ -68,9 +68,15 @@ that ruling.
 Issue #528 wrote the 3 entries of its own count. The maintainer ruled on 2026-08-14 that
 JA4L point C is the last QUIC server handshake packet, and the per-packet vector set reads
 the first one.
-Issue #449 wrote the 4 entries of its own count. The maintainer ruled on 2026-08-15 that
+Issue #449 wrote 4 of the 5 entries of its own count, and issue #692 wrote the 5th on
+2026-08-15 UTC. The maintainer ruled on 2026-08-15 that
 the library reads the first QUIC packet of a coalesced datagram, and the Wireshark
-dissector reads every packet.
+dissector reads every packet. The 5th entry is `tls3.pcapng/153/JA4L.1`, and **two rulings
+reach that one row**. Frame 149 of its connection coalesces a server Handshake packet behind
+a server Initial packet, so the library fills no point C there. Ruling #528 then moves point
+C to frame 151. `docs/audit/ja4l-deviation-cluster.md`
+`### The remainder of tls3.pcapng/153/JA4L.1` holds the reading, and issue #692 wrote no
+ruling.
 Issue #527 wrote the last 2 entries of the ruling #285 count. The maintainer ruled on
 2026-08-14 that JA4H part b hashes an empty header list, and frame 4 of
 `gre-erspan-vxlan.pcap` then reached a value and revealed the #285 difference in its two
@@ -83,15 +89,16 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1754 matches, 3
-deviations, 849 accepted deviations and 881 register keys. The run also reports 175 unaccepted
+reports 1754 matches, 2
+deviations, 850 accepted deviations and 882 register keys. The run also reports 175 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 849 and
-32 add up to the 881 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 850 and
+32 add up to the 882 register keys. A count that an entry below states therefore differs from
 a fresh run.
-**The 3 deviations that the register does not hold are three JA4L comparisons**, and issue
-#675, issue #686 and issue #692 hold them. Issue #701 wrote no entry for any one of the
-three, because no ruling covers them.
+**The 2 deviations that the register does not hold are two per-stream `JA4L-S` comparisons**,
+and issue #675 and issue #686 hold them. Issue #701 wrote no entry for either one, because no
+ruling covers them. **Issue #692 closed the third on 2026-08-15 UTC**, and the entry of that
+row carries ruling #449.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against

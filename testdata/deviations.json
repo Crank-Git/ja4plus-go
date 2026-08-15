@@ -5008,6 +5008,14 @@
     "reason": "The maintainer ruled in issue #449 on 2026-08-15 that the library reads the first QUIC packet of a coalesced datagram, and `wireshark/source/packet-ja4.c:1408` reads every packet."
   },
   {
+    "key": "tls3.pcapng/153/JA4L.1",
+    "capability": false,
+    "ours": "40_128_quic",
+    "theirs": "101_128_quic",
+    "ruling": "#449",
+    "reason": "Ruling #449 of 2026-08-15 reads the first QUIC packet of frame 149 alone, so the Handshake packet behind its Initial packet fills no point C, and ruling #528 of 2026-08-14 then moves point C to frame 151."
+  },
+  {
     "key": "tls3.pcapng/147/JA4L.1",
     "capability": false,
     "ours": "59_128_quic",
