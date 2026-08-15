@@ -196,6 +196,13 @@ separates it, and no assertion of this repository did.
 
 **Each test fails against the mutation, measured on 2026-08-14.** Both pass against the tree.
 
+**The comparison that S2 and E1 mutate no longer exists.** #298 replaced the two-literal loop
+with `headerBlockTerminatorRe` on 2026-08-15 UTC, and the leftmost match of that expression
+now chooses the terminator. **This record states what the sweep of 2026-08-14 measured, and
+it records no property of the tree today.** Both tests still pass, and each one still holds
+the earliest-terminator behavior. A later sweep of `./internal/parser` writes a fresh report
+and a fresh record.
+
 ### E1 — an equivalent mutation at the same position (#92)
 
 | Position | Type | Rewrite |

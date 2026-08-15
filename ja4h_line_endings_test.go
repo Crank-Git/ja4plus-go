@@ -161,12 +161,20 @@ func TestJA4H_ProducesNoValueBeforeTheHeaderBlockEnds(t *testing.T) {
 	}
 }
 
-// TestJA4H_ReadsAHeaderBlockThatEndsWithACarriageReturnAndTwoLineFeeds proves that the last
-// header line drops its trailing carriage return.
+// TestJA4H_ReadsAHeaderBlockThatEndsWithACarriageReturnAndTwoLineFeeds holds the second half
+// of the ruling of #298.
 //
-// The parser cuts the text at the two line feeds, so the last header line keeps the carriage
-// return of the line ending before them. The value trim removes it, and this test fails when
-// a later change drops that trim.
+// **This path passed by coincidence before the ruling, and it passes by design now.** `\n\n`
+// is a substring of `\r\n\n`, so the two literals found the terminator one byte late. The
+// last header line then carried a trailing carriage return, and the value trim removed it. A
+// later change to the value handling would have broken that path silently.
+//
+// The ruled pattern starts the match at the carriage return, so the header block holds no
+// part of the line ending and no trim is load-bearing.
+// `TestParseHTTPRequestReadsABlockThatEndsCarriageReturnLineFeedThenLineFeed` of
+// `internal/parser` states the offset, and this test states the value.
+//
+// **Reversal path: #298 and `Crank-Git/ja4plus#614`, together.**
 func TestJA4H_ReadsAHeaderBlockThatEndsWithACarriageReturnAndTwoLineFeeds(t *testing.T) {
 	raw := "GET /p HTTP/1.1\r\n" +
 		"Host: example.com\r\n" +
@@ -188,16 +196,21 @@ func TestJA4H_ReadsAHeaderBlockThatEndsWithACarriageReturnAndTwoLineFeeds(t *tes
 	}
 }
 
-// TestJA4H_ProducesNoValueForAHeaderBlockThatEndsWithALineFeedAndACarriageReturn holds the
-// gap that #298 states.
+// TestJA4H_ReadsAHeaderBlockThatEndsWithALineFeedAndACarriageReturn holds the ruling of
+// #298.
 //
-// The parser reads the terminator `\r\n\r\n` and the terminator `\n\n`, and it reads no
-// terminator that mixes the two line endings. `ja4plus/utils/http_utils.py:43` of the Python
-// port holds the same two, so both implementations answer alike.
+// The maintainer ruled the header block terminator on 2026-08-13 UTC, in the port, and
+// re-confirmed it on 2026-08-15 UTC. **The terminator is one line ending followed by
+// another.** `Crank-Git/ja4plus#614` and `Crank-Git/ja4plus#604` hold the Python half.
 //
-// **This test holds the present answer, and it holds no ruling.** #298 states the two
-// candidate answers, and the maintainer decides. A reader who closes #298 deletes this test.
-func TestJA4H_ProducesNoValueForAHeaderBlockThatEndsWithALineFeedAndACarriageReturn(t *testing.T) {
+// This request ends its last header line with one line feed, and it ends the empty line with
+// `\r\n`. The terminator is then `\n\r\n`, which neither `\r\n\r\n` nor `\n\n` matches. This
+// request reached no JA4H value before the ruling. **No capture of the FoxIO corpus holds a
+// mixed terminator**, so this constructed packet is the only thing that separates the two
+// candidate answers.
+//
+// **Reversal path: #298 and `Crank-Git/ja4plus#614`, together.**
+func TestJA4H_ReadsAHeaderBlockThatEndsWithALineFeedAndACarriageReturn(t *testing.T) {
 	raw := "GET /p HTTP/1.1\r\n" +
 		"Host: example.com\n" +
 		"\r\n"
@@ -207,8 +220,16 @@ func TestJA4H_ProducesNoValueForAHeaderBlockThatEndsWithALineFeedAndACarriageRet
 	if err != nil {
 		t.Fatalf("ProcessPacket returned an error: %v", err)
 	}
-	if len(results) != 0 {
-		t.Fatalf("ProcessPacket returned %d results, and the test expects 0", len(results))
+	if len(results) != 1 {
+		t.Fatalf("ProcessPacket returned %d results, and the test expects 1", len(results))
+	}
+
+	// The value matches the value of the same request under an unmixed terminator, because
+	// the line ending reaches no part of the JA4H value.
+	const expectedRaw = "ge11nn010000_Host_"
+	if results[0].RawOriginalOrder != expectedRaw {
+		t.Errorf("the JA4H_ro value is %q, and the test expects %q",
+			results[0].RawOriginalOrder, expectedRaw)
 	}
 }
 

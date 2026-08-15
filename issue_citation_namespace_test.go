@@ -261,13 +261,27 @@ import (
 // 679. **That round cites no number above 678**, and it opens no pull request of its own,
 // because the project manager opens the batch pull request. **So the round re-measures to
 // keep the mark accurate rather than to repair a failure.**
-// #675 re-measured the mark on 2026-08-15 UTC and it read 686. That issue reads the two
-// per-stream `JA4L-S` rows, and its reading names #686, which holds the point B reference
-// split it found. **The guard reported the citation and the test failed**, and the guard
-// behaves as it is designed to. **#675 opened its pull request after this reading**, so the tracker
-// allocated one number above the mark. **This comment names no number above 686 on purpose**,
-// because a citation of that pull request would redden the guard and cost a third reading.
-// The mark is a lower bound, and 686 covers every citation the tree carries.
+// #298 and #675 EACH re-measured the mark on 2026-08-15 UTC, and each one read 686. The two
+// members of batch #684 met in a merge conflict here, and this comment holds both readings
+// rather than one.
+//
+// **#298 cites #685**, which is the issue it filed for the JA4L half of its own finding:
+// `holdsACompleteHTTPRequest` in `ja4l.go` holds a duplicate of the terminator reading that
+// #298 replaced, and it gates a JA4L measurement point the line-ending ruling does not reach.
+//
+// **#675 cites #686**, which holds the point B reference split it found. Wireshark and the
+// FoxIO Python disagree on `tls3.pcapng/25`, so #675 ruled nothing and filed the split.
+//
+// **The guard reddened for each member in turn, and it behaves as it is designed to.** A
+// member pays this maintenance cost exactly as a documentation round does.
+//
+// **This comment names no number above 686 on purpose.** Each member opened its pull request
+// after its own reading, so the tracker allocated numbers above the mark. A citation of a
+// pull-request number would redden the guard and cost a further reading. **The mark is a
+// LOWER BOUND, and 686 covers every citation the tree carries.**
+//
+// **The resolver re-measured the mark at the merge**, which is the rule session 16 earned: a
+// conflict resolution writes prose, prose cites an issue, so the resolver re-measures.
 const issueCitationHighWaterMark = 686
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
