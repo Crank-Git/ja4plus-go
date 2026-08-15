@@ -884,6 +884,19 @@ candidate agrees with them exactly. The probe read each one.
 sibling, and they are two frames on the connection of frame 153.** That is the whole reason
 this row is the remainder of ruling #528.
 
+#### What this reading eliminates
+
+**Three other candidates reach this row, and the measurement eliminates each one.**
+
+- **The point A packet.** Both sides read frame 141. `(B - A) / 2` is 4455 microseconds on
+  each side, and the run reports no `JA4LS.1` deviation on frame 153.
+- **The rounding.** `emitResult` in `ja4l.go` truncates, and
+  `wireshark/source/packet-ja4.c:1445` truncates too. **The truncation moves one microsecond
+  of the candidate value, and it moves no part of the 59.**
+- **The seconds component of cause 7.** Every interval of this row sits between 80 and 202
+  microseconds, so no interval crosses one second and
+  `## Cause 7 — the seconds component of the Wireshark delta` reaches nothing here.
+
 #### The register entry of this row
 
 **The row carries one entry now, and the entry names ruling #449.** Both rulings already
