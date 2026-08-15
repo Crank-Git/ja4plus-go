@@ -21,9 +21,9 @@ ja4plus analyze capture.pcap
 ja4plus analyze capture.pcapng
 ```
 
-The program picks the reader from the file extension. A path that ends `.pcapng` reaches
-`pcapgo.NewNgReader`, and every other path reaches `pcapgo.NewReader`. The
-[usage guide](usage.md) states the subcommand and every option.
+The program picks the reader from the first four bytes of the file, and never from the file
+extension. So both commands above read, and a path that carries no extension reads too. The
+[usage guide](usage.md) states the subcommand, every option and the format choice.
 
 **The library reads no file at all.** A fingerprinter takes a `gopacket.Packet`, and the
 caller decides where that packet came from. `cmd/ja4plus` holds the only file-reading code
