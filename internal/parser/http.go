@@ -85,10 +85,10 @@ var lineEndingRe = regexp.MustCompile(`\r\n|\n`)
 // measured on an Apple M4 on 2026-08-15 UTC. #685 measured one 8192-byte conversion at
 // 8192 B and one allocation on the same machine on the same day.
 //
-// **So the `[]byte` parameter saves a second conversion on the JA4L path, and it saves the
-// only conversion of a caller that reads no request line first.** The doc comment of #685
-// named the JA4L path as the reason for the whole saving, and batch #708 measured that the
-// path already pays one. **Issue #685 is the reversal path.**
+// **So the `[]byte` parameter saves a second conversion on the JA4L path.** It saves the
+// only conversion of a caller that reads no request line first. The doc comment of #685
+// named the JA4L path as the reason for the whole saving. Batch #708 measured that the path
+// already pays one. **Issue #685 is the reversal path.**
 func HoldsAHeaderBlockTerminator(payload []byte) bool {
 	return headerBlockEnd(payload) >= 0
 }
@@ -127,8 +127,8 @@ func headerBlockEnd(data []byte) int {
 // Apple M4 on 2026-08-15 UTC, while this function took a `string`.
 //
 // **This function costs 91.43, 92.25 and 91.91 nanoseconds on that payload today**, at 0 B
-// and 0 allocations, measured on an Apple M4 on 2026-08-15 UTC over three runs of
-// `Benchmark_headerBlockTerminator/8192` at `-benchtime=2s`. **#685 moved the parameter from
+// and 0 allocations. Three runs of `Benchmark_headerBlockTerminator/8192` at `-benchtime=2s`
+// measured it, on an Apple M4 on 2026-08-15 UTC. **#685 moved the parameter from
 // `string` to `[]byte`, and that move is why the figure fell from 120.** The two comparators
 // above read the `string` form, so a reader who compares them to 92 compares two signatures.
 //
