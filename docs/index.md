@@ -28,7 +28,7 @@ Install the command-line program:
 go install github.com/Crank-Git/ja4plus-go/cmd/ja4plus@latest
 ```
 
-`go.mod` declares the language version `go 1.24.0`. The minimum build toolchain is a
+`go.mod` declares the language version `go 1.25.0`. The minimum build toolchain is a
 separate question, and the [implementation notes](implementation-notes.md) answer it.
 
 ## Read one capture

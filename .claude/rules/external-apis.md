@@ -23,8 +23,8 @@ Never describe an external interface from memory. A capability you cannot confir
 | FoxIO License 1.1 | Read 2026-08-06 at `27f0cbf` | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE> |
 | Wireshark core dissectors | `v4.6.0`, which the pin records | <https://gitlab.com/wireshark/wireshark/-/tree/v4.6.0/epan/dissectors> |
 | Zeek analyzer | `8.0.0`, which the pin records | <https://github.com/zeek/zeek/tree/v8.0.0/src/analyzer/protocol> |
-| `github.com/gopacket/gopacket` | v1.6.1 | <https://pkg.go.dev/github.com/gopacket/gopacket> |
-| `golang.org/x/crypto` | v0.37.0 | <https://pkg.go.dev/golang.org/x/crypto> |
+| `github.com/gopacket/gopacket` | v1.7.1 | <https://pkg.go.dev/github.com/gopacket/gopacket> |
+| `golang.org/x/crypto` | v0.51.0 | <https://pkg.go.dev/golang.org/x/crypto> |
 | `ja4db.com` read API | Unversioned | <https://ja4db.com> |
 | `govulncheck` | Pinned in the workflow | <https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck> |
 | `golangci-lint` | Pinned in `.golangci.yml` | <https://golangci-lint.run/usage/configuration/> |

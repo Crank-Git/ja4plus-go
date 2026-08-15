@@ -4,7 +4,6 @@ import (
 	"go/ast"
 	goparser "go/parser"
 	"go/token"
-	"io/fs"
 	"sort"
 	"strings"
 	"testing"
@@ -199,30 +198,28 @@ var ja4hHashCallSites = []ja4hHashCallSite{
 // call moves the line and never the enclosing function.
 func TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed(t *testing.T) {
 	fileSet := token.NewFileSet()
-	packages, err := goparser.ParseDir(fileSet, ".", func(info fs.FileInfo) bool {
-		return !strings.HasSuffix(info.Name(), "_test.go")
-	}, 0)
-	if err != nil {
-		t.Fatalf("ParseDir: %v", err)
-	}
 
 	var found []ja4hHashCallSite
-	for _, pkg := range packages {
-		for path, file := range pkg.Files {
-			for _, declaration := range file.Decls {
-				function, ok := declaration.(*ast.FuncDecl)
-				if !ok {
-					continue
-				}
-				ast.Inspect(function, func(node ast.Node) bool {
-					callee := parserHashCallee(node)
-					if callee == "" {
-						return true
-					}
-					found = append(found, ja4hHashCallSite{path, function.Name.Name, callee})
-					return true
-				})
+
+	for _, path := range productionGoFilesOf(t, ".") {
+		file, err := goparser.ParseFile(fileSet, path, nil, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", path, err)
+		}
+
+		for _, declaration := range file.Decls {
+			function, ok := declaration.(*ast.FuncDecl)
+			if !ok {
+				continue
 			}
+			ast.Inspect(function, func(node ast.Node) bool {
+				callee := parserHashCallee(node)
+				if callee == "" {
+					return true
+				}
+				found = append(found, ja4hHashCallSite{path, function.Name.Name, callee})
+				return true
+			})
 		}
 	}
 

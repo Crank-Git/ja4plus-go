@@ -323,11 +323,24 @@ import (
 // twice, in `internal/parser/http.go` and in `ja4l_mixed_line_ending_test.go`. **The mark is
 // a lower bound**, and 711 covers every citation the tree carries.
 //
+// **#721 re-measured the mark on 2026-08-15 UTC and it read 730.** The same two commands
+// reported issue 728 and pull request 730. **#721 writes 6 citations that the mark of 711
+// reddened, and all 6 sit in `docs/audit/gopacket-tcp-option-panic.md`.** Five name #721,
+// which is the Dependabot pull request this member merges, and one names #730, which is the
+// pull request of this member.
+//
+// **The member measured the mark twice, and the first reading of 728 went stale before the
+// commit.** The self-review of #721 added the citation of #730, and creating that pull
+// request allocated the number that the citation names. **A member that cites its own pull
+// request must measure the mark after it opens that pull request.**
+//
 // **#727 re-measured the mark on 2026-08-15 UTC and it read 730.** The same two commands
 // reported issue 728 and pull request 730. #727 cites its own number in
 // `cmd/ja4plus/main.go` and in `cmd/ja4plus/capture_format_dispatch_test.go`, and the mark of
-// 711 reddened the guard on all 3 citations. **The mark is a lower bound**, and 730 covers
-// every citation the tree carries.
+// 711 reddened the guard on all 3 citations.
+//
+// **#721 and #727 each measured 730 on the same day, in two different batches.** The two
+// batches ran at the same time. **The two readings agree, and neither one copied the other.**
 //
 // **#439 re-measured the mark on 2026-08-15 UTC and it read 733.** The same two commands
 // reported issue 728 and pull request 733. **#727 and #439 are two members of batch #727,
@@ -338,16 +351,21 @@ import (
 // `docs/specs/spec.md` and in `docs/specs/spec.html`. #727 is the batch that carries #439.
 // **The mark of 730 that #727 measured covers those 2 citations as well.** #439 raises the
 // mark for a second reason. Pull request 732 is the pull request of #439, and it stands
-// above 730. **The mark is a lower bound**, and 733 covered every citation of that day.
+// above 730.
 //
 // **The documentation round of batch #727 re-measured the mark on 2026-08-15 UTC, and it
 // read 737.** The same two commands reported issue 736 and pull request 737. **The round
 // raises the mark because its `## Changelog` row cites #735**, and 735 stands above 733.
 // #735 is the pull request of #724, which is the third member of this batch.
 //
-// **Three re-measurements in one batch is the expected cost of this guard.** A member that
-// cites its own batch allocates a number while it works. A later member re-measures again
-// rather than transcribing 737.
+// **The merge of batch #721 into batch #727 keeps 737, which is the higher of the two
+// values.** Batch #721 wrote 730 and batch #727 wrote 737. **The mark is a lower bound**, so
+// the higher value covers both trees. **The highest bare citation of the merged tree is
+// #735**, measured on 2026-08-15 UTC.
+//
+// **Four re-measurements across two batches is the expected cost of this guard.** A member
+// that cites its own batch allocates a number while it works. A later member re-measures
+// again rather than transcribing 737.
 const issueCitationHighWaterMark = 737
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
