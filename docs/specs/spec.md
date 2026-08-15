@@ -213,6 +213,7 @@ across both repositories, because a reader moves between them.
 | multi-packet method | noun | One method that reads more than one packet of a connection and holds connection state between them. JA4L, JA4LS and JA4SSH are the three, and each one reaches no one-shot function. A method that reassembles one message from more than one packet is not one. The word `multi-packet` also describes such a message, and that meaning names no method. | stateful method, multi-packet state, connection-state method |
 | stable target | noun | The name that an internal citation points at, which survives an edit above it. A section heading, a rule number, a requirement number and an identifier are the four. A line number is not one. `.claude/rules/ste.md` `## How a citation names its target` states the rule, and an evidence citation keeps `file:line` instead. | anchor, stable anchor, durable reference |
 | pipelined pair | noun | One byte range that holds a complete HTTP request and then a second request. The maintainer ruled on 2026-08-14 that the library produces one JA4H value for one, and `ja4h_pipelined_request_test.go` holds that ruling. Two requests in two byte ranges are no pipelined pair, and each one reaches a value. | pipelined request, request pair, double request |
+| library | noun | The root package, `ja4db/` and every package below `internal/`. `cmd/ja4plus` and `examples/` hold programs, and both are outside. `internal/capture` is inside, and the maintainer ruled that extent on 2026-08-15. Issue #613 is the reversal path. The words `the core package` name the root package alone, and that is a second extent. | the core package, the module, the codebase |
 
 ## Goals
 
@@ -602,8 +603,11 @@ command-line program owns all output. **The statistics line is command-line outp
 
 ### Security posture
 
-- The library performs no network input and no network output, except the opt-in database
-  lookup that `features/09-database-lookup.md` covers.
+- The library performs no network input and no network output, except two reaches. The
+  first is the opt-in database lookup that `features/09-database-lookup.md` covers. The
+  second is the raw capture socket of `internal/capture`, which reads a local interface.
+  The maintainer ruled that second exception on 2026-08-15, and
+  `docs/audit/network-boundary.md` holds the amendment. **Issue #613 is the reversal path.**
 - **The monitor is the one component that opens an interface.** It reads packets and
   sends none. `features/13-live-capture.md` states that boundary.
 - The library reads no key material outside a capture file. **It reads a pcapng
