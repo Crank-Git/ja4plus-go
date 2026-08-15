@@ -10,11 +10,14 @@ for**, so the defect belongs in the record rather than in a comment alone.
 **This file states no ruling.** `.claude/rules/rulings.md` reserves a ruling for the
 maintainer.
 
-## What panics
+## What panics at v1.6.1
 
-`go.mod` pins `github.com/gopacket/gopacket v1.6.1`. At that version,
-`layers.TCP.DecodeFromBytes` reads two bytes of a Multipath TCP option without a length
-guard, at `layers/tcp.go:347-353`:
+**`go.mod` pinned `github.com/gopacket/gopacket v1.6.1` when #510 wrote this record, and it
+pins `v1.7.1` today.** #721 moved the pin on 2026-08-15, and `## The repair at v1.7.1` below
+holds the second reading. **This section reads v1.6.1, and it reads no later version.**
+
+At v1.6.1, `layers.TCP.DecodeFromBytes` reads two bytes of a Multipath TCP option without a
+length guard, at `layers/tcp.go:347-353`:
 
 ```go
 		case TCPOptionKindMultipathTCP:
@@ -67,6 +70,77 @@ place of the TCP layer. So the packet holds no TCP layer, and `GetTCPLayer` of
 `decode.go:139-141` states that `DecodeFailure.String()` prepends `Packet decoding error: `.
 Both readings report the same runtime error.
 
+## The repair at v1.7.1
+
+**`github.com/gopacket/gopacket v1.7.1` repairs the defect**, and #721 read the source on
+2026-08-15. `TestTheGopacketPanicRecordCitesThePinnedVersion` demanded this reading, because
+a bump moves the source that the section above cites.
+
+**The MPTCP branch now bounds the read before it takes `data[1]`**, at
+`layers/tcp.go:347-367`:
+
+```go
+		case TCPOptionKindMultipathTCP:
+			tcp.Multipath = true
+			// The subtype nibble lives in data[2], so three bytes are the
+			// minimum any MPTCP option can occupy.
+			if len(data) < 3 {
+				df.SetTruncated()
+				return fmt.Errorf("Invalid MPTCP option. Length %d less than 3", len(data))
+			}
+			opt.OptionLength = data[1]
+			if opt.OptionLength < 3 {
+				return fmt.Errorf("MPTCP bad option length %d", opt.OptionLength)
+			} else if int(opt.OptionLength) > len(data) {
+```
+
+**The `default` branch keeps its guard, and it gains a second bound**, at
+`layers/tcp.go:554-565`. The added branch reads
+`return fmt.Errorf("Invalid TCP option length %d exceeds remaining %d bytes", opt.OptionLength, len(data))`.
+
+### The measurement of the repair
+
+**#721 ran one program against both versions on 2026-08-15**, in a throwaway module outside
+this repository. It built the input that `## The input that reaches it` above names. At
+`v1.6.1` it printed:
+
+```
+direct call panicked: runtime error: index out of range [1] with length 1
+outer tcp layer held: false
+error layer: runtime error: index out of range [1] with length 1
+```
+
+**That text reproduces the #510 measurement without a change**, so the program reads the
+defect the record names. At `v1.7.1` the same program printed:
+
+```
+direct call returned: Invalid MPTCP option. Length 1 less than 3
+outer tcp layer held: true
+error layer: Invalid MPTCP option. Length 1 less than 3
+```
+
+**So the direct call returns an error at `v1.7.1`, and it panics at `v1.6.1`.** The outer
+decode path also moves: `v1.6.1` writes a decode failure in place of the TCP layer, and
+`v1.7.1` keeps the TCP layer and reports the error beside it.
+
+**The bump moves no fingerprint value.** The conformance suite reports 1754 matches before
+the bump and 1754 after it, measured on 2026-08-15.
+
+### The record page keeps the guard
+
+**The vendor states that every version through `v1.7.0` carries the defect.** The `v1.7.1`
+release notes state
+`All versions up to and including v1.7.0 are affected — upgrade is recommended for anyone decoding untrusted packets or capture files.`
+The MPTCP repair carries the advisory `GHSA-6h9g-cjv3-pg2c`.
+
+Verified against: <https://github.com/gopacket/gopacket/releases/tag/v1.7.1>, retrieved
+2026-08-15.
+
+**The guard stays, and the repaired version is not a reason to remove it.**
+`TestNoProductionFileCallsDecodeFromBytesDirectly` holds a property of this repository, and
+it asserts no behavior of the dependency. A later bump can reintroduce a panic in another
+decoder, and the guard holds without a re-read.
+
 ## The library crashes on no packet today
 
 **No production line of this repository calls `DecodeFromBytes`**, measured on 2026-08-14.
@@ -103,9 +177,15 @@ memory.
 
 ## What this record does not do
 
-- **It moves no pin.** Issue #510 states a third candidate answer: report the defect upstream
-  and move the pin when a release repairs it. **That answer stays open**, and this record
-  neither adopts it nor declines it.
+- **#510 moved no pin, and #721 moved it on 2026-08-15.** Issue #510 stated a third candidate
+  answer: report the defect upstream and move the pin when a release repairs it. **The
+  Dependabot pull request #721 took that answer**, and `## The repair at v1.7.1` above holds
+  the reading. **The bump changes `go.mod` and `go.sum` alone, and it moves the Go language
+  version of this module from 1.24 to 1.25.** `github.com/gopacket/gopacket@v1.7.1` declares
+  `go 1.25.0` in its own `go.mod`, and Go requires the main module to declare a language
+  version at or above every dependency. **That move is a maintainer question, and this page
+  rules nothing.** Pull request #730 states the question, and #721 changed no requirement and
+  no guard that names 1.24.
 - **It vendors nothing, and it patches nothing.**
 - **It moves no fingerprint value.** The deviation count and the match count of the
   conformance suite are equal before this record and after it.
