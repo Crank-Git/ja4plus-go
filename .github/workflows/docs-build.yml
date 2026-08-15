@@ -47,7 +47,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # `docs/requirements.txt` was measured on CPython 3.14.3, and this range names that
       # minor version. A second Python minor version resolves a different wheel set, and the
