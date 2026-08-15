@@ -221,7 +221,13 @@ import (
 // 639.** Epic 15 and Epic 16 each ran a round on 2026-08-14, and each round re-measured the
 // mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
 // takes the union of the two histories and one constant.
-const issueCitationHighWaterMark = 639
+//
+// #649 re-measured the mark on 2026-08-15 and it read 656. #649 is the Epic 5b reading of
+// the key-material route, and `docs/audit/key-material-route.md` cites its own issue number
+// and cites #644. Both numbers sit above the inherited mark of 639, which is the case the
+// paragraph above names. The highest number this repository had allocated is #656, which is
+// the tracking issue of the batch that carries #649.
+const issueCitationHighWaterMark = 656
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
