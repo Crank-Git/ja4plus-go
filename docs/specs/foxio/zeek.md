@@ -193,7 +193,7 @@ Each reading below records what the Zeek package holds. None of them decides a v
   `"c%ds%d_c%ds%d_c%ds%d"`.
 - `zeek/ja4ssh/main.zeek:69` breaks a tie in the packet-length mode toward the lower
   value.
-- `zeek/ja4ssh/main.zeek:123` counts an acknowledgement packet only when the TCP flags
+- `zeek/ja4ssh/main.zeek:123` counts an acknowledgment packet only when the TCP flags
   equal `0x10` exactly.
 - `zeek/ja4ssh/main.zeek:161` writes a final value at the end of the connection, and that
   value can hold fewer than 200 packets.

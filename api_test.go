@@ -73,6 +73,13 @@ type apiEntry struct {
 func (e apiEntry) key() string { return e.Kind + "|" + e.Name }
 
 // topLevelAPIKinds names every kind that FR-release-3 enumerates.
+//
+// **`readmeTopLevelKinds` in `readme_code_blocks_test.go` names one kind fewer, and that
+// difference is deliberate.** This set answers which kinds the API record carries, so it
+// holds `method`. That set answers which kinds a package qualifier reaches, and a README
+// block writes `ja4plus.Name` rather than `ja4plus.Processor.Reset`, so it holds no
+// `method`. **The two sets answer two questions, so neither one may adopt the members of
+// the other.**
 var topLevelAPIKinds = map[string]bool{
 	"type": true, "func": true, "method": true, "const": true, "var": true,
 }

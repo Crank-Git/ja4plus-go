@@ -1,7 +1,6 @@
 package ja4plus
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -227,14 +226,14 @@ func tcpEndpoint(ip string, port uint16) string {
 	return fmt.Sprintf("%s:%d", ip, port)
 }
 
-// relativeNumbers returns the relative sequence number and the relative acknowledgement
+// relativeNumbers returns the relative sequence number and the relative acknowledgment
 // number of one TCP packet.
 //
 // It returns false when the capture holds no SYN for one of the two endpoints, because a
 // relative number counts from the initial sequence number that the SYN carries.
 // `python/ja4.py:570` reads the two numbers that the dissector counts. A sequence number
 // wraps at 32 bits, and unsigned subtraction wraps the same way.
-func (c *connState) relativeNumbers(source, target string, seq, acknowledgement uint32) (uint32, uint32, bool) {
+func (c *connState) relativeNumbers(source, target string, seq, acknowledgment uint32) (uint32, uint32, bool) {
 	sourceISN, held := c.isns[source]
 	if !held {
 		return 0, 0, false
@@ -245,7 +244,7 @@ func (c *connState) relativeNumbers(source, target string, seq, acknowledgement 
 		return 0, 0, false
 	}
 
-	return seq - sourceISN, acknowledgement - targetISN, true
+	return seq - sourceISN, acknowledgment - targetISN, true
 }
 
 // opensASecondConnection reports whether one SYN opens a second connection on the endpoints of
@@ -292,23 +291,36 @@ func (c *connState) restart() {
 //
 // `latest.pcapng` stream 6 and `http-empty-useragent.pcap` prove the two halves.
 //
-// TODO(#685): Read a header block terminator that mixes the two line endings. #298 ruled
-// that terminator for `internal/parser/http.go`, and this gate still reads two fixed byte
-// groups. So a request that ends `\n\r\n` reaches a JA4H value and it moves the JA4L
-// measurement point. No capture of the FoxIO corpus holds a mixed terminator.
+// **The deciding source is the dissector of the reference, and never a terminator this
+// library chooses.** `python/common.py:78` routes a packet whose `hl` is `http` to a cache
+// that holds no measurement point. `python/ja4.py:398` sets `hl` from the layer name that
+// tshark reports. So the question is whether the Wireshark HTTP dissector reads the header
+// block as complete in this one segment.
+//
+// **It reads `\n\r\n` as complete.** `epan/tvbuff.c:4203` of Wireshark v4.6.0 compiles the
+// line-end pattern over both `\r` and `\n`, so a bare line feed ends a line, and
+// `epan/req_resp_hdrs.c:143` breaks out of the header loop on the first line of length 0.
+// `docs/audit/upstream-versions.md` records why v4.6.0 is the version this project reads.
+//
+// **#685 read that source and repaired the gate on 2026-08-15 UTC.** The gate held its own
+// pair of fixed byte groups, `\r\n\r\n` and `\n\n`, and the pair declined `\n\r\n`. So the
+// library moved the measurement point on a request that the reference routes away from it.
+// No capture of the FoxIO corpus holds a mixed terminator, so the four conformance figures
+// do not move. `ja4l_mixed_line_ending_test.go` builds the separating packet, and issue
+// #685 is the reversal path.
 func holdsACompleteHTTPRequest(payload []byte) bool {
 	if !parser.IsHTTPRequest(payload) {
 		return false
 	}
 
-	return bytes.Contains(payload, []byte("\r\n\r\n")) || bytes.Contains(payload, []byte("\n\n"))
+	return parser.HoldsAHeaderBlockTerminator(payload)
 }
 
 // clientPoint moves the client measurement point to this packet, and it returns the JA4L-C
 // value that the packet gives.
 //
 // The reference records the point on every packet that carries `ACK`, carries no `SYN`, and
-// holds the relative sequence number `1` and the relative acknowledgement number `1`. That is
+// holds the relative sequence number `1` and the relative acknowledgment number `1`. That is
 // the bare ACK of the handshake first, and then the first packet of the application
 // handshake. `python/ja4.py:570` states the rule.
 //
@@ -335,8 +347,8 @@ func (f *JA4LFingerprinter) clientPoint(
 		return nil
 	}
 
-	sequence, acknowledgement, read := conn.relativeNumbers(source, target, tcpLayer.Seq, tcpLayer.Ack)
-	if !read || sequence != 1 || acknowledgement != 1 {
+	sequence, acknowledgment, read := conn.relativeNumbers(source, target, tcpLayer.Seq, tcpLayer.Ack)
+	if !read || sequence != 1 || acknowledgment != 1 {
 		return nil
 	}
 
