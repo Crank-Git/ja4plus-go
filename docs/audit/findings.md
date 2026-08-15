@@ -93,9 +93,9 @@ issue that added it.** That classification states the true history of the file, 
 claims no audit.
 
 `classificationRoots` in `audit_record_test.go` names each root. It holds the three
-directories of the audit set, and it holds `internal/capture/`. **A whole directory that
-no audit reads needs the classification most**, because every file of it carries an added
-files row and none of them carries a `Read by` row.
+directories of the audit set, and it holds `internal/capture/`. **No audit reads
+`internal/capture/`**, so every file that ships from it carries an added files row and
+none of them carries a `Read by` row.
 
 The two classifications cover each classification root. One audit issue reads the file, or
 one later issue added it. **A file that carries neither classification fails
@@ -144,9 +144,9 @@ issue that added the file after the audit of Epic 2.
   `internal/capture/permission_linux.go` and `internal/capture/permission_other.go`.
 - Issue #609 added `internal/capture/linktype.go`.
 
-**Eight rows name a file of `internal/capture/`, and issue #611 added every one of them.**
-The directory holds eight files that ship, measured on 2026-08-14 at
-`issue/611-audit-roots-capture`. **A test file carries no row**, because `goFilesOfRoots`
+**Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
+holds eight files that ship and seven test files, measured on 2026-08-14 with
+`git ls-files internal/capture/`. **A test file carries no row**, because `goFilesOfRoots`
 in `audit_record_test.go` drops a file whose name ends in `_test.go`.
 
 **The merge of `dev` into `epic/76-live-capture` met two tables, and it holds the union of
