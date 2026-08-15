@@ -144,31 +144,71 @@ var releaseGates = []releaseGate{
 	},
 }
 
-// releaseGateRequirements returns each requirement that the feature file states as a gate.
+// releaseRequirementBullet matches the opening of one requirement bullet.
 //
-// It reads the sentence of releaseGateSentence rather than a section boundary, because the
-// section also holds two requirements that state no gate.
-func releaseGateRequirements(t *testing.T) []string {
-	t.Helper()
+// **The pattern bounds no requirement text**, because a bound drops a long requirement and
+// the record then reports a green result for a gate that reaches no holder. The first
+// review of #106 measured that defect on 2026-08-15 UTC. So the reader below takes the text
+// between one bullet and the next.
+var releaseRequirementBullet = regexp.MustCompile(`(?m)^- \*\*(FR-release-\d+)\*\* — `)
 
-	feature := readRepoFile(t, releaseFeatureFile)
-	pattern := regexp.MustCompile(`(?s)\*\*(FR-release-\d+)\*\* — (.{0,120}?)\.`)
-
+// releaseGatesInDocument returns each requirement that the document states as a gate.
+//
+// It reads the sentence of releaseGateSentence rather than a section boundary. The section
+// also holds two requirements that state no gate.
+func releaseGatesInDocument(document string) []string {
+	bullets := releaseRequirementBullet.FindAllStringSubmatchIndex(document, -1)
 	found := []string{}
 
-	for _, match := range pattern.FindAllStringSubmatch(feature, -1) {
-		statement := strings.Join(strings.Fields(match[2]), " ")
+	for position, bullet := range bullets {
+		end := len(document)
+		if position+1 < len(bullets) {
+			end = bullets[position+1][0]
+		}
+
+		statement := strings.Join(strings.Fields(document[bullet[1]:end]), " ")
 		if strings.HasPrefix(statement, releaseGateSentence) {
-			found = append(found, match[1])
+			found = append(found, document[bullet[2]:bullet[3]])
 		}
 	}
 
+	return found
+}
+
+// releaseGateRequirements returns each gate that the feature file states.
+//
+// It fails the test when the file states none, because an extractor that reads nothing
+// passes every comparison below.
+func releaseGateRequirements(t *testing.T) []string {
+	t.Helper()
+
+	found := releaseGatesInDocument(readRepoFile(t, releaseFeatureFile))
 	if len(found) == 0 {
 		t.Fatalf("%s states no requirement that opens %q, and this record reads that sentence",
 			releaseFeatureFile, releaseGateSentence)
 	}
 
 	return found
+}
+
+// TestTheGateExtractorReadsALongRequirementThatWraps holds the extractor against the defect
+// that the first review of #106 measured.
+//
+// The requirement below states 40 words, it wraps over three lines, and it holds a period
+// inside a file name. **An extractor that bounds the sentence drops it**, and the record
+// then names no holder and reports no failure.
+func TestTheGateExtractorReadsALongRequirementThatWraps(t *testing.T) {
+	document := "### The release gate\n\n" +
+		"- **FR-release-99** — The release does not proceed until the maintainer reads\n" +
+		"  `docs/audit/conformance-exclusions.md` and `docs/specs/features/08-python-parity.md`,\n" +
+		"  and records one acceptance for each entry that the two documents hold today.\n" +
+		"- **FR-release-98** — The CHANGELOG records the name of every method.\n"
+
+	found := releaseGatesInDocument(document)
+
+	if len(found) != 1 || found[0] != "FR-release-99" {
+		t.Errorf("the extractor reads %v, and the document states FR-release-99 as its one gate", found)
+	}
 }
 
 // TestTheReleaseGateRecordHoldsEveryGateOfTheFeatureFile compares the record against the

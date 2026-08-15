@@ -48,9 +48,9 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 // artifact every measurement below describes.
 //
 // **The proxy holds no `v1.0.0` until the maintainer pushes the tag**, so each case of this
-// file fails until then. FR-prerelease-26 states that order: the maintainer pushes the tag,
-// runs `make prerelease` against it, and promotes only when every case passes or carries a
-// recorded reason.
+// file fails until then. FR-prerelease-26 states that order. The maintainer pushes the tag
+// first. The maintainer then runs `make prerelease` against it. The maintainer promotes the
+// release only when every case passes or carries a recorded reason.
 //
 // # Five constants carry the module path and the tag
 //

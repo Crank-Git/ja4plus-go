@@ -11,9 +11,9 @@ import (
 // **#106 built this guard on 2026-08-15 UTC, and it moved the three tag constants to
 // `v1.0.0` in the same change.** The
 // `# Five constants carry the module path and the tag` section of
-// `prerelease_install_test.go` recorded the hazard on 2026-08-14: a session that moves one
-// constant leaves the others behind, and the run then reads two tags. A run that reads two
-// tags reports a green gate for an artifact that nobody published.
+// `prerelease_install_test.go` recorded the hazard on 2026-08-14. A session that moves one
+// constant leaves the others behind. The run then reads two tags, and it reports a green
+// gate for an artifact that nobody published.
 //
 // **This file carries no build tag, and the five constants sit behind the `prerelease`
 // tag.** So each case reads the declaration as text, and `go test ./...` runs it. A
