@@ -283,9 +283,10 @@ import (
 // **The resolver re-measured the mark at the merge**, which is the rule session 16 earned: a
 // conflict resolution writes prose, prose cites an issue, so the resolver re-measures.
 // #682 re-measured the mark on 2026-08-15 UTC after it merged `batch/684` into its branch,
-// and it read 692. **#682 cites #692**, which holds the one row of the JA4L cluster that
-// reaches no ruling: `tls3.pcapng/153/JA4L.1`. The maintainer read #682 and declined a
-// register entry for that row, so the row stays unaccepted and the issue holds it.
+// and it read 692. **#682 cites #692**, which held the one row of the JA4L cluster that
+// reached no ruling: `tls3.pcapng/153/JA4L.1`. The maintainer read #682 and declined a
+// register entry for that row on 2026-08-15 UTC. **#692 then read the row on the same day**,
+// and the register carries one entry for it under ruling #449 now.
 //
 // **#682 is the third member of batch #684 to pay this cost**, after #298 and #675. The
 // mark read 679 when #682 branched, and the two earlier members moved it to 686 while #682
@@ -300,7 +301,21 @@ import (
 // re-measurement**, and the round pays the measurement to keep the mark tight rather than to
 // repair a failure. **The opening sentence of this comment read 2026-08-14 until this
 // round**, and each of the four readings above it was measured on 2026-08-15 UTC.
-const issueCitationHighWaterMark = 696
+//
+// **#701 re-measured the mark on 2026-08-15 UTC and it read 702.** The inherited mark of 696
+// predates issue #701, so the two `CHANGELOG.md` citations of #701 reddened the guard. #701
+// writes 91 register entries under ruling #529, ruling #492 and ruling #164, and the
+// changelog preamble names the issue that wrote them. **The mark is a lower bound**, and 702
+// covers every citation the tree carries.
+//
+// **The documentation round of batch #701 re-measured the mark again on 2026-08-15 UTC and
+// it read 705.** A pull request and an issue share one number space on GitHub, so the mark
+// reads the higher of the two. The measurement is
+// `gh issue list --state all --limit 1` against `gh pr list --state all --limit 1`, which
+// reported 702 and 705. Round 65 of the `## Changelog` of `docs/specs/spec.md` cites pull
+// request #703 and pull request #704 by number, and the mark of 702 reddened this guard on
+// both. **The mark is a lower bound**, and 705 covers every citation the tree carries.
+const issueCitationHighWaterMark = 705
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
