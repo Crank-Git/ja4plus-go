@@ -153,7 +153,7 @@ No entity changes. The following files change.
 // A SyncProcessor gives lower throughput than one Processor for each shard.
 type SyncProcessor struct { /* unexported */ }
 
-func NewSyncProcessor() *SyncProcessor
+func NewSyncProcessor(options ...ProcessorOption) *SyncProcessor
 func (p *SyncProcessor) ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, []error)
 func (p *SyncProcessor) Reset()
 func (p *SyncProcessor) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string)
@@ -161,6 +161,13 @@ func (p *SyncProcessor) CloseOpenWindows() []FingerprintResult
 func (p *SyncProcessor) CloseConnectionWindow(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) []FingerprintResult
 func (p *SyncProcessor) GetShardKey(packet gopacket.Packet) string
 ```
+
+**`NewProcessor` and `NewSyncProcessor` each accept a variadic `ProcessorOption`**, and #661
+added that parameter on 2026-08-15 UTC under the ruling of issue #649.
+`docs/specs/features/05-conformance-gaps.md` FR-gaps-17c through FR-gaps-17e state the
+shape. **An option writes a field once at construction, so the contract above is
+unchanged.** No option adds a lock, and no exported name writes a `Processor` field after
+construction.
 
 The Go memory model decides what "safe" means here. See
 <https://go.dev/ref/mem>. The race detector documentation is at
