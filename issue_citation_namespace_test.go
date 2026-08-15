@@ -307,7 +307,15 @@ import (
 // writes 91 register entries under ruling #529, ruling #492 and ruling #164, and the
 // changelog preamble names the issue that wrote them. **The mark is a lower bound**, and 702
 // covers every citation the tree carries.
-const issueCitationHighWaterMark = 702
+//
+// **The documentation round of batch #701 re-measured the mark again on 2026-08-15 UTC and
+// it read 705.** A pull request and an issue share one number space on GitHub, so the mark
+// reads the higher of the two. The measurement is
+// `gh issue list --state all --limit 1` against `gh pr list --state all --limit 1`, which
+// reported 702 and 705. Round 65 of the `## Changelog` of `docs/specs/spec.md` cites pull
+// request #703 and pull request #704 by number, and the mark of 702 reddened this guard on
+// both. **The mark is a lower bound**, and 705 covers every citation the tree carries.
+const issueCitationHighWaterMark = 705
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

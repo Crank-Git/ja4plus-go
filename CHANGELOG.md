@@ -97,8 +97,9 @@ An accepted deviation and an accepted uncovered value each name one register ent
 a fresh run.
 **The 2 deviations that the register does not hold are two per-stream `JA4L-S` comparisons**,
 and issue #675 and issue #686 hold them. Issue #701 wrote no entry for either one, because no
-ruling covers them. **Issue #692 closed the third on 2026-08-15 UTC**, and the entry of that
-row carries ruling #449.
+ruling covers them. **Batch #701 reached this paragraph holding 3 such rows, and issue #692
+closed one of them on 2026-08-15 UTC.** That row is `tls3.pcapng/153/JA4L.1`, and its entry
+carries ruling #449.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
 It reads the four counts and the enumeration above, and it compares each one against
