@@ -967,7 +967,7 @@ finishes.
 `Crank-Git/ja4plus` shipped the correction in its Epic 1. This project records the finding
 and acts only on its own side.
 
-### R5 — `gopacket` upstream is unmaintained (open)
+### R5 — `gopacket` upstream is unmaintained (resolved 2026-08-13)
 
 `github.com/google/gopacket` has had no release since v1.1.19 on 2020-10-19. **The gap is
 five years, nine months and 25 days on 2026-08-13.** The community fork is
@@ -978,9 +978,9 @@ module proxy reports `{"Version":"v1.1.19","Time":"2020-10-19T16:12:32Z"}`.
 **The maintainer settled this risk on 2026-08-13, and #438 carried the migration.** The
 library depends on `github.com/gopacket/gopacket` v1.6.1 today, and no fingerprint value
 moved. `docs/audit/dependency-decision.md` records the decision and the reversal path.
-**The heading of this risk still reads `(open)`, and the `## Changelog` round owns that
-status.**
-`docs/audit/dependency-decision.md` holds that measurement, and #434 recorded it.
+**The heading of this risk read `(open)` until 2026-08-15 UTC**, and #439 closed it in
+batch #727. `docs/audit/dependency-decision.md` holds that measurement, and #434 recorded
+it.
 
 **This paragraph stated that Epic 13 raises the cost of this question until 2026-08-15, and
 that claim is false.** Both candidates declare `pcapgo.NewEthernetHandle` with one signature,
