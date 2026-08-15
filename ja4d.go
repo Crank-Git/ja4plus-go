@@ -33,6 +33,29 @@ var dhcpMessageMap = map[byte]string{
 
 // dhcpExcludedOptions are the option codes excluded from the option list section
 // (FoxIO PR #267/#270): Pad (0), MessageType (53), Requested IP (50), FQDN (81).
+//
+// The maintainer ruled the skip set on 2026-08-11 UTC, in the second comment of #130. The
+// effective set holds 0, 50, 53, 81 and 255, and this map holds four of those five codes.
+// The maintainer also ruled the shape: the decoder stops at the End option, so code 255
+// reaches no read of this map.
+//
+// Two lines of the decoder carry that shape, each measured on 2026-08-15 UTC.
+// `github.com/gopacket/gopacket@v1.6.1/layers/dhcpv4.go:164-165` breaks the option loop at
+// the End option, and `dhcpv4.go:337` defines that option as 255. So the decoder appends
+// no option 255, and this map needs no entry for it. The Pad option reaches the map,
+// because `dhcpv4.go:167` appends an option before `dhcpv4.go:168-169` tests for Pad.
+//
+// The ruling departs from the source ranking once, and the maintainer recorded that cost.
+// `.claude/rules/rulings.md` `## The source ranking` places a FoxIO image above a reference
+// implementation. R17 of `docs/specs/foxio/JA4D.md` records the image label, which names
+// 50, 53, 81 and 255 and names no code 0. R25 of that page records the reference split. So
+// the entry for code 0 follows `wireshark/source/packet-ja4.c:1526` against the image.
+//
+// No reference value separates the two sets, and the port marks the same rule uncertain at
+// R10 of the port's `docs/specs/foxio/JA4D.md`. The maintainer asked for a reading that
+// names this tension, so a later reader reverses the set with a new fact. This paragraph
+// and the one above it are that reading. #130 is the reversal path, and a reversal changes
+// the port as well.
 var dhcpExcludedOptions = map[byte]bool{
 	0:  true,
 	53: true,
