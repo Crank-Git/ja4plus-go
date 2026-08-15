@@ -1067,9 +1067,13 @@ the per-issue log of the same work, and this section states the release position
 reader who wants one entry reads the log above. A reader who wants the release position
 reads this section.
 
-**Every measurement below names its base.** The base is `epic/100-api-freeze` at `e596366`,
+**Every measurement below names its base.** The base is `epic/100-api-freeze` at `e4330fb`,
 and the corpus is the FoxIO repository at the pinned commit
 `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which `testdata/foxio.pin` holds.
+
+**The base was `e596366` when this section was written, and two merges of `origin/dev`
+superseded that commit.** The Epic 10 documentation round re-measured every count of this
+section against `e4330fb` on 2026-08-15 UTC.
 
 **This project implements eleven methods, and ten fingerprinters carry them.**
 `JA4LFingerprinter` writes both JA4L and JA4LS. The eleven are JA4, JA4S, JA4H, JA4T,
@@ -1224,10 +1228,16 @@ tunnel layers, and no capture of the corpus nests more than three.
 `q12i030000_55b375c5d22e_000000000000` to `q13d0310h3_55b375c5d22e_cd85d2d88918`. Issue #42
 holds that measurement.
 
-**The conformance run of this head reports 1754 matches, 247 deviations, 605 accepted
-deviations and 637 register keys.** Three runs on `issue/104-v1-changelog` report those four
-figures, and the third run read the tree that holds this section. **This CHANGELOG change moves no fingerprint value**, and it adds, removes and
-changes no exported name.
+**The conformance run of this head reports 1754 matches, 2 deviations, 850 accepted
+deviations and 882 register keys.** Two runs of the Epic 10 documentation round report
+those four figures, measured on 2026-08-15 UTC at base `e4330fb`. **This CHANGELOG change
+moves no fingerprint value**, and it adds, removes and changes no exported name.
+
+**Three runs on `issue/104-v1-changelog` reported 1754 matches, 247 deviations, 605
+accepted deviations and 637 register keys.** Those figures were true when this section was
+written. Two merges of `origin/dev` then landed the register work of batch #684 and batch
+#701, which moved the deviation count and the register key count. **The match count did not
+move**, so no fingerprint value changed between the two measurements.
 
 ### A known cross-implementation difference
 
@@ -1327,6 +1337,7 @@ whether the difference closed, widened or held.
   each fingerprint.
 
 [Unreleased]: https://github.com/Crank-Git/ja4plus-go/compare/v0.3.0...HEAD
+[v1.0.0]: https://github.com/Crank-Git/ja4plus-go/compare/v0.3.0...v1.0.0
 [v0.3.0]: https://github.com/Crank-Git/ja4plus-go/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/Crank-Git/ja4plus-go/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/Crank-Git/ja4plus-go/releases/tag/v0.1.0

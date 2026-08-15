@@ -19,7 +19,7 @@ The source of this site and of the library is at
 Install the library into a module:
 
 ```bash
-go get github.com/Crank-Git/ja4plus-go
+go get github.com/Crank-Git/ja4plus-go@latest
 ```
 
 Install the command-line program:
