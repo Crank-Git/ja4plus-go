@@ -11,11 +11,11 @@ import (
 	"github.com/gopacket/gopacket/layers"
 )
 
-// handshakeSequenceNumbers returns the sequence number and the acknowledgement number that
+// handshakeSequenceNumbers returns the sequence number and the acknowledgment number that
 // one packet of a three-way handshake carries.
 //
 // The client measurement point reads the relative sequence number and the relative
-// acknowledgement number, so a packet that carries no realistic number reaches no client
+// acknowledgment number, so a packet that carries no realistic number reaches no client
 // point. Both endpoints open at the initial sequence number 0, which makes every relative
 // number of the handshake read 1.
 func handshakeSequenceNumbers(syn, ack bool) (uint32, uint32) {
@@ -179,7 +179,7 @@ func TestJA4L_MinimumLatency(t *testing.T) {
 // bare ACK.
 //
 // A repeated bare ACK holds the relative sequence number `1` and the relative
-// acknowledgement number `1`, so it meets the rule that
+// acknowledgment number `1`, so it meets the rule that
 // `python/ja4.py:570` states.
 // `python/common.py:101` omits `C` from the fields it declines to
 // update, so the second packet replaces the point and the reference reports the later value.
@@ -924,7 +924,7 @@ func TestJA4LHalvesTheClientLatency(t *testing.T) {
 
 // buildTCPStreamPacket builds one TCP packet with explicit sequence numbers and a payload.
 // The client measurement point reads the relative sequence number, the relative
-// acknowledgement number and the payload, so a test of that rule states all three.
+// acknowledgment number and the payload, so a test of that rule states all three.
 // The function reads the address family from srcIP.
 func buildTCPStreamPacket(
 	t testing.TB,
@@ -1003,7 +1003,7 @@ func ja4lLastFingerprint(t *testing.T, results []FingerprintResult) string {
 //
 // `python/ja4.py:570` records the client point on every packet that
 // carries `ACK`, carries no `SYN`, and holds the relative sequence number `1` and the
-// relative acknowledgement number `1`. `python/common.py:101` omits
+// relative acknowledgment number `1`. `python/common.py:101` omits
 // `C` from the fields it declines to update, so a later packet moves the point.
 //
 // The bare ACK arrives at `+0.005918s` and the Client Hello at `+0.005925s`, so the point
@@ -1062,7 +1062,7 @@ func TestJA4LMovesTheClientPointToTheClientHelloOfBadcurveballPcap(t *testing.T)
 
 // TestJA4LMovesNoClientPointForAPacketThatAcknowledgesPayload holds the second half of the
 // relative number rule. Frame 5 of `badcurveball.pcap` acknowledges the 517 payload bytes of
-// the Client Hello, so its relative acknowledgement number is 518 and it moves no point.
+// the Client Hello, so its relative acknowledgment number is 518 and it moves no point.
 // `python/ja4.py:570` states the rule. Issue #196 holds the reading.
 func TestJA4LMovesNoClientPointForAPacketThatAcknowledgesPayload(t *testing.T) {
 	fp := NewJA4L()
@@ -1087,7 +1087,7 @@ func TestJA4LMovesNoClientPointForAPacketThatAcknowledgesPayload(t *testing.T) {
 	ackPkt.Metadata().Timestamp = baseTime.Add(5918 * time.Microsecond)
 	_, _ = fp.ProcessPacket(ackPkt)
 
-	// The server acknowledges 517 payload bytes, so the relative acknowledgement number
+	// The server acknowledges 517 payload bytes, so the relative acknowledgment number
 	// reads 518.
 	serverAck := buildTCPStreamPacket(t, serverIP, clientIP, 238, 443, 55318, false, true, serverISN+1, clientISN+518, nil)
 	serverAck.Metadata().Timestamp = baseTime.Add(21617 * time.Microsecond)
@@ -1165,7 +1165,7 @@ func TestJA4LKeepsTheClientPointOnTheBareACKOfLatestPcapngStream6(t *testing.T) 
 // and it moves the client point. The reference `JA4L-C` is `177863_64`.
 //
 // Frame 4 is a bare ACK the server sends, and it holds the relative sequence number `1` and
-// the relative acknowledgement number `1`. It moves the point, and
+// the relative acknowledgment number `1`. It moves the point, and
 // `python/ja4.py:159` reads `client_ttl` for every client value.
 // Issue #196 holds the reading.
 func TestJA4LMovesTheClientPointToThePartialRequestOfHttpEmptyUseragentPcap(t *testing.T) {
