@@ -40,7 +40,9 @@ ship, and nine of them decode a protocol. The audit reads a file that ships, bec
 check in FR-audit-11 through FR-audit-24 names shipped behavior.
 
 `internal/capture/` is outside the set, because FR-audit-1 names three directories and that
-directory is none of them.
+directory is none of them. **The classification of `## The files a later issue added` still
+covers it.** Issue #611 measured the earlier state: the guard read the three directories
+alone, so every file of `internal/capture/` passed it without a classification.
 
 The `Read by` column names each issue that reads the file. The three audit issues run at
 the same time. Each one records its own audit date in its own table, under
@@ -83,17 +85,25 @@ into the package that ships. The audit reads it for that reason.
 ## The files a later issue added
 
 The audit ran in Epic 2, and it read the files the repository held then. **A later epic
-adds a file to one of the three directories, and no audit reads that file.** A `Read by`
-row for it records an audit that nobody performed, so the audit set never gains one.
+adds a file to a classification root, and no audit reads that file.** A `Read by` row for
+it records an audit that nobody performed, so the audit set never gains one.
 
 **The report classifies such a file as an added file, and the `Added by` column names the
 issue that added it.** That classification states the true history of the file, and it
 claims no audit.
 
-The two classifications cover the three directories. One audit issue reads the file, or
+`classificationRoots` in `audit_record_test.go` names each root. It holds the three
+directories of the audit set, and it holds `internal/capture/`. **No audit reads
+`internal/capture/`**, so every file that ships from it carries an added files row and
+none of them carries a `Read by` row.
+
+The two classifications cover each classification root. One audit issue reads the file, or
 one later issue added it. **A file that carries neither classification fails
-`TestTheReportClassifiesEveryGoFileOfTheThreeDirectories`**, so the guard keeps its force
-and an added file reaches an honest row.
+`TestTheReportClassifiesEveryGoFileOfEveryClassificationRoot`**, so the guard keeps its
+force and an added file reaches an honest row.
+
+**The name of that test states no count of directories.** Issue #611 records the reason:
+the earlier name stated three, and the fourth root left the name stale.
 
 Issue #162 states this classification, and the project manager decided it on issue #40.
 
@@ -107,14 +117,37 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `state_bound.go` | #565 |
 | `cmd/ja4plus/watch.go` | #79 |
 | `cmd/ja4plus/statistics.go` | #81 |
+| `internal/capture/capture.go` | #77 |
+| `internal/capture/pcapgo_linux.go` | #77 |
+| `internal/capture/unsupported.go` | #77 |
+| `internal/capture/libpcap.go` | #78 |
+| `internal/capture/permission_darwin.go` | #82 |
+| `internal/capture/permission_linux.go` | #82 |
+| `internal/capture/permission_other.go` | #82 |
+| `internal/capture/linktype.go` | #609 |
 <!-- added-files:end -->
 
-The table holds seven rows. Issue #200 added `internal/parser/ssh_tracker.go` after the
-audit of Epic 2, issue #61 added `cmd/ja4plus/types.go` after it, issue #490 added
-`internal/parser/x509_identifiers.go` after it, issue #494 added
-`internal/parser/icmp_quoted.go` after it, issue #565 added `state_bound.go` after it,
-issue #79 added `cmd/ja4plus/watch.go` after it, and issue #81 added
-`cmd/ja4plus/statistics.go` after it, so no audit reads any of the seven files.
+**The table holds 15 rows, and no audit reads any of the 15 files.** Each row names the
+issue that added the file after the audit of Epic 2.
+
+- Issue #200 added `internal/parser/ssh_tracker.go`.
+- Issue #61 added `cmd/ja4plus/types.go`.
+- Issue #490 added `internal/parser/x509_identifiers.go`.
+- Issue #494 added `internal/parser/icmp_quoted.go`.
+- Issue #565 added `state_bound.go`.
+- Issue #79 added `cmd/ja4plus/watch.go`.
+- Issue #81 added `cmd/ja4plus/statistics.go`.
+- Issue #77 added `internal/capture/capture.go`, `internal/capture/pcapgo_linux.go` and
+  `internal/capture/unsupported.go`.
+- Issue #78 added `internal/capture/libpcap.go`.
+- Issue #82 added `internal/capture/permission_darwin.go`,
+  `internal/capture/permission_linux.go` and `internal/capture/permission_other.go`.
+- Issue #609 added `internal/capture/linktype.go`.
+
+**Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
+holds eight files that ship and seven test files, measured on 2026-08-14 with
+`git ls-files internal/capture/`. **A test file carries no row**, because `goFilesOfRoots`
+in `audit_record_test.go` drops a file whose name ends in `_test.go`.
 
 **The merge of `dev` into `epic/76-live-capture` met two tables, and it holds the union of
 them.** `dev` carried the row of #565, and the integration branch carried the row of #79 and
