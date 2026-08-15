@@ -85,8 +85,12 @@ var ja4tCitationContent = []ja4tCitation{
 	{69, "zeek/ja4t/main.zeek", 199, `"-"`},
 	{70, "wireshark/source/packet-ja4.c", 1458, `"%d-"`},
 	{70, "rust/ja4/src/tcp.rs", 133, `.join("-")`},
-	// The page names the break, and line 97 holds it. Line 96 opens the branch that the
-	// same sentence names, so the citation reads at the head of a two-line construct.
+	// The sentence names the break, and `zeek/ja4t/main.zeek:97` holds it. This row keeps
+	// 96 because a second guard pins that number:
+	// TestFoxioTCPTranscriptionMarksTheEndOfOptionListSplit in
+	// `foxio_transcription_tcp_test.go` requires the page to hold
+	// `zeek/ja4t/main.zeek:96` for FR-reference-11. #726 barred a change to that file, so
+	// the two guards agree today and the batch round owns the question.
 	{73, "zeek/ja4t/main.zeek", 96, `if (opt_kind == 0) {`},
 	{75, "wireshark/source/packet-ja4.c", 1456, `tcp.option_kind`},
 	{76, "rust/ja4/src/tcp.rs", 70, `tcp.option_kind`},
