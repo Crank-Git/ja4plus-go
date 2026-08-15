@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-cache-check bench clean corpus conformance cover docs fuzz mutate vuln
+.PHONY: build test lint lint-cache-check bench clean corpus conformance cover docs fuzz mutate prerelease vuln
 
 # The generator of the documentation site. `docs/requirements.txt` pins it.
 # Override it to reach a virtual environment that the PATH does not hold:
@@ -268,6 +268,28 @@ vuln:
 # with two different generators.
 docs:
 	$(MKDOCS) build --strict
+
+# Epic 16 adds the pre-release cases behind the `prerelease` build tag. Each case builds a
+# clean environment, so the tag keeps the cases out of `go test ./...`.
+#
+# `-count=1` defeats the test cache, because a cached run builds no clean environment and
+# proves nothing about the artifact.
+#
+# `-v` prints the summary that `TestThePrereleaseRunReportsOneSummary` writes. That summary
+# names one line for each case of `docs/specs/features/16-pre-release-validation.md`, and
+# it separates a case that proves its requirement from a case that waits.
+#
+# Epic #94 built every case on 2026-08-14. `prereleaseCases` in
+# `prerelease_registry_test.go` states which case proves its requirement today, and the
+# summary prints that state. A count here would go stale at each such change, so the
+# registry states the count and this comment states none.
+#
+# A case that reads a published tag reads `v0.3.0`, because this project has cut no tag
+# since it. So a case can report a failure that the next tag repairs.
+#
+# FR-prerelease-26 states that this target passes before the maintainer creates the tag.
+prerelease:
+	go test -tags prerelease -count=1 -v ./...
 
 clean:
 	rm -rf bin/ coverage.out .golangci-cache site/

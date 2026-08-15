@@ -172,6 +172,38 @@ import (
 // `.claude/rules/rulings.md` `## A citation names its repository` already bars it. This guard
 // enforces the bare form for this repository, and
 // `TestEveryPortIssueCitationCarriesARecordedForm` reads the qualified form.
+// #96 re-measured the mark on 2026-08-14 and it read 628.
+// `prerelease_install_test.go` cites #628, which names the issue that carries the version
+// of a program that `go install` builds. That number sits above the inherited mark of 622.
+// **A member pays this cost**, and no round of Epic 16 precedes a member that files an
+// issue. **Three members of Epic 16 run beside #96**, so a later member re-measures the
+// mark again and the union of the four is one number.
+//
+// **The project manager re-measured the mark on 2026-08-14 and it read 635.** It resolved
+// the three registry conflicts of Epic 16 by hand, and its own resolution wrote a bare
+// `#633` into `prerelease_registry_test.go`. **#633 names the issue that carries the
+// FR-prerelease-26 question**, and the project manager filed it after #96 measured 628.
+//
+// **The guard reported that citation and the ordinary gate turned red**, which is the guard
+// doing its work rather than a defect of any member. **#96 predicted this exact breach**,
+// three paragraphs above, and no member closed it because the number arrived after every
+// member had measured.
+//
+// **A project manager pays this cost too, and not a member alone.** A conflict resolution
+// writes prose, and prose cites an issue. **So the resolver re-measures the mark**, and the
+// Epic 16 cross-member review is what found that it had not.
+//
+// **The Epic 16 round re-measured the mark on 2026-08-14 and it read 637.** The round cites
+// #637, which is its own issue, and 637 sits above the inherited mark of 635. **A round pays
+// this cost after the project manager pays it.** The round allocates its own number after the
+// resolution that raised the mark.
+//
+// **The round read 637 before it opened its pull request, and it read 639 after.** The pull
+// request is #639, and the constant holds the second reading. **A mark that a later
+// allocation passes stays safe**, because the mark is a lower bound and this repository only
+// allocates upward. The #556 hotfix recorded the same pair of readings on the same day.
+//
+// **No tracked file cites a number above 637**, so either reading leaves this guard green.
 //
 // #92 re-measured the mark on 2026-08-14 and it read 635. The highest number this repository
 // had allocated is #635, which is the pull request of #93. #92 cites #634, which is the
@@ -184,6 +216,11 @@ import (
 // `docs/specs/spec.md`. That number sits above the inherited mark of 635, which is the case
 // the paragraph above names. The highest number this repository had allocated is #639, which
 // is the pull request of the Epic 16 documentation round.
+//
+// **The merge of `dev` into `epic/94-prerelease-validation` met two readings, and both read
+// 639.** Epic 15 and Epic 16 each ran a round on 2026-08-14, and each round re-measured the
+// mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
+// takes the union of the two histories and one constant.
 const issueCitationHighWaterMark = 639
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
