@@ -60,16 +60,16 @@ const releaseTagVariable = "JA4PLUS_RELEASE_TAG"
 
 // defaultReleaseTag names the tag that the cases read when the environment names none.
 //
-// `v0.3.0` is the version of the library today, and `CLAUDE.md` states it. #593 records
-// that the maintainer cuts no tag before the Epic 10 freeze, so this value is the newest
-// tag that the cases can read.
+// **#106 moved this constant from `v0.3.0` to `v1.0.0` on 2026-08-15 UTC**, under Epic 10.
+// `v1.0.0` is the tag that the maintainer promotes, and these cases read the artifacts of
+// that tag. `JA4PLUS_RELEASE_TAG` overrides the value for a run against another tag.
 //
-// **Two other constants hold `v0.3.0`, and no guard compares the three.**
-// `prereleaseInstallVersion` in `prerelease_install_test.go` and `publishedModuleVersion` in
-// `prerelease_module_contents_test.go` are the two. The
+// **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
+// the three. `prereleaseInstallVersion` in `prerelease_install_test.go` and
+// `publishedModuleVersion` in `prerelease_module_contents_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
-// states the hazard. That section names #100 as the issue that repairs it.
-const defaultReleaseTag = "v0.3.0"
+// states the hazard, and #106 built the guard.
+const defaultReleaseTag = "v1.0.0"
 
 // releaseIssue names the issue that publishes a release for a tag under test.
 const releaseIssue = 100

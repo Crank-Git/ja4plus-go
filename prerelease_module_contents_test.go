@@ -44,7 +44,12 @@ import (
 // below. #593 records the consequence: `pkg.go.dev` detects no license and it renders no
 // documentation. The working tree holds both files, so the next tag turns the case green.
 //
-// Every other case of this file passes against `v0.3.0`.
+// Every other case of this file passed against `v0.3.0`, measured on 2026-08-15 UTC.
+//
+// **#106 moved `publishedModuleVersion` to `v1.0.0` on 2026-08-15 UTC**, and every case of
+// this file reads that tag now. **The proxy serves no `v1.0.0` until the maintainer pushes
+// the tag**, so each case reports the absent tag until then. That failure names the tag it
+// read, and it is the state of the repository rather than a defect of a case.
 
 // publishedModulePath names the module that the proxy publishes.
 //
@@ -54,16 +59,16 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 
 // publishedModuleVersion names the tag that these cases read.
 //
-// `v0.3.0` is the latest tag on 2026-08-14, and Epic 10 cuts the next one. A reader who
-// moves this constant moves every case of this file to the new tag, and it moves no case of
-// another file.
+// **#106 moved this constant from `v0.3.0` to `v1.0.0` on 2026-08-15 UTC**, under Epic 10.
+// A reader who moves this constant moves every case of this file to the new tag, and it
+// moves no case of another file.
 //
-// **Two other constants hold `v0.3.0`, and no guard compares the three.**
-// `prereleaseInstallVersion` in `prerelease_install_test.go` and `defaultReleaseTag` in
-// `prerelease_binaries_test.go` are the two. The
+// **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
+// the three. `prereleaseInstallVersion` in `prerelease_install_test.go` and
+// `defaultReleaseTag` in `prerelease_binaries_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
-// states the hazard. That section names #100 as the issue that repairs it.
-const publishedModuleVersion = "v0.3.0"
+// states the hazard, and #106 built the guard.
+const publishedModuleVersion = "v1.0.0"
 
 // embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
 const embeddedDatabase = "data/ja4plus-mapping.csv"
