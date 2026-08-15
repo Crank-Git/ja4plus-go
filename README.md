@@ -543,6 +543,20 @@ cd ja4plus-go
 go test -v -race ./...
 ```
 
+## Security
+
+Report a vulnerability privately at
+<https://github.com/Crank-Git/ja4plus-go/security/advisories/new>. The report reaches the
+maintainer, and it reaches no public page. Never open a public issue for a vulnerability.
+
+**Every packet this library reads is untrusted input.** A fingerprinter parses a header
+that an attacker writes, so a bounds defect there is reachable from the network. Report a
+crash, a hang, an out-of-range read, or a value that escapes its documented format.
+
+Private vulnerability reporting is enabled on this repository, measured 2026-08-15 UTC. A
+repository setting moves without a change to this repository, so that sentence carries its
+date.
+
 ## License
 
 The BSD 3-Clause license in [LICENSE](LICENSE) covers the original Go code, and FoxIO licenses the JA4 method under [LICENSE-JA4](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE-JA4).
