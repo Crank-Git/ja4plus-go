@@ -154,8 +154,7 @@ run**, so no row above names one.
 0.19 and 0.33 seconds.** That is a ratio of between about four and about seven, and the suite
 is the reason rather than the file count. The two `internal/parser` figures divide the two
 measured runs above by 882. **The conformance suite does not reach the sweep**, because it
-sits behind the
-`conformance` build tag and `.gremlins.yaml` sets no `tags` key.
+sits behind the `conformance` build tag and `.gremlins.yaml` sets no `tags` key.
 
 **`gremlins` reports a false `TIMED OUT` at its default timeout coefficient of 3.** It
 estimates the timeout of one mutation from a `go test` run. The Go build cache serves that

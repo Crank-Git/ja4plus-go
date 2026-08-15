@@ -178,9 +178,9 @@ fuzz:
 #
 # A second sweep of `./internal/parser` ran on 2026-08-14, and it reports 289 s.
 # `docs/mutation_reports/2026-08-14-internal-parser.md` holds that figure. **Both figures are
-# wall clock, and neither one is a transcription defect.** `Run` in `internal/engine/engine.go`
-# of `gremlins` v0.6.0 sets `Elapsed` from `time.Since`. `newReport` in
-# `internal/report/report.go` parses that one value, and two readers then report it.
+# wall clock, and neither one is a transcription defect.** `Run` in
+# `internal/engine/engine.go` of `gremlins` v0.6.0 sets `Elapsed` from `time.Since`.
+# `newReport` in `internal/report/report.go` parses that one value, and two readers report it.
 # `fullRunReport` prints `Mutation testing completed in %s`, and `fileReport` writes the
 # `elapsed_time` field of the JSON. `Duration` of `hako/durafmt` returns the parsed value
 # without a rounding, so the two readers report one number. So one run reports one number, and
@@ -188,10 +188,10 @@ fuzz:
 # verdicts are deterministic. Wall clock is not deterministic, because the machine load moves
 # it. Round 59 of the `## Changelog` of `docs/specs/spec.md` holds the reading.
 #
-# So `gremlins` completes a run over `internal/parser` in between 2m47s and 289 s on a 10-core
-# machine, and question 1 is answered: the tool is viable for this repository. Question 1 asks
-# for a run within the CI job limit, and `.github/workflows/mutation.yml` sets that limit at
-# 60 minutes.
+# So `gremlins` completes a run over `internal/parser` in between 2m47s and 289 s on a
+# 10-core machine. Question 1 asks for a run within the CI job limit, and
+# `.github/workflows/mutation.yml` sets that limit at 60 minutes. Both runs meet it, so
+# question 1 has its answer: the tool is viable for this repository.
 #
 # The root package costs 1.39 seconds for each mutation, and `internal/parser` costs between
 # 0.19 and 0.33 seconds. That is a ratio of between about four and about seven. The reason is
