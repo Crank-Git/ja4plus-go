@@ -498,15 +498,14 @@ every packet of the connection, and `ComputeJA4TS` reads one packet and writes f
 
 ## Conformance
 
-The library is tested against the FoxIO corpus at commit
+`make conformance` tests this library against the FoxIO corpus at commit
 [`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`](https://github.com/FoxIO-LLC/ja4/tree/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8).
 `testdata/foxio.pin` holds that commit, and `make corpus` fetches the corpus at it. The
 corpus is FoxIO-licensed material, so this repository tracks the pin and never the
 captures.
 
-Run the suite with `make conformance`. It compares every value this library computes
-against the FoxIO vector for the same packet, and it reports one entry for each
-difference. `testdata/deviations.json` is the register: it holds one entry for each
+The suite compares every value this library computes against the FoxIO vector for the
+same packet, and it reports one entry for each difference. `testdata/deviations.json` is the register: it holds one entry for each
 accepted difference, with the issue that ruled it. The suite fails on a difference that
 the register does not hold, and it fails on a register entry whose comparison now
 matches.

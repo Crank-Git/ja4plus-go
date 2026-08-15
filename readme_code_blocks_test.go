@@ -62,6 +62,10 @@ const (
 	// readmeCommandName is the first word of every shell line that runs the program.
 	readmeCommandName = "ja4plus"
 
+	// readmeRunCapture is the capture that a program block reads. It is a pcap file,
+	// because the Quick Start block reads one through `pcapgo.NewReader`.
+	readmeRunCapture = "testdata/foxio/pcap/tls12.pcap"
+
 	// readmeCaptureAbsentMessage states that the guard read no capture.
 	//
 	// It carries no word of `conformanceSkipMarker`, because
@@ -175,8 +179,15 @@ func readmeSortedLanguages(checked map[string]string) string {
 //  2. A declaration list, which declares a function or an import and no package clause.
 //  3. A statement list, which a reader pastes into a function body.
 //
-// It returns the offset that the successful shape added before the block, so a caller
-// reports a position of the page.
+// **Two limits, and a reader must know both.**
+//
+// Shape 2 and shape 3 each add a line above the block, so the position that the parser
+// reports for a failure of one of them is one line low or two lines low. The citation
+// still names the page and the fence, which is what a reader needs to find the block.
+//
+// A block that drops its `package main` line parses under shape 2, so this function
+// reports nothing for it. TestEveryProgramBlockOfTheReadmeCompiles reads a whole program
+// alone, and a reader who copies a program block reaches the compiler.
 func parseReadmeGoBlock(block readmeBlock) (*ast.File, *token.FileSet, error) {
 	shapes := []string{
 		block.source,
@@ -278,10 +289,60 @@ func readmeCompileProgram(t *testing.T, block readmeBlock) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	build := exec.CommandContext(ctx, "go", "build", "-o", os.DevNull, "./"+dir)
+	binary := filepath.Join(dir, "program")
+	build := exec.CommandContext(ctx, "go", "build", "-o", binary, "./"+dir)
 
 	if report, buildErr := build.CombinedOutput(); buildErr != nil {
 		t.Errorf("%s does not compile: %v\n%s", block.name(), buildErr, report)
+
+		return
+	}
+
+	readmeRunProgram(t, ctx, block, dir)
+}
+
+// readmeRunProgram runs one built program block against a real capture.
+//
+// FR-release-20 states that the example compiles, and the acceptance criterion of #100
+// states that it runs. A program that compiles still fails at the first packet, so the
+// run is the stronger evidence.
+//
+// The block opens a capture under a fixed name, so this function copies one there. It
+// returns without a run when the block reads no capture, and it returns without a run
+// when the worktree holds no corpus.
+func readmeRunProgram(t *testing.T, ctx context.Context, block readmeBlock, dir string) {
+	t.Helper()
+
+	const captureName = "capture.pcap"
+
+	if !strings.Contains(block.source, captureName) {
+		return
+	}
+
+	capture, err := os.ReadFile(readmeRunCapture)
+	if err != nil {
+		t.Log(readmeCaptureAbsentMessage)
+
+		return
+	}
+
+	if writeErr := os.WriteFile(filepath.Join(dir, captureName), capture, 0o600); writeErr != nil {
+		t.Fatalf("write the capture for %s: %v", block.name(), writeErr)
+	}
+
+	run := exec.CommandContext(ctx, "./program")
+	run.Dir = dir
+
+	report, runErr := run.CombinedOutput()
+	if runErr != nil {
+		t.Errorf("%s compiles and it does not run: %v\n%s", block.name(), runErr, report)
+
+		return
+	}
+
+	if len(report) == 0 {
+		t.Errorf("%s runs against %s and it writes nothing, so the run proves no read",
+			block.name(), readmeRunCapture)
 	}
 }
 
@@ -349,6 +410,16 @@ func readmeExportedNames(t *testing.T, dir string) map[string]bool {
 //
 // It reads the syntax tree and never the text, so a name inside a comment or inside a
 // string reaches no assertion.
+//
+// **What this test does not reach.** It reads a selector whose base is the identifier
+// `ja4plus` or the identifier `ja4db`, so three kinds of name stand outside it.
+//
+//   - A method of a value, such as `proc.ProcessPacket`.
+//   - A field of a struct, such as `r.Fingerprint`.
+//   - A name that a block reads through another import alias.
+//
+// `api_test.go` holds each of those against `docs/api/v1.md`, and
+// TestEveryProgramBlockOfTheReadmeCompiles reaches every one of them in a program block.
 func TestEveryLibraryNameOfTheReadmeIsExported(t *testing.T) {
 	declared := map[string]map[string]bool{
 		"ja4plus": readmeExportedNames(t, "."),
@@ -402,10 +473,18 @@ func TestEveryLibraryNameOfTheReadmeIsExported(t *testing.T) {
 
 // readmeSubcommands returns every word that the program accepts as its first argument.
 //
-// It reads the case labels of `cmd/ja4plus/main.go`. The set is a superset of the
-// subcommands, because the file switches on a subcommand of `db` in the same shape. A
-// superset still fails on a subcommand that the program drops or renames, which is the
-// defect this guard exists to catch.
+// It reads the case labels of `cmd/ja4plus/main.go`, and it drops every label that opens
+// with `-`.
+//
+// **The file holds three switches of this shape, and the drop is what separates them.**
+// One switch dispatches the subcommand, one dispatches a subcommand of `db`, and one
+// reads the flags of `analyze`. Without the drop the set holds `--json` and `--csv`, and
+// the guard would then read `ja4plus --json` as a valid command. The program accepts no
+// such first argument.
+//
+// The set is still a superset, because `update` and `info` reach `db` alone. A superset
+// fails on a subcommand that the program drops or renames, which is the defect this guard
+// exists to catch.
 func readmeSubcommands(t *testing.T) map[string]bool {
 	t.Helper()
 
@@ -423,6 +502,9 @@ func readmeSubcommands(t *testing.T) map[string]bool {
 			word, err := strconv.Unquote(quoted)
 			if err != nil {
 				t.Fatalf("read the case label %s of %s: %v", quoted, mainFile, err)
+			}
+			if strings.HasPrefix(word, "-") {
+				continue
 			}
 			accepted[word] = true
 		}
@@ -480,9 +562,17 @@ func readmeOutputCase(t *testing.T) (command []string, output string) {
 
 	start := strings.Index(page, readmeOutputSection)
 	section := page[start:]
-	if next := strings.Index(section[len(readmeOutputSection):], "\n### "); next >= 0 {
-		section = section[:len(readmeOutputSection)+next]
+
+	// A section ends at the next heading of any level. A search for `\n### ` alone runs
+	// past a `## ` heading, and the section then holds a block of another section.
+	rest := section[len(readmeOutputSection):]
+	end := len(rest)
+	for _, heading := range []string{"\n## ", "\n### "} {
+		if next := strings.Index(rest, heading); next >= 0 && next < end {
+			end = next
+		}
 	}
+	section = section[:len(readmeOutputSection)+end]
 
 	for _, block := range readmeBlocks(t) {
 		if !strings.Contains(section, block.source) {
@@ -535,8 +625,14 @@ func readmeOutputCase(t *testing.T) (command []string, output string) {
 func TestTheReadmeCommandLineOutputMatchesTheProgram(t *testing.T) {
 	command, want := readmeOutputCase(t)
 
-	// The command names the capture, so the guard reads the path the page states.
+	// The command names the capture last, and readmeOutputCase holds the command to one
+	// line. A trailing flag would put the flag here instead, and the test would then skip
+	// rather than report. So the guard fails on a command that ends in a flag.
 	capture := command[len(command)-1]
+	if strings.HasPrefix(capture, "-") {
+		t.Fatalf("the command of %q ends with %q, and the guard reads the last field as "+
+			"the capture", readmeOutputSection, capture)
+	}
 	if _, err := os.Stat(capture); err != nil {
 		t.Skip(readmeCaptureAbsentMessage)
 	}
