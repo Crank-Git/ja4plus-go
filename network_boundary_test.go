@@ -615,6 +615,33 @@ func TestTheNetworkBoundaryRecordNamesTheAmendmentOfTheLibraryExtent(t *testing.
 	}
 }
 
+// TestTheAmendmentCitesAnIdentifierThatTheCaptureBackendDeclares holds the citation rule of
+// `.claude/rules/ste.md` `## How a citation names its target`.
+//
+// The first draft of the record cited a line of `pcapgo_linux.go`, and the sub-merge of #609
+// moved that call to another line inside one batch. An identifier survives that edit, and
+// this guard fails when the identifier leaves the file.
+func TestTheAmendmentCitesAnIdentifierThatTheCaptureBackendDeclares(t *testing.T) {
+	record := readRepoFile(t, networkBoundaryRecordPage)
+
+	for identifier, file := range map[string]string{
+		"captureRefusal": socketPermittedDir + "permission_linux.go",
+		"open":           socketPermittedDir + "pcapgo_linux.go",
+	} {
+		if !strings.Contains(record, "`"+identifier+"` in `"+file+"`") {
+			t.Errorf("%s names no %q in %q, and the amendment cites the identifier rather than the line",
+				networkBoundaryRecordPage, identifier, file)
+
+			continue
+		}
+
+		if !strings.Contains(readRepoFile(t, file), "\nfunc "+identifier+"(") {
+			t.Errorf("%s declares no %s, and %s cites that identifier",
+				file, identifier, networkBoundaryRecordPage)
+		}
+	}
+}
+
 // TestNoPageStatesThatTheCaptureBackendSitsOutsideTheLibrary holds the ruling of #613 in the
 // documents. One word carries one extent, and the sentence below carried a second one.
 func TestNoPageStatesThatTheCaptureBackendSitsOutsideTheLibrary(t *testing.T) {

@@ -131,9 +131,16 @@ moves no code, and it moves no fingerprint value.
 ### The question the amendment answers
 
 **Epic 13 added `internal/capture`, and that package opens a raw socket in the default
-build.** `internal/capture/permission_linux.go:46` calls `syscall.Socket`, and
-`internal/capture/pcapgo_linux.go:31` calls `pcapgo.NewEthernetHandle`. The Epic 13
-cross-member review found both calls on 2026-08-14, and issue #613 records the reading.
+build.** `captureRefusal` in `internal/capture/permission_linux.go` calls `syscall.Socket`,
+and `open` in `internal/capture/pcapgo_linux.go` calls `pcapgo.NewEthernetHandle`. The Epic
+13 cross-member review found both calls on 2026-08-14, and issue #613 records the reading.
+
+**Each citation above names an identifier, and it names no line.**
+`.claude/rules/ste.md` `## How a citation names its target` states that rule for the code of
+this library. **The first draft of this page cited `pcapgo_linux.go` at line 31**, and the
+sub-merge of #609 moved that call to another line inside one batch. So this page carries the
+worked example of the rule it follows.
+`TestTheAmendmentCitesAnIdentifierThatTheCaptureBackendDeclares` holds each identifier.
 
 **A remote lookup and a raw capture socket are two reaches.** The decision above governs an
 outbound lookup at `ja4db.com`. A raw capture socket reads a local interface, and it reaches
