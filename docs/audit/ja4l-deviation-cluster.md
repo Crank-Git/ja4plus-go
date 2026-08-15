@@ -22,6 +22,11 @@ entries that the three rulings produce. **The cause 5 decline is provisional**, 
 that question is open. **Each section below states its ruling, its re-measurement and its
 reversal path.**
 
+**Issue #692 read the last unattributed row on 2026-08-15 UTC, and cause 6 holds it.**
+`tls3.pcapng/153/JA4L.1` is that row, and
+`### The remainder of tls3.pcapng/153/JA4L.1` under cause 6 states the measurement. **Two
+rulings reach it**, and the reading writes neither one.
+
 ## The measurement
 
 Every number of this section and of causes 1, 2, 4 and 5 comes from one run of
@@ -217,9 +222,10 @@ accepted and it moves no output. **The identity holds on each side**: `605 + 32 
 `754 + 32 = 786`.
 
 **The enumeration returned 150 per-packet rows, and this cause holds 149 of them.** The 149
-each carry an entry now. **The 150th carries none.** That row is `tls3.pcapng/153/JA4L.1`,
-and `#### The count of this ruling is 3, and the count above is 4` under cause 3 states why
-no reading explains it. **Issue #692 holds the row**, and it stays unaccepted.
+each carry an entry under ruling #127. **The 150th is `tls3.pcapng/153/JA4L.1`**, and ruling
+#127 reaches no part of it. **Issue #692 read that row on 2026-08-15 UTC**, and
+`### The remainder of tls3.pcapng/153/JA4L.1` under cause 6 holds the reading. The row
+carries an entry under ruling #449 now.
 
 **Issue #652 already declined `browsers-x509.pcapng/128/JA4LS.1`**, at `5d3a650`, so the
 round did not re-enter it. **A duplicate key fails the conformance suite**, and
@@ -465,12 +471,13 @@ and the ruling alone holds three of them.**
 | `tls3.pcapng/147/JA4L.1` | `90_128_quic` | `59_128_quic` | `90_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/167/JA4L.1` | `81_128_quic` | `59_128_quic` | `81_128_quic` | One entry under ruling #528. |
 | `tls3.pcapng/312/JA4L.1` | `83_128_quic` | `45_128_quic` | `83_128_quic` | One entry under ruling #528. |
-| `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | **No entry. Issue #692 holds the row.** |
+| `tls3.pcapng/153/JA4L.1` | `101_128_quic` | `40_128_quic` | `71_128_quic` | **One entry under ruling #449. Issue #692 read the remainder.** |
 | `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` | `264_0_quic` | `113_64_quic` | `264_64_quic` | No entry under ruling #528. Ruling #229 holds it. |
 
 **The last two rows carry a second difference, so ruling #528 alone does not hold either
 one.** `tls3.pcapng/153/JA4L.1` reads `71_128_quic` under the candidate, and the vector holds
-`101_128_quic`. No reading of this page states that remainder.
+`101_128_quic`. **Issue #692 read that remainder on 2026-08-15 UTC, and cause 6 holds it.**
+`### The remainder of tls3.pcapng/153/JA4L.1` under cause 6 states the measurement.
 
 Part a of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` agrees exactly under the
 candidate. The time-to-live `0` of that vector reaches cause 4, and the maintainer ruled
@@ -479,21 +486,22 @@ cause 4 on 2026-08-15 UTC.
 **An entry that named ruling #528 for either row would accept a difference the ruling does
 not decide.**
 
-**`tls3.pcapng/153/JA4L.1` carries no register entry, and issue #692 holds the row.** The
-same objection reaches ruling #127. Ruling #127 decides the part count on a TCP connection
-and the `quic` marker on a QUIC connection, and both sides of this comparison already write
-three parts and the marker. **So ruling #127 decides no part of this difference either.**
+**Ruling #127 reaches no part of this difference.** Ruling #127 decides the part count on a
+TCP connection and the `quic` marker on a QUIC connection, and both sides of this comparison
+already write three parts and the marker.
 
-**Issue #682 wrote an entry for this row on 2026-08-15 UTC, and it removed that entry on the
-same day.** The maintainer read the objection and declined the entry. **A row that no ruling
-explains stays unaccepted**, and it counts as one deviation.
+**Issue #682 wrote an entry under ruling #127 for this row on 2026-08-15 UTC, and it removed
+that entry on the same day.** The maintainer read the objection and declined the entry.
 
 **The reason is that an entry is a record of a ruling.** An entry that names a ruling which
 decides none of the difference gives the register a false record, and the register is the
-one durable statement of why this library differs from the reference. Issue #692 asks for
-the reading that the row still needs.
-**Issue #127 is its reversal path.** The register holds no entry for this row today, so a
-later reading that explains the remainder writes one, under the ruling that decides it.
+one durable statement of why this library differs from the reference.
+
+**Issue #692 read the remainder on 2026-08-15 UTC, and the row carries an entry now.** The
+entry names ruling #449, and its `reason` names ruling #528 beside it.
+`### The remainder of tls3.pcapng/153/JA4L.1` under cause 6 states the measurement, and
+`chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` is the precedent for a two-ruling
+row. **Issue #449 and issue #528 are the two reversal paths.**
 
 **The row of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` is new.** The run of
 2026-08-13 attributed that comparison to cause 4 alone. The re-measurement moves its part a
@@ -792,6 +800,102 @@ produces the per-stream set and `python/ja4.py:403-404` drops every QUIC layer a
 first. **So the ruled rule cannot produce the per-stream difference**, and a decline there
 would hide the fall-through of `processUDP` behind a ruling that does not reach it.
 **Issue #675 holds that fall-through.**
+
+### The remainder of tls3.pcapng/153/JA4L.1
+
+**A coalesced server datagram moves point C, and that is the whole remainder of
+`tls3.pcapng/153/JA4L.1`.** Issue #692 measured it on 2026-08-15 UTC, and this section holds
+the reading. **The reading decides no value, and it changes no line of `ja4l.go`.**
+
+**Cause 3 above leaves 30 microseconds of half-latency on this row**, and
+`#### The count of this ruling is 3, and the count above is 4` states that gap. This section
+names the mechanism that produces it.
+
+#### The packet sequence
+
+**Frame 153 belongs to the QUIC connection between `192.168.1.169:49791` and
+`151.101.1.229:443`.** A probe read `testdata/foxio/pcap/tls3.pcapng` at the pinned commit
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` on 2026-08-15 UTC. It walks every QUIC packet of
+each datagram, and it reports the long-header type of each one.
+
+| Frame | Timestamp | Direction | The QUIC packets of the datagram |
+|---|---|---|---|
+| 141 | `1692898402.927135000` | client to server | Initial |
+| 149 | `1692898402.936045000` | server to client | **Initial, then Handshake** |
+| 150 | `1692898402.936104000` | server to client | Handshake |
+| 151 | `1692898402.936167000` | server to client | Handshake, then a short header |
+| 153 | `1692898402.936247000` | client to server | Handshake |
+
+**Frame 149 is the one coalesced datagram of this connection**, and it carries a server
+Handshake packet behind a server Initial packet.
+
+#### The three readings of point C
+
+**Point A and point B agree, so no part of this difference reaches them.** Both sides read
+frame 141 for point A and frame 149 for point B. `(B - A) / 2` is 4455 microseconds, and
+`testdata/foxio/wireshark/tls3.pcapng.json` holds `ja4.ja4ls` `4455_58_quic` on frame 153.
+**The conformance run reports no `JA4LS.1` deviation on that frame**, which corroborates the
+reading.
+
+**Point D agrees too.** Both sides read frame 153, which is the first client Handshake
+packet.
+
+**So point C carries the whole difference, and each of the three points below reproduces a
+published value exactly.**
+
+| Who | Point C | `D - C` | `(D - C) / 2` | The value |
+|---|---|---|---|---|
+| Wireshark | Frame 149, the coalesced Handshake packet | 202 µs | 101 | `101_128_quic`, which the vector holds. |
+| The cause 3 candidate | Frame 150, the first Handshake datagram | 143 µs | 71 | `71_128_quic`. |
+| This library | Frame 151, the last server Handshake packet before point D | 80 µs | 40 | `40_128_quic`, which the library produces. |
+
+**The remainder is 59 microseconds of interval, and it is the gap between frame 149 and
+frame 150.** Issue #692 states 60 microseconds, and that figure doubles the 30 microseconds
+of half-latency. **The truncation produces the difference of 1**: `143 / 2` is 71.5, and
+`emitResult` in `ja4l.go` truncates it to 71. **59 is the measured figure, and 60 is an
+inference from a truncated value.**
+
+#### Why the mechanism is cause 6 and not a new cause
+
+**`IsQUICHandshakePacket` in `internal/parser/quic.go` reads `payload[0]`**, which is the
+first byte of the first QUIC packet of a datagram. Frame 149 leads with an Initial packet, so
+that predicate returns false and `processUDP` in `ja4l.go` fills no point C from it.
+
+**Wireshark walks every field of the frame.** `wireshark/source/packet-ja4.c:969` opens the
+walk, and `wireshark/source/packet-ja4.c:1408` matches each `quic.long.packet_type` field of
+it. A coalesced datagram carries one such field for each QUIC packet, so the Handshake packet
+of frame 149 reaches the point C branch at `wireshark/source/packet-ja4.c:1426-1430`.
+
+**That is the mechanism of cause 6, and this row is a fourth consequence of it.**
+`### The four rows` above holds the rows where the mechanism empties a value. **This row is
+the case where the connection still fills point D**, so the mechanism moves a value rather
+than removing one.
+
+**The three sibling rows carry no coalesced server datagram**, which is why the cause 3
+candidate agrees with them exactly. The probe read each one.
+
+| Row | The server datagrams before point D | The first Handshake packet |
+|---|---|---|
+| `tls3.pcapng/147/JA4L.1` | Frames 144, 145 and 146, none coalesced | Frame 145 |
+| `tls3.pcapng/167/JA4L.1` | Frames 159, 165 and 166, none coalesced | Frame 165 |
+| `tls3.pcapng/312/JA4L.1` | Frames 303, 310 and 311, none coalesced | Frame 310 |
+
+**So the first Handshake packet and the first Handshake datagram are one frame on each
+sibling, and they are two frames on the connection of frame 153.** That is the whole reason
+this row is the remainder of ruling #528.
+
+#### The register entry of this row
+
+**The row carries one entry now, and the entry names ruling #449.** Both rulings already
+exist, so this reading writes no ruling. Ruling #449 of 2026-08-15 UTC decides that the
+library reads the first QUIC packet of a coalesced datagram, and ruling #528 of 2026-08-14
+decides that point C is the last QUIC server handshake packet. **The `reason` of the entry
+names both**, as the entry of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` does.
+
+**The `ruling` field names one issue, and `deviationRulingPattern` in `deviations_test.go`
+bars a second one.** So a row that two rulings reach names the ruling that decides the part
+no other entry records, and its `reason` carries the other. **Issue #449 and issue #528 are
+the two reversal paths.**
 
 ### The reading of #675
 
@@ -1177,7 +1281,7 @@ each one.
 | 3 — the QUIC client measurement point | 4 | **3** | **The ruling costs nothing.** Answer 2 cost nothing on 2026-08-13, and it costs 5 stale entries on 2026-08-14. | **Ruled on 2026-08-14. Issue #528 holds it.** |
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | 2 register entries. | **Ruled on 2026-08-15 UTC. Issue #229 holds it.** |
 | 5 — the two vector sets disagree | 1 | Not measured. Each set holds a different value. | 1 register entry. | **Ruled on 2026-08-15 UTC. Issue #249 holds it. Provisional.** |
-| 6 — the coalesced QUIC datagram | 3 | **4**, on a later base. Opens 2. | 4 register entries. | **Ruled on 2026-08-15 UTC. Issue #449 holds it.** |
+| 6 — the coalesced QUIC datagram | 3 | **4**, on a later base. Opens 2. | 5 register entries. | **Ruled on 2026-08-15 UTC. Issue #449 holds it.** |
 | 7 — the seconds component of the Wireshark delta | 1 | Not measured. Ruling #127 bars a candidate. | — | The maintainer. A proven reference defect. |
 | **Total** | **177** | | | |
 
@@ -1200,6 +1304,14 @@ UTC**, from cause 5 to cause 6. `tls3.pcapng/25/JA4L-S` is that row, and
 `## What #253 and #249 explain` above states the measurement that moved it. **The total of
 177 does not change**, because the move takes one row from one cause and gives it to
 another.
+
+**Cause 3 and cause 6 both reach `tls3.pcapng/153/JA4L.1`, and no count above moves.** Cause
+3 states 4 in the `Attributed` column, and that 4 holds this row. **Cause 6 reaches it too**,
+because a coalesced server datagram carries the point C that ruling #528 alone does not
+explain. `### The remainder of tls3.pcapng/153/JA4L.1` under cause 6 states the measurement.
+**Cause 3 and cause 4 already share one row the same way**, and
+`#### The count of this ruling is 3, and the count above is 4` records that pair. **A reader
+adds no row of the `Attributed` column twice.**
 
 **Cause 4 states 3 in the `Attributed` column and it holds 2 today.**
 `### The re-measurement of 2026-08-15` above states the reason: #447 collapsed two rows of
@@ -1240,8 +1352,10 @@ vector also discards a whole second**, so the cause 1 candidate leaves the row o
   **Batch #668 wrote seven more on 2026-08-15 UTC**, under the rulings of #229, #249 and
   #449. The register held 630 keys before that batch and it holds 637 after it, measured on
   2026-08-15 UTC. **Issue #682 then wrote 149 more under ruling #127 on 2026-08-15 UTC**,
-  and the register holds 786 keys after it. **It declined a 150th**, because no ruling
-  explains `tls3.pcapng/153/JA4L.1` and issue #692 holds that row.
+  and the register holds 786 keys after it. **It declined a 150th**, because no ruling then
+  explained `tls3.pcapng/153/JA4L.1`. **Issue #692 wrote that entry on 2026-08-15 UTC**,
+  under ruling #449, and `### The remainder of tls3.pcapng/153/JA4L.1` under cause 6 holds
+  the reading.
   `#### The maintainer kept ruling #127 on 2026-08-15, and the register now records the price`
   under cause 1 above holds that measurement. **Issue #683 then wrote 4 more under ruling
   #42 in the same batch, on 2026-08-15 UTC**, and the register holds 790 keys after it. Each
