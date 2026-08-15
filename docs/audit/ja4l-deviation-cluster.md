@@ -743,6 +743,13 @@ opens with a test of `conn.timestamps["C"]`, so a connection with no point C rea
 of the method and returns no result. **That test is the fall-through, and it is the whole
 cause of `ssh2.pcapng/33/JA4L-S`.**
 
+**#447 created these two rows, and the fall-through was harmless before it.** The library
+published the QUIC server value on the frame that fills point B until #447, so a connection
+that never fills point D still reached a value. `## Cause 2 — the JA4L-S emission frame on a
+QUIC connection` above records that behavior, and it names `16192_57_quic` on frame 1042 of
+`ssh2.pcapng`. **That is the same connection this section reads.** #447 moved the emission to
+the point D frame, and the point C gate then emptied both rows.
+
 **Point C stays empty for a lawful reason, and the reference agrees with the library
 there.** `IsQUICHandshakePacket` in `internal/parser/quic.go` reads `payload[0]`, so a
 coalesced datagram that leads with an Initial packet fills no point C. The reference reads
