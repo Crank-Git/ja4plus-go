@@ -20,9 +20,12 @@ var mappingCSV []byte
 
 // LookupResult holds the result of a fingerprint database lookup.
 type LookupResult struct {
+	// Application names the program that produces the fingerprint.
 	Application string
-	Type        string
-	Notes       string
+	// Type names the class of the program.
+	Type string
+	// Notes holds the free text of the record.
+	Notes string
 }
 
 // cacheStamp identifies one state of the cache file. The library rebuilds the table
