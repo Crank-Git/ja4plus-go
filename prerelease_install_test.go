@@ -35,6 +35,10 @@ import (
 // that turns it green.
 
 // prereleaseModulePath names the module that each case reads.
+//
+// `publishedModulePath` in `prerelease_module_contents_test.go` holds the same string, and
+// both compile in one package under the `prerelease` tag. See
+// `# Five constants carry the module path and the tag` below.
 const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 
 // prereleaseInstallVersion names the tag that each case reads.
@@ -43,6 +47,27 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 // `v1.0.0`. #100 cuts the release tag, and a later session moves this constant to it.
 // FR-prerelease-7 matches the printed version against this tag, so a reader knows which
 // artifact every measurement below describes.
+//
+// # Five constants carry the module path and the tag
+//
+// **A session that moves one of them leaves the others at `v0.3.0`, and no guard compares
+// them.** The Epic 16 cross-member review measured the hazard on 2026-08-14, and the round
+// recorded it here rather than repairing it. The five are these.
+//
+//   - `prereleaseModulePath`, above.
+//   - `publishedModulePath`, in `prerelease_module_contents_test.go`.
+//   - `prereleaseInstallVersion`, below.
+//   - `publishedModuleVersion`, in `prerelease_module_contents_test.go`.
+//   - `defaultReleaseTag`, in `prerelease_binaries_test.go`.
+//
+// **Three of the five hold `v0.3.0`**: this constant, `publishedModuleVersion` and
+// `defaultReleaseTag`. Each doc comment promises a single edit at the next tag, and each one
+// describes its own file alone.
+//
+// **The issue that cuts the tag moves all three, and it owns the guard that compares them.**
+// #100 cuts the tag, under Epic 10. A guard written before the tag would compare three
+// constants that no session has reason to move, so it would prove nothing until the day it
+// matters. The round states that reading, and it builds no guard.
 const prereleaseInstallVersion = "v0.3.0"
 
 // prereleaseExpectedJA4 states the JA4 value of the capture that `prereleaseCaptureFrame`
@@ -282,6 +307,11 @@ func requireModuleCacheHoldsThePublishedModule(t *testing.T, environment *cleanE
 // prereleaseRepositoryRoot returns the directory of this repository.
 //
 // A test of this package runs in the package directory, which is the repository root.
+//
+// **Two cases call `os.Getwd` inline for the same value**, in `prerelease_test.go` and in
+// `prerelease_site_test.go`. The Epic 16 cross-member review measured that on 2026-08-14,
+// and the round recorded it rather than repairing it. A caller that adopts this helper reads
+// one failure message rather than three.
 func prereleaseRepositoryRoot(t *testing.T) string {
 	t.Helper()
 

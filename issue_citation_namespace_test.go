@@ -192,7 +192,12 @@ import (
 // **A project manager pays this cost too, and not a member alone.** A conflict resolution
 // writes prose, and prose cites an issue. **So the resolver re-measures the mark**, and the
 // Epic 16 cross-member review is what found that it had not.
-const issueCitationHighWaterMark = 635
+//
+// **The Epic 16 round re-measured the mark on 2026-08-14 and it read 637.** The round cites
+// #637, which is its own issue, and 637 sits above the inherited mark of 635. **A round pays
+// this cost whether or not the project manager already paid it**, because the round allocates
+// a number after the resolution that raised the mark.
+const issueCitationHighWaterMark = 637
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

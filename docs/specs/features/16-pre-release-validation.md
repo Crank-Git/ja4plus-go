@@ -194,6 +194,7 @@ the reason FR-prerelease-26 puts every case before the tag rather than after it.
    once at Epic 16 and recorded then. A ceiling invented before the measurement would be
    arbitrary. **#97 measured it on 2026-08-14, and `publishedModuleSizeCeiling` in
    `prerelease_module_contents_test.go` holds the number.** The module zip of `v0.3.0`
-   measures 2253962 bytes, and `assets/logo.png` is 2192430 bytes of it. The ceiling is
-   4 MiB. A corpus capture and a built site each add more than 2 MiB, so either one
-   crosses it.
+   measures 2253962 bytes compressed and 2444024 bytes uncompressed. `assets/logo.png` is
+   2192430 uncompressed bytes, which is 89.7 percent of the uncompressed total. The
+   ceiling is 4 MiB, and it reads the compressed zip size. A corpus capture and a built
+   site each add more than 2 MiB, so either one crosses it.
