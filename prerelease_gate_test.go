@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -16,8 +17,13 @@ import (
 
 // The release gate case of `docs/specs/features/16-pre-release-validation.md`.
 //
-// FR-prerelease-26 through FR-prerelease-30 stand between the last commit and the tag. Each
-// one reads a fact that the maintainer must know before the release.
+// FR-prerelease-26 through FR-prerelease-30 stand at the release gate. Each one reads a
+// fact that the maintainer must know before it promotes the release.
+//
+// **The maintainer amended FR-prerelease-26 on 2026-08-15 UTC**, and #633 applied it. The
+// run now reads the tag under test, and the promotion waits on the result. **The four other
+// requirements of this slice read the tracked tree**, so each one holds before the tag and
+// after it.
 //
 // **Three of the five run today, and two of them read something the tree does not hold.**
 // #94 records the maintainer ruling of 2026-08-14: each member writes its case against
@@ -61,28 +67,42 @@ func prereleaseSummaryRow(t *testing.T, report, measure string) int {
 	return count
 }
 
-// TestThePrereleaseTargetPassesBeforeTheTag records FR-prerelease-26, and it asserts
-// nothing.
+// TestTheReleaseGateRunsAgainstTheTagUnderTest holds FR-prerelease-26.
 //
-// **FR-prerelease-26 and the maintainer ruling of 2026-08-14 disagree, and this case
-// resolves neither.** The requirement states that `make prerelease` passes before the
-// maintainer creates the tag. The ruling on #94 states that each case runs against `v0.3.0`
-// and that several of them fail until Epic 10 ships a tag. So `make prerelease` does not
-// pass today, by that ruling.
+// The requirement states that `make prerelease` runs against the tag under test, and that
+// the maintainer promotes the release only when every case passes or carries a recorded
+// reason. **The maintainer ruled that amendment on 2026-08-15 UTC**, at
+// https://github.com/Crank-Git/ja4plus-go/issues/633#issuecomment-5299776974, and #633
+// applied it. **#633 is the reversal path.**
 //
-// **The question belongs to the maintainer**, and #99 returns it. It is a scope question,
-// and it is never a ruling about a fingerprint value.
+// The pre-amendment requirement stated that `make prerelease` passes before the maintainer
+// creates the tag. That named a moment at which no tag exists, so this case could read
+// none and it asserted nothing.
+//
+// This case reads two facts. The run names a tag, and the download directory holds the
+// published checksum file of that tag. **A run that reads no published release proves
+// nothing about the artifact the maintainer promotes**, so a summary that reported it as a
+// pass would report a gate that gates nothing.
+//
+// **This case verifies no digest.** `TestEveryPublishedChecksumVerifies` holds
+// FR-prerelease-22 and compares every digest. This case reads the presence of the file,
+// which is the evidence that the maintainer pushed the tag and that GoReleaser published
+// it.
 //
 // **This case runs no command.** `make prerelease` runs this file, so a case that ran the
 // target would call itself without a bound.
 //
-// The registry row of FR-prerelease-26 reads `proves: false` until the maintainer answers.
-// **The tree holds this case, and the row states that the case asserts nothing.** The Epic
-// 16 round renamed the field from `built` on 2026-08-14, because a summary that called this
-// case `absent` stated something the binary disproves.
-func TestThePrereleaseTargetPassesBeforeTheTag(t *testing.T) {
-	t.Skip("this case asserts nothing about FR-prerelease-26: the requirement and the " +
-		"maintainer ruling of 2026-08-14 on #94 disagree, and #99 returns the question")
+// **This case is red until Epic 10 ships a tag under test.** #100 cuts that tag and #593
+// holds the `LICENSE` half. That red is the state of the repository, and it is never a
+// regression of this case.
+func TestTheReleaseGateRunsAgainstTheTagUnderTest(t *testing.T) {
+	directory, tag := releaseUnderTest(t)
+
+	path := filepath.Join(directory, releaseChecksumFile)
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("the release of tag %s holds no %s in %s, so this run reads no published release: %v",
+			tag, releaseChecksumFile, directory, err)
+	}
 }
 
 // TestTheRegisterHoldsNoEntryWhoseComparisonNowMatches holds FR-prerelease-27.

@@ -550,9 +550,14 @@ func requireAbsent(t *testing.T, path string) {
 // that waits from a case that passed.
 //
 // **The summary printed `absent` for a case that runs, until 2026-08-14.** The Epic 16
-// cross-member review measured it: `TestThePrereleaseTargetPassesBeforeTheTag` and
+// cross-member review measured it: the FR-prerelease-26 case and
 // `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` each stand in the tree and each one
 // skips. So the round renamed the state to `waits`, which is what each of the two does.
+//
+// **#633 flipped the FR-prerelease-26 row to `proves` on 2026-08-15 UTC**, and
+// `TestTheReleaseGateRunsAgainstTheTagUnderTest` now asserts. So the summary names one
+// waiting case today, and `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` is that
+// case.
 func TestThePrereleaseRunReportsOneSummary(t *testing.T) {
 	proved, waiting := 0, 0
 
@@ -566,7 +571,10 @@ func TestThePrereleaseRunReportsOneSummary(t *testing.T) {
 			waiting++
 		}
 
-		t.Logf("  %-30s %-6s issue #%d  %s",
+		// The width holds the longest row name of the registry. #633 widened it from 30 on
+		// 2026-08-15 UTC, because `the pre-release run against the tag` is 35 characters and
+		// a shorter width pushes the state column out of line.
+		t.Logf("  %-35s %-6s issue #%d  %s",
 			prereleaseCase.name, state, prereleaseCase.issue,
 			strings.Join(prereleaseCase.requirements, " "))
 	}

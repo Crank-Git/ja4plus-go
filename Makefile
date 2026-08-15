@@ -287,7 +287,9 @@ docs:
 # A case that reads a published tag reads `v0.3.0`, because this project has cut no tag
 # since it. So a case can report a failure that the next tag repairs.
 #
-# FR-prerelease-26 states that this target passes before the maintainer creates the tag.
+# FR-prerelease-26 states that this target runs against the tag under test, and that the
+# maintainer promotes the release only when every case passes or carries a recorded reason.
+# The maintainer ruled that amendment on 2026-08-15 UTC, and #633 applied it.
 prerelease:
 	go test -tags prerelease -count=1 -v ./...
 
