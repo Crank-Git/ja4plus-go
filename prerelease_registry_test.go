@@ -33,10 +33,19 @@ type prereleaseCase struct {
 	//
 	// **The tree holds a Go case for every row, and this field reads no absence.** The
 	// Epic 16 round renamed this field from `built` on 2026-08-14, because the cross-member
-	// review measured the third meaning. `TestThePrereleaseTargetPassesBeforeTheTag` and
+	// review measured the third meaning. The FR-prerelease-26 case and
 	// `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` each stand in
-	// `prerelease_gate_test.go`, each one runs, and each one skips with a stated reason. So
-	// a summary that called either case `absent` stated something the binary disproves.
+	// `prerelease_gate_test.go`, and each one runs. So a summary that called either case
+	// `absent` stated something the binary disproves.
+	//
+	// **Every row reads `true` on 2026-08-15 UTC**, because #642 completed the last case.
+	// The field stays, because a later requirement reaches the feature file before its
+	// case reaches the tree.
+	//
+	// **A red case proves its requirement, and it never waits.** #633 flipped the
+	// FR-prerelease-26 row on 2026-08-15 UTC, and
+	// `TestTheReleaseGateRunsAgainstTheTagUnderTest` fails until Epic 10 ships a tag under
+	// test. A field that read `false` for that case would call an assertion an absence.
 	proves bool
 }
 
@@ -102,17 +111,32 @@ var prereleaseCases = []prereleaseCase{
 	//
 	// **The split renumbers no requirement and it reorders no row.** Each requirement of the
 	// feature file still reaches exactly one row.
+	// The maintainer amended FR-prerelease-26 on 2026-08-15 UTC, and #633 flipped this row.
+	// The pre-amendment requirement named a moment at which no tag exists, so the case read
+	// nothing and the row read `proves: false`. The amended requirement names the tag under
+	// test, and `TestTheReleaseGateRunsAgainstTheTagUnderTest` reads it.
+	//
+	// **This row proves its requirement and the case is red today.** The case reads a
+	// published release, and this repository publishes none for a tag under test. #100 cuts
+	// that tag, under Epic 10. A red case that asserts its requirement is not a waiting case.
 	{
-		name:         "the pre-release run before the tag",
+		name:         "the pre-release run against the tag",
 		requirements: []string{"FR-prerelease-26"},
-		issue:        99,
-		proves:       false,
+		issue:        prereleaseAmendmentIssue,
+		proves:       true,
 	},
+	// #642 completed this case on 2026-08-15 UTC, and it flipped this row. Epic 15 landed
+	// the sweep, so `docs/mutation_reports/` and `docs/mutation_settlements/` each hold the
+	// document that `TestEveryLivedMutationOfTheMostRecentSweepIsSettled` reads. #634
+	// amended FR-mutation-11 before that, and the case reads the amended rule.
+	//
+	// **This row reads no tag, so it waits on Epic 10 for nothing.** The case reads two
+	// tracked documents, and it passed on 2026-08-15 UTC.
 	{
 		name:         "the mutation sweep report",
 		requirements: []string{"FR-prerelease-28"},
-		issue:        99,
-		proves:       false,
+		issue:        642,
+		proves:       true,
 	},
 }
 
@@ -178,10 +202,13 @@ func TestThePrereleaseRegistryCoversEveryRequirement(t *testing.T) {
 // built the module install, #97 built the published module contents, #98 built the
 // binaries, and #99 built the documentation site and the release gate.
 //
-// **Six rows of the registry prove a requirement, and two wait.** `the pre-release run
-// before the tag` waits on the maintainer answer that #633 carries, and `the mutation sweep
-// report` waits on Epic #89. **So this list holds six names and the registry holds eight
-// rows**, and a reader who counts one against the other reads no disagreement.
+// **Every row of the registry proves a requirement, and none waits.** **So this list holds
+// eight names and the registry holds eight rows.** #642 closed the last gap on 2026-08-15
+// UTC. `the mutation sweep report` waited on Epic #89, and Epic 15 landed the sweep.
+//
+// **#633 flipped `the pre-release run against the tag` on 2026-08-15 UTC**, and it added
+// the name to the list below. The maintainer amended FR-prerelease-26 on that day, and the
+// case now reads the tag under test.
 //
 // **This guard reads the registry against a written list, and it reads no Go case.** So it
 // reports a row that claims the wrong state against this list, and it reports no row that
@@ -203,6 +230,12 @@ func TestThePrereleaseRegistryNamesEveryCaseThatProvesItsRequirement(t *testing.
 		"the binaries",                  // #98
 		"the documentation site",        // #99
 		"the release gate",              // #99
+		// #633 flipped this row on 2026-08-15 UTC, and it appended this name.
+		"the pre-release run against the tag",
+		// #642 flipped this row on 2026-08-15 UTC, and it appended this name after the
+		// name above. `slices.Equal` reads the order, so a name in another position
+		// reports a disagreement that the registry does not hold.
+		"the mutation sweep report",
 	}
 
 	if !slices.Equal(proved, expected) {
@@ -294,5 +327,93 @@ func TestTheFeatureFileNamesThePrereleaseBuildTag(t *testing.T) {
 	if !strings.HasPrefix(source, "//go:build prerelease\n") {
 		t.Errorf("prerelease_test.go opens with %q, and the feature file names the prerelease build tag",
 			fmt.Sprintf("%.30s", source))
+	}
+}
+
+// prereleaseAmendmentIssue names the issue that applies the FR-prerelease-26 amendment.
+//
+// The maintainer ruled the amendment on 2026-08-15 UTC, at
+// https://github.com/Crank-Git/ja4plus-go/issues/633#issuecomment-5299776974. **The same
+// issue is the reversal path**, so one number answers both questions a later reader asks.
+const prereleaseAmendmentIssue = 633
+
+// TestTheReleaseGateRequirementNamesTheTagAndThePromotion holds the amended
+// FR-prerelease-26.
+//
+// The requirement states the release gate: the maintainer pushes the tag, `make prerelease`
+// runs against that tag, and the maintainer promotes only when every case passes or carries
+// a recorded reason. **The pre-amendment requirement named a moment at which no tag exists**,
+// so no case could read one, and the case asserted nothing for that reason. #633 renamed
+// that case to `TestTheReleaseGateRunsAgainstTheTagUnderTest`.
+//
+// This guard reads the requirement text and the amendment record. `.claude/rules/rulings.md`
+// `## Where a ruling is recorded` requires the date, the issue and the reversal path, and a
+// record that names one of the three leaves a later reader unable to reverse the amendment.
+func TestTheReleaseGateRequirementNamesTheTagAndThePromotion(t *testing.T) {
+	feature := readRepoFile(t, prereleaseFeatureFile)
+
+	requirement := regexp.MustCompile(`(?s)\*\*FR-prerelease-26\*\* — (.{0,300})`).FindStringSubmatch(feature)
+	if requirement == nil {
+		t.Fatalf("%s states FR-prerelease-26 in no readable form", prereleaseFeatureFile)
+	}
+
+	for _, word := range []string{"tag", "promotes", "recorded reason"} {
+		if !strings.Contains(requirement[1], word) {
+			t.Errorf("the amended FR-prerelease-26 of %s names no %q: %q",
+				prereleaseFeatureFile, word, strings.TrimSpace(requirement[1]))
+		}
+	}
+
+	for _, record := range []string{
+		"2026-08-15",
+		fmt.Sprintf("#%d", prereleaseAmendmentIssue),
+		"reversal path",
+	} {
+		if !strings.Contains(feature, record) {
+			t.Errorf("%s records the FR-prerelease-26 amendment without %q, and a reader cannot reverse it",
+				prereleaseFeatureFile, record)
+		}
+	}
+}
+
+// TestNoTrackedStatementPutsTheReleaseGateBeforeTheTag holds the amended FR-prerelease-26
+// against each file that stated the pre-amendment moment.
+//
+// Four files explained the requirement, and each one said that the gate runs before the tag.
+// The amendment moves the gate to the tag, so each sentence now contradicts the requirement
+// it explains. **A contradiction that survives in one file sends the next reader to the
+// pre-amendment rule.**
+//
+// This guard reads a list of files, and it never reads its own source. A guard that swept
+// the tree would match the sentences below and report itself.
+//
+// **The first two entries name a whole statement, and neither one names the bare phrase.**
+// The amendment record of the feature file quotes the pre-amendment requirement as
+// evidence, and `.claude/rules/ste.md` `## What is verbatim, and never rewritten` holds
+// that quotation. A guard that read the bare phrase would report the record that the
+// amendment needs.
+func TestNoTrackedStatementPutsTheReleaseGateBeforeTheTag(t *testing.T) {
+	forbidden := []string{
+		"**FR-prerelease-26** — `make prerelease` passes before the maintainer creates the tag.",
+		"FR-prerelease-26 states that this target passes before the maintainer creates the tag.",
+		"before the tag rather than after it",
+		"the check to run before the tag",
+		"The check runs before the tag.",
+		"Every gate runs before the tag, never after it.",
+	}
+
+	for _, path := range []string{
+		prereleaseFeatureFile,
+		"Makefile",
+		"prerelease_gate_test.go",
+		".claude/skills/release/SKILL.md",
+	} {
+		text := readRepoFile(t, path)
+		for _, sentence := range forbidden {
+			if strings.Contains(text, sentence) {
+				t.Errorf("%s states %q, and the amendment of #%d moves the release gate to the tag",
+					path, sentence, prereleaseAmendmentIssue)
+			}
+		}
 	}
 }

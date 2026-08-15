@@ -9,17 +9,23 @@ allowed-tools: Bash, Read, Grep
 GoReleaser builds the tag. `docs/specs/features/10-release.md` holds the requirements and
 `docs/specs/features/16-pre-release-validation.md` holds the pre-release cases.
 
-**A published tag cannot be moved, and a deleted tag stays in the module proxy cache.**
-Every gate runs before the tag, never after it.
+**A published tag cannot be moved, and a deleted tag stays in the module proxy cache.** So
+every working-tree gate runs before the tag.
+
+**The release gate is the one gate that runs after the tag**, because each of its cases
+reads a published release. FR-prerelease-26 states it: `make prerelease` runs against the
+tag under test, and the maintainer promotes the release only when every case passes or
+carries a recorded reason. The maintainer ruled that amendment on 2026-08-15 UTC, and #633
+applied it. Step 6 below runs it.
 
 ## 1. Run every gate
 
 ```
-make test && make lint && make vuln && make conformance && make docs && make prerelease
+make test && make lint && make vuln && make conformance && make docs
 ```
 
-Nothing proceeds until all six pass. **Report a failure with its output.** Do not
-summarise a red gate as "mostly passing".
+Nothing proceeds until all five pass. **Report a failure with its output.** Do not
+summarize a red gate as "mostly passing".
 
 ## 2. Check the release blockers
 
@@ -32,7 +38,7 @@ These are not covered by the commands above. Check each one by hand.
 | `testdata/deviations.json` holds no entry whose comparison now matches. | `make conformance` fails if one does. |
 | Every register row of `features/08-python-parity.md` is closed. | Read the feature file. |
 | No tracked document applies the count of ten to methods. | `go test -run TestMethodCount ./...` |
-| Every `LIVED` mutation of the most recent sweep is settled. | Read `docs/mutation_settlements/`. |
+| The most recent sweep records every `LIVED` mutation as settled or as counted. | Read `docs/mutation_settlements/`. `make prerelease` fails when no record covers the most recent sweep. |
 | The README links to the documentation site, and the link resolves. | Read and follow it. |
 
 ## 3. Check the artifact configuration
@@ -51,7 +57,7 @@ Then confirm three properties of the snapshot.
 
 ## 4. Update the record
 
-- `CHANGELOG.md` describes the released behaviour and nothing else.
+- `CHANGELOG.md` describes the released behavior and nothing else.
 - **Breaking changes are named as breaking.** `CloseOpenWindows` is not one. It sits on the
   optional interface `WindowCloser`, and the exported `Fingerprinter` interface does not
   change. JA4LS is a new method and it breaks nothing, and the CHANGELOG states it and
@@ -66,11 +72,20 @@ separate step the maintainer approves.
 **Ask the maintainer before you create a tag or push one.** A tag is outward-facing and it
 cannot be taken back.
 
-## After the release
+## 6. Run the release gate
 
-Run the binary cases of `make prerelease` against the published artifacts, on each platform
-a runner offers. **A platform no runner offers is recorded as unchecked in the release
-notes.** It is never reported as passing.
+Download the artifacts of the pushed tag, then run the gate against them.
+
+```
+gh release download <tag> --repo Crank-Git/ja4plus-go --dir <directory>
+JA4PLUS_RELEASE_TAG=<tag> JA4PLUS_RELEASE_DIR=<directory> make prerelease
+```
+
+Run it on each platform a runner offers. **A platform no runner offers is recorded as
+unchecked in the release notes.** It is never reported as passing.
+
+**Promote the release only when every case passes, or when each failing case carries a
+recorded reason.** FR-prerelease-26 states that rule.
 
 ## The v1.0.0 freeze
 

@@ -31,6 +31,28 @@ const auditReportFile = "docs/audit/findings.md"
 // three, and the walk reads no subdirectory of them.
 var auditRoots = []string{".", "internal/parser", "cmd/ja4plus"}
 
+// captureAuditRoot is the directory that #611 adds to the classification guard. No audit
+// issue reads it, so the added files table classifies every file that ships from it.
+const captureAuditRoot = "internal/capture"
+
+// captureClassificationCase is the file whose row the negative guard below removes. The
+// guard needs one file of captureAuditRoot that the report classifies today.
+const captureClassificationCase = captureAuditRoot + "/capture.go"
+
+// classificationRoots names each directory whose files the report classifies. It holds
+// every root of auditRoots, and it holds one directory that no audit reads.
+//
+// The two sets differ, because a classification states the history of a file and never an
+// audit. A file that no audit reads carries an added files row instead, so the guard
+// reaches a directory that FR-audit-1 leaves out.
+//
+// #611 measured the reason: the guard read auditRoots alone, `internal/capture` was none
+// of the three, and every file that ships from it passed the guard unclassified.
+//
+// The list derives from auditRoots, so a later root reaches the classification guard
+// without a second edit.
+var classificationRoots = slices.Concat(auditRoots, []string{captureAuditRoot})
+
 // auditIssues names each issue that owns one section of the report. A section per issue
 // keeps two slices that run at the same time off one another's rows.
 var auditIssues = []string{"22", "23", "24", "25"}
@@ -135,16 +157,32 @@ type auditFinding struct {
 // auditGoFiles returns the path of every file the audit reads.
 //
 // It reads each directory of auditRoots and no subdirectory of them.
+func auditGoFiles(t *testing.T) []string {
+	t.Helper()
+
+	return goFilesOfRoots(t, auditRoots)
+}
+
+// classifiedGoFiles returns the path of every file the classification guard reads.
+func classifiedGoFiles(t *testing.T) []string {
+	t.Helper()
+
+	return goFilesOfRoots(t, classificationRoots)
+}
+
+// goFilesOfRoots returns the path of every file that ships from the roots.
+//
+// It reads each directory of the roots and no subdirectory of them.
 //
 // It drops a file whose name ends in `_test.go`, because a test file ships nothing. The
 // `Purpose` section of the feature file counts nine parser files, and that count holds
 // only without the test files.
-func auditGoFiles(t *testing.T) []string {
+func goFilesOfRoots(t *testing.T, roots []string) []string {
 	t.Helper()
 
 	var files []string
 
-	for _, root := range auditRoots {
+	for _, root := range roots {
 		entries, err := os.ReadDir(root)
 		if err != nil {
 			t.Fatalf("read %s: %v", root, err)
@@ -514,7 +552,7 @@ func auditAddedRows(t *testing.T, page string) map[string]string {
 
 // unclassifiedAuditFiles returns each file the report classifies neither way.
 //
-// A file of the three directories carries one of two classifications: an audit issue reads
+// A file of a classification root carries one of two classifications: an audit issue reads
 // it, or a later issue added it. A file that carries neither is a file the record does not
 // account for.
 func unclassifiedAuditFiles(files []string, readers map[string][]string, added map[string]string) []string {
@@ -532,8 +570,8 @@ func unclassifiedAuditFiles(files []string, readers map[string][]string, added m
 	return unclassified
 }
 
-// unknownAuditFiles returns each file the report classifies that the three directories do
-// not hold. A row for an absent file records a classification of nothing.
+// unknownAuditFiles returns each file the report classifies that the classification roots
+// do not hold. A row for an absent file records a classification of nothing.
 func unknownAuditFiles(files []string, recorded ...map[string][]string) []string {
 	var unknown []string
 
@@ -579,7 +617,9 @@ func twiceClassifiedAuditFiles(readers map[string][]string, added map[string]str
 	return twice
 }
 
-func TestTheReportClassifiesEveryGoFileOfTheThreeDirectories(t *testing.T) {
+// The test name states no count of directories. #611 records the reason: the earlier name
+// stated three, and a fourth root left the name stale.
+func TestTheReportClassifiesEveryGoFileOfEveryClassificationRoot(t *testing.T) {
 	page := readRepoFile(t, auditReportFile)
 	readers := auditSetRows(t, page)
 	added := auditAddedRows(t, page)
@@ -588,14 +628,66 @@ func TestTheReportClassifiesEveryGoFileOfTheThreeDirectories(t *testing.T) {
 		t.Errorf("the report records %s as read and as added, and one file carries one classification", file)
 	}
 
-	files := auditGoFiles(t)
+	files := classifiedGoFiles(t)
 
 	for _, file := range unclassifiedAuditFiles(files, readers, added) {
-		t.Errorf("the report classifies %s neither as read by an audit issue nor as added by a later issue, and FR-audit-1 reads every file of the three directories", file)
+		t.Errorf("the report classifies %s neither as read by an audit issue nor as added by a later issue, and every file of a classification root carries one classification", file)
 	}
 
 	for _, file := range unknownAuditFiles(files, readers, auditAddedFileKeys(added)) {
-		t.Errorf("the report classifies %s, and the three directories hold no such file", file)
+		t.Errorf("the report classifies %s, and the classification roots hold no such file", file)
+	}
+}
+
+func TestTheClassificationGuardReadsEveryGoFileOfTheCaptureDirectory(t *testing.T) {
+	classified := classifiedGoFiles(t)
+
+	entries, err := os.ReadDir(captureAuditRoot)
+	if err != nil {
+		t.Fatalf("read %s: %v", captureAuditRoot, err)
+	}
+
+	shipped := 0
+
+	for _, entry := range entries {
+		name := entry.Name()
+
+		if entry.IsDir() || filepath.Ext(name) != ".go" || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+
+		shipped++
+
+		file := captureAuditRoot + "/" + name
+		if !slices.Contains(classified, file) {
+			t.Errorf("the classification guard reads no %s, and #611 records that it then passes the file without a classification", file)
+		}
+	}
+
+	// A root that holds no shipped file proves nothing, and #611 exists because a guard
+	// that reads nothing reports nothing.
+	if shipped == 0 {
+		t.Fatalf("%s holds no file that ships, so this test measures no guard", captureAuditRoot)
+	}
+}
+
+func TestTheClassificationGuardFailsOnAnUnclassifiedFileOfTheCaptureDirectory(t *testing.T) {
+	page := readRepoFile(t, auditReportFile)
+	readers := auditSetRows(t, page)
+	added := auditAddedRows(t, page)
+	files := classifiedGoFiles(t)
+
+	// The report classifies every file today, so this case removes one row and reads the
+	// guard against the tree that the removal produces.
+	if _, held := added[captureClassificationCase]; !held {
+		t.Fatalf("the added files table names no %s, and this case removes that row", captureClassificationCase)
+	}
+
+	delete(added, captureClassificationCase)
+
+	unclassified := unclassifiedAuditFiles(files, readers, added)
+	if !slices.Equal(unclassified, []string{captureClassificationCase}) {
+		t.Errorf("the guard reports %v, and %s carries no classification", unclassified, captureClassificationCase)
 	}
 }
 
@@ -628,7 +720,7 @@ func TestTheClassificationReaderRejectsARowForAnAbsentFile(t *testing.T) {
 		map[string][]string{"later.go": {"39"}})
 
 	if !slices.Equal(unknown, []string{"gone.go", "later.go"}) {
-		t.Errorf("the reader reports %v, and two rows name a file the three directories do not hold", unknown)
+		t.Errorf("the reader reports %v, and two rows name a file the classification roots do not hold", unknown)
 	}
 }
 

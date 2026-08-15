@@ -222,55 +222,29 @@ import (
 // mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
 // takes the union of the two histories and one constant.
 //
-// #649 re-measured the mark on 2026-08-15 and it read 656. #649 is the Epic 5b reading of
-// the key-material route, and `docs/audit/key-material-route.md` cites its own issue number
-// and cites #644. Both numbers sit above the inherited mark of 639, which is the case the
-// paragraph above names. The highest number this repository had allocated is #656, which is
-// the tracking issue of the batch that carries #649.
+// #642 re-measured the mark on 2026-08-15 UTC and it read 656. **#642 is the first issue
+// of batch #645 that cites its own number above the inherited mark of 639**, and it cites
+// that number in `prerelease_gate_test.go`, in `prerelease_registry_test.go` and in
+// `docs/specs/features/16-pre-release-validation.md`. Batch #645 opened its members and
+// their pull requests after the inherited reading, so the tracker moved by 17 between the
+// two. **A member pays this maintenance cost exactly as a round does**, because the guard
+// reads the number and never the shape of the change that carries it.
+// #667 re-measured the mark on 2026-08-15 UTC, and it read 668. **#667 is the documentation
+// round of batch #644, and the merge of `origin/dev` into that batch met two readings.** The
+// batch branch carried 639 and `dev` carried 663, and git merged the constant without a
+// conflict because one side alone had moved it. **A resolver of that constant re-measures it
+// rather than take a side**, because the mark is a lower bound and a taken side records a
+// number that nobody measured. The round cites #667, #644 and the five members of the batch,
+// and every one of those numbers sits at or below the mark.
 //
-// **#650 re-measured the mark on 2026-08-15 and it read 660.**
-// `docs/audit/ja4s-segment-span-measurement.md` cites #650, which is the issue that carries
-// the JA4S segment span measurement, and 650 sits above the inherited mark of 639. **A member
-// pays this cost before its round does**, because the member writes the page that cites its
-// own number.
-//
-// **#650 re-measured the mark a second time on 2026-08-15 and it read 663.** The maintainer
-// ruled the two questions of #650 between the two readings, and the member then wrote the
-// register entries and the parity row that the ruling ordered. **A member that pauses for a
-// ruling re-measures the mark when it resumes**, because the tracker moves while the member
-// waits. The second reading covers every citation the first one covers.
-//
-// **The merge of `batch/656-epic-5b-readings` into #650 met the readings 656 and 663, and it
-// keeps neither.** #650 re-measured the mark a third time at the resolution on 2026-08-15 and
-// it read 666. **A conflict resolution re-measures the mark, and it never picks the larger
-// side.** Both sides were stale, because the tracker allocated numbers while #650 waited for
-// the ruling and while #649 sub-merged. **The rule is that the resolver re-measures**, and a
-// resolution that picks a side writes a mark that no reading of that day produced.
-//
-// **A merge that meets two readings keeps both histories.** #649 and #650 each measured one
-// tracker on one day, and neither paragraph describes the other member's citation. The mark
-// stays a lower bound, so 666 covers every citation that 656 covers and every citation that
-// 663 covers.
-//
-// **#652 re-measured the mark on 2026-08-15 and it read 661.** #652 cites its own number in
-// `ja4ls_seconds_truncation_test.go`, in `testdata/deviations.json` and in
-// `docs/audit/ja4l-deviation-cluster.md`. That number sits above the inherited mark of 639.
-// **A member pays this cost exactly as a round does**, because the guard reads the number
-// and never the shape of the change that carries it.
-//
-// **#652 read 661 before it opened its pull request, and it read 665 after.** The pull
-// request is #664, and the paragraph above cites that number. **The #556 hotfix and the Epic
-// 16 round each recorded the same pair of readings**, and the paragraphs above name both.
-//
-// **The merge of `batch/656-epic-5b-readings` into #652 met the readings 666 and 665, and it
-// re-measured rather than picked.** #652 read the tracker a third time at the resolution on
-// 2026-08-15 and it read 666. **That reading equals the #650 side, and #652 picked no side.**
-// A resolver that re-measures and a resolver that picks the larger side write one number
-// here, and only the re-measurement states what the tracker held.
-//
-// **The rule of #650 above governs this resolution, and #652 applied it.** The mark stays a
-// lower bound, so 666 covers every citation of #649, of #650 and of #652.
-const issueCitationHighWaterMark = 666
+// **The round read 667 before it wrote the requirements of this batch, and it read 668
+// afterwards.** Two readings minutes apart differ, because another repository user allocates
+// a number at any moment. The constant holds the second reading.
+// The project manager re-measured the mark on 2026-08-15 UTC while it merged `origin/dev`
+// into `batch/656-epic-5b-readings`, and it read 675. **The batch carried 666 and `dev`
+// carried 668**, and neither side is the answer. **A resolver re-measures rather than take a
+// side**, and #650 wrote that rule into this tree.
+const issueCitationHighWaterMark = 675
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

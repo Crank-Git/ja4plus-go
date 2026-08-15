@@ -544,10 +544,10 @@ func TestTheMutationWorkflowNamesTheGoToolchainRange(t *testing.T) {
 // on `epic/94-prerelease-validation`, which is a different integration branch. So #93 builds
 // no second case, and this case reads the cross-reference that FR-mutation-20 states.
 //
-// **The case that #99 built is a tripwire today, and it is not the check.** It skips while
-// the `Makefile` holds no `mutate` target, and it fails once the target lands. #90 landed
-// the target on `epic/89-mutation-sweep`, so the case fails when the two epics reach one
-// branch. That is Epic 16 work, and #93 records it rather than repairs it.
+// **The case that #99 built was a tripwire, and #642 completed it on 2026-08-15 UTC.** It
+// skipped while the `Makefile` held no `mutate` target, and it failed once #90 landed that
+// target on `epic/89-mutation-sweep`. The case now reads the settlement record of the most
+// recent sweep against the report of that sweep.
 func TestThePreReleaseFeatureFileChecksTheMostRecentSweep(t *testing.T) {
 	text := readRepoFile(t, preReleaseFeatureFile)
 

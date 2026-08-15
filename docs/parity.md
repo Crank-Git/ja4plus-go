@@ -145,8 +145,10 @@ the table does not hold.
 **The `__version__` row records a fact of the Go language, and it records no preference.**
 `runtime/debug.ReadBuildInfo` returns the build information that the running binary carries,
 and that information holds the module version. A Python module carries no such mechanism, so
-the port declares the version as an attribute. `cmd/ja4plus/main.go:35` holds
-`var Version = "dev"`, which the linker sets for the command and not for the library.
+the port declares the version as an attribute. `Version` in `cmd/ja4plus/main.go` holds the
+value that the linker sets for the command and not for the library. **#628 made the command
+read that build information on 2026-08-14**, and `resolveVersion` states the order: the link
+flag, then the module version, then `dev`.
 
 **A reader who disagrees reverses the row with one action.** Open an issue that states which
 caller needs a version name in the library, and change the row to `` `none` ``,

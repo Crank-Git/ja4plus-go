@@ -12,7 +12,8 @@ FoxIO publishes the file at
 <https://github.com/FoxIO-LLC/ja4/blob/main/ja4plus-mapping.csv>. The `ja4plus db update`
 command downloads the current copy from
 <https://github.com/FoxIO-LLC/ja4/raw/main/ja4plus-mapping.csv>, which
-`cmd/ja4plus/main.go:22` names. This project read the FoxIO reference at commit
+`ja4PlusMappingURL` in `cmd/ja4plus/main.go` names. This project read the FoxIO reference at
+commit
 `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which `testdata/foxio.pin` holds.
 
 ## The license
