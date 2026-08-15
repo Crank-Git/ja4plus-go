@@ -17,10 +17,30 @@ import (
 	"fmt"
 	"net"
 	"syscall"
+	"time"
 
 	"github.com/gopacket/gopacket"
 	"github.com/gopacket/gopacket/layers"
 )
+
+// readDeadline bounds one read of a capture backend.
+//
+// **A read that blocks forever gives the monitor no way to read the stop request on an
+// interface that carries no traffic.** Issue #610 records the cost: one `SIGINT` did not
+// stop the monitor, and the operator lost every open window to the second signal of
+// FR-capture-19. So each read carries this deadline, and each backend reports
+// `ErrReadTimeout` when it reaches it.
+//
+// The value bounds the delay that the operator sees after a signal. A shorter deadline
+// costs one more wakeup for each second of an idle interface, and it shortens no capture.
+const readDeadline = 250 * time.Millisecond
+
+// ErrReadTimeout reports that the interface delivered no packet before the read deadline.
+//
+// **It states no failure of the capture.** `readPackets` of `cmd/ja4plus` reads the stop
+// request at this answer and it reads the interface again, and FR-capture-17 states that
+// stop request.
+var ErrReadTimeout = errors.New("capture: the interface delivers no packet before the read deadline")
 
 // Options states what Open needs to open a capture handle.
 type Options struct {
@@ -40,7 +60,10 @@ type Options struct {
 // The monitor opens one handle for the whole run, and FR-capture-14 states that rule.
 type Handle interface {
 	// ReadPacketData returns the bytes of the next packet, and the capture information
-	// of that packet. It blocks until the interface delivers a packet.
+	// of that packet. It blocks until the interface delivers a packet, and it blocks no
+	// longer than the read deadline.
+	// It returns ErrReadTimeout when the interface delivers no packet before that
+	// deadline. That answer states no failure, and the caller reads the interface again.
 	ReadPacketData() ([]byte, gopacket.CaptureInfo, error)
 	// LinkType returns the link type of the bytes that ReadPacketData returns.
 	LinkType() layers.LinkType

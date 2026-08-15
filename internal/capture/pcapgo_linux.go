@@ -4,6 +4,7 @@ package capture
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 	"syscall"
@@ -20,6 +21,10 @@ import (
 // C. So this backend reaches Linux alone, and the default build holds no cgo.
 type ethernetHandle struct {
 	handle *pcapgo.EthernetHandle
+	// reader gives each read the deadline that `readDeadline` states, because
+	// `pcapgo.EthernetHandle` takes none. The doc comment of `deadlineReader` states the
+	// measurement.
+	reader *deadlineReader
 	// linkType holds the link type of the interface that `open` read. `open` refuses an
 	// interface whose hardware type reaches no link type, so this field is never zero.
 	linkType layers.LinkType
@@ -67,7 +72,13 @@ func open(opts Options) (Handle, error) {
 		}
 	}
 
-	return &ethernetHandle{handle: handle, linkType: linkType}, nil
+	// The read goroutine starts after the last refusal above, so a refused open starts no
+	// goroutine.
+	return &ethernetHandle{
+		handle:   handle,
+		reader:   newDeadlineReader(handle, readDeadline),
+		linkType: linkType,
+	}, nil
 }
 
 // readLinkType returns the link type of the bytes that the packet socket delivers for the
@@ -122,12 +133,18 @@ func readLinkType(name string) (layers.LinkType, error) {
 
 // ReadPacketData returns the bytes of the next packet, and the capture information of that
 // packet.
+// It returns `ErrReadTimeout` when the interface delivers no packet before the read
+// deadline.
 //
-// It calls `ReadPacketData` of `pcapgo.EthernetHandle`, which copies the bytes out of the
-// read buffer. `ZeroCopyReadPacketData` returns the buffer itself, and the next read
-// overwrites it, so this backend declines that method.
+// The read goroutine of `deadlineReader` calls `ReadPacketData` of
+// `pcapgo.EthernetHandle`, which copies the bytes out of the read buffer.
+// `ZeroCopyReadPacketData` returns the buffer itself, and the next read overwrites it, so
+// this backend declines that method.
 func (e *ethernetHandle) ReadPacketData() ([]byte, gopacket.CaptureInfo, error) {
-	data, info, err := e.handle.ReadPacketData()
+	data, info, err := e.reader.read()
+	if errors.Is(err, ErrReadTimeout) {
+		return nil, info, err
+	}
 	if err != nil {
 		return nil, info, fmt.Errorf("capture: the interface returns no packet: %w", err)
 	}
@@ -165,6 +182,15 @@ func (e *ethernetHandle) LinkType() layers.LinkType {
 // accumulator holds the total that the statistics line reports.
 // Verified against: <https://pkg.go.dev/github.com/gopacket/gopacket/pcapgo>, read from
 // the module cache at `github.com/gopacket/gopacket@v1.6.1` on 2026-08-14.
+//
+// **The read goroutine of `deadlineReader` holds a read of the same socket while this
+// method runs, and the two reach the socket two ways.** `EthernetHandle.Stats` calls
+// `Control` of `syscall.RawConn`, and the read calls `Read` of the same interface. The
+// documentation of `Control` states `The file descriptor fd is guaranteed to remain valid
+// while f executes`, and `Stats` takes the mutex that the read holds never. So this method
+// blocks for no packet.
+// Verified against: <https://pkg.go.dev/syscall#RawConn>, read from `go doc syscall.RawConn`
+// at go1.26.5 on 2026-08-14.
 func (e *ethernetHandle) DropCount() (uint64, bool) {
 	stats, err := e.handle.Stats()
 	if err != nil {
@@ -174,8 +200,14 @@ func (e *ethernetHandle) DropCount() (uint64, bool) {
 	return e.drops.add(stats.Drops), true
 }
 
-// Close releases the packet socket.
+// Close releases the packet socket, and it ends the read goroutine of the backend.
+//
+// The reader stops before the socket closes, and the close ends the read that the goroutine
+// holds. So the goroutine ends, and it outlives the handle never. #612 records the cost of
+// a goroutine that outlives its owner.
 func (e *ethernetHandle) Close() error {
+	e.reader.stop()
+
 	if err := e.handle.Close(); err != nil {
 		return fmt.Errorf("capture: the packet socket does not close: %w", err)
 	}

@@ -60,6 +60,44 @@ func TestTheFilterErrorHoldsTheFilterTextAndTheParserError(t *testing.T) {
 	}
 }
 
+func TestTheLibpcapBackendReportsTheReadDeadlineAsATimeout(t *testing.T) {
+	// Issue #610 states that a read deadline is no failure of the capture. libpcap reports
+	// the deadline as `pcap.NextErrorTimeoutExpired`, and the monitor reads the stop request
+	// at `ErrReadTimeout`.
+	err := readError(pcap.NextErrorTimeoutExpired)
+
+	if !errors.Is(err, ErrReadTimeout) {
+		t.Fatalf("the backend returns the error %v for the read deadline of libpcap", err)
+	}
+}
+
+func TestTheLibpcapBackendReportsAFailedReadAsAFailure(t *testing.T) {
+	// A failure that is no deadline keeps the message that the edge-case table of
+	// `docs/specs/features/13-live-capture.md` states for a removed interface.
+	cause := errors.New("the interface is removed")
+
+	err := readError(cause)
+
+	if errors.Is(err, ErrReadTimeout) {
+		t.Errorf("the backend reports the failure %v as a read deadline", cause)
+	}
+	if !errors.Is(err, cause) {
+		t.Errorf("the error %q wraps no cause", err)
+	}
+	if !strings.HasPrefix(err.Error(), "capture: ") {
+		t.Errorf("the error %q holds no `capture: ` prefix", err)
+	}
+}
+
+func TestTheLibpcapBackendOpensTheInterfaceWithAPositiveReadDeadline(t *testing.T) {
+	// `pcap.BlockForever` is negative, and it makes each read block until the interface
+	// delivers a packet. Issue #610 measured the cost of that value, so this test fails when
+	// a later change restores it.
+	if readDeadline <= 0 {
+		t.Fatalf("the read deadline is %v, and a read of the libpcap backend then blocks forever", readDeadline)
+	}
+}
+
 func TestTheLibpcapBuildCompilesACaptureFilterExpression(t *testing.T) {
 	// FR-capture-15 sends `--bpf` to this build, and the maintainer ruled that on
 	// 2026-08-14 in #564. `pcap.CompileBPFFilter` opens a dead handle, so it parses the
