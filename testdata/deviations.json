@@ -5094,5 +5094,1205 @@
     "theirs": "t120400_c030_0005,0017,ff01,0000",
     "ruling": "#650",
     "reason": "The maintainer ruled in issue #650 on 2026-08-15 that this library declines the value, because the Wireshark reference publishes a JA4S for the six streams whose handshake record spans several TCP segments while the Python reference publishes none for the same six, no FoxIO text settles that split, `docs/audit/ja4t-ja4ssh-ja4s-deviation-cluster.md` records that nobody has determined the Python reference reason, and `docs/audit/ja4s-segment-span-measurement.md` measured that a candidate change closes 0 per-packet deviations and opens 24."
+  },
+  {
+    "key": "badcurveball.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "781_238",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "badcurveball.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "2177_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "badcurveball.pcap/9/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "2177_64_114797",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "badcurveball.pcap/9/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "781_238_9042",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/10/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "56_128_3758",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/10/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "1907_112_343076",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/121/JA4LS.1",
+    "capability": false,
+    "ours": "2948_229",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "browsers-x509.pcapng/122/JA4L.1",
+    "capability": false,
+    "ours": "78_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "browsers-x509.pcapng/128/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "78_128_150466",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/2/JA4LS.1",
+    "capability": false,
+    "ours": "1907_112",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "browsers-x509.pcapng/3/JA4L.1",
+    "capability": false,
+    "ours": "56_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "browsers-x509.pcapng/31/JA4LS.1",
+    "capability": false,
+    "ours": "7166_41",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "browsers-x509.pcapng/32/JA4L.1",
+    "capability": false,
+    "ours": "73_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "browsers-x509.pcapng/46/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "73_128_4054",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "browsers-x509.pcapng/46/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "7166_41_384963",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/2/JA4LS.1",
+    "capability": false,
+    "ours": "5749_56",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/3/JA4L.1",
+    "capability": false,
+    "ours": "30_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/12/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "47_128_455044",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/12/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "44840_117_48774",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/2/JA4LS.1",
+    "capability": false,
+    "ours": "44840_117",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "http2-with-cookies.pcapng/3/JA4L.1",
+    "capability": false,
+    "ours": "47_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "https-connect.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "13532_57",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "https-connect.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "45_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "https-connect.pcap/8/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "45_64_66",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "https-connect.pcap/8/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "13532_57_31654",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "https3-301-get.pcap/10/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "33_64_20332",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "https3-301-get.pcap/10/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "17805_50_18217",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "https3-301-get.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "17805_50",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "https3-301-get.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "33_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/100/JA4L.1",
+    "capability": false,
+    "ours": "47_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/111/JA4LS.1",
+    "capability": false,
+    "ours": "3915_57",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/112/JA4L.1",
+    "capability": false,
+    "ours": "32_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/117/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "47_128_34471",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/117/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14207_43_18819",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/156/JA4LS.1",
+    "capability": false,
+    "ours": "42103_109",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/157/JA4L.1",
+    "capability": false,
+    "ours": "40_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/165/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "40_128_1829",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/165/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "42103_109_42502",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/186/JA4LS.1",
+    "capability": false,
+    "ours": "53595_109",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/187/JA4L.1",
+    "capability": false,
+    "ours": "61_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/199/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "61_128_1680",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/199/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "53595_109_42401",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/23/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "62_128_930",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/23/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "33804_227_35440",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/73/JA4LS.1",
+    "capability": false,
+    "ours": "7096_245",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/74/JA4L.1",
+    "capability": false,
+    "ours": "57_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/8/JA4LS.1",
+    "capability": false,
+    "ours": "33804_227",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/82/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "57_128_2696",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/82/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "7096_245_3800",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "latest.pcapng/9/JA4L.1",
+    "capability": false,
+    "ours": "62_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "latest.pcapng/99/JA4LS.1",
+    "capability": false,
+    "ours": "14207_43",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "socks-https-example.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "210_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "socks-https-example.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "23_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "socks-https-example.pcap/32/JA4LS.1",
+    "capability": false,
+    "ours": "280_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "socks-https-example.pcap/33/JA4L.1",
+    "capability": false,
+    "ours": "22_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "socks-https-example.pcap/38/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "22_64_274",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "socks-https-example.pcap/38/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "280_64_18934",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "socks-https-example.pcap/62/JA4LS.1",
+    "capability": false,
+    "ours": "233_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "socks-https-example.pcap/63/JA4L.1",
+    "capability": false,
+    "ours": "15_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "socks-https-example.pcap/68/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "15_64_318",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "socks-https-example.pcap/68/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "233_64_298",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "socks-https-example.pcap/8/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "23_64_200",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "socks-https-example.pcap/8/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "210_64_1594",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-r.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "32_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh-r.pcap/297/JA4LS.1",
+    "capability": false,
+    "ours": "4171_116",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh-r.pcap/298/JA4L.1",
+    "capability": false,
+    "ours": "14_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh-r.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "94_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh-r.pcap/304/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "14_64_108",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-r.pcap/304/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "4171_116_8099",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-r.pcap/393/JA4LS.1",
+    "capability": false,
+    "ours": "3169_116",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh-r.pcap/394/JA4L.1",
+    "capability": false,
+    "ours": "12_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh-r.pcap/399/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "12_64_222",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-r.pcap/399/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "3169_116_7225",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-r.pcap/7/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "94_128_5421",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-r.pcap/7/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "32_64_9660",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-scp-1050.pcap/10/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "179_128_2773",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-scp-1050.pcap/10/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "38_64_1921",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh-scp-1050.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "38_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh-scp-1050.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "179_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2-malformed.pcap/11/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "7_64_45",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2-malformed.pcap/11/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "462_60_984",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2-malformed.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "462_60",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2-malformed.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "7_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2-moloch-crash.pcap/11/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "7_64_45",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2-moloch-crash.pcap/11/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "462_60_984",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2-moloch-crash.pcap/2/JA4LS.1",
+    "capability": false,
+    "ours": "462_60",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2-moloch-crash.pcap/3/JA4L.1",
+    "capability": false,
+    "ours": "7_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/157/JA4LS.1",
+    "capability": false,
+    "ours": "55492_235",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/158/JA4L.1",
+    "capability": false,
+    "ours": "56_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/170/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "56_128_1303",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/170/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "55492_235_57471",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/230/JA4LS.1",
+    "capability": false,
+    "ours": "49308_110",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/231/JA4L.1",
+    "capability": false,
+    "ours": "46_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/239/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "46_128_3294",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/239/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "49308_110_50750",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/250/JA4LS.1",
+    "capability": false,
+    "ours": "3217_119",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/251/JA4L.1",
+    "capability": false,
+    "ours": "55_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/264/JA4LS.1",
+    "capability": false,
+    "ours": "18693_241",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/265/JA4L.1",
+    "capability": false,
+    "ours": "58_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/274/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "58_128_1588",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/274/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "18693_241_16515",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/279/JA4LS.1",
+    "capability": false,
+    "ours": "12897_50",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/282/JA4L.1",
+    "capability": false,
+    "ours": "77_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/288/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "55_128_80306",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/288/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "3217_119_5882",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/300/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "77_128_1108",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/300/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "12897_50_15471",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/370/JA4LS.1",
+    "capability": false,
+    "ours": "6252_58",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/371/JA4L.1",
+    "capability": false,
+    "ours": "45_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/88/JA4LS.1",
+    "capability": false,
+    "ours": "12517_53",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/89/JA4L.1",
+    "capability": false,
+    "ours": "44_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/954/JA4LS.1",
+    "capability": false,
+    "ours": "4272_58",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/955/JA4L.1",
+    "capability": false,
+    "ours": "50_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "ssh2.pcapng/97/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "44_128_926",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "ssh2.pcapng/97/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "12517_53_15110",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tcpdump-geneve.pcap/13/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "93_64_124",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tcpdump-geneve.pcap/13/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "24_64_380",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tcpdump-geneve.pcap/4/JA4LS.1",
+    "capability": false,
+    "ours": "24_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tcpdump-geneve.pcap/5/JA4L.1",
+    "capability": false,
+    "ours": "93_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/153/JA4L.1",
+    "capability": false,
+    "ours": "40_128_quic",
+    "theirs": "101_128_quic",
+    "ruling": "#127",
+    "reason": "Ruling #127 decides the part count and the `quic` marker of this value and it decides no part of this difference, ruling #528 of 2026-08-14 closes part a only as far as `71_128_quic`, and no reading of `docs/audit/ja4l-deviation-cluster.md` explains the remainder."
+  },
+  {
+    "key": "tls3.pcapng/170/JA4LS.1",
+    "capability": false,
+    "ours": "2442_57",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/171/JA4L.1",
+    "capability": false,
+    "ours": "15_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/214/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "15_128_1312",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/214/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "2442_57_3520",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/276/JA4LS.1",
+    "capability": false,
+    "ours": "34691_38",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/277/JA4L.1",
+    "capability": false,
+    "ours": "15_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/279/JA4LS.1",
+    "capability": false,
+    "ours": "36549_35",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/280/JA4L.1",
+    "capability": false,
+    "ours": "13_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/484/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "15_128_73",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/484/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "34691_38_35096",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/580/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "13_128_93",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/580/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "36549_35_36327",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/582/JA4LS.1",
+    "capability": false,
+    "ours": "33515_32",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/583/JA4L.1",
+    "capability": false,
+    "ours": "15_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/586/JA4LS.1",
+    "capability": false,
+    "ours": "33738_33",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/587/JA4L.1",
+    "capability": false,
+    "ours": "11_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/61/JA4LS.1",
+    "capability": false,
+    "ours": "34615_35",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/62/JA4L.1",
+    "capability": false,
+    "ours": "16_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/729/JA4LS.1",
+    "capability": false,
+    "ours": "36498_35",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/730/JA4L.1",
+    "capability": false,
+    "ours": "11_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/76/JA4LS.1",
+    "capability": false,
+    "ours": "3181_57",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/77/JA4L.1",
+    "capability": false,
+    "ours": "14_128",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes a two-part value on its own measurement frame and `wireshark/source/packet-ja4.c:1362-1394` writes a three-part value on the `timestamp_F` frame alone."
+  },
+  {
+    "key": "tls3.pcapng/81/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "16_128_14777",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/81/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "34615_35_39381",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/966/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "15_128_115",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/966/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "33515_32_35062",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/973/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "11_128_453",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/973/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "33738_33_35118",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/988/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "11_128_502",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
+  },
+  {
+    "key": "tls3.pcapng/988/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "36498_35_37058",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes this three-part value on the `timestamp_F` frame and this library writes its two-part value on an earlier frame."
   }
 ]

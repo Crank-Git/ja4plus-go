@@ -16,8 +16,17 @@ put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issu
 142 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
-issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, and issue #127 put 1
+issue #249 put 1 more, issue #449 put 4 more, issue #650 put 12 more, and issue #127 put 151
 more.
+The register round on `issue/682-ruling-127-register-entries` wrote 150 of the 151 entries
+of the ruling #127 count on 2026-08-15 UTC. The maintainer kept ruling #127 on that day, so
+the library writes two parts on a TCP connection and the Wireshark dissector writes three
+parts on the `timestamp_F` frame. **The set was enumerated from one `make conformance` run
+and never from a document**, because `docs/audit/conformance.md` truncates each deviation
+group to three rows.
+`docs/audit/ja4l-deviation-cluster.md` `## Cause 1 — the emission frame and part c on a TCP
+connection` holds the reading for 149 of the 150, and `tls3.pcapng/153/JA4L.1` carries a
+remainder that no reading of that page explains.
 Issue #229 wrote the 2 entries of its own count. The maintainer ruled on 2026-08-15 that
 this library writes the observed time-to-live, and the per-packet vector set writes `0` on
 a second QUIC connection over one four-tuple.
@@ -28,7 +37,7 @@ reference publishes none for the same six. **The same ruling kept the source ran
 `.claude/rules/rulings.md` unchanged**, so this library keeps its own record-length bound and
 declines the bound that `Crank-Git/ja4plus#151` gave the port.
 `docs/audit/ja4s-segment-span-measurement.md` holds the measurement that both halves rest on.
-Issue #652 wrote the 1 entry of the ruling #127 count on 2026-08-15. The maintainer kept
+Issue #652 wrote 1 of the 151 entries of the ruling #127 count on 2026-08-15. The maintainer kept
 ruling #127 on that day, so the library writes two parts on a TCP connection. It therefore
 produces no value on frame 128 of `browsers-x509.pcapng`.
 `docs/audit/ja4l-deviation-cluster.md` `## Cause 7 — the seconds component of the Wireshark
@@ -55,11 +64,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1754 matches, 247
-deviations, 605 accepted deviations and 637 register keys. The run also reports 175 unaccepted
+reports 1754 matches, 97
+deviations, 755 accepted deviations and 787 register keys. The run also reports 175 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 605 and
-32 add up to the 637 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 755 and
+32 add up to the 787 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
