@@ -176,11 +176,26 @@ fuzz:
 #   | `./internal/parser`  | 882       | 2m47s      | 493    | 223   | 162         | 4         |
 #   | the root package     | 663       | 15m24s     | 484    | 162   | 16          | 1         |
 #
-# So `gremlins` completes a run over `internal/parser` in under three minutes, and question 1
-# is answered: the tool is viable for this repository.
+# A second sweep of `./internal/parser` ran on 2026-08-14, and it reports 289 s.
+# `docs/mutation_reports/2026-08-14-internal-parser.md` holds that figure. **Both figures are
+# wall clock, and neither one is a transcription defect.** `Run` in `internal/engine/engine.go`
+# of `gremlins` v0.6.0 sets `Elapsed` from `time.Since`. `newReport` in
+# `internal/report/report.go` parses that one value, and two readers then report it.
+# `fullRunReport` prints `Mutation testing completed in %s`, and `fileReport` writes the
+# `elapsed_time` field of the JSON. `Duration` of `hako/durafmt` returns the parsed value
+# without a rounding, so the two readers report one number. So one run reports one number, and
+# two numbers name two runs. The four verdict counts agree, because the mutation set and its
+# verdicts are deterministic. Wall clock is not deterministic, because the machine load moves
+# it. Round 58 of the `## Changelog` of `docs/specs/spec.md` holds the reading.
 #
-# The root package costs 1.39 seconds for each mutation, and `internal/parser` costs 0.19
-# seconds. The reason is the suite and not the file count. `go test .` reported `ok 3.941s` and
+# So `gremlins` completes a run over `internal/parser` in between 2m47s and 289 s on a 10-core
+# machine, and question 1 is answered: the tool is viable for this repository. Question 1 asks
+# for a run within the CI job limit, and `.github/workflows/mutation.yml` sets that limit at
+# 60 minutes.
+#
+# The root package costs 1.39 seconds for each mutation, and `internal/parser` costs between
+# 0.19 and 0.33 seconds. That is a ratio of between about four and about seven. The reason is
+# the suite and not the file count. `go test .` reported `ok 3.941s` and
 # `go test ./internal/parser` reported under one second, measured on 2026-08-14. **The
 # conformance suite does not reach the sweep**, because it sits behind the `conformance`
 # build tag and `.gremlins.yaml` sets no `tags` key.

@@ -135,14 +135,26 @@ measurement. Sweep one package instead with `make mutate PKG=./internal/parser`.
 | `./internal/parser` | 882 | 2m47s | 493 | 223 | 162 | 4 |
 | The root package | 663 | 15m24s | 484 | 162 | 16 | 1 |
 
+**Each `Wall clock` cell names one run, and it names no property of the swept path.** A
+second sweep of `./internal/parser` ran on 2026-08-14, and it reports 289 s.
+`docs/mutation_reports/2026-08-14-internal-parser.md` holds that figure, and the row above
+holds 2m47s. **Both figures are wall clock, and neither one is a transcription defect.** One
+run of `gremlins` v0.6.0 reports one elapsed value to the console and to the JSON, so two
+values name two runs. The four verdict counts agree, because the mutation set and its
+verdicts are deterministic. Wall clock is not deterministic, because the machine load moves
+it. The `mutate` comment of the `Makefile` holds the reading, and round 58 of the
+`## Changelog` of `docs/specs/spec.md` records it.
+
 **The four rows hold 1592 mutations, and the set holds 1675.** The difference of 83 is
 `internal/capture` at 29, `internal/keylog` at 45 and `internal/fuzzprop` at 9, each
 measured with `gremlins unleash --dry-run` on 2026-08-14. **No sweep of those three has
 run**, so no row above names one.
 
-**The root package costs 1.39 seconds for each mutation, and `internal/parser` costs 0.19
-seconds.** That is a ratio of about seven, and the suite is the reason rather than the file
-count. **The conformance suite does not reach the sweep**, because it sits behind the
+**The root package costs 1.39 seconds for each mutation, and `internal/parser` costs between
+0.19 and 0.33 seconds.** That is a ratio of between about four and about seven, and the suite
+is the reason rather than the file count. The two `internal/parser` figures divide the two
+measured runs above by 882. **The conformance suite does not reach the sweep**, because it
+sits behind the
 `conformance` build tag and `.gremlins.yaml` sets no `tags` key.
 
 **`gremlins` reports a false `TIMED OUT` at its default timeout coefficient of 3.** It
