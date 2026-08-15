@@ -251,6 +251,25 @@ import (
 // tracker on one day, and neither paragraph describes the other member's citation. The mark
 // stays a lower bound, so 666 covers every citation that 656 covers and every citation that
 // 663 covers.
+//
+// **#652 re-measured the mark on 2026-08-15 and it read 661.** #652 cites its own number in
+// `ja4ls_seconds_truncation_test.go`, in `testdata/deviations.json` and in
+// `docs/audit/ja4l-deviation-cluster.md`. That number sits above the inherited mark of 639.
+// **A member pays this cost exactly as a round does**, because the guard reads the number
+// and never the shape of the change that carries it.
+//
+// **#652 read 661 before it opened its pull request, and it read 665 after.** The pull
+// request is #664, and the paragraph above cites that number. **The #556 hotfix and the Epic
+// 16 round each recorded the same pair of readings**, and the paragraphs above name both.
+//
+// **The merge of `batch/656-epic-5b-readings` into #652 met the readings 666 and 665, and it
+// re-measured rather than picked.** #652 read the tracker a third time at the resolution on
+// 2026-08-15 and it read 666. **That reading equals the #650 side, and #652 picked no side.**
+// A resolver that re-measures and a resolver that picks the larger side write one number
+// here, and only the re-measurement states what the tracker held.
+//
+// **The rule of #650 above governs this resolution, and #652 applied it.** The mark stays a
+// lower bound, so 666 covers every citation of #649, of #650 and of #652.
 const issueCitationHighWaterMark = 666
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of

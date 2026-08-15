@@ -12,11 +12,11 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1754 |
-| Deviations | 255 |
-| Accepted deviations | 597 |
+| Deviations | 254 |
+| Accepted deviations | 598 |
 | Unaccepted uncovered values | 175 |
 | Accepted uncovered values | 32 |
-| Accepted comparisons | 629 |
+| Accepted comparisons | 630 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -27,7 +27,7 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
 | per-stream | 1116 | 44 | 281 | 147 | 14 |
-| per-packet | 638 | 211 | 316 | 28 | 18 |
+| per-packet | 638 | 210 | 317 | 28 | 18 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -55,7 +55,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `browsers-x509.pcapng` | per-packet | JA4L | 9 | `browsers-x509.pcapng/123/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `247_128` |
 | `browsers-x509.pcapng` | per-packet | JA4LS | 6 | `browsers-x509.pcapng/10/JA4LS.1` | the vector holds a value the library does not produce | `1907_112_343076` | (none) |
 | `browsers-x509.pcapng` | per-packet | JA4LS | 6 | `browsers-x509.pcapng/121/JA4LS.1` | the library produces a value the vector does not hold | (none) | `2948_229` |
-| `browsers-x509.pcapng` | per-packet | JA4LS | 6 | `browsers-x509.pcapng/128/JA4LS.1` | the vector holds a value the library does not produce | `2948_229_14055` | (none) |
+| `browsers-x509.pcapng` | per-packet | JA4LS | 6 | `browsers-x509.pcapng/128/JA4LS.1` | the vector holds a value the library does not produce (accepted) | `2948_229_14055` | (none) |
 | `browsers-x509.pcapng` | per-packet | JA4S | 2 | `browsers-x509.pcapng/8/JA4S.1` | the vector holds a value the library does not produce (accepted) | `t1206h2_c030_044dc9b3196d` | (none) |
 | `browsers-x509.pcapng` | per-packet | JA4S | 2 | `browsers-x509.pcapng/8/JA4S_r.1` | the vector holds a value the library does not produce (accepted) | `t1206h2_c030_0005,0023,0010,0017,ff01,0000` | (none) |
 | `browsers-x509.pcapng` | per-packet | JA4TS | 1 | `browsers-x509.pcapng/119/JA4TS.1` | the library produces a value the vector does not hold (accepted) | (none) | `64240_2-1-3-4-0-0_1460_2` |

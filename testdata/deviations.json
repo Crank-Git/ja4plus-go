@@ -2032,6 +2032,14 @@
     "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
   },
   {
+    "key": "browsers-x509.pcapng/128/JA4LS.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "2948_229_14055",
+    "ruling": "#127",
+    "reason": "Ruling #127 declines part c on a TCP connection, so the library writes its value on frame 121 and no value on this frame, and part c of the vector also discards a whole second because wireshark/source/packet-ja4.c:1373 reads the nsecs field of a 1028110000 nanosecond interval, which issue #652 measured on 2026-08-15."
+  },
+  {
     "key": "chrome-cloudflare-quic-with-secrets.pcapng/4/JA4L.1",
     "capability": false,
     "ours": "149_64",

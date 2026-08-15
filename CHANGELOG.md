@@ -15,8 +15,8 @@ entries into `testdata/deviations.json`, and the register held no entry before t
 put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 142 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
-issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, and issue #650 put 12
-more.
+issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #650 put 12
+more, and issue #127 put 1 more.
 Issue #650 wrote the 12 entries of its own count. The maintainer ruled on 2026-08-15 that
 this library declines the JA4S value on the six streams whose handshake record spans several
 TCP segments, because the Wireshark reference publishes a value for all six and the Python
@@ -24,6 +24,12 @@ reference publishes none for the same six. **The same ruling kept the source ran
 `.claude/rules/rulings.md` unchanged**, so this library keeps its own record-length bound and
 declines the bound that `Crank-Git/ja4plus#151` gave the port.
 `docs/audit/ja4s-segment-span-measurement.md` holds the measurement that both halves rest on.
+Issue #652 wrote the 1 entry of the ruling #127 count on 2026-08-15. The maintainer kept
+ruling #127 on that day, so the library writes two parts on a TCP connection. It therefore
+produces no value on frame 128 of `browsers-x509.pcapng`.
+`docs/audit/ja4l-deviation-cluster.md` `## Cause 7 — the seconds component of the Wireshark
+delta` holds the reading, and `wireshark/source/packet-ja4.c:1373` holds the second half of
+the difference.
 Issue #543 wrote the 6 entries of the ruling #126 count. The maintainer ruled on 2026-08-14
 that the SYN bit test of ruling #126 reaches JA4L, and `docs/specs/foxio/JA4L.md` R36 holds
 that ruling.
@@ -42,11 +48,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1754 matches, 255
-deviations, 597 accepted deviations and 629 register keys. The run also reports 175 unaccepted
+reports 1754 matches, 254
+deviations, 598 accepted deviations and 630 register keys. The run also reports 175 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 597 and
-32 add up to the 629 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 598 and
+32 add up to the 630 register keys. A count that an entry below states therefore differs from
 a fresh run.
 
 **A guard holds this paragraph true, and `changelog_counts_freshness_test.go` is that guard.**
