@@ -186,7 +186,7 @@ fuzz:
 # without a rounding, so the two readers report one number. So one run reports one number, and
 # two numbers name two runs. The four verdict counts agree, because the mutation set and its
 # verdicts are deterministic. Wall clock is not deterministic, because the machine load moves
-# it. Round 58 of the `## Changelog` of `docs/specs/spec.md` holds the reading.
+# it. Round 59 of the `## Changelog` of `docs/specs/spec.md` holds the reading.
 #
 # So `gremlins` completes a run over `internal/parser` in between 2m47s and 289 s on a 10-core
 # machine, and question 1 is answered: the tool is viable for this repository. Question 1 asks
