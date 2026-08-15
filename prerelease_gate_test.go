@@ -3,6 +3,7 @@
 package ja4plus
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -216,7 +217,15 @@ func mostRecentMutationReport(t *testing.T) string {
 	output, err := exec.Command("go", "run", "./internal/mutationdiff",
 		"-dir", mutationReportDirectory).Output()
 	if err != nil {
-		t.Fatalf("name the report of the most recent sweep: %v", err)
+		// `main` of `internal/mutationdiff` writes the reason to standard error and it
+		// exits 1, so `%v` alone reports `exit status 1` and it drops the reason.
+		reason := ""
+		exit := &exec.ExitError{}
+		if errors.As(err, &exit) {
+			reason = strings.TrimSpace(string(exit.Stderr))
+		}
+
+		t.Fatalf("name the report of the most recent sweep: %v: %s", err, reason)
 	}
 
 	for _, line := range strings.Split(string(output), "\n") {
