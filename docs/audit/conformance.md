@@ -12,11 +12,11 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 |---|---|
 | Captures | 38 |
 | Matches | 1754 |
-| Deviations | 97 |
-| Accepted deviations | 755 |
+| Deviations | 98 |
+| Accepted deviations | 754 |
 | Unaccepted uncovered values | 175 |
 | Accepted uncovered values | 32 |
-| Accepted comparisons | 787 |
+| Accepted comparisons | 786 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -27,7 +27,7 @@ The two vector sets cover different methods, so the report counts each one on it
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
 | per-stream | 1116 | 43 | 282 | 147 | 14 |
-| per-packet | 638 | 54 | 473 | 28 | 18 |
+| per-packet | 638 | 55 | 472 | 28 | 18 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -215,7 +215,7 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `tls3.pcapng` | per-packet | JA4H | 14 | `tls3.pcapng/47/JA4H_r.1` | the vector holds a value the library does not produce (accepted) | `ms11nn050000_Host,Content-Length,MAN,MX,ST__` | (none) |
 | `tls3.pcapng` | per-packet | JA4H | 14 | `tls3.pcapng/47/JA4H_ro.1` | the vector holds a value the library does not produce (accepted) | `ms11nn050000_Host,Content-Length,MAN,MX,ST__` | (none) |
 | `tls3.pcapng` | per-packet | JA4L | 27 | `tls3.pcapng/147/JA4L.1` | the two values differ (accepted) | `90_128_quic` | `59_128_quic` |
-| `tls3.pcapng` | per-packet | JA4L | 27 | `tls3.pcapng/153/JA4L.1` | the two values differ (accepted) | `101_128_quic` | `40_128_quic` |
+| `tls3.pcapng` | per-packet | JA4L | 27 | `tls3.pcapng/153/JA4L.1` | the two values differ | `101_128_quic` | `40_128_quic` |
 | `tls3.pcapng` | per-packet | JA4L | 27 | `tls3.pcapng/167/JA4L.1` | the two values differ (accepted) | `81_128_quic` | `59_128_quic` |
 | `tls3.pcapng` | per-packet | JA4LS | 16 | `tls3.pcapng/170/JA4LS.1` | the library produces a value the vector does not hold (accepted) | (none) | `2442_57` |
 | `tls3.pcapng` | per-packet | JA4LS | 16 | `tls3.pcapng/214/JA4LS.1` | the vector holds a value the library does not produce (accepted) | `2442_57_3520` | (none) |

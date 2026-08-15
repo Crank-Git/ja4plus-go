@@ -6048,14 +6048,6 @@
     "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes two parts on an earlier frame than `wireshark/source/packet-ja4.c:1362-1394` does."
   },
   {
-    "key": "tls3.pcapng/153/JA4L.1",
-    "capability": false,
-    "ours": "40_128_quic",
-    "theirs": "101_128_quic",
-    "ruling": "#127",
-    "reason": "Ruling #127 decides no part of this difference, and no reading of `docs/audit/ja4l-deviation-cluster.md` explains the remainder that ruling #528 leaves."
-  },
-  {
     "key": "tls3.pcapng/170/JA4LS.1",
     "capability": false,
     "ours": "2442_57",
