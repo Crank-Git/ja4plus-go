@@ -106,11 +106,11 @@ call. `.claude/rules/concurrency.md` `## Rules` states the same property, and
 `docs/concurrency.md` `## The database lookup holds one snapshot` states it for a user.
 
 **The stat that FR-lookup-18 needs costs 459 ns for each lookup**, measured on an Apple M4
-on 2026-08-15. **Issue #573 read that cost and it accepted it**, because no fingerprinter
-reaches `LookupFingerprint` and the measured `ja4plus analyze` run that emits the most
-fingerprints pays 0.9 percent of its time there. `docs/audit/lookup-stat-cost.md` holds the measurement, the four
-call sites and the reading that a throttle needs a maintainer ruling. **Issue #573 is the
-reversal path.**
+on 2026-08-15. **Issue #573 read that cost and it accepted it.** No fingerprinter reaches
+`LookupFingerprint`. The measured `ja4plus analyze` run that emits the most fingerprints
+pays 0.9 percent of its time there. `docs/audit/lookup-stat-cost.md` holds the measurement,
+the four call sites and the reading that a throttle needs a maintainer ruling. **Issue #573
+is the reversal path.**
 
 ## User flows
 

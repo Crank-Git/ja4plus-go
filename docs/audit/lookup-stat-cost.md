@@ -36,8 +36,10 @@ name one machine, and `25.6.0` is the Darwin kernel version.
 
 **A scratch benchmark of the map read measured 6.2 ns/op under a temporary home
 directory**, and `BenchmarkLookupTableRead` measures 5.7 ns/op under the user cache path.
-**Both figures reproduce the 6.6 ns/op that #74 recorded before its change.** So the stat is
-the whole of the added cost, and #74 read it correctly.
+**Each figure sits within 15 percent of the 6.6 ns/op that #74 recorded before its
+change.** So the stat is the whole of the added cost, and #74 read it correctly. **No figure
+of this page reproduces 6.6 ns/op exactly**, and a map read costs a different number on each
+run of each machine.
 
 **The compiler does not remove the map read of `BenchmarkLookupTableRead`.** A removed read
 would report a fraction of one nanosecond, and 5.7 ns/op is the cost of one map hash.
