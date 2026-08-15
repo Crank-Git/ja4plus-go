@@ -823,10 +823,10 @@ reads `tls-handshake.pcapng/142.251.111.101:443-192.168.1.168:60486/JA4S`, and t
   or `x509ce`. `python/ja4.py:430-431` reads the first element of a handshake type list, and
   that element is `2`. **The two facts do not compose into one reason**, and this page runs
   the reference never.
-- **The exact per-stream cost of cause 6. #650 measured it on 2026-08-15, and it is 12.**
-  `docs/audit/ja4s-segment-span-measurement.md` holds the measurement. The sentence below
-  states what this page did, and it no longer states an open question. The page states about 12, and it builds no
-  candidate change.
+- **The exact per-stream cost of cause 6. This page states about 12, and it builds no
+  candidate change.** #650 built one on 2026-08-15, and the measured cost is 12.
+  `docs/audit/ja4s-segment-span-measurement.md` holds the measurement, so this row records
+  an answered question rather than an open one.
 - **Whether cause 4 moves the value of a register entry.** The `## Cause 4` section names the
   entry and the risk, and no measurement settles it. **The cause 4 ruling of 2026-08-14 needs no
   code change**, so no change of this batch reached that risk. **A later issue that changes the
