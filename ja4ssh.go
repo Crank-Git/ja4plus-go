@@ -926,9 +926,9 @@ type SSHSessionInfo struct {
 	ClientSSH int
 	// ServerSSH is the count of SSH packets the server sent.
 	ServerSSH int
-	// ClientACK is the count of bare acknowledgements the client sent.
+	// ClientACK is the count of bare acknowledgments the client sent.
 	ClientACK int
-	// ServerACK is the count of bare acknowledgements the server sent.
+	// ServerACK is the count of bare acknowledgments the server sent.
 	ServerACK int
 }
 

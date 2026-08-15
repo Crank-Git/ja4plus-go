@@ -64,6 +64,16 @@ sentence.
 next line binds the Go files. Round 39 of the `## Changelog` of `docs/specs/spec.md`
 records the same reading.
 
+**One word carries a guard, and every other British spelling carries none.**
+`TestNoTrackedFileWritesTheBritishAcknowledgmentSpelling` in
+`us_english_acknowledgment_test.go` reads every tracked file and it fails on the British
+form of `acknowledgment` as prose. #697 built it, because `misspell` at `locale: US` flags
+neither spelling of that word and round 48 had already converted it once. **The guard
+accepts an occurrence inside a code span and an occurrence in a block-quote line**, which
+are the two forms `## What is verbatim, and never rewritten` below holds unchanged. It
+exempts `docs/specs/foxio/port-register.md`, because that page is a verbatim copy that no
+change of this repository may edit. **Issue #697 is the reversal path.**
+
 ## What is verbatim, and never rewritten
 
 Reproduce these without a change. Rewriting evidence destroys it, and rewriting a quote

@@ -227,14 +227,14 @@ func tcpEndpoint(ip string, port uint16) string {
 	return fmt.Sprintf("%s:%d", ip, port)
 }
 
-// relativeNumbers returns the relative sequence number and the relative acknowledgement
+// relativeNumbers returns the relative sequence number and the relative acknowledgment
 // number of one TCP packet.
 //
 // It returns false when the capture holds no SYN for one of the two endpoints, because a
 // relative number counts from the initial sequence number that the SYN carries.
 // `python/ja4.py:570` reads the two numbers that the dissector counts. A sequence number
 // wraps at 32 bits, and unsigned subtraction wraps the same way.
-func (c *connState) relativeNumbers(source, target string, seq, acknowledgement uint32) (uint32, uint32, bool) {
+func (c *connState) relativeNumbers(source, target string, seq, acknowledgment uint32) (uint32, uint32, bool) {
 	sourceISN, held := c.isns[source]
 	if !held {
 		return 0, 0, false
@@ -245,7 +245,7 @@ func (c *connState) relativeNumbers(source, target string, seq, acknowledgement 
 		return 0, 0, false
 	}
 
-	return seq - sourceISN, acknowledgement - targetISN, true
+	return seq - sourceISN, acknowledgment - targetISN, true
 }
 
 // opensASecondConnection reports whether one SYN opens a second connection on the endpoints of
@@ -308,7 +308,7 @@ func holdsACompleteHTTPRequest(payload []byte) bool {
 // value that the packet gives.
 //
 // The reference records the point on every packet that carries `ACK`, carries no `SYN`, and
-// holds the relative sequence number `1` and the relative acknowledgement number `1`. That is
+// holds the relative sequence number `1` and the relative acknowledgment number `1`. That is
 // the bare ACK of the handshake first, and then the first packet of the application
 // handshake. `python/ja4.py:570` states the rule.
 //
@@ -335,8 +335,8 @@ func (f *JA4LFingerprinter) clientPoint(
 		return nil
 	}
 
-	sequence, acknowledgement, read := conn.relativeNumbers(source, target, tcpLayer.Seq, tcpLayer.Ack)
-	if !read || sequence != 1 || acknowledgement != 1 {
+	sequence, acknowledgment, read := conn.relativeNumbers(source, target, tcpLayer.Seq, tcpLayer.Ack)
+	if !read || sequence != 1 || acknowledgment != 1 {
 		return nil
 	}
 

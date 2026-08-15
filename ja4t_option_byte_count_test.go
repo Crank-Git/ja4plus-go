@@ -38,7 +38,7 @@ func tcpOptionEndList() layers.TCPOption {
 	return layers.TCPOption{OptionType: layers.TCPOptionKindEndList, OptionLength: 1}
 }
 
-// tcpOptionSACKPermitted returns a TCP selective acknowledgement permitted option.
+// tcpOptionSACKPermitted returns a TCP selective acknowledgment permitted option.
 func tcpOptionSACKPermitted() layers.TCPOption {
 	return layers.TCPOption{OptionType: layers.TCPOptionKindSACKPermitted, OptionLength: 2}
 }

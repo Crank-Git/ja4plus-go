@@ -199,7 +199,7 @@ image.
   `C` from three different packets, and only Python moves the point after it fills it.
   **Issue #196 holds the question.**
     - Python fills `C` from every packet that carries `ACK`, carries no `SYN`, and holds the
-      relative sequence number `1` and the relative acknowledgement number `1`. A payload
+      relative sequence number `1` and the relative acknowledgment number `1`. A payload
       does not bar the packet. Python reads the condition at `python/ja4.py:570`.
       `python/common.py:101` omits `C` from the fields that it declines to update, so a
       later packet replaces the point. `python/common.py:111` stops the point once `D`
