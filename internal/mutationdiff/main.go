@@ -149,7 +149,12 @@ func (m mutation) key() mutation {
 	return m
 }
 
-// unsettledVerdicts names each verdict that FR-mutation-11 settles.
+// unsettledVerdicts names each verdict that FR-mutation-11 reads.
+//
+// **FR-mutation-11 settles a `LIVED` mutation on code that can move a fingerprint value,
+// and it counts every other one.** The maintainer ruled that boundary on 2026-08-14, and
+// #634 carries the amendment. **A report states no fingerprint risk**, so this map keeps
+// both verdicts and a person applies the boundary to each row the comparison reports.
 //
 // **FR-mutation-18 names `LIVED`, and the edge-case table of
 // `docs/specs/features/15-mutation-sweep.md` adds `TIMED OUT`.** That table states it
@@ -322,8 +327,9 @@ func renderBody(baseline, swept string, found []mutation) string {
 	var out strings.Builder
 
 	fmt.Fprintf(&out, "The scheduled mutation sweep of `%s` found %d mutation(s) that the last tracked sweep does not settle.\n\n", swept, len(found))
-	fmt.Fprintf(&out, "FR-mutation-18 opens this issue. FR-mutation-11 settles each row below, and\n")
-	fmt.Fprintf(&out, "FR-mutation-12 states that a settlement is an added assertion or a recorded reason.\n\n")
+	fmt.Fprintf(&out, "FR-mutation-18 opens this issue. FR-mutation-11 settles each row below on code that\n")
+	fmt.Fprintf(&out, "can move a fingerprint value, and it counts every other row. FR-mutation-12 states that\n")
+	fmt.Fprintf(&out, "a settlement is an added assertion or a recorded reason.\n\n")
 
 	fmt.Fprintf(&out, "| Baseline | `%s` |\n|---|---|\n| Swept path | `%s` |\n\n", baseline, swept)
 

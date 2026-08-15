@@ -3,8 +3,10 @@
 <!-- This file is generated. `make mutate` writes it. Do not edit it by hand. -->
 
 **A mutation that survives names a test that runs a line and asserts nothing about it.**
-It is not always a defect. `docs/specs/features/15-mutation-sweep.md` holds the requirements,
-and FR-mutation-11 states that every `LIVED` mutation is settled.
+It is not always a defect. `docs/specs/features/15-mutation-sweep.md` holds the requirements.
+**FR-mutation-11 settles a `LIVED` mutation on code that can move a fingerprint value.**
+It counts and records every other `LIVED` mutation. The maintainer ruled that boundary
+on 2026-08-14, and `docs/mutation_sweep.md` states the procedure that applies it.
 
 ## The run
 
@@ -27,14 +29,14 @@ unmeasured rather than effective.
 
 ## The verdict counts
 
-**LIVED: 223.** That count sizes the settlement work of FR-mutation-11.
+**LIVED: 223.** FR-mutation-11 reads each mutation of that count against the fingerprint risk.
 
 | Verdict | Count | What it means |
 |---|---|---|
 | `KILLED` | 493 | A test failed, so the suite catches the change. `go test` exited 1. |
-| `LIVED` | 223 | Every test passed, so no test asserts on the change. FR-mutation-11 settles it. |
+| `LIVED` | 223 | Every test passed, so no test asserts on the change. FR-mutation-11 settles it when it can move a fingerprint value, and counts it otherwise. |
 | `NOT COVERED` | 162 | No test reaches the line, so the tool ran nothing. |
-| `TIMED OUT` | 4 | The suite did not finish, and FR-mutation-11 settles it like a `LIVED` mutation. |
+| `TIMED OUT` | 4 | The suite did not finish, and FR-mutation-11 reads it like a `LIVED` mutation. |
 | `NOT VIABLE` | 0 | The mutated package did not compile. `go test` exited 2. No settlement is needed. |
 | `SKIPPED` | 0 | The mutation sits outside the configured diff. This repository configures none. |
 | `RUNNABLE` | 0 | A dry run identified the mutation and ran no test. `make mutate` performs no dry run. |

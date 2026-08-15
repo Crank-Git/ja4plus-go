@@ -206,8 +206,8 @@ func TestTheReportNameLeadsWithTheDate(t *testing.T) {
 // `newReport` in `internal/report/report.go` of `gremlins` v0.6.0 keys its file map on
 // `m.Position().Filename`, and `OutputFile` carries that value alone. **The value is a base
 // name, and the whole named set of this repository holds two names that two files carry:
-// `lookup.go` and `doc.go`.** FR-mutation-11 settles a `LIVED` mutation by reading the line
-// it names, and an ambiguous name names no line to read.
+// `lookup.go` and `doc.go`.** FR-mutation-11 reads the line that a `LIVED` mutation names,
+// and an ambiguous name names no line to read.
 func TestTheReportResolvesTheBaseNameThatGremlinsWrites(t *testing.T) {
 	root := t.TempDir()
 	for _, path := range []string{"lookup.go", "ja4db/lookup.go", "parser/tls.go", "parser/tls_test.go"} {
@@ -259,6 +259,35 @@ func TestTheReportReportsAnAmbiguousBaseName(t *testing.T) {
 
 	if clean := render(sampleInput(t)); !strings.Contains(clean, "Every name of this sweep resolved to one file.") {
 		t.Error("a sweep with no ambiguous name does not say so")
+	}
+}
+
+// TestTheReportStatesTheAmendedSettlementRule holds the FR-mutation-11 amendment of #634.
+//
+// **The maintainer ruled the settlement scope on 2026-08-14, in issue #92.** This command
+// writes the rule into every report it renders, so a repair of a tracked report leaves the
+// next sweep to write the pre-amendment sentence again.
+func TestTheReportStatesTheAmendedSettlementRule(t *testing.T) {
+	report := render(sampleInput(t))
+
+	for _, want := range []string{
+		"settles a `LIVED` mutation on code that can move a fingerprint value",
+		"counts and records every other `LIVED` mutation",
+	} {
+		if !strings.Contains(report, want) {
+			t.Errorf("the report states no %q, so it holds the pre-amendment rule", want)
+		}
+	}
+
+	for _, stale := range []string{
+		"every `LIVED` mutation is settled",
+		"That count sizes the settlement work",
+		"FR-mutation-11 settles it.",
+		"FR-mutation-11 settles it like a `LIVED` mutation",
+	} {
+		if strings.Contains(report, stale) {
+			t.Errorf("the report states the pre-amendment rule: %q", stale)
+		}
 	}
 }
 

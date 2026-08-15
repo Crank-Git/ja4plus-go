@@ -50,15 +50,34 @@ after which a defect is expensive to correct.
 
 ### The settlement
 
-- **FR-mutation-11** — Every mutation with the verdict `LIVED` is settled.
+- **FR-mutation-11** — A settlement covers each mutation with the verdict `LIVED` on code
+  that can move a fingerprint value.
 - **FR-mutation-12** — A settlement is an added assertion, or a recorded reason why the
   mutation changes no observable behaviour.
-- **FR-mutation-13** — The settlements are recorded at `docs/mutation_settlements/`.
+- **FR-mutation-13** — `docs/mutation_settlements/` records each settlement and the count
+  of each `LIVED` mutation that no settlement covers.
 - **FR-mutation-14** — Each settlement names the mutation and the issue that closed it.
 - **FR-mutation-15** — A settlement that says "equivalent mutation" states the reason in
   one sentence.
 - **FR-mutation-16** — `docs/mutation_sweep.md` explains the sweep, the report and the
   settlement procedure.
+
+#### The ruling that narrowed FR-mutation-11
+
+**The maintainer ruled the settlement scope on 2026-08-14, in issue #92.** Issue #634
+carries the amendment of FR-mutation-11 and FR-mutation-13, and `docs/mutation_sweep.md`
+states the procedure that applies the rule.
+
+> **A LIVED mutation on code that can move a fingerprint value is settled. Every other LIVED mutation is counted and recorded.**
+
+**Before the ruling, FR-mutation-11 settled every `LIVED` mutation.** `./internal/parser`
+alone holds 223 `LIVED` and 4 `TIMED OUT` mutations of 882, measured on 2026-08-14. **The
+reason for the ruling is reviewability.** A worker that writes `equivalent mutation` 227
+times produces a record nobody can check, and a rubber stamp hides the weak test that the
+sweep exists to find.
+
+**The reversal path is issue #92.** A reversal restores the rule that every `LIVED`
+mutation carries a settlement, and it states the reason.
 
 ### The gate
 
@@ -66,8 +85,8 @@ after which a defect is expensive to correct.
 - **FR-mutation-18** — The scheduled run opens an issue when a new `LIVED` mutation
   appears.
 - **FR-mutation-19** — The sweep does not block a merge.
-- **FR-mutation-20** — `features/16-pre-release-validation.md` checks that every `LIVED`
-  mutation of the last sweep is settled before the release.
+- **FR-mutation-20** — `features/16-pre-release-validation.md` checks that the last sweep
+  meets FR-mutation-11 before the release.
 
 ## User flows
 
@@ -76,11 +95,14 @@ after which a defect is expensive to correct.
 1. The engineer runs `make mutate PKG=./internal/parser`.
 2. The report names a `LIVED` mutation at a file and a line.
 3. The engineer reads the test that covers the line.
-4. If the test asserts nothing about the value, the engineer adds the assertion. The
+4. The engineer reads whether the mutated expression can move a fingerprint value.
+5. If the expression can move no fingerprint value, the engineer counts the mutation and
+   writes no settlement.
+6. If the test asserts nothing about the value, the engineer adds the assertion. The
    mutation is then killed.
-5. If the mutation changes no observable behaviour, the engineer records the reason as an
+7. If the mutation changes no observable behaviour, the engineer records the reason as an
    equivalent mutation.
-6. The engineer commits the report and the settlement together.
+8. The engineer commits the report and the settlement together.
 
 ## Screens & states
 
@@ -136,11 +158,13 @@ not archived.
 
 1. `make mutate` runs and writes a report to `docs/mutation_reports/`.
 2. The report holds a verdict for every mutation the tool applied.
-3. Every `LIVED` mutation of the most recent report has a settlement.
-4. Every settlement that claims equivalence states one sentence of reason.
-5. `docs/mutation_sweep.md` builds into the site.
-6. The scheduled workflow runs and does not appear as a required check on a pull request.
-7. A deliberately weakened assertion produces a new `LIVED` mutation in the next sweep.
+3. Every `LIVED` mutation of the most recent report that can move a fingerprint value has
+   a settlement.
+4. The settlement record counts every other `LIVED` mutation of that report.
+5. Every settlement that claims equivalence states one sentence of reason.
+6. `docs/mutation_sweep.md` builds into the site.
+7. The scheduled workflow runs and does not appear as a required check on a pull request.
+8. A deliberately weakened assertion produces a new `LIVED` mutation in the next sweep.
 
 ## Out of scope
 

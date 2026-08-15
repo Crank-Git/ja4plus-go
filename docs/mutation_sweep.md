@@ -34,8 +34,8 @@ blocks no merge.
 | Verdict | What it means | What it asks for |
 |---|---|---|
 | `KILLED` | A test failed, so the suite catches the change. | Nothing. |
-| `LIVED` | Every test passed, so no test asserts on the change. | A settlement. |
-| `TIMED OUT` | The suite did not finish. | A settlement, as for `LIVED`. |
+| `LIVED` | Every test passed, so no test asserts on the change. | A settlement, or a count. |
+| `TIMED OUT` | The suite did not finish. | A settlement or a count, as for `LIVED`. |
 | `NOT COVERED` | No test reaches the line, so the tool ran nothing. | Nothing here. The coverage floor owns that gap. |
 | `NOT VIABLE` | The mutated package did not compile. | Nothing. |
 
