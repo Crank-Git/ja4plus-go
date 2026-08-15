@@ -82,12 +82,28 @@ strict: true
 #
 # `docs/mutation_sweep.md` is the published half, and it states the procedure. It names each
 # record as a path in a code span, and it never links into one.
+#
+# `docs/api/` is the sixth pattern, and #101 added it under FR-release-1. **The record of
+# the exported API is an engineering artifact, and `docs/audit/` is the precedent.** Two
+# facts decide the exclusion.
+#
+#   1. `docs/reference/index.md` states `So no page of this section repeats a signature.`
+#      and it gives the reason: a copied signature goes stale. `docs/api/v1.md` holds 144
+#      signatures, so a published record contradicts a published page.
+#   2. `pkg.go.dev` already serves the reader-facing signatures, and the module proxy builds
+#      them from the doc comments. The record serves the freeze and `api_test.go`.
+#
+# **A record that this file does not exclude fails `make docs`.** `validation.nav` above
+# raises `omitted_files` to `warn`, and `strict` turns that warning into a failed build. So
+# a reversal adds a `nav` entry under `Reference` and removes this pattern together.
+# `TestTheSiteExcludesTheApiRecord` in `api_test.go` holds the pattern.
 exclude_docs: |
   /specs/
   /audit/
   /requirements.txt
   /mutation_reports/
   /mutation_settlements/
+  /api/
 
 # FR-documentation-5. A broken link and a broken anchor each reach `warn`, and `strict`
 # above turns each warning into a failed build.
