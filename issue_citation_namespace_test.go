@@ -221,7 +221,13 @@ import (
 // 639.** Epic 15 and Epic 16 each ran a round on 2026-08-14, and each round re-measured the
 // mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
 // takes the union of the two histories and one constant.
-const issueCitationHighWaterMark = 639
+//
+// **#652 re-measured the mark on 2026-08-15 and it read 661.** #652 cites its own number in
+// `ja4ls_seconds_truncation_test.go`, in `testdata/deviations.json` and in
+// `docs/audit/ja4l-deviation-cluster.md`. That number sits above the inherited mark of 639.
+// **A member pays this cost exactly as a round does**, because the guard reads the number
+// and never the shape of the change that carries it.
+const issueCitationHighWaterMark = 661
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

@@ -618,6 +618,145 @@ datagram, and `ja4plus/utils/quic_utils.py:64` reads `udp_payload[0]`. **The por
 writes answer 2**, and a ruling for answer 1 is a change in both repositories.
 `Crank-Git/ja4plus#613` holds the other half.
 
+## Cause 7 — the seconds component of the Wireshark delta
+
+**This cause holds the one deviation that no other cause explains.** Issue #652 measured it
+on 2026-08-15, and this section holds the reading. **The reading decides no value.**
+
+| Key | The vector holds | The library produces |
+|---|---|---|
+| `browsers-x509.pcapng/128/JA4LS.1` | `2948_229_14055` | (none) |
+
+### Ruling #127 covers the deviation, and it is not the whole reason
+
+**Ruling #127 declines part c on a TCP connection.** The maintainer ruled it on 2026-08-12,
+re-ruled the same question as #247 on the same day, and kept it on 2026-08-15. So the
+library writes two parts on a TCP connection, and `emitResult` in `ja4l.go` writes them on
+the SYN-ACK frame. **The library therefore produces `2948_229` on frame 121**, and the
+conformance suite reports that value as a second deviation of the pair that
+`## The shape of the cluster` above describes.
+
+**Cause 1 above prices a reversal of ruling #127, and its candidate left this row open.**
+`### The count this cause closes` records the measurement: the candidate closes 149
+deviations, and one TCP deviation remains. **This section states why that one row survives a
+reversal.**
+
+### Part c of the vector discards a whole second
+
+`wireshark/source/packet-ja4.c:1371-1374` writes the three parts:
+
+```c
+                                    wmem_strbuf_append_printf(
+                                        display, "%d_%d_%d", latency.nsecs / 2 / 1000, conn->server_ttl,
+                                        latency2.nsecs / 2 / 1000
+                                    );
+```
+
+**`nsecs` is the sub-second field of `nstime_t`, and it is never the whole interval.** The
+Wireshark core at `v4.6.0` defines the type:
+
+```c
+typedef struct {
+	time_t	secs;
+	int	nsecs;
+} nstime_t;
+```
+
+`wireshark/source/packet-ja4.c:1370` fills `latency2` with
+`nstime_delta(&latency2, &conn->timestamp_E, &conn->timestamp_D)`, and the dissector reads
+`latency2.nsecs` alone. **So an interval of one second or more loses its whole-second
+part.**
+
+### The measurement
+
+**`browsers-x509.pcapng` stream 2 is the one TCP connection of the corpus whose interval
+crosses one second.** The frames below come from the capture at the pinned commit.
+
+| Point | Frame | Timestamp |
+|---|---|---|
+| A | 120 | `1691545934.646949000` |
+| B | 121 | `1691545934.652846000` |
+| D | 123 | `1691545934.653341000` |
+| E | 125 | `1691545935.681451000` |
+
+**The interval `E - D` is 1028110000 nanoseconds.** It normalizes to `secs=1` and
+`nsecs=28110000`.
+
+| Reading | Arithmetic | Result |
+|---|---|---|
+| The whole interval | `1028110000 / 2 / 1000` | `514055` |
+| **The `nsecs` field alone** | `28110000 / 2 / 1000` | **`14055`** |
+
+**The published vector holds `14055`**, so the vector reads the `nsecs` field.
+
+**The corpus corroborates the reading with a second published field.**
+`testdata/foxio/wireshark/browsers-x509.pcapng.json` holds `ja4.ja4ls_delta` `4.8` on frame
+128. `wireshark/source/packet-ja4.c:1377` computes that ratio as
+`latency2.nsecs / latency.nsecs`. The `nsecs` reading gives `28110000 / 5897000`, which is
+4.767 and rounds to `4.8`. The whole-interval reading gives `1028110000 / 5897000`, which
+is 174.3. **So FoxIO's own delta field states which interval the dissector read.**
+
+### Why the JA4L value of the same frame closes and the JA4LS value does not
+
+`ja4.ja4l` on frame 128 holds `78_128_150466`. Its part c reads `F - E`, which is 300932000
+nanoseconds. **That interval stays below one second, so both readings give `150466`.** The
+cause 1 candidate therefore closes the JA4L row of frame 128 and it leaves the JA4LS row
+open.
+
+### This is the defect that #253 records, in a second implementation
+
+**#253 records the same defect class in FoxIO's reference Python.**
+`python/common.py:182` holds `return int((dt2-dt1).microseconds/2)`, and
+`timedelta.microseconds` is the sub-second field. #253 states the question it leaves open:
+
+> **Whether any corpus capture holds a latency above one second is the question this issue leaves open**, and it decides whether the defect reaches a published vector.
+
+**This measurement answers that question. One capture holds such an interval, and the
+defect reaches a published vector.** The vector is a Wireshark vector rather than a Python
+vector, so the answer names the dissector.
+
+**`## What #253 and #249 explain` below reads part a of every JA4L value, and it reads no
+part c.** That section states that no interval of the cluster crosses one second, and the
+sentence holds for part a alone. **The `E - D` interval of part c crosses one second.**
+
+### Do the FoxIO implementations agree
+
+**No.** The Wireshark dissector discards the whole-second part, and no other implementation
+does.
+
+| Implementation | What it reads | Evidence |
+|---|---|---|
+| Wireshark | The `nsecs` field of the delta. | `wireshark/source/packet-ja4.c:1373` |
+| Zeek | The whole timestamp, in microseconds. | `zeek/ja4l/main.zeek:72`, `zeek/ja4l/main.zeek:125` |
+| FoxIO's reference Python | The `microseconds` field of the delta. | `python/common.py:182` |
+
+`zeek/ja4l/main.zeek:72` returns `cp$ts_sec * 1000000.0 + cp$ts_usec`, so the Zeek package
+keeps the whole interval. **FoxIO's reference Python carries the same defect as Wireshark**,
+and #253 holds that reading.
+
+### Does the port carry the same gap
+
+**Yes.** The port writes two parts on a TCP connection, so it produces no part c at all.
+`ja4plus/fingerprinters/ja4l.py:482` at the tag `v1.1.0` writes the client value with two
+parts, and `:447` and `:467` write the server value with two parts. `_one_way_latency` at
+`ja4plus/fingerprinters/ja4l.py:348` returns `int((end - start) / LATENCY_DIVISOR)` over
+whole microsecond timestamps, so the port discards no second.
+
+**A reversal of ruling #127 therefore reaches both repositories**, and this row needs a
+second decision after that reversal.
+
+### This cause is the maintainer's
+
+**`.claude/rules/parity.md` `## Where a difference comes from` names a proven reference
+defect, and it reserves the decision to the maintainer.** This section records the
+measurement, and it recommends no change.
+
+**The decision is not needed while ruling #127 stands.** Ruling #127 gives the library two
+parts on a TCP connection, so no part c of the library can reach this vector. **The decision
+is needed only if the maintainer reverses ruling #127.** The reversal then asks one further
+question: does the library reproduce the seconds truncation of the dissector, or does it
+write the whole interval and decline this vector?
+
 ## What #253 and #249 explain
 
 **#253 explains no deviation of this cluster.** It reads that FoxIO's reference Python
@@ -626,9 +765,15 @@ interval above one second and turns a negative interval into a large positive on
 second half of #253 is now measured: the cluster holds one candidate.**
 `chrome-cloudflare-quic-with-secrets.pcapng/0:50280/JA4L-S` reads `10990_56` in the
 per-stream set, and the per-packet set reads `9285` for the same connection. Both values
-sit below one second, so the truncation of #253 does not reach either one. **No JA4L
-interval of this cluster crosses one second, and no value of this cluster carries the
-signature of #253.**
+sit below one second, so the truncation of #253 does not reach either one. **No part a of
+this cluster crosses one second.**
+
+**That sentence reads part a alone, and #652 measured a part c that crosses one second.**
+`## Cause 7 — the seconds component of the Wireshark delta` above holds the measurement:
+the `E - D` interval of `browsers-x509.pcapng` stream 2 is 1028110000 nanoseconds, and the
+published vector holds the sub-second part of it. **So one value of this cluster does carry
+the signature of #253**, in the Wireshark dissector rather than in FoxIO's reference
+Python.
 
 **#249 is explained in part, and one half stays open.** #249 asks why the server latency of
 the second QUIC connection on one stream differs by 1705 microseconds when the client
@@ -661,7 +806,7 @@ the library reads `3051_57_quic`, and the per-packet set reads `3051_57_quic` on
 | 4 — the time-to-live of a reused four-tuple | 3 | Not measured. The vector writes `0`. | — | The maintainer. A reference defect. |
 | 5 — the two vector sets disagree | 2 | Not measured. Each set holds a different value. | — | The maintainer. #249 holds it. |
 | 6 — the coalesced QUIC datagram | 2 | **4**, on a later base. Opens 2. | None. | The maintainer. A reference split, 2 against 2. |
-| Unattributed | 1 | — | — | — |
+| 7 — the seconds component of the Wireshark delta | 1 | Not measured. Ruling #127 bars a candidate. | — | The maintainer. A proven reference defect. |
 | **Total** | **177** | | | |
 
 **Four causes carry a measured count, and each one was measured on its own.** Cause 3 is
@@ -674,15 +819,21 @@ opens 2.
 moved, so its count of 4 counts two rows that the base of this page does not hold. A reader
 who buys two causes measures the pair.
 
-**Every deviation of the cluster reaches a cause, except one.**
+**Every deviation of the cluster reaches a cause.**
 
-## The unattributed deviation
+## The last deviation, and where its reading lives
 
-| Key | The vector holds | The library produces | Why it stays open |
+`browsers-x509.pcapng/128/JA4LS.1` was unattributed until 2026-08-15, and
+`## Cause 7 — the seconds component of the Wireshark delta` above now holds its reading.
+**#443 produced no reading for it, and #652 measured it.**
+
+| Key | The vector holds | The library produces | Which cause holds it |
 |---|---|---|---|
-| `browsers-x509.pcapng/128/JA4LS.1` | `2948_229_14055` | (none) | Three numeric parts on a TCP connection, and the candidate of cause 1 did not close it. |
+| `browsers-x509.pcapng/128/JA4LS.1` | `2948_229_14055` | (none) | Cause 7, and ruling #127 beside it. |
 
-**It needs a separate reading, and #443 produced none.**
+**Two causes reach this one row, and cause 1 alone does not close it.** Ruling #127 declines
+part c on a TCP connection, so the library writes `2948_229` on frame 121. **Part c of the
+vector also discards a whole second**, so the cause 1 candidate leaves the row open.
 
 **#443 listed two more rows here, and cause 6 above now holds them.**
 `ssh2.pcapng/1046/JA4L.1` and `tls3.pcapng/297/JA4L.1` each read
@@ -691,9 +842,10 @@ who buys two causes measures the pair.
 ## What this page does not state
 
 - **It recommends no change.** **The maintainer ruled cause 3 on 2026-08-14**, and causes
-  1, 4, 5 and 6 each stay with the maintainer.
+  1, 4, 5, 6 and 7 each stay with the maintainer.
 - **It measured causes 1, 2, 3 and 6.** Causes 4 and 5 carry no measured count, because
-  each one needs a ruling before a candidate exists.
+  each one needs a ruling before a candidate exists. **Cause 7 carries no measured count
+  either**, because ruling #127 bars the candidate that would produce one.
 - **It measured each cause on its own.** It measured no pair of causes together, so the
   four counts do not add. **Causes 1, 2 and 3 ran against one base, and cause 6 ran against
   a later base.** `### The measurement of this section` states the base of cause 6.
