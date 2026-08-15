@@ -704,8 +704,8 @@ writes no register entry, and it changes no line of `ja4l.go`.
 **The measured yield is 2, and it is not attributed.** One run of `make conformance` on
 `issue/675-processudp-per-stream-ja4ls` reports 1754 matches, 247 deviations, 605 accepted
 deviations and 637 register keys. Two comparisons of the whole corpus read
-`the vector holds a value the library does not produce` for a per-stream `JA4L-S` key, and
-they are the two rows of `### The four rows` above.
+`the vector holds a value the library does not produce` for a per-stream `JA4L-S` key.
+**They are the two rows of `### The four rows` above.**
 
 #### The emission point is not the difference
 
@@ -739,9 +739,9 @@ holds.
 `python/ja4.py:585` tests the packet type and the destination port, and nothing else.
 
 **`processUDP` in `ja4l.go` fills point D only when point C is present.** Its point D branch
-opens with a test of `conn.timestamps["C"]`, so a connection with no point C reaches the end
-of the method and returns no result. **That test is the fall-through, and it is the whole
-cause of `ssh2.pcapng/33/JA4L-S`.**
+opens with a test of `conn.timestamps["C"]`. A connection with no point C therefore reaches
+the end of the method, and it returns no result. **That test is the fall-through, and it is
+the whole cause of `ssh2.pcapng/33/JA4L-S`.**
 
 **#447 created these two rows, and the fall-through was harmless before it.** The library
 published the QUIC server value on the frame that fills point B until #447, so a connection
@@ -816,9 +816,9 @@ tag `v1.1.0` returns until `server_hello_is_complete` holds, so the port takes t
 packet that carries the ServerHello.
 
 **This section states what the port's code does, and it states no value the port produces.**
-`.claude/rules/parity.md` `## Never run the port from a test` bars a run, and
-`ja4plus/fingerprinters/ja4l.py:538` of tag `v1.1.0` gates point B on a decryption that this
-reading did not measure.
+`.claude/rules/parity.md` `## Never run the port from a test` bars a run.
+`ja4plus/fingerprinters/ja4l.py:538` of tag `v1.1.0` gates point B on a decryption, and this
+reading did not measure that decryption.
 
 **`### Does the port carry the same gap` above answers a different question.** It reads the
 coalesced datagram, and the port carries that reading. This section reads the emission point
@@ -842,10 +842,10 @@ values move.
   `the two values differ` after the repair.
 - **`tls3.pcapng/25/JA4L-S` changes state, and the second difference survives.** The library
   would publish `3051_57_quic`, and the vector holds `3583_57`.
-- **The per-packet set gains a `JA4LS.1` value on each of the two captures**, because a point
-  D that fills without point C emits on a frame that publishes nothing today.
+- **The per-packet set gains a `JA4LS.1` value on each of the two captures.** A point D that
+  fills without point C emits on a frame that publishes nothing today.
 
-**`CHANGELOG.md` holds a guard that reads the match count and the deviation count**, and
+**`CHANGELOG.md` holds a guard that reads the match count and the deviation count.**
 `### The count this cause closes` above records that the candidate of #449 reddened it.
 
 ## Cause 7 — the seconds component of the Wireshark delta
