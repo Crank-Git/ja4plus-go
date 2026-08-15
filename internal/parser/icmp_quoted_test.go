@@ -314,6 +314,50 @@ func TestQuotedTCPHeaderReadsATruncatedMultipathOption(t *testing.T) {
 	}
 }
 
+// TestQuotedTCPHeaderReadsAHeaderThatCarriesNoOption reads the shortest quoted header the
+// wire permits. The header holds 20 bytes, and its data offset states five words.
+//
+// The mutation sweep of 2026-08-14 earned this test. Every other test of this file builds an
+// option region, so no test reached the lower bound of either length guard, and two surviving
+// mutations named that gap. `docs/mutation_settlements/2026-08-14-internal-parser.md` records
+// them as S1.
+//
+//   - `icmp_quoted.go:108` reads `len(transport) < quotedTCPHeaderLength`. The mutant reads
+//     `<=`, and it declines a 20-byte transport region.
+//   - `icmp_quoted.go:114` reads `dataOffset < quotedTCPHeaderLength`. The mutant reads `<=`,
+//     and it declines a data offset of five words.
+//
+// A SYN that carries no option is well-formed, and `ja4t.go` reads this header, so each
+// mutant moves a JA4T value to no value at all.
+func TestQuotedTCPHeaderReadsAHeaderThatCarriesNoOption(t *testing.T) {
+	header := buildQuotedTCPHeader(nil, 64240)
+	if len(header) != quotedTCPHeaderLength {
+		t.Fatalf("the test header holds %d bytes, and the lower bound needs %d",
+			len(header), quotedTCPHeaderLength)
+	}
+
+	quoted := buildQuotedIPPacket(header, 0)
+	packet := buildICMPPacket(t, layers.ICMPv4TypeDestinationUnreachable, 13, quoted)
+
+	tcp := QuotedTCPHeader(packet)
+	if tcp == nil {
+		t.Fatalf("QuotedTCPHeader read no header of a 20-byte quoted TCP header")
+	}
+	if !tcp.SYN || tcp.ACK {
+		t.Fatalf("the quoted header carries SYN %t and ACK %t", tcp.SYN, tcp.ACK)
+	}
+	if tcp.DataOffset != 5 {
+		t.Fatalf("the quoted header states the data offset %d, and the test needs 5", tcp.DataOffset)
+	}
+	if tcp.Window != 64240 {
+		t.Fatalf("the quoted header carries the window %d, and the test needs 64240", tcp.Window)
+	}
+	if got := len(tcp.Contents); got != quotedTCPHeaderLength {
+		t.Fatalf("the quoted header holds %d content bytes, and the test needs %d",
+			got, quotedTCPHeaderLength)
+	}
+}
+
 // TestQuotedTCPHeaderReadsNoEmptyPayload bounds a message that quotes nothing.
 func TestQuotedTCPHeaderReadsNoEmptyPayload(t *testing.T) {
 	packet := buildICMPPacket(t, layers.ICMPv4TypeDestinationUnreachable, 13, nil)
