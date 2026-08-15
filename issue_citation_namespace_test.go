@@ -229,7 +229,7 @@ import (
 // their pull requests after the inherited reading, so the tracker moved by 17 between the
 // two. **A member pays this maintenance cost exactly as a round does**, because the guard
 // reads the number and never the shape of the change that carries it.
-const issueCitationHighWaterMark = 656
+const issueCitationHighWaterMark = 663
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,

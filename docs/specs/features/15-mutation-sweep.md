@@ -53,7 +53,7 @@ after which a defect is expensive to correct.
 - **FR-mutation-11** — A settlement covers each mutation with the verdict `LIVED` on code
   that can move a fingerprint value.
 - **FR-mutation-12** — A settlement is an added assertion, or a recorded reason why the
-  mutation changes no observable behaviour.
+  mutation changes no observable behavior.
 - **FR-mutation-13** — `docs/mutation_settlements/` records each settlement and one count
   of every `LIVED` mutation that no settlement covers.
 - **FR-mutation-14** — Each settlement names the mutation and the issue that closed it.
@@ -100,7 +100,7 @@ mutation carries a settlement, and it states the reason.
    writes no settlement.
 6. If the test asserts nothing about the value, the engineer adds the assertion. The
    mutation is then killed.
-7. If the mutation changes no observable behaviour, the engineer records the reason as an
+7. If the mutation changes no observable behavior, the engineer records the reason as an
    equivalent mutation.
 8. The engineer commits the report and the settlement together.
 
@@ -145,7 +145,7 @@ not archived.
 
 ## Edge cases & failures
 
-| Case | Expected behaviour |
+| Case | Expected behavior |
 |---|---|
 | The sweep takes longer than the CI job limit. | FR-mutation-4 narrows the package set. The report records which packages were swept and which were not. |
 | A mutation makes the suite hang. | The verdict is `TIMED OUT`. FR-mutation-11 reads it like a `LIVED` mutation. |
