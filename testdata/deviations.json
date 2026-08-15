@@ -2040,6 +2040,22 @@
     "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
   },
   {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/52/JA4LS.1",
+    "capability": false,
+    "ours": "9285_56_quic",
+    "theirs": "9285_0_quic",
+    "ruling": "#229",
+    "reason": "The maintainer ruled in issue #229 on 2026-08-15 that this library writes the observed time-to-live, because the vector time-to-live `0` on a second QUIC connection over one four-tuple describes the capture rather than the connection."
+  },
+  {
+    "key": "chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1",
+    "capability": false,
+    "ours": "113_64_quic",
+    "theirs": "264_0_quic",
+    "ruling": "#229",
+    "reason": "The maintainer ruled in issue #229 on 2026-08-15 that this library writes the observed time-to-live, and ruling #528 of 2026-08-14 decides part a because JA4L point C is the last QUIC server handshake packet."
+  },
+  {
     "key": "CVE-2018-6794.pcap/2/JA4LS.1",
     "capability": false,
     "ours": "2219_255",
