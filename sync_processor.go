@@ -18,8 +18,10 @@ type SyncProcessor struct {
 }
 
 // NewSyncProcessor returns a SyncProcessor that holds a new Processor.
-func NewSyncProcessor() *SyncProcessor {
-	return &SyncProcessor{proc: NewProcessor()}
+// It passes each option to NewProcessor, so one option type serves both constructors.
+// A caller that states no option receives a SyncProcessor with no key log.
+func NewSyncProcessor(options ...ProcessorOption) *SyncProcessor {
+	return &SyncProcessor{proc: NewProcessor(options...)}
 }
 
 // ensure fills the Processor that the constructor fills.
