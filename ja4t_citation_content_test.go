@@ -8,8 +8,8 @@ import (
 )
 
 // `docs/specs/foxio/JA4T.md` cites a line of a FoxIO reference implementation for each
-// rule it states, and this file holds every one of those citations against the content of
-// the line it names.
+// rule it states. This file holds every one of those citations against the content of the
+// line it names.
 //
 // TestNoCitationOfTheFoxioDirectoryNamesALinePastTheEndOfItsFile reads the same page, and
 // it asserts a bound alone: the cited number is at or below the line count of the file. A
@@ -220,8 +220,8 @@ func ja4tSourceLine(t *testing.T, path string, number int) string {
 }
 
 // The table names one citation for each citation of the page, in page order. A count that
-// disagrees means the page gained a citation, or it lost one, and the reader then has to
-// learn which row the table lost.
+// disagrees means the page gained a citation, or it lost one. The reader then has to learn
+// which row the table lost.
 func TestTheJA4TCitationTableHoldsEveryCitationOfThePage(t *testing.T) {
 	page := ja4tPageCitation(t)
 

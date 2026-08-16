@@ -126,8 +126,8 @@ reads the configuration on every pull request. That job runs `goreleaser check` 
 **The job also reads the version line of the binary it built, and #736 added that step on
 2026-08-15 UTC.** A job that runs no binary proves that the build succeeds, and it proves
 nothing about what the build stamps. **A snapshot binary printed the version of the previous
-release, and every case stayed green.** So the step runs the Linux amd64 artifact and it
-reads the printed line against the `v` prefix of #724 and the snapshot marker of #736.
+release, and every case stayed green.** So the step runs the Linux amd64 artifact. It reads
+the printed line against the `v` prefix of #724 and the snapshot marker of #736.
 `release_snapshot_version_test.go` reads the step, and it reads the link flag of
 `.goreleaser.yaml` beside it.
 

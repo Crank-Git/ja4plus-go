@@ -26,8 +26,10 @@ import (
 // cases below pin the two branches of the template by name.
 //
 // Verified against <https://goreleaser.com/customization/templates/>, retrieved 2026-08-15.
-// The page states that `.IsSnapshot` is `true if --snapshot is set, false otherwise`, that
-// `.ShortCommit` is `the git commit short hash`, and that `.Tag` is `the current git tag`.
+// The page states one meaning for each of the three fields below.
+//   - `.IsSnapshot` is `true if --snapshot is set, false otherwise`.
+//   - `.ShortCommit` is `the git commit short hash`.
+//   - `.Tag` is `the current git tag`.
 
 // snapshotLinkFlagPattern reads the whole link flag line of `.goreleaser.yaml`.
 //
@@ -77,7 +79,7 @@ func TestTheSnapshotJobReadsTheBinaryItBuilds(t *testing.T) {
 			ciWorkflowPath)
 	}
 
-	// The step matches the printed line against this pattern, and the pattern holds both
+	// The step matches the printed line against this pattern. The pattern holds both
 	// rulings: the `v` prefix of #724 and the snapshot marker of #736.
 	if !strings.Contains(workflow, `"ja4plus v"*-SNAPSHOT-*`) {
 		t.Errorf("%s reads the snapshot binary against no pattern that names the v prefix and the SNAPSHOT marker",

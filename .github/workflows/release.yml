@@ -100,8 +100,9 @@ jobs:
       # reads the release list. The comment above `jobs:` of `.github/workflows/ci.yml`
       # states the full reading, and `foundation_test.go` holds every file at one range.
       #
-      # **`go.mod` does not move.** Its `go 1.24.0` directive states a language version
-      # rather than a toolchain, and #438 established that reading.
+      # **This range does not move `go.mod`.** Its `go 1.25.0` directive states a language
+      # version rather than a toolchain, and #438 established that reading. **The directive
+      # read `go 1.24.0` until 2026-08-15**, and #725 moved it for a dependency requirement.
       #
       # **A stale range here costs more than a stale range in CI.** The cross-member review
       # of Epic 7 measured the case on 2026-08-13. `~1.26.5` reached this file, the `vuln`
