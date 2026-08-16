@@ -542,6 +542,32 @@ that the interface declares.
 
 ### Fixed
 
+- **The library now produces a JA4H value for every request of a protected HTTP/2
+  connection, and three limits stopped that connection before.** Issue #529 built the HTTP/2
+  reader, and that reader decoded the whole client stream at each packet. Two bounds held the
+  cost of the repeated decode, and each one stopped the connection rather than delaying a
+  request. **The byte bound is gone.** `ja4hMaxProtectedSearchBytes` stopped a connection
+  whose request stream passed 65536 bytes, and no cost now grows with the stream, because one
+  packet costs its own bytes.
+  `TestTheProcessorReadsAnHTTP2RequestOfAStreamAbove64Kilobytes` builds a stream of 80 kB.
+  **The request bound now delays a request, and it drops none.** `http2MaxRequests` still
+  bounds one call, because one chunk carries any number of small header blocks, and the
+  reader keeps the bytes above the bound so that the next call returns the requests they
+  carry. `TestTheProcessorReadsMoreRequestsThanTheCallBoundOfOneConnection` sends 300
+  requests and reads 300. **A second connection of one address pair and port pair now reaches
+  a decode of its own, and it read the buffer of the first before.** `protectedHTTP2Results`
+  writes the consumed range, so the four-tuple reading of `segmentCarriesNoNewRequest` runs,
+  and `TestTheProcessorReadsASecondHTTP2ConnectionOfOneFourTuple` states the case that opens
+  below the first and the case that opens above it. **`parser.TLS13StreamReader` and
+  `parser.HTTP2Reader` carry the repair**, and each one reads a byte once and holds what the
+  next packet needs. **One `HTTP2Reader` holds one HPACK decoder for the whole connection**,
+  which RFC 7541 section 2.3.2 requires, because a decoder that restarts at a packet reads
+  wrong header names. **The change lowers the memory of an HTTP/2 stream**, because the
+  reassembler held the connection up to `ja4hMaxStreamBytes` and it now holds one packet.
+  **The change moves no fingerprint value**, because the run reports 1826 matches before it
+  and 1826 after it, and no capture of the corpus reaches either bound:
+  `testdata/foxio/pcap/http2-with-cookies.pcapng` reports 20 kB in the request direction and
+  15 requests. Issue #753 holds the work, and pull request #764 carried it.
 - **The library now reads a header block terminator that mixes the two line endings, and it
   read two fixed byte groups before.** The maintainer ruled the pattern on 2026-08-13 UTC, in
   the port, and re-confirmed it on 2026-08-15 UTC at #298. `Crank-Git/ja4plus#614` and

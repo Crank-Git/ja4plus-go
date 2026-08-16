@@ -271,7 +271,7 @@ This feature set changes no screen.
 | `conformance_test.go` | Reads the register. |
 | `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
 | `foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
-| `issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, and FR-reference-38 through FR-reference-44. |
+| `issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, FR-reference-38, FR-reference-38a, and FR-reference-40 through FR-reference-44. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces

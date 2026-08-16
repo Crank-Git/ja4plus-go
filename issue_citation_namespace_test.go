@@ -14,7 +14,8 @@ package ja4plus
 // FR-reference-18a scopes that guard to `docs/specs/foxio/*.md`. This guard reads the whole
 // tree, because the issue-namespace rule binds every file.
 // `docs/specs/features/11-foxio-reference.md` numbers this file as FR-reference-32 through
-// FR-reference-34 and FR-reference-38 through FR-reference-44.
+// FR-reference-34, FR-reference-38, FR-reference-38a, and FR-reference-40 through
+// FR-reference-44. It names FR-reference-39 in no row, because #759 withdrew it.
 //
 // # This guard bounds no number, and #759 removed the bound
 //
@@ -342,6 +343,7 @@ func TestTheIssueCitationGuardHonorsTheLocalRule(t *testing.T) {
 }
 
 // FR-reference-38 — the guard reads no tracker, and it bounds no number.
+// FR-reference-38a — the guard holds no high-water mark, and this test reads its own source.
 //
 // A guard that reads a tracker fails when the network fails, and it then reports a defect
 // that the tree does not hold. #759 read that cost against the bound it removed, and it
