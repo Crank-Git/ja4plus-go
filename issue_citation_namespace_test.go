@@ -12,20 +12,48 @@ package ja4plus
 //
 // `foxio_citation_base_test.go` holds the other citation rule, the file namespace, and
 // FR-reference-18a scopes that guard to `docs/specs/foxio/*.md`. This guard reads the whole
-// tree, because the issue-namespace rule binds every file. `docs/specs/features/
-// 11-foxio-reference.md` numbers this file as FR-reference-32 through FR-reference-53.
+// tree, because the issue-namespace rule binds every file.
+// `docs/specs/features/11-foxio-reference.md` numbers this file as FR-reference-32 through
+// FR-reference-34 and FR-reference-38 through FR-reference-44.
 //
-// This file uses two words for two things, and it never rotates them. An **exclusion** names
-// text that cites no issue, so the guard reads it and reports nothing. An **exception** names
-// one live breach that this member repairs not, with the count and the reason.
+// # This guard bounds no number, and #759 removed the bound
 //
-// This guard proves one half of the rule and it declines the other half. It proves that a
-// number names no issue of this repository, where the number is above the recorded high-water
-// number. It proves nothing about the subject of a number at or below that mark. The tracker
-// holds that subject, and this guard reads no tracker.
+// The guard held a hand-maintained constant until 2026-08-16 UTC. That constant recorded the
+// highest number the tracker had allocated, and it failed a bare citation above that number.
+// **#759 deleted it, because a person raised it by hand and it went stale within the hour.**
+//
+// Three measurements decided the question, each taken on 2026-08-16 UTC.
+//
+//   - **The constant made this file the second most-edited file of the repository.** It sits
+//     in 43 of the last 300 commits of `dev`, ahead of `CHANGELOG.md`.
+//   - **The tracker allocates numbers without a gap.** It reported 760 issues and pull
+//     requests together, and 760 as the highest number. So every number at or below the
+//     highest one already resolves to something here, and a bound reports a number above it
+//     alone. **The gapless property is the measurement that matters, and the count is dated
+//     evidence for it.** The same two commands reported 763 and 763 later in the same
+//     session, after this member and two siblings each opened a pull request. **A number
+//     that moves while one member works is the cost this change removes**, and the gapless
+//     property holds at each reading.
+//   - **The bound reported no typo in its whole life.** The deleted comment recorded 39
+//     re-measurements of the mark, measured with `grep -c "re-measured the mark"`. Every
+//     citation that reddened the guard named an issue or a pull request that the tracker
+//     allocated minutes later, so each report named the author's own fresh number. **The
+//     measured precision of the bound is zero.**
+//
+// **A typo now reaches the tree, and this file accepts that cost.** A number that names the
+// wrong issue of this repository sits inside the allocated range, so no bound ever reported
+// it and no bound ever could. A reader who follows the number reaches the wrong issue, and
+// the tracker corrects the reader in one lookup. **A citation that names the wrong repository
+// is the expensive failure**, and `TestEveryPortIssueCitationCarriesARecordedForm` still
+// reports it.
+//
+// **A person sweeps the tree on demand**, and no gate runs the sweep:
+//
+//	git grep -o -E '(^|[^0-9A-Za-z_/])#[0-9]{1,4}' | grep -o '#[0-9]*' | sort -u
+//
+// #759 is the reversal path. A change that restores a bound states which typo it caught.
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -35,385 +63,16 @@ import (
 	"testing"
 )
 
-// issueCitationHighWaterMark is the highest number this repository had allocated on
-// 2026-08-16 UTC. GitHub allocates one number sequence to issues and to pull requests. So every
-// number at or below the mark names something of this repository, and no number above it does.
-//
-// The command that produced it:
-//
-//	gh api '/repos/Crank-Git/ja4plus-go/issues?state=all&per_page=1' --jq '.[0].number'
-//
-// The mark is a lower bound, and this repository only allocates upward. So a stale mark
-// loosens this guard and it never reddens it. A batch that cites a number above the mark
-// re-measures the mark with the command above, and the failure below states that repair.
-//
-// The value read 520 when #351 first measured it, and the batch documentation round
-// re-measured it with the same command on the same day. #351 named this maintenance cost, and
-// the round pays it: the round cites its own issue number, and that number sits above the mark
-// the round inherits. Round 36 of the `## Changelog` of `docs/specs/spec.md` cites `#349`, so a
-// round that cites a pull request pays the cost too.
-// The batch #516 gate re-measured the mark on 2026-08-14 and it read 530. The gate note of
-// round 49 cites `#525`, which is the issue that carries the anaphoric citation ruling, and
-// that number sits above the inherited mark of 522. **The guard reported it and CI failed on
-// it**, which is the guard doing its work rather than a defect of the round.
-// The batch #530 round re-measured the mark on 2026-08-14 and it read 543. **That batch
-// merged `dev` into its integration branch after six members had landed**, so this guard
-// reached their commits only at the merge. It reported 8 bare citations above 530: 6 name
-// #532 and 2 name #533, and every one names an issue of this repository.
-// The batch #536 round re-measured the mark on 2026-08-14 and it read 552. The round cites
-// #544, #547, #548, #549, #550, #551 and #552, and each number sits above the inherited
-// mark of 543. Every one names an issue or a pull request of this repository.
-// Issue #565 re-measured the mark on 2026-08-14 and it read 578. That issue bounds the eight
-// fingerprinter state maps, and its code comments cite #565, #577 and #193. Each of the three
-// names an issue of this repository, and #565 and #577 sit above the inherited mark of 552.
-// **The self-review of #565 filed #577, and the guard then reported the new citation.** So one
-// issue re-measured the mark twice, and 578 is the second reading.
-//
-// The #556 hotfix re-measured the mark on 2026-08-14 and it read 568. That hotfix cites
-// `#556` in a code comment and in a test, and 556 sits above the inherited mark of 552. **A
-// hotfix pays this maintenance cost exactly as a batch round does**, because the guard reads
-// the number and never the shape of the change that carries it.
-//
-// The hotfix read 560 before it filed #568, and it read 568 after. **A mark that a later
-// allocation passes stays safe**, because the mark is a lower bound and this repository only
-// allocates upward.
-//
-// #87 re-measured the mark on 2026-08-14 and it read 595. `docs/reference/index.md` cites
-// #593, which records the `pkg.go.dev` license reading, and 593 sits above the inherited
-// mark of 568. **A member of a batch pays this maintenance cost exactly as a round does**,
-// because the guard reads the number and never the shape of the change that carries it.
-//
-// The Epic 9 round re-measured the mark on 2026-08-14 and it read 581. That round cites
-// #573, #577 and #581, and each number sits above the inherited mark of 543.
-//
-// The merge of `dev` into `epic/71-database-lookup` met two marks, 568 and 581, and it kept
-// 581. The mark is a lower bound, so the higher reading covers every citation the lower one
-// covers.
-//
-// The batch #555 round re-measured the mark on 2026-08-14 and it read 583. The round cites
-// #555, #557, #559, #560, #561, #563 and #575, and each number sits above the inherited
-// mark of 552. Every one names an issue or a pull request of this repository.
-//
-// **The merge of `dev` into batch #555 met two marks, and it keeps the higher one.** The
-// hotfix read 568 and the round read 583. **A mark is a lower bound, so the higher reading
-// covers the lower one** and no citation of either change falls outside it.
-//
-// **The second merge of `dev` into `epic/71-database-lookup` met the marks 581 and 583, and
-// it keeps 583.** Batch #555 landed on `dev` after the first merge, and it carried the
-// higher reading. The mark stays a lower bound, so 583 covers every citation that 581
-// covers.
-//
-// **The merge of `dev` into batch #432 met a third reading, and it keeps the highest.** #565
-// read 578, the hotfix read 568 and the round read 583. **Three readings of one lower bound
-// reconcile to the largest**, because this repository allocates upward and never reuses a
-// number.
-//
-// **Five changes of one day each re-measured this mark, and every reading reconciles to
-// 583.** A reader who counts the paragraphs above reads the maintenance cost that #351
-// named, and never a disagreement.
-//
-// The Epic 6 round re-measured the mark on 2026-08-14 and it read 602. The round cites #591,
-// #596, #600 and #602, and each number sits above the inherited mark of 568. Every one names
-// an issue or a pull request of this repository. **#602 is the round's own issue**, which is
-// the maintenance cost that #351 named and that every round pays.
-//
-// **The merge of `dev` into epic #43 met the marks 583 and 602, and it keeps 602.** The
-// Epic 6 round allocated #602 for itself, so its reading is the later one. **The mark is a
-// lower bound, so 602 covers every citation that 583 covers.**
-//
-// **The Epic 14 round merged `dev` into `epic/83-documentation-site` and it met two marks,
-// 595 and 583.** The round re-measured the mark on 2026-08-14 and it read 604. The round
-// cites #603, which is the issue that carries the merge and the refresh, and 603 sits above
-// both inherited marks. **A mark is a lower bound, so 604 covers every citation that 595
-// covers and every citation that 583 covers.**
-//
-// **The second merge of `dev` into `epic/83-documentation-site` met the marks 604 and 602,
-// and it keeps 604.** Epic 6 landed on `dev` after the first merge, and it carried the
-// reading of 602. **A mark is a lower bound, so 604 covers every citation that 602 covers.**
-//
-// #77 re-measured the mark on 2026-08-14 and it read 564. `internal/capture/pcapgo_linux.go`
-// cites #564 at three places. #564 names the issue that carries the capture filter question,
-// and that number sits above the inherited mark of 552. **A member pays this cost too**, and
-// no round of the batch precedes a member that files an issue.
-//
-// **The sentence above named a TODO comment until the Epic 13 round repaired it.**
-// `grep -n "TODO" internal/capture/pcapgo_linux.go` reports nothing on 2026-08-14. The
-// three #564 citations sit at `:42`, `:112` and `:120`: one ordinary comment inside `open`,
-// and two lines of the doc comment of `compileFilter`. `.claude/rules/ste.md`
-// `### A code comment` gives `TODO(#N)` a defined form, so a reader who grepped that marker
-// found no target.
-//
-// #80 re-measured the mark on 2026-08-14 and it read 591. The doc comment of `newMonitor`
-// in `cmd/ja4plus/watch.go` cites #577, which names the issue that carries the age-pass
-// clock question, and that number sits above the inherited mark of 564. **Two members of
-// one batch each pay this cost**, because #77 landed before #577 existed.
-//
-// **The merge of `dev` into `epic/76-live-capture` met the marks 604 and 591, and it keeps
-// 604.** Epic 14 allocated #603 for its own round, and that reading is the later one. **A
-// mark is a lower bound, so 604 covers every citation that 591 covers**, and it covers the
-// #564 citation of #77 and the #577 citation of #80.
-//
-// The Epic 13 round re-measured the mark on 2026-08-14 and it read 614. The round cites
-// #609, #610, #611, #612, #613 and #614, and each number sits above the inherited mark of
-// 604. Every one names an issue of this repository. **#614 is the round's own issue**, and
-// #609 through #613 are the five findings of the Epic 13 cross-member review that earned a
-// tracker issue. **A round that runs after its review allocates six numbers rather than
-// one**, which is the maintenance cost that #351 named.
-//
-// The batch #617 round re-measured the mark on 2026-08-14 and it read 622. That round cites
-// #594, #596, #617 and #619 through #622, and each number sits above the inherited mark of
-// 614. Every one names an issue or a pull request of this repository.
-//
-// **This round names four numbers that both repositories allocated, and the two sets differ.**
-// This repository holds #619 through #622, and the port holds `Crank-Git/ja4plus#619` through
-// `Crank-Git/ja4plus#622`. `Crank-Git/ja4plus#619` and this repository's #619 each concern the
-// JA4X empty list, and `Crank-Git/ja4plus#620` and this repository's #620 concern two
-// different questions. **So a bare number in that range is ambiguous**, and
-// `.claude/rules/rulings.md` `## A citation names its repository` already bars it. This guard
-// enforces the bare form for this repository, and
-// `TestEveryPortIssueCitationCarriesARecordedForm` reads the qualified form.
-// #96 re-measured the mark on 2026-08-14 and it read 628.
-// `prerelease_install_test.go` cites #628, which names the issue that carries the version
-// of a program that `go install` builds. That number sits above the inherited mark of 622.
-// **A member pays this cost**, and no round of Epic 16 precedes a member that files an
-// issue. **Three members of Epic 16 run beside #96**, so a later member re-measures the
-// mark again and the union of the four is one number.
-//
-// **The project manager re-measured the mark on 2026-08-14 and it read 635.** It resolved
-// the three registry conflicts of Epic 16 by hand, and its own resolution wrote a bare
-// `#633` into `prerelease_registry_test.go`. **#633 names the issue that carries the
-// FR-prerelease-26 question**, and the project manager filed it after #96 measured 628.
-//
-// **The guard reported that citation and the ordinary gate turned red**, which is the guard
-// doing its work rather than a defect of any member. **#96 predicted this exact breach**,
-// three paragraphs above, and no member closed it because the number arrived after every
-// member had measured.
-//
-// **A project manager pays this cost too, and not a member alone.** A conflict resolution
-// writes prose, and prose cites an issue. **So the resolver re-measures the mark**, and the
-// Epic 16 cross-member review is what found that it had not.
-//
-// **The Epic 16 round re-measured the mark on 2026-08-14 and it read 637.** The round cites
-// #637, which is its own issue, and 637 sits above the inherited mark of 635. **A round pays
-// this cost after the project manager pays it.** The round allocates its own number after the
-// resolution that raised the mark.
-//
-// **The round read 637 before it opened its pull request, and it read 639 after.** The pull
-// request is #639, and the constant holds the second reading. **A mark that a later
-// allocation passes stays safe**, because the mark is a lower bound and this repository only
-// allocates upward. The #556 hotfix recorded the same pair of readings on the same day.
-//
-// **No tracked file cites a number above 637**, so either reading leaves this guard green.
-//
-// #92 re-measured the mark on 2026-08-14 and it read 635. The highest number this repository
-// had allocated is #635, which is the pull request of #93. #92 cites #634, which is the
-// issue that carries the FR-mutation-11 amendment of the maintainer's ruling, and that
-// number sits above the inherited mark of 622. **#634 names an issue of this repository**,
-// and its title is `Amend FR-mutation-11 to settle by fingerprint risk and count the
-// remainder`.
-// #638 re-measured the mark on 2026-08-14 and it read 639. #638 is the Epic 15 documentation
-// round, and it cites its own number in round 59 of the `## Changelog` of
-// `docs/specs/spec.md`. That number sits above the inherited mark of 635, which is the case
-// the paragraph above names. The highest number this repository had allocated is #639, which
-// is the pull request of the Epic 16 documentation round.
-//
-// **The merge of `dev` into `epic/94-prerelease-validation` met two readings, and both read
-// 639.** Epic 15 and Epic 16 each ran a round on 2026-08-14, and each round re-measured the
-// mark. **Two rounds that measure one tracker on one day reach one number**, so the merge
-// takes the union of the two histories and one constant.
-//
-// #642 re-measured the mark on 2026-08-15 UTC and it read 656. **#642 is the first issue
-// of batch #645 that cites its own number above the inherited mark of 639**, and it cites
-// that number in `prerelease_gate_test.go`, in `prerelease_registry_test.go` and in
-// `docs/specs/features/16-pre-release-validation.md`. Batch #645 opened its members and
-// their pull requests after the inherited reading, so the tracker moved by 17 between the
-// two. **A member pays this maintenance cost exactly as a round does**, because the guard
-// reads the number and never the shape of the change that carries it.
-// #667 re-measured the mark on 2026-08-15 UTC, and it read 668. **#667 is the documentation
-// round of batch #644, and the merge of `origin/dev` into that batch met two readings.** The
-// batch branch carried 639 and `dev` carried 663, and git merged the constant without a
-// conflict because one side alone had moved it. **A resolver of that constant re-measures it
-// rather than take a side**, because the mark is a lower bound and a taken side records a
-// number that nobody measured. The round cites #667, #644 and the five members of the batch,
-// and every one of those numbers sits at or below the mark.
-//
-// **The round read 667 before it wrote the requirements of this batch, and it read 668
-// afterwards.** Two readings minutes apart differ, because another repository user allocates
-// a number at any moment. The constant holds the second reading.
-// The project manager re-measured the mark on 2026-08-15 UTC while it merged `origin/dev`
-// into `batch/656-epic-5b-readings`, and it read 675. **The batch carried 666 and `dev`
-// carried 668**, and neither side is the answer. **A resolver re-measures rather than take a
-// side**, and #650 wrote that rule into this tree.
-// #676 re-measured the mark twice on 2026-08-15 UTC, and it read 676 and then 677. **#676
-// is the documentation round of batch #656, and its `## Changelog` row cites both its own
-// issue number and pull request #677.** The inherited mark of 675 sits below each of them,
-// so the round pays the maintenance cost that #351 named. **A round pays it at every batch.**
-//
-// **The two readings differ because the round opened its own pull request between them.**
-// The tracker numbers an issue and a pull request from one sequence, so a round that cites
-// its own pull request must measure the mark after it opens one. **The constant holds the
-// second reading**, and the mark is a lower bound.
-// The project manager re-measured the mark on 2026-08-15 UTC while it merged `origin/dev`
-// into `batch/668-route-and-declines` a SECOND time, after batch #656 landed, and it read
-// 678. **The batch carried 675 and `dev` carried 677.** **A resolver re-measures rather than
-// take a side.**
-// The documentation round of batch #668 re-measured the mark on 2026-08-15 UTC and it read
-// 679. **That round cites no number above 678**, and it opens no pull request of its own,
-// because the project manager opens the batch pull request. **So the round re-measures to
-// keep the mark accurate rather than to repair a failure.**
-// #298 and #675 EACH re-measured the mark on 2026-08-15 UTC, and each one read 686. The two
-// members of batch #684 met in a merge conflict here, and this comment holds both readings
-// rather than one.
-//
-// **#298 cites #685**, which is the issue it filed for the JA4L half of its own finding:
-// `holdsACompleteHTTPRequest` in `ja4l.go` holds a duplicate of the terminator reading that
-// #298 replaced, and it gates a JA4L measurement point the line-ending ruling does not reach.
-//
-// **#675 cites #686**, which holds the point B reference split it found. Wireshark and the
-// FoxIO Python disagree on `tls3.pcapng/25`, so #675 ruled nothing and filed the split.
-//
-// **The guard reddened for each member in turn, and it behaves as it is designed to.** A
-// member pays this maintenance cost exactly as a documentation round does.
-//
-// **This comment names no number above 686 on purpose.** Each member opened its pull request
-// after its own reading, so the tracker allocated numbers above the mark. A citation of a
-// pull-request number would redden the guard and cost a further reading. **The mark is a
-// LOWER BOUND, and 686 covers every citation the tree carries.**
-//
-// **The resolver re-measured the mark at the merge**, which is the rule session 16 earned: a
-// conflict resolution writes prose, prose cites an issue, so the resolver re-measures.
-// #682 re-measured the mark on 2026-08-15 UTC after it merged `batch/684` into its branch,
-// and it read 692. **#682 cites #692**, which held the one row of the JA4L cluster that
-// reached no ruling: `tls3.pcapng/153/JA4L.1`. The maintainer read #682 and declined a
-// register entry for that row on 2026-08-15 UTC. **#692 then read the row on the same day**,
-// and the register carries one entry for it under ruling #449 now.
-//
-// **#682 is the third member of batch #684 to pay this cost**, after #298 and #675. The
-// mark read 679 when #682 branched, and the two earlier members moved it to 686 while #682
-// ran. **A member that files an issue moves the mark past its own citation every time.**
-//
-// **692 is the number of the issue itself, and #682 opened its pull request before it.** So
-// this reading covers every citation the tree carries, and it names no pull-request number.
-//
-// **The documentation round of batch #684 re-measured the mark on 2026-08-15 UTC and it read
-// 696.** The round cites #298, #675, #682, #683, #685, #686 and #692, and the inherited mark
-// of 692 already covered every one of them. **So the guard was green before this
-// re-measurement**, and the round pays the measurement to keep the mark tight rather than to
-// repair a failure. **The opening sentence of this comment read 2026-08-14 until this
-// round**, and each of the four readings above it was measured on 2026-08-15 UTC.
-//
-// **#701 re-measured the mark on 2026-08-15 UTC and it read 702.** The inherited mark of 696
-// predates issue #701, so the two `CHANGELOG.md` citations of #701 reddened the guard. #701
-// writes 91 register entries under ruling #529, ruling #492 and ruling #164, and the
-// changelog preamble names the issue that wrote them. **The mark is a lower bound**, and 702
-// covers every citation the tree carries.
-//
-// **The documentation round of batch #701 re-measured the mark again on 2026-08-15 UTC and
-// it read 705.** A pull request and an issue share one number space on GitHub, so the mark
-// reads the higher of the two. The measurement is
-// `gh issue list --state all --limit 1` against `gh pr list --state all --limit 1`, which
-// reported 702 and 705. Round 65 of the `## Changelog` of `docs/specs/spec.md` cites pull
-// request #703 and pull request #704 by number, and the mark of 702 reddened this guard on
-// both. **The mark is a lower bound**, and 705 covers every citation the tree carries.
-//
-// **The documentation round of batch #708 re-measured the mark on 2026-08-15 UTC and it read
-// 711.** The same two commands reported issue 708 and pull request 711. **The round writes
-// all 5 citations that the mark of 705 reddened, and every one names #708**, which is the
-// batch this round closes. They sit in `docs/specs/spec.html`, in `docs/specs/spec.md`
-// twice, in `internal/parser/http.go` and in `ja4l_mixed_line_ending_test.go`. **The mark is
-// a lower bound**, and 711 covers every citation the tree carries.
-//
-// **#721 re-measured the mark on 2026-08-15 UTC and it read 730.** The same two commands
-// reported issue 728 and pull request 730. **#721 writes 6 citations that the mark of 711
-// reddened, and all 6 sit in `docs/audit/gopacket-tcp-option-panic.md`.** Five name #721,
-// which is the Dependabot pull request this member merges, and one names #730, which is the
-// pull request of this member.
-//
-// **The member measured the mark twice, and the first reading of 728 went stale before the
-// commit.** The self-review of #721 added the citation of #730, and creating that pull
-// request allocated the number that the citation names. **A member that cites its own pull
-// request must measure the mark after it opens that pull request.**
-//
-// **#727 re-measured the mark on 2026-08-15 UTC and it read 730.** The same two commands
-// reported issue 728 and pull request 730. #727 cites its own number in
-// `cmd/ja4plus/main.go` and in `cmd/ja4plus/capture_format_dispatch_test.go`, and the mark of
-// 711 reddened the guard on all 3 citations.
-//
-// **#721 and #727 each measured 730 on the same day, in two different batches.** The two
-// batches ran at the same time. **The two readings agree, and neither one copied the other.**
-//
-// **#439 re-measured the mark on 2026-08-15 UTC and it read 733.** The same two commands
-// reported issue 728 and pull request 733. **#727 and #439 are two members of batch #727,
-// and each one re-measured the mark on the same day.** The two readings differ because the
-// forge allocated 3 more numbers between them, and both readings are correct.
-//
-// **The mark of 711 reddened this guard on the 2 citations of #727 that #439 wrote**, in
-// `docs/specs/spec.md` and in `docs/specs/spec.html`. #727 is the batch that carries #439.
-// **The mark of 730 that #727 measured covers those 2 citations as well.** #439 raises the
-// mark for a second reason. Pull request 732 is the pull request of #439, and it stands
-// above 730.
-//
-// **The documentation round of batch #727 re-measured the mark on 2026-08-15 UTC, and it
-// read 737.** The same two commands reported issue 736 and pull request 737. **The round
-// raises the mark because its `## Changelog` row cites #735**, and 735 stands above 733.
-// #735 is the pull request of #724, which is the third member of this batch.
-//
-// **The merge of batch #721 into batch #727 keeps 737, which is the higher of the two
-// values.** Batch #721 wrote 730 and batch #727 wrote 737. **The mark is a lower bound**, so
-// the higher value covers both trees. **The highest bare citation of the merged tree is
-// #735**, measured on 2026-08-15 UTC.
-//
-// **Four re-measurements across two batches is the expected cost of this guard.** A member
-// that cites its own batch allocates a number while it works. A later member re-measures
-// again rather than transcribing 737.
-//
-// **The documentation round of batch #742 re-measured the mark on 2026-08-16 UTC, and it
-// read 750.** `gh issue list --state all --limit 1` reported issue 749, and
-// `gh pr list --state all --limit 1` reported pull request 750. **An issue and a pull
-// request share one number space**, so the mark takes the higher of the two readings.
-//
-// **That round measured the mark three times, and the number space moved twice.**
-//
-//   - The first reading was issue 747 and pull request 747.
-//   - The second reading was issue 749 and pull request 747, because the project manager
-//     filed #748 and #749 while the round ran.
-//   - The third reading was issue 749 and pull request 750, because the round opened its
-//     own pull request between the second reading and the third.
-//
-// **#748 carries the R10 citation item of `docs/specs/foxio/JA4T.md`, and #749 carries the
-// repository-wide citation sweep.** The `## Changelog` row of that round cites both
-// numbers. **Pull request 750 is the pull request of that round**, and it repeats the case
-// this comment already records: a member that opens a pull request must measure the mark
-// after it opens one.
-//
-// **The mark is a lower bound, and it goes stale within the hour.** Re-measure it rather
-// than transcribing 750.
-//
-// **The epic #441 documentation round raised the mark from 737 to 754 on 2026-08-16 UTC.**
-// The epic allocated #751, #752, #753 and #754. **The round read the two number spaces
-// separately, because one command reads one of them and the mark is the higher reading.**
-//
-//	gh issue list --repo Crank-Git/ja4plus-go --state all --limit 1   # 754
-//	gh pr list --repo Crank-Git/ja4plus-go --state all --limit 1      # 751
-//
-// **The issue reading is the higher of the two, so the mark is 754.** The `gh api` command
-// above returns the same number, because the GitHub issues endpoint returns a pull request
-// too. The round records both readings, so a later reader sees which space held the mark.
-//
-// **The round raised the mark because its own work cites #753 and #754, and it measured
-// that.** At 737 the guard fails on four lines: `docs/specs/spec.md` twice for #754, and
-// `internal/parser/http2.go` and `ja4h.go` for #753. **So a round that writes those
-// citations and leaves the mark produces a red guard**, and the raise is not optional.
-//
-// **`origin/dev` holds 750 at the same moment, so the merge of this epic finds two changed
-// sides.** Resolve it by keeping 754, which is the higher of the two. **The mark is a lower
-// bound**, so the higher value covers both trees. The batch #721 merge above records the
-// same resolution.
-const issueCitationHighWaterMark = 754
+// issueCitationHash returns the citation token for the number.
+//
+// This file is in scope of its own guard, so a literal malformed fixture below would report
+// itself. Each malformed fixture composes the token instead, and it renders the bytes the
+// fixture describes.
+func issueCitationHash(number int) string {
+	return "#" + strconv.Itoa(number)
+}
 
-// issueCitationExtension names the file extension of a file this guard reads. Round 36 of
-// the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
-// so the guard and that measurement read one tree.
+// issueCitationExtension names the file extension of a file this guard reads.
 var issueCitationExtension = map[string]bool{
 	".go":   true,
 	".md":   true,
@@ -438,9 +97,7 @@ var issueCitationExtension = map[string]bool{
 // and `.gitignore:48` name them. **`make docs` became a real target on 2026-08-14**, so a
 // developer who builds the site and then runs `go test` gave this guard a second copy of
 // every page. It then reported one defect twice, and it named a generated HTML file that no
-// repair can reach. #87 measured it: a run after `make docs` reported
-// `site/reference/index.html:1511` and `site/search/search_index.json:1` beside the page
-// that holds the citation.
+// repair can reach. #87 measured it.
 var issueCitationSkipDirectory = map[string]bool{
 	".git":              true,
 	"bin":               true,
@@ -463,72 +120,11 @@ var issueCitationExcludedFile = map[string]string{
 		"bars an edit of the copy.",
 }
 
-// issueCitationRulingColumn names the header cell that marks a register table. The preamble
-// of the register in `docs/specs/spec.md` states that this column names the port issue, so
-// the guard blanks the final cell of every row of a table this cell heads.
-const issueCitationRulingColumn = "Ruling"
-
-// issueCitationException records one bare citation that names the port and that this member
-// repairs not, with the count and the reason.
-//
-// Each entry names one file, one number and the count of occurrences on that file. A count
-// keeps the entry narrow, exactly as `foxioCitationException` does: a second breach of the
-// same number on the same file fails the test rather than hiding under the entry.
-// The table is empty on 2026-08-14. #351 recorded one entry, for the one bare number of round
-// 19 of the `## Changelog` of `docs/specs/spec.md`. Round 49 of that changelog writes
-// `Crank-Git/ja4plus#594` in place of that number, so the breach no longer reproduces and the
-// batch documentation round removed the entry.
-var issueCitationException = []struct {
-	file   string
-	number int
-	count  int
-	reason string
-}{}
-
-// issueCitationPortForm matches a citation that names the port.
-//
-// The tree uses five shapes, and round 36 of the `## Changelog` of `docs/specs/spec.md`
-// measured four of them. The fifth one is a list. A marker that names the port carries a
-// following list of numbers, and each number of that list names the port too.
-//
-// The list reads three separators. A comma joins the items, and `and` or `or` joins the last
-// two. A separator this pattern does not name leaves the number bare, and the guard then
-// reports a citation that the sentence resolves.
-var issueCitationPortForm = regexp.MustCompile(
-	"(?i)(?:Crank-Git/ja4plus(?:/(?:issues|pull)/|#|`?\\s+(?:issues?\\s+)?#)" +
-		"|\\bja4plus#" +
-		"|\\b(?:the\\s+)?port(?:'s)?\\s+issues?\\s+#" +
-		")([0-9]+)((?:\\s*(?:,|and|or)\\s*#[0-9]+)*)")
-
-// issueCitationListItem matches one number of the list that follows a port marker.
-var issueCitationListItem = regexp.MustCompile(`#[0-9]+`)
-
 // issueCitationMalformedPortForm matches a shape that names the port beside a number, and
 // that no recorded form holds. A reader of one of these cannot tell which repository the
 // number names, because the shape names the port and the number stands bare.
 var issueCitationMalformedPortForm = regexp.MustCompile(
 	`(?i)(?:\bja4plus\s+#|\bja4plus/#|\bthe\s+port's\s+#|\bport\s+#)([0-9]+)`)
-
-// issueCitationDigits matches the shape of a citation. A citation of this repository carries
-// three digits today, and the guard reads at most four.
-var issueCitationDigits = regexp.MustCompile(`#[0-9]{1,4}`)
-
-// issueCitationHash returns the citation token for the number.
-//
-// This file is in scope of its own guard, so a literal token above the mark would report
-// itself. Every fixture and every quotation below composes the token instead, and each one
-// renders the same bytes the tree holds.
-func issueCitationHash(number int) string {
-	return "#" + strconv.Itoa(number)
-}
-
-// issueCitation is one bare number of one file.
-type issueCitation struct {
-	file   string
-	line   int
-	number int
-	text   string
-}
 
 // issueCitationFile returns every file this guard reads, as a slash-separated path from the
 // repository root.
@@ -571,289 +167,16 @@ func issueCitationFile(t *testing.T) []string {
 	return found
 }
 
-// issueCitationBlankRulingColumn returns the lines of the file with the final cell of every
-// register row replaced by an empty cell.
-//
-// The preamble of the register in `docs/specs/spec.md` states that the `Ruling` column names
-// the port issue. `docs/specs/spec.html` renders the same table, so one rule reads both
-// formats. The guard finds the header cell, and it blanks the final cell of each row until the
-// table ends.
-//
-// The function blanks a cell rather than a line, for two reasons. A reported line number then
-// names the line of the file. A citation in another cell of the same row then still reaches the
-// guard.
-func issueCitationBlankRulingColumn(lines []string) []string {
-	blanked := make([]string, len(lines))
-	copy(blanked, lines)
-
-	markdownTable := false
-	htmlTable := false
-
-	for index, line := range lines {
-		trimmed := strings.TrimSpace(line)
-
-		switch {
-		case strings.HasPrefix(trimmed, "|"):
-			if issueCitationFinalMarkdownCell(trimmed) == issueCitationRulingColumn {
-				markdownTable = true
-
-				continue
-			}
-
-			if markdownTable {
-				blanked[index] = issueCitationCutFinalMarkdownCell(line)
-			}
-		case strings.Contains(trimmed, "<th>"+issueCitationRulingColumn+"</th></tr>"):
-			htmlTable = true
-		case strings.Contains(trimmed, "</table>"):
-			htmlTable = false
-		case htmlTable && strings.Contains(trimmed, "<tr>"):
-			blanked[index] = issueCitationCutFinalHTMLCell(line)
-		default:
-			markdownTable = false
-		}
-	}
-
-	return blanked
-}
-
-// issueCitationWrappedRulingRow returns the line number of every row of a rendered register
-// table that carries a cell on a line of its own.
-//
-// The rule above reads one row on one line. A row that wraps puts its `Ruling` cell on a line
-// that carries no `<tr>`, and the rule then blanks nothing there. That failure is silent, so
-// FR-reference-53 bars a wrapped row rather than a permissive rule that blanks every cell of
-// such a line.
-func issueCitationWrappedRulingRow(lines []string) []int {
-	var wrapped []int
-
-	table := false
-
-	for index, line := range lines {
-		trimmed := strings.TrimSpace(line)
-
-		switch {
-		case strings.Contains(trimmed, "<th>"+issueCitationRulingColumn+"</th></tr>"):
-			table = true
-		case strings.Contains(trimmed, "</table>"):
-			table = false
-		case table && strings.Contains(trimmed, "<td>") && !strings.Contains(trimmed, "<tr>"):
-			wrapped = append(wrapped, index+1)
-		}
-	}
-
-	return wrapped
-}
-
-// issueCitationFinalCell returns the cells of a markdown table row and the index of the final
-// cell.
-//
-// Both helpers below read this one split, so a row that carries no trailing separator reaches
-// the same cell as a row that carries one. Two helpers that split a row two ways disagree on a
-// malformed row, and the disagreement blanks the wrong cell.
-func issueCitationFinalCell(row string) ([]string, int) {
-	cell := strings.Split(row, "|")
-
-	final := len(cell) - 1
-	if final > 0 && strings.TrimSpace(cell[final]) == "" {
-		final--
-	}
-
-	return cell, final
-}
-
-// issueCitationFinalMarkdownCell returns the final cell of a markdown table row, trimmed.
-func issueCitationFinalMarkdownCell(row string) string {
-	cell, final := issueCitationFinalCell(row)
-	if final < 0 {
-		return ""
-	}
-
-	return strings.TrimSpace(cell[final])
-}
-
-// issueCitationCutFinalMarkdownCell returns the row with the final cell emptied.
-func issueCitationCutFinalMarkdownCell(row string) string {
-	cell, final := issueCitationFinalCell(row)
-	if final < 1 {
-		return row
-	}
-
-	cell[final] = ""
-
-	return strings.Join(cell, "|")
-}
-
-// issueCitationCutFinalHTMLCell returns the row with the final `<td>` element emptied.
-func issueCitationCutFinalHTMLCell(row string) string {
-	open := strings.LastIndex(row, "<td>")
-	if open < 0 {
-		return row
-	}
-
-	end := strings.LastIndex(row, "</td>")
-	if end < open {
-		return row
-	}
-
-	return row[:open+len("<td>")] + row[end:]
-}
-
-// issueCitationBare returns every bare number of one line.
-//
-// A bare number is a `#` that carries digits, and that no recorded port form covers. Three
-// shapes carry the `#` character and cite nothing, and the function declines each one.
-//
-//   - A token of five or more digits. A CSS color literal such as `#101216` is one, and no
-//     number of this repository reaches five digits.
-//   - A token that a word character or a `/` precedes. A URL fragment such as
-//     `spec.html#127` is one.
-//   - A token that a letter follows. A CSS color literal such as `#0b0d11` is one.
-func issueCitationBare(line string) []int {
-	stripped := issueCitationPortForm.ReplaceAllStringFunc(line, func(match string) string {
-		return issueCitationListItem.ReplaceAllString(match, "PORTREF")
-	})
-
-	var found []int
-
-	for _, span := range issueCitationDigits.FindAllStringIndex(stripped, -1) {
-		start, end := span[0], span[1]
-
-		if start > 0 && issueCitationWordByte(stripped[start-1]) {
-			continue
-		}
-
-		if start > 0 && stripped[start-1] == '/' {
-			continue
-		}
-
-		if end < len(stripped) && issueCitationWordByte(stripped[end]) {
-			continue
-		}
-
-		number, err := strconv.Atoi(stripped[start+1 : end])
-		if err != nil {
-			continue
-		}
-
-		found = append(found, number)
-	}
-
-	return found
-}
-
-// issueCitationWordByte reports whether the byte is a letter, a digit or an underscore.
-func issueCitationWordByte(b byte) bool {
-	switch {
-	case b >= '0' && b <= '9':
-		return true
-	case b >= 'a' && b <= 'z':
-		return true
-	case b >= 'A' && b <= 'Z':
-		return true
-	case b == '_':
-		return true
-	default:
-		return false
-	}
-}
-
-// issueCitationRead returns every bare citation of every file this guard reads.
-func issueCitationRead(t *testing.T) []issueCitation {
-	t.Helper()
-
-	var found []issueCitation
-
-	for _, file := range issueCitationFile(t) {
-		if _, excluded := issueCitationExcludedFile[file]; excluded {
-			continue
-		}
-
-		content, err := os.ReadFile(file)
-		if err != nil {
-			t.Fatalf("%s does not open: %v", file, err)
-		}
-
-		lines := issueCitationBlankRulingColumn(strings.Split(string(content), "\n"))
-
-		for index, line := range lines {
-			for _, number := range issueCitationBare(line) {
-				found = append(found, issueCitation{
-					file:   file,
-					line:   index + 1,
-					number: number,
-					text:   strings.TrimSpace(line),
-				})
-			}
-		}
-	}
-
-	return found
-}
-
-// issueCitationExceptionKey names one entry of the exception table.
-type issueCitationExceptionKey struct {
-	file   string
-	number int
-}
-
-// issueCitationExcepted returns the count the exception table records for the citation.
-func issueCitationExcepted(citation issueCitation) (int, bool) {
-	for _, entry := range issueCitationException {
-		if entry.file == citation.file && entry.number == citation.number {
-			return entry.count, true
-		}
-	}
-
-	return 0, false
-}
-
-// FR-reference-32, FR-reference-35 and FR-reference-39 — a bare `#N` names an issue of this
-// repository, and a bare number above the recorded high-water number names none.
-//
-// The check is one-directional, and that is the whole reason it holds. This repository
-// allocates a number to an issue and to a pull request from one sequence, so every number at
-// or below the mark resolves to something here and the guard proves nothing about it. A
-// number above the mark resolves to nothing here, so the citation names another repository.
-func TestNoBareIssueCitationNamesANumberAboveTheHighWaterMark(t *testing.T) {
-	seen := map[issueCitationExceptionKey]int{}
-
-	for _, citation := range issueCitationRead(t) {
-		if citation.number <= issueCitationHighWaterMark {
-			continue
-		}
-
-		if _, excepted := issueCitationExcepted(citation); excepted {
-			seen[issueCitationExceptionKey{file: citation.file, number: citation.number}]++
-
-			continue
-		}
-
-		t.Errorf("%s:%d writes a bare #%d, and this repository had allocated %d numbers on "+
-			"2026-08-15 UTC.\n\tThe line reads: %s\n\tEither the citation names the port, and "+
-			"the repair writes `Crank-Git/ja4plus#%d`, or this repository has allocated "+
-			"more numbers since, and the repair re-measures %s.",
-			citation.file, citation.line, citation.number, issueCitationHighWaterMark,
-			citation.text, citation.number, "issueCitationHighWaterMark")
-	}
-
-	for _, entry := range issueCitationException {
-		key := issueCitationExceptionKey{file: entry.file, number: entry.number}
-
-		if seen[key] != entry.count {
-			t.Errorf("the exception table records %d bare #%d of %s, and the file holds "+
-				"%d.\n\tThe recorded reason is: %s",
-				entry.count, entry.number, entry.file, seen[key], entry.reason)
-		}
-	}
-}
-
 // FR-reference-33 and FR-reference-34 — a citation of an issue of the port carries a
 // recorded form.
 //
 // A shape that names the port beside a bare number tells a reader two things at once. The
 // recorded forms carry the repository into the citation itself, so a reader who reads the
 // number alone still reaches the right repository.
+//
+// **This test is the whole guard now**, because #759 removed the bound that the deleted
+// constant held. It reports the failure that costs a reader the most: a number that names
+// the wrong repository.
 func TestEveryPortIssueCitationCarriesARecordedForm(t *testing.T) {
 	for _, file := range issueCitationFile(t) {
 		if _, excluded := issueCitationExcludedFile[file]; excluded {
@@ -879,42 +202,88 @@ func TestEveryPortIssueCitationCarriesARecordedForm(t *testing.T) {
 	}
 }
 
-// FR-reference-50, FR-reference-51 and FR-reference-52 — an exception names one file, one
-// number, one count and one reason, and an exception that no longer reproduces fails.
+// FR-reference-34 — the detector reads each recorded shape, and it reports each malformed
+// shape.
 //
-// A stale exception hides the next breach of the same file, exactly as a file-wide exclusion
-// does.
-func TestTheIssueCitationExceptionTableHoldsNoBreachThatNoLongerReproduces(t *testing.T) {
-	reproduced := map[issueCitationExceptionKey]int{}
-
-	for _, citation := range issueCitationRead(t) {
-		if citation.number <= issueCitationHighWaterMark {
-			continue
-		}
-
-		reproduced[issueCitationExceptionKey{
-			file:   citation.file,
-			number: citation.number,
-		}]++
+// The tree-wide test above reports nothing on a clean tree, so it proves nothing about the
+// detector on its own. These fixtures separate the two sets, and they redden when a later
+// edit widens or narrows the pattern.
+func TestTheMalformedPortFormDetectorReadsEachRecordedShape(t *testing.T) {
+	line := []struct {
+		name   string
+		text   string
+		report bool
+	}{
+		{
+			name:   "the table-cell port form carries the repository",
+			text:   "The port half is `Crank-Git/ja4plus#215`, and it is closed.",
+			report: false,
+		},
+		{
+			name:   "the sentence port form carries the repository",
+			text:   "The port's issue #533 settled the vocabulary.",
+			report: false,
+		},
+		{
+			name:   "the short sentence port form carries the repository",
+			text:   "Port issue #594 records that.",
+			report: false,
+		},
+		{
+			name:   "a port issue URL carries the repository",
+			text:   "See <https://github.com/Crank-Git/ja4plus/issues/598> for the port half.",
+			report: false,
+		},
+		{
+			// The maintainer ruled this form on 2026-08-14, and #525 carries the ruling into
+			// `.claude/rules/rulings.md`. The possessive takes the port as its antecedent in
+			// the same sentence, so the reader reaches the right repository.
+			name:   "the anaphoric possessive form carries the repository",
+			text:   "The port decided it as D4 of its issue #231 on 2026-08-08.",
+			report: false,
+		},
+		{
+			name:   "a bare number of this repository reports nothing",
+			text:   "Issue #127 holds the question.",
+			report: false,
+		},
+		{
+			name:   "a bare number above the tracker reports nothing now",
+			text:   "Issue #9999 holds the question.",
+			report: false,
+		},
+		{
+			name:   "the bare port shape reports",
+			text:   "The port half is port " + issueCitationHash(215) + ", and it is closed.",
+			report: true,
+		},
+		{
+			name:   "the bare repository-name shape reports",
+			text:   "The port half is ja4plus " + issueCitationHash(215) + ", and it is closed.",
+			report: true,
+		},
+		{
+			name:   "the slashed repository-name shape reports",
+			text:   "The port half is ja4plus/" + issueCitationHash(215) + ", and it is closed.",
+			report: true,
+		},
+		{
+			name: "the bare possessive shape reports",
+			text: "The port half is the port's " + issueCitationHash(215) +
+				", and it is closed.",
+			report: true,
+		},
 	}
 
-	for _, entry := range issueCitationException {
-		if entry.reason == "" {
-			t.Errorf("the exception for #%d of %s states no reason", entry.number, entry.file)
-		}
+	for _, one := range line {
+		t.Run(one.name, func(t *testing.T) {
+			got := issueCitationMalformedPortForm.FindString(one.text) != ""
 
-		if entry.count < 1 {
-			t.Errorf("the exception for #%d of %s records a count of %d, and an entry that "+
-				"records no occurrence covers a whole file", entry.number, entry.file, entry.count)
-		}
-
-		key := issueCitationExceptionKey{file: entry.file, number: entry.number}
-
-		if reproduced[key] != entry.count {
-			t.Errorf("the exception table records %d bare #%d of %s, and the file holds "+
-				"%d.\n\tThe recorded reason is: %s",
-				entry.count, entry.number, entry.file, reproduced[key], entry.reason)
-		}
+			if got != one.report {
+				t.Errorf("the detector reports %v of %q, and it must report %v",
+					got, one.text, one.report)
+			}
+		})
 	}
 }
 
@@ -955,208 +324,11 @@ func TestTheIssueCitationGuardReadsNoCorpusAndSkipsForNoReason(t *testing.T) {
 	if !transcription {
 		t.Error("the walk reached no page of `docs/specs/foxio`, which holds the transcriptions")
 	}
-
-	if len(issueCitationRead(t)) == 0 {
-		t.Error("the guard read no citation, and the tree holds many")
-	}
 }
 
-// FR-reference-46 through FR-reference-49 — one test case holds each exclusion the guard
-// makes.
-//
-// A false positive costs more than a gap here. A `#N` of a URL, of a CSS color literal or of
-// a register cell cites no issue, and a guard that reports one of them earns a deletion.
-func TestTheIssueCitationGuardExcludesEachRecordedShape(t *testing.T) {
-	line := []struct {
-		name string
-		text string
-		want []int
-	}{
-		{
-			name: "a bare number is a citation of this repository",
-			text: "Issue #127 holds the question.",
-			want: []int{127},
-		},
-		{
-			name: "the table-cell port form names the port",
-			text: "The port half is `Crank-Git/ja4plus#215`, and it is closed.",
-			want: nil,
-		},
-		{
-			name: "the sentence port form names the port",
-			text: "The port's issue #533 settled the vocabulary.",
-			want: nil,
-		},
-		{
-			name: "the short sentence port form names the port",
-			text: "Port issue #594 records that.",
-			want: nil,
-		},
-		{
-			name: "the backticked repository name form names the port",
-			text: "The change opens the port half, and `Crank-Git/ja4plus` #597 holds it.",
-			want: nil,
-		},
-		{
-			name: "a list after a port marker names the port",
-			text: "The port's issues #127, #141, #162 and #522 hold these rulings.",
-			want: nil,
-		},
-		{
-			name: "a list that `or` joins names the port",
-			text: "The port's issues #127 or #141 hold these rulings.",
-			want: nil,
-		},
-		{
-			name: "a port issue URL names the port",
-			text: "See <https://github.com/Crank-Git/ja4plus/issues/598> for the port half.",
-			want: nil,
-		},
-		{
-			name: "a CSS color literal of six digits cites no issue",
-			text: "--bg: #101216; --panel: #171a20;",
-			want: nil,
-		},
-		{
-			name: "a CSS color literal that carries a letter cites no issue",
-			text: ":root { --term-bg: #0b0d11; }",
-			want: nil,
-		},
-		{
-			name: "a URL fragment cites no issue",
-			text: "Open <spec.html#127> for the readable overview.",
-			want: nil,
-		},
-		{
-			name: "an anaphoric port form leaves the number bare",
-			text: "The port decided it as D4 of its issue #231 on 2026-08-08.",
-			want: []int{231},
-		},
-	}
-
-	for _, one := range line {
-		t.Run(one.name, func(t *testing.T) {
-			got := issueCitationBare(one.text)
-
-			if fmt.Sprint(got) != fmt.Sprint(one.want) {
-				t.Errorf("the guard reads %v of %q, and it must read %v",
-					got, one.text, one.want)
-			}
-		})
-	}
-}
-
-// FR-reference-53 — a row of a rendered register table stays on one line.
-//
-// The rule that blanks the `Ruling` column reads one row on one line. A row that wraps hides
-// its `Ruling` cell from that rule, and the guard then reports a citation the register
-// resolves. This test names the wrapped row rather than let the rule guess.
-func TestEveryRenderedRulingRowStaysOnOneLine(t *testing.T) {
-	// The detector is worth nothing until a wrapped row proves it, so these two fixtures run
-	// before the tree does.
-	oneLine := []string{
-		"<tr><th>Method</th><th>What must change</th><th>Ruling</th></tr>",
-		"<tr><td>JA4</td><td>Write `99`.</td><td>#127</td></tr>",
-		"</table>",
-	}
-
-	if got := issueCitationWrappedRulingRow(oneLine); got != nil {
-		t.Errorf("the detector names line %v of a table that wraps no row", got)
-	}
-
-	wrapped := []string{
-		"<tr><th>Method</th><th>What must change</th><th>Ruling</th></tr>",
-		"<tr>",
-		"<td>JA4</td><td>Write `99`.</td><td>#127</td>",
-		"</tr>",
-		"</table>",
-	}
-
-	if got := issueCitationWrappedRulingRow(wrapped); len(got) != 1 || got[0] != 3 {
-		t.Errorf("the detector names %v of a table whose row wraps onto line 3", got)
-	}
-
-	for _, file := range issueCitationFile(t) {
-		if !strings.HasSuffix(file, ".html") {
-			continue
-		}
-
-		content, err := os.ReadFile(file)
-		if err != nil {
-			t.Fatalf("%s does not open: %v", file, err)
-		}
-
-		for _, line := range issueCitationWrappedRulingRow(strings.Split(string(content), "\n")) {
-			t.Errorf("%s:%d carries a cell of a register row on a line of its own.\n\t"+
-				"Write the whole row on one line, so the guard reads its `%s` cell.",
-				file, line, issueCitationRulingColumn)
-		}
-	}
-}
-
-// FR-reference-36, FR-reference-37 and FR-reference-38 — the record of the high-water number
-// names its date and its command, the number is a lower bound, and the guard reads no tracker.
-//
-// A guard that reads a tracker fails when the network fails, and it then reports a defect that
-// the tree does not hold. So this test reads the source of the guard and it bars the three
-// shapes that reach a tracker.
-func TestTheIssueCitationGuardRecordsItsSourceAndReadsNoTracker(t *testing.T) {
-	const source = "issue_citation_namespace_test.go"
-
-	content, err := os.ReadFile(source)
-	if err != nil {
-		t.Fatalf("%s does not open: %v", source, err)
-	}
-
-	text := string(content)
-
-	// FR-reference-36 — the record names the date and the command.
-	for _, want := range []string{
-		"2026-08-14",
-		"gh api '/repos/Crank-Git/ja4plus-go/issues?state=all&per_page=1'",
-	} {
-		if !strings.Contains(text, want) {
-			t.Errorf("the record of the high-water number names no %q", want)
-		}
-	}
-
-	// FR-reference-38 — the guard reaches no tracker. `gh` in a code span of the record above
-	// is the command a person runs, and never a call this file makes.
-	//
-	// Each name below is composed, because this test reads its own source. A literal here
-	// would match itself and report the guard it holds.
-	for _, barred := range []string{"net/" + "http", "os/" + "exec", "exec." + "Command"} {
-		if strings.Contains(text, barred) {
-			t.Errorf("the guard names %q, and a guard that reads a tracker fails with the "+
-				"network", barred)
-		}
-	}
-
-	// FR-reference-37 — the mark bounds the report from one side. A number at or below it
-	// reaches no report, so a stale mark loosens the guard.
-	reported := 0
-
-	for _, citation := range issueCitationRead(t) {
-		if citation.number <= issueCitationHighWaterMark {
-			continue
-		}
-
-		reported++
-	}
-
-	if reported != len(issueCitationException) {
-		t.Errorf("the guard reports %d citation above the mark, and the exception table "+
-			"holds %d", reported, len(issueCitationException))
-	}
-
-	if len(issueCitationRead(t)) <= reported {
-		t.Error("every citation of the tree sits above the mark, so the mark bounds nothing")
-	}
-}
-
-// FR-reference-43, FR-reference-44 and FR-reference-45 — the guard honors the two local
-// rules, and each exclusion states its reason.
-func TestTheIssueCitationGuardHonorsTheTwoLocalRules(t *testing.T) {
+// FR-reference-43 and FR-reference-44 — the guard honors the local rule of the copied page,
+// and the exclusion states its reason.
+func TestTheIssueCitationGuardHonorsTheLocalRule(t *testing.T) {
 	for file, reason := range issueCitationExcludedFile {
 		if reason == "" {
 			t.Errorf("the exclusion of %s states no reason", file)
@@ -1167,74 +339,40 @@ func TestTheIssueCitationGuardHonorsTheTwoLocalRules(t *testing.T) {
 				file, err)
 		}
 	}
+}
 
-	row := []struct {
-		name string
-		text []string
-		want []int
-	}{
-		{
-			name: "the Ruling column of the register names the port",
-			text: []string{
-				"| Item | This project today | What must change | Rule | Ruling |",
-				"|---|---|---|---|---|",
-				"| The ALPN value | Writes `99`. | Done. | 1 | #141, #162, " +
-					issueCitationHash(522) + " |",
-			},
-			want: nil,
-		},
-		{
-			name: "another cell of a register row reaches the guard",
-			text: []string{
-				"| Item | This project today | What must change | Rule | Ruling |",
-				"|---|---|---|---|---|",
-				"| The ALPN value | " + issueCitationHash(517) + " built it. | Done. | 1 | " +
-					issueCitationHash(522) + " |",
-			},
-			want: []int{517},
-		},
-		{
-			name: "the rendered Ruling column names the port",
-			text: []string{
-				"<tr><th>Method</th><th>What must change</th><th>Ruling</th></tr>",
-				"<tr><td>JA4, JA4S</td><td>Write `99`.</td><td>#127 " +
-					issueCitationHash(522) + "</td></tr>",
-				"</table>",
-			},
-			want: nil,
-		},
-		{
-			name: "a row without a trailing separator blanks the same cell",
-			text: []string{
-				"| Item | This project today | What must change | Rule | Ruling |",
-				"|---|---|---|---|---|",
-				"| The ALPN value | Writes `99`. | Done. | 1 | " + issueCitationHash(522),
-			},
-			want: nil,
-		},
-		{
-			name: "a table that no Ruling cell heads reaches the guard",
-			text: []string{
-				"| Round | Date | What changed |",
-				"|---|---|---|",
-				"| 19 | 2026-08-12 | The port reaches it when it closes " +
-					issueCitationHash(594) + ". |",
-			},
-			want: []int{594},
-		},
+// FR-reference-38 — the guard reads no tracker, and it bounds no number.
+//
+// A guard that reads a tracker fails when the network fails, and it then reports a defect
+// that the tree does not hold. #759 read that cost against the bound it removed, and it
+// declined the tracker.
+//
+// The second half of this test holds the decision of #759. A batch gate raised the deleted
+// constant by reflex for 43 commits, so a later gate can restore it without reading why it
+// went. **A restored bound reddens this test**, and the author then states which typo the
+// bound caught.
+func TestTheIssueCitationGuardReadsNoTrackerAndBoundsNoNumber(t *testing.T) {
+	const source = "issue_citation_namespace_test.go"
+
+	content, err := os.ReadFile(source)
+	if err != nil {
+		t.Fatalf("%s does not open: %v", source, err)
 	}
 
-	for _, one := range row {
-		t.Run(one.name, func(t *testing.T) {
-			var got []int
+	text := string(content)
 
-			for _, line := range issueCitationBlankRulingColumn(one.text) {
-				got = append(got, issueCitationBare(line)...)
-			}
+	// Each name below is composed, because this test reads its own source. A literal here
+	// would match itself and report the guard it holds.
+	for _, barred := range []string{"net/" + "http", "os/" + "exec", "exec." + "Command"} {
+		if strings.Contains(text, barred) {
+			t.Errorf("the guard names %q, and a guard that reads a tracker fails with the "+
+				"network", barred)
+		}
+	}
 
-			if fmt.Sprint(got) != fmt.Sprint(one.want) {
-				t.Errorf("the guard reads %v of the row, and it must read %v", got, one.want)
-			}
-		})
+	if strings.Contains(text, "issueCitation"+"HighWaterMark") {
+		t.Error("the guard holds a high-water mark again, and #759 removed it because a " +
+			"person raised it by hand in 43 of 300 commits.\n\tA change that restores a " +
+			"bound states which typo the bound caught.")
 	}
 }
