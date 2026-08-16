@@ -72,6 +72,7 @@ func WithKeyLog(keyLog *KeyLog) ProcessorOption {
 
 		p.keyLog = keyLog
 		p.ja4x.setKeyLog(keyLog)
+		p.ja4h.setKeyLog(keyLog)
 	}
 }
 
