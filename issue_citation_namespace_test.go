@@ -36,7 +36,7 @@ import (
 )
 
 // issueCitationHighWaterMark is the highest number this repository had allocated on
-// 2026-08-15 UTC. GitHub allocates one number sequence to issues and to pull requests. So every
+// 2026-08-16 UTC. GitHub allocates one number sequence to issues and to pull requests. So every
 // number at or below the mark names something of this repository, and no number above it does.
 //
 // The command that produced it:
@@ -388,7 +388,28 @@ import (
 //
 // **The mark is a lower bound, and it goes stale within the hour.** Re-measure it rather
 // than transcribing 750.
-const issueCitationHighWaterMark = 750
+//
+// **The epic #441 documentation round raised the mark from 737 to 754 on 2026-08-16 UTC.**
+// The epic allocated #751, #752, #753 and #754. **The round read the two number spaces
+// separately, because one command reads one of them and the mark is the higher reading.**
+//
+//	gh issue list --repo Crank-Git/ja4plus-go --state all --limit 1   # 754
+//	gh pr list --repo Crank-Git/ja4plus-go --state all --limit 1      # 751
+//
+// **The issue reading is the higher of the two, so the mark is 754.** The `gh api` command
+// above returns the same number, because the GitHub issues endpoint returns a pull request
+// too. The round records both readings, so a later reader sees which space held the mark.
+//
+// **The round raised the mark because its own work cites #753 and #754, and it measured
+// that.** At 737 the guard fails on four lines: `docs/specs/spec.md` twice for #754, and
+// `internal/parser/http2.go` and `ja4h.go` for #753. **So a round that writes those
+// citations and leaves the mark produces a red guard**, and the raise is not optional.
+//
+// **`origin/dev` holds 750 at the same moment, so the merge of this epic finds two changed
+// sides.** Resolve it by keeping 754, which is the higher of the two. **The mark is a lower
+// bound**, so the higher value covers both trees. The batch #721 merge above records the
+// same resolution.
+const issueCitationHighWaterMark = 754
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
