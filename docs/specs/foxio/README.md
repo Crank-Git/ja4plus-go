@@ -139,7 +139,7 @@ Re-run the resolver for a current count.
 **The three spans that the table counts under no base each name `ja4l.py`**, and the FoxIO
 `python/` directory holds no file of that name at the pin. The removed page wrote one of
 them, and the paragraph of this page that reported that defect wrote the other two. **This
-sentence writes the name once**, and the exception table of `foxio_citation_base_test.go`
+sentence writes the name once**, and the exception table of `internal/repocheck/foxio_citation_base_test.go`
 holds that one occurrence with its reason.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier

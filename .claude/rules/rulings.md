@@ -57,7 +57,7 @@ prose that is already correct costs more than it returns, and the maintainer dec
 repository-wide English conversion for the same reason. **The paragraph above writes the
 form with `N` rather than a number, so it moves neither count.**
 `TestTheMalformedPortFormDetectorReadsEachRecordedShape` in
-`issue_citation_namespace_test.go` holds one case for the form, and that case is the record
+`internal/repocheck/issue_citation_namespace_test.go` holds one case for the form, and that case is the record
 of this ruling. Issue #525 is the reversal path.
 
 **One question carries a different number in each repository.** The JA4L part count is issue

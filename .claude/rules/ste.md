@@ -67,7 +67,7 @@ document` until #697**, and the guard below falsified that wider claim.
 
 **One word carries a guard, and every other British spelling carries none.**
 `TestNoTrackedFileWritesTheBritishAcknowledgmentSpelling` in
-`us_english_acknowledgment_test.go` reads every tracked file, and it fails on the British
+`internal/repocheck/us_english_acknowledgment_test.go` reads every tracked file, and it fails on the British
 spelling of `acknowledgment` as prose. #697 built it, because `misspell` at `locale: US`
 flags neither spelling of that word and round 48 had already converted it once. **The guard
 accepts an occurrence inside a code span, and it accepts one in a block-quote line.**
@@ -158,7 +158,7 @@ above, and it states no number.
 |---|---|---|---|
 | The conformance figures — matches, deviations, accepted deviations, and each per-set split | `docs/audit/conformance.md` | 1 | `make conformance` rewrites the report on every run, and a CI job fails when the tracked report and the run disagree. |
 | The register key count, and the entry count of one ruling | `testdata/deviations.json` | 1 | The register is the data, and the count is its length. `changelog_counts_freshness_test.go` derives both from it. |
-| The coverage floor | `.coverage-floor` | 1 | The file holds one number, and `coverage_floor_test.go` reads it. |
+| The coverage floor | `.coverage-floor` | 1 | The file holds one number, and `internal/repocheck/coverage_floor_test.go` reads it. |
 | The mutation counts of the named package set | `docs/specs/features/15-mutation-sweep.md` | 2 | No cheap command produces the value, so a document holds it. That file states the package set the counts measure. |
 | A file count or a citation-site count that one rule measures | The rule file that states the rule | 2 | This file owns the British-spelling file count for that reason. |
 | The fuzz target count | **The command, and no document** | 3 | `make fuzz` reads the target list from the tree, so a new target moves the value without a document edit. |
@@ -220,7 +220,7 @@ states the mechanism that both declines share**, and it quotes the record of #38
 
 ### The guard
 
-`measured_count_ownership_test.go` holds a registry of each owned count that a guard reaches.
+`internal/repocheck/measured_count_ownership_test.go` holds a registry of each owned count that a guard reaches.
 It fails when a document states a value that the registry gives an owner. **The registry
 names the fuzz target count today.** A batch that converts a class adds the entry for it.
 

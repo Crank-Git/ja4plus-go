@@ -205,7 +205,7 @@ a reader who meets one of them in an older document finds it here.
 
 Three measurements withdrew them, each taken on 2026-08-16 UTC.
 
-1. **The mark made `issue_citation_namespace_test.go` the second most-edited file of this
+1. **The mark made `internal/repocheck/issue_citation_namespace_test.go` the second most-edited file of this
    repository.** It sits in 43 of the last 300 commits of `dev`, ahead of `CHANGELOG.md`.
 2. **The tracker allocates numbers without a gap.** It reported 760 issues and pull requests
    together, and 760 as the highest number. **The gapless property is the measurement that
@@ -280,8 +280,8 @@ This feature set changes no screen.
 | `testdata/README.md` | States the schema and the two meanings of the middle key part. |
 | `conformance_test.go` | Reads the register. |
 | `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
-| `foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
-| `issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, FR-reference-38, FR-reference-38a, FR-reference-40, FR-reference-41 and FR-reference-42. **#758 withdrew FR-reference-43 and FR-reference-44 on 2026-08-16 UTC**, and the test that held them went with the exclusion. |
+| `internal/repocheck/foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
+| `internal/repocheck/issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, FR-reference-38, FR-reference-38a, FR-reference-40, FR-reference-41 and FR-reference-42. **#758 withdrew FR-reference-43 and FR-reference-44 on 2026-08-16 UTC**, and the test that held them went with the exclusion. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces

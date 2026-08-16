@@ -152,7 +152,7 @@ that calls the method on untrusted bytes adds a crash path that no recovery reac
 
 ## The guard
 
-`gopacket_direct_decode_test.go` holds the guard, and
+`internal/repocheck/gopacket_direct_decode_test.go` holds the guard, and
 `TestNoProductionFileCallsDecodeFromBytesDirectly` is its name.
 
 **The guard holds a property of this repository: no line outside a test calls

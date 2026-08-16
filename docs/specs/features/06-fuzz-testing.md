@@ -230,7 +230,7 @@ deliberate change to a seed, and never in a workflow file.
 
 - Each fuzz job of `.github/workflows/ci.yml` and `.github/workflows/fuzz.yml` refuses a run
   that carries the variable, with `if [ -n "${JA4PLUS_SEEDGEN:-}" ]; then`.
-- `TestNoWorkflowSetsTheSeedGenerationVariable` in `fuzz_job_test.go` reads both files for an
+- `TestNoWorkflowSetsTheSeedGenerationVariable` in `internal/repocheck/fuzz_job_test.go` reads both files for an
   assignment and for an environment key. `TestEachFuzzJobRefusesASeedCorpusWrite` reads both
   jobs for the refusal.
 
@@ -269,7 +269,7 @@ branch. Every member commit ends with `[skip ci]`, and the documentation states
 `Skip instructions only apply to the push and pull_request events.`
 
 **So the batch pull request into `dev` is the first run of this job.**
-`TestThePullRequestFuzzJobAddsNoTrigger` in `fuzz_job_test.go` reads the job for a trigger key
+`TestThePullRequestFuzzJobAddsNoTrigger` in `internal/repocheck/fuzz_job_test.go` reads the job for a trigger key
 and fails on one.
 
 ### FR-fuzz-27 ships in this batch, and the first nightly run starts later
@@ -587,7 +587,7 @@ instead, which keeps a target beside the code it drives.
 | `scripts/seed-fuzz-reduce.awk` | New. It reduces one captured record. | #46 |
 | `.github/workflows/ci.yml` | Gains the short fuzz job, and no existing job moves. | #47 |
 | `.github/workflows/fuzz.yml` | New. It holds the nightly job. | #47 |
-| `fuzz_job_test.go` | New. It holds each property of the two jobs. | #47 |
+| `internal/repocheck/fuzz_job_test.go` | New. It holds each property of the two jobs. | #47 |
 
 **No member edits the `Makefile`.** The `fuzz` target of `features/00-foundation.md` reads
 the target list from the tree with `go test -list '^Fuzz'`, so it found the 13 new targets
