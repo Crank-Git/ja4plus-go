@@ -44,10 +44,11 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 // prereleaseInstallVersion names the tag that each case reads.
 //
 // **#106 moved this constant from `v0.3.0` to `v1.0.0` on 2026-08-15 UTC**, under Epic 10.
-// FR-prerelease-7 matches the printed version against this tag, so a reader knows which
-// artifact every measurement below describes.
+// **#767 moved it to `v1.1.0` on 2026-08-16 UTC.** FR-prerelease-7 matches the printed
+// version against this tag, so a reader knows which artifact every measurement below
+// describes.
 //
-// **The proxy holds no `v1.0.0` until the maintainer pushes the tag**, so each case of this
+// **The proxy holds no `v1.1.0` until the maintainer pushes the tag**, so each case of this
 // file fails until then. FR-prerelease-26 states that order. The maintainer pushes the tag
 // first. The maintainer then runs `make prerelease` against it. The maintainer promotes the
 // release only when every case passes or carries a recorded reason.
@@ -70,7 +71,7 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 // **`release_tag_constants_test.go` now compares all five, and #106 built that guard.** It
 // reads each declaration as text, so it runs without the `prerelease` build tag. A run that
 // read two tags would report a green gate for an artifact nobody published.
-const prereleaseInstallVersion = "v1.0.0"
+const prereleaseInstallVersion = "v1.1.0"
 
 // prereleaseExpectedJA4 states the JA4 value of the capture that `prereleaseCaptureFrame`
 // builds.
