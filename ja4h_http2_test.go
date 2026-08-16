@@ -93,8 +93,8 @@ func ja4hHTTP2Connection(t *testing.T, random, handshake, application []byte, co
 // the initial sequence number that the caller states.
 //
 // A second connection of one address pair and port pair starts at an initial sequence number
-// of its own, so a test that reuses the four-tuple states that number. #753 records the
-// limit that the reuse reaches.
+// of its own. So a test that reuses the four-tuple states that number. #753 records the limit
+// that the reuse reaches.
 func ja4hHTTP2ConnectionFrom(
 	t *testing.T,
 	baseSeq uint32,

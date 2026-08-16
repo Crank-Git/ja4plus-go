@@ -292,13 +292,13 @@ func (f *JA4HFingerprinter) holdsHTTP2Decode(key string) bool {
 // which is also the direction that carries no request.
 //
 // **The stream leaves the reassembler at each packet, and the decode holds what it still
-// needs.** `ja4hHTTP2Decode` holds the traffic keys, the record sequence number, the HPACK
-// dynamic table and one incomplete record, so the next packet opens a buffer of its own. The
-// stream of a long connection therefore reaches no bound of the reassembler.
+// needs.** `ja4hHTTP2Decode` holds four things: the traffic keys, the record sequence number,
+// the HPACK dynamic table and one incomplete record. So the next packet opens a buffer of its
+// own, and the stream of a long connection reaches no bound of the reassembler.
 //
-// **This path writes the consumed range that `segmentCarriesNoNewRequest` reads**, so a
-// repeated segment produces no second value and a second connection of one address pair and
-// port pair removes the entry of the first.
+// **This path writes the consumed range that `segmentCarriesNoNewRequest` reads.** A repeated
+// segment then produces no second value. A second connection of one address pair and port
+// pair then removes the entry of the first.
 func (f *JA4HFingerprinter) protectedHTTP2Results(
 	streamKey string,
 	data []byte,
@@ -321,10 +321,12 @@ func (f *JA4HFingerprinter) protectedHTTP2Results(
 	// The two readers hold every byte they still need, so the reassembler holds none of them.
 	// The consumed range names the bytes that left, and `recordTheBufferStart` opens the next
 	// buffer at the segment that follows them.
-	decode.nextSeq = entry.bufferStart + uint32(buffered)
+	if ja4hSeqBefore(decode.nextSeq, entry.bufferStart+uint32(buffered)) {
+		decode.nextSeq = entry.bufferStart + uint32(buffered)
+	}
+
 	f.reassembler.RemoveStream(streamKey)
-	f.rememberTheConsumedRequest(streamKey, entry.bufferStart, buffered, template.Timestamp)
-	entry.http2 = decode
+	f.rememberTheConsumedStream(entry, entry.bufferStart, buffered)
 
 	results := make([]FingerprintResult, 0, len(requests))
 
@@ -369,33 +371,94 @@ func (f *JA4HFingerprinter) http2Decode(
 	if entry.http2 != nil && entry.holdsBuffer {
 		// The signed conversion holds across a wrap of the 32-bit sequence number, because one
 		// buffer holds ja4hMaxStreamBytes bytes at most.
-		offset := int32(entry.http2.nextSeq - entry.bufferStart)
-		if offset >= 0 && int(offset) <= len(data) {
-			return entry.http2, data[offset:]
+		offset := int(int32(entry.http2.nextSeq - entry.bufferStart))
+		if offset >= 0 {
+			// A buffer that ends below the first unread byte carries read bytes alone, so the
+			// readers receive an empty chunk.
+			return entry.http2, data[min(offset, len(data)):]
 		}
 	}
 
-	entry.http2 = nil
+	decode := f.openHTTP2Decode(data)
+	if decode == nil {
+		return nil, nil
+	}
 
+	// The decode opens at the first byte of the buffer, and the caller then advances the
+	// number. A fresh decode holds no number of its own, so this assignment states it once.
+	decode.nextSeq = entry.bufferStart
+	entry.http2 = decode
+	// The consumed range names the bytes of one connection, so a decode of a second connection
+	// opens a range of its own.
+	entry.holdsConsumed = false
+
+	return decode, data
+}
+
+// openHTTP2Decode returns a decode of the connection that the buffer opens.
+//
+// It returns nil where the buffer carries no ClientHello, and nil where the key log holds no
+// secret of that ClientHello.
+//
+// **The ClientHello is what tells a second connection from a lost segment.** A buffer that
+// opens above the bytes an earlier decode read reaches this function, and a TLS 1.3 client
+// sends a ClientHello at the start of a connection alone. So a buffer that carries one names
+// a second connection, and a buffer that carries none names a hole that a later segment
+// fills.
+func (f *JA4HFingerprinter) openHTTP2Decode(data []byte) *ja4hHTTP2Decode {
 	hello, err := parser.ParseClientHello(data)
 	if err != nil || hello == nil || len(hello.Random) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	handshakeKeys, err := f.tls13Keys(hello.Random, parser.TLS13ClientHandshakeSecretLabel)
 	if err != nil {
-		return nil, nil
+		return nil
 	}
 
 	applicationKeys, err := f.tls13Keys(hello.Random, parser.TLS13ClientApplicationSecretLabel)
 	if err != nil {
-		return nil, nil
+		return nil
 	}
 
 	return &ja4hHTTP2Decode{
 		records:  parser.NewTLS13StreamReader(handshakeKeys, applicationKeys),
 		requests: parser.NewHTTP2Reader(),
-	}, data
+	}
+}
+
+// ja4hHTTP2ConsumedWindow bounds the sequence range that one protected HTTP/2 stream holds.
+//
+// `ja4hSeqBefore` reads the signed difference of two sequence numbers, so it needs the two
+// within 2**31 of each other. One connection carries any number of bytes, and this window
+// keeps the consumed range inside that distance. A segment that TCP reorders arrives within
+// milliseconds of its neighbors, so no reordered segment reaches the far end of this window.
+const ja4hHTTP2ConsumedWindow = 1 << 30
+
+// rememberTheConsumedStream advances the consumed range of a protected HTTP/2 stream.
+//
+// The range opens at the first byte of the connection, and it never moves back. So a segment
+// that TCP reorders sits inside the range, and `segmentCarriesNoNewRequest` reads it as a
+// repeated segment rather than as a second connection.
+// `rememberTheConsumedRequest` names one request instead, because the HTTP/1.x path removes
+// the stream at each value and this path removes it at each packet.
+func (f *JA4HFingerprinter) rememberTheConsumedStream(entry *ja4hStreamRange, start uint32, length int) {
+	end := start + uint32(length)
+
+	if !entry.holdsConsumed {
+		entry.consumedStart = start
+		entry.consumedEnd = end
+		entry.holdsConsumed = true
+	} else if ja4hSeqBefore(entry.consumedEnd, end) {
+		entry.consumedEnd = end
+	}
+
+	if int32(entry.consumedEnd-entry.consumedStart) > ja4hHTTP2ConsumedWindow {
+		entry.consumedStart = entry.consumedEnd - ja4hHTTP2ConsumedWindow
+	}
+
+	// The emission removes the stream, so the next segment opens a buffer of its own.
+	entry.holdsBuffer = false
 }
 
 // tls13Keys returns the record keys of one traffic secret of the connection.

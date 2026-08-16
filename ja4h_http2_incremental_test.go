@@ -88,7 +88,7 @@ func TestTheProcessorReadsAnHTTP2RequestOfAStreamAbove64Kilobytes(t *testing.T) 
 //
 // `http2MaxRequests` bounds the requests one decode returns. The caller counted the requests
 // the stream already published, so a decode that stopped at the bound stopped that counter
-// too and the connection reached no later value.
+// too. The connection then reached no later value.
 func TestTheProcessorReadsMoreRequestsThanTheCallBoundOfOneConnection(t *testing.T) {
 	const total = 300
 
@@ -126,14 +126,52 @@ func TestTheProcessorReadsMoreRequestsThanTheCallBoundOfOneConnection(t *testing
 	}
 }
 
+// TestTheProcessorReadsAnHTTP2RequestOfAReorderedConnection states that a segment which
+// arrives out of order costs no value.
+//
+// The decode reads each byte of the stream once, so it holds the sequence number of the
+// first byte it has not read. A segment above that number leaves a hole, and the decode waits
+// for the segment that fills it. TCP reorders a segment of any connection, so a decode that
+// stopped at a hole would stop most connections.
+func TestTheProcessorReadsAnHTTP2RequestOfAReorderedConnection(t *testing.T) {
+	random := bytes.Repeat([]byte{0x2c}, 32)
+	handshake := bytes.Repeat([]byte{0x71}, 32)
+	application := bytes.Repeat([]byte{0x35}, 32)
+
+	buffer := &bytes.Buffer{}
+	encoder := hpack.NewEncoder(buffer)
+
+	block := ja4hHTTP2Block(t, encoder, buffer,
+		":method", "GET", ":authority", "example.test", ":scheme", "https", ":path", "/one",
+		"user-agent", "probe")
+
+	packets := ja4hHTTP2ConnectionFrom(t, 1, random, handshake, application, [][]byte{
+		[]byte(parser.HTTP2ClientPreface),
+		ja4hHTTP2HeadersFrame(1, block),
+	})
+
+	// Packet 1 carries the ClientHello and packet 2 the Finished message. The last two arrive
+	// in the reverse order, so the HEADERS record reaches the fingerprinter before the preface.
+	reordered := []gopacket.Packet{packets[0], packets[1], packets[3], packets[2]}
+
+	processor := NewProcessor(WithKeyLog(ja4hHTTP2KeyLog(t, random, handshake, application)))
+
+	values := ja4hHTTP2Run(t, processor, reordered)
+
+	if len(values) != 1 {
+		t.Fatalf("the run produced %d values %v, and the connection carries 1 request",
+			len(values), values)
+	}
+}
+
 // TestTheProcessorReadsASecondHTTP2ConnectionOfOneFourTuple holds limit 2 of #753.
 //
 // The HTTP/2 path wrote no consumed range, so `segmentCarriesNoNewRequest` removed no entry
-// for it. A second connection of one address pair and port pair therefore read the buffer
-// and the counter of the first, and it produced no value of its own.
+// for it. A second connection of one address pair and port pair therefore read the buffer and
+// the counter of the first. It produced no value of its own.
 //
-// A second connection starts at an initial sequence number of its own, and that number sits
-// below the number of the first connection about half the time. Each case reaches this test.
+// A second connection starts at an initial sequence number of its own. That number sits below
+// the number of the first connection about half the time. Each case reaches this test.
 func TestTheProcessorReadsASecondHTTP2ConnectionOfOneFourTuple(t *testing.T) {
 	cases := []struct {
 		name   string

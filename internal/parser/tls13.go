@@ -200,10 +200,9 @@ func (k *TLS13RecordKeys) Open(record []byte, sequence uint64) ([]byte, byte, er
 
 // TLS13MaxRecordBytes is the byte count of the longest record that RFC 8446 permits.
 //
-// Section 5.2 bounds `TLSCiphertext.encrypted_record` at 2^14 + 256 octets, and the record
-// header adds 5 more. A reader that holds a part of one record therefore holds this many
-// bytes at most.
-const TLS13MaxRecordBytes = tls13RecordHeaderLength + (1 << 14) + 256
+// `tls13MaxRecordLength` states the bound of section 5.2, and the record header adds 5 more
+// octets. A reader that holds a part of one record therefore holds this many bytes at most.
+const TLS13MaxRecordBytes = tls13RecordHeaderLength + tls13MaxRecordLength
 
 // TLS13StreamReader opens the protected records of one direction, one chunk at a time.
 //
@@ -212,9 +211,9 @@ const TLS13MaxRecordBytes = tls13RecordHeaderLength + (1 << 14) + 256
 // bound then stops the connection rather than delaying it. #753 records the limit that this
 // reader removes, and `JA4HFingerprinter` is the caller that reaches it.
 //
-// The reader holds the sequence number of each key, because RFC 8446 section 5.3 states that
-// the number restarts at 0 at each key change and no record carries its own number. It holds
-// the bytes of one incomplete record, and TLS13MaxRecordBytes bounds them.
+// The reader holds the sequence number of each key. RFC 8446 section 5.3 states that the
+// number restarts at 0 at each key change, and no record carries its own number. The reader
+// also holds the bytes of one incomplete record, and TLS13MaxRecordBytes bounds them.
 //
 // One TLS13StreamReader serves one direction of one connection, and one goroutine.
 // `.claude/rules/concurrency.md` states that contract.
