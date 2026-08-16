@@ -161,19 +161,15 @@ The failure the rule prevents is a reader who follows one number into the wrong 
 cross-member review of batch #342 found that breach inside the batch that wrote the rule.
 
 - **FR-reference-32** — A bare `#N` of a file the guard reads names an issue of this
-  repository.
+  repository. **No test bounds that number**, and FR-reference-35 below states why.
 - **FR-reference-33** — A citation of an issue of the port carries one of the recorded
   forms.
-- **FR-reference-34** — A shape that names the port beside a bare number fails a test.
-- **FR-reference-35** — A bare `#N` above the recorded high-water number fails a test.
-- **FR-reference-36** — The record of the high-water number names the date and the command
-  that produced it.
-- **FR-reference-37** — The high-water number is a lower bound. A stale record loosens the
-  guard, and it reddens no test.
-- **FR-reference-38** — The guard reads no tracker.
-- **FR-reference-39** — The guard proves no subject of a number at or below the high-water
-  number. **This repository allocates one number sequence to an issue and to a pull
-  request.** So every number at or below that number resolves to something here.
+- **FR-reference-34** — A shape that names the port beside a bare number fails a test. **One
+  test case holds each recorded form, and one holds each malformed shape.**
+- **FR-reference-38** — The guard reads no tracker. **A guard that reads a tracker fails
+  when the network fails**, and it then reports a defect that the tree does not hold.
+- **FR-reference-38a** — The guard holds no high-water mark. A test reads the source of the
+  guard, and it fails when a later change restores one.
 - **FR-reference-40** — The guard reads every file of the tree whose extension the test
   records.
 - **FR-reference-41** — The guard enters neither the corpus directory nor a linked worktree.
@@ -181,17 +177,39 @@ cross-member review of batch #342 found that breach inside the batch that wrote 
 - **FR-reference-43** — An exclusion names one file and one reason.
 - **FR-reference-44** — `docs/specs/foxio/port-register.md` is excluded, because it is a
   verbatim copy of a section of the port's specification.
-- **FR-reference-45** — The final cell of a row of a table that a `Ruling` header cell heads
-  is excluded.
-- **FR-reference-46** — A `#` token of five or more digits cites no issue.
-- **FR-reference-47** — A `#` token that a word character or a `/` precedes cites no issue.
-- **FR-reference-48** — A `#` token that a letter follows cites no issue.
-- **FR-reference-49** — One test case holds each exclusion.
-- **FR-reference-50** — An exception names one file, one number, one count and one reason.
-- **FR-reference-51** — An exception that no longer reproduces fails a test.
-- **FR-reference-52** — No exception covers a whole file.
-- **FR-reference-53** — A row of a rendered register table stays on one line. **A row that
-  wraps hides its `Ruling` cell from FR-reference-45**, so a test names the wrapped row.
+
+#### The withdrawn requirements, and the measurement that withdrew them
+
+**#759 withdrew FR-reference-35, FR-reference-36, FR-reference-37, FR-reference-39 and
+FR-reference-45 through FR-reference-53 on 2026-08-16 UTC.** Each one specified the
+high-water mark, or the reader that the mark bounded. **No number of the list is reused**, so
+a reader who meets one of them in an older document finds it here.
+
+| Withdrawn | What it specified |
+|---|---|
+| FR-reference-35, FR-reference-36, FR-reference-37, FR-reference-39 | The high-water mark, its record and its one-directional reading. |
+| FR-reference-45, FR-reference-53 | The `Ruling` column exclusion, and the wrapped row that hid a cell from it. |
+| FR-reference-46, FR-reference-47, FR-reference-48, FR-reference-49 | The shape that the bare-number reader declined. |
+| FR-reference-50, FR-reference-51, FR-reference-52 | The exception table of a bare number above the mark. |
+
+Three measurements withdrew them, each taken on 2026-08-16 UTC.
+
+1. **The mark made `issue_citation_namespace_test.go` the second most-edited file of this
+   repository.** It sits in 43 of the last 300 commits of `dev`, ahead of `CHANGELOG.md`.
+2. **The tracker allocates numbers without a gap.** It reported 760 issues and pull requests
+   together, and 760 as the highest number. So a bound reports a number above the highest
+   allocated number alone.
+3. **The mark reported no typo in its whole life.** Its comment recorded about 35 reports,
+   and every one named a number that the tracker allocated minutes later. **The measured
+   precision of the bound is zero.**
+
+**A typo now reaches the tree, and FR-reference-32 accepts that cost.** A number that names
+the wrong issue of this repository sits inside the allocated range, so no bound reported it
+and no bound could. **A citation that names the wrong repository is the expensive failure**,
+and FR-reference-34 still reports it.
+
+**#759 is the reversal path.** A change that restores a bound states which typo the bound
+caught.
 
 ## User flows
 
@@ -248,7 +266,7 @@ This feature set changes no screen.
 | `conformance_test.go` | Reads the register. |
 | `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
 | `foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
-| `issue_citation_namespace_test.go` | New. Holds FR-reference-32 through FR-reference-53. |
+| `issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, and FR-reference-38 through FR-reference-44. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces
