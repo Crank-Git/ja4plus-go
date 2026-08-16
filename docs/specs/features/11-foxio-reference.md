@@ -90,11 +90,20 @@ image. Fact 4 is why FR-reference-12 recovers the deleted text.
   quotation.
 - **FR-reference-16** — No page reproduces a FoxIO image. Each page links to it.
 
-### The port's register copy
+### The port's register copy — withdrawn
 
-- **FR-reference-17** — `docs/specs/foxio/port-register.md` holds the port's `Parity with
-  ja4plus-go` section, with the port commit and the retrieval date.
-- **FR-reference-18** — The copy is verbatim.
+**#758 withdrew FR-reference-17 and FR-reference-18 on 2026-08-16 UTC**, and it removed
+`docs/specs/foxio/port-register.md` with them. FR-reference-17 required the copy of the
+port's `Parity with ja4plus-go` section, and FR-reference-18 required that copy to be
+verbatim.
+
+**No change of this repository could edit the copy, so it held no reading of this
+repository.** `.claude/rules/ste.md`
+`## A value of another repository is cited, and never mirrored` bars a whole-page copy of
+the port's material. **A reader cites the port at the tag instead**, under
+`.claude/rules/rulings.md` `### How a reader finds the port's ruling on a shared question`.
+
+**Neither number is reused**, so a reader who meets one in an older document finds it here.
 
 ### The citation base
 
@@ -113,8 +122,8 @@ because a citation that resolves under no base fails silently. A writer joins
 - **FR-reference-18f** — An exception that now resolves fails a test.
 - **FR-reference-18g** — No exception covers a whole page.
 - **FR-reference-18h** — No citation names a line past the end of the file it names.
-- **FR-reference-18i** — The test names the two pages that state their own base.
-- **FR-reference-18j** — The test states the reason for each of those two pages.
+- **FR-reference-18i** — The test names each page that states its own base.
+- **FR-reference-18j** — The test states the reason for each of those pages.
 - **FR-reference-18k** — The recorded FoxIO root directories equal the root directories of
   the fetched corpus.
 - **FR-reference-18l** — A test that the corpus gates states in its skip message that it
@@ -175,9 +184,10 @@ cross-member review of batch #342 found that breach inside the batch that wrote 
   records.
 - **FR-reference-41** — The guard enters neither the corpus directory nor a linked worktree.
 - **FR-reference-42** — No test of the guard skips.
-- **FR-reference-43** — An exclusion names one file and one reason.
-- **FR-reference-44** — `docs/specs/foxio/port-register.md` is excluded, because it is a
-  verbatim copy of a section of the port's specification.
+**#758 withdrew FR-reference-43 and FR-reference-44 on 2026-08-16 UTC.** FR-reference-43
+required an exclusion to name one file and one reason, and FR-reference-44 excluded
+`docs/specs/foxio/port-register.md`. **That page was the one exclusion, and #758 removed
+it**, so the guard now reads every file it walks. **Neither number is reused.**
 
 #### The withdrawn requirements, and the measurement that withdrew them
 
@@ -265,7 +275,7 @@ This feature set changes no screen.
 | `docs/specs/foxio/JA4.md` and one page per image method | New. |
 | `docs/specs/foxio/deleted-text-specifications.md` | New. |
 | `docs/specs/foxio/zeek.md` | New. |
-| `docs/specs/foxio/port-register.md` | New. |
+| `docs/specs/foxio/port-register.md` | New. **#758 removed it on 2026-08-16 UTC**, with FR-reference-17 and FR-reference-18. |
 | `testdata/deviations.json` | New. Tracked. |
 | `testdata/README.md` | States the schema and the two meanings of the middle key part. |
 | `conformance_test.go` | Reads the register. |
@@ -313,6 +323,13 @@ pin. FR-reference-12 records the commit it read, and the two commits differ on p
    the suite.
 7. `docs/specs/foxio/port-register.md` is verbatim and names the port commit.
 8. `mkdocs build --strict` succeeds with `docs/specs/` excluded.
+
+**Criterion 7 no longer holds, and this record corrects it rather than rewrites it.** #758
+removed `docs/specs/foxio/port-register.md` on 2026-08-16 UTC, with FR-reference-17 and
+FR-reference-18. **A criterion of a feature file is a dated record** under
+`.claude/rules/ste.md` `### Two permitted restatements, and one date rule`, so the line
+above stays and this paragraph states the later fact.
+`TestTheTreeHoldsNoMirroredCopyOfThePortRegister` in `deviations_test.go` holds the removal.
 
 ## Out of scope
 

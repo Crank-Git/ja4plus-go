@@ -63,20 +63,36 @@ of this ruling. Issue #525 is the reversal path.
 **One question carries a different number in each repository.** The JA4L part count is issue
 #127 here and issue #225 in the port. When a reader needs both halves, write both numbers.
 
-Two pages carry a local rule, and each one states that rule.
+One page carries a local rule, and it states that rule.
 
 - **The `Ruling` column of the register in `docs/specs/spec.md`.** Its preamble states that
   the column names the port issue, so a bare number in that column names the port. A cell
   that names an issue of this repository says so.
-- **`docs/specs/foxio/port-register.md`.** It is a verbatim copy of a section of the port's
-  specification, so a bare number in it names the port. `docs/specs/foxio/README.md` holds
-  that reading. **Never edit the copy.**
 
 **A value that the port owns is cited, and never mirrored.**
 `.claude/rules/ste.md` `## A value of another repository is cited, and never mirrored`
-states that rule, and #757 landed it on 2026-08-16 UTC. **The bar above states what a
-reader does with the copy the tree holds today, and it states nothing about whether the
-tree keeps one.** #758 decides that question.
+states that rule, and #757 landed it on 2026-08-16 UTC. **#758 applied it to the one copy
+the tree held, on 2026-08-16 UTC.** `docs/specs/foxio/port-register.md` was a verbatim copy
+of a section of the port's specification. It carried a second local rule, because a bare
+number in it named the port. The copy is gone, and this section now states one local rule
+rather than two.
+
+### How a reader finds the port's ruling on a shared question
+
+**Cite the port at a tag, and name the section.** The port is `Crank-Git/ja4plus`, and its
+register lives in the `## Parity with ja4plus-go` section of its `docs/specs/spec.md`.
+`portReadVersion` and `portReadCommit` in `parity_table_test.go` state the tag this project
+reads and the commit that tag points at, so a citation resolves at one immovable state of
+the port.
+
+**A row of the register in `docs/specs/spec.md` of this repository names the port issue in
+its `Ruling` column**, so a reader who holds a row reaches the port half without the port's
+own page. A test that holds a ruling names the port issue in a comment, under
+`.claude/rules/parity.md` `## Every ruling carries a register entry or a test`.
+
+**So three routes reach the port half of a ruling, and none of them needs a copy.** The
+register row names the port issue. The test comment names the port issue. A citation of the
+port at the tag reaches the port's own text.
 
 ## Text copied from FoxIO material is verbatim
 

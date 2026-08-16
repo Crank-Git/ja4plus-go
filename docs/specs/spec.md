@@ -89,9 +89,15 @@ round.
 
 ## Terms
 
-This table is the controlled vocabulary of the project. **Where a term also appears in
-the port's own table, the meaning here is the same meaning.** One concept keeps one word
-across both repositories, because a reader moves between them.
+This table is the controlled vocabulary of the project, and it is the vocabulary of this
+project alone. **No term here has to match a term of the port.** #758 dropped that
+requirement on 2026-08-16 UTC, and `.claude/rules/parity.md`
+`## Each repository writes its own controlled vocabulary` states the reason and what
+replaced it.
+
+**A FoxIO value stays verbatim, and this table never renames one.**
+`.claude/rules/ste.md` `## What is verbatim, and never rewritten` holds that rule, and the
+shared vector set is what makes the two implementations agree.
 
 | Term | Part of speech | Meaning in this project | Do not use |
 |---|---|---|---|
@@ -1029,11 +1035,17 @@ the tag.
 Every register row is reversible. The port shipped `v1.1.0` on 2026-08-11, and it may rule
 again.
 
-This spec records the port version each row was read from. **The mitigation is a check,
-not a promise.** Epic 8 adds a test that reads the port's `docs/specs/spec.md` register at
-a pinned commit and compares its row count against the register here. **The test reads a
-committed copy under `docs/specs/foxio/port-register.md` and performs no network call**,
-so it obeys rule 3. A count that moves reports that a re-read is due.
+This spec records the port version each row was read from. **The mitigation is a re-read,
+and no check performs it.** Epic 8 built a drift check that counted the rows of a committed
+copy of the port's register, and #758 removed the copy and the check on 2026-08-16 UTC.
+**The check caught no defect**, and `.claude/rules/ste.md`
+`## A value of another repository is cited, and never mirrored` bars the copy it read.
+
+**A reader re-reads the port at the tag instead.** `portReadVersion` and `portReadCommit` in
+`parity_table_test.go` state the tag and the commit, and the `## Parity with ja4plus-go`
+section of `docs/specs/spec.md` in `Crank-Git/ja4plus` holds the port's register at that
+tag. **A ruling lands in both repositories or in neither**, so a port ruling that moves a
+row of this register reaches this repository as its own change.
 
 ### R9 — Three questions the port never settled (question 1 and question 3 are closed)
 

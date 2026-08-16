@@ -71,9 +71,10 @@ document` until #697**, and the guard below falsified that wider claim.
 spelling of `acknowledgment` as prose. #697 built it, because `misspell` at `locale: US`
 flags neither spelling of that word and round 48 had already converted it once. **The guard
 accepts an occurrence inside a code span, and it accepts one in a block-quote line.**
-`## What is verbatim, and never rewritten` below holds both forms unchanged. It exempts
-`docs/specs/foxio/port-register.md`, because that page is a verbatim copy that no change of
-this repository may edit. **Issue #697 is the reversal path.**
+`## What is verbatim, and never rewritten` below holds both forms unchanged. **The guard
+exempts no file today.** It exempted `docs/specs/foxio/port-register.md` until 2026-08-16
+UTC, because that page was a verbatim copy that no change of this repository could edit, and
+#758 removed the page. **Issue #697 is the reversal path.**
 
 ## What is verbatim, and never rewritten
 

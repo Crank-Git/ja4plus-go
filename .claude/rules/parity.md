@@ -23,6 +23,28 @@ set governs both repositories.
    the same pinned commit. Two implementations that each match the reference match each
    other.
 
+## Each repository writes its own controlled vocabulary
+
+**No term of this project has to match a term of the port.** #758 dropped that requirement
+on 2026-08-16 UTC, and the `## Terms` table of `docs/specs/spec.md` is now the vocabulary of
+this project alone.
+
+**What replaced it: rule 3 above, and the verbatim rule.** The shared vector set is the
+gate, and it reads no word of either specification. A value that FoxIO publishes stays
+verbatim in both repositories under `.claude/rules/ste.md`
+`## What is verbatim, and never rewritten`. So two implementations still produce one answer,
+and neither one spends a change on the other's word.
+
+**The measurement that earned the drop.** One word cost five issues and closed no defect.
+#356 adopted `one-shot function`, #379 added the Terms row, #397 repaired a note of
+`README.md`, #399 found eleven remaining places, and #403 found a block of `README.md` that
+listed seven of ten. The same practice produced the citation namespace collision that #254,
+#255 and #351 record.
+
+**What the drop does not reach.** A ruling still lands in this repository and in the port
+together, or in neither. An exported name still follows rule 2 above. A term that names a
+FoxIO value still reads the FoxIO material, and never a word this project prefers.
+
 ## Never run the port from a test
 
 **No test in this repository builds, imports or executes Python.** A cross-language test

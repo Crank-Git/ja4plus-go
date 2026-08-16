@@ -232,15 +232,31 @@ The port's issues #138, #219, #231 and #271 hold these rulings.
 - **FR-parity-55** — Part a of a JA4D6 value holds eleven characters.
 - **FR-parity-56** — A test builds a DHCPv6 relay message and asserts FR-parity-54.
 
-### The register drift check
+### The register drift check — withdrawn
 
-- **FR-parity-57** — The repository holds a copy of the port's register at
-  `docs/specs/foxio/port-register.md`, with the port commit it was read from.
-- **FR-parity-58** — A test counts the rows of that copy and compares the count against a
-  recorded number.
-- **FR-parity-59** — The test performs no network call.
-- **FR-parity-60** — A count that differs fails the test with a message that asks for a
-  re-read.
+**#758 withdrew FR-parity-57, FR-parity-58, FR-parity-59 and FR-parity-60 on 2026-08-16
+UTC**, and it removed `docs/specs/foxio/port-register.md` and `port_register_drift_test.go`
+with them.
+
+| Withdrawn | What it specified |
+|---|---|
+| FR-parity-57 | The committed copy of the port's register, with the port commit. |
+| FR-parity-58 | The row count of that copy, against a recorded number. |
+| FR-parity-59 | That the check performs no network call. |
+| FR-parity-60 | The failure message that asks for a re-read. |
+
+**The check caught no defect, and the copy it read carried the cost.** No change of this
+repository could edit the copy, and `.claude/rules/ste.md`
+`## A value of another repository is cited, and never mirrored` bars a whole-page copy of
+the port's material.
+
+**Rule 3 of `.claude/rules/parity.md` is what holds the two implementations together**, and
+it reads the shared FoxIO vector set rather than a row count. A reader re-reads the port at
+the tag, under `.claude/rules/rulings.md`
+`### How a reader finds the port's ruling on a shared question`.
+
+**No number of the four is reused**, so a reader who meets one in an older document finds it
+here.
 
 ## User flows
 
@@ -297,7 +313,7 @@ that FR-parity-32 adds a line to.
 | `cmd/ja4plus/main.go` | The end-of-capture call. |
 | `testdata/deviations.json` | The value declines that FR-parity-22 and FR-parity-50 add. |
 | `docs/parity.md` | New. |
-| `docs/specs/foxio/port-register.md` | New. |
+| `docs/specs/foxio/port-register.md` | New. **#758 removed it on 2026-08-16 UTC**, with FR-parity-57 through FR-parity-60. |
 
 ## Interfaces
 
