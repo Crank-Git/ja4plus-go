@@ -51,7 +51,7 @@ features:
 
 `ja4plus-go` is a Go library and command-line program for JA4+ network fingerprinting.
 FoxIO publishes the JA4+ standard. This project is an independent implementation of that
-standard. The library is at version `v1.0.0`, and the current work takes it to `v1.1.0`.
+standard. The library is at version `v1.1.0`, and the current work takes it to `v1.1.1`.
 
 **FoxIO names twelve methods. This project implements eleven of them.** The twelfth is
 JA4TScan. `Non-goals` holds the reason, and the reason is that FoxIO publishes no format
