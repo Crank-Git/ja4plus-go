@@ -123,11 +123,11 @@ func DeriveTLS13RecordKeys(secret []byte) (*TLS13RecordKeys, error) {
 //
 // The nonce takes two steps:
 //
-//	1.  The 64-bit record sequence number is encoded in network byte
-//	    order and padded to the left with zeros to iv_length.
+//  1. The 64-bit record sequence number is encoded in network byte
+//     order and padded to the left with zeros to iv_length.
 //
-//	2.  The padded sequence number is XORed with either the static
-//	    client_write_iv or server_write_iv (depending on the role).
+//  2. The padded sequence number is XORed with either the static
+//     client_write_iv or server_write_iv (depending on the role).
 func (k *TLS13RecordKeys) Open(record []byte, sequence uint64) ([]byte, byte, error) {
 	if k == nil {
 		return nil, 0, ErrNoSecret

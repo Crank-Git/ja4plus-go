@@ -11,6 +11,9 @@ import (
 	"encoding/hex"
 	"math/big"
 	"net"
+	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -414,5 +417,53 @@ func TestCleanupConnectionRemovesTheProtectedStream(t *testing.T) {
 
 	if values := tls13TestFingerprints(results); len(values) != 0 {
 		t.Fatalf("the processor returned %v after CleanupConnection removed the client stream", values)
+	}
+}
+
+// TestTheProcessorReadsTheProtectedCertificatesOfTheHTTP2Capture holds the yield that #492
+// buys on the corpus.
+//
+// `http2-with-cookies.pcapng` carries a TLS 1.3 connection and the Decryption Secrets
+// Blocks of that connection. Frame 10 holds three certificates behind the record
+// protection, and `docs/audit/ja4x-deviation-cluster.md`
+// `## Cause 2 — the library reads no encrypted TLS 1.3 handshake record` measured the 9
+// deviations that the three values close.
+//
+// The three expected values are the FoxIO vector values, and the register held each one
+// under ruling #492 until this issue removed the entry.
+func TestTheProcessorReadsTheProtectedCertificatesOfTheHTTP2Capture(t *testing.T) {
+	path := filepath.Join(corpusCaptureDir, "http2-with-cookies.pcapng")
+
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Skipf("%s is absent, so run `make corpus` to fetch the FoxIO corpus", path)
+	}
+
+	keyLog, err := ReadKeyLogFromCapture(bytes.NewReader(raw))
+	if err != nil {
+		t.Fatalf("ReadKeyLogFromCapture returned %v", err)
+	}
+
+	if keyLog.Len() == 0 {
+		t.Fatal("the capture holds no Decryption Secrets Block, and the vector set needs one")
+	}
+
+	processor := NewProcessor(WithKeyLog(keyLog))
+
+	var values []string
+
+	for _, packet := range loadPCAP(t, path) {
+		results, _ := processor.ProcessPacket(packet)
+		values = append(values, tls13TestFingerprints(results)...)
+	}
+
+	want := []string{
+		"a373a9f83c6b_7022c563de38_2e3757343cb0",
+		"a373a9f83c6b_a373a9f83c6b_5d71497f7704",
+		"7d5dbb3783b4_a373a9f83c6b_2fbee3f04f3b",
+	}
+
+	if !slices.Equal(values, want) {
+		t.Fatalf("the processor returned %v, and the FoxIO vector holds %v", values, want)
 	}
 }
