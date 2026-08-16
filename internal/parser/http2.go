@@ -71,99 +71,264 @@ const http2MaxStringLength = 16384
 
 // http2MaxRequests bounds the requests one call returns.
 //
-// One decrypted stream carries any number of header blocks, and the caller bounds the
-// stream. This bound holds the returned slice as well, so a stream of small blocks costs a
-// bounded allocation.
+// One decrypted stream carries any number of header blocks, and one call reads any number of
+// them. This bound holds the returned slice, so a chunk of small blocks costs a bounded
+// allocation.
 //
-// **A connection that passes this bound reaches no later value, and it reports no error.**
-// The caller counts the requests the stream already published, so a return that stops at
-// this bound stops that counter too. **#753 holds this limit**, and it records it as
-// limit 1.
+// **The bound delays a request, and it stops no connection.** The reader keeps the bytes it
+// has not read, so the next call returns the requests above the bound. **#753 records the
+// permanent stop that this bound produced**, and `HTTP2Reader` is the repair.
 const http2MaxRequests = 256
+
+// http2MaxFieldBlockBytes bounds the field block that one reader holds.
+//
+// The bound covers one HEADERS or CONTINUATION frame payload, and it covers the block that
+// several CONTINUATION frames build. Every packet is untrusted input, and a frame states its
+// own length, so a frame above this bound would otherwise hold whatever length it states.
+//
+// RFC 9113 section 6.5.2 states the initial SETTINGS_MAX_FRAME_SIZE as 16384 octets, and it
+// permits a peer to raise that setting to 16777215. **This reader sees no setting of the
+// server**, because it reads the client stream alone. So it bounds the block itself, at four
+// times the initial frame size.
+const http2MaxFieldBlockBytes = 65536
+
+// HTTP2Reader decodes the client half of one HTTP/2 connection, one chunk at a time.
+//
+// **One reader holds one HPACK decoder, and that is the reason this type exists.** RFC 7541
+// section 2.3.2 states that the dynamic table serves the whole connection, so a block that
+// names an entry of an earlier block decodes only after that earlier block. A caller that
+// starts a decoder at each chunk therefore reads wrong header names.
+//
+// The reader holds the bytes of one field block that no chunk completed, and
+// http2MaxFieldBlockBytes bounds them. It stores no byte of a frame that carries no field
+// block, so a request body of any length costs no memory.
+//
+// One HTTP2Reader serves one connection, and one goroutine.
+// `.claude/rules/concurrency.md` states that contract.
+type HTTP2Reader struct {
+	decoder *hpack.Decoder
+	// prefaceRead reports whether the stream opened with the 24 octets of RFC 9113
+	// section 3.4.
+	prefaceRead bool
+	// tail holds the bytes that no call read. It holds one incomplete frame at most.
+	tail []byte
+	// skipRemaining counts the payload octets of a frame that carries no field block. The
+	// reader drops those octets as they arrive, and it stores none of them.
+	skipRemaining int
+	// block holds the field block that the HEADERS frame opened, and that a CONTINUATION
+	// frame continues.
+	block  []byte
+	failed bool
+}
+
+// NewHTTP2Reader returns a reader of the client half of one HTTP/2 connection.
+func NewHTTP2Reader() *HTTP2Reader {
+	decoder := hpack.NewDecoder(http2MaxDynamicTableSize, nil)
+	decoder.SetMaxStringLength(http2MaxStringLength)
+
+	return &HTTP2Reader{decoder: decoder}
+}
+
+// Read returns one HTTPRequest for each request that the chunk completes.
+//
+// chunk holds the decrypted client bytes that follow the bytes of every earlier call. The
+// first call opens at the first byte of the connection preface.
+// It returns nil for a stream that carries no connection preface, and nil for a chunk that
+// completes no header block.
+// It reads no length field before it bounds that field, and it never panics.
+//
+// It returns http2MaxRequests requests at most. The reader holds the bytes above that bound,
+// so the next call returns the requests they carry.
+// It stops at the first header block the decoder does not read, because the dynamic table
+// then disagrees with the encoder and every later block decodes to the wrong names.
+func (r *HTTP2Reader) Read(chunk []byte) []*HTTPRequest {
+	if r.failed {
+		return nil
+	}
+
+	r.tail = append(r.tail, chunk...)
+
+	if !r.prefaceRead && !r.readPreface() {
+		return nil
+	}
+
+	var requests []*HTTPRequest
+
+	pos := r.walk(&requests)
+
+	r.tail = append(r.tail[:0], r.tail[pos:]...)
+
+	return requests
+}
+
+// Failed reports whether the reader stopped. A reader that stopped reads no later request.
+func (r *HTTP2Reader) Failed() bool {
+	return r.failed
+}
+
+// Pending returns the bytes that no call read.
+func (r *HTTP2Reader) Pending() int {
+	return len(r.tail)
+}
+
+// stop ends the walk, and it drops the bytes the reader holds.
+func (r *HTTP2Reader) stop() {
+	r.failed = true
+	r.tail = nil
+	r.block = nil
+}
+
+// readPreface reports whether the stream opened with the connection preface.
+//
+// The preface is the gate of the whole walk, because a decrypted stream that carries another
+// protocol then costs one prefix comparison. The reader waits for the 24 octets, and it
+// stops at the first octet that names another protocol.
+func (r *HTTP2Reader) readPreface() bool {
+	preface := []byte(HTTP2ClientPreface)
+
+	if len(r.tail) < len(preface) {
+		if !bytes.HasPrefix(preface, r.tail) {
+			r.stop()
+		}
+
+		return false
+	}
+
+	if !bytes.HasPrefix(r.tail, preface) {
+		r.stop()
+
+		return false
+	}
+
+	r.tail = append(r.tail[:0], r.tail[len(preface):]...)
+	r.prefaceRead = true
+
+	return true
+}
+
+// walk reads the frames the tail completes, and it returns the count of octets it read.
+//
+// It appends one request for each field block that ends with the END_HEADERS flag and names
+// a `:method` pseudo-header.
+func (r *HTTP2Reader) walk(requests *[]*HTTPRequest) int {
+	pos := 0
+
+	for {
+		if r.skipRemaining > 0 {
+			dropped := min(r.skipRemaining, len(r.tail)-pos)
+			pos += dropped
+			r.skipRemaining -= dropped
+
+			if r.skipRemaining > 0 {
+				return pos
+			}
+		}
+
+		if pos+http2FrameHeaderLength > len(r.tail) {
+			return pos
+		}
+
+		length := int(r.tail[pos])<<16 | int(r.tail[pos+1])<<8 | int(r.tail[pos+2])
+		frameType := r.tail[pos+3]
+		flags := r.tail[pos+4]
+
+		payloadStart := pos + http2FrameHeaderLength
+
+		if frameType != http2FrameTypeHeaders && frameType != http2FrameTypeContinuation {
+			// The reader stores no byte of this frame, because a client sends a request body in
+			// a DATA frame and RFC 9113 section 6.5.2 permits 16777215 octets of it.
+			pos = payloadStart
+			r.skipRemaining = length
+
+			continue
+		}
+
+		if length > http2MaxFieldBlockBytes {
+			r.stop()
+
+			return 0
+		}
+
+		if payloadStart+length > len(r.tail) {
+			return pos
+		}
+
+		pos = payloadStart + length
+
+		if !r.readFieldBlock(r.tail[payloadStart:pos], frameType, flags, requests) {
+			return 0
+		}
+
+		if len(*requests) >= http2MaxRequests {
+			return pos
+		}
+	}
+}
+
+// readFieldBlock reads one HEADERS or CONTINUATION frame payload, and it reports whether the
+// walk continues.
+//
+// It appends one request where the flags end the field block and the block names a `:method`
+// pseudo-header.
+func (r *HTTP2Reader) readFieldBlock(
+	payload []byte,
+	frameType byte,
+	flags byte,
+	requests *[]*HTTPRequest,
+) bool {
+	if frameType == http2FrameTypeHeaders {
+		fragment, ok := http2HeadersFragment(payload, flags)
+		if !ok {
+			r.stop()
+
+			return false
+		}
+
+		r.block = append(r.block[:0], fragment...)
+	} else {
+		if len(r.block)+len(payload) > http2MaxFieldBlockBytes {
+			r.stop()
+
+			return false
+		}
+
+		r.block = append(r.block, payload...)
+	}
+
+	if flags&http2FlagEndHeaders == 0 {
+		return true
+	}
+
+	fields, err := r.decoder.DecodeFull(r.block)
+	if err != nil {
+		// The dynamic table now disagrees with the encoder, so every later block of this
+		// stream decodes to the wrong names. The walk stops rather than reporting them.
+		r.stop()
+
+		return false
+	}
+
+	if request := http2RequestOfFields(fields); request != nil {
+		*requests = append(*requests, request)
+	}
+
+	return true
+}
 
 // HTTP2Requests returns one HTTPRequest for each request that the client half of one
 // HTTP/2 connection carries.
 //
-// stream holds the decrypted client bytes from the first byte of the connection preface. A
-// longer buffer is allowed, because the caller passes the whole stream it holds.
+// stream holds the decrypted client bytes from the first byte of the connection preface, and
+// it holds the whole connection.
 // It returns nil for a stream that carries no connection preface, and nil for a stream that
 // completes no header block.
-// It reads no length field before it bounds that field, and it never panics.
 //
-// **The whole stream reaches one decoder, and that is not an optimization.** RFC 7541
-// section 2.3.2 states that the dynamic table serves the whole connection, so a block that
-// names an entry of an earlier block decodes only after that earlier block. A caller that
-// passes a suffix of the stream therefore reads wrong header names.
-//
-// **The dynamic table lives for the length of this call, and the return is its removal
-// path.** The decoder is a local value, so the table needs no entry in `CleanupConnection`
-// and no entry in `Reset`. `.claude/rules/concurrency.md` states that a new state map needs
-// both, and this reader adds no map.
-//
-// It stops at the first frame whose length passes the end of the stream, and at the first
-// header block the decoder does not read. It returns the requests it read up to that frame.
+// **A caller that reads one connection over several packets calls `HTTP2Reader` instead.**
+// This function starts one decoder, so it reads the whole stream at each call and a suffix
+// of the stream decodes to wrong header names.
+// It returns http2MaxRequests requests at most.
 func HTTP2Requests(stream []byte) []*HTTPRequest {
-	if !bytes.HasPrefix(stream, []byte(HTTP2ClientPreface)) {
-		return nil
-	}
-
-	decoder := hpack.NewDecoder(http2MaxDynamicTableSize, nil)
-	decoder.SetMaxStringLength(http2MaxStringLength)
-
-	var requests []*HTTPRequest
-
-	var block []byte
-
-	for pos := len(HTTP2ClientPreface); pos+http2FrameHeaderLength <= len(stream); {
-		length := int(stream[pos])<<16 | int(stream[pos+1])<<8 | int(stream[pos+2])
-		frameType := stream[pos+3]
-		flags := stream[pos+4]
-
-		payloadStart := pos + http2FrameHeaderLength
-
-		next := payloadStart + length
-		if next > len(stream) {
-			break
-		}
-
-		payload := stream[payloadStart:next]
-		pos = next
-
-		if frameType != http2FrameTypeHeaders && frameType != http2FrameTypeContinuation {
-			continue
-		}
-
-		if frameType == http2FrameTypeHeaders {
-			fragment, ok := http2HeadersFragment(payload, flags)
-			if !ok {
-				break
-			}
-
-			block = append(block[:0], fragment...)
-		} else {
-			block = append(block, payload...)
-		}
-
-		if flags&http2FlagEndHeaders == 0 {
-			continue
-		}
-
-		fields, err := decoder.DecodeFull(block)
-		if err != nil {
-			// The dynamic table now disagrees with the encoder, so every later block of this
-			// stream decodes to the wrong names. The walk stops rather than reporting them.
-			break
-		}
-
-		if request := http2RequestOfFields(fields); request != nil {
-			requests = append(requests, request)
-			if len(requests) >= http2MaxRequests {
-				break
-			}
-		}
-	}
-
-	return requests
+	return NewHTTP2Reader().Read(stream)
 }
 
 // http2HeadersFragment returns the field block fragment of one HEADERS frame payload.
