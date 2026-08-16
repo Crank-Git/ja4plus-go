@@ -58,8 +58,13 @@ the trailing comma that the Wireshark dissector writes on the unsorted cookie va
 2 carry the two trailing underscores that it writes for a request without a cookie.
 
 **The HTTP/3 half of cause 1 holds no register entry today**, because every entry of ruling
-#164 named an HTTP/2 frame. **#164 measures its own yield against the merged tree**, and it
-reads no count from the register.
+#164 named an HTTP/2 frame.
+
+**#164 closed without code on 2026-08-16 UTC, because it had no target.** The register holds
+no entry under ruling #164, measured over `testdata/deviations.json`. **The corpus holds no
+HTTP/3 JA4H value either**: every JA4H value of the two vector sets carries version `11` or
+version `20`, and none carries version `30`, measured on 2026-08-16 UTC. **So the HTTP/3 half
+of cause 1 reaches no comparison of this corpus**, and no open issue holds it today.
 
 **The 80 above is the count that #442 measured on 2026-08-13, and this section keeps it.**
 
@@ -125,7 +130,7 @@ of the per-packet set and 26 occurrences of the per-stream set carry the 337.**
 
 | N | Cause | Deviations | Count it closes, measured |
 |---|---|---|---|
-| 1 | The library reads no HTTP/2 request and no HTTP/3 request. | 80 | Not measured. The section states why. |
+| 1 | The library reads no HTTP/2 request and no HTTP/3 request. **#529 closed the HTTP/2 half, and #164 closed without code.** | 80 | Not measured. The section states why. |
 | 2 | The library emitted at the frame that ends the header block. **#462 closed it.** | 96 | 64 |
 | 3 | The library emitted a second value for a repeated TCP segment. **#446 closed it.** | 50 | 50 |
 | 4 | The library reads no HTTP request over UDP. | 108 | The candidate opens 36 more deviations than it closes. |
@@ -143,6 +148,12 @@ of the per-packet set and 26 occurrences of the per-stream set carry the 337.**
 **80 deviations.** `http2-with-cookies.pcapng` holds 75 and
 `chrome-cloudflare-quic-with-secrets.pcapng` holds 5. Every one reads
 `the vector holds a value the library does not produce`.
+
+**#529 falsified the next sentence on 2026-08-16 UTC, and this section keeps it as the
+reading of 2026-08-13.** `internal/parser/http2.go` holds an HPACK decoder today, and
+`protectedHTTP2Results` of `ja4h.go` reads an HTTP/2 request from a protected TLS 1.3 record.
+**The heading above keeps its name, because other sections cite it.** **The library still
+reads no HTTP/3 request.**
 
 **The library holds no HTTP/2 decoder.** `ProcessPacket` of `ja4h.go` reads the TCP payload
 and passes it to `parser.ParseHTTPRequest`. That function reads a request line of the form

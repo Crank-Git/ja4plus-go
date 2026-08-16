@@ -77,8 +77,8 @@ const http2MaxStringLength = 16384
 //
 // **A connection that passes this bound reaches no later value, and it reports no error.**
 // The caller counts the requests the stream already published, so a return that stops at
-// this bound stops that counter too. The tracker holds one issue for this limit, and the
-// batch gate writes its number here.
+// this bound stops that counter too. **#753 holds this limit**, and it records it as
+// limit 1.
 const http2MaxRequests = 256
 
 // HTTP2Requests returns one HTTPRequest for each request that the client half of one

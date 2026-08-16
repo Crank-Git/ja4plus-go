@@ -131,8 +131,13 @@ does not change after construction. So a sharded caller gives one `KeyLog` to ev
 `Processor`, and the packet path takes no lock. **No setter writes the field on a live
 `Processor`.**
 
-**No fingerprint value moves under this ruling**, because no fingerprinter reads the key log
-today. #492, #529 and #164 each build a reader.
+**No fingerprint value moved under this ruling**, because no fingerprinter read the key log
+on the day #661 landed it.
+
+**Two readers landed on 2026-08-16 UTC, and this sentence records them.** #492 built the TLS
+1.3 record decryptor and #529 built the HPACK decoder, so `JA4XFingerprinter` and
+`JA4HFingerprinter` each read the key log today. **#164 closed without code on 2026-08-16
+UTC**, so no fingerprinter reads an HTTP/3 request.
 
 **One gap stays open, and this requirement does not close it.** `NewJA4SSH(packetCount int)`
 in `ja4ssh.go` accepts a window size, and `NewProcessor` calls `NewJA4SSH(0)`. So a caller
@@ -343,9 +348,11 @@ reader or reads the block directly.
 - This feature set changes the API at two places. FR-gaps-17 through FR-gaps-17b add the
   eight exported names of `types.go`, and FR-gaps-17c through FR-gaps-17e add
   `ProcessorOption` and `WithKeyLog`.
-- This feature set adds no reader of the key log. The `Processor` carries the key log and no
-  fingerprinter reads it. #492 builds the TLS record decryptor, #529 builds the HPACK
-  decoder and #164 builds the QPACK decoder.
+- This feature set adds no reader of the key log. The `Processor` carries the key log, and
+  this feature set leaves every fingerprinter without a reader of it. **#492 built the TLS
+  record decryptor and #529 built the HPACK decoder, both on 2026-08-16 UTC.** **#164 asked
+  for the QPACK decoder, and it closed without code on 2026-08-16 UTC**, so no issue builds
+  one today.
 - This feature set adds no `WithSSHWindow` option, and no accessor that exposes a
   fingerprinter of a `Processor`.
 

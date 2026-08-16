@@ -38,6 +38,11 @@ the rows. Read the ten as a count of fingerprinters, and never as a count of met
 The library decrypts a QUIC Initial packet (RFC 9001 and RFC 9369) and it reads the TLS
 ClientHello inside.
 
+**The library also decrypts a protected TLS 1.3 record on TCP, where a key log supplies the
+secret.** JA4X reads the Certificate message of that record, and JA4H reads an HTTP/2
+request from it. **The library reads no HTTP/3 request**, because a QPACK header block
+travels inside a protected QUIC packet that the library does not decode.
+
 ## Installation
 
 The module requires Go 1.25 or later. **That sentence states a language version, and the
