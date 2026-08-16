@@ -47,3 +47,21 @@ func TestGetDatabaseInfo(t *testing.T) {
 		t.Errorf("Entries = 0, want > 0")
 	}
 }
+
+// TestLookupReturnsTheRecordForAMappedFingerprint stood in `licensing_test.go` until the
+// repository tests moved to `internal/repocheck`. It is the one test of that file that
+// reaches the library, so it moved here rather than into that package.
+func TestLookupReturnsTheRecordForAMappedFingerprint(t *testing.T) {
+	result := LookupFingerprint("t13i181000_85036bcba153_d41ae481755e")
+	if result == nil {
+		t.Fatalf("the lookup returns no record for a fingerprint that data/ja4plus-mapping.csv holds")
+	}
+
+	if result.Application != "Python" {
+		t.Errorf("the record names %q, and the mapping row names Python", result.Application)
+	}
+
+	if result.Type != "ja4" {
+		t.Errorf("the record type is %q, and the mapping column is ja4", result.Type)
+	}
+}

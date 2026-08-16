@@ -4,6 +4,8 @@ package ja4plus
 
 import (
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 )
 
 // These tests hold FR-conformance-16 through FR-conformance-19, FR-reference-25 and
@@ -162,7 +164,7 @@ func TestTheComparisonReportsADeviationForACaseChangeAndForAWhitespaceChange(t *
 func TestTheComparisonAcceptsADeviationTheRegisterNames(t *testing.T) {
 	key := oneConformanceKey("JA4L-S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
 	}
 
@@ -191,7 +193,7 @@ func TestTheComparisonReportsAClosedEntryWhenARegisteredComparisonMatches(t *tes
 	key := oneConformanceKey("JA4L-S")
 	value := "6252_58"
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Ours: value, Theirs: value, Ruling: "#19"},
 	}
 
@@ -222,7 +224,7 @@ func TestTheComparisonReportsAClosedEntryWhenARegisteredComparisonMatches(t *tes
 func TestTheComparisonReportsAStaleEntryWhenTheRunNoLongerProducesTheRecordedValue(t *testing.T) {
 	key := oneConformanceKey("JA4L-S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
 	}
 
@@ -261,7 +263,7 @@ func TestTheComparisonReportsAStaleEntryWhenTheRunNoLongerProducesTheRecordedVal
 func TestTheComparisonReportsNoStaleEntryWhenTheRunProducesTheRecordedValue(t *testing.T) {
 	key := oneConformanceKey("JA4L-S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
 	}
 
@@ -282,7 +284,7 @@ func TestTheComparisonReportsNoStaleEntryWhenTheRunProducesTheRecordedValue(t *t
 func TestTheComparisonReportsAStaleEntryWhenTheLibraryProducesAValueACapabilityDeclineDenies(t *testing.T) {
 	key := oneConformanceKey("JA4L-S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Capability: true, Ours: "", Theirs: "6252_59", Ruling: "#19"},
 	}
 
@@ -307,7 +309,7 @@ func TestTheComparisonReportsAStaleEntryWhenTheLibraryProducesAValueACapabilityD
 func TestTheComparisonReportsNoStaleEntryWhenACapabilityDeclineStillProducesNoValue(t *testing.T) {
 	key := oneConformanceKey("JA4L-S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Capability: true, Ours: "", Theirs: "6252_59", Ruling: "#19"},
 	}
 
@@ -329,7 +331,7 @@ func TestTheComparisonReportsNoStaleEntryWhenACapabilityDeclineStillProducesNoVa
 func TestTheComparisonReportsAClosedEntryAndAStaleEntryForOneRegisterKey(t *testing.T) {
 	key := oneConformanceKey("JA4L-S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Ours: "6252_58", Theirs: "6252_59", Ruling: "#19"},
 	}
 
@@ -402,7 +404,7 @@ func TestTheComparisonSortsTheDeviationsByKey(t *testing.T) {
 
 func TestTheConformanceKeyWritesTheRegisterKeyForm(t *testing.T) {
 	// `testdata/README.md` states the form `<capture>/<stream>/<method>`, and
-	// `checkDeviationKey` holds it. A key the register cannot name is a key that
+	// `deviations.CheckKey` holds it. A key the register cannot name is a key that
 	// FR-reference-25 cannot reach.
 	key := conformanceKey{Capture: "ssh2.pcapng", Stream: "15", Method: "JA4L-S"}
 
@@ -410,7 +412,7 @@ func TestTheConformanceKeyWritesTheRegisterKeyForm(t *testing.T) {
 		t.Fatalf("the key writes %q, and the register form is `ssh2.pcapng/15/JA4L-S`", key.String())
 	}
 
-	if err := checkDeviationKey(key.String()); err != nil {
+	if err := deviations.CheckKey(key.String()); err != nil {
 		t.Errorf("the register reader rejects the key %q: %v", key.String(), err)
 	}
 }
@@ -422,7 +424,7 @@ func TestTheComparisonNamesEveryRegisterKeyItReaches(t *testing.T) {
 	reached := oneConformanceKey("JA4")
 	absent := oneConformanceKey("JA4S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		reached: {Key: reached.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
 		absent:  {Key: absent.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
 	}
@@ -464,7 +466,7 @@ func TestTheComparisonNamesNoReachedKeyThatTheRegisterDoesNotHold(t *testing.T) 
 func TestTheComparisonNamesAReachedKeyForAClosedEntry(t *testing.T) {
 	key := oneConformanceKey("JA4")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Ours: "value", Theirs: "value", Ruling: "#19"},
 	}
 
@@ -490,7 +492,7 @@ func TestTheOrphanEntriesNameEveryRegisterKeyTheRunNeverReaches(t *testing.T) {
 	reached := oneConformanceKey("JA4")
 	orphan := oneConformanceKey("JA4S")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		reached: {Key: reached.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
 		orphan:  {Key: orphan.String(), Ours: "recorded", Theirs: "theirs", Ruling: "#20"},
 	}
@@ -514,7 +516,7 @@ func TestTheOrphanEntriesNameEveryRegisterKeyTheRunNeverReaches(t *testing.T) {
 func TestTheOrphanEntriesNameNoRegisterKeyTheRunReaches(t *testing.T) {
 	key := oneConformanceKey("JA4")
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		key: {Key: key.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
 	}
 
@@ -530,7 +532,7 @@ func TestTheOrphanEntriesSortTheEntriesByKey(t *testing.T) {
 	first := conformanceKey{Capture: "dhcp.pcapng", Stream: "1", Method: "JA4D"}
 	second := conformanceKey{Capture: "tls12.pcap", Stream: "1", Method: "JA4"}
 
-	register := map[conformanceKey]deviationEntry{
+	register := map[conformanceKey]deviations.Entry{
 		second: {Key: second.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
 		first:  {Key: first.String(), Ours: "ours", Theirs: "theirs", Ruling: "#20"},
 	}
@@ -624,7 +626,7 @@ func TestTheRunAcceptsAnUncoveredValueTheRegisterNames(t *testing.T) {
 		compareConformance(
 			map[conformanceKey]string{key: "13532_57"},
 			map[conformanceKey]string{},
-			map[conformanceKey]deviationEntry{key: {Key: key.String(), Ours: "13532_57", Ruling: "#361"}},
+			map[conformanceKey]deviations.Entry{key: {Key: key.String(), Ours: "13532_57", Ruling: "#361"}},
 		),
 		map[string]bool{},
 	)

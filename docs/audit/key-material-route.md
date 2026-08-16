@@ -428,7 +428,7 @@ port does not make opens a parity difference on 11 values.
 
 **#613 applied the maintainer ruling of 2026-08-15: the boundary names an HTTP call and a
 remote lookup, and never a raw socket.** `docs/audit/network-boundary.md` holds the record,
-and `network_boundary_test.go` fails on an import that breaks the rule.
+and `internal/repocheck/network_boundary_test.go` fails on an import that breaks the rule.
 
 **A key log reaches the library through an `io.Reader` that the caller opens.**
 `ParseKeyLog(r io.Reader)` and `ReadKeyLogFromCapture(r io.Reader)` in `types.go` each accept

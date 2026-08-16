@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 )
 
 // These tests hold FR-conformance-27 through FR-conformance-33.
@@ -406,7 +408,7 @@ func TestTheReportNamesEveryOrphanRegisterEntry(t *testing.T) {
 
 	report := newConformanceReport("27f0cbf")
 	report.readCapture("ssh2.pcapng")
-	report.recordOrphans(map[conformanceKey]deviationEntry{
+	report.recordOrphans(map[conformanceKey]deviations.Entry{
 		orphan: {Key: orphan.String(), Ours: "c36s36_c55s53_c14s14", Theirs: "c36s36_c55s53_c13s14", Ruling: "#19"},
 	})
 
@@ -431,7 +433,7 @@ func TestTheReportNamesNoOrphanEntryForAKeyAComparisonReaches(t *testing.T) {
 
 	report := oneConformanceReport()
 	report.recordComparison("tls12.pcap", "per-stream", conformanceComparison{Reached: []conformanceKey{reached}})
-	report.recordOrphans(map[conformanceKey]deviationEntry{
+	report.recordOrphans(map[conformanceKey]deviations.Entry{
 		reached: {Key: reached.String(), Ours: "ours", Theirs: "theirs", Ruling: "#19"},
 	})
 

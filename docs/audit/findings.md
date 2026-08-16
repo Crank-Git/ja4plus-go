@@ -6,7 +6,7 @@ This file is the record of the correctness audit. `docs/specs/features/02-correc
 states every requirement, and FR-audit-9 names this path. Issue #21 defines the record.
 Issues #22, #23, #24 and #25 fill it.
 
-`audit_record_test.go` holds the shape of this file. A row that omits a field fails that
+`internal/repocheck/audit_record_test.go` holds the shape of this file. A row that omits a field fails that
 test, so read `## The record` before you add one.
 
 **The audit changes no code.** The audit and the closure are two steps. A finding without
@@ -92,7 +92,7 @@ it records an audit that nobody performed, so the audit set never gains one.
 issue that added it.** That classification states the true history of the file, and it
 claims no audit.
 
-`classificationRoots` in `audit_record_test.go` names each root. It holds the three
+`classificationRoots` in `internal/repocheck/audit_record_test.go` names each root. It holds the three
 directories of the audit set, and it holds `internal/capture/`. **No audit reads
 `internal/capture/`**, so every file that ships from it carries an added files row and
 none of them carries a `Read by` row.
@@ -153,7 +153,7 @@ issue that added the file after the audit of Epic 2.
 **Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
 held eight files that ship and seven test files, measured on 2026-08-15 with
 `git ls-files internal/capture/`. **A test file carries no row**, because `goFilesOfRoots`
-in `audit_record_test.go` drops a file whose name ends in `_test.go`.
+in `internal/repocheck/audit_record_test.go` drops a file whose name ends in `_test.go`.
 
 **Issue #610 wrote the ninth row that names a file of `internal/capture/`.** The directory
 holds nine files that ship and eight test files, measured on 2026-08-15 with
@@ -243,7 +243,7 @@ Good: A TLS record whose length field exceeds the remaining buffer makes `ja4.go
 The bad example names no input and no result. The good example names both, so a reader
 builds the packet and sees the panic.
 
-The reader in `audit_record_test.go` declines a scenario in three cases.
+The reader in `internal/repocheck/audit_record_test.go` declines a scenario in three cases.
 
 - The scenario is shorter than 40 characters.
 - The scenario ends with no full stop.

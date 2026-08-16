@@ -103,7 +103,7 @@ Neither amendment changes code, and `ja4ls_emission_test.go` holds each one as a
   `parity_one_shot_not_applicable_test.go:32-35` holds that ruling as a test. **Open
   question 2 below asks whether this requirement is worth building, and the maintainer
   answers it.** **This requirement is unbuildable today, and that is deliberate.**
-  `terms_one_shot_function_test.go` makes `ComputeJA4LS` a red build, so the tree holds a
+  `internal/repocheck/terms_one_shot_function_test.go` makes `ComputeJA4LS` a red build, so the tree holds a
   requirement that its own guard blocks. **The cross-member review of batch #391 reported
   that pair, and the project manager resolved neither half**, because #356 named JA4L and
   JA4SSH and it named no JA4LS. **The maintainer answers open question 2, and the two places
@@ -211,7 +211,7 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 
 | File | Change |
 |---|---|
-| `ja4l.go` | Emits a second result. **`ComputeJA4LS` is not built**, because open question 2 below asks whether to add it and `terms_one_shot_function_test.go` makes the name a red build until the maintainer answers. |
+| `ja4l.go` | Emits a second result. **`ComputeJA4LS` is not built**, because open question 2 below asks whether to add it and `internal/repocheck/terms_one_shot_function_test.go` makes the name a red build until the maintainer answers. |
 | `ja4l_test.go` | New cases for the server value. |
 | `processor.go` | No change. It holds no type filter. |
 | `cmd/ja4plus/types.go` | New. The token list, the parse and the selection. |

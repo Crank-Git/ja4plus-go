@@ -91,7 +91,7 @@ git show 7ff7b3275a9d084ab6884559a6e58a9cee08f19d:technical_details/JA4.md | sha
 | `JA4T.md` | `d8ec985535f5bbf2cf411989f6ab19b17191585137e4ee448041e9ee91191d76` |
 | `JA4X.md` | `b094b74a74c541fabb6c3c01150fe10960f41047e6ef5ac8fd15c32259407c8b` |
 
-`foxio_deleted_specs_test.go` holds the same digests, and it fails when an edit changes one
+`internal/repocheck/foxio_deleted_specs_test.go` holds the same digests, and it fails when an edit changes one
 character of a recovered file.
 
 ## The recovered files

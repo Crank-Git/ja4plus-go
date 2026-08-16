@@ -150,7 +150,7 @@ release job would leave the git tree dirty and GoReleaser would refuse the relea
   alone**. Issue #473 carried
   the range to the release workflow, and issue #473 is the reversal path.
   `TestReleaseWorkflowNamesTheGoToolchainRange` holds the value, and `goToolchainRange` in
-  `foundation_test.go` states it once for both workflows. **FR-foundation-1 does not move**,
+  `internal/repocheck/foundation_test.go` states it once for both workflows. **FR-foundation-1 does not move**,
   because `go.mod` states a language version and never a toolchain.
 - **FR-release-38** — The release workflow attaches `LICENSE` and `NOTICE` to the
   release.
@@ -232,7 +232,7 @@ No entity changes. The following files change.
 | File | Change |
 |---|---|
 | `docs/api/v1.md` | New. |
-| `api_test.go` | New. Compares the exported API with the record. |
+| `internal/repocheck/api_test.go` | New. Compares the exported API with the record. |
 | `doc.go` | Rewritten. |
 | `example_test.go` | New. Holds the runnable examples. |
 | `README.md` | Rewritten. |

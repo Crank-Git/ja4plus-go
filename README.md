@@ -170,7 +170,7 @@ Type  Source                 Destination         Fingerprint
 ja4   192.168.133.129:36372  34.117.237.239:443  t13d1715h2_5b57614c22b0_3d5424432f57
 ```
 
-`TestTheReadmeCommandLineOutputMatchesTheProgram` in `readme_code_blocks_test.go` runs
+`TestTheReadmeCommandLineOutputMatchesTheProgram` in `internal/repocheck/readme_code_blocks_test.go` runs
 that command and it compares the output to the block above. The test skips when the
 worktree holds no corpus.
 

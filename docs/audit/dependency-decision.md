@@ -40,16 +40,16 @@ returns `"Time":"2026-06-04T20:44:08Z"` and
 | Total | 60 |
 
 **Three Go files change a line that is not an import path**, and each one is a test file.
-They are `foundation_test.go`, `ja4t_option_byte_count_test.go` and
+They are `internal/repocheck/foundation_test.go`, `ja4t_option_byte_count_test.go` and
 `ja4t_syn_selection_test.go`. **Two of the three also change an import path**, so the 57
-above holds them and the 1 above holds `foundation_test.go` alone.
+above holds them and the 1 above holds `internal/repocheck/foundation_test.go` alone.
 
 **42 test files and 15 non-test files hold the import path.** The command is
 `grep -rl 'github.com/google/gopacket' --include='*.go' .`, and it reports 57. **#434
 counted 55, being 40 test files and 15 non-test files, and batch #421 added two test files
 between the two measurements.**
 
-**The one other Go file is `foundation_test.go`.**
+**The one other Go file is `internal/repocheck/foundation_test.go`.**
 `### The Go directive moves its text, and it keeps its language version` below states why.
 
 ### The four counts, before and after the migration
@@ -103,7 +103,7 @@ go: updates to go.mod needed; to update it:
 > The language version for a Go version is the result of truncating everything after the _N_: 1.21, 1.21rc2, and 1.21.3 all implement language version 1.21.
 
 **So Assumption 1 of `docs/specs/spec.md` holds, and `CLAUDE.md` needs no amendment.**
-`foundation_test.go` declares `TestGoModDeclaresGo124`, and its pattern accepted the shorter
+`internal/repocheck/foundation_test.go` declares `TestGoModDeclaresGo124`, and its pattern accepted the shorter
 form alone. **#438 widened that pattern to `(?m)^go 1\.24(\.\d+)?$`**, so the guard accepts
 each 1.24 release and it still fails for `go 1.25`.
 
@@ -582,7 +582,7 @@ one. So the fork causes the longer form.
 
 **The Go floor does not move.** `go 1.24.0` and `go 1.24` name one language version, and
 `CLAUDE.md` states `Go 1.24 or later`. **The guard reads the literal text, and the literal
-text moves.** A migration therefore changes `foundation_test.go` as well, and no fingerprint
+text moves.** A migration therefore changes `internal/repocheck/foundation_test.go` as well, and no fingerprint
 value is involved.
 
 **No other test fails.** The command `go test -race ./...` reports one failing test in the
@@ -754,7 +754,7 @@ sentence now names the measurement, and `## The decision` above holds the result
 | Candidate | What it costs | What it risks |
 |---|---|---|
 | **A. Keep `google/gopacket` v1.1.19.** | No work. | The dependency reaches six years without a release. No defect of it is ever repaired. The library keeps its own decryption secrets block reader. |
-| **B. Move to `gopacket/gopacket` v1.6.1.** | 57 files, plus `foundation_test.go`. Both published advisories are fixed at this version. The Go floor stays 1.24.0, so Assumption 1 holds. | Every caller breaks. The corpus separates neither the `layers/tcp.go` difference nor the `layers/geneve.go` difference, so each one stays an unbounded risk on a capture the corpus does not hold. The move also upgrades three `golang.org/x` modules. |
+| **B. Move to `gopacket/gopacket` v1.6.1.** | 57 files, plus `internal/repocheck/foundation_test.go`. Both published advisories are fixed at this version. The Go floor stays 1.24.0, so Assumption 1 holds. | Every caller breaks. The corpus separates neither the `layers/tcp.go` difference nor the `layers/geneve.go` difference, so each one stays an unbounded risk on a capture the corpus does not hold. The move also upgrades three `golang.org/x` modules. |
 | **C. Move to `gopacket/gopacket` v1.7.1.** | The cost of B, plus a Go floor of 1.25.0. | The cost of B, plus a contradiction with Assumption 1 of `docs/specs/spec.md` and with `CLAUDE.md`. |
 | **D. Answer after Epic 13.** | The cost of B or C, plus the capture backend that Epic 13 builds. | Epic 10 freezes the API, so a move after Epic 10 needs a `v2` path. |
 

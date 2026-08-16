@@ -94,7 +94,7 @@ UTC, and `.claude/rules/ste.md`
   sentence around it names the tag. `ja4plus/fingerprinters/ja4x.py:341` at tag `v1.1.0`
   is one, and `ja4x_stream_key_test.go` writes it. **A reader resolves it in
   `Crank-Git/ja4plus` at that tag**, and this checkout
-  holds no copy of it. `parity_table_test.go` states the tag and the commit it points at,
+  holds no copy of it. `internal/repocheck/parity_table_test.go` states the tag and the commit it points at,
   in `portReadVersion` and `portReadCommit`.
   **A citation of base 7 opens with `ja4plus/`, and that root names a directory of the port
   alone.** This repository holds no directory of that name, so the root decides the
@@ -139,7 +139,7 @@ Re-run the resolver for a current count.
 **The three spans that the table counts under no base each name `ja4l.py`**, and the FoxIO
 `python/` directory holds no file of that name at the pin. The removed page wrote one of
 them, and the paragraph of this page that reported that defect wrote the other two. **This
-sentence writes the name once**, and the exception table of `foxio_citation_base_test.go`
+sentence writes the name once**, and the exception table of `internal/repocheck/foxio_citation_base_test.go`
 holds that one occurrence with its reason.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier

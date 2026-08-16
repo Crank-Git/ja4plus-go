@@ -34,7 +34,7 @@ of this site is mirrored twice, and a test holds each mirror equal to the page.
 | `examples/<name>/main.go` | `go build ./examples/...`, which runs on every pull request. |
 | An example function of `example_test.go` | `go test`, which type-checks it on every run. |
 
-`docs_go_samples_test.go` holds the three equal. **It compares the Go token sequence, after
+`internal/repocheck/docs_go_samples_test.go` holds the three equal. **It compares the Go token sequence, after
 the comments and the semicolons are removed.**
 
 - A reindent, an added blank line and an edited comment each pass.

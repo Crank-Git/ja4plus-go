@@ -74,7 +74,7 @@ of that register name a change to this repository. Read
   go1.26.5 links 4 called vulnerabilities and go1.26.6 links 0, measured on 2026-08-14.
 - **The maintainer ruled the toolchain question on 2026-08-14**, and #472 holds the ruling
   and the reversal path. `README.md` and `doc.go` state the measurement. **Every CI job
-  builds on the range `~1.26.6`**, and `goToolchainRange` in `foundation_test.go` states
+  builds on the range `~1.26.6`**, and `goToolchainRange` in `internal/repocheck/foundation_test.go` states
   that range once for both workflows.
 - `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
   `github.com/google/gopacket` on 2026-08-13, and #438 carried it.
@@ -105,6 +105,9 @@ of that register name a change to this repository. Read
 | `data/` | The embedded FoxIO fingerprint mapping. |
 | `internal/capture/` | Opening a live interface. Holds the pure-Go backend, the libpcap backend, the unsupported-platform fallback, and one permission probe for each of Linux, macOS and every other platform. |
 | `internal/keylog/` | Reading a pcapng Decryption Secrets Block and a key log in the NSS key log format. |
+| `internal/repocheck/` | Package `repocheck`: the tests that read this repository rather than this library. It holds no production Go file, so it contributes no statement to the coverage total. |
+| `internal/deviations/` | The schema and the reader of `testdata/deviations.json`. Package `ja4plus` and package `repocheck` both read the register, and neither one imports the other's test files. |
+| `internal/repofile/` | The tracked paths of this repository and the reader for them: the documentation-site layout, the two publish workflows, and the production Go files of one directory. |
 | `testdata/foxio/` | The fetched FoxIO corpus. Not tracked in git. |
 | `testdata/deviations.json` | The register: one entry per accepted difference from a FoxIO value. Tracked. |
 | `docs/specs/` | The spec package. Tracked. Not published to the site. |
@@ -118,14 +121,14 @@ packet belongs in `cmd/`.
 
 **Every remote lookup of the library goes in `ja4db/`.** The maintainer ruled that boundary
 on 2026-08-14, and `docs/audit/network-boundary.md` holds the record. The core package
-imports no HTTP client, and `network_boundary_test.go` fails on an import that breaks the
+imports no HTTP client, and `internal/repocheck/network_boundary_test.go` fails on an import that breaks the
 rule.
 
 **The boundary names an HTTP call and a remote lookup, and it names no raw socket.** The
 maintainer narrowed it on 2026-08-15, and `docs/audit/network-boundary.md` holds that
 amendment. A remote lookup reaches `ja4db.com`, and a raw capture socket reads a local
 interface. The two are different reaches, so `internal/capture/` stays in the layout table
-above. `network_boundary_test.go` permits a socket open in that directory alone, and it
+above. `internal/repocheck/network_boundary_test.go` permits a socket open in that directory alone, and it
 fails on a second package that opens one. **Issue #613 is the reversal path.**
 
 ## Commands
@@ -156,7 +159,7 @@ that the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` and
 `grep -rn --include='*_test.go' '^func Fuzz' .` rather than reading it from a document.
 **The command owns that count, and no document states it.**
 `.claude/rules/ste.md` `## One document owns each measured count` states the rule, and
-`measured_count_ownership_test.go` fails when a document states the value.
+`internal/repocheck/measured_count_ownership_test.go` fails when a document states the value.
 
 **One run of `make fuzz` costs 30 seconds for each target of the tree**, because it fuzzes
 them in turn. Multiply the count that the command above reports by 30 seconds.
@@ -224,13 +227,13 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
 - **`make mutate` needs the `mutate` entry of the `.PHONY` line, and the reason differs
   from the `docs` reason below.** The repository root holds no path named `mutate`, so the
   trap that `docs/` produces does not apply today. The entry guards a later change that
-  adds such a path. `TestTheMutateTargetIsPhony` in `mutation_sweep_test.go` holds the
+  adds such a path. `TestTheMutateTargetIsPhony` in `internal/repocheck/mutation_sweep_test.go` holds the
   entry, and it also holds the reading: it fails when a path named `mutate` appears.
 - **`make docs` needs the `docs` entry of the `.PHONY` line, and that entry is not
   decoration.** `docs/` is a directory of this repository, so make reads the bare target
   name as that directory and finds it already up to date. Without the `.PHONY` entry it
   prints ``make: Nothing to be done for `docs'.`` and it exits 0 without a site build.
-  `TestTheMakefileBuildsTheSite` in `mkdocs_config_test.go` holds the entry.
+  `TestTheMakefileBuildsTheSite` in `internal/repocheck/mkdocs_config_test.go` holds the entry.
 - `make vuln` exits 3 when the library calls a vulnerable function. It exits 0 when a
   vulnerable module reaches the build and no call reaches it, and it prints a count of
   that second kind. **The scanner reads the Go version of the `go` command on the PATH**,
@@ -308,7 +311,7 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
   - A document.
   - A code comment.
 
-  `TestTheToolchainPagesDateTheVulnerabilityMeasurement` in `go_toolchain_statement_test.go`
+  `TestTheToolchainPagesDateTheVulnerabilityMeasurement` in `internal/repocheck/go_toolchain_statement_test.go`
   holds the rule for `README.md` and for `doc.go`. Batch #493 earned this rule.
 - **Every date of this repository states the UTC calendar day.** Batch #493 recorded the
   ambiguity. The environment reported 2026-08-13 local and 2026-08-14 UTC on one day, and

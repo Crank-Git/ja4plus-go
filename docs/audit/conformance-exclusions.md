@@ -11,7 +11,7 @@ or this file records why the closure is not possible.
 the maintainer alone. An engineer records the reading and the evidence, opens an issue,
 and stops. An engineer never writes an acceptance.
 
-`conformance_exclusions_test.go` holds the shape of this file. An entry that omits a
+`internal/repocheck/conformance_exclusions_test.go` holds the shape of this file. An entry that omits a
 column fails that test, so read `## The fields of an entry` before you add an entry.
 
 **Never write a placeholder entry.** An entry that names no person and no date fails the

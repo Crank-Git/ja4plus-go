@@ -67,7 +67,7 @@ today.** Read a row as a start state, and never as a claim about the present tre
   **Every Go 1.24 consumer is dropped, and that cost is the accepted one.** The ruling lands
   in v1.1.0, because a minimum language version raise is a minor version change.
   **`goToolchainRange` does not move**, because this ruling moves a language version and no
-  build toolchain. `TestGoModDeclaresGo125` in `foundation_test.go` holds the ruling, and
+  build toolchain. `TestGoModDeclaresGo125` in `internal/repocheck/foundation_test.go` holds the ruling, and
   **issue #725 is the reversal path**.
 - **FR-foundation-2** — `.github/workflows/ci.yml` builds and tests on Go 1.26 only.
 
@@ -128,7 +128,7 @@ today.** Read a row as a start state, and never as a claim about the present tre
   each stay where #472 left them. **The two rulings answer two different questions**, and a
   reader who conflates them draws the wrong conclusion about vulnerability exposure.
 
-  `go_toolchain_statement_test.go` holds this requirement.
+  `internal/repocheck/go_toolchain_statement_test.go` holds this requirement.
 
 ## User flows
 

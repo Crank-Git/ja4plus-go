@@ -5,6 +5,8 @@ package ja4plus
 import (
 	"slices"
 	"strings"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 )
 
 // The comparison engine of the conformance suite. It holds FR-conformance-16 through
@@ -14,7 +16,7 @@ import (
 // test proves every case with a fixture. `conformance_test.go` fills the two maps from the
 // corpus.
 //
-// The engine stays in the test build. It reads `deviationEntry`, which `deviations_test.go`
+// The engine stays in the test build. It reads `deviations.Entry`, which `deviations_test.go`
 // defines, and `v1.0.0` freezes the exported API of the library.
 
 // conformanceKey names one comparison. It writes the register key form of
@@ -158,7 +160,7 @@ type conformanceComparison struct {
 func compareConformance(
 	produced map[conformanceKey]string,
 	expected map[conformanceKey]string,
-	register map[conformanceKey]deviationEntry,
+	register map[conformanceKey]deviations.Entry,
 ) conformanceComparison {
 	var result conformanceComparison
 
@@ -286,7 +288,7 @@ func conformanceSplitUncovered(
 // comparison reads one capture and one vector set, so a key it does not reach is a key
 // another comparison of the run reaches.
 func conformanceOrphanEntries(
-	register map[conformanceKey]deviationEntry,
+	register map[conformanceKey]deviations.Entry,
 	reached map[conformanceKey]bool,
 ) []conformanceOrphanEntry {
 	var entries []conformanceOrphanEntry

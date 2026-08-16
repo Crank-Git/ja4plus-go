@@ -18,7 +18,7 @@ for an expected value.
 
 `deviations.json` holds a JSON array. **Each entry records one ruling that a conformance
 run measured.** `docs/specs/features/11-foxio-reference.md` FR-reference-19 through
-FR-reference-24 state the file and the schema, and `deviations_test.go` holds them.
+FR-reference-24 state the file and the schema, and `internal/repocheck/deviations_test.go` holds them.
 
 **An entry records a ruling, and only the maintainer makes one.** Read
 `.claude/rules/rulings.md` before you add an entry. Never write an entry for a difference
@@ -71,7 +71,7 @@ the colliding stream number alone. `conformanceStreamNames` of
 named a comparison in each set would accept a difference the maintainer never ruled on.
 FR-reference-30 fails the suite for such a key, and
 `conformance_key_kind_test.go` holds that test. FR-reference-31 gives one entry to one key,
-and `deviations_test.go` holds it.
+and `internal/repocheck/deviations_test.go` holds it.
 
 ### One entry
 

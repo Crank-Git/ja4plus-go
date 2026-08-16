@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 )
 
 // The report of the conformance suite. It holds FR-conformance-27 through
@@ -328,7 +330,7 @@ func (r *conformanceReport) recordComparison(capture, set string, comparison con
 //
 // The caller calls it once, after the last comparison. A caller that calls it earlier
 // reports an orphan entry for each comparison the run has not yet made.
-func (r *conformanceReport) recordOrphans(register map[conformanceKey]deviationEntry) {
+func (r *conformanceReport) recordOrphans(register map[conformanceKey]deviations.Entry) {
 	r.orphan = conformanceOrphanEntries(register, r.reached)
 }
 

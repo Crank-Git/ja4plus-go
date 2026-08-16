@@ -57,7 +57,7 @@ prose that is already correct costs more than it returns, and the maintainer dec
 repository-wide English conversion for the same reason. **The paragraph above writes the
 form with `N` rather than a number, so it moves neither count.**
 `TestTheMalformedPortFormDetectorReadsEachRecordedShape` in
-`issue_citation_namespace_test.go` holds one case for the form, and that case is the record
+`internal/repocheck/issue_citation_namespace_test.go` holds one case for the form, and that case is the record
 of this ruling. Issue #525 is the reversal path.
 
 **One question carries a different number in each repository.** The JA4L part count is issue
@@ -81,7 +81,7 @@ rather than two.
 
 **Cite the port at a tag, and name the section.** The port is `Crank-Git/ja4plus`, and its
 register lives in the `## Parity with ja4plus-go` section of its `docs/specs/spec.md`.
-`portReadVersion` and `portReadCommit` in `parity_table_test.go` state the tag this project
+`portReadVersion` and `portReadCommit` in `internal/repocheck/parity_table_test.go` state the tag this project
 reads and the commit that tag points at, so a citation resolves at one immovable state of
 the port.
 

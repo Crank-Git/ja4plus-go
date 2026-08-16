@@ -154,7 +154,7 @@ The cross-member review checks each category below, and it reports on every one 
 and neither one fits category 3. Category 3 names one mechanism: a target that another
 member **moved, renamed or never created**. Both targets of batch #342 exist under the name
 the member wrote. The doc comment of `foxioCorpusAbsentMessage` in
-`foxio_citation_base_test.go` named `TestTheCISkipDetectorMatchesNoUntaggedSkipMessage`.
+`internal/repocheck/foxio_citation_base_test.go` named `TestTheCISkipDetectorMatchesNoUntaggedSkipMessage`.
 That test exists, and its extractor read no skip of the file that named it. The second
 finding was a count in a pull-request body that the table below it contradicts.
 

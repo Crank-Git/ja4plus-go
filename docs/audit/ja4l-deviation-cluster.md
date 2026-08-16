@@ -229,7 +229,7 @@ carries an entry under ruling #449 now.
 
 **Issue #652 already declined `browsers-x509.pcapng/128/JA4LS.1`**, at `5d3a650`, so the
 round did not re-enter it. **A duplicate key fails the conformance suite**, and
-`TestTheRegisterHoldsEachKeyOnce` in `deviations_test.go` holds that rule.
+`TestTheRegisterHoldsEachKeyOnce` in `internal/repocheck/deviations_test.go` holds that rule.
 
 #### The 149 rows hold two shapes, and the second one is not a pair
 
@@ -915,7 +915,7 @@ library reads the first QUIC packet of a coalesced datagram. Ruling #528 of 2026
 decides that point C is the last QUIC server handshake packet. **The `reason` of the entry
 names both**, as the entry of `chrome-cloudflare-quic-with-secrets.pcapng/52/JA4L.1` does.
 
-**The `ruling` field names one issue, and `deviationRulingPattern` in `deviations_test.go`
+**The `ruling` field names one issue, and `deviationRulingPattern` in `internal/repocheck/deviations_test.go`
 bars a second one.** So a row that two rulings reach names the ruling that decides the part
 no other entry records, and its `reason` carries the other. **Issue #449 and issue #528 are
 the two reversal paths.**

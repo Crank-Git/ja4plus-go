@@ -48,7 +48,7 @@ hold.** Every sample of this site therefore writes the alias:
 | `github.com/Crank-Git/ja4plus-go/ja4db` | `ja4db` | The remote lookup at `ja4db.com`. |
 
 **`ja4db` is the one package of the library that reaches the network.** The maintainer
-ruled that boundary on 2026-08-14, and `network_boundary_test.go` fails on an import that
+ruled that boundary on 2026-08-14, and `internal/repocheck/network_boundary_test.go` fails on an import that
 breaks it. So a caller who imports `ja4plus` alone links no HTTP client.
 
 **`internal/parser`, `internal/keylog`, `internal/dbcache` and every other `internal`

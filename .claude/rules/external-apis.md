@@ -64,7 +64,7 @@ The fingerprint definitions come from FoxIO. The wire formats come from these.
   `image: zeek/zeek:8.0.0`. Each path reads at base 1 of
   `docs/specs/foxio/README.md` `## How to read a citation`.
   **`docs/audit/upstream-versions.md` holds the measurement**, and
-  `upstream_versions_test.go` fails when a moved pin leaves either row behind.
+  `internal/repocheck/upstream_versions_test.go` fails when a moved pin leaves either row behind.
 - **`ja4db.com` publishes no versioned API documentation.** Confirm the response shape
   against a live call before you change the response parser, and record the observed shape
   in the issue. Until then, leave the current parser unchanged.

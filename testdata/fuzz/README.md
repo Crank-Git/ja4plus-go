@@ -50,7 +50,7 @@ Two checks hold this rule, and #47 built both.
 
 - The fuzz job of `.github/workflows/ci.yml` and the fuzz job of `.github/workflows/fuzz.yml`
   each refuse a run that carries the variable.
-- `TestNoWorkflowSetsTheSeedGenerationVariable` in `fuzz_job_test.go` reads both workflow
+- `TestNoWorkflowSetsTheSeedGenerationVariable` in `internal/repocheck/fuzz_job_test.go` reads both workflow
   files for an assignment and for an environment key.
   `TestEachFuzzJobRefusesASeedCorpusWrite` reads both jobs for the refusal.
 

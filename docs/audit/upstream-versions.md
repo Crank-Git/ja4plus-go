@@ -105,7 +105,7 @@ floor and as a second tested version. **FoxIO builds the shipped plugin against 
 and a reader who traces a plugin field reads that core.** So the rule file names `v4.6.0`.
 
 **This project reverses that choice through issue #537**, and the reversal costs one row of
-`.claude/rules/external-apis.md` and one constant of `upstream_versions_test.go`.
+`.claude/rules/external-apis.md` and one constant of `internal/repocheck/upstream_versions_test.go`.
 
 ### What records no Wireshark version
 
