@@ -242,7 +242,11 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // The reader decrypts the whole stream at each packet, because RFC 8446 section 5.3
 // restarts the record sequence number at each key change and no record carries its own
 // number. So the cost of one packet grows with the stream, and this bound holds it.
-// `ja4xMaxProtectedSearchBytes` in `ja4x.go` holds the same value for the same reason.
+// `ja4xMaxProtectedSearchBytes` in `ja4x.go` holds the same value, and it holds it for a
+// different reason. **A TLS 1.3 server sends the Certificate message in the first records**,
+// so a longer stream carries no certificate and that bound discards nothing. **A client
+// sends a request at any point of an HTTP/2 connection**, so this bound discards every later
+// request of a long connection. #753 records that loss.
 //
 // The client half of one HTTP/2 connection carries the requests, and it carries no response
 // body. `testdata/foxio/pcap/http2-with-cookies.pcapng` reports 20 kB in that direction and
@@ -254,8 +258,8 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // no error.** The reader keeps the whole stream, so the stream of a long connection grows
 // past the bound and every later request of that connection is lost. **A delay would need
 // an incremental decode**, which needs one HPACK decoder for each connection and therefore a
-// table with a bound and a removal path. The tracker holds one issue for this limit, and
-// the batch gate writes its number here.
+// table with a bound and a removal path. **#753 holds this limit**, and it records the
+// incremental decode as the candidate change.
 const ja4hMaxProtectedSearchBytes = 65536
 
 // protectedHTTP2Results returns one result for each HTTP/2 request that the protected
@@ -280,8 +284,7 @@ const ja4hMaxProtectedSearchBytes = 65536
 // for it.** That removal is what tells a second connection of one address pair and port pair
 // from a repeated segment of the first, and an HTTP/2 stream reaches it never. So a second
 // connection of one four-tuple reads the buffer of the first, and it produces no value of
-// its own. The tracker holds one issue for this limit, and the batch gate writes its
-// number here.
+// its own. **#753 holds this limit**, and it records it as limit 2.
 func (f *JA4HFingerprinter) protectedHTTP2Results(
 	streamKey string,
 	data []byte,
@@ -354,6 +357,9 @@ func (f *JA4HFingerprinter) protectedHTTP2Results(
 // decline, and the library reads the SHA-256 key schedule of TLS_AES_128_GCM_SHA256 alone.
 // A capture outside that suite therefore produces no value and no panic, and issue #492 is
 // the reversal path.
+//
+// **`protectedCertificates` of `ja4x.go` runs the same two steps inline**, and the two
+// sites are not one helper. A reader who changes the key schedule changes both.
 func (f *JA4HFingerprinter) tls13Keys(random []byte, label string) (*parser.TLS13RecordKeys, error) {
 	secret, err := f.keyLog.Secret(random, label)
 	if err != nil {

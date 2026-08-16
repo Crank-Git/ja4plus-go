@@ -19,7 +19,8 @@ three issues below, and each of those issues then needs an additive `v1.1` inter
 
 **The maintainer moved Epic 5b ahead of Epic 10 on 2026-08-15 for this reason.**
 
-Three issues wait on the answer.
+Three issues waited on the answer, and none waits today. The note below the three states what
+each one did.
 
 - **#492** reads the certificate of a protected TLS 1.3 handshake record. It needs a key
   log, a TLS record decryptor for TCP, and a reader for the compressed certificate of
@@ -28,6 +29,12 @@ Three issues wait on the answer.
   decoder above it.
 - **#164** reads an HTTP/3 request. It needs the QUIC 1-RTT keys, and a QPACK decoder
   above them.
+
+**The maintainer answered on 2026-08-15 UTC, and #661 built the route.** **#492 and #529 each
+built their reader on 2026-08-16 UTC**, so `JA4XFingerprinter` and `JA4HFingerprinter` read
+the key log today. **#164 closed without code on 2026-08-16 UTC**, because the register holds
+no entry under its ruling and the corpus holds no HTTP/3 JA4H value. **This page records the
+reading of 2026-08-15, and the sections below name the tree of that day.**
 
 **The conformance run of this branch reports 267 deviations that the register does not
 hold**, measured on 2026-08-15. **Epic 5b estimates that the three issues above hold about

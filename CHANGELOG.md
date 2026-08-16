@@ -42,7 +42,9 @@ entries of ruling #164 on 2026-08-15 UTC.** The 5 entries of ruling #164 state
 and frame 12 of `chrome-cloudflare-quic-with-secrets.pcapng` reports the protocol chain
 `eth:ethertype:ipv6:tcp:tls:http2`. **So that frame carries HTTP/2 over TCP, and the reason
 of each of the 5 names the wrong protocol.** The register therefore holds no entry of
-ruling #164 today, and issue #164 still holds the HTTP/3 half of the gap.
+ruling #164 today. **Issue #164 closed without code on 2026-08-16 UTC**, because it had no
+target: the register carries no entry under its ruling, and the 5 entries that named it
+described an HTTP/2 request on TCP. **So no open issue holds an HTTP/3 half of this gap.**
 **The removal moved 63 fingerprint values on 2 captures**, because the run reports 1763
 matches before the change and 1826 after it. **The change also wrote 17 entries of the
 ruling #285 count**, because 17 of the new values reach the reference split that the

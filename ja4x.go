@@ -421,6 +421,8 @@ func (f *JA4XFingerprinter) protectedCertificates(streamID, reverseID string, da
 		return nil
 	}
 
+	// **`tls13Keys` of `ja4h.go` wraps these same two steps**, and the two sites are not one
+	// helper. A reader who changes the key schedule changes both.
 	secret, err := f.keyLog.Secret(random, label)
 	if err != nil {
 		return nil
