@@ -12,11 +12,11 @@ The register lives in the `## Parity with ja4plus` section of `docs/specs/spec.m
 These are the port's own rules. This project adopted them without a change, so one rule
 set governs both repositories.
 
-1. **FoxIO decides behaviour.** Where FoxIO specifies the output, the vectors decide. This
+1. **FoxIO decides behavior.** Where FoxIO specifies the output, the vectors decide. This
    rule outranks the port. Where this project disagrees with a vector, this project is
    wrong.
 2. **The port decides interface where this project shipped nothing.** Where FoxIO
-   specifies nothing, and where this project has no exported name for the behaviour, adopt
+   specifies nothing, and where this project has no exported name for the behavior, adopt
    the port's choice. **Where this project shipped a name first, the rule runs the other
    way and the port adopted it.** The register records which side each row followed.
 3. **The gate is the shared vector set.** Both repositories read the same FoxIO vectors at

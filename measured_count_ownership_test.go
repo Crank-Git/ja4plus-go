@@ -33,12 +33,16 @@ import (
 //
 // A record states what one run measured on one date, so a later measurement never
 // falsifies it and no change edits it. `.claude/rules/ste.md`
-// `## Two permitted restatements, and one date rule` states that reading.
+// `### Two permitted restatements, and one date rule` states that reading.
 type ownedCountRecord struct {
 	// file is the tracked path that holds the records.
 	file string
 	// fromHeading names the section where the records start. An empty value makes the
 	// whole file a record surface.
+	//
+	// The reader matches the heading on a line of its own. A page that cites its own
+	// heading in prose writes the same literal above the heading, and an unanchored match
+	// then cuts the live text at the citation.
 	fromHeading string
 }
 
@@ -89,7 +93,10 @@ var ownedCounts = []ownedCount{
 			// Every entry of the changelog records one release or one batch.
 			{file: "CHANGELOG.md"},
 			// The `## Changelog` section records one round of the specification. Every
-			// section above it is live, and the `## Terms` table sits above it.
+			// section above it is live, and that live text holds the `## Terms` table,
+			// the `## Parity with ja4plus` register and each open question under `### R8`.
+			// The page cites `## Changelog` in prose above the heading, so the reader
+			// matches the heading on a line of its own.
 			{file: "docs/specs/spec.md", fromHeading: "## Changelog"},
 			// Each statement of this page records one dated run of Epic 6 or one
 			// accepted criterion of it. Its `## What Epic 6 built` section states
@@ -193,8 +200,13 @@ func liveTextOfOwnedCount(count ownedCount, path, content string) string {
 			return ""
 		}
 
-		if start := strings.Index(content, record.fromHeading); start >= 0 {
-			content = content[:start]
+		// The match is line-anchored, because a page cites its own heading in prose. A
+		// bare `strings.Index` on the literal found the citation at `docs/specs/spec.md:480`
+		// rather than the heading at `:1232`, and it then skipped 752 live lines. The
+		// batch #773 cross-member review measured that defect on 2026-08-16 UTC.
+		anchored := "\n" + record.fromHeading + "\n"
+		if start := strings.Index(content, anchored); start >= 0 {
+			content = content[:start+1]
 		}
 	}
 
