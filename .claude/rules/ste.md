@@ -118,13 +118,21 @@ of those three citations is the defect, and never a citation this file makes.**
 
 **A count restated in three documents costs three repairs when the measurement moves.** The
 third repair becomes a separate issue when a later reader finds it, so the backlog
-regenerates itself. Issue #757 holds the measurement of 2026-08-16 UTC: of 365 closed
-issues, 67 repaired a sentence, a citation, a count or a term, and 46 of the 67 name an
-earlier issue as their cause.
+regenerates itself.
 
-**A measured count is a number that a command produces, and a later run moves it.** The
-conformance figures, the deviation counts, the register key count, the mutation counts, the
-fuzz target count, the coverage total, a citation-site count and a file count each qualify.
+**Issue #757 holds the measurement of 2026-08-16 UTC.** 365 issues were closed, and 67 of
+them repaired a sentence, a citation, a count or a term. **46 of the 67 name an earlier
+issue as their cause.**
+
+**A measured count is a number that a command produces, and a later run moves it.** Each of
+these is one.
+
+- The conformance figures.
+- The deviation counts, and the register key count.
+- The mutation counts.
+- The fuzz target count.
+- The coverage total.
+- A citation-site count, and a file count.
 
 **A schema count is not a measured count, and this rule never reaches one.** No command
 moves the eleven methods or the ten fingerprinters, because FoxIO and this project decide
@@ -187,15 +195,27 @@ the largest size. **Cite the port at a tag instead**, under `.claude/rules/rulin
 ### The conversion is incremental, and no sweep converts the tree
 
 **The round of a batch converts each document that the batch already opens, and no other
-document.** The maintainer declined a repository-wide sweep in #388 on 2026-08-13, and
-#749 was closed on 2026-08-16 UTC for the same reason: a sweep edits a file that a live
-batch member also edits.
+document.** A standing sweep issue competes with a live batch for the same files.
+
+**The maintainer closed #388 on 2026-08-13**, and `## This project writes US English` above
+records that decline. **The project manager closed #749 on 2026-08-16 UTC**, and it filed
+that issue itself. #749 asked for a repository-wide sweep of the citations of
+`docs/specs/foxio/`, so it asked for a different sweep from this one. **Its closing comment
+states the mechanism that both declines share**, and it quotes the record of #388.
 
 ### The guard
 
-`measured_count_ownership_test.go` holds a registry of each owned count that a guard reaches,
-and it fails when a document states a value the registry gives an owner. **The registry names
-the fuzz target count today.** A batch that converts a class adds the entry for it.
+`measured_count_ownership_test.go` holds a registry of each owned count that a guard reaches.
+It fails when a document states a value that the registry gives an owner. **The registry
+names the fuzz target count today.** A batch that converts a class adds the entry for it.
+
+**The registry names each surface whose statements are dated records, and it reads no
+record.** `docs/specs/features/06-fuzz-testing.md` is one such surface, in full. Its
+`## What Epic 6 built` section states
+`The four members of Epic 6 landed on 2026-08-14, and this section states the result.`, and
+its table gives every count the command that measured it. **So the guard reaches no
+statement of that file at all**, and this sentence states that limit rather than a wider
+claim.
 
 ## The rules
 

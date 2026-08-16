@@ -148,7 +148,7 @@ Run `make corpus` once before `make conformance`. The conformance suite skips wi
 
 **`make fuzz` reads the target list from the tree**, with `go test -list '^Fuzz'` over
 `go list ./...`. So a new target joins the run without an edit to the `Makefile`. Epic 6
-added 13 targets on 2026-08-14, and the recipe found every one of them. **The two targets
+added its targets on 2026-08-14, and the recipe found every one of them. **The two targets
 that the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` and
 `FuzzTCPOptionEntriesReadsAnyOptionRegion`.** Re-measure the count with
 `grep -rn --include='*_test.go' '^func Fuzz' .` rather than reading it from a document.

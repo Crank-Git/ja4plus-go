@@ -29,18 +29,6 @@ import (
 // derives its expected value from `go.mod` rather than from a literal. These tests derive
 // the fuzz target count from the tree for the same reason.
 
-// ownedCountRestatement names one document that states an owned count, and the test that
-// derives the expected value from the owner.
-//
-// `.claude/rules/ste.md` `## Two permitted restatements, and one date rule` permits a
-// restatement under a guard, and it permits no other one.
-type ownedCountRestatement struct {
-	// file is the tracked path that states the value.
-	file string
-	// guard is the test function that fails when the statement and the owner disagree.
-	guard string
-}
-
 // ownedCountRecord names one surface whose statements are dated records.
 //
 // A record states what one run measured on one date, so a later measurement never
@@ -68,11 +56,25 @@ type ownedCount struct {
 	derive func(t *testing.T) int
 	// records names each surface whose statements are dated records.
 	records []ownedCountRecord
-	// restatements names each live statement that a guard holds fresh.
-	restatements []ownedCountRestatement
-	// patterns match one statement of the value. A hit outside a record and outside a
-	// restatement is the defect.
+	// patterns match one statement of the value. A hit outside the owner and outside a
+	// record is the defect.
 	patterns []*regexp.Regexp
+}
+
+// theGuardedRestatementCase names the one live restatement that this project already
+// holds fresh, and the test that holds it.
+//
+// `.claude/rules/ste.md` `### Two permitted restatements, and one date rule` permits a
+// restatement when a test derives the expected value from the owner. The registry above
+// carries no such case, so it models none: unused machinery is a guard that guards
+// nothing. This pair holds the rule file to a guard the tree really declares, and a batch
+// that converts a class with a live restatement adds the field it needs then.
+var theGuardedRestatementCase = struct {
+	file  string
+	guard string
+}{
+	file:  "CHANGELOG.md",
+	guard: "TestTheChangelogPreambleStatesTheCountsTheTreeProduces",
 }
 
 // ownedCounts is the registry. It names the fuzz target count today, and a batch that
@@ -90,18 +92,21 @@ var ownedCounts = []ownedCount{
 			// section above it is live, and the `## Terms` table sits above it.
 			{file: "docs/specs/spec.md", fromHeading: "## Changelog"},
 			// Each statement of this page records one dated run of Epic 6 or one
-			// accepted criterion of it. So this guard does not reach a new live
-			// statement in this file, and a reader of that file reaches the rule
-			// through `docs/specs/spec.md` `## Terms`.
+			// accepted criterion of it. Its `## What Epic 6 built` section states
+			// `The four members of Epic 6 landed on 2026-08-14, and this section
+			// states the result.`, and its table gives every count the command that
+			// measured it. **So this guard reaches no statement of this file**, and
+			// `.claude/rules/ste.md` `### The guard` states that limit.
 			{file: "docs/specs/features/06-fuzz-testing.md"},
 		},
-		restatements: nil,
 		patterns: []*regexp.Regexp{
-			// `holds 15 targets`, `fuzzes 15 targets in turn`, `runs 15 targets`.
-			regexp.MustCompile(`(?i)\b(?:holds|fuzzes|runs|covers|names)\s+(?:about\s+)?[0-9]+\s+(?:fuzz\s+)?targets?\b`),
+			// `15 fuzz targets`, `holds 15 targets`, `there are 15 targets`. The number
+			// stands beside the noun, so no verb list bounds this pattern. A pattern
+			// that named five verbs missed `there are 15 fuzz targets`.
+			regexp.MustCompile(`(?i)\b[0-9]+ (?:fuzz )?targets?\b`),
 			// The `## Terms` row of `docs/specs/spec.md` read `**The tree holds 15**`,
 			// and the word `targets` sits in the row heading rather than in the sentence.
-			regexp.MustCompile(`(?i)fuzz target.*\bthe tree holds\s+\*{0,2}[0-9]+`),
+			regexp.MustCompile(`(?i)fuzz target.{0,400}?the tree holds \*{0,2}[0-9]+`),
 		},
 	},
 }
@@ -211,24 +216,26 @@ func TestNoDocumentStatesAMeasuredCountThatTheRegistryOwns(t *testing.T) {
 				continue
 			}
 
-			if statesTheOwnedCount(count, path) {
+			if path == count.owner {
 				continue
 			}
 
 			live := liveTextOfOwnedCount(count, path, readTrackedFile(path))
 
-			for number, line := range strings.Split(live, "\n") {
-				for _, pattern := range count.patterns {
-					if !pattern.MatchString(line) {
-						continue
-					}
+			// This project hard-wraps its prose near 90 columns, so one sentence
+			// crosses a line break. A match against one line at a time therefore
+			// misses `The tree holds\n15 fuzz targets`. The flat text replaces each
+			// line break with one space, which keeps every byte offset.
+			flat := strings.ReplaceAll(live, "\n", " ")
 
+			for _, pattern := range count.patterns {
+				for _, at := range pattern.FindAllStringIndex(flat, -1) {
 					t.Errorf(
 						"%s:%d states %s, and `.claude/rules/ste.md` `## One document owns each measured count` gives that count %s.\n"+
 							"Cite the owner and state no number. Reproduce the value with: %s\n"+
 							"The tree holds %d today.\n%s",
-						path, number+1, count.name, ownerSentenceOfOwnedCount(count),
-						count.command, held, strings.TrimSpace(line),
+						path, lineOfOffset(live, at[0]), count.name, ownerSentenceOfOwnedCount(count),
+						count.command, held, strings.TrimSpace(flat[at[0]:at[1]]),
 					)
 				}
 			}
@@ -236,19 +243,9 @@ func TestNoDocumentStatesAMeasuredCountThatTheRegistryOwns(t *testing.T) {
 	}
 }
 
-// statesTheOwnedCount reports whether the registry permits this path to state the value.
-func statesTheOwnedCount(count ownedCount, path string) bool {
-	if path == count.owner {
-		return true
-	}
-
-	for _, restatement := range count.restatements {
-		if restatement.file == path {
-			return true
-		}
-	}
-
-	return false
+// lineOfOffset returns the one-based line that holds a byte offset.
+func lineOfOffset(text string, offset int) int {
+	return strings.Count(text[:offset], "\n") + 1
 }
 
 // ownerSentenceOfOwnedCount names the owner of a count for a failure message.
@@ -305,17 +302,33 @@ func TestEachEntryOfTheOwnedCountRegistryNamesALiveTarget(t *testing.T) {
 			}
 		}
 
-		for _, restatement := range count.restatements {
-			if !tracked[restatement.file] {
-				t.Errorf("the entry for %s names the restatement %s, and the index holds no such path",
-					count.name, restatement.file)
-			}
+	}
+}
 
-			if !holdsTheOwnedCountGuard(t, restatement.guard) {
-				t.Errorf("the entry for %s names the guard %s, and no tracked test file declares it",
-					count.name, restatement.guard)
-			}
-		}
+func TestTheGuardedRestatementOfAnOwnedCountNamesALiveGuard(t *testing.T) {
+	// `.claude/rules/ste.md` `### Two permitted restatements, and one date rule` names
+	// this pair as the worked example of a restatement that a guard holds fresh. A rule
+	// that cites a test the tree no longer declares permits a restatement that nothing
+	// checks.
+	tracked := make(map[string]bool)
+	for _, path := range trackedFilesForOwnedCounts(t) {
+		tracked[path] = true
+	}
+
+	if !tracked[theGuardedRestatementCase.file] {
+		t.Errorf("the index holds no %s, and `.claude/rules/ste.md` names its preamble as the worked restatement",
+			theGuardedRestatementCase.file)
+	}
+
+	if !holdsTheOwnedCountGuard(t, theGuardedRestatementCase.guard) {
+		t.Errorf("no tracked test file declares %s, and `.claude/rules/ste.md` names it as the guard of that restatement",
+			theGuardedRestatementCase.guard)
+	}
+
+	standard := readRepoFile(t, ".claude/rules/ste.md")
+	if !strings.Contains(standard, theGuardedRestatementCase.guard) {
+		t.Errorf(".claude/rules/ste.md names no %s, and this test holds that citation",
+			theGuardedRestatementCase.guard)
 	}
 }
 
