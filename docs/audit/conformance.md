@@ -11,12 +11,12 @@ The corpus holds the FoxIO commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
 | Measure | Count |
 |---|---|
 | Captures | 38 |
-| Matches | 1754 |
+| Matches | 1763 |
 | Deviations | 0 |
-| Accepted deviations | 852 |
-| Unaccepted uncovered values | 175 |
+| Accepted deviations | 843 |
+| Unaccepted uncovered values | 178 |
 | Accepted uncovered values | 32 |
-| Accepted comparisons | 884 |
+| Accepted comparisons | 875 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 35 |
@@ -26,8 +26,8 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1116 | 0 | 325 | 147 | 14 |
-| per-packet | 638 | 0 | 527 | 28 | 18 |
+| per-stream | 1119 | 0 | 322 | 150 | 14 |
+| per-packet | 644 | 0 | 521 | 28 | 18 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
 An accepted uncovered value is an entry of that file too, and `## Uncovered values` below states what an uncovered value is.
@@ -35,7 +35,7 @@ The register holds one entry for each accepted comparison, so the accepted compa
 
 ## Deviations
 
-The run reports 852 deviations in 76 groups. One group is one capture, one method and one vector set.
+The run reports 843 deviations in 74 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -95,15 +95,9 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `http2-with-cookies.pcapng` | per-packet | JA4L | 3 | `http2-with-cookies.pcapng/4/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `470_128` |
 | `http2-with-cookies.pcapng` | per-packet | JA4LS | 2 | `http2-with-cookies.pcapng/12/JA4LS.1` | the vector holds a value the library does not produce (accepted) | `44840_117_48774` | (none) |
 | `http2-with-cookies.pcapng` | per-packet | JA4LS | 2 | `http2-with-cookies.pcapng/2/JA4LS.1` | the library produces a value the vector does not hold (accepted) | (none) | `44840_117` |
-| `http2-with-cookies.pcapng` | per-packet | JA4X | 6 | `http2-with-cookies.pcapng/10/JA4X.1` | the vector holds a value the library does not produce (accepted) | `a373a9f83c6b_7022c563de38_2e3757343cb0` | (none) |
-| `http2-with-cookies.pcapng` | per-packet | JA4X | 6 | `http2-with-cookies.pcapng/10/JA4X.2` | the vector holds a value the library does not produce (accepted) | `a373a9f83c6b_a373a9f83c6b_5d71497f7704` | (none) |
-| `http2-with-cookies.pcapng` | per-packet | JA4X | 6 | `http2-with-cookies.pcapng/10/JA4X.3` | the vector holds a value the library does not produce (accepted) | `7d5dbb3783b4_a373a9f83c6b_2fbee3f04f3b` | (none) |
 | `http2-with-cookies.pcapng` | per-stream | JA4H | 30 | `http2-with-cookies.pcapng/0/JA4H.1` | the vector holds a value the library does not produce (accepted) | `ge20cn19enus_cb83bf27b7a9_c7713052b7e4_348cad68b6fb` | (none) |
 | `http2-with-cookies.pcapng` | per-stream | JA4H | 30 | `http2-with-cookies.pcapng/0/JA4H.10` | the vector holds a value the library does not produce (accepted) | `ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7` | (none) |
 | `http2-with-cookies.pcapng` | per-stream | JA4H | 30 | `http2-with-cookies.pcapng/0/JA4H.11` | the vector holds a value the library does not produce (accepted) | `ge20cr18enus_40430d236f7c_10ff48fdaa11_ac323afc21f7` | (none) |
-| `http2-with-cookies.pcapng` | per-stream | JA4X | 3 | `http2-with-cookies.pcapng/0/JA4X.1` | the vector holds a value the library does not produce (accepted) | `a373a9f83c6b_7022c563de38_2e3757343cb0` | (none) |
-| `http2-with-cookies.pcapng` | per-stream | JA4X | 3 | `http2-with-cookies.pcapng/0/JA4X.2` | the vector holds a value the library does not produce (accepted) | `a373a9f83c6b_a373a9f83c6b_5d71497f7704` | (none) |
-| `http2-with-cookies.pcapng` | per-stream | JA4X | 3 | `http2-with-cookies.pcapng/0/JA4X.3` | the vector holds a value the library does not produce (accepted) | `7d5dbb3783b4_a373a9f83c6b_2fbee3f04f3b` | (none) |
 | `https-connect.pcap` | per-packet | JA4H | 2 | `https-connect.pcap/4/JA4H_r.1` | the two values differ (accepted) | `co10nn010000_User-Agent__` | `co10nn010000_User-Agent_` |
 | `https-connect.pcap` | per-packet | JA4H | 2 | `https-connect.pcap/4/JA4H_ro.1` | the two values differ (accepted) | `co10nn010000_User-Agent__` | `co10nn010000_User-Agent_` |
 | `https-connect.pcap` | per-packet | JA4L | 2 | `https-connect.pcap/3/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `45_64` |
@@ -242,7 +236,7 @@ The library produces a value, and the vector file of the capture publishes no ke
 
 The count below holds the accepted values and the unaccepted ones. The summary above counts the two apart.
 
-The run reports 207 uncovered values in 60 groups, and the register accepts 32 of them. One group is one capture, one method and one vector set.
+The run reports 210 uncovered values in 61 groups, and the register accepts 32 of them. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 uncovered values of each group. The `Uncovered` column counts the whole group.
 
@@ -290,6 +284,9 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 | `http1.pcapng` | per-stream | JA4H | 56 | `http1.pcapng/0/JA4H_r` | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_` | no |
 | `http1.pcapng` | per-stream | JA4H | 56 | `http1.pcapng/1/JA4H_r` | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_` | no |
 | `http1.pcapng` | per-stream | JA4H | 56 | `http1.pcapng/10/JA4H_r` | `po11nn050000_Host,Accept,User-Agent,Content-Type,Content-Length_` | no |
+| `http2-with-cookies.pcapng` | per-stream | JA4X | 3 | `http2-with-cookies.pcapng/0/JA4X_r` | `550406,55040a,550403_550403_551d0f,551d25,551d13,551d0e,551d23,2b06010505070101,551d11,551d20,551d1f,2b06010401d679020402` | no |
+| `http2-with-cookies.pcapng` | per-stream | JA4X | 3 | `http2-with-cookies.pcapng/0/JA4X_r.2` | `550406,55040a,550403_550406,55040a,550403_551d0f,551d25,551d13,551d0e,551d23,2b06010505070101,551d1f,551d20` | no |
+| `http2-with-cookies.pcapng` | per-stream | JA4X | 3 | `http2-with-cookies.pcapng/0/JA4X_r.3` | `550406,55040a,55040b,550403_550406,55040a,550403_551d0f,551d13,551d0e,551d23,2b06010505070101,551d1f,551d20` | no |
 | `https-connect.pcap` | per-stream | JA4 | 4 | `https-connect.pcap/0/JA4` | `t12i860500_e18388e7f3a3_a1e935682795` | no |
 | `https-connect.pcap` | per-stream | JA4 | 4 | `https-connect.pcap/0/JA4_o` | `t12i860500_42de6d1d033a_318da70f1e40` | no |
 | `https-connect.pcap` | per-stream | JA4 | 4 | `https-connect.pcap/0/JA4_r` | `t12i860500_0004,0005,0007,000a,000d,0010,0013,0016,002f,0030,0031,0032,0033,0035,0036,0037,0038,0039,003c,003d,003e,003f,0040,0041,0042,0043,0044,0045,0067,0068,0069,006a,006b,0084,0085,0086,0087,0088,0096,0097,0098,0099,009a,009c,009d,009e,009f,00a0,00a1,00a2,00a3,00a4,00a5,00ff,c002,c003,c004,c005,c007,c008,c009,c00a,c00c,c00d,c00e,c00f,c011,c012,c013,c014,c023,c024,c025,c026,c027,c028,c029,c02a,c02b,c02c,c02d,c02e,c02f,c030,c031,c032_000a,000b,000d,000f,0023_0601,0602,0603,0501,0502,0503,0401,0402,0403,0301,0302,0303,0201,0202,0203` | no |
@@ -511,7 +508,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `http2-with-cookies.pcapng` | JA4 | per-stream | match | 4 | 0 | — |
 | `http2-with-cookies.pcapng` | JA4S | per-packet and per-stream | match | 4 | 0 | — |
 | `http2-with-cookies.pcapng` | JA4H | per-packet and per-stream | deviation | 0 | 75 | — |
-| `http2-with-cookies.pcapng` | JA4X | per-packet and per-stream | deviation | 0 | 9 | — |
+| `http2-with-cookies.pcapng` | JA4X | per-packet and per-stream | match | 9 | 0 | — |
 | `http2-with-cookies.pcapng` | JA4SSH | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `http2-with-cookies.pcapng` | JA4L | per-packet and per-stream | deviation | 1 | 3 | — |
 | `http2-with-cookies.pcapng` | JA4LS | per-packet and per-stream | deviation | 1 | 2 | — |

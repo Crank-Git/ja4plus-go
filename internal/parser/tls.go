@@ -12,6 +12,11 @@ const (
 	TLSHandshakeServerHello = 0x02
 )
 
+// tlsRandomLength is the byte count of the Random field of a ClientHello and of a
+// ServerHello. RFC 8446 section 4.1.2 states `Random random;`, and `Random` is
+// `opaque Random[32]`.
+const tlsRandomLength = 32
+
 // TLS extension type IDs.
 const (
 	ExtSNI                 = 0x0000
@@ -22,6 +27,12 @@ const (
 
 // ClientHello holds parsed fields from a TLS ClientHello message.
 type ClientHello struct {
+	// Random holds the 32-byte Random field of the message, and nil when the message is
+	// too short to carry it.
+	//
+	// A key log names the connection by this value, so a caller that decrypts a record
+	// reads it. `KeyLog.Secret` of the root package takes it as the connection name.
+	Random              []byte
 	Version             uint16
 	CipherSuites        []uint16
 	Extensions          []uint16 // extension type IDs in original order
@@ -135,6 +146,14 @@ func ParseClientHello(payload []byte) (*ClientHello, error) {
 
 	// Skip record header(5) + handshake header(4) + version(2) + random(32)
 	pos := 43
+
+	// The random starts after the record header, the handshake header and the version.
+	// A key log names the connection by this value. The copy keeps the field alive after
+	// the caller reuses the payload buffer.
+	if len(payload) >= pos {
+		ch.Random = make([]byte, tlsRandomLength)
+		copy(ch.Random, payload[pos-tlsRandomLength:pos])
+	}
 
 	// Session ID
 	if pos+1 > len(payload) {

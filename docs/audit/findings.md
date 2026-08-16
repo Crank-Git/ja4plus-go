@@ -126,9 +126,10 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `internal/capture/permission_other.go` | #82 |
 | `internal/capture/linktype.go` | #609 |
 | `internal/capture/deadline.go` | #610 |
+| `internal/parser/tls13.go` | #492 |
 <!-- added-files:end -->
 
-**The table holds 16 rows, and no audit reads any of the 16 files.** Each row names the
+**The table holds 17 rows, and no audit reads any of the 17 files.** Each row names the
 issue that added the file after the audit of Epic 2.
 
 - Issue #200 added `internal/parser/ssh_tracker.go`.
@@ -145,6 +146,7 @@ issue that added the file after the audit of Epic 2.
   `internal/capture/permission_linux.go` and `internal/capture/permission_other.go`.
 - Issue #609 added `internal/capture/linktype.go`.
 - Issue #610 added `internal/capture/deadline.go`.
+- Issue #492 added `internal/parser/tls13.go`.
 
 **Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
 held eight files that ship and seven test files, measured on 2026-08-15 with
