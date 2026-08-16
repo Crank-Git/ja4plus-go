@@ -133,6 +133,49 @@ func TestOpenRefusesARecordOfTheWrongSequenceNumber(t *testing.T) {
 	}
 }
 
+// TestOpenRefusesKeysOfTheWrongLength holds the two field lengths.
+//
+// The two fields are exported, so a caller builds this value without
+// DeriveTLS13RecordKeys. `crypto/cipher` panics on a nonce of the wrong length, and the
+// nonce loop indexes a nonce of fewer than 8 bytes at a negative position. The library
+// returns a non-fatal error and it never panics.
+func TestOpenRefusesKeysOfTheWrongLength(t *testing.T) {
+	derived, err := DeriveTLS13RecordKeys(tls13TestSecret)
+	if err != nil {
+		t.Fatalf("DeriveTLS13RecordKeys returned %v", err)
+	}
+
+	record := tls13TestProtect(t, derived, []byte{0x0b, 0x00, 0x00, 0x00}, TLSRecordTypeHandshake, 0, 0)
+
+	cases := map[string]*TLS13RecordKeys{
+		"the zero value":     {},
+		"a nonce of 4 bytes": {Key: derived.Key, IV: derived.IV[:4]},
+		"a nonce of 8 bytes": {Key: derived.Key, IV: derived.IV[:8]},
+		"a key of 8 bytes":   {Key: derived.Key[:8], IV: derived.IV},
+	}
+
+	for name, keys := range cases {
+		if _, _, err := keys.Open(record, 0); err == nil {
+			t.Errorf("Open read a record under %s", name)
+		}
+	}
+}
+
+// TestTLS13ContentOfStreamRefusesKeysOfTheWrongLength holds the same bound on the walk.
+func TestTLS13ContentOfStreamRefusesKeysOfTheWrongLength(t *testing.T) {
+	derived, err := DeriveTLS13RecordKeys(tls13TestSecret)
+	if err != nil {
+		t.Fatalf("DeriveTLS13RecordKeys returned %v", err)
+	}
+
+	stream := tls13TestProtect(t, derived, []byte{0x0b, 0x00, 0x00, 0x00}, TLSRecordTypeHandshake, 0, 0)
+
+	content, opened := TLS13ContentOfStream(stream, &TLS13RecordKeys{}, 0, TLSRecordTypeHandshake)
+	if len(content) != 0 || opened != 0 {
+		t.Errorf("TLS13ContentOfStream read %d bytes under the zero value of the keys", len(content))
+	}
+}
+
 // TestOpenRefusesATruncatedRecord holds the bound of every length field.
 func TestOpenRefusesATruncatedRecord(t *testing.T) {
 	keys, err := DeriveTLS13RecordKeys(tls13TestSecret)

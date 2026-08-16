@@ -133,6 +133,16 @@ func (k *TLS13RecordKeys) Open(record []byte, sequence uint64) ([]byte, byte, er
 		return nil, 0, ErrNoSecret
 	}
 
+	// The two fields are exported, so a caller builds this value without
+	// DeriveTLS13RecordKeys. `crypto/cipher` panics on a nonce of the wrong length rather
+	// than returning an error, and the loop below indexes a nonce shorter than 8 bytes at a
+	// negative position. The library returns a non-fatal error instead, so this method
+	// states both lengths before it reaches either one.
+	if len(k.Key) != tls13KeyLength || len(k.IV) != tls13IVLength {
+		return nil, 0, fmt.Errorf("parser: the keys hold %d key bytes and %d nonce bytes, and the suite states %d and %d",
+			len(k.Key), len(k.IV), tls13KeyLength, tls13IVLength)
+	}
+
 	// Every packet is untrusted input, so the header bound comes before the length field.
 	if len(record) < tls13RecordHeaderLength {
 		return nil, 0, fmt.Errorf("parser: the record holds %d bytes, and the header needs %d",

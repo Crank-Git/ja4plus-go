@@ -395,6 +395,18 @@ func (f *JA4XFingerprinter) emitCertificates(
 // It reads no stream above ja4xMaxProtectedSearchBytes, and it reads no stream that already
 // produced a certificate. Both guards stop the repeated walk that each later packet of one
 // stream would otherwise run.
+//
+// **The walk still runs once for each packet of a stream that produces no certificate, and
+// #492 declined a third guard against that.** The self-review of #492 measured the worst
+// case: about 3121 packets reach the byte bound when each one adds one 21-byte record, and
+// the walk of packet k opens k records, so one such stream costs about 4.9 million AEAD
+// operations. **That case needs a peer that writes thousands of records under the handshake
+// traffic key**, because `TLS13ContentOfStream` stops at the first record the handshake keys
+// do not open and a real connection changes that key after the Finished message. So the
+// realistic cost of one packet is the handshake record count, which is about five. **A third
+// guard would need a per-stream table, and a new table needs a bound and a removal path**;
+// batch #184 records the leak that a table without them produces. Issue #492 is the reversal
+// path, and a stream that reaches the measured case is the fact that reverses it.
 func (f *JA4XFingerprinter) protectedCertificates(streamID, reverseID string, data []byte) [][]byte {
 	if f.keyLog == nil || len(data) > ja4xMaxProtectedSearchBytes {
 		return nil
