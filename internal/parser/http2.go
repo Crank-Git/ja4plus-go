@@ -19,9 +19,9 @@ const HTTP2ClientPreface = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 // http2VersionToken names the HTTP version of every request this reader returns.
 //
 // `ja4hNormalizeVersion` in `ja4h.go` reads this token and writes the JA4H version code
-// `20`. `testdata/foxio/reference/wireshark/source/packet-ja4.c:1152` writes that code for
-// a frame that carries `http2.headers.method`, and
-// `testdata/foxio/reference/python/ja4h.py:31` writes it for the `http2` layer.
+// `20`. `testdata/foxio/reference/wireshark/source/packet-ja4.c:1152-1153` writes that code
+// for a frame that carries `http2.headers.method`, and
+// `testdata/foxio/reference/python/ja4h.py:31-32` writes it for the `http2` layer.
 const http2VersionToken = "HTTP/2"
 
 // The frame header of RFC 9113 section 4.1, and the two frame types that carry a field
@@ -74,6 +74,11 @@ const http2MaxStringLength = 16384
 // One decrypted stream carries any number of header blocks, and the caller bounds the
 // stream. This bound holds the returned slice as well, so a stream of small blocks costs a
 // bounded allocation.
+//
+// **A connection that passes this bound reaches no later value, and it reports no error.**
+// The caller counts the requests the stream already published, so a return that stops at
+// this bound stops that counter too. The tracker holds one issue for this limit, and the
+// batch gate writes its number here.
 const http2MaxRequests = 256
 
 // HTTP2Requests returns one HTTPRequest for each request that the client half of one
@@ -242,7 +247,7 @@ func http2RequestOfFields(fields []hpack.HeaderField) *HTTPRequest {
 // **One cookie field states one cookie pair, and this reader splits no field on a
 // semicolon.** RFC 9113 section 8.2.3 permits a sender to split the Cookie header field
 // into separate fields, and this capture shape is what the reference reads.
-// `testdata/foxio/reference/wireshark/source/packet-ja4.c:1174` splits one
+// `testdata/foxio/reference/wireshark/source/packet-ja4.c:1174-1175` splits one
 // `http2.headers.cookie` field on `=` into two parts and reads no semicolon, and
 // `testdata/foxio/reference/python/ja4h.py:59` reads one pair from each entry of the list
 // that `tshark` supplies. The HTTP/1.x reader splits the one Cookie header on a semicolon,

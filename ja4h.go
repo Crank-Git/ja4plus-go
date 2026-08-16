@@ -249,6 +249,13 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 // 1926 kB in the other, measured with `tshark -q -z conv,tcp` on 2026-08-15 UTC. So this
 // bound stops the walk of the response direction at once, and it reaches every request of
 // that capture.
+//
+// **A connection whose client half passes this bound reaches no later value, and it reports
+// no error.** The reader keeps the whole stream, so the stream of a long connection grows
+// past the bound and every later request of that connection is lost. **A delay would need
+// an incremental decode**, which needs one HPACK decoder for each connection and therefore a
+// table with a bound and a removal path. The tracker holds one issue for this limit, and
+// the batch gate writes its number here.
 const ja4hMaxProtectedSearchBytes = 65536
 
 // protectedHTTP2Results returns one result for each HTTP/2 request that the protected
@@ -268,6 +275,13 @@ const ja4hMaxProtectedSearchBytes = 65536
 // value, and this path cannot: RFC 7541 section 2.3.2 states that the HPACK dynamic table
 // serves the whole connection, so a later block reads an entry that an earlier block
 // inserted. `ja4hMaxStreamBytes` bounds the stream and `removeRange` removes it.
+//
+// **This path writes no consumed range, so `segmentCarriesNoNewRequest` removes no entry
+// for it.** That removal is what tells a second connection of one address pair and port pair
+// from a repeated segment of the first, and an HTTP/2 stream reaches it never. So a second
+// connection of one four-tuple reads the buffer of the first, and it produces no value of
+// its own. The tracker holds one issue for this limit, and the batch gate writes its
+// number here.
 func (f *JA4HFingerprinter) protectedHTTP2Results(
 	streamKey string,
 	data []byte,

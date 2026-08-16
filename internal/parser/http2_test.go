@@ -151,7 +151,7 @@ func TestHTTP2RequestsReadsOneCookiePairFromEachCookieField(t *testing.T) {
 func TestHTTP2RequestsSplitsNoCookieFieldOnASemicolon(t *testing.T) {
 	encoder, buffer := http2TestEncoder()
 
-	// `testdata/foxio/reference/wireshark/source/packet-ja4.c:1174` splits one
+	// `testdata/foxio/reference/wireshark/source/packet-ja4.c:1174-1175` splits one
 	// `http2.headers.cookie` field on `=` into two parts, and it reads no semicolon.
 	fields := append(http2TestRequestFields("/three"), "cookie", "a=1; b=2")
 
