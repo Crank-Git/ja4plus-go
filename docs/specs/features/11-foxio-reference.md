@@ -329,7 +329,7 @@ removed `docs/specs/foxio/port-register.md` on 2026-08-16 UTC, with FR-reference
 FR-reference-18. **A criterion of a feature file is a dated record** under
 `.claude/rules/ste.md` `### Two permitted restatements, and one date rule`, so the line
 above stays and this paragraph states the later fact.
-`TestTheTreeHoldsNoMirroredCopyOfThePortRegister` in `deviations_test.go` holds the removal.
+`TestTheTreeHoldsNoMirroredCopyOfThePortRegister` in `internal/repocheck/deviations_test.go` holds the removal.
 
 ## Out of scope
 

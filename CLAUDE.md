@@ -106,6 +106,8 @@ of that register name a change to this repository. Read
 | `internal/capture/` | Opening a live interface. Holds the pure-Go backend, the libpcap backend, the unsupported-platform fallback, and one permission probe for each of Linux, macOS and every other platform. |
 | `internal/keylog/` | Reading a pcapng Decryption Secrets Block and a key log in the NSS key log format. |
 | `internal/repocheck/` | Package `repocheck`: the tests that read this repository rather than this library. It holds no production Go file, so it contributes no statement to the coverage total. |
+| `internal/deviations/` | The schema and the reader of `testdata/deviations.json`. Package `ja4plus` and package `repocheck` both read the register, and neither one imports the other's test files. |
+| `internal/repofile/` | The tracked paths of this repository and the reader for them: the documentation-site layout, the two publish workflows, and the production Go files of one directory. |
 | `testdata/foxio/` | The fetched FoxIO corpus. Not tracked in git. |
 | `testdata/deviations.json` | The register: one entry per accepted difference from a FoxIO value. Tracked. |
 | `docs/specs/` | The spec package. Tracked. Not published to the site. |
@@ -119,14 +121,14 @@ packet belongs in `cmd/`.
 
 **Every remote lookup of the library goes in `ja4db/`.** The maintainer ruled that boundary
 on 2026-08-14, and `docs/audit/network-boundary.md` holds the record. The core package
-imports no HTTP client, and `network_boundary_test.go` fails on an import that breaks the
+imports no HTTP client, and `internal/repocheck/network_boundary_test.go` fails on an import that breaks the
 rule.
 
 **The boundary names an HTTP call and a remote lookup, and it names no raw socket.** The
 maintainer narrowed it on 2026-08-15, and `docs/audit/network-boundary.md` holds that
 amendment. A remote lookup reaches `ja4db.com`, and a raw capture socket reads a local
 interface. The two are different reaches, so `internal/capture/` stays in the layout table
-above. `network_boundary_test.go` permits a socket open in that directory alone, and it
+above. `internal/repocheck/network_boundary_test.go` permits a socket open in that directory alone, and it
 fails on a second package that opens one. **Issue #613 is the reversal path.**
 
 ## Commands
@@ -231,7 +233,7 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
   decoration.** `docs/` is a directory of this repository, so make reads the bare target
   name as that directory and finds it already up to date. Without the `.PHONY` entry it
   prints ``make: Nothing to be done for `docs'.`` and it exits 0 without a site build.
-  `TestTheMakefileBuildsTheSite` in `mkdocs_config_test.go` holds the entry.
+  `TestTheMakefileBuildsTheSite` in `internal/repocheck/mkdocs_config_test.go` holds the entry.
 - `make vuln` exits 3 when the library calls a vulnerable function. It exits 0 when a
   vulnerable module reaches the build and no call reaches it, and it prints a count of
   that second kind. **The scanner reads the Go version of the `go` command on the PATH**,

@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/repofile"
 )
 
 // The two publish workflows of Epic 14 hold ten requirements, and no Go code reads either
@@ -18,22 +20,13 @@ import (
 // commit of batch #83 carries `[skip ci]`, and this epic merges to `dev`. So no run of
 // either workflow exists, and #88 claims none.
 
-const (
-	docsBuildWorkflow   = ".github/workflows/docs-build.yml"
-	docsPublishWorkflow = ".github/workflows/docs.yml"
-
-	// FR-documentation-38 states the site URL. Every page that names it reads this one
-	// value, so a later move edits one line of this file and the test finds each page.
-	documentationSiteURL = "https://crank-git.github.io/ja4plus-go/"
-)
-
 // TestTheDocsBuildWorkflowRunsOnEveryPullRequest holds FR-documentation-33.
 //
 // The trigger carries no branch filter. `.github/workflows/ci.yml` filters on three
 // branches, and a copy of that filter here would skip a pull request into an integration
 // branch. Such a pull request also changes a page.
 func TestTheDocsBuildWorkflowRunsOnEveryPullRequest(t *testing.T) {
-	workflow := readRepoFile(t, docsBuildWorkflow)
+	workflow := readRepoFile(t, repofile.DocsBuildWorkflow)
 
 	if !regexp.MustCompile(`(?m)^\s{2}pull_request:\s*$`).MatchString(workflow) {
 		t.Fatal("FR-documentation-33 states that docs-build.yml runs on every pull request")
@@ -45,7 +38,7 @@ func TestTheDocsBuildWorkflowRunsOnEveryPullRequest(t *testing.T) {
 
 // TestTheDocsBuildWorkflowUploadsTheArtifactWhenTheCallerAsks holds FR-documentation-30.
 func TestTheDocsBuildWorkflowUploadsTheArtifactWhenTheCallerAsks(t *testing.T) {
-	workflow := readRepoFile(t, docsBuildWorkflow)
+	workflow := readRepoFile(t, repofile.DocsBuildWorkflow)
 
 	if !regexp.MustCompile(`(?m)^\s{2}workflow_call:\s*$`).MatchString(workflow) {
 		t.Fatal("FR-documentation-30 states that a caller builds the site through this workflow")
@@ -73,7 +66,7 @@ func countPermissionLines(t *testing.T, workflow, permission string) int {
 
 // TestTheDocsBuildWorkflowPublishesNothing holds FR-documentation-33.
 func TestTheDocsBuildWorkflowPublishesNothing(t *testing.T) {
-	workflow := readRepoFile(t, docsBuildWorkflow)
+	workflow := readRepoFile(t, repofile.DocsBuildWorkflow)
 
 	if strings.Contains(workflow, "actions/deploy-pages@") {
 		t.Error("FR-documentation-33 states that docs-build.yml publishes nothing, and it names the deploy action")
@@ -87,7 +80,7 @@ func TestTheDocsBuildWorkflowPublishesNothing(t *testing.T) {
 
 // TestTheDocsPublishWorkflowRunsOnAPushToMaster holds FR-documentation-31.
 func TestTheDocsPublishWorkflowRunsOnAPushToMaster(t *testing.T) {
-	workflow := readRepoFile(t, docsPublishWorkflow)
+	workflow := readRepoFile(t, repofile.DocsPublishWorkflow)
 
 	if !regexp.MustCompile(`(?m)^\s{2}push:\s*$`).MatchString(workflow) {
 		t.Fatal("FR-documentation-31 states that docs.yml publishes on a push")
@@ -99,10 +92,10 @@ func TestTheDocsPublishWorkflowRunsOnAPushToMaster(t *testing.T) {
 
 // TestTheDocsPublishWorkflowCallsTheBuildWorkflow holds FR-documentation-32.
 func TestTheDocsPublishWorkflowCallsTheBuildWorkflow(t *testing.T) {
-	workflow := readRepoFile(t, docsPublishWorkflow)
+	workflow := readRepoFile(t, repofile.DocsPublishWorkflow)
 
-	if !strings.Contains(workflow, "uses: ./"+docsBuildWorkflow) {
-		t.Errorf("FR-documentation-32 states that docs.yml calls %s", docsBuildWorkflow)
+	if !strings.Contains(workflow, "uses: ./"+repofile.DocsBuildWorkflow) {
+		t.Errorf("FR-documentation-32 states that docs.yml calls %s", repofile.DocsBuildWorkflow)
 	}
 	// A second build recipe would publish a site that no pull request ever built.
 	for _, recipe := range []string{"mkdocs build", "make docs", "requirements.txt"} {
@@ -118,7 +111,7 @@ func TestTheDocsPublishWorkflowCallsTheBuildWorkflow(t *testing.T) {
 // `docs/specs/features/14-documentation.md` states that a status other than 200 or 404
 // fails the run, prints the status and the body, and claims nothing about the setting.
 func TestTheDocsPublishWorkflowReadsThePagesSettingFirst(t *testing.T) {
-	workflow := readRepoFile(t, docsPublishWorkflow)
+	workflow := readRepoFile(t, repofile.DocsPublishWorkflow)
 
 	if !strings.Contains(workflow, "  pages-setting:") {
 		t.Fatal("FR-documentation-34 states that docs.yml reads the Pages setting")
@@ -146,8 +139,8 @@ func TestTheDocsPublishWorkflowReadsThePagesSettingFirst(t *testing.T) {
 //
 // The two workflows are the whole publish path, so the count reads both files.
 func TestTheDeployJobAloneHoldsThePagesPermissions(t *testing.T) {
-	publish := readRepoFile(t, docsPublishWorkflow)
-	build := readRepoFile(t, docsBuildWorkflow)
+	publish := readRepoFile(t, repofile.DocsPublishWorkflow)
+	build := readRepoFile(t, repofile.DocsBuildWorkflow)
 
 	for _, permission := range []string{"pages: write", "id-token: write"} {
 		count := countPermissionLines(t, publish, permission) + countPermissionLines(t, build, permission)
@@ -170,7 +163,7 @@ func TestTheDeployJobAloneHoldsThePagesPermissions(t *testing.T) {
 
 // TestOneDeploymentRunsAtATime holds FR-documentation-36.
 func TestOneDeploymentRunsAtATime(t *testing.T) {
-	workflow := readRepoFile(t, docsPublishWorkflow)
+	workflow := readRepoFile(t, repofile.DocsPublishWorkflow)
 
 	if !regexp.MustCompile(`(?m)^concurrency:\s*$`).MatchString(workflow) {
 		t.Fatal("FR-documentation-36 runs one deployment at a time, and docs.yml holds no concurrency block")
@@ -192,7 +185,7 @@ func TestEveryActionReferenceIsPinnedToACommitHash(t *testing.T) {
 	pinned := regexp.MustCompile(`^[\w.-]+/[\w.-]+(/[\w.-]+)*@[0-9a-f]{40}$`)
 	usesLine := regexp.MustCompile(`(?m)^\s*(?:- )?uses:\s+(\S+)`)
 
-	for _, path := range []string{docsBuildWorkflow, docsPublishWorkflow} {
+	for _, path := range []string{repofile.DocsBuildWorkflow, repofile.DocsPublishWorkflow} {
 		workflow := readRepoFile(t, path)
 		matches := usesLine.FindAllStringSubmatch(workflow, -1)
 		if len(matches) == 0 {
@@ -218,13 +211,13 @@ func TestEveryActionReferenceIsPinnedToACommitHash(t *testing.T) {
 // #84 wrote the `site_url` of `mkdocs.yml`, and #85 wrote the README link. This test reads
 // both against one value, so a later move of the address cannot leave one of them behind.
 func TestTheSiteURLAndTheReadmeLinkNameOneAddress(t *testing.T) {
-	config := readRepoFile(t, mkdocsConfigPath)
-	if !strings.Contains(config, "site_url: "+documentationSiteURL) {
-		t.Errorf("FR-documentation-38 states that the site URL is %s", documentationSiteURL)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
+	if !strings.Contains(config, "site_url: "+repofile.DocumentationSiteURL) {
+		t.Errorf("FR-documentation-38 states that the site URL is %s", repofile.DocumentationSiteURL)
 	}
 
 	readme := readRepoFile(t, "README.md")
-	if !strings.Contains(readme, documentationSiteURL) {
-		t.Errorf("FR-documentation-39 states that the README links to %s", documentationSiteURL)
+	if !strings.Contains(readme, repofile.DocumentationSiteURL) {
+		t.Errorf("FR-documentation-39 states that the README links to %s", repofile.DocumentationSiteURL)
 	}
 }

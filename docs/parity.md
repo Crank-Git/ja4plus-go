@@ -61,7 +61,7 @@ The two counts differ, and this page names the one it counted. `ja4plus/cli.py`,
   a method.
 - **The reason** carries one sentence. A row that names a Go equivalent needs none.
 
-`parity_table_test.go` reads this table. It fails on each of these.
+`internal/repocheck/parity_table_test.go` reads this table. It fails on each of these.
 
 - A row disappears, or two rows name one port name.
 - A row names a name that the port does not promise.
@@ -130,14 +130,14 @@ that ruling.**
 **Three port names and three Go names answer the one JA4X method.** The port promises
 `compute_ja4x_from_der`, `compute_ja4x_from_pem` and `generate_ja4x`, and this library
 exports `ComputeJA4XFromDER`, `ComputeJA4XFromPEM` and `ComputeJA4XFromPacket`. Each pair
-reads the same input. `parity_ja4x_name_count_test.go` fails when this paragraph states a
+reads the same input. `internal/repocheck/parity_ja4x_name_count_test.go` fails when this paragraph states a
 count that the table does not hold.
 
 ## The three `not applicable` rows, and how to reverse one
 
 **The table records three rows as `` `none` ``, `not applicable`.** The `__version__` row
 records a reading. The `generate_ja4l` row and the `generate_ja4ssh` row record the ruling of
-#356. `parity_one_shot_not_applicable_test.go` fails when this heading states a count that
+#356. `internal/repocheck/parity_one_shot_not_applicable_test.go` fails when this heading states a count that
 the table does not hold.
 
 ### The `__version__` row
@@ -172,7 +172,7 @@ goroutine, and the core is lock-free by design. **`v1.0.0` freezes the exported 
 the exposure would be permanent.
 
 **This library therefore exports no `ComputeJA4L` and no `ComputeJA4SSH`.**
-`parity_one_shot_not_applicable_test.go` holds the ruling. The ruling moves no fingerprint
+`internal/repocheck/parity_one_shot_not_applicable_test.go` holds the ruling. The ruling moves no fingerprint
 value, so it reaches no entry of `testdata/deviations.json`, and
 `.claude/rules/rulings.md` names a test as the other home.
 

@@ -1,4 +1,4 @@
-package ja4plus
+package repocheck
 
 // The exported API record is the tracked file `docs/api/v1.md`. `v1.0.0` freezes it, and
 // these tests hold FR-release-1 through FR-release-5 of
@@ -27,13 +27,15 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/repofile"
 )
 
 // apiRecordFile is the path of the record, relative to the package directory.
 const apiRecordFile = "docs/api/v1.md"
 
 // apiRecordDir is the directory of the record, relative to `docs/`. `mkdocs.yml` excludes
-// it, and `excludedDocumentationDirs` in `mkdocs_config_test.go` holds the same name.
+// it, and `repofile.ExcludedDocumentationDirs` in `mkdocs_config_test.go` holds the same name.
 const apiRecordDir = "api"
 
 // publishedPackage names one package that a consumer outside this module imports.
@@ -895,14 +897,14 @@ func pathHoldsInternalElement(path string) bool {
 // TestTheSiteExcludesTheApiRecord holds the exclusion of `docs/api/` by name.
 //
 // `TestEveryExcludedDirectoryReachesTheSiteConfig` in `mkdocs_config_test.go` reads
-// `excludedDocumentationDirs`, so it holds no name of its own and an edit that drops the
+// `repofile.ExcludedDocumentationDirs`, so it holds no name of its own and an edit that drops the
 // entry leaves it green. This test names the directory as a literal.
 //
 // `docs/api/v1.md` `## This page is not published by the documentation site` states the two
 // reasons and the reversal path.
 func TestTheSiteExcludesTheApiRecord(t *testing.T) {
-	if !isExcludedDocumentationDir(apiRecordDir) {
-		t.Errorf("excludedDocumentationDirs holds no %q entry, and %s must not publish",
+	if !repofile.IsExcludedDocumentationDir(apiRecordDir) {
+		t.Errorf("repofile.ExcludedDocumentationDirs holds no %q entry, and %s must not publish",
 			apiRecordDir, apiRecordFile)
 	}
 

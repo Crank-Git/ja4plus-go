@@ -1,4 +1,4 @@
-package ja4plus
+package repocheck
 
 import (
 	"os"
@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/repofile"
 )
 
 // The documentation site of Epic 14 lives in two files that no Go code reads: `mkdocs.yml`
@@ -18,31 +20,16 @@ import (
 // The tests read the files as text rather than as YAML, because this module declares no
 // YAML dependency and #84 adds no Go dependency.
 
-const (
-	mkdocsConfigPath  = "mkdocs.yml"
-	docsRequirements  = "docs/requirements.txt"
-	documentationRoot = "docs"
-)
-
-func readTextFile(t *testing.T, path string) string {
-	t.Helper()
-	content, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("read %s: %v", path, err)
-	}
-	return string(content)
-}
-
 // TestMkdocsConfigSitsAtTheRepositoryRoot holds FR-documentation-2.
 func TestMkdocsConfigSitsAtTheRepositoryRoot(t *testing.T) {
-	if _, err := os.Stat(mkdocsConfigPath); err != nil {
+	if _, err := os.Stat(repofile.MkdocsConfigPath); err != nil {
 		t.Fatalf("FR-documentation-2 states that mkdocs.yml sits at the repository root: %v", err)
 	}
 }
 
 // TestMkdocsConfigNamesTheMaterialTheme holds FR-documentation-1.
 func TestMkdocsConfigNamesTheMaterialTheme(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
 	if !regexp.MustCompile(`(?m)^theme:\s*$`).MatchString(config) {
 		t.Fatal("mkdocs.yml holds no theme block")
 	}
@@ -53,7 +40,7 @@ func TestMkdocsConfigNamesTheMaterialTheme(t *testing.T) {
 
 // TestMkdocsConfigReadsTheDocsDirectory holds FR-documentation-3.
 func TestMkdocsConfigReadsTheDocsDirectory(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
 	if !regexp.MustCompile(`(?m)^docs_dir:\s+docs\s*$`).MatchString(config) {
 		t.Error("FR-documentation-3 states that docs_dir is docs/")
 	}
@@ -61,7 +48,7 @@ func TestMkdocsConfigReadsTheDocsDirectory(t *testing.T) {
 
 // TestMkdocsConfigFailsTheBuildOnAWarning holds FR-documentation-4.
 func TestMkdocsConfigFailsTheBuildOnAWarning(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
 	if !regexp.MustCompile(`(?m)^strict:\s+true\s*$`).MatchString(config) {
 		t.Error("FR-documentation-4 states that strict is true, so a warning fails the build")
 	}
@@ -72,7 +59,7 @@ func TestMkdocsConfigFailsTheBuildOnAWarning(t *testing.T) {
 // `links.anchors` defaults to `info`, so the anchor half of the requirement exists only
 // because the configuration raises it.
 func TestMkdocsConfigRaisesABrokenLinkAndABrokenAnchor(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
 	if !regexp.MustCompile(`(?m)^\s+not_found:\s+warn\s*$`).MatchString(config) {
 		t.Error("FR-documentation-5 states that a broken link reaches warn")
 	}
@@ -84,7 +71,7 @@ func TestMkdocsConfigRaisesABrokenLinkAndABrokenAnchor(t *testing.T) {
 // TestMkdocsConfigExcludesTheSpecPackageAndTheAudit holds FR-documentation-6 and
 // FR-documentation-7.
 func TestMkdocsConfigExcludesTheSpecPackageAndTheAudit(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
 	for requirement, pattern := range map[string]string{
 		"FR-documentation-6": "/specs/",
 		"FR-documentation-7": "/audit/",
@@ -102,18 +89,18 @@ func TestMkdocsConfigExcludesTheSpecPackageAndTheAudit(t *testing.T) {
 // repository. The issue states the rule: a bump is a commit that does nothing else.
 func TestTheGeneratorPinsAreExact(t *testing.T) {
 	pins := 0
-	for number, line := range strings.Split(readTextFile(t, docsRequirements), "\n") {
+	for number, line := range strings.Split(readRepoFile(t, repofile.DocsRequirements), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 		pins++
 		if !strings.Contains(line, "==") {
-			t.Errorf("%s:%d states no exact pin: %q", docsRequirements, number+1, line)
+			t.Errorf("%s:%d states no exact pin: %q", repofile.DocsRequirements, number+1, line)
 		}
 	}
 	if pins == 0 {
-		t.Errorf("FR-documentation-8 states that one file pins every generator, and %s pins none", docsRequirements)
+		t.Errorf("FR-documentation-8 states that one file pins every generator, and %s pins none", repofile.DocsRequirements)
 	}
 }
 
@@ -121,7 +108,7 @@ func TestTheGeneratorPinsAreExact(t *testing.T) {
 //
 // Material names the light palette `default` and the dark palette `slate`.
 func TestTheThemeOffersALightPaletteAndADarkPalette(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
 	for _, scheme := range []string{"default", "slate"} {
 		if !regexp.MustCompile(`(?m)^\s+scheme:\s+` + scheme + `\s*$`).MatchString(config) {
 			t.Errorf("FR-documentation-9 states two palettes, and the theme names no %q scheme", scheme)
@@ -144,7 +131,7 @@ func TestTheThemeOffersALightPaletteAndADarkPalette(t *testing.T) {
 // Measured on 2026-08-14 against `Flet/github-slugger`, which states that it generates
 // "a slug just like GitHub does for markdown headings".
 func TestTheTableOfContentsSlugMatchesTheGitHubSlug(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
 	if !strings.Contains(config, "slugify: !!python/object/apply:pymdownx.slugs.slugify") {
 		t.Fatal("FR-documentation-10 states that the slug matches GitHub, and the toc extension names no slugify function")
 	}
@@ -163,7 +150,7 @@ func TestTheTableOfContentsSlugMatchesTheGitHubSlug(t *testing.T) {
 // `make: Nothing to be done for 'docs'.` and it exits 0 without a build. The `.PHONY`
 // entry is what makes the recipe run.
 func TestTheMakefileBuildsTheSite(t *testing.T) {
-	makefile := readTextFile(t, "Makefile")
+	makefile := readRepoFile(t, "Makefile")
 	phony := regexp.MustCompile(`(?m)^\.PHONY:(.*)$`).FindStringSubmatch(makefile)
 	if phony == nil {
 		t.Fatal("the Makefile states no .PHONY line")
@@ -179,14 +166,6 @@ func TestTheMakefileBuildsTheSite(t *testing.T) {
 	}
 }
 
-// excludedDocumentationDirs names every directory of `docs/` that `exclude_docs` of
-// `mkdocs.yml` drops from the built site.
-//
-// One list serves every walker of `docs/`, so a sixth exclusion reaches each guard at once.
-// #91 added `mutation_reports` under FR-mutation-6, #92 added `mutation_settlements`
-// under FR-mutation-13, and #101 added `api` under FR-release-1.
-var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports", "mutation_settlements", "api"}
-
 // TestEveryExcludedDirectoryReachesTheSiteConfig binds the list above to `exclude_docs`.
 //
 // The list drives the guards of this file, and `exclude_docs` drives the built site. Nothing
@@ -199,25 +178,14 @@ var excludedDocumentationDirs = []string{"specs", "audit", "mutation_reports", "
 // `mutation_reports` as a literal, and it covers that case for the one directory a sweep
 // writes to.
 func TestEveryExcludedDirectoryReachesTheSiteConfig(t *testing.T) {
-	config := readTextFile(t, mkdocsConfigPath)
-	for _, excluded := range excludedDocumentationDirs {
+	config := readRepoFile(t, repofile.MkdocsConfigPath)
+	for _, excluded := range repofile.ExcludedDocumentationDirs {
 		pattern := "/" + excluded + "/"
 		if !regexp.MustCompile(`(?m)^\s+` + regexp.QuoteMeta(pattern) + `\s*$`).MatchString(config) {
-			t.Errorf("excludedDocumentationDirs names %s, and exclude_docs of %s holds no %s pattern",
-				excluded, mkdocsConfigPath, pattern)
+			t.Errorf("repofile.ExcludedDocumentationDirs names %s, and exclude_docs of %s holds no %s pattern",
+				excluded, repofile.MkdocsConfigPath, pattern)
 		}
 	}
-}
-
-// isExcludedDocumentationDir reports whether the site publishes no page of the directory.
-func isExcludedDocumentationDir(name string) bool {
-	for _, excluded := range excludedDocumentationDirs {
-		if name == excluded {
-			return true
-		}
-	}
-
-	return false
 }
 
 // TestNoPublishedPageLinksIntoAnExcludedDirectory holds the edge case of #84: a page that
@@ -235,16 +203,16 @@ func TestNoPublishedPageLinksIntoAnExcludedDirectory(t *testing.T) {
 	// A markdown link or a markdown image whose target opens with an excluded directory.
 	// The pattern reads a relative target alone, because an absolute URL to the GitHub
 	// blob view is a link to another site and never a link into the built site.
-	intoExcluded := regexp.MustCompile(`]\(\.?/?(?:` + strings.Join(excludedDocumentationDirs, "|") + `)/`)
+	intoExcluded := regexp.MustCompile(`]\(\.?/?(?:` + strings.Join(repofile.ExcludedDocumentationDirs, "|") + `)/`)
 
 	pages := 0
-	err := filepath.WalkDir(documentationRoot, func(path string, entry os.DirEntry, err error) error {
+	err := filepath.WalkDir(repofile.DocumentationRoot, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if entry.IsDir() {
 			// An excluded directory publishes no page, so the rule binds none of them.
-			if path != documentationRoot && isExcludedDocumentationDir(entry.Name()) {
+			if path != repofile.DocumentationRoot && repofile.IsExcludedDocumentationDir(entry.Name()) {
 				return filepath.SkipDir
 			}
 			return nil
@@ -253,7 +221,7 @@ func TestNoPublishedPageLinksIntoAnExcludedDirectory(t *testing.T) {
 			return nil
 		}
 		pages++
-		for number, line := range strings.Split(readTextFile(t, path), "\n") {
+		for number, line := range strings.Split(readRepoFile(t, path), "\n") {
 			if intoExcluded.MatchString(line) {
 				t.Errorf("%s:%d links into an excluded directory, and the built site holds no target for it: %q",
 					path, number+1, strings.TrimSpace(line))
@@ -262,9 +230,9 @@ func TestNoPublishedPageLinksIntoAnExcludedDirectory(t *testing.T) {
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("walk %s: %v", documentationRoot, err)
+		t.Fatalf("walk %s: %v", repofile.DocumentationRoot, err)
 	}
 	if pages == 0 {
-		t.Fatalf("%s holds no published page, so this guard reads nothing", documentationRoot)
+		t.Fatalf("%s holds no published page, so this guard reads nothing", repofile.DocumentationRoot)
 	}
 }

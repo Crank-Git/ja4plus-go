@@ -157,7 +157,7 @@ above, and it states no number.
 | Class of measured count | Owner | Rank | Why |
 |---|---|---|---|
 | The conformance figures — matches, deviations, accepted deviations, and each per-set split | `docs/audit/conformance.md` | 1 | `make conformance` rewrites the report on every run, and a CI job fails when the tracked report and the run disagree. |
-| The register key count, and the entry count of one ruling | `testdata/deviations.json` | 1 | The register is the data, and the count is its length. `changelog_counts_freshness_test.go` derives both from it. |
+| The register key count, and the entry count of one ruling | `testdata/deviations.json` | 1 | The register is the data, and the count is its length. `internal/repocheck/changelog_counts_freshness_test.go` derives both from it. |
 | The coverage floor | `.coverage-floor` | 1 | The file holds one number, and `internal/repocheck/coverage_floor_test.go` reads it. |
 | The mutation counts of the named package set | `docs/specs/features/15-mutation-sweep.md` | 2 | No cheap command produces the value, so a document holds it. That file states the package set the counts measure. |
 | A file count or a citation-site count that one rule measures | The rule file that states the rule | 2 | This file owns the British-spelling file count for that reason. |
@@ -187,7 +187,7 @@ here rather than converting a second class in the batch that ships `v1.1.0`.
 **A guard makes a restatement safe, and nothing else does.** A document restates an owned
 count when a test derives the expected value from the owner and fails on a disagreement.
 `TestTheChangelogPreambleStatesTheCountsTheTreeProduces` in
-`changelog_counts_freshness_test.go` holds the `## [Unreleased]` preamble of `CHANGELOG.md`
+`internal/repocheck/changelog_counts_freshness_test.go` holds the `## [Unreleased]` preamble of `CHANGELOG.md`
 that way. **#752 built two `CHANGELOG.md` guards on the same principle in batch #760**, and
 each one derives its expected value from `go.mod`.
 

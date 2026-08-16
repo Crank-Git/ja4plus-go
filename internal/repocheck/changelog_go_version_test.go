@@ -1,4 +1,4 @@
-package ja4plus
+package repocheck
 
 import (
 	"fmt"

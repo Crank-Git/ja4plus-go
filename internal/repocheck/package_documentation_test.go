@@ -1,4 +1,4 @@
-package ja4plus
+package repocheck
 
 // These tests hold FR-release-7 and FR-release-10 through FR-release-16 of
 // `docs/specs/features/10-release.md`, which issue #102 carries.
@@ -31,38 +31,6 @@ type documentedName struct {
 	Name string
 	// Doc is the text of the doc comment, and it is empty when the name carries none.
 	Doc string
-}
-
-// productionGoFilesOf returns the path of every Go file of one directory that is not a test
-// file. It sorts the result, so two walks of one directory read one order.
-//
-// It replaces `go/parser.ParseDir`, which Go 1.25 deprecates. The #725 ruling of 2026-08-15
-// moved the language version to 1.25, and `staticcheck` then reported `SA1019` on the two
-// call sites. The documented replacement is `golang.org/x/tools/go/packages`, and that
-// package would add a module dependency for a directory walk the standard library already
-// serves. **A caller that needs build tags takes the documented replacement instead.**
-func productionGoFilesOf(t *testing.T, dir string) []string {
-	t.Helper()
-
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatalf("read the directory %s: %v", dir, err)
-	}
-
-	var paths []string
-
-	for _, entry := range entries {
-		name := entry.Name()
-		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
-			continue
-		}
-
-		paths = append(paths, filepath.Join(dir, name))
-	}
-
-	sort.Strings(paths)
-
-	return paths
 }
 
 // documentedNamesOf returns every exported name of one package directory, with its doc

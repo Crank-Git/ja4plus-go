@@ -4,6 +4,9 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
+	"github.com/Crank-Git/ja4plus-go/internal/repofile"
 )
 
 // readRepoFile returns the content of a file in the repository root.
@@ -54,4 +57,34 @@ func makefileRecipe(t *testing.T, target string) string {
 	}
 
 	return strings.Join(recipe, "\n")
+}
+
+// readDeviationRegister returns the parsed register.
+// It fails the test when the file is absent or when it does not parse.
+//
+// `internal/deviations` holds the reader, and this wrapper reports its error to the test.
+// `internal/repocheck` holds the same wrapper, for the reason `readRepoFile` states above.
+func readDeviationRegister(t *testing.T) []deviations.Entry {
+	t.Helper()
+
+	entries, err := deviations.Load()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	return entries
+}
+
+// productionGoFilesOf returns every Go file of one directory that the build compiles into
+// the package. `internal/repofile` holds the walk, and this wrapper reports its error to
+// the test.
+func productionGoFilesOf(t *testing.T, dir string) []string {
+	t.Helper()
+
+	paths, err := repofile.ProductionGoFiles(dir)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	return paths
 }

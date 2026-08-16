@@ -102,7 +102,7 @@ unchanged, and the conformance count is unchanged.
 
 ## The guard
 
-**`network_boundary_test.go` holds the property, and it makes no network call.** The guard
+**`internal/repocheck/network_boundary_test.go` holds the property, and it makes no network call.** The guard
 holds three parts.
 
 1. `TestNoProductionFileOfTheCorePackageImportsAnHTTPClient` reads the abstract syntax tree

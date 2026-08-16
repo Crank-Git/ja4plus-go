@@ -1,4 +1,4 @@
-package ja4plus
+package repocheck
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 // README is the first page a reader meets, so a stale block there costs the most.
 //
 // `docs_go_samples_test.go` holds the same rule for `docs/`, and it does not reach this
-// file. It walks `documentationRoot`, which is `docs`, so `README.md` stood outside every
+// file. It walks `repofile.DocumentationRoot`, which is `docs`, so `README.md` stood outside every
 // code check until #103. The two guards differ in what they can demand, and the reason is
 // the mirror.
 //
@@ -102,7 +102,7 @@ func (b readmeBlock) name() string {
 func readmeBlocks(t *testing.T) []readmeBlock {
 	t.Helper()
 
-	lines := strings.Split(readTextFile(t, readmeFile), "\n")
+	lines := strings.Split(readRepoFile(t, readmeFile), "\n")
 
 	var blocks []readmeBlock
 	for index := 0; index < len(lines); index++ {
@@ -533,7 +533,7 @@ func readmeSubcommands(t *testing.T) map[string]bool {
 	const mainFile = "cmd/ja4plus/main.go"
 
 	labels := regexp.MustCompile(`case ("[^"]*"(?:, "[^"]*")*):`).
-		FindAllStringSubmatch(readTextFile(t, mainFile), -1)
+		FindAllStringSubmatch(readRepoFile(t, mainFile), -1)
 	if len(labels) == 0 {
 		t.Fatalf("%s holds no case label, and this guard then reads nothing", mainFile)
 	}
@@ -596,7 +596,7 @@ func TestEveryProgramCommandOfTheReadmeNamesASubcommand(t *testing.T) {
 func readmeOutputCase(t *testing.T) (command []string, output string) {
 	t.Helper()
 
-	page := readTextFile(t, readmeFile)
+	page := readRepoFile(t, readmeFile)
 	if !strings.Contains(page, readmeOutputSection) {
 		t.Fatalf("%s holds no section headed %q, and FR-release-21 requires the output "+
 			"of one real run", readmeFile, readmeOutputSection)

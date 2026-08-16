@@ -15,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Crank-Git/ja4plus-go/internal/repofile"
 )
 
 // The release gate case of `docs/specs/features/16-pre-release-validation.md`.
@@ -436,8 +438,8 @@ func prereleaseTextFile(t *testing.T, path string) (string, bool) {
 // the case fail, because the host then resolves and the site does not.
 func TestTheReadmeLinksToTheDocumentationSiteAndTheLinkResolves(t *testing.T) {
 	readme := readRepoFile(t, "README.md")
-	if !strings.Contains(readme, documentationSiteURL) {
-		t.Fatalf("README.md names no link to %s", documentationSiteURL)
+	if !strings.Contains(readme, repofile.DocumentationSiteURL) {
+		t.Fatalf("README.md names no link to %s", repofile.DocumentationSiteURL)
 	}
 
 	if networkIsAbsent(documentationSiteAddress) {
@@ -449,9 +451,9 @@ func TestTheReadmeLinksToTheDocumentationSiteAndTheLinkResolves(t *testing.T) {
 	// timeout, it verifies the server certificate, and it bounds the response body.
 	client := &http.Client{Timeout: 30 * time.Second}
 
-	response, err := client.Get(documentationSiteURL)
+	response, err := client.Get(repofile.DocumentationSiteURL)
 	if err != nil {
-		t.Fatalf("the link %s does not resolve: %v", documentationSiteURL, err)
+		t.Fatalf("the link %s does not resolve: %v", repofile.DocumentationSiteURL, err)
 	}
 
 	defer func() {
@@ -463,6 +465,6 @@ func TestTheReadmeLinksToTheDocumentationSiteAndTheLinkResolves(t *testing.T) {
 		t.Errorf("the link %s answers with status %d, and the release needs status %d. "+
 			"`.github/workflows/docs.yml` publishes the site on a push to `master`, and "+
 			"this work stands on `dev`",
-			documentationSiteURL, response.StatusCode, http.StatusOK)
+			repofile.DocumentationSiteURL, response.StatusCode, http.StatusOK)
 	}
 }

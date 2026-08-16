@@ -81,7 +81,7 @@ rather than two.
 
 **Cite the port at a tag, and name the section.** The port is `Crank-Git/ja4plus`, and its
 register lives in the `## Parity with ja4plus-go` section of its `docs/specs/spec.md`.
-`portReadVersion` and `portReadCommit` in `parity_table_test.go` state the tag this project
+`portReadVersion` and `portReadCommit` in `internal/repocheck/parity_table_test.go` state the tag this project
 reads and the commit that tag points at, so a citation resolves at one immovable state of
 the port.
 

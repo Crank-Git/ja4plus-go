@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 )
 
 // These tests hold FR-conformance-20 through FR-conformance-26. They run over fixture
@@ -535,7 +537,7 @@ func TestTheStreamAdapterNamesTheStreamByTheStreamField(t *testing.T) {
 		t.Fatalf("the adapter writes no value under the key %q", key)
 	}
 
-	if err := checkDeviationKey(key.String()); err != nil {
+	if err := deviations.CheckKey(key.String()); err != nil {
 		t.Errorf("the register reader rejects the key %q: %v", key.String(), err)
 	}
 }

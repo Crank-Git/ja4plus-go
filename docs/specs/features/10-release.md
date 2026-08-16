@@ -232,7 +232,7 @@ No entity changes. The following files change.
 | File | Change |
 |---|---|
 | `docs/api/v1.md` | New. |
-| `api_test.go` | New. Compares the exported API with the record. |
+| `internal/repocheck/api_test.go` | New. Compares the exported API with the record. |
 | `doc.go` | Rewritten. |
 | `example_test.go` | New. Holds the runnable examples. |
 | `README.md` | Rewritten. |

@@ -219,7 +219,7 @@ the counts.
 **Each record is tracked in git**, and this page names each path in a code span rather than in
 a link. A link from a published page into an excluded directory resolves in the repository and
 breaks on the site.
-`TestNoPublishedPageLinksIntoAnExcludedDirectory` in `mkdocs_config_test.go` holds that rule.
+`TestNoPublishedPageLinksIntoAnExcludedDirectory` in `internal/repocheck/mkdocs_config_test.go` holds that rule.
 
 Read a record in the repository, at
 <https://github.com/Crank-Git/ja4plus-go/tree/dev/docs>.

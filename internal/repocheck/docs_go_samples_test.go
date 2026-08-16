@@ -1,4 +1,4 @@
-package ja4plus
+package repocheck
 
 import (
 	"go/ast"
@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/repofile"
 )
 
 // The tests below hold FR-documentation-28 and FR-documentation-29 of #87.
@@ -68,14 +70,6 @@ import (
 // **A one-way rule lets a deleted page leave an orphan mirror behind.** The next reader
 // then cannot tell an orphan from a sample whose page moved.
 
-const (
-	// exampleTestFile holds one testable example for each fenced Go block of `docs/`.
-	exampleTestFile = "example_test.go"
-	// examplesRoot holds one runnable program for each fenced Go block of `docs/`.
-	// FR-documentation-25 requires the directory.
-	examplesRoot = "examples"
-)
-
 // goSample is one fenced Go block of one published page.
 type goSample struct {
 	// page is the path of the page that holds the block.
@@ -93,19 +87,19 @@ func (s goSample) name() string {
 
 // collectGoSamples returns every fenced Go block of every published page.
 //
-// It skips every directory of `excludedDocumentationDirs`, because `exclude_docs` of
+// It skips every directory of `repofile.ExcludedDocumentationDirs`, because `exclude_docs` of
 // `mkdocs.yml` drops each one from the site. A sample in the spec package documents a design
 // and never an interface a reader calls.
 func collectGoSamples(t *testing.T) []goSample {
 	t.Helper()
 
 	var samples []goSample
-	err := filepath.WalkDir(documentationRoot, func(path string, entry os.DirEntry, err error) error {
+	err := filepath.WalkDir(repofile.DocumentationRoot, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if entry.IsDir() {
-			if path != documentationRoot && isExcludedDocumentationDir(entry.Name()) {
+			if path != repofile.DocumentationRoot && repofile.IsExcludedDocumentationDir(entry.Name()) {
 				return filepath.SkipDir
 			}
 			return nil
@@ -114,7 +108,7 @@ func collectGoSamples(t *testing.T) []goSample {
 			return nil
 		}
 
-		lines := strings.Split(readTextFile(t, path), "\n")
+		lines := strings.Split(readRepoFile(t, path), "\n")
 		for index := 0; index < len(lines); index++ {
 			opening := strings.TrimSpace(lines[index])
 			if opening != "```go" && !strings.HasPrefix(opening, "```go ") {
@@ -138,7 +132,7 @@ func collectGoSamples(t *testing.T) []goSample {
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("walk %s: %v", documentationRoot, err)
+		t.Fatalf("walk %s: %v", repofile.DocumentationRoot, err)
 	}
 	return samples
 }
@@ -204,25 +198,25 @@ func functionBodyTokens(t *testing.T, path, source string, body *ast.BlockStmt, 
 func TestEveryGoSampleOfTheSiteIsARunnableProgram(t *testing.T) {
 	samples := collectGoSamples(t)
 	if len(samples) == 0 {
-		t.Fatalf("%s holds no fenced Go block, so this guard reads nothing", documentationRoot)
+		t.Fatalf("%s holds no fenced Go block, so this guard reads nothing", repofile.DocumentationRoot)
 	}
 
 	programs := map[string]string{}
-	err := filepath.WalkDir(examplesRoot, func(path string, entry os.DirEntry, err error) error {
+	err := filepath.WalkDir(repofile.ExamplesRoot, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if entry.IsDir() || filepath.Base(path) != "main.go" {
 			return nil
 		}
-		programs[tokenKey(normalizedTokens(readTextFile(t, path)))] = path
+		programs[tokenKey(normalizedTokens(readRepoFile(t, path)))] = path
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("walk %s: %v", examplesRoot, err)
+		t.Fatalf("walk %s: %v", repofile.ExamplesRoot, err)
 	}
 	if len(programs) == 0 {
-		t.Fatalf("%s holds no program, and FR-documentation-25 requires one for each sample", examplesRoot)
+		t.Fatalf("%s holds no program, and FR-documentation-25 requires one for each sample", repofile.ExamplesRoot)
 	}
 
 	matched := map[string]string{}
@@ -247,7 +241,7 @@ func TestEveryGoSampleOfTheSiteIsARunnableProgram(t *testing.T) {
 		program, ok := programs[key]
 		if !ok {
 			t.Errorf("%s matches no program of %s; add one whose token sequence equals the block",
-				sample.name(), examplesRoot)
+				sample.name(), repofile.ExamplesRoot)
 			continue
 		}
 		if earlier, taken := matched[program]; taken {
@@ -263,7 +257,7 @@ func TestEveryGoSampleOfTheSiteIsARunnableProgram(t *testing.T) {
 			continue
 		}
 		t.Errorf("%s matches no fenced Go block of %s; delete it or add the page that carries it",
-			program, documentationRoot)
+			program, repofile.DocumentationRoot)
 	}
 }
 
@@ -275,14 +269,14 @@ func TestEveryGoSampleOfTheSiteIsARunnableProgram(t *testing.T) {
 func TestEveryGoSampleOfTheSiteIsATestableExample(t *testing.T) {
 	samples := collectGoSamples(t)
 	if len(samples) == 0 {
-		t.Fatalf("%s holds no fenced Go block, so this guard reads nothing", documentationRoot)
+		t.Fatalf("%s holds no fenced Go block, so this guard reads nothing", repofile.DocumentationRoot)
 	}
 
-	source := readTextFile(t, exampleTestFile)
+	source := readRepoFile(t, repofile.ExampleTestFile)
 	set := token.NewFileSet()
-	parsed, err := parser.ParseFile(set, exampleTestFile, source, parser.SkipObjectResolution)
+	parsed, err := parser.ParseFile(set, repofile.ExampleTestFile, source, parser.SkipObjectResolution)
 	if err != nil {
-		t.Fatalf("parse %s: %v", exampleTestFile, err)
+		t.Fatalf("parse %s: %v", repofile.ExampleTestFile, err)
 	}
 
 	examples := map[string]string{}
@@ -295,13 +289,13 @@ func TestEveryGoSampleOfTheSiteIsATestableExample(t *testing.T) {
 		if !strings.HasPrefix(function.Name.Name, "Example") {
 			continue
 		}
-		key := tokenKey(functionBodyTokens(t, exampleTestFile, source, function.Body, set))
+		key := tokenKey(functionBodyTokens(t, repofile.ExampleTestFile, source, function.Body, set))
 		examples[key] = function.Name.Name
 		names[function.Name.Name] = ""
 	}
 	if len(examples) == 0 {
 		t.Fatalf("%s holds no testable example, and FR-documentation-28 requires one for each sample",
-			exampleTestFile)
+			repofile.ExampleTestFile)
 	}
 
 	for _, sample := range samples {
@@ -321,7 +315,7 @@ func TestEveryGoSampleOfTheSiteIsATestableExample(t *testing.T) {
 		name, ok := examples[key]
 		if !ok {
 			t.Errorf("%s matches no testable example of %s; add one whose body equals the body of main",
-				sample.name(), exampleTestFile)
+				sample.name(), repofile.ExampleTestFile)
 			continue
 		}
 		if earlier := names[name]; earlier != "" {
@@ -336,7 +330,7 @@ func TestEveryGoSampleOfTheSiteIsATestableExample(t *testing.T) {
 			continue
 		}
 		t.Errorf("%s of %s matches no fenced Go block of %s; delete it or add the page that carries it",
-			name, exampleTestFile, documentationRoot)
+			name, repofile.ExampleTestFile, repofile.DocumentationRoot)
 	}
 }
 

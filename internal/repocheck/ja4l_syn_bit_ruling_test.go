@@ -1,8 +1,10 @@
-package ja4plus
+package repocheck
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 )
 
 // The maintainer ruled issue #543 on 2026-08-14. The SYN bit test of ruling #126 reaches
@@ -44,7 +46,7 @@ var ja4lSYNBitDeclines = map[string]string{
 }
 
 func TestTheRegisterDeclinesEachExtraFlagBitSYNValueUnderRuling126(t *testing.T) {
-	held := make(map[string]deviationEntry)
+	held := make(map[string]deviations.Entry)
 	for _, entry := range readDeviationRegister(t) {
 		held[entry.Key] = entry
 	}

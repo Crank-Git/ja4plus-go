@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 	"github.com/gopacket/gopacket"
 )
 
@@ -596,10 +597,10 @@ func (m *conformanceMovedPoints) write(produced map[conformanceKey]string, shape
 // conformanceRegisterByKey returns the register, keyed by the comparison each entry names.
 // FR-reference-25 reads `testdata/deviations.json`, and the suite expects the named
 // comparison to differ.
-func conformanceRegisterByKey(t *testing.T) map[conformanceKey]deviationEntry {
+func conformanceRegisterByKey(t *testing.T) map[conformanceKey]deviations.Entry {
 	t.Helper()
 
-	register := make(map[conformanceKey]deviationEntry)
+	register := make(map[conformanceKey]deviations.Entry)
 
 	for _, entry := range readDeviationRegister(t) {
 		parts := strings.Split(entry.Key, "/")
@@ -764,7 +765,7 @@ func conformanceRunTotalsAsCounts(totals conformanceRunTotals) conformanceReport
 func conformanceRunOneCapture(
 	t *testing.T,
 	capture string,
-	register map[conformanceKey]deviationEntry,
+	register map[conformanceKey]deviations.Entry,
 	totals *conformanceRunTotals,
 	report *conformanceReport,
 ) {
@@ -817,7 +818,7 @@ func conformanceRunStreamSet(
 	t *testing.T,
 	capture string,
 	packets []gopacket.Packet,
-	register map[conformanceKey]deviationEntry,
+	register map[conformanceKey]deviations.Entry,
 	totals *conformanceRunTotals,
 	report *conformanceReport,
 ) bool {
@@ -862,7 +863,7 @@ func conformanceRunPacketSet(
 	t *testing.T,
 	capture string,
 	packets []gopacket.Packet,
-	register map[conformanceKey]deviationEntry,
+	register map[conformanceKey]deviations.Entry,
 	totals *conformanceRunTotals,
 	report *conformanceReport,
 ) bool {

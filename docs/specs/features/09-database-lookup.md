@@ -20,7 +20,7 @@ all three on 2026-08-14**, and each paragraph below states the state the epic le
 library that reaches the network surprises a caller who embeds it in a monitor. #72 moved
 `RemoteLookupConfig` and `LookupFingerprintRemote` to `ja4db`, so the core package imports
 no HTTP client. `docs/audit/network-boundary.md` holds the maintainer's ruling, and
-`network_boundary_test.go` fails on an import that breaks it.
+`internal/repocheck/network_boundary_test.go` fails on an import that breaks it.
 
 **The client had no timeout.** `RemoteLookupConfig.HTTPClient` fell back to
 `http.DefaultClient`, which has no timeout at all. #73 gave the package a default client
@@ -206,7 +206,7 @@ the reversal path for a reader who wants the other pair of names.
 | `internal/dbcache/dbcache.go` | New. It validates a downloaded database, holds the 16 MB bound and writes the cache file atomically. |
 | `cmd/ja4plus/main.go` | The `db update` path writes the cache through `internal/dbcache`. |
 | `docs/audit/network-boundary.md` | New. It records the boundary ruling of 2026-08-14. |
-| `network_boundary_test.go` | New. It fails when a production file of the core package imports an HTTP client. |
+| `internal/repocheck/network_boundary_test.go` | New. It fails when a production file of the core package imports an HTTP client. |
 | `lookup_reload_test.go` | New. It holds the reload, fallback and race tests. |
 | `ja4db/hardening_test.go` | New. It holds the timeout, redirect, bound and `User-Agent` tests. |
 | `internal/dbcache/dbcache_test.go` | New. It holds the validation and atomic-write tests. |

@@ -1,8 +1,10 @@
-package ja4plus
+package repocheck
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/Crank-Git/ja4plus-go/internal/deviations"
 )
 
 // The maintainer ruled issue #528 on 2026-08-14. JA4L point C is the last QUIC server
@@ -46,7 +48,7 @@ var ja4lPointCDeclines = map[string]ja4lPointCDecline{
 }
 
 func TestTheRegisterDeclinesEachFirstPacketPointCValueUnderRuling528(t *testing.T) {
-	held := make(map[string]deviationEntry)
+	held := make(map[string]deviations.Entry)
 	for _, entry := range readDeviationRegister(t) {
 		held[entry.Key] = entry
 	}

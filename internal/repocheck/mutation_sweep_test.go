@@ -248,10 +248,10 @@ func latestMutationReport(t *testing.T) string {
 //
 // `TestEveryExcludedDirectoryReachesTheSiteConfig` in `mkdocs_config_test.go` asserts the
 // same pattern shape, and the two tests guard different things. That test reads
-// `excludedDocumentationDirs`, so it holds `mkdocs.yml` against the list and it holds the
+// `repofile.ExcludedDocumentationDirs`, so it holds `mkdocs.yml` against the list and it holds the
 // list against nothing. This test names `mutation_reports` as a literal, so it survives an
 // edit that drops the name from the list. Without this test one edit that removes the name
-// from both `excludedDocumentationDirs` and `mkdocs.yml` leaves every test green, and
+// from both `repofile.ExcludedDocumentationDirs` and `mkdocs.yml` leaves every test green, and
 // `make docs` then fails on the first sweep. The cross-member review of Epic 15 asked which
 // test the tree keeps, and it keeps both for this reason.
 func TestTheSiteExcludesTheMutationReports(t *testing.T) {
