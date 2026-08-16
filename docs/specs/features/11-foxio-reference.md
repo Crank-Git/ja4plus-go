@@ -199,8 +199,9 @@ Three measurements withdrew them, each taken on 2026-08-16 UTC.
 2. **The tracker allocates numbers without a gap.** It reported 760 issues and pull requests
    together, and 760 as the highest number. So a bound reports a number above the highest
    allocated number alone.
-3. **The mark reported no typo in its whole life.** Its comment recorded about 35 reports,
-   and every one named a number that the tracker allocated minutes later. **The measured
+3. **The mark reported no typo in its whole life.** Its comment recorded **39
+   re-measurements**, measured with `grep -c "re-measured the mark"`. Every citation that
+   reddened the guard named a number that the tracker allocated minutes later. **The measured
    precision of the bound is zero.**
 
 **A typo now reaches the tree, and FR-reference-32 accepts that cost.** A number that names

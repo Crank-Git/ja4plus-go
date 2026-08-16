@@ -30,10 +30,11 @@ package ja4plus
 //     requests together, and it reported 760 as the highest number. So every number at or
 //     below the highest one already resolves to something here, and a bound reports a number
 //     above it alone.
-//   - **The bound reported no typo in its whole life.** The deleted comment recorded about 35
-//     reports, and every one named an issue or a pull request that the tracker allocated
-//     minutes later. Each report named the author's own fresh number, so the measured
-//     precision of the bound is zero.
+//   - **The bound reported no typo in its whole life.** The deleted comment recorded 39
+//     re-measurements of the mark, measured with `grep -c "re-measured the mark"`. Every
+//     citation that reddened the guard named an issue or a pull request that the tracker
+//     allocated minutes later, so each report named the author's own fresh number. **The
+//     measured precision of the bound is zero.**
 //
 // **A typo now reaches the tree, and this file accepts that cost.** A number that names the
 // wrong issue of this repository sits inside the allocated range, so no bound ever reported
