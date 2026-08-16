@@ -136,7 +136,7 @@ fails on a second package that opens one. **Issue #613 is the reversal path.**
 | `make lint-cache-check` | Prove the stale linter cache defect of #257, and prove the repair. |
 | `make corpus` | Fetch the FoxIO corpus at the pinned commit. |
 | `make conformance` | Run the conformance suite against the corpus. |
-| `make fuzz` | Run each fuzz target for 30 seconds. **The tree holds 15 targets**, measured on 2026-08-14. |
+| `make fuzz` | Run each fuzz target for 30 seconds. The recipe reads the target list from the tree, and no document states the count. |
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
@@ -148,13 +148,16 @@ Run `make corpus` once before `make conformance`. The conformance suite skips wi
 
 **`make fuzz` reads the target list from the tree**, with `go test -list '^Fuzz'` over
 `go list ./...`. So a new target joins the run without an edit to the `Makefile`. Epic 6
-added 13 targets on 2026-08-14, and the recipe found every one of them. **The two targets
+added its targets on 2026-08-14, and the recipe found every one of them. **The two targets
 that the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` and
 `FuzzTCPOptionEntriesReadsAnyOptionRegion`.** Re-measure the count with
 `grep -rn --include='*_test.go' '^func Fuzz' .` rather than reading it from a document.
+**The command owns that count, and no document states it.**
+`.claude/rules/ste.md` `## One document owns each measured count` states the rule, and
+`measured_count_ownership_test.go` fails when a document states the value.
 
-**One run of `make fuzz` takes about 8 minutes**, because it fuzzes 15 targets in turn for
-30 seconds each.
+**One run of `make fuzz` costs 30 seconds for each target of the tree**, because it fuzzes
+them in turn. Multiply the count that the command above reports by 30 seconds.
 
 **`make mutate` sweeps every package of the module except `cmd/ja4plus` and `examples/`.**
 That set is the named set of FR-mutation-4, and #90 concluded it from a measurement rather
@@ -279,6 +282,12 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
   sentence, a citation, a term or a stale count. **Each repair produced more issues.** #410
   exists because #398 edited a file. #419 exists because #355 edited a file. #436 exists
   because #70 measured something. **The backlog regenerated at about the rate it closed.**
+- **One document owns each measured count, and every other document cites that owner.**
+  `.claude/rules/ste.md` `## One document owns each measured count` states the rule, the
+  owner of each class and the two permitted restatements. **This file owns no measured
+  count**, and it cites each owner. **A schema count is not a measured count**, so the
+  eleven methods and the ten fingerprinters above stay here. #757 earned the rule from a
+  measurement of the closed backlog on 2026-08-16 UTC.
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
   the reference is wrong. Never change a FoxIO vector to make a test pass.
 - **Where the FoxIO implementations disagree, a person decides.** That is a ruling, not a
