@@ -96,9 +96,9 @@ UTC, and `.claude/rules/ste.md`
   `Crank-Git/ja4plus` at that tag**, and this checkout
   holds no copy of it. `parity_table_test.go` states the tag and the commit it points at,
   in `portReadVersion` and `portReadCommit`.
-  **`ja4plus/` is the one root that separates the two repositories**, so a citation of base
-  7 names it. `tests/` and `.claude/` each name a directory of both repositories, so no
-  citation of base 7 opens with one of them.
+  **A citation of base 7 opens with `ja4plus/`, and that root names a directory of the port
+  alone.** This repository holds no directory of that name, so the root decides the
+  repository without help from the sentence around it.
 
 ### The measurement of every citation
 

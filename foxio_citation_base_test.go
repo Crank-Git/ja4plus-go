@@ -89,9 +89,11 @@ var foxioVectorExtension = map[string]bool{
 //
 // #758 removed the mirrored copy of the port's register on 2026-08-16 UTC. That copy used
 // the port's own citation forms, and it named `tests` and `.claude` of the port beside
-// `ja4plus`. Each of those two roots also names a directory of this repository, so this
-// set held them for the copy alone and `portPath` rejected them on every other page. The
-// copy is gone, so the set names the one root that separates the two repositories.
+// `ja4plus`. `portPath` accepted those two on the copy alone, and it rejected them on every
+// other page, so both entries became unreachable when the copy went.
+//
+// `ja4plus` stays, and it needs no such restriction: this repository holds no directory of
+// that name, so the root decides the repository on any page.
 var foxioPortDirectory = map[string]bool{
 	"ja4plus": true,
 }
