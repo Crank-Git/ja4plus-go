@@ -1092,9 +1092,10 @@ that the interface declares.
   moved it to Go 1.25. **The move drops every Go 1.24 consumer.** So a consumer on Go
   1.22, Go 1.23 or Go 1.24 must move to Go 1.25. Issue #725 holds the ruling and the
   reversal path.
-- **Four dependency moves landed in this cycle.** The `github.com/gopacket/gopacket` bump
-  forced the language version above. v1.7.1 declares `go 1.25.0` in its own `go.mod`, and
-  Go requires the main module to declare a language version at or above every dependency.
+- **Four changes to `go.mod` landed in this cycle.** One of them is the language version
+  of the entry above, and the `github.com/gopacket/gopacket` bump forces it. v1.7.1
+  declares `go 1.25.0` in its own `go.mod`, and Go requires the main module to declare a
+  language version at or above every dependency.
   - `github.com/gopacket/gopacket` to v1.7.1. It repairs a decoder panic on untrusted
     input, under `GHSA-6h9g-cjv3-pg2c`, and no patch release of the 1.6 line carries that
     repair. Issue #730 holds the move.
