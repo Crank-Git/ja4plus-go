@@ -165,8 +165,22 @@ above, and it states no number.
 | The coverage total | **No file** | 3 | The tree moves the total on any commit, and `.coverage-floor` holds the floor rather than the total. |
 
 **`CLAUDE.md` owns no measured count.** Every session reads it, so an unrelated change edits
-it most often, and the measurement of #757 gives it 25 documentation issues. It cites each
-owner above.
+it most often, and the measurement of #757 gives it 25 documentation issues.
+
+**`CLAUDE.md` still states the mutation counts today, and the conversion of that class has
+not run.** `## Commands` of that file states the whole-set counts of 2026-08-14, and it
+carries a table with a `Mutations` column. **The owner of that class is
+`docs/specs/features/15-mutation-sweep.md`**, and the table above names it. That file holds
+the `./internal/parser` figures of 2026-08-14, and it holds no whole-set figure. **So the
+mutation class is unconverted on both sides**, and `CLAUDE.md` cites the owner of the fuzz
+target count alone. **A conversion moves the whole-set counts to the owner, and it leaves a
+citation in `CLAUDE.md`.** Issue #757 is the path that carries it.
+
+**An unconverted class is the designed state of this rule, and never a defect of it.**
+`### The guard` below states that the registry names the fuzz target count today, and that a
+batch adds the entry for a class when it converts that class. **The batch #773 cross-member
+review measured this exception on 2026-08-16 UTC**, and the round of that batch recorded it
+here rather than converting a second class in the batch that ships `v1.1.0`.
 
 ### Two permitted restatements, and one date rule
 
