@@ -183,8 +183,13 @@ freeze a breaking change, so a reader reverses it before the freeze.
 
 **A name the port adds after 2026-08-12 reaches no test on this page.** No test here reads
 the port, because a cross-language test rig couples two repositories that move at different
-speeds. FR-parity-58 of `docs/specs/features/08-python-parity.md` owns the drift of the
-port's own register, and `docs/specs/foxio/port-register.md` holds the copy it reads.
+speeds.
+
+**No test of this repository reports the drift of the port's own register either.** #758
+withdrew that check on 2026-08-16 UTC, with the committed copy of the port's register that
+it read. A reader re-reads the port at the tag instead, and
+`docs/specs/features/08-python-parity.md` `### The register drift check — withdrawn` states
+the reason.
 
 **This page records no fingerprint value.** `testdata/deviations.json` holds one entry for
 each accepted difference from a FoxIO value, and the `## Parity with ja4plus` section of

@@ -2,8 +2,8 @@
 // repository runs.
 //
 // `docs/specs/features/06-fuzz-testing.md` states FR-fuzz-14 through FR-fuzz-18. This
-// package carries one implementation of them, because 13 targets live in two packages and
-// 13 copies of one property drift apart.
+// package carries one implementation of them, because the targets live in two packages and
+// one copy of a property for each target would drift apart.
 //
 // This package holds no fuzz target and no test of the library. A target calls
 // `ExactInput` and `Check`, and it reads no field of the result.

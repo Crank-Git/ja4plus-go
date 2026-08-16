@@ -12,16 +12,38 @@ The register lives in the `## Parity with ja4plus` section of `docs/specs/spec.m
 These are the port's own rules. This project adopted them without a change, so one rule
 set governs both repositories.
 
-1. **FoxIO decides behaviour.** Where FoxIO specifies the output, the vectors decide. This
+1. **FoxIO decides behavior.** Where FoxIO specifies the output, the vectors decide. This
    rule outranks the port. Where this project disagrees with a vector, this project is
    wrong.
 2. **The port decides interface where this project shipped nothing.** Where FoxIO
-   specifies nothing, and where this project has no exported name for the behaviour, adopt
+   specifies nothing, and where this project has no exported name for the behavior, adopt
    the port's choice. **Where this project shipped a name first, the rule runs the other
    way and the port adopted it.** The register records which side each row followed.
 3. **The gate is the shared vector set.** Both repositories read the same FoxIO vectors at
    the same pinned commit. Two implementations that each match the reference match each
    other.
+
+## Each repository writes its own controlled vocabulary
+
+**No term of this project has to match a term of the port.** #758 dropped that requirement
+on 2026-08-16 UTC, and the `## Terms` table of `docs/specs/spec.md` is now the vocabulary of
+this project alone.
+
+**What replaced it: rule 3 above, and the verbatim rule.** The shared vector set is the
+gate, and it reads no word of either specification. A value that FoxIO publishes stays
+verbatim in both repositories under `.claude/rules/ste.md`
+`## What is verbatim, and never rewritten`. So two implementations still produce one answer,
+and neither one spends a change on the other's word.
+
+**The measurement that earned the drop.** One word cost five issues and closed no defect.
+#356 adopted `one-shot function`, #379 added the Terms row, #397 repaired a note of
+`README.md`, #399 found eleven remaining places, and #403 found a block of `README.md` that
+listed seven of ten. The same practice produced the citation namespace collision that #254,
+#255 and #351 record.
+
+**What the drop does not reach.** A ruling still lands in this repository and in the port
+together, or in neither. An exported name still follows rule 2 above. A term that names a
+FoxIO value still reads the FoxIO material, and never a word this project prefers.
 
 ## Never run the port from a test
 

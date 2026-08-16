@@ -19,7 +19,7 @@ import (
 // **No test below holds FR-fuzz-30, and no test of this repository holds it.** That
 // requirement states that `go test ./...` replays every seed input with no fuzz time, and
 // the run itself is the proof: `go test` starts one subtest for each seed of each target.
-// A run on 2026-08-14 reported 91 passing seed subtests over the 15 targets, at exit 0.
+// A run on 2026-08-14 reported 91 passing seed subtests over every target, at exit 0.
 // `fuzz_seed_corpus_test.go` reads the content of each seed, which is a different question.
 
 // nightlyFuzzWorkflow names the file that FR-fuzz-27 names.
