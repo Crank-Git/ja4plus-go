@@ -33,7 +33,7 @@ const theBritishAcknowledgmentWord = "acknowledg" + "ement"
 // `docs/specs/foxio/port-register.md` was a verbatim copy of a section of the port's
 // specification, so no change of this repository could repair a hit there. #758 removed the
 // copy under `.claude/rules/ste.md`
-// `## A value of another repository is cited, and never mirrored`, so the guard now reads
+// `### A value of another repository is cited, and never mirrored`, so the guard now reads
 // every tracked file and it exempts none.
 
 // TestNoTrackedFileWritesTheBritishAcknowledgmentSpelling fails when a tracked file writes

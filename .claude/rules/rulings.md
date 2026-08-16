@@ -70,7 +70,7 @@ One page carries a local rule, and it states that rule.
   that names an issue of this repository says so.
 
 **A value that the port owns is cited, and never mirrored.**
-`.claude/rules/ste.md` `## A value of another repository is cited, and never mirrored`
+`.claude/rules/ste.md` `### A value of another repository is cited, and never mirrored`
 states that rule, and #757 landed it on 2026-08-16 UTC. **#758 applied it to the one copy
 the tree held, on 2026-08-16 UTC.** `docs/specs/foxio/port-register.md` was a verbatim copy
 of a section of the port's specification. It carried a second local rule, because a bare

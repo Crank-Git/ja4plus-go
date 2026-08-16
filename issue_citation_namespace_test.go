@@ -14,8 +14,10 @@ package ja4plus
 // FR-reference-18a scopes that guard to `docs/specs/foxio/*.md`. This guard reads the whole
 // tree, because the issue-namespace rule binds every file.
 // `docs/specs/features/11-foxio-reference.md` numbers this file as FR-reference-32 through
-// FR-reference-34, FR-reference-38, FR-reference-38a, and FR-reference-40 through
-// FR-reference-44. It names FR-reference-39 in no row, because #759 withdrew it.
+// FR-reference-34, FR-reference-38, FR-reference-38a, FR-reference-40, FR-reference-41 and
+// FR-reference-42. It names FR-reference-39 in no row, because #759 withdrew it. It names
+// FR-reference-43 and FR-reference-44 in no row either, because #758 withdrew those two on
+// 2026-08-16 UTC with the file exclusion they specified.
 //
 // # This guard bounds no number, and #759 removed the bound
 //

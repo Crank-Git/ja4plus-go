@@ -480,7 +480,7 @@ func TestTheSchemaDocumentNamesEveryRegisterField(t *testing.T) {
 // holds the removal.
 //
 // A whole-page copy of the port's material restates every value that page holds.
-// `.claude/rules/ste.md` `## A value of another repository is cited, and never mirrored`
+// `.claude/rules/ste.md` `### A value of another repository is cited, and never mirrored`
 // states the rule that bars it. A later change that restores the copy restores the drift
 // check, the local bare-number namespace and the maintenance cost with it, so the guard
 // reports the return of the path rather than the return of the text.

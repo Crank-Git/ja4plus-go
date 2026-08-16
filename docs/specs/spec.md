@@ -1039,7 +1039,7 @@ This spec records the port version each row was read from. **The mitigation is a
 and no check performs it.** Epic 8 built a drift check that counted the rows of a committed
 copy of the port's register, and #758 removed the copy and the check on 2026-08-16 UTC.
 **The check caught no defect**, and `.claude/rules/ste.md`
-`## A value of another repository is cited, and never mirrored` bars the copy it read.
+`### A value of another repository is cited, and never mirrored` bars the copy it read.
 
 **A reader re-reads the port at the tag instead.** `portReadVersion` and `portReadCommit` in
 `parity_table_test.go` state the tag and the commit, and the `## Parity with ja4plus-go`

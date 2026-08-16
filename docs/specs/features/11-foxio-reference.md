@@ -99,7 +99,7 @@ verbatim.
 
 **No change of this repository could edit the copy, so it held no reading of this
 repository.** `.claude/rules/ste.md`
-`## A value of another repository is cited, and never mirrored` bars a whole-page copy of
+`### A value of another repository is cited, and never mirrored` bars a whole-page copy of
 the port's material. **A reader cites the port at the tag instead**, under
 `.claude/rules/rulings.md` `### How a reader finds the port's ruling on a shared question`.
 
@@ -281,7 +281,7 @@ This feature set changes no screen.
 | `conformance_test.go` | Reads the register. |
 | `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
 | `foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
-| `issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, FR-reference-38, FR-reference-38a, and FR-reference-40 through FR-reference-44. |
+| `issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, FR-reference-38, FR-reference-38a, FR-reference-40, FR-reference-41 and FR-reference-42. **#758 withdrew FR-reference-43 and FR-reference-44 on 2026-08-16 UTC**, and the test that held them went with the exclusion. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |
 
 ## Interfaces

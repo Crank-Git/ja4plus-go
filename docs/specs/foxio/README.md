@@ -81,7 +81,7 @@ port names a path of the port under `ja4plus/`, and the sentence around it names
 
 **This repository copies no page of the port.** #758 removed the one copy on 2026-08-16
 UTC, and `.claude/rules/ste.md`
-`## A value of another repository is cited, and never mirrored` states the rule.
+`### A value of another repository is cited, and never mirrored` states the rule.
 
 ### Two bases that reach no file of this checkout
 
