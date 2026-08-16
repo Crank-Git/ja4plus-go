@@ -46,7 +46,7 @@ and the last two rows reach no file of this checkout.
 | 4 | A recovered file of `docs/specs/foxio/deleted-text-specifications.md` | `JA4L.md:19` | Line 19 of the block that the `### JA4L.md` heading of that page carries |
 | 5 | This repository | `.claude/rules/rulings.md:4` | Line 4 of that file, from the root of this checkout |
 | 6 | The FoxIO repository at a commit that the sentence names | `technical_details/JA4L.md` | The FoxIO repository at that commit. FoxIO deleted the file before the pin, so the corpus holds it at no path. |
-| 7 | The port repository `Crank-Git/ja4plus` | `ja4plus/fingerprinters/ja4ssh.py` | The port, at the commit that `docs/specs/foxio/port-register.md` records |
+| 7 | The port repository `Crank-Git/ja4plus` | `ja4plus/fingerprinters/ja4ssh.py` | The port, at the tag that the sentence around the citation names |
 
 **Every page of this directory uses more than one base, and this page states no count of
 pages.** A count of pages goes stale at the next edit. The stale rule then sends a reader
@@ -77,8 +77,11 @@ wrong citation reached a ruling on 2026-08-12.
 
 **`python/ja4.py` is the FoxIO reference program, and it is never the port.** The port is
 the Python implementation at `Crank-Git/ja4plus`, and the two disagree. A citation of the
-port names a path of the port, and `docs/specs/foxio/port-register.md` holds the port
-material this project copies.
+port names a path of the port under `ja4plus/`, and the sentence around it names the tag.
+
+**This repository copies no page of the port.** #758 removed the one copy on 2026-08-16
+UTC, and `.claude/rules/ste.md`
+`### A value of another repository is cited, and never mirrored` states the rule.
 
 ### Two bases that reach no file of this checkout
 
@@ -87,11 +90,15 @@ material this project copies.
   seven recovered files exist at no commit after `b6f3ff4`. The page names the commit at
   each recovered file. **Base 4 reaches the same text without a clone**, because the page
   reproduces each recovered file verbatim.
-- **Base 7.** `docs/specs/foxio/port-register.md` is a verbatim copy of a section of the
-  port's specification. Its citations name paths of the port, and no reader edits the copy.
-  **The copy also uses the citation forms of the port**, and one of them is a bare source
-  file name such as `packet-ja4.c:1328`. The FoxIO tree holds that file at
-  `wireshark/source/packet-ja4.c`, so that form is a short form of base 1.
+- **Base 7.** A citation of base 7 names a path of the port under `ja4plus/`, and the
+  sentence around it names the tag. `ja4plus/fingerprinters/ja4x.py:341` at tag `v1.1.0`
+  is one, and `ja4x_stream_key_test.go` writes it. **A reader resolves it in
+  `Crank-Git/ja4plus` at that tag**, and this checkout
+  holds no copy of it. `parity_table_test.go` states the tag and the commit it points at,
+  in `portReadVersion` and `portReadCommit`.
+  **A citation of base 7 opens with `ja4plus/`, and that root names a directory of the port
+  alone.** This repository holds no directory of that name, so the root decides the
+  repository without help from the sentence around it.
 
 ### The measurement of every citation
 
@@ -115,20 +122,25 @@ later edit of any page moves a count, and it breaks no rule of this page.
 | 7 The port repository | 18 |
 | No base | 3 |
 
-**A bare file name is a short form of base 1.** `docs/specs/foxio/port-register.md` writes
-`packet-ja4.c:1328`, and this page writes `ja4.py`. Each one names one file of the FoxIO
-tree, and the resolver found each name at exactly one path.
+**A bare file name is a short form of base 1.** This page writes `ja4.py`, and that name
+reaches one file of the FoxIO tree. The resolver found each such name at exactly one path.
 
 **No citation names a line past the end of the file it names.** The resolver compared each
 `:line` suffix against the line count of the resolved file. For base 4 it read the line
 count of the recovered file.
 
-**One citation resolves under no base: `ja4l.py`, at
-`docs/specs/foxio/port-register.md:80`.** The FoxIO `python/` directory at the pin holds
-`common.py`, `ja4.py`, `ja4h.py`, `ja4ssh.py` and `ja4x.py`, and it holds no `ja4l.py`.
-That citation sits inside the verbatim copy of the port's specification, which no reader
-edits. **This page reports the citation, and it repoints nothing.** The table above counts
-three spans under no base, because this paragraph quotes the name twice.
+**#758 removed one page of this directory on 2026-08-16 UTC, and the run of 2026-08-12 read
+that page.** It held a verbatim copy of a section of the port's specification, and it
+carried spans of base 7, of base 1 under a bare source file name, and of no base. **So each
+count of the table above is now high by an amount that this paragraph does not state.** The
+table records one run on one date, and a later record corrects it rather than rewrites it.
+Re-run the resolver for a current count.
+
+**The three spans that the table counts under no base each name `ja4l.py`**, and the FoxIO
+`python/` directory holds no file of that name at the pin. The removed page wrote one of
+them, and the paragraph of this page that reported that defect wrote the other two. **This
+sentence writes the name once**, and the exception table of `foxio_citation_base_test.go`
+holds that one occurrence with its reason.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier
 version of `scripts/fetch-corpus.sh` wrote names the pinned commit and holds no reference
