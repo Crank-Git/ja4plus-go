@@ -72,6 +72,12 @@ Two pages carry a local rule, and each one states that rule.
   specification, so a bare number in it names the port. `docs/specs/foxio/README.md` holds
   that reading. **Never edit the copy.**
 
+**A value that the port owns is cited, and never mirrored.**
+`.claude/rules/ste.md` `## A value of another repository is cited, and never mirrored`
+states that rule, and #757 landed it on 2026-08-16 UTC. **The bar above states what a
+reader does with the copy the tree holds today, and it states nothing about whether the
+tree keeps one.** #758 decides that question.
+
 ## Text copied from FoxIO material is verbatim
 
 `.claude/rules/ste.md` bars a rewording of copied text. **A reworded quotation is no longer

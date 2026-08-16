@@ -114,6 +114,89 @@ for a `JA4L-S` write that now sits at `:413`. It cited `ja4ssh.go:176-180` for a
 line holds. Its `Three defects` box named three defects that the code does not hold. **Each
 of those three citations is the defect, and never a citation this file makes.**
 
+## One document owns each measured count
+
+**A count restated in three documents costs three repairs when the measurement moves.** The
+third repair becomes a separate issue when a later reader finds it, so the backlog
+regenerates itself. Issue #757 holds the measurement of 2026-08-16 UTC: of 365 closed
+issues, 67 repaired a sentence, a citation, a count or a term, and 46 of the 67 name an
+earlier issue as their cause.
+
+**A measured count is a number that a command produces, and a later run moves it.** The
+conformance figures, the deviation counts, the register key count, the mutation counts, the
+fuzz target count, the coverage total, a citation-site count and a file count each qualify.
+
+**A schema count is not a measured count, and this rule never reaches one.** No command
+moves the eleven methods or the ten fingerprinters, because FoxIO and this project decide
+them. `CLAUDE.md` states both, and it keeps them.
+
+### One owner, and every other document cites it
+
+**One file owns each measured count, and every other document cites that owner.** The
+citation names the owner and a stable target under `## How a citation names its target`
+above, and it states no number.
+
+**The owner is the first of these three ranks that the count reaches.**
+
+1. **The file that the command writes or reads.** The value lives where the command puts
+   it, so no prose is more current than that file.
+2. **The one document that states the rule the count measures.** The count exists to state
+   how far the rule has reached, so it belongs beside the rule.
+3. **The command, and no document at all.** A count that any commit moves is stale in every
+   document within one batch. Each document names the command, and it states no value.
+
+| Class of measured count | Owner | Rank | Why |
+|---|---|---|---|
+| The conformance figures — matches, deviations, accepted deviations, and each per-set split | `docs/audit/conformance.md` | 1 | `make conformance` rewrites the report on every run, and a CI job fails when the tracked report and the run disagree. |
+| The register key count, and the entry count of one ruling | `testdata/deviations.json` | 1 | The register is the data, and the count is its length. `changelog_counts_freshness_test.go` derives both from it. |
+| The coverage floor | `.coverage-floor` | 1 | The file holds one number, and `coverage_floor_test.go` reads it. |
+| The mutation counts of the named package set | `docs/specs/features/15-mutation-sweep.md` | 2 | No cheap command produces the value, so a document holds it. That file states the package set the counts measure. |
+| A file count or a citation-site count that one rule measures | The rule file that states the rule | 2 | This file owns the British-spelling file count for that reason. |
+| The fuzz target count | **The command, and no document** | 3 | `make fuzz` reads the target list from the tree, so a new target moves the value without a document edit. |
+| The coverage total | **No file** | 3 | The tree moves the total on any commit, and `.coverage-floor` holds the floor rather than the total. |
+
+**`CLAUDE.md` owns no measured count.** Every session reads it, so an unrelated change edits
+it most often, and the measurement of #757 gives it 25 documentation issues. It cites each
+owner above.
+
+### Two permitted restatements, and one date rule
+
+**A guard makes a restatement safe, and nothing else does.** A document restates an owned
+count when a test derives the expected value from the owner and fails on a disagreement.
+`TestTheChangelogPreambleStatesTheCountsTheTreeProduces` in
+`changelog_counts_freshness_test.go` holds the `## [Unreleased]` preamble of `CHANGELOG.md`
+that way. **#752 built two `CHANGELOG.md` guards on the same principle in batch #760**, and
+each one derives its expected value from `go.mod`.
+
+**A dated record states what one run measured on one date, and no change edits it.** A
+`## Changelog` row of `docs/specs/spec.md`, an entry of `CHANGELOG.md`, an acceptance
+criterion of a feature file and a pull-request body each read that way. **A record that a
+later fact falsifies is corrected in a later record, and never rewritten.** Round 72 and
+round 73 of the `## Changelog` of `docs/specs/spec.md` set that precedent.
+
+**A live measurement that no file owns carries its date.** `CLAUDE.md` `## Conventions`
+states that rule, and the coverage total and the `govulncheck` count each read that way.
+
+### A value of another repository is cited, and never mirrored
+
+**This repository owns no value that the Python port owns.** A whole-page copy of the
+port's material restates every value that page holds, so it carries the cost of this rule at
+the largest size. **Cite the port at a tag instead**, under `.claude/rules/rulings.md`
+`## A citation names its repository`.
+
+### The conversion is incremental, and no sweep converts the tree
+
+**The round of a batch converts each document that the batch already opens, and no other
+document.** The maintainer declined a repository-wide sweep in #388 on 2026-08-13, and
+#749 was closed on 2026-08-16 UTC for the same reason: a sweep edits a file that a live
+batch member also edits.
+
+### The guard
+
+`measured_count_ownership_test.go` holds a registry of each owned count that a guard reaches,
+and it fails when a document states a value the registry gives an owner. **The registry names
+the fuzz target count today.** A batch that converts a class adds the entry for it.
+
 ## The rules
 
 ### Sentences
