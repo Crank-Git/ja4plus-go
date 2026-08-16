@@ -30,9 +30,10 @@ it breaks no frozen name.
 
 **`git describe` on a work branch still reads `v0.3.0`, and that is not a stale
 statement.** The `v1.0.0` tag sits on `master`, and no head of `dev` descends from it, so
-`git describe --tags` reports `v0.3.0-532-g9f3533e` on `batch/768-release-prep`, measured
-on 2026-08-16 UTC. A document that reads a tag from a work branch reads `v0.3.0` for that
-reason, and never because this project cut no tag.
+`git describe --tags --abbrev=0` names `v0.3.0` as the nearest reachable tag of a work
+branch, measured on 2026-08-16 UTC. A document that reads a tag from a work branch reads
+`v0.3.0` for that reason, and never because this project cut no tag. **Re-measure the
+commit count with the command, and never read one from a document.**
 
 ## Where the design lives
 
