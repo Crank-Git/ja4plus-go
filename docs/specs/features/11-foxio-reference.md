@@ -198,8 +198,11 @@ Three measurements withdrew them, each taken on 2026-08-16 UTC.
 1. **The mark made `issue_citation_namespace_test.go` the second most-edited file of this
    repository.** It sits in 43 of the last 300 commits of `dev`, ahead of `CHANGELOG.md`.
 2. **The tracker allocates numbers without a gap.** It reported 760 issues and pull requests
-   together, and 760 as the highest number. So a bound reports a number above the highest
-   allocated number alone.
+   together, and 760 as the highest number. **The gapless property is the measurement that
+   matters, and the count is dated evidence for it.** The same two commands reported 763 and
+   763 later in the same session, after #759 and two siblings each opened a pull request.
+   **A number that moves while one member works is the cost this change removes.** So a
+   bound reports a number above the highest allocated number alone.
 3. **The mark reported no typo in its whole life.** Its comment recorded **39
    re-measurements**, measured with `grep -c "re-measured the mark"`. Every citation that
    reddened the guard named a number that the tracker allocated minutes later. **The measured

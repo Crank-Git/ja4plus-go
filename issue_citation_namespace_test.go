@@ -27,9 +27,13 @@ package ja4plus
 //   - **The constant made this file the second most-edited file of the repository.** It sits
 //     in 43 of the last 300 commits of `dev`, ahead of `CHANGELOG.md`.
 //   - **The tracker allocates numbers without a gap.** It reported 760 issues and pull
-//     requests together, and it reported 760 as the highest number. So every number at or
-//     below the highest one already resolves to something here, and a bound reports a number
-//     above it alone.
+//     requests together, and 760 as the highest number. So every number at or below the
+//     highest one already resolves to something here, and a bound reports a number above it
+//     alone. **The gapless property is the measurement that matters, and the count is dated
+//     evidence for it.** The same two commands reported 763 and 763 later in the same
+//     session, after this member and two siblings each opened a pull request. **A number
+//     that moves while one member works is the cost this change removes**, and the gapless
+//     property holds at each reading.
 //   - **The bound reported no typo in its whole life.** The deleted comment recorded 39
 //     re-measurements of the mark, measured with `grep -c "re-measured the mark"`. Every
 //     citation that reddened the guard named an issue or a pull request that the tracker
