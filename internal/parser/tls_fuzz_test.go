@@ -56,8 +56,8 @@ func FuzzParseClientHelloReadsAnyPayload(f *testing.F) {
 // example of FR-fuzz-24.
 //
 // The citation above names the repository, and it writes no bare number.
-// `issueCitationHighWaterMark` in `issue_citation_namespace_test.go` bounds a bare number,
-// and the Epic 6 round re-measured that mark.
+// `issue_citation_namespace_test.go` holds that rule for the whole tree. **It bounds no
+// number**, because #759 removed the hand-maintained mark on 2026-08-16 UTC.
 //
 // The seeds below panic for no input, so `go test ./...` replays them and passes.
 func FuzzParseServerHelloReadsAnyPayload(f *testing.F) {

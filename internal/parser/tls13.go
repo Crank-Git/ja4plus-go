@@ -198,6 +198,156 @@ func (k *TLS13RecordKeys) Open(record []byte, sequence uint64) ([]byte, byte, er
 	return plaintext[:last], plaintext[last], nil
 }
 
+// TLS13MaxRecordBytes is the byte count of the longest record that RFC 8446 permits.
+//
+// `tls13MaxRecordLength` states the bound of section 5.2, and the record header adds 5 more
+// octets. A reader that holds a part of one record therefore holds this many bytes at most.
+const TLS13MaxRecordBytes = tls13RecordHeaderLength + tls13MaxRecordLength
+
+// TLS13StreamReader opens the protected records of one direction, one chunk at a time.
+//
+// **The reader reads each byte once, and `TLS13ContentOfStream` reads the whole stream at
+// each call.** A caller that holds a growing stream therefore bounds that stream, and the
+// bound then stops the connection rather than delaying it. #753 records the limit that this
+// reader removes, and `JA4HFingerprinter` is the caller that reaches it.
+//
+// The reader holds the sequence number of each key. RFC 8446 section 5.3 states that the
+// number restarts at 0 at each key change, and no record carries its own number. The reader
+// also holds the bytes of one incomplete record, and TLS13MaxRecordBytes bounds them.
+//
+// One TLS13StreamReader serves one direction of one connection, and one goroutine.
+// `.claude/rules/concurrency.md` states that contract.
+type TLS13StreamReader struct {
+	handshake           *TLS13RecordKeys
+	application         *TLS13RecordKeys
+	handshakeSequence   uint64
+	applicationSequence uint64
+	// applicationStarted reports whether the walk reached the key change. The records of one
+	// key form a prefix of the stream, so the walk moves to the application key once and it
+	// never moves back.
+	applicationStarted bool
+	// tail holds the bytes of the record that no call completed.
+	tail   []byte
+	failed bool
+}
+
+// NewTLS13StreamReader returns a reader of one direction of one connection.
+//
+// handshake names the client handshake traffic key, and the caller passes nil where the
+// direction carries no handshake record under that key. application names the client
+// application traffic key, and a reader without it opens no record.
+func NewTLS13StreamReader(handshake, application *TLS13RecordKeys) *TLS13StreamReader {
+	return &TLS13StreamReader{
+		handshake:          handshake,
+		application:        application,
+		applicationStarted: handshake == nil,
+	}
+}
+
+// Read returns the application-data content of each record that the chunk completes.
+//
+// chunk holds the bytes that follow the bytes of every earlier call, and never a byte that
+// an earlier call already read. The reader holds the part of a record that the chunk leaves
+// incomplete, so the caller keeps no byte of its own.
+// It returns nil after a record that the keys do not open, because the sequence number of
+// every later record then disagrees with the sender.
+// It reads no length field before it bounds that field, and it never panics.
+func (r *TLS13StreamReader) Read(chunk []byte) []byte {
+	if r.failed || r.application == nil {
+		return nil
+	}
+
+	r.tail = append(r.tail, chunk...)
+
+	var content []byte
+
+	pos := 0
+
+	for pos+tls13RecordHeaderLength <= len(r.tail) {
+		length := int(r.tail[pos+3])<<8 | int(r.tail[pos+4])
+
+		// Every packet is untrusted input, and a record states its own length. A length above
+		// the bound of section 5.2 names no record of this protocol, so the walk stops rather
+		// than holding the bytes that the length names.
+		if tls13RecordHeaderLength+length > TLS13MaxRecordBytes {
+			r.stop()
+
+			return content
+		}
+
+		next := pos + tls13RecordHeaderLength + length
+		if next > len(r.tail) {
+			break
+		}
+
+		if r.tail[pos] != TLSRecordTypeApplicationData {
+			pos = next
+
+			continue
+		}
+
+		record, innerType, opened := r.open(r.tail[pos:next])
+		if !opened {
+			r.stop()
+
+			return content
+		}
+
+		if innerType == TLSRecordTypeApplicationData {
+			content = append(content, record...)
+		}
+
+		pos = next
+	}
+
+	r.tail = append(r.tail[:0], r.tail[pos:]...)
+
+	return content
+}
+
+// Failed reports whether the reader stopped. A reader that stopped opens no later record.
+func (r *TLS13StreamReader) Failed() bool {
+	return r.failed
+}
+
+// Pending returns the bytes of the record that no call completed.
+func (r *TLS13StreamReader) Pending() int {
+	return len(r.tail)
+}
+
+// stop ends the walk, and it drops the bytes the reader holds.
+func (r *TLS13StreamReader) stop() {
+	r.failed = true
+	r.tail = nil
+}
+
+// open returns the content and the inner content type of one protected record.
+//
+// The records of the handshake traffic key form a prefix of the direction, so the reader
+// tries that key until one record declines it. `TLS13ContentOfStream` counts the same prefix
+// in a first pass, and it passes the count as the skip of a second pass.
+func (r *TLS13StreamReader) open(record []byte) ([]byte, byte, bool) {
+	if !r.applicationStarted {
+		content, innerType, err := r.handshake.Open(record, r.handshakeSequence)
+		if err == nil {
+			r.handshakeSequence++
+
+			return content, innerType, true
+		}
+
+		r.applicationStarted = true
+	}
+
+	content, innerType, err := r.application.Open(record, r.applicationSequence)
+	if err != nil {
+		return nil, 0, false
+	}
+
+	r.applicationSequence++
+
+	return content, innerType, true
+}
+
 // TLS13ContentOfStream returns the content of each protected record of one stream that
 // carries the wanted inner content type, and the count of records the keys opened.
 //

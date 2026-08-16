@@ -542,6 +542,32 @@ that the interface declares.
 
 ### Fixed
 
+- **The library now produces a JA4H value for every request of a protected HTTP/2
+  connection, and three limits stopped that connection before.** Issue #529 built the HTTP/2
+  reader, and that reader decoded the whole client stream at each packet. Two bounds held the
+  cost of the repeated decode, and each one stopped the connection rather than delaying a
+  request. **The byte bound is gone.** `ja4hMaxProtectedSearchBytes` stopped a connection
+  whose request stream passed 65536 bytes, and no cost now grows with the stream, because one
+  packet costs its own bytes.
+  `TestTheProcessorReadsAnHTTP2RequestOfAStreamAbove64Kilobytes` builds a stream of 80 kB.
+  **The request bound now delays a request, and it drops none.** `http2MaxRequests` still
+  bounds one call, because one chunk carries any number of small header blocks, and the
+  reader keeps the bytes above the bound so that the next call returns the requests they
+  carry. `TestTheProcessorReadsMoreRequestsThanTheCallBoundOfOneConnection` sends 300
+  requests and reads 300. **A second connection of one address pair and port pair now reaches
+  a decode of its own, and it read the buffer of the first before.** `protectedHTTP2Results`
+  writes the consumed range, so the four-tuple reading of `segmentCarriesNoNewRequest` runs,
+  and `TestTheProcessorReadsASecondHTTP2ConnectionOfOneFourTuple` states the case that opens
+  below the first and the case that opens above it. **`parser.TLS13StreamReader` and
+  `parser.HTTP2Reader` carry the repair**, and each one reads a byte once and holds what the
+  next packet needs. **One `HTTP2Reader` holds one HPACK decoder for the whole connection**,
+  which RFC 7541 section 2.3.2 requires, because a decoder that restarts at a packet reads
+  wrong header names. **The change lowers the memory of an HTTP/2 stream**, because the
+  reassembler held the connection up to `ja4hMaxStreamBytes` and it now holds one packet.
+  **The change moves no fingerprint value**, because the run reports 1826 matches before it
+  and 1826 after it, and no capture of the corpus reaches either bound:
+  `testdata/foxio/pcap/http2-with-cookies.pcapng` reports 20 kB in the request direction and
+  15 requests. Issue #753 holds the work, and pull request #764 carried it.
 - **The library now reads a header block terminator that mixes the two line endings, and it
   read two fixed byte groups before.** The maintainer ruled the pattern on 2026-08-13 UTC, in
   the port, and re-confirmed it on 2026-08-15 UTC at #298. `Crank-Git/ja4plus#614` and
@@ -1087,8 +1113,22 @@ that the interface declares.
   the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
   user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
   records the decision behind the correction.
-- The module needs Go 1.24 or later. It needed Go 1.22 before this change, so a consumer
-  on Go 1.22 or Go 1.23 must move to Go 1.24.
+- **The module needs Go 1.25 or later, and `go.mod` declares `go 1.25.0`.** `v0.3.0`
+  needed Go 1.22. The floor moved to Go 1.24 first, and the #725 ruling of 2026-08-15 UTC
+  moved it to Go 1.25. **The move drops every Go 1.24 consumer.** So a consumer on Go
+  1.22, Go 1.23 or Go 1.24 must move to Go 1.25. Issue #725 holds the ruling and the
+  reversal path.
+- **Four changes to `go.mod` landed in this cycle.** One of them is the language version
+  of the entry above, and the `github.com/gopacket/gopacket` bump forces it. v1.7.1
+  declares `go 1.25.0` in its own `go.mod`, and Go requires the main module to declare a
+  language version at or above every dependency.
+  - `github.com/gopacket/gopacket` to v1.7.1. It repairs a decoder panic on untrusted
+    input, under `GHSA-6h9g-cjv3-pg2c`, and no patch release of the 1.6 line carries that
+    repair. Issue #730 holds the move.
+  - The language version to Go 1.25, which the bump above forces. Issue #725 holds the
+    ruling.
+  - `golang.org/x/crypto` to v0.55.0. Issue #719 holds the move.
+  - `golang.org/x/net` to v0.58.0. Issue #741 holds the move.
 
 ## [v1.0.0]
 
