@@ -324,9 +324,11 @@ func TestTheEmbeddedDatabaseOfThePublishedModuleHoldsBytes(t *testing.T) {
 // ruled the scope on 2026-08-14, at #94: the case runs against the tag that exists, and the
 // record enumerates the failure.
 //
-// `v0.3.0` carries neither file. #593 records the consequence: `pkg.go.dev` reports
-// `License: None detected` and it renders no documentation. The working tree holds
-// `LICENSE` and `NOTICE`, so the next tag turns this case green.
+// `v0.3.0` carries neither file, and `v1.0.0` carries both. #593 records the consequence
+// that the absent files had: `pkg.go.dev` reported `License: None detected` and it rendered
+// no documentation on 2026-08-14. **That page renders the documentation of `v1.0.0` and it
+// states `License: BSD-3-Clause`**, read on 2026-08-16 UTC, so the tag turned this case
+// green.
 //
 // Never weaken this assertion. `NOTICE` holds the FoxIO License 1.1 terms, and a module
 // that publishes the methods without those terms states the wrong license to every user.
