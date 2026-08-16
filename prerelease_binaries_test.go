@@ -65,12 +65,17 @@ const releaseTagVariable = "JA4PLUS_RELEASE_TAG"
 // promotes next, and these cases read the artifacts of that tag. `JA4PLUS_RELEASE_TAG`
 // overrides the value for a run against another tag.
 //
+// **#779 moved it to `v1.1.1` on 2026-08-16 UTC**, because the `v1.1.0` release job failed
+// and it published no artifact. The tag `v1.1.0` stays where it is, so these cases read the
+// artifacts of `v1.1.1` instead. The `## [v1.1.1]` section of `CHANGELOG.md` holds the
+// record.
+//
 // **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
 // the three. `prereleaseInstallVersion` in `prerelease_install_test.go` and
 // `publishedModuleVersion` in `prerelease_module_contents_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
 // states the hazard, and #106 built the guard.
-const defaultReleaseTag = "v1.1.0"
+const defaultReleaseTag = "v1.1.1"
 
 // releaseIssue names the issue that publishes a release for a tag under test.
 const releaseIssue = 100

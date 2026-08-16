@@ -1130,6 +1130,92 @@ that the interface declares.
   - `golang.org/x/crypto` to v0.55.0. Issue #719 holds the move.
   - `golang.org/x/net` to v0.58.0. Issue #741 holds the move.
 
+## [v1.1.1]
+
+This section is the release record of `v1.1.1`. It carries no date, because FR-release-40
+creates the tag and no tag exists at this head.
+
+**`v1.1.1` exists because the `v1.1.0` release job failed.** The job stopped at the step
+`Read the release notes from the CHANGELOG`, and run `31930896325` reported
+`CHANGELOG.md holds no section for v1.1.0, and FR-release-39 reads one`. That step runs
+before GoReleaser, so the job built no artifact and it created no GitHub release.
+
+**`v1.1.0` is a published module version, and it stays where it is.**
+`proxy.golang.org` resolves the tag to commit `8c46e820`, and `sum.golang.org` holds
+`github.com/Crank-Git/ja4plus-go v1.1.0 h1:JMF1VpwOONT6jJ+VhiE5bWyBQ8kSVZfZwK3qZTRXo7o=`.
+Issue #779 records both measurements, on 2026-08-16 UTC. **So a reader who finds `v1.1.0`
+on the module proxy and no release page reads this paragraph.** `go get` reaches that
+version, and the GitHub releases page holds no entry and no binary for it. **A moved tag
+would give one version two trees**, and every consumer that fetched the version already
+would then read a checksum mismatch. The maintainer ruled on 2026-08-16 UTC that the tag
+stays, and that `v1.1.1` carries the recovery.
+
+**`v1.1.1` carries the tree of `v1.1.0`, and it adds the records that the release step
+reads.** No fingerprint value moves between the two versions, and the exported surface of
+the two is the same surface.
+
+### Added
+
+- No exported name, and one guard that reads each release tag constant against
+  `CHANGELOG.md`. `TestTheChangelogHoldsAReleaseSectionForEveryReleaseTagConstant` in
+  `changelog_release_section_test.go` fails when the file holds no section for the tag that
+  `prereleaseInstallVersion`, `publishedModuleVersion` and `defaultReleaseTag` name. The
+  case derives the expected heading from the constant, so no literal tag reaches it. #767
+  moved those three constants to `v1.1.0` in batch #768, and the file held no `## [v1.1.0]`
+  section on that day, so this guard would have failed in that batch. Issue #779 holds the
+  measurement, and no fingerprint value moved.
+- The `## [v1.1.0]` section below, which the release step of the `v1.1.0` job did not
+  find.
+
+### Changed
+
+- The three pre-release tag constants, from `v1.1.0` to `v1.1.1`. Each one names the tag
+  that the pre-release cases measure, and `TestEveryPrereleaseTagConstantHoldsOneTag`
+  compares the three. Issue #779 holds the move.
+- `docs/api/v1.md`, which states the value that the three constants hold.
+
+## [v1.1.0]
+
+This section is the release record of `v1.1.0`. **The tag exists**, and `proxy.golang.org`
+resolves it to commit `8c46e820`, measured on 2026-08-16 UTC. The `## [Unreleased]` section
+above holds the per-issue log of this work, and this section states the release position.
+
+**Every measurement below names its base.** The base is the tree that the `v1.1.0` tag
+names, and `origin/dev` at `90a860d` holds the same tree. The corpus is the FoxIO
+repository at the pinned commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which
+`testdata/foxio.pin` holds.
+
+**This release closes 72 register entries, and it moves 72 comparisons to a match.** The
+run reports 1754 matches and 884 register keys at the `v1.0.0` tag, and 1826 matches and
+812 register keys at this base. `docs/audit/conformance.md` owns each figure, and
+`testdata/deviations.json` owns the register key count.
+
+**This release adds no exported name, and it removes none.** `docs/api/v1.md` records the
+surface that the `v1.0.0` tag froze, and this release holds every name of that record.
+
+### Added
+
+The decryption of a protected TLS 1.3 handshake record on TCP, where the key log holds the
+secret. The library then reads the certificate of that handshake, and it produces the JA4X
+value. Issue #492 built the capability that its own ruling declined.
+
+The decoding of an HTTP/2 request under HPACK, which RFC 7541 states. The library decrypts
+the client application records of a protected TLS 1.3 connection on TCP, and it produces
+the JA4H value. Issue #529 built the capability that ruling #529 declined.
+
+### Changed
+
+- The minimum language version, from Go 1.24 to Go 1.25. Issue #725 holds the ruling, and
+  `github.com/gopacket/gopacket` v1.7.1 forces it: that release declares `go 1.25.0` in its
+  own `go.mod`, and Go requires the main module to declare a language version at or above
+  every dependency. **The ruling drops every Go 1.24 consumer**, which is why this release
+  is a minor version and never a patch.
+- `github.com/gopacket/gopacket` to v1.7.1. It repairs a decoder panic on untrusted input,
+  under `GHSA-6h9g-cjv3-pg2c`, and no patch release of the 1.6 line carries that repair.
+  Issue #730 holds the move.
+- `golang.org/x/crypto` to v0.55.0. Issue #719 holds the move.
+- `golang.org/x/net` to v0.58.0. Issue #741 holds the move.
+
 ## [v1.0.0]
 
 This section is the release record of `v1.0.0`. It carries no date, because FR-release-40
@@ -1408,6 +1494,8 @@ whether the difference closed, widened or held.
   each fingerprint.
 
 [Unreleased]: https://github.com/Crank-Git/ja4plus-go/compare/v0.3.0...HEAD
+[v1.1.1]: https://github.com/Crank-Git/ja4plus-go/compare/v1.1.0...v1.1.1
+[v1.1.0]: https://github.com/Crank-Git/ja4plus-go/compare/v1.0.0...v1.1.0
 [v1.0.0]: https://github.com/Crank-Git/ja4plus-go/compare/v0.3.0...v1.0.0
 [v0.3.0]: https://github.com/Crank-Git/ja4plus-go/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/Crank-Git/ja4plus-go/compare/v0.1.0...v0.2.0

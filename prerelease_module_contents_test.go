@@ -47,8 +47,10 @@ import (
 // Every other case of this file passed against `v0.3.0`, measured on 2026-08-15 UTC.
 //
 // **#106 moved `publishedModuleVersion` to `v1.0.0` on 2026-08-15 UTC, and #767 moved it to
-// `v1.1.0` on 2026-08-16 UTC.** Every case of this file reads `v1.1.0` now. **The proxy
-// serves no `v1.1.0` until the maintainer pushes the tag**, so each case reports the absent
+// `v1.1.0` on 2026-08-16 UTC.** **#779 then moved it to `v1.1.1` on 2026-08-16 UTC**, and
+// every case of this file reads `v1.1.1` now. The `v1.1.0` release job failed at the release
+// notes step, and the `## [v1.1.1]` section of `CHANGELOG.md` holds that record. **The proxy
+// serves no `v1.1.1` until the maintainer pushes the tag**, so each case reports the absent
 // tag until then. That failure names the tag it read, and it is the state of the repository
 // rather than a defect of a case.
 
@@ -69,7 +71,7 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // `defaultReleaseTag` in `prerelease_binaries_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
 // states the hazard, and #106 built the guard.
-const publishedModuleVersion = "v1.1.0"
+const publishedModuleVersion = "v1.1.1"
 
 // embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
 const embeddedDatabase = "data/ja4plus-mapping.csv"
