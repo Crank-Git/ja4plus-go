@@ -69,7 +69,7 @@ that method.
   `zeek/ja4t/main.zeek:199`. Wireshark appends `"%d-"` at
   `wireshark/source/packet-ja4.c:1458`. Rust joins with `"-"` at `rust/ja4/src/tcp.rs:133`.
 - **R10** — **Reference split.** Zeek writes no entry for option kind 0, and Wireshark and
-  Rust write one entry for each kind 0 byte. Zeek breaks the loop before the append at
+  Rust write one entry for each kind 0 byte. The branch that guards the break sits at
   `zeek/ja4t/main.zeek:96`, so `badcurveball.pcap` frame 1 reaches `2-1-3-1-1-8-4` in Zeek.
   Wireshark appends one entry for each `tcp.option_kind` field occurrence at
   `wireshark/source/packet-ja4.c:1456`. Rust reads that same field list at
