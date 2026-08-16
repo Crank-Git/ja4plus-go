@@ -161,7 +161,8 @@ The failure the rule prevents is a reader who follows one number into the wrong 
 cross-member review of batch #342 found that breach inside the batch that wrote the rule.
 
 - **FR-reference-32** — A bare `#N` of a file the guard reads names an issue of this
-  repository. **No test bounds that number**, and FR-reference-35 below states why.
+  repository. **No test bounds that number.**
+  `#### The withdrawn requirements, and the measurement that withdrew them` below states why.
 - **FR-reference-33** — A citation of an issue of the port carries one of the recorded
   forms.
 - **FR-reference-34** — A shape that names the port beside a bare number fails a test. **One
