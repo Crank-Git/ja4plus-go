@@ -188,10 +188,11 @@ func TestJA4TS_WritesTwoPartEDelaysWhenTheServerAnswersThreeTimes(t *testing.T) 
 // `wireshark/source/packet-ja4.c:277`. R24 names issue #18, which recorded the split.
 // Issue #56 holds the reading this library follows, and the maintainer read the port's
 // shipped rule on 2026-08-13. The port holds `_delay_seconds` at
-// `ja4plus/fingerprinters/ja4ts.py:43` of tag `v1.1.0`, the register row
-// `Part e of JA4TS, the time since the last SYN-ACK` at
-// `docs/specs/foxio/port-register.md:112` carries the port half, and the port issue is
-// `Crank-Git/ja4plus#226`. A reversal changes both repositories.
+// `ja4plus/fingerprinters/ja4ts.py:43` of tag `v1.1.0`. The register row
+// `Part e of JA4TS, the time since the last SYN-ACK` carries the port half, in the
+// `## Parity with ja4plus-go` section of `docs/specs/spec.md` in `Crank-Git/ja4plus` at
+// tag `v1.1.0`. The port issue is `Crank-Git/ja4plus#226`, and a reversal changes both
+// repositories.
 func TestJA4TS_RoundsAPartEDelayToTheNearestSecond(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -415,9 +416,10 @@ func TestJA4TS_AppendsTheResetDelayToPartE(t *testing.T) {
 // `rph$tcp$flags & TH_RST != 0` at `zeek/ja4t/main.zeek:167`, and Wireshark tests
 // `tcp_flags == 0x004` for equality at `wireshark/source/packet-ja4.c:1296`. The maintainer
 // read the port's shipped rule on 2026-08-13, at issue #126, and this library follows Zeek.
-// The register row `The JA4TS value that a RST produces` at
-// `docs/specs/foxio/port-register.md:114` carries the port half, and the port issue is
-// `Crank-Git/ja4plus#246`. A reversal changes both repositories.
+// The register row `The JA4TS value that a RST produces` carries the port half, in the
+// `## Parity with ja4plus-go` section of `docs/specs/spec.md` in `Crank-Git/ja4plus` at
+// tag `v1.1.0`. The port issue is `Crank-Git/ja4plus#246`, and a reversal changes both
+// repositories.
 func TestJA4TS_ReadsARSTThatAlsoCarriesACK(t *testing.T) {
 	fingerprinter := NewJA4TS()
 

@@ -1,8 +1,6 @@
 package ja4plus
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -27,9 +25,6 @@ import (
 
 // deviationRegisterFile is the path of the register, relative to the package directory.
 const deviationRegisterFile = "testdata/deviations.json"
-
-// portRegisterFile is the path of the port's register copy.
-const portRegisterFile = "docs/specs/foxio/port-register.md"
 
 // deviationFieldNames names every field that FR-reference-20 requires.
 var deviationFieldNames = []string{"key", "capability", "ours", "theirs", "ruling", "reason"}
@@ -481,58 +476,21 @@ func TestTheSchemaDocumentNamesEveryRegisterField(t *testing.T) {
 	}
 }
 
-func TestThePortRegisterPageNamesThePortCommitAndTheRetrievalDate(t *testing.T) {
-	page := readRepoFile(t, portRegisterFile)
+// #758 removed the mirrored copy of the port's register on 2026-08-16 UTC, and this test
+// holds the removal.
+//
+// A whole-page copy of the port's material restates every value that page holds.
+// `.claude/rules/ste.md` `## A value of another repository is cited, and never mirrored`
+// states the rule that bars it. A later change that restores the copy restores the drift
+// check, the local bare-number namespace and the maintenance cost with it, so the guard
+// reports the return of the path rather than the return of the text.
+//
+// Issue #758 is the reversal path. A reversal removes this test and it states the reason.
+func TestTheTreeHoldsNoMirroredCopyOfThePortRegister(t *testing.T) {
+	const removedPage = "docs/specs/foxio/port-register.md"
 
-	// FR-reference-17 requires the port commit and the retrieval date. The commit is the
-	// one that `v1.1.0` points at in `Crank-Git/ja4plus`.
-	for _, wanted := range []string{
-		"21299645366591331eb93155355b65a76a3729f3",
-		"v1.1.0",
-		"2026-08-11",
-	} {
-		if !strings.Contains(page, wanted) {
-			t.Errorf("%s does not name %q", portRegisterFile, wanted)
-		}
-	}
-}
-
-func TestThePortRegisterPageHoldsThePortSection(t *testing.T) {
-	page := readRepoFile(t, portRegisterFile)
-
-	const beginMarker = "<!-- port-register:begin -->"
-	const endMarker = "<!-- port-register:end -->"
-
-	begin := strings.Index(page, beginMarker)
-	end := strings.Index(page, endMarker)
-
-	if begin < 0 || end < begin {
-		t.Fatalf("%s holds no marked copy between %s and %s", portRegisterFile, beginMarker, endMarker)
-	}
-
-	copied := page[begin+len(beginMarker) : end]
-
-	// FR-reference-18 requires a verbatim copy. These anchors are the section heading and
-	// the last line of the port's own section, so a reworded copy fails the test.
-	for _, wanted := range []string{
-		"## Parity with ja4plus-go",
-		"### Divergence register",
-		"| Item | This project today | The port today | Rule | Action |",
-		"Verified against: https://github.com/Crank-Git/ja4plus-go",
-	} {
-		if !strings.Contains(copied, wanted) {
-			t.Errorf("the copy in %s does not hold %q", portRegisterFile, wanted)
-		}
-	}
-
-	// The hash is the whole gate on FR-reference-18. An anchor test passes over an edit
-	// between the anchors, and this test does not. The page states the command that
-	// reproduces the value.
-	const wantedDigest = "f5ec7502b46cea632ac8d291f32acf3b97fcf3471a5ee8a4a8ea0ac6aba45f4b"
-
-	digest := sha256.Sum256([]byte(strings.Trim(copied, "\n") + "\n"))
-	if hex.EncodeToString(digest[:]) != wantedDigest {
-		t.Errorf("the copy in %s hashes to %s, and the port section at commit 21299645366591331eb93155355b65a76a3729f3 hashes to %s",
-			portRegisterFile, hex.EncodeToString(digest[:]), wantedDigest)
+	if _, err := os.Stat(removedPage); err == nil {
+		t.Errorf("%s exists, and #758 removed it on 2026-08-16 UTC. Cite the port at the tag %s instead, under `.claude/rules/rulings.md` `## A citation names its repository`",
+			removedPage, portReadVersion)
 	}
 }

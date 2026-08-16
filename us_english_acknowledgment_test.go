@@ -28,17 +28,13 @@ import (
 // records the same trap.
 const theBritishAcknowledgmentWord = "acknowledg" + "ement"
 
-// theVerbatimCopyPage is the one tracked page that no change of this repository may edit.
+// This guard exempted one page until 2026-08-16 UTC, and #758 removed that page.
 //
-// `docs/specs/foxio/README.md` states that the page is a verbatim copy of a section of the
-// port's specification, and `.claude/rules/rulings.md` `## A citation names its repository`
-// states `Never edit the copy.` So a hit there would report a defect that no repair
-// reaches.
-//
-// The page holds no occurrence of this word today, and it holds one British spelling of
-// another word outside a code span. So the exemption is inert today, and the port decides
-// when it is not.
-const theVerbatimCopyPage = "docs/specs/foxio/port-register.md"
+// `docs/specs/foxio/port-register.md` was a verbatim copy of a section of the port's
+// specification, so no change of this repository could repair a hit there. #758 removed the
+// copy under `.claude/rules/ste.md`
+// `## A value of another repository is cited, and never mirrored`, so the guard now reads
+// every tracked file and it exempts none.
 
 // TestNoTrackedFileWritesTheBritishAcknowledgmentSpelling fails when a tracked file writes
 // the British spelling as prose.
@@ -60,7 +56,7 @@ func TestNoTrackedFileWritesTheBritishAcknowledgmentSpelling(t *testing.T) {
 	}
 
 	for _, path := range strings.Split(strings.TrimRight(string(output), "\x00"), "\x00") {
-		if path == "" || path == theVerbatimCopyPage {
+		if path == "" {
 			continue
 		}
 

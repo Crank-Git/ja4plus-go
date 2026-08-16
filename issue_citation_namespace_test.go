@@ -110,16 +110,17 @@ var issueCitationSkipDirectory = map[string]bool{
 	"testdata/foxio":    true,
 }
 
-// issueCitationExcludedFile names a whole file that carries a local rule, with the reason.
+// This guard excluded one file until 2026-08-16 UTC, and #758 removed that file.
 //
-// `.claude/rules/rulings.md` `## A citation names its repository` states the local rule of
-// each entry. The section bars an edit of the copy, so the guard reads it and reports nothing.
-var issueCitationExcludedFile = map[string]string{
-	"docs/specs/foxio/port-register.md": "The page is a verbatim copy of a section of the " +
-		"port's specification, so a bare number in it names the port. " +
-		"`docs/specs/foxio/README.md` holds that reading, and `.claude/rules/rulings.md` " +
-		"bars an edit of the copy.",
-}
+// `docs/specs/foxio/port-register.md` was a verbatim copy of a section of the port's
+// specification, so a bare number in it named the port and no change of this repository
+// could repair a hit. #758 removed the copy, so the guard now reads every file it walks and
+// it excludes none.
+//
+// **The `Ruling` column of the register in `docs/specs/spec.md` still carries a local
+// rule**, and this guard needs no exclusion for it. The guard matches
+// `issueCitationMalformedPortForm` alone, which names the port beside a number. A bare
+// number of that column matches no such shape.
 
 // issueCitationMalformedPortForm matches a shape that names the port beside a number, and
 // that no recorded form holds. A reader of one of these cannot tell which repository the
@@ -180,10 +181,6 @@ func issueCitationFile(t *testing.T) []string {
 // the wrong repository.
 func TestEveryPortIssueCitationCarriesARecordedForm(t *testing.T) {
 	for _, file := range issueCitationFile(t) {
-		if _, excluded := issueCitationExcludedFile[file]; excluded {
-			continue
-		}
-
 		content, err := os.ReadFile(file)
 		if err != nil {
 			t.Fatalf("%s does not open: %v", file, err)
@@ -327,20 +324,12 @@ func TestTheIssueCitationGuardReadsNoCorpusAndSkipsForNoReason(t *testing.T) {
 	}
 }
 
-// FR-reference-43 and FR-reference-44 — the guard honors the local rule of the copied page,
-// and the exclusion states its reason.
-func TestTheIssueCitationGuardHonorsTheLocalRule(t *testing.T) {
-	for file, reason := range issueCitationExcludedFile {
-		if reason == "" {
-			t.Errorf("the exclusion of %s states no reason", file)
-		}
-
-		if _, err := os.Stat(file); err != nil {
-			t.Errorf("the exclusion names %s, and this checkout holds no such file: %v",
-				file, err)
-		}
-	}
-}
+// FR-reference-43 and FR-reference-44 named the copied page, and #758 removed that page on
+// 2026-08-16 UTC. The test that read the exclusion went out with it.
+//
+// **An empty exclusion map makes that test pass over zero entries**, so it would report a
+// rule it no longer reads. `TestTheTreeHoldsNoMirroredCopyOfThePortRegister` in
+// `deviations_test.go` holds the removal instead, and it fails when the copy returns.
 
 // FR-reference-38 — the guard reads no tracker, and it bounds no number.
 // FR-reference-38a — the guard holds no high-water mark, and this test reads its own source.
