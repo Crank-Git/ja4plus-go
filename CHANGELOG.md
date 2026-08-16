@@ -1087,8 +1087,21 @@ that the interface declares.
   the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
   user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
   records the decision behind the correction.
-- The module needs Go 1.24 or later. It needed Go 1.22 before this change, so a consumer
-  on Go 1.22 or Go 1.23 must move to Go 1.24.
+- **The module needs Go 1.25 or later, and `go.mod` declares `go 1.25.0`.** `v0.3.0`
+  needed Go 1.22. The floor moved to Go 1.24 first, and the #725 ruling of 2026-08-15 UTC
+  moved it to Go 1.25. **The move drops every Go 1.24 consumer.** So a consumer on Go
+  1.22, Go 1.23 or Go 1.24 must move to Go 1.25. Issue #725 holds the ruling and the
+  reversal path.
+- **Four dependency moves landed in this cycle.** The `github.com/gopacket/gopacket` bump
+  forced the language version above. v1.7.1 declares `go 1.25.0` in its own `go.mod`, and
+  Go requires the main module to declare a language version at or above every dependency.
+  - `github.com/gopacket/gopacket` to v1.7.1. It repairs a decoder panic on untrusted
+    input, under `GHSA-6h9g-cjv3-pg2c`, and no patch release of the 1.6 line carries that
+    repair. Issue #730 holds the move.
+  - The language version to Go 1.25, which the bump above forces. Issue #725 holds the
+    ruling.
+  - `golang.org/x/crypto` to v0.55.0. Issue #719 holds the move.
+  - `golang.org/x/net` to v0.58.0. Issue #741 holds the move.
 
 ## [v1.0.0]
 
