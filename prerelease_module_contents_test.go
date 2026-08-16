@@ -63,8 +63,10 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // publishedModuleVersion names the tag that these cases read.
 //
 // **#106 moved this constant from `v0.3.0` to `v1.0.0` on 2026-08-15 UTC**, under Epic 10.
-// **#767 moved it to `v1.1.0` on 2026-08-16 UTC.** A reader who moves this constant moves
-// every case of this file to the new tag, and it moves no case of another file.
+// **#767 moved it to `v1.1.0` on 2026-08-16 UTC.** **#779 moved it to `v1.1.1` on
+// 2026-08-16 UTC**, because the `v1.1.0` release job failed at the release notes step. A
+// reader who moves this constant moves every case of this file to the new tag, and it moves
+// no case of another file.
 //
 // **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
 // the three. `prereleaseInstallVersion` in `prerelease_install_test.go` and

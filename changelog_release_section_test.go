@@ -58,8 +58,13 @@ func changelogReleaseSectionBody(changelog, tag string) string {
 // against the changelog.
 //
 // The case fails when the file holds no section for the tag, and it fails when that section
-// holds no text. The release step writes the notes to a file and it stops on an empty file,
-// so an empty section reaches the same failure that this guard exists to catch.
+// holds no text.
+//
+// **This case is stricter than the release step on one input, and that is deliberate.** The
+// step writes the notes to a file, and `.github/workflows/release.yml` stops on an empty
+// file with `if [ ! -s "$notes" ]`. A section that holds one blank line writes one byte, so
+// the step proceeds and it publishes empty release notes. FR-release-39 reads the recorded
+// release, so this case fails on that section instead.
 func TestTheChangelogHoldsAReleaseSectionForEveryReleaseTagConstant(t *testing.T) {
 	changelog := readRepoFile(t, changelogFile)
 
