@@ -33,12 +33,37 @@ measured**, because that count is the record that earned the change.
 | 3 | #446 | `segmentCarriesNoNewRequest` of `ja4h.go` reads the consumed sequence range, so a repeated segment produces no second value. |
 | 5 | #527, under the maintainer ruling of 2026-08-14 on rule 5b | `requestLineRe` of `internal/parser/http.go` reads a request path that holds a space, and `computeJA4HFromRequest` of `ja4h.go` hashes an empty header list. |
 
+**The heading counts a whole cause, and cause 1 holds two halves.** #529 closed the HTTP/2
+half on 2026-08-15 UTC, and the HTTP/3 half stays open. So this table gains no row, and the
+paragraph that starts `**#529 closed the HTTP/2 half of cause 1` below states what the
+library does today.
+
 **This section carried the name `## Two causes are closed since this reading` until batch
 #617.** #465 created it with two rows, #527 closed cause 5 on 2026-08-14, and the batch #555
 cross-member review measured the disagreement. **Round 43 of the `## Changelog` of
 `docs/specs/spec.md` names the old heading**, because that round records what #465 wrote.
 
-**Cause 1 is open, and #441 owns it.** **The maintainer ruled split S1
+**#529 closed the HTTP/2 half of cause 1 on 2026-08-15 UTC, and the HTTP/3 half is open.**
+The 80 deviations of cause 1 each carried a register entry by then, so the change closed 80
+register entries rather than 80 deviations. **75 of the 80 carry ruling #529, and 5 carry
+ruling #164.** The 5 name frame 12 of `chrome-cloudflare-quic-with-secrets.pcapng` and the
+per-stream key `0:57098` of that capture, and their reason names HTTP/3. **That reason is
+wrong**: `tshark -Y "frame.number==12" -T fields -e frame.protocols` reports
+`eth:ethertype:ipv6:tcp:tls:http2` for that frame, measured on 2026-08-15 UTC. So the frame
+carries HTTP/2 over TCP, and one TLS record decryptor closed it.
+
+**63 of the 80 comparisons now match, and 17 reach ruling #285.** The run reports 1763
+matches before the change and 1826 after it. The 17 hold the two raw forms alone: 15 carry
+the trailing comma that the Wireshark dissector writes on the unsorted cookie value list, and
+2 carry the two trailing underscores that it writes for a request without a cookie.
+
+**The HTTP/3 half of cause 1 holds no register entry today**, because every entry of ruling
+#164 named an HTTP/2 frame. **#164 measures its own yield against the merged tree**, and it
+reads no count from the register.
+
+**The 80 above is the count that #442 measured on 2026-08-13, and this section keeps it.**
+
+**Cause 1 was open until 2026-08-15, and #441 owns it.** **The maintainer ruled split S1
 of cause 4 on 2026-08-13**, and #467 recorded that ruling in `testdata/deviations.json`.
 **The library produces no value for an SSDP request over UDP**, so cause 4 moves no
 fingerprint value.
@@ -148,6 +173,9 @@ alone. **One frame was read byte by byte, and it is frame 15 of `http2-with-cook
   `ja4plus/fingerprinters/ja4h.py:111` reads `packet[TCP]` and `packet[Raw]` alone.
 - **No register entry closes.** No register entry names a JA4H value of
   `http2-with-cookies.pcapng` or of `chrome-cloudflare-quic-with-secrets.pcapng`.
+  **#701 falsified this bullet on 2026-08-15 UTC**, and it wrote one entry for each of the
+  80. **#529 then closed all 80 on the same day.**
+  `## Three causes are closed since this reading` above states that measurement.
 - **The cost is high.** A TLS decryptor, an HPACK decoder and a QPACK decoder are three new
   subsystems, and each one reads untrusted input.
 
