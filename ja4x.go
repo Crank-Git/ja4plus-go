@@ -26,6 +26,17 @@ const (
 // TLS handshake type for Certificate message.
 const tlsHandshakeCertificate = 0x0b
 
+// ja4xMaxCertificateBytes bounds one certificate of a chain.
+// Every packet is untrusted input, and a three-byte length field states up to 16 megabytes.
+const ja4xMaxCertificateBytes = 200000
+
+// ja4xMaxProtectedSearchBytes bounds the stream that the protected reader walks.
+//
+// A TLS 1.3 server sends the Certificate message in the first records of the connection,
+// so a longer stream carries application data and no certificate. The reader runs at each
+// packet, and this bound stops it once the connection carries a payload.
+const ja4xMaxProtectedSearchBytes = 65536
+
 // JA4XFingerprinter computes JA4X X.509 certificate fingerprints.
 // It is stateful: it tracks TCP streams to reassemble TLS Certificate
 // messages that may span multiple TCP segments.
@@ -73,6 +84,13 @@ type JA4XFingerprinter struct {
 	// refused.
 	streamBytes map[string]int
 	lastCleanup time.Time
+	// keyLog holds the TLS secrets that the caller supplied, and nil when the caller
+	// supplied none. `WithKeyLog` writes it, and the constructor leaves it nil.
+	//
+	// It is configuration and never state, so `Reset` keeps it. The value does not change
+	// after construction, which is what lets a sharded caller give one key log to every
+	// shard without a lock.
+	keyLog *KeyLog
 }
 
 // NewJA4X creates a new JA4XFingerprinter.
@@ -84,6 +102,17 @@ func NewJA4X() *JA4XFingerprinter {
 		streamBytes:    make(map[string]int),
 		lastCleanup:    time.Now(),
 	}
+}
+
+// setKeyLog gives the fingerprinter the TLS secrets that the caller supplied.
+//
+// `WithKeyLog` calls it, and no exported name of this package reaches it. Epic 10 freezes
+// the exported surface, and issue #649 ruled that one option function carries a new
+// setting.
+// The caller calls it once, before the first packet. A write on a live fingerprinter would
+// break the lock-free contract of `.claude/rules/concurrency.md`.
+func (f *JA4XFingerprinter) setKeyLog(keyLog *KeyLog) {
+	f.keyLog = keyLog
 }
 
 // ensure fills the state maps that the constructor fills.
@@ -277,50 +306,252 @@ func (f *JA4XFingerprinter) findCertificatesInStream(
 		// `testdata/foxio/pcap/socks4-https.pcap` holds such a record.
 		{
 			certs := ja4xCertificatesInRecord(data[i+5 : i+5+recordLength])
-			for _, certDER := range certs {
-				// The key names the SHA-256 hash of the DER bytes and the stream.
-				h := sha256.Sum256(certDER)
-				certHash := hex.EncodeToString(h[:])
-				setKey := ja4xCertSetKey(streamID, certHash)
-
-				// The reassembler keeps every segment until a removal, so this reader reads
-				// the same certificate again at each later packet of the stream.
-				if _, seen := f.processedCerts[setKey]; seen {
-					continue
-				}
-
-				fp, raw := computeJA4XWithRaw(certDER)
-				if fp != "" {
-					result := FingerprintResult{
-						Fingerprint: fp,
-						Raw:         raw,
-						Type:        "ja4x",
-						SrcIP:       srcIP,
-						DstIP:       dstIP,
-						SrcPort:     srcPort,
-						DstPort:     dstPort,
-						Timestamp:   parser.GetPacketTimestamp(packet),
-					}
-					results = append(results, result)
-					f.processedCerts[setKey] = struct{}{}
-
-					if f.certsByStream[streamID] == nil {
-						f.certsByStream[streamID] = make(map[string]struct{})
-					}
-					f.certsByStream[streamID][certHash] = struct{}{}
-				}
-			}
+			results = append(results, f.emitCertificates(certs, streamID, packet, srcIP, dstIP, srcPort, dstPort)...)
 		}
 
 		// Move past this TLS record.
 		i += 5 + recordLength
 	}
 
+	// A TLS 1.3 server writes the Certificate message inside a protected record, whose
+	// outer type is TLSRecordTypeApplicationData. RFC 8446 section 5.2 states that rule, so
+	// the plaintext walk above reads no byte of it. This second walk decrypts those records
+	// where the caller supplied the secret, and it reads nothing at all otherwise.
+	// #492 built it, and `docs/audit/ja4x-deviation-cluster.md`
+	// `## Cause 2 — the library reads no encrypted TLS 1.3 handshake record` measured the
+	// values it recovers.
+	reverseID := fmt.Sprintf("%s:%d-%s:%d", dstIP, dstPort, srcIP, srcPort)
+
+	protected := f.protectedCertificates(streamID, reverseID, data)
+	results = append(results, f.emitCertificates(protected, streamID, packet, srcIP, dstIP, srcPort, dstPort)...)
+
 	// The reassembler holds the segments, and it drops one only at RemoveStream or at an
 	// eviction. A trim of the returned run would therefore reappear at the next packet, so
 	// this reader trims nothing and the certificate set removes the repeat instead.
 
 	return results
+}
+
+// emitCertificates returns one result for each certificate the stream has not produced yet.
+//
+// It writes the certificate set and the stream index, so the reader produces one value for
+// each certificate of each stream. The reassembler keeps every segment until a removal, so
+// this reader reads the same certificate again at each later packet of the stream.
+func (f *JA4XFingerprinter) emitCertificates(
+	certs [][]byte,
+	streamID string,
+	packet gopacket.Packet,
+	srcIP, dstIP string,
+	srcPort, dstPort uint16,
+) []FingerprintResult {
+	var results []FingerprintResult
+
+	for _, certDER := range certs {
+		// The key names the SHA-256 hash of the DER bytes and the stream.
+		h := sha256.Sum256(certDER)
+		certHash := hex.EncodeToString(h[:])
+		setKey := ja4xCertSetKey(streamID, certHash)
+
+		if _, seen := f.processedCerts[setKey]; seen {
+			continue
+		}
+
+		fp, raw := computeJA4XWithRaw(certDER)
+		if fp == "" {
+			continue
+		}
+
+		results = append(results, FingerprintResult{
+			Fingerprint: fp,
+			Raw:         raw,
+			Type:        "ja4x",
+			SrcIP:       srcIP,
+			DstIP:       dstIP,
+			SrcPort:     srcPort,
+			DstPort:     dstPort,
+			Timestamp:   parser.GetPacketTimestamp(packet),
+		})
+
+		f.processedCerts[setKey] = struct{}{}
+
+		if f.certsByStream[streamID] == nil {
+			f.certsByStream[streamID] = make(map[string]struct{})
+		}
+
+		f.certsByStream[streamID][certHash] = struct{}{}
+	}
+
+	return results
+}
+
+// protectedCertificates returns the certificates that the protected TLS 1.3 records of one
+// stream carry.
+//
+// It returns nil when the caller supplied no key log, and nil when the key log holds no
+// secret for the connection. It allocates no state of its own: the client random comes from
+// the ClientHello that the reassembler already holds, so the two bounds of the reassembler
+// bound this reader too.
+//
+// It reads no stream above ja4xMaxProtectedSearchBytes, and it reads no stream that already
+// produced a certificate. Both guards stop the repeated walk that each later packet of one
+// stream would otherwise run.
+//
+// **The walk still runs once for each packet of a stream that produces no certificate, and
+// #492 declined a third guard against that.** The self-review of #492 measured the worst
+// case: about 3121 packets reach the byte bound when each one adds one 21-byte record, and
+// the walk of packet k opens k records, so one such stream costs about 4.9 million AEAD
+// operations. **That case needs a peer that writes thousands of records under the handshake
+// traffic key**, because `TLS13ContentOfStream` stops at the first record the handshake keys
+// do not open and a real connection changes that key after the Finished message. So the
+// realistic cost of one packet is the handshake record count, which is about five. **A third
+// guard would need a per-stream table, and a new table needs a bound and a removal path**;
+// batch #184 records the leak that a table without them produces. Issue #492 is the reversal
+// path, and a stream that reaches the measured case is the fact that reverses it.
+func (f *JA4XFingerprinter) protectedCertificates(streamID, reverseID string, data []byte) [][]byte {
+	if f.keyLog == nil || len(data) > ja4xMaxProtectedSearchBytes {
+		return nil
+	}
+
+	if len(f.certsByStream[streamID]) > 0 {
+		return nil
+	}
+
+	random, label := f.tls13SecretName(reverseID, data)
+	if len(random) == 0 {
+		return nil
+	}
+
+	// **`tls13Keys` of `ja4h.go` wraps these same two steps**, and the two sites are not one
+	// helper. A reader who changes the key schedule changes both.
+	secret, err := f.keyLog.Secret(random, label)
+	if err != nil {
+		return nil
+	}
+
+	keys, err := parser.DeriveTLS13RecordKeys(secret)
+	if err != nil {
+		return nil
+	}
+
+	// The handshake starts at the first protected record of the direction, so the walk
+	// skips none. RFC 8446 section 5.3 states that the first record under one traffic key
+	// uses the sequence number 0.
+	handshake, _ := parser.TLS13ContentOfStream(data, keys, 0, parser.TLSRecordTypeHandshake)
+
+	return ja4xCertificatesInTLS13Handshake(handshake)
+}
+
+// tls13SecretName returns the client random of the connection and the key log label of the
+// direction. It returns a nil random when neither direction carries a ClientHello.
+//
+// A key log names each connection by the Random field of its ClientHello, and the JA4X
+// stream identifier names one direction. So the certificate travels on one stream and the
+// client random travels on the other. The reader reads the ClientHello of this stream
+// first, because a client certificate travels beside it, and it reads the reverse stream
+// otherwise.
+func (f *JA4XFingerprinter) tls13SecretName(reverseID string, data []byte) ([]byte, string) {
+	if hello, err := parser.ParseClientHello(data); err == nil && hello != nil && len(hello.Random) != 0 {
+		return hello.Random, parser.TLS13ClientHandshakeSecretLabel
+	}
+
+	reverse := f.reassembler.GetStream(reverseID)
+
+	if hello, err := parser.ParseClientHello(reverse); err == nil && hello != nil && len(hello.Random) != 0 {
+		return hello.Random, parser.TLS13ServerHandshakeSecretLabel
+	}
+
+	return nil, ""
+}
+
+// ja4xCertificatesInTLS13Handshake returns the certificates of every Certificate message
+// that a decrypted TLS 1.3 handshake stream holds.
+//
+// The stream joins the content of each protected handshake record, because one handshake
+// message spans more than one record. RFC 8446 section 5.1 permits that split.
+func ja4xCertificatesInTLS13Handshake(handshake []byte) [][]byte {
+	var certs [][]byte
+
+	for offset := 0; offset+4 <= len(handshake); {
+		// Every packet is untrusted input, so the length field is bounds-checked before
+		// the slice below reads it.
+		messageLength := int(handshake[offset+1])<<16 | int(handshake[offset+2])<<8 | int(handshake[offset+3])
+		if offset+4+messageLength > len(handshake) {
+			break
+		}
+
+		if handshake[offset] == tlsHandshakeCertificate {
+			certs = append(certs, ja4xCertificatesInTLS13Message(handshake[offset+4:offset+4+messageLength])...)
+		}
+
+		offset += 4 + messageLength
+	}
+
+	return certs
+}
+
+// ja4xCertificatesInTLS13Message returns the DER-encoded certificates of the body of one
+// TLS 1.3 Certificate message. The body starts after the 4-byte message header.
+//
+// RFC 8446 section 4.4.2 states the body:
+//
+//	struct {
+//	    opaque certificate_request_context<0..2^8-1>;
+//	    CertificateEntry certificate_list<0..2^24-1>;
+//	} Certificate;
+//
+// and one entry holds `opaque cert_data<1..2^24-1>` then `Extension extensions<0..2^16-1>`.
+// The TLS 1.2 message holds neither the context nor the per-entry extensions, so
+// `ja4xCertificatesInMessage` reads no TLS 1.3 message.
+func ja4xCertificatesInTLS13Message(body []byte) [][]byte {
+	if len(body) < 1 {
+		return nil
+	}
+
+	// certificate_request_context is empty in a server message, and a client message
+	// echoes the context of the CertificateRequest.
+	pos := 1 + int(body[0])
+	if pos+3 > len(body) {
+		return nil
+	}
+
+	listLength := int(body[pos])<<16 | int(body[pos+1])<<8 | int(body[pos+2])
+	pos += 3
+
+	end := pos + listLength
+	if end > len(body) {
+		return nil
+	}
+
+	var certs [][]byte
+
+	for pos+3 <= end {
+		certLength := int(body[pos])<<16 | int(body[pos+1])<<8 | int(body[pos+2])
+		pos += 3
+
+		if certLength <= 0 || certLength > ja4xMaxCertificateBytes || pos+certLength > end {
+			break
+		}
+
+		cert := make([]byte, certLength)
+		copy(cert, body[pos:pos+certLength])
+		certs = append(certs, cert)
+		pos += certLength
+
+		if pos+2 > end {
+			break
+		}
+
+		extensionsLength := int(body[pos])<<8 | int(body[pos+1])
+		pos += 2
+
+		if pos+extensionsLength > end {
+			break
+		}
+
+		pos += extensionsLength
+	}
+
+	return certs
 }
 
 // ja4xCertSetKey returns the processedCerts key of one certificate on one stream.
@@ -391,7 +622,7 @@ func ja4xCertificatesInMessage(message []byte) [][]byte {
 		certLen := int(message[pos])<<16 | int(message[pos+1])<<8 | int(message[pos+2])
 		pos += 3
 
-		if certLen <= 0 || certLen > 200000 {
+		if certLen <= 0 || certLen > ja4xMaxCertificateBytes {
 			break
 		}
 		if pos+certLen > len(message) {

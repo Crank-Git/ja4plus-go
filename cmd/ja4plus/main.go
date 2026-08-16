@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"text/tabwriter"
@@ -162,6 +161,50 @@ type packetReader interface {
 	LinkType() layers.LinkType
 }
 
+// pcapngMagic is the first four bytes of a pcapng Section Header Block.
+// The four bytes read the same in each byte order, so one value matches both.
+// A classic pcap file carries a different magic number, in one of four forms.
+// `pcapgo.NewReader` accepts all four, so this program matches the one pcapng value.
+var pcapngMagic = [4]byte{0x0a, 0x0d, 0x0d, 0x0a}
+
+// newPacketReader returns the reader that matches the first four bytes of the file.
+// It returns an error when the file holds fewer than four bytes.
+// It returns an error when the reader rejects the file.
+//
+// A capture file names its own format in those four bytes.
+// A file extension is a convention that a writer may not follow.
+// The FoxIO corpus ships a classic pcap under the name http1.pcapng.
+// Issue #727 records the refusal that the extension check produced.
+// `loadPCAP` in `integration_test.go` already reads the magic number for the same reason.
+func newPacketReader(f *os.File, path string) (packetReader, error) {
+	var magic [4]byte
+
+	if _, err := io.ReadFull(f, magic[:]); err != nil {
+		return nil, fmt.Errorf("cannot read the format of %s: %w", path, err)
+	}
+
+	// The reader reads the file from its first byte, so the sniff returns the offset.
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return nil, fmt.Errorf("cannot seek to the start of %s: %w", path, err)
+	}
+
+	if magic == pcapngMagic {
+		r, err := pcapgo.NewNgReader(f, pcapgo.DefaultNgReaderOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read pcapng: %w", err)
+		}
+
+		return r, nil
+	}
+
+	r, err := pcapgo.NewReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read pcap: %w", err)
+	}
+
+	return r, nil
+}
+
 func runAnalyze(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("missing pcap file argument\nUsage: ja4plus analyze <pcap-file> [--json|--csv] [--types ja4,ja4t] [--lookup]")
@@ -206,20 +249,9 @@ func runAnalyze(args []string) error {
 	}
 	defer func() { _ = f.Close() }()
 
-	var reader packetReader
-	ext := strings.ToLower(filepath.Ext(pcapFile))
-	if ext == ".pcapng" {
-		r, err := pcapgo.NewNgReader(f, pcapgo.DefaultNgReaderOptions)
-		if err != nil {
-			return fmt.Errorf("failed to read pcapng: %w", err)
-		}
-		reader = r
-	} else {
-		r, err := pcapgo.NewReader(f)
-		if err != nil {
-			return fmt.Errorf("failed to read pcap: %w", err)
-		}
-		reader = r
+	reader, err := newPacketReader(f, pcapFile)
+	if err != nil {
+		return err
 	}
 
 	proc := ja4plus.NewProcessor()

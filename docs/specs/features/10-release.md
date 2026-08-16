@@ -123,6 +123,14 @@ each of FR-release-35a through FR-release-35k. **A tag push is the only trigger 
 reads the configuration on every pull request. That job runs `goreleaser check` and
 `goreleaser release --snapshot --clean`, and it publishes nothing.
 
+**The job also reads the version line of the binary it built, and #736 added that step on
+2026-08-15 UTC.** A job that runs no binary proves that the build succeeds, and it proves
+nothing about what the build stamps. **A snapshot binary printed the version of the previous
+release, and every case stayed green.** So the step runs the Linux amd64 artifact. It reads
+the printed line against the `v` prefix of #724 and the snapshot marker of #736.
+`release_snapshot_version_test.go` reads the step, and it reads the link flag of
+`.goreleaser.yaml` beside it.
+
 **The conformance suite runs in a job of its own, and the `release` job names it in
 `needs:`.** The suite rewrites `docs/audit/conformance.md` on every run, so a run in the
 release job would leave the git tree dirty and GoReleaser would refuse the release.

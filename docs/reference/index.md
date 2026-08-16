@@ -77,24 +77,39 @@ holds each of these.
 - `id="CaptureInfo.Timestamp"`, for a struct field.
 - `id="DecodingLayer.CanDecode"`, for an interface method.
 
-## The generated page serves no documentation today, and this states why
+## The generated page renders the documentation, and this states what changed
 
-**`https://pkg.go.dev/github.com/Crank-Git/ja4plus-go` answers 200 and it renders no
-documentation.** Read on 2026-08-14, the page states `License: None detected` and:
+**`https://pkg.go.dev/github.com/Crank-Git/ja4plus-go` answers 200 and it renders the
+documentation.** The served markup was read on 2026-08-16 UTC, and it holds each of these.
+
+- The version `v1.0.0`, with `Published: Aug 15, 2026`.
+- The license `BSD-3-Clause`.
+- `id="NewProcessor"` and `id="Processor.ProcessPacket"`, which are two anchors of the
+  table above.
+- No `None detected`, and no `Documentation not displayed due to license restrictions`.
+
+**That license label is the one the generator detects from `LICENSE`, and it is not the
+license of every method.** `NOTICE` holds the FoxIO License 1.1 terms, and
+`docs/specs/features/01-licensing.md` states the split.
+
+**The page served no documentation until the `v1.0.0` tag, and the cause was measurable.**
+Read on 2026-08-14, it stated `License: None detected` and:
 
 > Documentation not displayed due to license restrictions.
 
-**The cause is measurable. The latest tag is `v0.3.0`, and that tag carries no `LICENSE`
-file.** `git show v0.3.0:LICENSE` reports
-`fatal: path 'LICENSE' exists on disk, but not in 'v0.3.0'`. The working tree holds
-`LICENSE` and `NOTICE`, so a later tag that carries both gives the generator a license to
-detect.
+**The latest tag was `v0.3.0` on that date, and that tag carries no `LICENSE` file.**
+`git show v0.3.0:LICENSE` reports
+`fatal: path 'LICENSE' exists on disk, but not in 'v0.3.0'`. **The `v1.0.0` tag carries
+`LICENSE` and `NOTICE`**, measured on 2026-08-16 UTC, so it gives the generator a license
+to detect.
 
 **Every link of this section resolves to the right page and to the right anchor.** The
-target renders the documentation when a tagged version carries the license. The links name
-no version, so each one follows the latest version the generator holds. Issue
-[#593](https://github.com/Crank-Git/ja4plus-go/issues/593) records the question for the
-maintainer.
+links name no version, so each one follows the latest version the generator holds, which is
+`v1.0.0`. Issue [#593](https://github.com/Crank-Git/ja4plus-go/issues/593) recorded the
+question that the old measurement raised, and it is closed.
+
+Verified against: <https://pkg.go.dev/github.com/Crank-Git/ja4plus-go>, retrieved
+2026-08-16.
 
 **`go doc` reads the same doc comments from the module itself, and it needs no network.**
 Run `go doc github.com/Crank-Git/ja4plus-go` for the index, and

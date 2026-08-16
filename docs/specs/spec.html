@@ -144,7 +144,8 @@ sentence, <strong>"the port" names this repository</strong>.</p>
 
 <p><code>ja4plus-go</code> is a Go library and command-line program for JA4+ network
 fingerprinting. FoxIO publishes the JA4+ standard; this is an independent implementation.
-The library is at <code>v0.3.0</code>.</p>
+The library is at <code>v1.0.0</code>, and the current work takes it to
+<code>v1.1.0</code>.</p>
 
 <p><strong>FoxIO names twelve methods. This project implements eleven of them.</strong>
 <code>JA4LFingerprinter</code> writes both JA4L and JA4LS, so <strong>ten
@@ -482,8 +483,8 @@ all three; the library appears not to. Epic 5 is sized after Epic 4 finishes.</p
 <p>The port shipped the correction in its own Epic 1. This project acts only on its own side.</p>
 </div>
 
-<div class="box q">
-<h3>R5 — <code>gopacket</code> upstream is unmaintained <em>(open)</em></h3>
+<div class="box ok">
+<h3>R5 — <code>gopacket</code> upstream is unmaintained <em>(resolved 2026-08-13)</em></h3>
 <p>No release since v1.1.19 on 2020-10-19, which is a gap of five years, nine months and 25
 days on 2026-08-13. The community fork is <code>gopacket/gopacket</code>. This sentence read
 <em>in 2022</em> until 2026-08-13, and the Go module proxy reports
@@ -494,7 +495,10 @@ with one signature, under one Linux-only build constraint, so Epic 13 costs the 
 either one. <strong>The deadline was Epic 10, and never Epic 13</strong>, because
 <code>gopacket.Packet</code> is an interface whose methods return types of its own package.
 <strong>#438 carried the migration on 2026-08-13, before Epic 10</strong>, so this question
-holds no open deadline today. Issue #436 asked for this repair, and batch #708 made it.</p>
+holds no open deadline today. Issue #436 asked for this repair, and batch #708 made it.
+<strong>The heading of this box read <em>(open)</em> until 2026-08-15 UTC</strong>, and #439
+closed it in batch #727. The maintainer settled the risk on 2026-08-13, and the library
+depends on <code>gopacket/gopacket</code> v1.6.1 today.</p>
 </div>
 
 <div class="box ok">

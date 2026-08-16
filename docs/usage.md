@@ -56,9 +56,14 @@ Database commands:
 ja4plus analyze capture.pcap
 ```
 
-The program picks the reader from the file extension. A path that ends `.pcapng` reaches
-`pcapgo.NewNgReader`, and every other path reaches `pcapgo.NewReader`. `runAnalyze` in
-`cmd/ja4plus/main.go` holds that choice.
+The program picks the reader from the first four bytes of the file. A file that starts with
+the pcapng magic number reaches `pcapgo.NewNgReader`, and every other file reaches
+`pcapgo.NewReader`. `newPacketReader` in `cmd/ja4plus/main.go` holds that choice.
+
+**The file extension is a hint, and it is never the decision.** A capture file names its own
+format in those four bytes, and a writer may not follow the extension convention. So the
+program reads a file that carries no extension, and it reads a classic pcap that carries the
+name `.pcapng`. Issue #727 records the refusal that the extension check produced.
 
 At the end of the file the program calls `CloseOpenWindows`. That call emits the JA4SSH
 value of a window that the capture left open.

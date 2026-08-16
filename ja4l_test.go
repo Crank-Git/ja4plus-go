@@ -256,6 +256,25 @@ func buildTCPPacketWithIPv6(t *testing.T, srcIP, dstIP net.IP, hopLimit uint8, s
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
 
+// TestJA4L_IPv6Handshake holds the observed time-to-live ruling of #128.
+//
+// The maintainer ruled on 2026-08-11 UTC, in the second comment of #128. The library reads
+// the IPv6 hop limit as the observed time-to-live, and it writes JA4L over IPv6. That is
+// candidate 1 of the issue, and the library declines the Wireshark restriction to IPv4.
+//
+// The references split two against one. `zeek/ja4l/main.zeek:93` and
+// `zeek/ja4l/main.zeek:147` read `rp$ip6$hlim`, and `rust/ja4/src/time.rs:66` reads
+// `ipv6.hlim`. `wireshark/source/packet-ja4.c:1218` reads `ip.ttl` alone, and it holds no
+// IPv6 branch. `JA4L.png` labels part b `Observed TTL`, and it names no address family.
+//
+// The maintainer records the answer as a reading of the port, and not as a ruling of this
+// project. The port reads the hop limit at `ja4plus/utils/packet_utils.py:134-144`, at the
+// port commit `21299645366591331eb93155355b65a76a3729f3`. The port's own prose records no
+// rule for IPv6, so the port's code is the whole evidence.
+//
+// `GetIPInfo` in `internal/parser/packet.go` returns the hop limit, and this test proves
+// that an IPv6 handshake reaches a value. #128 is the reversal path, and a reversal changes
+// the port as well.
 func TestJA4L_IPv6Handshake(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)

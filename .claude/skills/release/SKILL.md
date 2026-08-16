@@ -92,7 +92,7 @@ recorded reason.** FR-prerelease-26 states that rule.
 After `v1.0.0` the exported names and signatures stay stable for the whole `v1` series.
 Breaking that promise means `v2` and a changed import path.
 
-**Before you tag `v1.0.0`, confirm the maintainer settled every open R9 question of
-`docs/specs/spec.md`.** R9 question 2 is settled already. The maintainer ruled on 2026-08-11
+**The maintainer tagged `v1.0.0` on 2026-08-15 UTC, so the freeze is done and no tag waits
+on an R9 question of `docs/specs/spec.md`.** R9 question 2 is settled. The maintainer ruled on 2026-08-11
 that `CloseOpenWindows` sits on the optional interface `WindowCloser`, and #53 records the
 ruling. Never re-ask that question.

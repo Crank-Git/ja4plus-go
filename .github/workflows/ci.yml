@@ -45,11 +45,14 @@ permissions:
 # of one day, and never as a property of go1.24.13. `CLAUDE.md` `## Conventions` states the
 # rule that a ruling record quotes no live measurement without its date.
 #
-# **`go.mod` does not move, and it states a language version rather than a toolchain.**
-# #438 established that reading, and Go states it: `The language version for a Go version
-# is the result of truncating everything after the N: 1.21, 1.21rc2, and 1.21.3 all
-# implement language version 1.21.` So the `go 1.24.0` directive and this Go 1.26 build are
-# independent, and `CLAUDE.md` still states `Go 1.24 or later`.
+# **`go.mod` states a language version rather than a toolchain, and this range does not
+# move it.** #438 established that reading. Go states it: `The language version for a Go
+# version is the result of truncating everything after the N: 1.21, 1.21rc2, and 1.21.3 all
+# implement language version 1.21.` So the `go 1.25.0` directive and this Go 1.26 build are
+# independent, and `CLAUDE.md` states `Go 1.25 or later`.
+#
+# **The directive read `go 1.24.0` until 2026-08-15**, and #725 moved it for a dependency
+# requirement.
 #
 # **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.** GO-2026-5856
 # names a fix at 1.26.5. GO-2026-6218, GO-2026-6090, GO-2026-5972 and GO-2026-5026 each name
@@ -103,9 +106,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -142,10 +145,10 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and FR-supply-15 permits no other permission here.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -169,7 +172,7 @@ jobs:
       #
       # `corpus_fetch_test.go` holds both halves of the key.
       - name: Restore the corpus
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: testdata/foxio
           key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
@@ -291,7 +294,7 @@ jobs:
       # The log names every deviation, and Epic 5 reads it to size the work.
       - name: Upload the conformance log
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: conformance-log
           path: conformance.log
@@ -312,10 +315,10 @@ jobs:
   libpcap:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -331,10 +334,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -385,7 +388,7 @@ jobs:
     # gives it `contents: read`, and this job reads the repository and a public database
     # alone.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The scanner reads the Go version of the `go` command on the PATH, and it reports
       # the standard library of that version. **This job therefore names the range that
@@ -394,7 +397,7 @@ jobs:
       # an artifact this workflow never produces.
       #
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -481,10 +484,10 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and this job reads the repository and writes no ref.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -497,7 +500,7 @@ jobs:
         run: echo "commit=$(tr -d '[:space:]' < testdata/foxio.pin)" >> "$GITHUB_OUTPUT"
 
       - name: Restore the corpus
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: testdata/foxio
           key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
@@ -654,10 +657,10 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and this job reads two commits of the repository.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -693,7 +696,7 @@ jobs:
       # package of a nested module.
       - name: Check out the base branch
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.base_ref }}
           path: base
@@ -882,10 +885,10 @@ jobs:
     # This job declares no `permissions` block of its own. The workflow-level block above
     # gives it `contents: read`, and this job reads the repository and writes nothing.
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -926,12 +929,12 @@ jobs:
     steps:
       # GoReleaser reads the tag history to compute the snapshot version, so the checkout
       # takes the whole history rather than one commit.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       # The comment above `jobs:` states why the range reads `~1.26.6`.
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '~1.26.6'
 
@@ -961,3 +964,35 @@ jobs:
           distribution: goreleaser
           version: 'v2.17.1'
           args: release --snapshot --clean
+
+      # **The step above built five binaries, and no step ran one of them.** So the job
+      # proved that the build succeeds, and it proved nothing about what the build stamps.
+      # #736 measured that gap on 2026-08-15 UTC. A snapshot binary printed `ja4plus v0.3.0`,
+      # which is the version of the previous release, and every case stayed green.
+      #
+      # This step reads real output, and the case in `release_snapshot_version_test.go` reads
+      # the template. **The two answer different questions**, and a template that GoReleaser
+      # renders differently than a reader expects reaches this step alone.
+      #
+      # The pattern holds two rulings. **The `v` prefix is #724, and the `-SNAPSHOT-` marker
+      # is #736.** A build for the runner's own platform is the one artifact this step can
+      # run, so it selects the Linux amd64 binary by path.
+      - name: Read the version line of the snapshot binary
+        run: |
+          set -euo pipefail
+          binary=dist/ja4plus_linux_amd64_v1/ja4plus
+          if [ ! -x "$binary" ]; then
+            echo "the snapshot build produced no runnable binary at $binary"
+            ls -R dist
+            exit 1
+          fi
+          line="$("$binary" --version)"
+          echo "the snapshot binary prints: $line"
+          case "$line" in
+            "ja4plus v"*-SNAPSHOT-*) ;;
+            *)
+              echo "a snapshot binary states no snapshot marker, and #736 rules that it states one"
+              echo "it must also keep the leading v that #724 rules"
+              exit 1
+              ;;
+          esac

@@ -7,10 +7,12 @@
 # **No pull request published a release from this file.** A tag push is the only trigger of
 # the release workflow, so the `goreleaser` job of `.github/workflows/ci.yml` is the one
 # reader before a tag. That job runs `goreleaser check` and
-# `goreleaser release --snapshot --clean`, and it publishes nothing.
+# `goreleaser release --snapshot --clean`, it reads the version line of the binary it built,
+# and it publishes nothing. **#736 added that read on 2026-08-15 UTC**, because a job that
+# runs no binary proves nothing about what the build stamps.
 #
-# `release_cgo_test.go` reads this file as text, because no test of this module parses YAML
-# and the module depends on no YAML package.
+# `release_cgo_test.go` and `release_snapshot_version_test.go` read this file as text,
+# because no test of this module parses YAML and the module depends on no YAML package.
 #
 # Verified against <https://goreleaser.com/customization/builds/go/>,
 # <https://goreleaser.com/customization/archive/>,
@@ -81,14 +83,65 @@ builds:
     # variable. `-trimpath` removes that line, and no build of the three holds the value.
     #
     # `main.Version` is different, because `resolveVersion` in `cmd/ja4plus/main.go` reads
-    # it and `ja4plus --version` prints it. The snapshot of 2026-08-15 printed
-    # `ja4plus 0.3.0-SNAPSHOT-8f0418c`.
+    # it and `ja4plus --version` prints it.
     #
     # **`ja4plus` prints no commit and no build date today**, and FR-prerelease-7 reads the
     # printed line against the tag. So a printed field is a change to the program, and #105
     # asked the maintainer to rule it.
+    #
+    # **The release branch of the flag writes `{{ .Tag }}`, and the flag wrote
+    # `{{ .Version }}` until #724.**
+    # GoReleaser strips the leading `v` from `.Version`, and it writes `.Tag` verbatim. So
+    # the published `v1.0.0` binary printed `ja4plus 1.0.0`, and FR-prerelease-19 reads
+    # `ja4plus v1.0.0`. `prerelease_binaries_test.go` holds that case, and it builds the
+    # expected line as `"ja4plus " + tag`.
+    #
+    # Verified against <https://goreleaser.com/customization/templates/>, retrieved
+    # 2026-08-15. The page states that `.Version` is `the version being released` and that
+    # `.Tag` is `the current git tag`, and its footnote states
+    # `The v prefix is stripped, and it might be changed in snapshot and nightly builds.`
+    #
+    # **The maintainer ruled #724 on 2026-08-15 UTC, and the ruling is the template and no
+    # release.** The published `v1.0.0` keeps its value, and the repaired flag first reaches
+    # a user at the next tag. **Issue #724 is the reversal path.**
+    #
+    # **A bare `{{ .Tag }}` made a snapshot print the last reachable tag, and no snapshot
+    # suffix.** Three builds measure the two moves, each with GoReleaser v2.17.1 on
+    # darwin/arm64. The first two ran on 2026-08-15 at commit `946ee62`, and the third ran
+    # on 2026-08-15 at commit `85e6e33`. `git describe --tags --abbrev=0` reads `v0.3.0` at
+    # each one:
+    #
+    #   $ goreleaser build --snapshot --clean --single-target   # with {{ .Version }}
+    #   $ ./dist/ja4plus_darwin_arm64_v8.0/ja4plus --version
+    #   ja4plus 0.3.0-SNAPSHOT-946ee62
+    #
+    #   $ goreleaser build --snapshot --clean --single-target   # with a bare {{ .Tag }}
+    #   $ ./dist/ja4plus_darwin_arm64_v8.0/ja4plus --version
+    #   ja4plus v0.3.0
+    #
+    #   $ goreleaser build --snapshot --clean --single-target   # with the flag below
+    #   $ ./dist/ja4plus_darwin_arm64_v8.0/ja4plus --version
+    #   ja4plus v0.3.0-SNAPSHOT-85e6e33
+    #
+    # **The maintainer ruled #736 on 2026-08-15 UTC: the snapshot marker returns, and the
+    # `v` prefix of #724 stays.** So the flag branches, and each branch holds one ruling.
+    # **Issue #736 is the reversal path.** A reversal restores the bare `{{ .Tag }}`, and it
+    # accepts that a snapshot binary names no snapshot.
+    #
+    # **A `snapshot:` block reaches this flag not at all.** Its `version_template` key sets
+    # `.Version`, and its default is `{{ .Version }}-SNAPSHOT-{{.ShortCommit}}`. This flag
+    # reads `.Tag`, so no value of that key changes what it writes. Verified against
+    # <https://goreleaser.com/customization/snapshots/>, retrieved 2026-08-15.
+    #
+    # `.IsSnapshot` is `true if --snapshot is set, false otherwise`, and `.ShortCommit` is
+    # `the git commit short hash`. Verified against
+    # <https://goreleaser.com/customization/templates/>, retrieved 2026-08-15.
+    #
+    # **Two cases read this flag now.** `TestTheSnapshotBuildIdentifiesItselfAsASnapshot` in
+    # `release_snapshot_version_test.go` pins both branches, and the `goreleaser` job of
+    # `.github/workflows/ci.yml` runs the snapshot binary and reads the line it prints.
     ldflags:
-      - -s -w -X main.Version={{ .Version }}
+      - -s -w -X main.Version={{ if .IsSnapshot }}{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}{{ else }}{{ .Tag }}{{ end }}
     # A reproducible build needs one timestamp that the commit decides, and never the wall
     # clock of the runner.
     mod_timestamp: "{{ .CommitTimestamp }}"

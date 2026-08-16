@@ -23,8 +23,9 @@ Never describe an external interface from memory. A capability you cannot confir
 | FoxIO License 1.1 | Read 2026-08-06 at `27f0cbf` | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE> |
 | Wireshark core dissectors | `v4.6.0`, which the pin records | <https://gitlab.com/wireshark/wireshark/-/tree/v4.6.0/epan/dissectors> |
 | Zeek analyzer | `8.0.0`, which the pin records | <https://github.com/zeek/zeek/tree/v8.0.0/src/analyzer/protocol> |
-| `github.com/gopacket/gopacket` | v1.6.1 | <https://pkg.go.dev/github.com/gopacket/gopacket> |
-| `golang.org/x/crypto` | v0.37.0 | <https://pkg.go.dev/golang.org/x/crypto> |
+| `github.com/gopacket/gopacket` | v1.7.1 | <https://pkg.go.dev/github.com/gopacket/gopacket> |
+| `golang.org/x/crypto` | v0.55.0, read 2026-08-15 | <https://pkg.go.dev/golang.org/x/crypto> |
+| `golang.org/x/net` | v0.58.0, read 2026-08-16 | <https://pkg.go.dev/golang.org/x/net> |
 | `ja4db.com` read API | Unversioned | <https://ja4db.com> |
 | `govulncheck` | Pinned in the workflow | <https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck> |
 | `golangci-lint` | Pinned in `.golangci.yml` | <https://golangci-lint.run/usage/configuration/> |
@@ -45,6 +46,8 @@ The fingerprint definitions come from FoxIO. The wire formats come from these.
 | VXLAN | RFC 7348 | <https://www.rfc-editor.org/rfc/rfc7348> |
 | Geneve | RFC 8926 | <https://www.rfc-editor.org/rfc/rfc8926> |
 | pcapng | IETF draft | <https://ietf-opsawg-wg.github.io/draft-ietf-opsawg-pcap/draft-ietf-opsawg-pcapng.html> |
+| HTTP/2 | RFC 9113 | <https://www.rfc-editor.org/rfc/rfc9113> |
+| HPACK | RFC 7541 | <https://www.rfc-editor.org/rfc/rfc7541> |
 
 ## Rules for this project
 

@@ -33,10 +33,6 @@ const foxioCorpusReferenceDir = "testdata/foxio/reference"
 
 // `foxio_deleted_specs_test.go` declares foxioDeletedSpecsPage, and that page is base 4.
 
-// foxioPortRegisterPage is the verbatim copy of a section of the port's specification.
-// It is the one page whose citations name paths of another repository.
-const foxioPortRegisterPage = "docs/specs/foxio/port-register.md"
-
 // foxioCitationExtension names the file extension that marks a code span as a path.
 //
 // A span with another extension is not a path, and the directory holds four kinds of
@@ -88,13 +84,18 @@ var foxioVectorExtension = map[string]bool{
 	"json": true, "pcap": true, "pcapng": true, "txt": true,
 }
 
-// foxioPortDirectory names each root directory of the port repository that the verbatim
-// copy cites. The copy uses the port's own citation forms, and the port holds each of
-// these at its root.
+// foxioPortDirectory names each root directory of the port repository that a page of this
+// directory cites at base 7. The port holds it at its root.
+//
+// #758 removed the mirrored copy of the port's register on 2026-08-16 UTC. That copy used
+// the port's own citation forms, and it named `tests` and `.claude` of the port beside
+// `ja4plus`. `portPath` accepted those two on the copy alone, and it rejected them on every
+// other page, so both entries became unreachable when the copy went.
+//
+// `ja4plus` stays, and it needs no such restriction: this repository holds no directory of
+// that name, so the root decides the repository on any page.
 var foxioPortDirectory = map[string]bool{
 	"ja4plus": true,
-	"tests":   true,
-	".claude": true,
 }
 
 // foxioCitationException records a span that resolves under no base, with the reason.
@@ -111,19 +112,12 @@ var foxioCitationException = []struct {
 	{
 		page:  "docs/specs/foxio/README.md",
 		span:  "ja4l.py",
-		count: 2,
-		reason: "The page reports the one citation of the verbatim copy that resolves under " +
-			"no base, and it names the file twice. `README.md:126` names it in the sentence " +
-			"that reports the defect, and `README.md:128` names it in the sentence that " +
-			"lists the files the FoxIO `python/` directory holds at the pin.",
-	},
-	{
-		page:  foxioPortRegisterPage,
-		span:  "ja4l.py",
 		count: 1,
-		reason: "The verbatim copy of the port's specification names a file that the FoxIO " +
-			"`python/` directory does not hold at the pin. The copy carries a recorded " +
-			"SHA-256, so this project reports the citation and repoints nothing.",
+		reason: "The page states why the recorded count of spans under no base is 3, and it " +
+			"names the file once to do so. #758 removed the page that wrote the other two " +
+			"occurrences on 2026-08-16 UTC. The FoxIO `python/` directory holds no file of " +
+			"this name at the pin, so this span resolves under no base and the count keeps " +
+			"the entry narrow.",
 	},
 }
 
@@ -414,10 +408,9 @@ func (r *foxioResolver) resolve(citation foxioCitation) (foxioResolution, bool) 
 		}
 
 		// A bare source file name is a short form of base 1, so it reads before base 5.
-		// `docs/specs/foxio/README.md:118-120` states that form, and
-		// `docs/specs/foxio/port-register.md` writes `packet-ja4.c:1328`. A name that this
-		// repository also holds at its root would otherwise read as base 5, and the line
-		// bound would then read the wrong file.
+		// `docs/specs/foxio/README.md` `## How to read a citation` states that form, and
+		// that page writes `ja4.py`. A name that this repository also holds at its root
+		// would otherwise read as base 5, and the line bound would then read the wrong file.
 		if match, ok := r.unique(r.referenceName, path); ok {
 			return foxioResolution{base: 1, file: match}, true
 		}
@@ -473,15 +466,14 @@ func (r *foxioResolver) unique(index map[string][]string, path string) (string, 
 // portPath reports whether the citation names a path of the port repository.
 //
 // `ja4plus/` is the port's package directory, and this repository holds no directory of
-// that name, so the rule reads it on every page. `tests/` and `.claude/` name a directory
-// of both repositories, so the rule reads those two on the verbatim copy alone.
+// that name, so the rule reads it on every page.
 func (r *foxioResolver) portPath(citation foxioCitation) bool {
 	root, _, found := strings.Cut(citation.path, "/")
-	if !found || !foxioPortDirectory[root] {
+	if !found {
 		return false
 	}
 
-	return root == "ja4plus" || citation.page == foxioPortRegisterPage
+	return foxioPortDirectory[root]
 }
 
 // foxioRecoveredLineCount returns the line count of each recovered file that the base 4
@@ -754,19 +746,20 @@ func TestNoCitationOfTheFoxioDirectoryNamesALinePastTheEndOfItsFile(t *testing.T
 	}
 }
 
-// FR-reference-18i and FR-reference-18j — the test names the two pages that state their
-// own base, and it states the reason for each one.
+// FR-reference-18i and FR-reference-18j — the test names each page that states its own
+// base, and it states the reason for that page.
 //
 // `docs/specs/foxio/deleted-text-specifications.md` is base 4, and it reproduces each
-// recovered file verbatim. `docs/specs/foxio/port-register.md` is base 7, and it is a
-// verbatim copy that no reader edits. A page name that goes stale would make the resolver
-// read a page that no tree holds.
-func TestTheTwoPagesThatStateTheirOwnCitationBaseExist(t *testing.T) {
+// recovered file verbatim. A page name that goes stale would make the resolver read a page
+// that no tree holds.
+//
+// One page carried base 7 until 2026-08-16 UTC, and #758 removed it. Base 7 stays a base
+// of `docs/specs/foxio/README.md`, and a citation of it now names `ja4plus/...` of the port
+// at the tag rather than a page of this repository.
+func TestEachPageThatStatesItsOwnCitationBaseExists(t *testing.T) {
 	for page, reason := range map[string]string{
 		foxioDeletedSpecsPage: "base 4. The page reproduces each recovered FoxIO file " +
 			"verbatim, and a citation of base 4 names a line of the reproduced block.",
-		foxioPortRegisterPage: "base 7. The page is a verbatim copy of a section of the " +
-			"port's specification, and its citations name paths of the port.",
 	} {
 		if !foxioFileExists(page) {
 			t.Errorf("%s does not exist, and the citation resolver reads it as %s", page, reason)

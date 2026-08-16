@@ -119,25 +119,30 @@ func TestTheToolchainPagesDateTheVulnerabilityMeasurement(t *testing.T) {
 // FR-foundation-23. The ruling declined candidate answer 2 of #472, which moved the `go`
 // directive. So each page states the language version that `go.mod` declares, and a reader
 // who consumes the module reads that number rather than the toolchain above.
-func TestTheToolchainPagesNameTheGo124LanguageVersion(t *testing.T) {
-	// The pattern accepts `Go 1.24` and `go 1.24.0`, because one page names the version in
+//
+// The pattern named 1.24 until 2026-08-15. The #725 ruling moved the language version to
+// 1.25 on that date, and it moved no build toolchain. Issue #725 is the reversal path.
+func TestTheToolchainPagesNameTheGo125LanguageVersion(t *testing.T) {
+	// The pattern accepts `Go 1.25` and `go 1.25.0`, because one page names the version in
 	// prose and the other names the directive.
-	version := regexp.MustCompile(`(?i)go 1\.24(\.\d+)?\b`)
+	version := regexp.MustCompile(`(?i)go 1\.25(\.\d+)?\b`)
 
 	for _, page := range toolchainStatementPages {
 		if !version.MatchString(readRepoFile(t, page)) {
-			t.Errorf("%s names no Go 1.24 language version, and the #472 ruling leaves the `go` directive at `go 1.24.0`", page)
+			t.Errorf("%s names no Go 1.25 language version, and the #725 ruling moves the `go` directive to `go 1.25.0`", page)
 		}
 	}
 }
 
-// FR-foundation-23. `CLAUDE.md` states `Go 1.24 or later`, and that sentence states a
-// language version. A reader who takes it for a toolchain floor builds with go1.24.13.
+// FR-foundation-23. `CLAUDE.md` states `Go 1.25 or later`, and that sentence states a
+// language version. A reader who takes it for a toolchain floor builds with go1.25.0.
+//
+// The sentence read `Go 1.24 or later` until the #725 ruling of 2026-08-15.
 func TestClaudeMdSeparatesTheLanguageVersionFromTheToolchain(t *testing.T) {
 	content := readRepoFile(t, "CLAUDE.md")
 
-	if !strings.Contains(content, "Go 1.24 or later") {
-		t.Fatal("CLAUDE.md states no Go 1.24 language version, and FR-foundation-1 names it")
+	if !strings.Contains(content, "Go 1.25 or later") {
+		t.Fatal("CLAUDE.md states no Go 1.25 language version, and FR-foundation-1 names it")
 	}
 
 	if !strings.Contains(content, minimumBuildToolchain) {

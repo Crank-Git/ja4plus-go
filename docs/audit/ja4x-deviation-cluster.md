@@ -53,6 +53,13 @@ so the accepted comparison count equals the register key count.**
 | **Total** | | **50** | **11** |
 
 **The 11 that remain are the 11 of cause 2, and the run names the same two captures.**
+
+**#492 closed cause 2 on 2026-08-16 UTC, and the table above records the batch that ended on
+2026-08-14.** So the `11` of the `The merged tree` column names that batch, and it never
+names the tree of today. **The register holds 2 entries under ruling #492 today**, measured
+over `testdata/deviations.json` on 2026-08-16 UTC, and both name the compressed certificate
+of RFC 8879 in `chrome-cloudflare-quic-with-secrets.pcapng`. `## Cause 2 — the library reads
+no encrypted TLS 1.3 handshake record` below states the closure and the 9 values it moved.
 `http2-with-cookies.pcapng` holds 9 and
 `chrome-cloudflare-quic-with-secrets.pcapng` holds 2. **So the cause 2 attribution of this
 page holds against the merged tree**, and the two closed causes reached the counts they
@@ -114,7 +121,7 @@ value the vector names at occurrence 3.**
 | N | Cause | Deviations | Count it closes, measured |
 |---|---|---|---|
 | 1 | The certificate set names no stream, so a certificate that two live streams carry reaches one value. | 36 | 36 |
-| 2 | The library reads no encrypted TLS 1.3 handshake record. | 11 | 11 |
+| 2 | The library reads no encrypted TLS 1.3 handshake record. **#492 closed it on 2026-08-16 UTC, and 2 entries stay.** | 11 | 11 |
 | 3 | The Go certificate parser refuses a key that names explicit elliptic curve parameters. | 3 | 3 |
 
 **The three causes attribute all 50.** 36 + 11 + 3 = 50.
@@ -262,9 +269,22 @@ stream of the six captures.
 `chrome-cloudflare-quic-with-secrets.pcapng` holds 2. Every one reads
 `the vector holds a value the library does not produce`.
 
-**#492 builds this cause, and #492 left the Epic #441 batch on 2026-08-14. The merged tree
-reports all 11.** The ship-partial comment of #441 of that date states the three parts the work
-needs. **It also states that #492 reaches #171, Epic 10 and the port together.**
+**#492 built this cause, and it closed the cause on 2026-08-16 UTC.** #492 left the Epic #441
+batch on 2026-08-14, and it rejoined the epic. The ship-partial comment of #441 of that date
+states the three parts the work needs. **It also states that #492 reaches #171, Epic 10 and
+the port together.**
+
+**#492 built the first two parts and it declined the third.** `internal/parser/tls13.go`
+holds the TLS 1.3 record decryptor, and `JA4XFingerprinter` reads the key log. **9 of the 11
+comparisons now match**, and all 9 are in `http2-with-cookies.pcapng`. The run reports 1754
+matches before #492 and 1763 after it. **The 2 that stay are the 2 of
+`chrome-cloudflare-quic-with-secrets.pcapng`**, whose QUIC handshake carries the compressed
+certificate of RFC 8879, and the register holds them under ruling #492. **So the sentence
+`The merged tree reports all 11.` named the batch of 2026-08-14**, and the merged tree of
+today reports 2.
+
+**The paragraphs below record the reading of 2026-08-13, and this section keeps them.** The
+heading above keeps its name, because `ja4x.go` cites this section.
 
 **`findCertificatesInStream` of `ja4x.go` reads the first byte of each TLS record, and it
 skips a byte that is not `parser.TLSRecordTypeHandshake`.**
@@ -348,6 +368,13 @@ cause 1 does. `http2-with-cookies.pcapng` stream 0 gains 3, and
 - **`chrome-cloudflare-quic-with-secrets.pcapng` needs the third part, and
   `http2-with-cookies.pcapng` does not.** Frame 10 of the second capture holds handshake type
   11, and frame 8 of the first holds handshake type 25.
+- **#492 closed this cause on 2026-08-16 UTC, and the two bullets above record the reading
+  that preceded it.** `internal/parser/tls13.go` holds the TLS 1.3 record decryptor, and
+  `JA4XFingerprinter` reads the key log today. **So the sentence `A TLS record decryptor for
+  TCP does not.` names a gap that the tree no longer holds.** #492 built the first two parts
+  and it declined the third, so the register keeps 2 entries under ruling #492 for the
+  compressed certificate of RFC 8879. The run reports 1754 matches before #492 and 1763
+  after it.
 
 ---
 

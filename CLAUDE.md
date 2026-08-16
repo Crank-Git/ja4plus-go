@@ -9,10 +9,31 @@ independent Go implementation.
 methods.** Read the ten as a count of fingerprinters, and never as a count of methods. A
 document that states "ten methods" is wrong, and a test holds that count.
 
-The library is at `v0.3.0`. The current work takes it to `v1.0.0`, which freezes the
-exported API. Four things must be true before that freeze: the output must match the FoxIO
-reference, the concurrency contract must be explicit and correct, the license must state
-the FoxIO terms, and this library and the Python port must produce the same fingerprint.
+**The library is at `v1.0.0`, and that tag froze the exported API.** `git ls-remote --tags
+origin` names the tag at `248f3e7`, and `gh release list` names the `v1.0.0` release of
+2026-08-15 UTC. Both were measured on 2026-08-16 UTC. FR-release-40 of
+`docs/specs/features/10-release.md` puts the tag on `master`, and `master` carries it. So
+the exported names and signatures stay stable for the whole `v1` series.
+
+**The freeze needed four things, the maintainer cut the tag, and each one is now
+history.** No current work waits on one of them.
+
+1. The output matches the FoxIO reference, and `testdata/deviations.json` records each
+   accepted difference.
+2. The concurrency contract is explicit and correct.
+3. The license states the FoxIO terms.
+4. This library and the Python port produce the same fingerprint.
+
+**The current work takes the library to `v1.1.0`.** That release raises the minimum
+language version to Go 1.25, and #725 holds the ruling. A minor version adds a name, and
+it breaks no frozen name.
+
+**`git describe` on a work branch still reads `v0.3.0`, and that is not a stale
+statement.** The `v1.0.0` tag sits on `master`, and no head of `dev` descends from it, so
+`git describe --tags --abbrev=0` names `v0.3.0` as the nearest reachable tag of a work
+branch, measured on 2026-08-16 UTC. A document that reads a tag from a work branch reads
+`v0.3.0` for that reason, and never because this project cut no tag. **Re-measure the
+commit count with the command, and never read one from a document.**
 
 ## Where the design lives
 
@@ -34,22 +55,34 @@ of that register name a change to this repository. Read
 
 ## Stack
 
-- Go 1.24 or later. **That sentence states a language version, and it states no build
+- Go 1.25 or later. **That sentence states a language version, and it states no build
   toolchain.** #438 established the reading on 2026-08-13, and `go.mod` declares
-  `go 1.24.0`. **The `or later` names the toolchain that compiles the module**, and it
+  `go 1.25.0`. **The `or later` names the toolchain that compiles the module**, and it
   names no toolchain that builds a released binary.
+- **The maintainer ruled the language version on 2026-08-15, and #725 holds the ruling and
+  the reversal path.** The version was 1.24 until that date. `github.com/gopacket/gopacket`
+  v1.7.1 declares `go 1.25.0` in its own `go.mod`, and Go requires the main module to
+  declare a language version at or above every dependency. **v1.7.1 repairs a decoder panic
+  on untrusted input, under `GHSA-6h9g-cjv3-pg2c`**, and no patch release of the 1.6 line
+  carries that repair. **The ruling drops every Go 1.24 consumer**, and it lands in v1.1.0.
 - **The minimum build toolchain is go1.25.13, and it answers a different question from the
   language version above.** A language version decides which consumer compiles the module.
-  **A build toolchain decides which standard library a built binary links.** So a Go 1.24
-  toolchain compiles this module and it links 13 called vulnerabilities, measured on
-  2026-08-14.
+  **A build toolchain decides which standard library a built binary links.** So a Go 1.25
+  toolchain compiles this module, and a later toolchain is not a clean toolchain by itself:
+  go1.26.5 links 4 called vulnerabilities and go1.26.6 links 0, measured on 2026-08-14.
 - **The maintainer ruled the toolchain question on 2026-08-14**, and #472 holds the ruling
   and the reversal path. `README.md` and `doc.go` state the measurement. **Every CI job
   builds on the range `~1.26.6`**, and `goToolchainRange` in `foundation_test.go` states
   that range once for both workflows.
 - `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
   `github.com/google/gopacket` on 2026-08-13, and #438 carried it.
-- `golang.org/x/crypto` for SSH and hashing.
+- **`golang.org/x/crypto` for one package, and that package is `hkdf`.**
+  `internal/parser/quic.go` imports `golang.org/x/crypto/hkdf` for QUIC key derivation, and
+  no other file of the tree imports the module, measured on 2026-08-15 UTC. **This library
+  decodes SSH in `internal/parser/`, and it imports `golang.org/x/crypto/ssh` nowhere.** So
+  an `x/crypto` bump reaches no JA4SSH value and no JA4 value. **The bullet read
+  `golang.org/x/crypto` for SSH and hashing until batch #725**, and that sentence made every
+  `x/crypto` bump read as a JA4SSH risk.
 - **The default build holds no cgo, and it cross-compiles to five platforms.** Every
   released binary is built with `CGO_ENABLED=0`.
 - **One build path uses cgo, and the `libpcap` build tag selects it.** It exists so that
@@ -103,7 +136,7 @@ fails on a second package that opens one. **Issue #613 is the reversal path.**
 | `make lint-cache-check` | Prove the stale linter cache defect of #257, and prove the repair. |
 | `make corpus` | Fetch the FoxIO corpus at the pinned commit. |
 | `make conformance` | Run the conformance suite against the corpus. |
-| `make fuzz` | Run each fuzz target for 30 seconds. **The tree holds 15 targets**, measured on 2026-08-14. |
+| `make fuzz` | Run each fuzz target for 30 seconds. The recipe reads the target list from the tree, and no document states the count. |
 | `make bench` | Run the benchmarks with allocation counts. |
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
@@ -115,13 +148,16 @@ Run `make corpus` once before `make conformance`. The conformance suite skips wi
 
 **`make fuzz` reads the target list from the tree**, with `go test -list '^Fuzz'` over
 `go list ./...`. So a new target joins the run without an edit to the `Makefile`. Epic 6
-added 13 targets on 2026-08-14, and the recipe found every one of them. **The two targets
+added its targets on 2026-08-14, and the recipe found every one of them. **The two targets
 that the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` and
 `FuzzTCPOptionEntriesReadsAnyOptionRegion`.** Re-measure the count with
 `grep -rn --include='*_test.go' '^func Fuzz' .` rather than reading it from a document.
+**The command owns that count, and no document states it.**
+`.claude/rules/ste.md` `## One document owns each measured count` states the rule, and
+`measured_count_ownership_test.go` fails when a document states the value.
 
-**One run of `make fuzz` takes about 8 minutes**, because it fuzzes 15 targets in turn for
-30 seconds each.
+**One run of `make fuzz` costs 30 seconds for each target of the tree**, because it fuzzes
+them in turn. Multiply the count that the command above reports by 30 seconds.
 
 **`make mutate` sweeps every package of the module except `cmd/ja4plus` and `examples/`.**
 That set is the named set of FR-mutation-4, and #90 concluded it from a measurement rather
@@ -246,6 +282,12 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
   sentence, a citation, a term or a stale count. **Each repair produced more issues.** #410
   exists because #398 edited a file. #419 exists because #355 edited a file. #436 exists
   because #70 measured something. **The backlog regenerated at about the rate it closed.**
+- **One document owns each measured count, and every other document cites that owner.**
+  `.claude/rules/ste.md` `## One document owns each measured count` states the rule, the
+  owner of each class and the two permitted restatements. **This file owns no measured
+  count**, and it cites each owner. **A schema count is not a measured count**, so the
+  eleven methods and the ten fingerprinters above stay here. #757 earned the rule from a
+  measurement of the closed backlog on 2026-08-16 UTC.
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
   the reference is wrong. Never change a FoxIO vector to make a test pass.
 - **Where the FoxIO implementations disagree, a person decides.** That is a ruling, not a
