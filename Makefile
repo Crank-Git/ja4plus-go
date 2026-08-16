@@ -284,8 +284,11 @@ docs:
 # summary prints that state. A count here would go stale at each such change, so the
 # registry states the count and this comment states none.
 #
-# A case that reads a published tag reads `v0.3.0`, because this project has cut no tag
-# since it. So a case can report a failure that the next tag repairs.
+# The three tag constants name `v1.1.0`, and no release publishes that tag yet. #767 moved
+# them on 2026-08-16 UTC, and `release_tag_constants_test.go` compares the three. So a case
+# reports a failure until the maintainer promotes `v1.1.0`, and that failure is no
+# regression. `gh release list` names `v1.0.0` as the latest release, published on
+# 2026-08-15 UTC, and `JA4PLUS_RELEASE_TAG` runs the cases against it.
 #
 # FR-prerelease-26 states that this target runs against the tag under test, and that the
 # maintainer promotes the release only when every case passes or carries a recorded reason.

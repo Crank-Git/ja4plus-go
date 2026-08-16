@@ -46,10 +46,11 @@ import (
 //
 // Every other case of this file passed against `v0.3.0`, measured on 2026-08-15 UTC.
 //
-// **#106 moved `publishedModuleVersion` to `v1.0.0` on 2026-08-15 UTC**, and every case of
-// this file reads that tag now. **The proxy serves no `v1.0.0` until the maintainer pushes
-// the tag**, so each case reports the absent tag until then. That failure names the tag it
-// read, and it is the state of the repository rather than a defect of a case.
+// **#106 moved `publishedModuleVersion` to `v1.0.0` on 2026-08-15 UTC, and #767 moved it to
+// `v1.1.0` on 2026-08-16 UTC.** Every case of this file reads `v1.1.0` now. **The proxy
+// serves no `v1.1.0` until the maintainer pushes the tag**, so each case reports the absent
+// tag until then. That failure names the tag it read, and it is the state of the repository
+// rather than a defect of a case.
 
 // publishedModulePath names the module that the proxy publishes.
 //
@@ -60,15 +61,15 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // publishedModuleVersion names the tag that these cases read.
 //
 // **#106 moved this constant from `v0.3.0` to `v1.0.0` on 2026-08-15 UTC**, under Epic 10.
-// A reader who moves this constant moves every case of this file to the new tag, and it
-// moves no case of another file.
+// **#767 moved it to `v1.1.0` on 2026-08-16 UTC.** A reader who moves this constant moves
+// every case of this file to the new tag, and it moves no case of another file.
 //
 // **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
 // the three. `prereleaseInstallVersion` in `prerelease_install_test.go` and
 // `defaultReleaseTag` in `prerelease_binaries_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
 // states the hazard, and #106 built the guard.
-const publishedModuleVersion = "v1.0.0"
+const publishedModuleVersion = "v1.1.0"
 
 // embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
 const embeddedDatabase = "data/ja4plus-mapping.csv"
@@ -323,9 +324,11 @@ func TestTheEmbeddedDatabaseOfThePublishedModuleHoldsBytes(t *testing.T) {
 // ruled the scope on 2026-08-14, at #94: the case runs against the tag that exists, and the
 // record enumerates the failure.
 //
-// `v0.3.0` carries neither file. #593 records the consequence: `pkg.go.dev` reports
-// `License: None detected` and it renders no documentation. The working tree holds
-// `LICENSE` and `NOTICE`, so the next tag turns this case green.
+// `v0.3.0` carries neither file, and `v1.0.0` carries both. #593 records the consequence
+// that the absent files had: `pkg.go.dev` reported `License: None detected` and it rendered
+// no documentation on 2026-08-14. **That page renders the documentation of `v1.0.0` and it
+// states `License: BSD-3-Clause`**, read on 2026-08-16 UTC, so the tag turned this case
+// green.
 //
 // Never weaken this assertion. `NOTICE` holds the FoxIO License 1.1 terms, and a module
 // that publishes the methods without those terms states the wrong license to every user.

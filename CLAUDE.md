@@ -9,10 +9,31 @@ independent Go implementation.
 methods.** Read the ten as a count of fingerprinters, and never as a count of methods. A
 document that states "ten methods" is wrong, and a test holds that count.
 
-The library is at `v0.3.0`. The current work takes it to `v1.0.0`, which freezes the
-exported API. Four things must be true before that freeze: the output must match the FoxIO
-reference, the concurrency contract must be explicit and correct, the license must state
-the FoxIO terms, and this library and the Python port must produce the same fingerprint.
+**The library is at `v1.0.0`, and that tag froze the exported API.** `git ls-remote --tags
+origin` names the tag at `248f3e7`, and `gh release list` names the `v1.0.0` release of
+2026-08-15 UTC. Both were measured on 2026-08-16 UTC. FR-release-40 of
+`docs/specs/features/10-release.md` puts the tag on `master`, and `master` carries it. So
+the exported names and signatures stay stable for the whole `v1` series.
+
+**The freeze needed four things, the maintainer cut the tag, and each one is now
+history.** No current work waits on one of them.
+
+1. The output matches the FoxIO reference, and `testdata/deviations.json` records each
+   accepted difference.
+2. The concurrency contract is explicit and correct.
+3. The license states the FoxIO terms.
+4. This library and the Python port produce the same fingerprint.
+
+**The current work takes the library to `v1.1.0`.** That release raises the minimum
+language version to Go 1.25, and #725 holds the ruling. A minor version adds a name, and
+it breaks no frozen name.
+
+**`git describe` on a work branch still reads `v0.3.0`, and that is not a stale
+statement.** The `v1.0.0` tag sits on `master`, and no head of `dev` descends from it, so
+`git describe --tags --abbrev=0` names `v0.3.0` as the nearest reachable tag of a work
+branch, measured on 2026-08-16 UTC. A document that reads a tag from a work branch reads
+`v0.3.0` for that reason, and never because this project cut no tag. **Re-measure the
+commit count with the command, and never read one from a document.**
 
 ## Where the design lives
 

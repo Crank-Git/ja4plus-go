@@ -44,6 +44,22 @@ this repository, and it names the JA4 ALPN value in the port. A reader who reads
 alone conflates an ALPN ruling with a JA4L ruling. Issue #255 records the collision, and
 issue #254 records the same defect in the file namespace.
 
+**A fourth form is the anaphoric possessive, and the maintainer ruled it on 2026-08-14.**
+Write `its issue #N` where a word of the same sentence names the port. `ProcessPacket` of
+`JA4DFingerprinter` in `ja4d.go` holds one, and its antecedent is `The port`. **The
+antecedent sits in the same sentence, and never in an earlier one.** A possessive whose
+antecedent sits in an earlier sentence names no repository to a reader who arrives at the
+line alone. That reader is the reader this rule serves.
+
+**The tree writes the form 20 times, in 15 files**, measured on 2026-08-16 UTC at commit
+`3b482bc`. **The maintainer ruled that no line of the 20 is repaired.** A conversion of
+prose that is already correct costs more than it returns, and the maintainer declined the
+repository-wide English conversion for the same reason. **The paragraph above writes the
+form with `N` rather than a number, so it moves neither count.**
+`TestTheMalformedPortFormDetectorReadsEachRecordedShape` in
+`issue_citation_namespace_test.go` holds one case for the form, and that case is the record
+of this ruling. Issue #525 is the reversal path.
+
 **One question carries a different number in each repository.** The JA4L part count is issue
 #127 here and issue #225 in the port. When a reader needs both halves, write both numbers.
 
