@@ -85,11 +85,35 @@ type ja4hStreamRange struct {
 	// lastSeen holds the timestamp of the last segment of the stream. The age pass reads the
 	// packet clock, because a capture replays faster than the wall clock.
 	lastSeen time.Time
-	// http2Emitted counts the HTTP/2 requests of the stream that already produced a value.
-	// The protected reader decodes the whole stream at each packet, because the HPACK
-	// dynamic table of RFC 7541 section 2.3.2 serves the whole connection. So this counter
-	// is what separates a new request from one the stream already published.
-	http2Emitted int
+	// http2 holds the incremental decode of a protected HTTP/2 connection, and nil for every
+	// other stream. `removeRange` is its removal path, so it leaves with this entry.
+	http2 *ja4hHTTP2Decode
+}
+
+// ja4hHTTP2Decode holds the decode of one protected HTTP/2 connection.
+//
+// **The two readers read each byte of the stream once, so the reassembler keeps no byte that
+// they already read.** A whole-stream decode costs the whole stream at each packet, and the
+// bound that held that cost stopped the connection. #753 records the two limits that this
+// type removes.
+//
+// **The state of one connection is the HPACK dynamic table**, which RFC 7541 section 2.3.2
+// gives to the whole connection. `parser.HTTP2Reader` holds it, and
+// `http2MaxDynamicTableSize` bounds it.
+//
+// One entry of the range table holds one decode, so `ja4hMaxStreams` bounds the count and
+// `removeRange` is the removal path. `.claude/rules/concurrency.md` states that a new state
+// needs both.
+type ja4hHTTP2Decode struct {
+	// records opens the protected records of the stream. It holds the traffic keys, so the
+	// decode needs no later ClientHello.
+	records *parser.TLS13StreamReader
+	// requests decodes the HTTP/2 frames that the records carry.
+	requests *parser.HTTP2Reader
+	// nextSeq names the sequence number of the first byte that the readers have not read.
+	// The reassembler holds no byte below it, so this number places the buffer of the next
+	// packet against the bytes the readers already read.
+	nextSeq uint32
 }
 
 // ensure fills the reassembler and the range table that the constructor fills.
@@ -142,8 +166,13 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 
+	// A stream whose HTTP/2 decode is open carries protected records alone, so neither
+	// plaintext parse below reads a request of it. Every packet is untrusted input, and a run
+	// of ciphertext bytes can otherwise read as a request line.
+	protected := f.holdsHTTP2Decode(streamKey)
+
 	// Try single-packet parse first (fast path)
-	if parser.IsHTTPRequest(payload) {
+	if !protected && parser.IsHTTPRequest(payload) {
 		req := parser.ParseHTTPRequest(payload)
 		// The body gate holds the value until the request completes.
 		// A packet that carries a header block and a part of the body therefore reaches the
@@ -185,10 +214,10 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		return nil, nil
 	}
 
-	if !parser.IsHTTPRequest(assembled) {
+	if protected || !parser.IsHTTPRequest(assembled) {
 		// An HTTP/2 request carries no request line, so it reaches this branch and never the
-		// two parses above. The reader keeps the stream, because the HPACK dynamic table
-		// reads every earlier header block of the connection.
+		// two parses above. The reader reads each byte of the stream once, because the HPACK
+		// dynamic table reads every earlier header block of the connection.
 		return f.protectedHTTP2Results(streamKey, assembled, FingerprintResult{
 			Type:      "ja4h",
 			SrcIP:     srcIP,
@@ -237,99 +266,69 @@ func (f *JA4HFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	return []FingerprintResult{result}, nil
 }
 
-// ja4hMaxProtectedSearchBytes bounds the stream that the protected reader walks.
+// holdsHTTP2Decode reports whether the stream carries a protected HTTP/2 connection that a
+// decode already opened.
 //
-// The reader decrypts the whole stream at each packet, because RFC 8446 section 5.3
-// restarts the record sequence number at each key change and no record carries its own
-// number. So the cost of one packet grows with the stream, and this bound holds it.
-// `ja4xMaxProtectedSearchBytes` in `ja4x.go` holds the same value, and it holds it for a
-// different reason. **A TLS 1.3 server sends the Certificate message in the first records**,
-// so a longer stream carries no certificate and that bound discards nothing. **A client
-// sends a request at any point of an HTTP/2 connection**, so this bound discards every later
-// request of a long connection. #753 records that loss.
-//
-// The client half of one HTTP/2 connection carries the requests, and it carries no response
-// body. `testdata/foxio/pcap/http2-with-cookies.pcapng` reports 20 kB in that direction and
-// 1926 kB in the other, measured with `tshark -q -z conv,tcp` on 2026-08-15 UTC. So this
-// bound stops the walk of the response direction at once, and it reaches every request of
-// that capture.
-//
-// **A connection whose client half passes this bound reaches no later value, and it reports
-// no error.** The reader keeps the whole stream, so the stream of a long connection grows
-// past the bound and every later request of that connection is lost. **A delay would need
-// an incremental decode**, which needs one HPACK decoder for each connection and therefore a
-// table with a bound and a removal path. **#753 holds this limit**, and it records the
-// incremental decode as the candidate change.
-const ja4hMaxProtectedSearchBytes = 65536
+// A live decode reads protected records alone, so the plaintext parse reads no request of
+// that stream. Every packet is untrusted input, and a run of ciphertext bytes can otherwise
+// read as a request line.
+// It creates no entry, because a stream that reaches no decode must leave the table
+// untouched.
+func (f *JA4HFingerprinter) holdsHTTP2Decode(key string) bool {
+	entry, present := f.ranges[key]
+
+	return present && entry.http2 != nil
+}
 
 // protectedHTTP2Results returns one result for each HTTP/2 request that the protected
 // records of one stream newly carry.
 //
 // It returns nil when the caller supplied no key log, and nil when the key log holds no
-// secret for the connection. It allocates no state of its own: the client random comes from
-// the ClientHello that the reassembler already holds, and the range table already bounds
-// this stream.
+// secret for the connection.
 //
 // **The reader reads the client half of the connection alone.** A key log names each
 // connection by the Random field of its ClientHello, and that message travels on the
 // request stream. So the response stream parses no ClientHello and this reader declines it,
 // which is also the direction that carries no request.
 //
-// **The stream stays in the reassembler.** The HTTP/1.x path removes a stream after each
-// value, and this path cannot: RFC 7541 section 2.3.2 states that the HPACK dynamic table
-// serves the whole connection, so a later block reads an entry that an earlier block
-// inserted. `ja4hMaxStreamBytes` bounds the stream and `removeRange` removes it.
+// **The stream leaves the reassembler at each packet, and the decode holds what it still
+// needs.** `ja4hHTTP2Decode` holds the traffic keys, the record sequence number, the HPACK
+// dynamic table and one incomplete record, so the next packet opens a buffer of its own. The
+// stream of a long connection therefore reaches no bound of the reassembler.
 //
-// **This path writes no consumed range, so `segmentCarriesNoNewRequest` removes no entry
-// for it.** That removal is what tells a second connection of one address pair and port pair
-// from a repeated segment of the first, and an HTTP/2 stream reaches it never. So a second
-// connection of one four-tuple reads the buffer of the first, and it produces no value of
-// its own. **#753 holds this limit**, and it records it as limit 2.
+// **This path writes the consumed range that `segmentCarriesNoNewRequest` reads**, so a
+// repeated segment produces no second value and a second connection of one address pair and
+// port pair removes the entry of the first.
 func (f *JA4HFingerprinter) protectedHTTP2Results(
 	streamKey string,
 	data []byte,
 	template FingerprintResult,
 ) []FingerprintResult {
-	if f.keyLog == nil || len(data) > ja4hMaxProtectedSearchBytes {
+	if f.keyLog == nil {
 		return nil
 	}
-
-	hello, err := parser.ParseClientHello(data)
-	if err != nil || hello == nil || len(hello.Random) == 0 {
-		return nil
-	}
-
-	// The handshake starts at the first protected record of the direction, so the walk skips
-	// none. The count it returns is the skip of the application walk, because RFC 8446
-	// section 5.3 restarts the sequence number at the key change and no record states it.
-	handshakeKeys, err := f.tls13Keys(hello.Random, parser.TLS13ClientHandshakeSecretLabel)
-	if err != nil {
-		return nil
-	}
-
-	_, protected := parser.TLS13ContentOfStream(data, handshakeKeys, 0, parser.TLSRecordTypeHandshake)
-
-	applicationKeys, err := f.tls13Keys(hello.Random, parser.TLS13ClientApplicationSecretLabel)
-	if err != nil {
-		return nil
-	}
-
-	content, _ := parser.TLS13ContentOfStream(data, applicationKeys, protected,
-		parser.TLSRecordTypeApplicationData)
-
-	requests := parser.HTTP2Requests(content)
 
 	entry := f.rangeEntry(streamKey, template.Timestamp)
-	if len(requests) <= entry.http2Emitted {
+	buffered := len(data)
+
+	decode, fresh := f.http2Decode(entry, data)
+	if decode == nil {
 		return nil
 	}
 
-	fresh := requests[entry.http2Emitted:]
-	entry.http2Emitted = len(requests)
+	requests := decode.requests.Read(decode.records.Read(fresh))
 
-	results := make([]FingerprintResult, 0, len(fresh))
+	// The two readers hold every byte they still need, so the reassembler holds none of them.
+	// The consumed range names the bytes that left, and `recordTheBufferStart` opens the next
+	// buffer at the segment that follows them.
+	decode.nextSeq = entry.bufferStart + uint32(buffered)
+	f.reassembler.RemoveStream(streamKey)
+	f.rememberTheConsumedRequest(streamKey, entry.bufferStart, buffered, template.Timestamp)
+	entry.http2 = decode
 
-	for _, request := range fresh {
+	results := make([]FingerprintResult, 0, len(requests))
+
+	for _, request := range requests {
 		fingerprint := computeJA4HFromRequest(request)
 		if fingerprint == "" {
 			continue
@@ -348,6 +347,55 @@ func (f *JA4HFingerprinter) protectedHTTP2Results(
 	}
 
 	return results
+}
+
+// http2Decode returns the decode of the stream, and the bytes of the buffer that no reader
+// has read.
+//
+// It returns the decode that the entry holds, where the buffer follows the bytes that decode
+// already read. It opens a decode from the ClientHello of the buffer otherwise, and it then
+// returns the whole buffer.
+// It returns nil where the buffer carries no ClientHello, and nil where the key log holds no
+// secret of the connection.
+//
+// **A buffer that the decode cannot follow opens a decode of its own.** Two cases reach that
+// branch. A second connection of one address pair and port pair opens above the bytes the
+// first connection read, and a lost segment leaves a gap. The first case then reads the
+// ClientHello of the second connection, and the second case reads none and produces no value.
+func (f *JA4HFingerprinter) http2Decode(
+	entry *ja4hStreamRange,
+	data []byte,
+) (*ja4hHTTP2Decode, []byte) {
+	if entry.http2 != nil && entry.holdsBuffer {
+		// The signed conversion holds across a wrap of the 32-bit sequence number, because one
+		// buffer holds ja4hMaxStreamBytes bytes at most.
+		offset := int32(entry.http2.nextSeq - entry.bufferStart)
+		if offset >= 0 && int(offset) <= len(data) {
+			return entry.http2, data[offset:]
+		}
+	}
+
+	entry.http2 = nil
+
+	hello, err := parser.ParseClientHello(data)
+	if err != nil || hello == nil || len(hello.Random) == 0 {
+		return nil, nil
+	}
+
+	handshakeKeys, err := f.tls13Keys(hello.Random, parser.TLS13ClientHandshakeSecretLabel)
+	if err != nil {
+		return nil, nil
+	}
+
+	applicationKeys, err := f.tls13Keys(hello.Random, parser.TLS13ClientApplicationSecretLabel)
+	if err != nil {
+		return nil, nil
+	}
+
+	return &ja4hHTTP2Decode{
+		records:  parser.NewTLS13StreamReader(handshakeKeys, applicationKeys),
+		requests: parser.NewHTTP2Reader(),
+	}, data
 }
 
 // tls13Keys returns the record keys of one traffic secret of the connection.

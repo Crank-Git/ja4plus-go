@@ -86,6 +86,23 @@ func ja4hHTTP2Fingerprints(results []FingerprintResult) []string {
 func ja4hHTTP2Connection(t *testing.T, random, handshake, application []byte, content [][]byte) []gopacket.Packet {
 	t.Helper()
 
+	return ja4hHTTP2ConnectionFrom(t, 1, random, handshake, application, content)
+}
+
+// ja4hHTTP2ConnectionFrom returns the packets of one synthetic HTTP/2 request stream, from
+// the initial sequence number that the caller states.
+//
+// A second connection of one address pair and port pair starts at an initial sequence number
+// of its own, so a test that reuses the four-tuple states that number. #753 records the
+// limit that the reuse reaches.
+func ja4hHTTP2ConnectionFrom(
+	t *testing.T,
+	baseSeq uint32,
+	random, handshake, application []byte,
+	content [][]byte,
+) []gopacket.Packet {
+	t.Helper()
+
 	handshakeKeys := tls13TestKeys(t, handshake)
 	applicationKeys := tls13TestKeys(t, application)
 
@@ -102,7 +119,7 @@ func ja4hHTTP2Connection(t *testing.T, random, handshake, application []byte, co
 
 	var packets []gopacket.Packet
 
-	seq := uint32(1)
+	seq := baseSeq
 
 	for _, payload := range payloads {
 		packets = append(packets, tls13TestPacket(t, tls13TestClientIP, tls13TestServerIP,
@@ -290,9 +307,13 @@ func TestTheProcessorProducesNoHTTP2ValueForASecretOfTheWrongLength(t *testing.T
 }
 
 // TestTheHTTP2ReaderRepublishesNoRequestOfAnEarlierPacket states the emission rule. The
-// reader decodes the whole stream at each packet, because the HPACK dynamic table of RFC
-// 7541 section 2.3.2 serves the whole connection. So a counter, and never the decode, is
-// what separates a new request from one the stream already published.
+// reader reads each byte of the stream once and it holds one HPACK decoder for the
+// connection, because the dynamic table of RFC 7541 section 2.3.2 serves the whole
+// connection. So the packet that carries a header block is the packet that publishes it.
+//
+// **#753 replaced the counter that this test once held.** The reader decoded the whole
+// stream at each packet until then, and a counter separated a new request from one the
+// stream already published.
 func TestTheHTTP2ReaderRepublishesNoRequestOfAnEarlierPacket(t *testing.T) {
 	random := bytes.Repeat([]byte{0x2c}, 32)
 	handshake := bytes.Repeat([]byte{0x71}, 32)
