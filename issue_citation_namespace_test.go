@@ -368,19 +368,27 @@ import (
 // again rather than transcribing 737.
 //
 // **The documentation round of batch #742 re-measured the mark on 2026-08-16 UTC, and it
-// read 749.** `gh issue list --state all --limit 1` reported issue 749, and
-// `gh pr list --state all --limit 1` reported pull request 747. **An issue and a pull
+// read 750.** `gh issue list --state all --limit 1` reported issue 749, and
+// `gh pr list --state all --limit 1` reported pull request 750. **An issue and a pull
 // request share one number space**, so the mark takes the higher of the two readings.
 //
-// **That round measured the mark twice, and the first reading went stale within the hour.**
-// The first reading was issue 747 and pull request 747, and the project manager then filed
-// #748 and #749 while the round ran. **#748 carries the R10 citation item of
-// `docs/specs/foxio/JA4T.md`, and #749 carries the repository-wide citation sweep.** The
-// `## Changelog` row of that round cites both numbers, so the mark must cover 749.
+// **That round measured the mark three times, and the number space moved twice.**
+//
+//   - The first reading was issue 747 and pull request 747.
+//   - The second reading was issue 749 and pull request 747, because the project manager
+//     filed #748 and #749 while the round ran.
+//   - The third reading was issue 749 and pull request 750, because the round opened its
+//     own pull request between the second reading and the third.
+//
+// **#748 carries the R10 citation item of `docs/specs/foxio/JA4T.md`, and #749 carries the
+// repository-wide citation sweep.** The `## Changelog` row of that round cites both
+// numbers. **Pull request 750 is the pull request of that round**, and it repeats the case
+// this comment already records: a member that opens a pull request must measure the mark
+// after it opens one.
 //
 // **The mark is a lower bound, and it goes stale within the hour.** Re-measure it rather
-// than transcribing 749.
-const issueCitationHighWaterMark = 749
+// than transcribing 750.
+const issueCitationHighWaterMark = 750
 
 // issueCitationExtension names the file extension of a file this guard reads. Round 36 of
 // the `## Changelog` of `docs/specs/spec.md` measured the citation forms over this same set,
