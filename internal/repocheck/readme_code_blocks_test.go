@@ -276,8 +276,18 @@ func TestEveryProgramBlockOfTheReadmeCompiles(t *testing.T) {
 func readmeCompileProgram(t *testing.T, block readmeBlock) {
 	t.Helper()
 
+	// "bin" stays inside the module, so the block's import of it still resolves, and
+	// methodCountSkipDirs already excludes it from the doctrine scan of
+	// method_count_test.go. A build directory at the repository root raced that scan:
+	// TestMethodCountScanReadsEveryDocumentThatCarriesTheDoctrine walks "." from the root
+	// package while this test walks "." from the repository root too, and the doctrine
+	// scan could open a file this test had already removed.
+	if mkdirErr := os.MkdirAll("bin", 0o755); mkdirErr != nil {
+		t.Fatalf("create bin/ for the build directory of %s: %v", block.name(), mkdirErr)
+	}
+
 	//nolint:usetesting // t.TempDir returns a path outside the module, and the block imports this module.
-	dir, err := os.MkdirTemp(".", "readmebuild")
+	dir, err := os.MkdirTemp("bin", "readmebuild")
 	if err != nil {
 		t.Fatalf("create the build directory for %s: %v", block.name(), err)
 	}
