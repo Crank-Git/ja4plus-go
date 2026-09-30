@@ -52,9 +52,16 @@ today.** Read a row as a start state, and never as a claim about the present tre
 
 ## Functional requirements
 
-- **FR-foundation-1** — `go.mod` declares `go 1.25`.
+- **FR-foundation-1** — `go.mod` declares `go 1.26`.
 
-  **The maintainer ruled this version on 2026-08-15, and issue #725 holds the ruling.** The
+  **The maintainer ruled this version on 2026-09-30 UTC, and issue #791 holds the ruling.**
+  The requirement named `go 1.25` until that date. `golang.org/x/crypto` v0.56.0 and later,
+  and `golang.org/x/net` v0.59.0 and later, each declare `go 1.26.0` in their own `go.mod`.
+  **Every Go 1.25 consumer is dropped.** `TestGoModDeclaresGo126` in
+  `internal/repocheck/foundation_test.go` holds the ruling, and **issue #791 is the reversal
+  path**.
+
+  **The maintainer ruled the earlier move on 2026-08-15, and issue #725 holds that ruling.** The
   requirement named `go 1.24` until that date. `github.com/gopacket/gopacket` v1.7.1 declares
   `go 1.25.0` in its own `go.mod`, and Go requires the main module to declare a language
   version at or above every dependency. **So the move is forced and never chosen.**
@@ -67,8 +74,7 @@ today.** Read a row as a start state, and never as a claim about the present tre
   **Every Go 1.24 consumer is dropped, and that cost is the accepted one.** The ruling lands
   in v1.1.0, because a minimum language version raise is a minor version change.
   **`goToolchainRange` does not move**, because this ruling moves a language version and no
-  build toolchain. `TestGoModDeclaresGo125` in `internal/repocheck/foundation_test.go` holds the ruling, and
-  **issue #725 is the reversal path**.
+  build toolchain. `TestGoModDeclaresGo125` held that ruling until the #791 move.
 - **FR-foundation-2** — `.github/workflows/ci.yml` builds and tests on Go 1.26 only.
 
   **The maintainer amended this requirement on 2026-08-13, and the amendment is
@@ -212,8 +218,8 @@ The Go toolchain interfaces are `go build`, `go test`, `go test -bench`,
 
 ## Acceptance criteria
 
-- [ ] `go build ./...` succeeds on Go 1.25.
-- [ ] `go build ./...` fails on Go 1.24 with a message that names the required version.
+- [ ] `go build ./...` succeeds on Go 1.26.
+- [ ] `go build ./...` fails on Go 1.25 with a message that names the required version.
 - [ ] `make lint` runs the pinned linter version and reports nothing.
 - [ ] `git check-ignore CLAUDE.md` reports no match.
 - [ ] `git check-ignore .claude/settings.json` reports no match.

@@ -48,11 +48,12 @@ permissions:
 # **`go.mod` states a language version rather than a toolchain, and this range does not
 # move it.** #438 established that reading. Go states it: `The language version for a Go
 # version is the result of truncating everything after the N: 1.21, 1.21rc2, and 1.21.3 all
-# implement language version 1.21.` So the `go 1.25.0` directive and this Go 1.26 build are
-# independent, and `CLAUDE.md` states `Go 1.25 or later`.
+# implement language version 1.21.` So the `go 1.26.0` directive and this Go 1.26 build are
+# independent, and `CLAUDE.md` states `Go 1.26 or later`.
 #
 # **The directive read `go 1.24.0` until 2026-08-15**, and #725 moved it for a dependency
-# requirement.
+# requirement. **It read `go 1.25.0` until 2026-09-30 UTC**, and #791 moved it for the same
+# reason.
 #
 # **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.** GO-2026-5856
 # names a fix at 1.26.5. GO-2026-6218, GO-2026-6090, GO-2026-5972 and GO-2026-5026 each name

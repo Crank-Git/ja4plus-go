@@ -24,7 +24,7 @@ func readRepoFile(t *testing.T, path string) string {
 	return string(content)
 }
 
-// TestGoModDeclaresGo125 holds the Go 1.25 language version that FR-foundation-1 names.
+// TestGoModDeclaresGo126 holds the Go 1.26 language version that FR-foundation-1 names.
 // The citation named FR-foundation-2 until 2026-08-13. That requirement now names the
 // toolchain of the workflow, and FR-foundation-1 names this directive.
 // `github.com/gopacket/gopacket@v1.7.1` states `go 1.25.0` in its own `go.mod`, so the
@@ -32,9 +32,18 @@ func readRepoFile(t *testing.T, path string) string {
 // mechanism at `go 1.24.0`.
 // Go states that the two forms name one language version:
 // `1.21, 1.21rc2, and 1.21.3 all implement language version 1.21`.
-// The pattern accepts each 1.25 release, and it still fails for `go 1.26`.
+// The pattern accepts each 1.26 release, and it still fails for `go 1.27`.
 //
-// **This test is the durable record of the #725 ruling of 2026-08-15.**
+// **This test is the durable record of the #791 ruling of 2026-09-30 UTC.** The maintainer
+// ruled to move the language version from Go 1.25 to Go 1.26. `golang.org/x/crypto`
+// v0.56.0 and later, and `golang.org/x/net` v0.59.0 and later, each declare `go 1.26.0`,
+// so every later bump of either module forces the move. **Every Go 1.25 consumer is
+// dropped.** The test named `TestGoModDeclaresGo125` until that date. **Issue #791 is the
+// reversal path.** A reversal pins `x/crypto` at v0.55.0 and `x/net` at v0.58.0, and it
+// restores this test to the 1.25 pattern.
+//
+// **The test first recorded the #725 ruling of 2026-08-15**, which moved the version from
+// 1.24 to 1.25. The paragraphs below state that ruling.
 // `.claude/rules/rulings.md` `## Where a ruling is recorded` is satisfied by a test, and no
 // vector separates this question, so no entry of `testdata/deviations.json` records it.
 // The test named `TestGoModDeclaresGo124` until that date.
@@ -51,11 +60,11 @@ func readRepoFile(t *testing.T, path string) string {
 //
 // **Issue #725 is the reversal path.** A reversal pins `gopacket` at v1.6.1, restores this
 // test to the 1.24 pattern, and records that #510 stays open.
-func TestGoModDeclaresGo125(t *testing.T) {
+func TestGoModDeclaresGo126(t *testing.T) {
 	goMod := readRepoFile(t, "go.mod")
 
-	if !regexp.MustCompile(`(?m)^go 1\.25(\.\d+)?$`).MatchString(goMod) {
-		t.Errorf("go.mod does not declare the Go 1.25 language version:\n%s", goMod)
+	if !regexp.MustCompile(`(?m)^go 1\.26(\.\d+)?$`).MatchString(goMod) {
+		t.Errorf("go.mod does not declare the Go 1.26 language version:\n%s", goMod)
 	}
 }
 

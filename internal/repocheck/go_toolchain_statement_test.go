@@ -21,14 +21,17 @@ import (
 
 // minimumBuildToolchain is the toolchain that `README.md` and `doc.go` each name.
 //
-// It is the oldest toolchain that #472 measured at zero called vulnerabilities of the
-// standard library. On 2026-08-14, `govulncheck` v1.6.0 reported 13 for go1.24.13, 0 for
-// go1.25.13, 4 for go1.26.5 and 0 for go1.26.6.
+// It is the oldest Go 1.26 toolchain that #472 measured at zero called vulnerabilities of
+// the standard library. On 2026-08-14, `govulncheck` v1.6.0 reported 13 for go1.24.13, 0
+// for go1.25.13, 4 for go1.26.5 and 0 for go1.26.6.
 //
-// **A later toolchain is not a clean toolchain by itself.** go1.26.5 is later than this
-// value and it carries four, so the Go 1.26 line takes go1.26.6 or later. That is why this
+// **The constant read go1.25.13 until the #791 ruling of 2026-09-30 UTC.** That ruling moved
+// the language version to 1.26, so a Go 1.25 toolchain compiles no source of this module.
+//
+// **A later toolchain is not a clean toolchain by itself.** go1.26.5 is later than go1.25.13
+// and it carries four, so the Go 1.26 line takes go1.26.6 or later. That is why this
 // constant states a toolchain rather than a major line.
-const minimumBuildToolchain = "go1.25.13"
+const minimumBuildToolchain = "go1.26.6"
 
 // toolchainStatementPages names each page that FR-foundation-23 binds.
 var toolchainStatementPages = []string{"README.md", "doc.go"}
@@ -121,28 +124,30 @@ func TestTheToolchainPagesDateTheVulnerabilityMeasurement(t *testing.T) {
 // who consumes the module reads that number rather than the toolchain above.
 //
 // The pattern named 1.24 until 2026-08-15. The #725 ruling moved the language version to
-// 1.25 on that date, and it moved no build toolchain. Issue #725 is the reversal path.
-func TestTheToolchainPagesNameTheGo125LanguageVersion(t *testing.T) {
-	// The pattern accepts `Go 1.25` and `go 1.25.0`, because one page names the version in
+// 1.25 on that date, and the #791 ruling moved it to 1.26 on 2026-09-30 UTC. Neither one
+// moved the build toolchain. Issue #791 is the reversal path.
+func TestTheToolchainPagesNameTheGo126LanguageVersion(t *testing.T) {
+	// The pattern accepts `Go 1.26` and `go 1.26.0`, because one page names the version in
 	// prose and the other names the directive.
-	version := regexp.MustCompile(`(?i)go 1\.25(\.\d+)?\b`)
+	version := regexp.MustCompile(`(?i)go 1\.26(\.\d+)?\b`)
 
 	for _, page := range toolchainStatementPages {
 		if !version.MatchString(readRepoFile(t, page)) {
-			t.Errorf("%s names no Go 1.25 language version, and the #725 ruling moves the `go` directive to `go 1.25.0`", page)
+			t.Errorf("%s names no Go 1.26 language version, and the #791 ruling moves the `go` directive to `go 1.26.0`", page)
 		}
 	}
 }
 
-// FR-foundation-23. `CLAUDE.md` states `Go 1.25 or later`, and that sentence states a
-// language version. A reader who takes it for a toolchain floor builds with go1.25.0.
+// FR-foundation-23. `CLAUDE.md` states `Go 1.26 or later`, and that sentence states a
+// language version. A reader who takes it for a toolchain floor builds with go1.26.0.
 //
-// The sentence read `Go 1.24 or later` until the #725 ruling of 2026-08-15.
+// The sentence read `Go 1.24 or later` until the #725 ruling of 2026-08-15, and
+// `Go 1.25 or later` until the #791 ruling of 2026-09-30 UTC.
 func TestClaudeMdSeparatesTheLanguageVersionFromTheToolchain(t *testing.T) {
 	content := readRepoFile(t, "CLAUDE.md")
 
-	if !strings.Contains(content, "Go 1.25 or later") {
-		t.Fatal("CLAUDE.md states no Go 1.25 language version, and FR-foundation-1 names it")
+	if !strings.Contains(content, "Go 1.26 or later") {
+		t.Fatal("CLAUDE.md states no Go 1.26 language version, and FR-foundation-1 names it")
 	}
 
 	if !strings.Contains(content, minimumBuildToolchain) {

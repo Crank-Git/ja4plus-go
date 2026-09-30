@@ -16,9 +16,9 @@ MKDOCS ?= mkdocs
 # `v0.6.0` was published 2025-12-05, and the module proxy states that date.
 #
 # The `go.mod` of `gremlins` v0.6.0 declares `go 1.25`, so a toolchain below go1.25 installs
-# no such binary. `CLAUDE.md` `## Stack` names go1.25.13 as the minimum build toolchain of
+# no such binary. `CLAUDE.md` `## Stack` names go1.26.6 as the minimum build toolchain of
 # this repository, so the two agree. **That figure is a toolchain and never the language
-# version**, and `go.mod` of this repository still declares `go 1.24.0`.
+# version**, and `go.mod` of this repository declares `go 1.26.0`.
 GREMLINS_VERSION ?= v0.6.0
 
 # `go install` writes the binary into the `bin` directory of `GOPATH`, and a developer PATH
