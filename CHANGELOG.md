@@ -1113,11 +1113,11 @@ that the interface declares.
   the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
   user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
   records the decision behind the correction.
-- **The module needs Go 1.25 or later, and `go.mod` declares `go 1.25.0`.** `v0.3.0`
-  needed Go 1.22. The floor moved to Go 1.24 first, and the #725 ruling of 2026-08-15 UTC
-  moved it to Go 1.25. **The move drops every Go 1.24 consumer.** So a consumer on Go
-  1.22, Go 1.23 or Go 1.24 must move to Go 1.25. Issue #725 holds the ruling and the
-  reversal path.
+- **The module needs Go 1.26 or later, and `go.mod` declares `go 1.26.0`.** `v0.3.0`
+  needed Go 1.22. The floor moved to Go 1.24 first, the #725 ruling of 2026-08-15 UTC
+  moved it to Go 1.25, and the #791 ruling of 2026-09-30 UTC moved it to Go 1.26. **The
+  last move drops every Go 1.25 consumer.** So a consumer on Go 1.25 or earlier must move
+  to Go 1.26. Issue #791 holds the ruling and the reversal path.
 - **Four changes to `go.mod` landed in this cycle.** One of them is the language version
   of the entry above, and the `github.com/gopacket/gopacket` bump forces it. v1.7.1
   declares `go 1.25.0` in its own `go.mod`, and Go requires the main module to declare a
@@ -1129,6 +1129,16 @@ that the interface declares.
     ruling.
   - `golang.org/x/crypto` to v0.55.0. Issue #719 holds the move.
   - `golang.org/x/net` to v0.58.0. Issue #741 holds the move.
+- **Three more changes to `go.mod` landed after them, and #791 holds all three.**
+  `golang.org/x/crypto` v0.56.0 and later, and `golang.org/x/net` v0.59.0 and later, each
+  declare `go 1.26.0` in their own `go.mod`, so the two `x/` bumps force the language
+  version of the entry above. No fingerprint value moved: `make conformance` reports 1826
+  matches before and after each bump, measured on 2026-09-30 UTC.
+  - `github.com/gopacket/gopacket` to v1.7.2. It repairs SCTP decoder panics under
+    `GHSA-358w-w75h-x6rx`, and it leaves `layers/tcp.go` unchanged. Pull request #790
+    proposed the move.
+  - `golang.org/x/crypto` to v0.57.0. Pull request #788 proposed the move.
+  - `golang.org/x/net` to v0.59.0. Pull request #789 proposed the move.
 
 ## [v1.1.1]
 

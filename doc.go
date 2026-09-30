@@ -40,16 +40,20 @@
 // section states both. A language version decides which consumer compiles the module. A
 // build toolchain decides which standard library a built binary links.
 //
-// The go.mod file declares the Go 1.25 language version. A language version is not a
-// toolchain, so a consumer on a Go 1.25 toolchain compiles this module.
+// The go.mod file declares the Go 1.26 language version. A language version is not a
+// toolchain, so a consumer on a Go 1.26 toolchain compiles this module.
 //
-// The maintainer moved the version from 1.24 to 1.25 on 2026-08-15, and issue #725 holds
+// The maintainer moved the version from 1.25 to 1.26 on 2026-09-30 UTC, and issue #791
+// holds the ruling. The golang.org/x/crypto and golang.org/x/net dependencies each declare
+// go 1.26.0 in their own go.mod. A Go 1.25 consumer no longer compiles this module.
+//
+// The maintainer first moved the version from 1.24 to 1.25 on 2026-08-15, and issue #725 holds
 // the ruling. The gopacket v1.7.1 dependency declares go 1.25.0 in its own go.mod, and it
 // repairs a decoder panic on untrusted input. A Go 1.24 consumer no longer compiles this
 // module, and the ruling lands in v1.1.0.
 //
-// The minimum build toolchain is go1.25.13. It is the oldest toolchain this project
-// measured at zero called vulnerabilities of the standard library. On 2026-08-14,
+// The minimum build toolchain is go1.26.6. It is the oldest Go 1.26 toolchain this
+// project measured at zero called vulnerabilities of the standard library. On 2026-08-14,
 // govulncheck v1.6.0 reported 13 for go1.24.13, 0 for go1.25.13, 4 for go1.26.5 and 0 for
 // go1.26.6. So a later toolchain is not a clean toolchain by itself, and a user on the Go
 // 1.26 line takes go1.26.6 or later.

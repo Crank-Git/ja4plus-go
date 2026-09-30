@@ -45,7 +45,7 @@ travels inside a protected QUIC packet that the library does not decode.
 
 ## Installation
 
-The module requires Go 1.25 or later. **That sentence states a language version, and the
+The module requires Go 1.26 or later. **That sentence states a language version, and the
 `or later` names the toolchain that compiles the module.** It names no toolchain that
 builds a binary free of a called vulnerability, and the section below names that one.
 
@@ -68,10 +68,15 @@ lands. A command that names an unpublished tag fails, and the module proxy holds
 - **A language version decides which consumer compiles the module.**
 - **A build toolchain decides which standard library a built binary links.**
 
-**The language version is 1.25.** `go.mod` declares `go 1.25.0`, and a language version is
-not a toolchain. So a consumer on a Go 1.25 toolchain compiles this module.
+**The language version is 1.26.** `go.mod` declares `go 1.26.0`, and a language version is
+not a toolchain. So a consumer on a Go 1.26 toolchain compiles this module.
 
-**The maintainer moved the version from 1.24 to 1.25 on 2026-08-15, and #725 holds the
+**The maintainer moved the version from 1.25 to 1.26 on 2026-09-30 UTC, and #791 holds the
+ruling.** `golang.org/x/crypto` v0.56.0 and later, and `golang.org/x/net` v0.59.0 and later,
+each declare `go 1.26.0` in their own `go.mod`. **A Go 1.25 consumer no longer compiles this
+module.** Go 1.25 left upstream support when Go 1.27 shipped.
+
+**The maintainer first moved the version from 1.24 to 1.25 on 2026-08-15, and #725 holds the
 ruling.** `github.com/gopacket/gopacket` v1.7.1 declares `go 1.25.0` in its own `go.mod`,
 and Go requires the main module to declare a language version at or above every dependency.
 **v1.7.1 repairs a decoder panic on untrusted input, under `GHSA-6h9g-cjv3-pg2c`.** No patch
@@ -79,10 +84,12 @@ release of the 1.6 line carries that repair, so the choice was binary. **A Go 1.
 no longer compiles this module**, and that cost is the accepted one. The ruling lands in
 v1.1.0, because a minimum language version raise is a minor version change.
 
-**The minimum build toolchain is go1.25.13.** A user who builds a binary from this source
-takes go1.25.13 or a later toolchain, and the measurement below states why. `go1.25.13` is
-the oldest toolchain this project measured at zero called vulnerabilities, and no claim
-here covers a patch that the table does not name.
+**The minimum build toolchain is go1.26.6.** A user who builds a binary from this source
+takes go1.26.6 or a later toolchain, and the measurement below states why. `go1.26.6` is
+the oldest Go 1.26 toolchain this project measured at zero called vulnerabilities, and no
+claim here covers a patch that the table does not name. **The floor read go1.25.13 until the
+#791 ruling of 2026-09-30 UTC**, and a Go 1.25 toolchain compiles no source of this module
+since then.
 
 `govulncheck` reads the standard library of the `go` command on the PATH, so the toolchain
 decides the result. `govulncheck` v1.6.0 reported this on 2026-08-14, against the

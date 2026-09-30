@@ -13,8 +13,9 @@ maintainer.
 ## What panics at v1.6.1
 
 **`go.mod` pinned `github.com/gopacket/gopacket v1.6.1` when #510 wrote this record, and it
-pins `v1.7.1` today.** #721 moved the pin on 2026-08-15, and `## The repair at v1.7.1` below
-holds the second reading. **This section reads v1.6.1, and it reads no later version.**
+pins `v1.7.2` today.** #721 moved the pin to `v1.7.1` on 2026-08-15, and
+`## The repair at v1.7.1` below holds the second reading. #791 moved it to `v1.7.2` on
+2026-09-30 UTC, and `## The re-read at v1.7.2` below holds the third. **This section reads v1.6.1, and it reads no later version.**
 
 At v1.6.1, `layers.TCP.DecodeFromBytes` reads two bytes of a Multipath TCP option without a
 length guard, at `layers/tcp.go:347-353`:
@@ -140,6 +141,24 @@ Verified against: <https://github.com/gopacket/gopacket/releases/tag/v1.7.1>, re
 `TestNoProductionFileCallsDecodeFromBytesDirectly` holds a property of this repository, and
 it asserts no behavior of the dependency. A later bump can reintroduce a panic in another
 decoder, and the guard holds without a re-read.
+
+## The re-read at v1.7.2
+
+**`layers/tcp.go` is byte-identical at `v1.7.1` and at `v1.7.2`**, read from the module
+cache with `diff` on 2026-09-30 UTC. So the reading of `## The repair at v1.7.1` holds at
+`v1.7.2` without a change, and every line range it cites names the same source.
+
+**The `v1.7.2` release changes three files of the module**: `decode.go`, `layers/sctp.go`
+and `layers/decode_oob_test.go`. `layers/sctp.go` carries the repair of
+`GHSA-358w-w75h-x6rx`, a set of out-of-bounds panics in SCTP chunk decoding. No
+fingerprinter of this library reads SCTP. `decode.go` exports the error of `decodeUnknown`
+as `ErrUnsupportedLayer`, and the message is unchanged.
+
+Verified against: <https://github.com/gopacket/gopacket/releases/tag/v1.7.2>, retrieved
+2026-09-30.
+
+**The bump moves no fingerprint value.** The conformance suite reports 1826 matches before
+the bump and 1826 after it, measured on 2026-09-30 UTC.
 
 ## The library crashes on no packet today
 

@@ -149,15 +149,20 @@ built today.
 
 ## The language version and the build toolchain answer different questions
 
-`go.mod` declares `go 1.25.0`. **That is a language version, and it decides which consumer
+`go.mod` declares `go 1.26.0`. **That is a language version, and it decides which consumer
 compiles the module.**
 
-**The maintainer moved the version from 1.24 to 1.25 on 2026-08-15, and issue #725 holds
+**The maintainer moved the version from 1.25 to 1.26 on 2026-09-30 UTC, and issue #791
+holds the ruling.** The `golang.org/x/crypto` and `golang.org/x/net` dependencies each
+declare `go 1.26.0` in their own `go.mod`. **A Go 1.25 consumer no longer compiles this
+module.**
+
+**The maintainer first moved the version from 1.24 to 1.25 on 2026-08-15, and issue #725 holds
 the ruling.** The `gopacket` v1.7.1 dependency declares `go 1.25.0` in its own `go.mod`, and
 it repairs a decoder panic on untrusted input. **A Go 1.24 consumer no longer compiles this
 module.** The ruling lands in v1.1.0, and it moves no build toolchain.
 
-**The minimum build toolchain is `go1.25.13`, and it decides which standard library a
+**The minimum build toolchain is `go1.26.6`, and it decides which standard library a
 built binary links.** A toolchain and a language version are two different settings, and a
 reader who conflates them draws the wrong conclusion about vulnerability exposure.
 
