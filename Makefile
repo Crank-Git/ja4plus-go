@@ -284,14 +284,13 @@ docs:
 # summary prints that state. A count here would go stale at each such change, so the
 # registry states the count and this comment states none.
 #
-# The three tag constants name `v1.1.1`, and no release publishes that tag yet. #767 moved
-# them to `v1.1.0` on 2026-08-16 UTC, and #779 moved them to `v1.1.1` on the same day,
-# because the `v1.1.0` release job failed at its release notes step. `v1.1.0` therefore
-# reaches the module proxy and no GitHub release, and the `## [v1.1.1]` section of
+# The three tag constants name `v1.2.0`, and the `v1.2.0` release moved them on 2026-09-30
+# UTC. #767 moved them to `v1.1.0` on 2026-08-16 UTC, and #779 moved them to `v1.1.1` on the
+# same day, because the `v1.1.0` release job failed at its release notes step. `v1.1.0`
+# therefore reaches the module proxy and no GitHub release, and the `## [v1.1.1]` section of
 # `CHANGELOG.md` holds that record. `release_tag_constants_test.go` compares the three. So a
-# case reports a failure until the maintainer promotes `v1.1.1`, and that failure is no
-# regression. `gh release list` names `v1.0.0` as the latest release, published on
-# 2026-08-15 UTC, and `JA4PLUS_RELEASE_TAG` runs the cases against it.
+# case reports a failure until the maintainer pushes the tag that the constants name, and
+# that failure is no regression. `JA4PLUS_RELEASE_TAG` runs the cases against another tag.
 #
 # FR-prerelease-26 states that this target runs against the tag under test, and that the
 # maintainer promotes the release only when every case passes or carries a recorded reason.
