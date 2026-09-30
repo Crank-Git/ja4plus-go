@@ -24,7 +24,8 @@ history.** No current work waits on one of them.
 3. The license states the FoxIO terms.
 4. This library and the Python port produce the same fingerprint.
 
-**The `v1.1.0` tag exists, and the current work takes the library to `v1.1.1`.** The
+**The `v1.2.0` release raises the minimum language version to Go 1.26, and #791 holds the
+ruling.** The `v1.1.1` tag exists, and it carries the recovery of `v1.1.0`. The
 `v1.1.0` release raises the minimum language version to Go 1.25, and #725 holds the ruling.
 A minor version adds a name, and it breaks no frozen name. **The `v1.1.0` release job failed
 at its release notes step**, so that version reaches the module proxy and no GitHub release.

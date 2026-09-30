@@ -1140,6 +1140,36 @@ that the interface declares.
   - `golang.org/x/crypto` to v0.57.0. Pull request #788 proposed the move.
   - `golang.org/x/net` to v0.59.0. Pull request #789 proposed the move.
 
+## [v1.2.0]
+
+This section is the release record of `v1.2.0`. It carries no date, because FR-release-40
+creates the tag and no tag exists at this head.
+
+**`v1.2.0` is a minor version, because it raises the minimum language version.** A Go 1.25
+consumer no longer compiles this module. #725 set that precedent for the move from Go 1.24
+to Go 1.25 in `v1.1.0`.
+
+**No fingerprint value moves between `v1.1.1` and this release, and the exported surface is
+the same surface.** `docs/audit/conformance.md` owns the conformance figures, and
+`docs/api/v1.md` records the surface that the `v1.0.0` tag froze.
+
+### Changed
+
+- **Breaking for a Go 1.25 consumer: the minimum language version moves from Go 1.25 to
+  Go 1.26.** `go.mod` declares `go 1.26.0`. `golang.org/x/crypto` v0.56.0 and later, and
+  `golang.org/x/net` v0.59.0 and later, each declare `go 1.26.0` in their own `go.mod`, and
+  Go requires the main module to declare a language version at or above every dependency.
+  Issue #791 holds the ruling and the reversal path.
+- The minimum build toolchain, from go1.25.13 to go1.26.6. A Go 1.25 toolchain compiles no
+  source of this module now, and go1.26.6 is the Go 1.26 toolchain that #472 measured at
+  zero called vulnerabilities of the standard library.
+- `github.com/gopacket/gopacket` to v1.7.2. It repairs SCTP decoder panics under
+  `GHSA-358w-w75h-x6rx`, and it leaves `layers/tcp.go` unchanged. #792 holds the move.
+- `golang.org/x/crypto` to v0.57.0. #792 holds the move.
+- `golang.org/x/net` to v0.59.0. #792 holds the move.
+- The three pre-release tag constants, from `v1.1.1` to `v1.2.0`, and `docs/api/v1.md`,
+  which states the value that the three constants hold.
+
 ## [v1.1.1]
 
 This section is the release record of `v1.1.1`. It carries no date, because FR-release-40
