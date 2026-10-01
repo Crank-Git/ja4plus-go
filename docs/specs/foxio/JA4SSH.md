@@ -16,9 +16,9 @@ states how to read a citation.
 
 **This page reproduces no image.** The link above reaches it.
 
-A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `zeek/ja4ssh/main.zeek:79` as line 79 of
-`testdata/foxio/reference/zeek/ja4ssh/main.zeek`. `docs/specs/foxio/README.md` states
+A citation names a path in the FoxIO repository at a pinned commit. **Join a `zeek/` path to `testdata/foxio/zeek-reference/`, and
+join every other path to `testdata/foxio/reference/`.** Read `zeek/ja4ssh/main.zeek:79` as line 79 of
+`testdata/foxio/zeek-reference/zeek/ja4ssh/main.zeek`. `docs/specs/foxio/README.md` states
 the rule, and it names each path that the rule does not cover.
 
 ## The rules

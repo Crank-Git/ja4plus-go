@@ -28,8 +28,30 @@ import (
 // constant here would break the rule this file holds.
 
 // foxioCorpusReferenceDir holds the FoxIO repository at the pin.
-// `scripts/fetch-corpus.sh:167` writes it, and `make corpus` runs that script.
+// `scripts/fetch-corpus.sh:261` writes it, and `make corpus` runs that script.
 const foxioCorpusReferenceDir = "testdata/foxio/reference"
+
+// foxioCorpusZeekDir holds the `zeek/` directory of the FoxIO repository at the commit of
+// `testdata/foxio-zeek.pin`. `fetch_zeek_tree` of `scripts/fetch-corpus.sh` writes it.
+//
+// The maintainer ruled on #797 that every Zeek citation reads the scripts at that pin. The
+// main pin holds the Zeek plugin, so a `zeek/` citation reads this tree and never the
+// `zeek/` directory of the reference tree.
+const foxioCorpusZeekDir = "testdata/foxio/zeek-reference"
+
+// foxioZeekPrefix is the FoxIO directory that the Zeek tree holds.
+const foxioZeekPrefix = "zeek/"
+
+// foxioCorpusPath returns the checkout path of a FoxIO path at base 1. A `zeek/` path
+// reads the Zeek tree, and every other path reads the reference tree. The reference tree
+// also holds a `zeek/` directory, and a read of it would read the plugin of the main pin.
+func foxioCorpusPath(path string) string {
+	if strings.HasPrefix(path, foxioZeekPrefix) {
+		return filepath.Join(foxioCorpusZeekDir, filepath.FromSlash(path))
+	}
+
+	return filepath.Join(foxioCorpusReferenceDir, filepath.FromSlash(path))
+}
 
 // `foxio_deleted_specs_test.go` declares foxioDeletedSpecsPage, and that page is base 4.
 
@@ -52,7 +74,7 @@ var foxioCitationExtension = map[string]bool{
 }
 
 // foxioMovedDirectory maps the FoxIO path a citation names to the corpus directory that
-// holds it. `scripts/fetch-corpus.sh:149` moves the three out of the staged tree, so a
+// holds it. `scripts/fetch-corpus.sh:243` moves the three out of the staged tree, so a
 // citation of one of the three reaches no path under `testdata/foxio/reference/`.
 var foxioMovedDirectory = [][2]string{
 	{"pcap/", "testdata/foxio/pcap/"},
@@ -337,7 +359,10 @@ func newFoxioResolver(t *testing.T) *foxioResolver {
 		return resolver
 	}
 
+	// A bare Zeek file name reads the Zeek tree, as a `zeek/` path does, so the index
+	// skips the `zeek/` directory of the reference tree.
 	resolver.index(t, foxioCorpusReferenceDir, resolver.referenceName)
+	resolver.index(t, foxioCorpusZeekDir, resolver.referenceName)
 
 	for _, moved := range foxioMovedDirectory {
 		resolver.index(t, strings.TrimSuffix(moved[1], "/"), resolver.captureName)
@@ -350,7 +375,13 @@ func newFoxioResolver(t *testing.T) *foxioResolver {
 func (r *foxioResolver) index(t *testing.T, root string, into map[string][]string) {
 	t.Helper()
 
+	skipped := filepath.Join(foxioCorpusReferenceDir, strings.TrimSuffix(foxioZeekPrefix, "/"))
+
 	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err == nil && entry.IsDir() && path == skipped {
+			return filepath.SkipDir
+		}
+
 		if err != nil || entry.IsDir() {
 			return nil //nolint:nilerr // An unreadable entry indexes nothing, and the walk continues.
 		}
@@ -380,8 +411,13 @@ func (r *foxioResolver) resolve(citation foxioCitation) (foxioResolution, bool) 
 	path := citation.path
 
 	if r.corpus {
-		if file := filepath.Join(foxioCorpusReferenceDir, path); foxioFileExists(file) {
+		if file := foxioCorpusPath(path); foxioFileExists(file) {
 			return foxioResolution{base: 1, file: file}, true
+		}
+
+		// A `zeek/` path reads the Zeek tree alone, so no later base reads it.
+		if strings.HasPrefix(path, foxioZeekPrefix) {
+			return foxioResolution{}, false
 		}
 
 		if !strings.Contains(path, "/") {
@@ -839,4 +875,33 @@ func foxioSortedKeys(set map[string]bool) string {
 	sort.Strings(names)
 
 	return strings.Join(names, ", ")
+}
+
+// #797 — a `zeek/` citation resolves under the Zeek tree of `testdata/foxio-zeek.pin`, and
+// never under the reference tree of the main pin. The maintainer ruled on 2026-10-01 UTC
+// that every Zeek citation reads the scripts at the second pin, and the main pin holds the
+// Zeek plugin rather than the scripts.
+func TestAZeekCitationResolvesUnderTheZeekTreeOfTheSecondPin(t *testing.T) {
+	resolver := newFoxioResolver(t)
+	if !resolver.corpus {
+		t.Skip(foxioCorpusAbsentMessage)
+	}
+
+	citation := foxioCitation{
+		page:   "docs/specs/foxio/JA4T.md",
+		span:   "zeek/ja4t/main.zeek:180",
+		path:   "zeek/ja4t/main.zeek",
+		number: 180,
+	}
+
+	resolution, ok := resolver.resolve(citation)
+	if !ok {
+		t.Fatalf("%q resolves under no base", citation.span)
+	}
+
+	const want = "testdata/foxio/zeek-reference/zeek/ja4t/main.zeek"
+	if resolution.base != 1 || resolution.file != want {
+		t.Errorf("%q resolves at base %d to %q, and the Zeek tree holds it at base 1 at %q",
+			citation.span, resolution.base, resolution.file, want)
+	}
 }

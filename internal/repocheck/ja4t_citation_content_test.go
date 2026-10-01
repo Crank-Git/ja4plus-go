@@ -2,7 +2,6 @@ package repocheck
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -202,7 +201,7 @@ func ja4tPageCitation(t *testing.T) []foxioCitation {
 func ja4tSourceLine(t *testing.T, path string, number int) string {
 	t.Helper()
 
-	file := filepath.Join(foxioCorpusReferenceDir, filepath.FromSlash(path))
+	file := foxioCorpusPath(path)
 
 	content, err := os.ReadFile(file)
 	if err != nil {
