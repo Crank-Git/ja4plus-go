@@ -16,7 +16,7 @@ import (
 // as `ja4plus watch` reads through it. A released binary is built with `CGO_ENABLED=0`, so
 // it scans on Linux alone. `pcap.Handle.WritePacketData` calls `pcap_sendpacket`.
 // Verified against: <https://pkg.go.dev/github.com/gopacket/gopacket/pcap>, read from the
-// module cache at `github.com/gopacket/gopacket@v1.7.2` on 2026-09-30.
+// module cache at `github.com/gopacket/gopacket@v1.7.2` on 2026-10-01 UTC.
 type pcapLink struct {
 	handle *pcap.Handle
 }

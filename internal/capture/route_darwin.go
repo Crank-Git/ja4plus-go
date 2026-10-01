@@ -12,14 +12,15 @@ import (
 )
 
 // The routing table of macOS answers a `sysctl` read, and `golang.org/x/net/route` parses
-// it. The read opens no socket. The `RTAX_*` order of `route(4)` places the destination at
-// index 0, the gateway at index 1 and the netmask at index 2 of each message.
-// Verified against: <https://pkg.go.dev/golang.org/x/net/route>, read from the module cache
-// at `golang.org/x/net@v0.59.0` on 2026-09-30, and `man 4 route` of macOS 27.0.
+// it. The read opens no socket. `parseAddrs` of `route/address.go` stores the address of
+// bit `i` of the `RTA_*` mask at index `i`, so `syscall.RTAX_DST`, `syscall.RTAX_GATEWAY`
+// and `syscall.RTAX_NETMASK` index each message. `man 4 route` of macOS 27.0.1 states the
+// bits `RTA_DST`, `RTA_GATEWAY` and `RTA_NETMASK`.
+// Verified against: `golang.org/x/net@v0.59.0` in the module cache, read on 2026-10-01 UTC.
 const (
-	rtaxDestination = 0
-	rtaxGateway     = 1
-	rtaxNetmask     = 2
+	rtaxDestination = syscall.RTAX_DST
+	rtaxGateway     = syscall.RTAX_GATEWAY
+	rtaxNetmask     = syscall.RTAX_NETMASK
 )
 
 func routeMessages(typ route.RIBType, arg int) ([]*route.RouteMessage, error) {

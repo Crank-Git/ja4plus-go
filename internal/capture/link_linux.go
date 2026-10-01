@@ -19,10 +19,10 @@ import (
 //
 // `pcapgo.EthernetHandle` of gopacket v1.7.2 declares no write method, so this backend
 // opens its own send socket. `packet(7)` states the send: `When you send packets, it is
-// enough to specify sll_family, sll_addr, sll_halen, sll_ifindex, and sll_protocol.` A
-// protocol of 0 binds the socket to no packet type, so the kernel delivers no frame to it.
+// enough to specify sll_family, sll_addr, sll_halen, sll_ifindex, and sll_protocol.` It
+// states the protocol of 0: `If protocol is set to zero, no packets are received.`
 // Verified against: <https://man7.org/linux/man-pages/man7/packet.7.html>, retrieved
-// 2026-09-30, and `pcapgo/capture.go` of gopacket v1.7.2 in the module cache.
+// 2026-10-01 UTC, and `pcapgo/capture.go` of gopacket v1.7.2 in the module cache.
 type packetLink struct {
 	handle *pcapgo.EthernetHandle
 	reader *deadlineReader

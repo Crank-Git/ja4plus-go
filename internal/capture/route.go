@@ -157,12 +157,14 @@ type neighborEntry struct {
 	iface    string
 }
 
-// Linux states the IPv4 routing table in `/proc/net/route`. Each address field holds the
-// four bytes of the address as one hexadecimal number in the byte order of the host.
-// `proc_net_route` of `proc(5)` names the file, and `fib_route_seq_show` of
-// `net/ipv4/fib_trie.c` writes each field with `%08X`.
-// Verified against: <https://man7.org/linux/man-pages/man5/proc_net.5.html>, retrieved
-// 2026-09-30.
+// Linux states the IPv4 routing table in `/proc/net/route`. `fib_route_seq_show` of
+// `net/ipv4/fib_trie.c` writes each row with the format
+// `"%s\t%08X\t%08X\t%04X\t%d\t%u\t%u\t%08X\t%d\t%u\t%u"`, and it passes each address as a
+// `__be32`. So each address field holds the four bytes of the address as one hexadecimal
+// number in the byte order of the host. `fib_flag_trans` of the same file sets `RTF_UP`
+// and `RTF_GATEWAY`. `proc_net(5)` documents no `/proc/net/route` entry.
+// Verified against: <https://github.com/torvalds/linux/blob/master/net/ipv4/fib_trie.c>,
+// retrieved 2026-10-01 UTC.
 const (
 	linuxRouteFlagUp      = 0x1
 	linuxRouteFlagGateway = 0x2
@@ -235,9 +237,12 @@ func maskBits(mask netip.Addr) (int, bool) {
 	return ones, size == 32
 }
 
-// parseLinuxNeighbors returns the complete rows of `/proc/net/arp`. `proc_net_arp` of
-// `proc(5)` names the file, and the columns are the address, the hardware type, the flags,
-// the hardware address, the mask and the device.
+// parseLinuxNeighbors returns the complete rows of `/proc/net/arp`. `proc_net(5)` states
+// the file: `This holds an ASCII readable dump of the kernel ARP table used for address
+// resolutions.` Its columns are `IP address`, `HW type`, `Flags`, `HW address`, `Mask` and
+// `Device`.
+// Verified against: <https://man7.org/linux/man-pages/man5/proc_net.5.html>, retrieved
+// 2026-10-01 UTC.
 func parseLinuxNeighbors(content string) []neighborEntry {
 	var entries []neighborEntry
 
