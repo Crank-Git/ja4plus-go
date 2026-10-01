@@ -12,7 +12,7 @@ import (
 // `testdata/foxio/reference/python/ja4x.py:14` states
 // `# JA4X does not use any caching from common.py`.
 // `testdata/foxio/reference/wireshark/source/packet-ja4.c:1628` writes one value for each
-// certificate of the message. `testdata/foxio/reference/rust/ja4/src/tls.rs:93` pushes one
+// certificate of the message. `testdata/foxio/reference/rust/ja4/src/tls.rs:99` pushes one
 // record for each certificate. So the reference is unanimous, and
 // `.claude/rules/parity.md` `## Where a difference comes from` row 1 names a change to this
 // code and no register entry.

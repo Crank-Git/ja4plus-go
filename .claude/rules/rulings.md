@@ -27,10 +27,7 @@ maintainer widened it on 2026-08-13. The table holds for every other question.
 A claim about a source is worthless without the location. Write
 `wireshark/source/packet-ja4.c:1595`, not "the Wireshark dissector".
 
-**Read the source at the pinned commit.** `testdata/foxio-reading.pin` holds it, and
-`testdata/foxio.pin` holds the commit of the vectors alone. #797 split the two on
-2026-10-01 UTC, and #801 rereads each citation at the vector pin and removes the reading
-pin. A reading of a
+**Read the source at the pinned commit.** `testdata/foxio.pin` holds it. A reading of a
 moving branch is a reading of something the next person cannot see.
 
 **Never describe an external interface from memory.** `.claude/rules/external-apis.md`
@@ -331,7 +328,7 @@ questions, and no one of the three is one of the four.
 **#223 is a delegated ruling, and the maintainer confirmed it on 2026-08-12.** A published
 FoxIO value contradicts a rule that every implementation enforces.
 `docs/specs/foxio/JA4SSH.md` R13 is a rank 1 rule, and it states that the mode is `0` when
-the side sent no SSH packet. `zeek/ja4ssh/main.zeek:63`,
+the side sent no SSH packet. `zeek/src/ja4ssh.cc:32`,
 `wireshark/source/packet-ja4.c:400`, `rust/ja4/src/ssh.rs:284` and `python/ja4ssh.py:51`
 each enforce R13. `testdata/foxio/python/ssh-scp-1050.pcap.json` holds
 `c112s1460_c0s200_c36s0`, which pairs a client mode of `112` with a client packet count of

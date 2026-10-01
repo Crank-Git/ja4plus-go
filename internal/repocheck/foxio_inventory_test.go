@@ -31,15 +31,15 @@ func readFoxioInventoryPage(t *testing.T) string {
 	return string(content)
 }
 
-// readFoxioInventoryPin returns the commit that `testdata/foxio-reading.pin` holds. The
-// inventory records the material that a reading cites, so it reads the reading pin of #797
-// and never the vector pin.
+// readFoxioInventoryPin returns the commit that `testdata/foxio.pin` holds. The
+// inventory records the material that a reading cites, and #801 made a reading and a
+// vector name that one commit.
 func readFoxioInventoryPin(t *testing.T) string {
 	t.Helper()
 
-	content, err := os.ReadFile("testdata/foxio-reading.pin")
+	content, err := os.ReadFile("testdata/foxio.pin")
 	if err != nil {
-		t.Fatalf("read testdata/foxio-reading.pin: %v", err)
+		t.Fatalf("read testdata/foxio.pin: %v", err)
 	}
 
 	return strings.TrimSpace(string(content))
@@ -69,7 +69,7 @@ func TestFoxioInventoryPageNamesTheCommitThatTheFoxioPinHolds(t *testing.T) {
 
 	for _, commit := range commits {
 		if commit != pin {
-			t.Errorf("%s names the commit %q, and testdata/foxio-reading.pin holds %q", foxioInventoryPagePath, commit, pin)
+			t.Errorf("%s names the commit %q, and testdata/foxio.pin holds %q", foxioInventoryPagePath, commit, pin)
 		}
 	}
 }

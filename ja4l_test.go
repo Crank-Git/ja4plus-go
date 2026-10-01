@@ -182,7 +182,7 @@ func TestJA4L_MinimumLatency(t *testing.T) {
 //
 // A repeated bare ACK holds the relative sequence number `1` and the relative
 // acknowledgment number `1`, so it meets the rule that
-// `python/ja4.py:570` states.
+// `python/ja4.py:561` states.
 // `python/common.py:101` omits `C` from the fields it declines to
 // update, so the second packet replaces the point and the reference reports the later value.
 // Issue #196 holds the reading, and it replaces the earlier expectation that the second
@@ -264,8 +264,8 @@ func buildTCPPacketWithIPv6(t *testing.T, srcIP, dstIP net.IP, hopLimit uint8, s
 // the IPv6 hop limit as the observed time-to-live, and it writes JA4L over IPv6. That is
 // candidate 1 of the issue, and the library declines the Wireshark restriction to IPv4.
 //
-// The references split two against one. `zeek/ja4l/main.zeek:93` and
-// `zeek/ja4l/main.zeek:147` read `rp$ip6$hlim`, and `rust/ja4/src/time.rs:66` reads
+// The references split two against one. `zeek/scripts/fingerprints/ja4l/main.zeek:94` and
+// `zeek/scripts/fingerprints/ja4l/main.zeek:146` read `rp$ip6$hlim`, and `rust/ja4/src/time.rs:66` reads
 // `ipv6.hlim`. `wireshark/source/packet-ja4.c:1218` reads `ip.ttl` alone, and it holds no
 // IPv6 branch. `JA4L.png` labels part b `Observed TTL`, and it names no address family.
 //
@@ -1022,7 +1022,7 @@ func ja4lLastFingerprint(t *testing.T, results []FingerprintResult) string {
 // TestJA4LMovesTheClientPointToTheClientHelloOfBadcurveballPcap holds the client point rule
 // of the reference on the four frames that open stream 0 of `badcurveball.pcap`.
 //
-// `python/ja4.py:570` records the client point on every packet that
+// `python/ja4.py:561` records the client point on every packet that
 // carries `ACK`, carries no `SYN`, and holds the relative sequence number `1` and the
 // relative acknowledgment number `1`. `python/common.py:101` omits
 // `C` from the fields it declines to update, so a later packet moves the point.
@@ -1084,7 +1084,7 @@ func TestJA4LMovesTheClientPointToTheClientHelloOfBadcurveballPcap(t *testing.T)
 // TestJA4LMovesNoClientPointForAPacketThatAcknowledgesPayload holds the second half of the
 // relative number rule. Frame 5 of `badcurveball.pcap` acknowledges the 517 payload bytes of
 // the Client Hello, so its relative acknowledgment number is 518 and it moves no point.
-// `python/ja4.py:570` states the rule. Issue #196 holds the reading.
+// `python/ja4.py:561` states the rule. Issue #196 holds the reading.
 func TestJA4LMovesNoClientPointForAPacketThatAcknowledgesPayload(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -1187,7 +1187,7 @@ func TestJA4LKeepsTheClientPointOnTheBareACKOfLatestPcapngStream6(t *testing.T) 
 //
 // Frame 4 is a bare ACK the server sends, and it holds the relative sequence number `1` and
 // the relative acknowledgment number `1`. It moves the point, and
-// `python/ja4.py:159` reads `client_ttl` for every client value.
+// `python/ja4.py:170` reads `client_ttl` for every client value.
 // Issue #196 holds the reading.
 func TestJA4LMovesTheClientPointToThePartialRequestOfHttpEmptyUseragentPcap(t *testing.T) {
 	fp := NewJA4L()
@@ -1306,7 +1306,7 @@ func TestJA4LMovesNoServerPointForARepeatedSynAck(t *testing.T) {
 }
 
 // TestJA4LMovesNoClientPointWhenTheCaptureHoldsNoSYN holds the guard that a relative number
-// needs. `python/ja4.py:570` reads the relative sequence number that
+// needs. `python/ja4.py:561` reads the relative sequence number that
 // the dissector counts from the initial sequence number of each endpoint. A capture that
 // holds no SYN for one endpoint reaches no relative number, so it reaches no client point.
 // Issue #196 holds the reading.
@@ -1687,7 +1687,7 @@ func TestJA4LHoldsOneClientValueForOneConnection(t *testing.T) {
 // `docs/specs/foxio/JA4L.md` R30 records the split that this project declines. Wireshark
 // writes the format `"%d_%d_tcp"` at `wireshark/source/packet-ja4.c:1348` and at
 // `wireshark/source/packet-ja4.c:1354`, and Zeek writes no such marker at
-// `zeek/ja4l/main.zeek:133`. The maintainer ruled on issue #247, and round 25 of the
+// `zeek/scripts/fingerprints/ja4l/main.zeek:134`. The maintainer ruled on issue #247, and round 25 of the
 // `## Changelog` of `docs/specs/spec.md` records it: "The maintainer ruled on #247, and
 // `#127` stands."
 //
@@ -1759,7 +1759,7 @@ func TestJA4LWritesNoTCPLiteralInAnyValue(t *testing.T) {
 // The mechanism is not specific to JA4L. `testdata/foxio/python/socks4-https.pcap.json`
 // publishes no JA4X key, and issue #57 owns FR-parity-50 and the JA4X entries.
 func TestTheRegisterHoldsAJA4LDeclineForEveryFileThatPublishesNoJA4LKey(t *testing.T) {
-	// The three reference files that publish no JA4L key. `python/ja4.py:340` runs
+	// The three reference files that publish no JA4L key. `python/ja4.py:331` runs
 	// `delete_keys(['JA4L-S', 'JA4L-C'], final)` when the run names another method, so the
 	// method filter removed the key from each file.
 	captures := []string{"CVE-2018-6794.pcap", "https-connect.pcap", "tls-handshake.pcapng"}

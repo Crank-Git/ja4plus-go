@@ -84,7 +84,7 @@ type FingerprintResult struct {
 	Raw string
 	// OriginalOrder holds `JA4_o`, which hashes each list of the wire-order raw form.
 	// `RawOriginalOrder` holds the same two lists unhashed, so the two fields read one
-	// input. `testdata/foxio/reference/python/ja4.py:291` states the rule, and issue #277
+	// input. `testdata/foxio/reference/python/ja4.py:282` states the rule, and issue #277
 	// records the field.
 	OriginalOrder string
 	// RawOriginalOrder holds the wire-order form unhashed, so it reads the same input as

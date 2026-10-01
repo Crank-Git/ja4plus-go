@@ -40,8 +40,8 @@ func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	}
 	// The line below tests two bits, and it reads no other flag. The maintainer ruled that
 	// selection on 2026-08-13, under #126, so a SYN that carries the ECN flags reaches a
-	// value. `rust/ja4/src/tcp.rs:146` tests the same two bits, and
-	// `zeek/ja4t/main.zeek:126` and `wireshark/source/packet-ja4.c:1266` each test the whole
+	// value. `rust/ja4/src/tcp.rs:151` tests the same two bits, and
+	// `zeek/scripts/fingerprints/ja4t/main.zeek:64` and `wireshark/source/packet-ja4.c:1266` each test the whole
 	// flag byte against `0x02`. The port holds the bit test at
 	// `ja4plus/fingerprinters/ja4t.py:159`. `Crank-Git/ja4plus#603` is open, and it adds the
 	// row of the `## Parity with ja4plus` section on the port side.
@@ -150,7 +150,7 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	// The two-digit form keys on the value, and never on the presence of the option. An
 	// absent option and an option that carries zero therefore write the same part.
 	// Ruling #125 states the form, and `wireshark/source/packet-ja4.c:668` and
-	// `zeek/ja4t/main.zeek:206` each test the value.
+	// `zeek/scripts/fingerprints/ja4t/main.zeek:142` each test the value.
 	optionParts, mss, wscale := tcpOptionEntries(tcpOptionRegion(tcp))
 
 	optionsStr := "00"
@@ -159,9 +159,9 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	}
 
 	// Part c and part d take different forms above zero. Zeek writes part c as
-	// `fmt("%02d", ...)` at `zeek/ja4t/main.zeek:204`, so a segment size below 10 carries
+	// `fmt("%02d", ...)` at `zeek/scripts/fingerprints/ja4t/main.zeek:140`, so a segment size below 10 carries
 	// a leading zero. Zeek writes part d as `"%d"` above zero at
-	// `zeek/ja4t/main.zeek:209`, so a window scale carries none.
+	// `zeek/scripts/fingerprints/ja4t/main.zeek:145`, so a window scale carries none.
 	// `wireshark/source/packet-ja4.c:664-676` writes the same two forms.
 	wscaleStr := "00"
 	if wscale != 0 {

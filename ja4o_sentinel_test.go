@@ -66,10 +66,10 @@ func ja4EmptySortedExtensionResult(t *testing.T) FingerprintResult {
 // TestJA4OriginalOrderWritesTheZeroSentinelWhenTheSortedExtensionListIsEmpty holds the
 // maintainer's ruling of 2026-08-12 on issue #287.
 //
-// The ruling follows the Python reference. `testdata/foxio/reference/python/ja4.py:248`
-// tests the sorted extension string, and `testdata/foxio/reference/python/ja4.py:253`
+// The ruling follows the Python reference. `testdata/foxio/reference/python/ja4.py:250`
+// tests the sorted extension string, and `testdata/foxio/reference/python/ja4.py:255`
 // writes `000000000000` into the wire-order part from that test. The Rust reference hashes
-// the wire-order string on its own at `testdata/foxio/reference/rust/ja4/src/tls.rs:363`.
+// the wire-order string on its own at `testdata/foxio/reference/rust/ja4/src/tls.rs:382`.
 // The Wireshark dissector emits no `JA4_o` key and the Zeek scripts emit none, so the
 // split reaches the two references alone.
 //

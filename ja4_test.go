@@ -119,15 +119,16 @@ func TestJA4WritesTheMeasuredValueForEachPR277Example(t *testing.T) {
 		{"two-alnum-bytes", []string{"h2"}, "h2"},
 		{"http/1.1-alnum-ends", []string{"http/1.1"}, "h1"},
 
-		// The eight FoxIO PR #277 examples. The `want` value of each row is the value the
-		// port measured, and the prose value of the pull request follows it in a comment.
+		// The eight FoxIO PR #277 examples. The prose value of the pull request follows each
+		// row in a comment. The ruling of #801 on 2026-10-01 UTC moved three rows: `0x20`,
+		// `0x30 0xAB` and `0x30 0x31 0xAB 0xCD`. The other rows hold the value the port measured.
 		{"0xAB", []string{"\xab"}, "99"},                            // the prose states `ab`
-		{"0x20", []string{"\x20"}, "99"},                            // the prose states `20`
+		{"0x20", []string{"\x20"}, "\x20\x20"},                      // the prose states `20`
 		{"0xAB 0xCD", []string{"\xab\xcd"}, "99"},                   // the prose states `ad`
 		{"0x20 0x61", []string{"\x20\x61"}, "\x20a"},                // the prose states `21`
-		{"0x30 0xAB", []string{"\x30\xab"}, "99"},                   // the prose states `3b`
+		{"0x30 0xAB", []string{"\x30\xab"}, "09"},                   // the prose states `3b`
 		{"0x61 0x20", []string{"\x61\x20"}, "a\x20"},                // the prose states `60`
-		{"0x30 0x31 0xAB 0xCD", []string{"\x30\x31\xab\xcd"}, "99"}, // the prose states `3d`
+		{"0x30 0x31 0xAB 0xCD", []string{"\x30\x31\xab\xcd"}, "09"}, // the prose states `3d`
 		{"0x30 0xAB 0xCD 0x31", []string{"\x30\xab\xcd\x31"}, "01"},
 	}
 	for _, tt := range tests {

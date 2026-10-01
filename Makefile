@@ -95,8 +95,8 @@ lint-cache-check:
 bench:
 	go test -run '^$$' -bench=. -benchmem ./...
 
-# The script fetches the captures and the vectors at the commit in `testdata/foxio.pin`,
-# and the reference tree at the commit in `testdata/foxio-reading.pin`.
+# The script fetches the captures, the vectors and the reference tree at the commit in
+# `testdata/foxio.pin`.
 # The script is idempotent: it downloads nothing on a second run.
 # It names the network on a failure, so this target adds nothing of its own.
 corpus:

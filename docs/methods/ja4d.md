@@ -65,7 +65,7 @@ label that the ruling reads:
 > Has a Domain name (d) or No domain (n)
 
 `wireshark/source/packet-ja4.c:1521` tests the field `dhcp.fqdn.name`, and
-`zeek/ja4d/main.zeek:73` tests the presence. **The ruling declines the Zeek answer, because
+`zeek/scripts/fingerprints/ja4d/main.zeek:66` tests the presence. **The ruling declines the Zeek answer, because
 an image outranks an implementation.** `ProcessPacket` in `ja4d.go` writes `d` when option
 81 holds more than 3 bytes, and it writes `n` otherwise.
 

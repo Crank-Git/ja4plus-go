@@ -51,6 +51,11 @@ type JA4Fingerprinter struct {
 	// keys holds the recency order of the fragment table, and it names the connection that
 	// the entry bound and the age bound remove.
 	keys boundedKeys
+	// tcpHellos holds the client-to-server segments of a ClientHello that spans more than
+	// one TCP segment, by the direction key of `ja4TCPHelloKey`. #795 added it.
+	tcpHellos map[string]*ja4TCPHello
+	// tcpHelloKeys holds the recency order of tcpHellos, for its entry bound and age bound.
+	tcpHelloKeys boundedKeys
 }
 
 // NewJA4 creates a new JA4Fingerprinter.
@@ -59,6 +64,7 @@ func NewJA4() *JA4Fingerprinter {
 		quicFragments:  make(map[string][]parser.CryptoFragment),
 		dcidToTuple:    make(map[string]string),
 		dcidToReported: make(map[string]string),
+		tcpHellos:      make(map[string]*ja4TCPHello),
 	}
 }
 
@@ -77,6 +83,10 @@ func (f *JA4Fingerprinter) ensure() {
 	if f.dcidToReported == nil {
 		f.dcidToReported = make(map[string]string)
 	}
+
+	if f.tcpHellos == nil {
+		f.tcpHellos = make(map[string]*ja4TCPHello)
+	}
 }
 
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
@@ -87,16 +97,32 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	var srcPort, dstPort uint16
 
 	// Try TCP/TLS first
-	if payload := parser.GetTCPPayload(packet); payload != nil {
+	if tcp := parser.GetTCPLayer(packet); tcp != nil {
 		var err error
-		ch, err = parser.ParseClientHello(payload)
+		if len(tcp.Payload) > 0 {
+			ch, err = parser.ParseClientHello(tcp.Payload)
+		}
+
+		// A ClientHello can span more than one TCP segment, and the segments then
+		// complete it. #795 records the defect that this step repairs.
+		if ch == nil {
+			assembled, followed, assembleErr := f.collectTCPHello(packet, tcp)
+			if assembled != nil {
+				ch, err = assembled, nil
+			} else if followed {
+				// The segment belongs to a hello that the table follows, so its truncation
+				// error describes that hello and no defect of the segment. The assembled
+				// bytes decide the error instead.
+				err = assembleErr
+			}
+		}
+
 		if err != nil {
 			return nil, err
 		}
-		if tcp := parser.GetTCPLayer(packet); tcp != nil {
-			srcPort = uint16(tcp.SrcPort)
-			dstPort = uint16(tcp.DstPort)
-		}
+
+		srcPort = uint16(tcp.SrcPort)
+		dstPort = uint16(tcp.DstPort)
 	}
 
 	// Try QUIC in UDP packets with multi-packet CRYPTO frame accumulation
@@ -201,7 +227,8 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears the QUIC fragment table and the connection identifier table.
+// Reset clears the QUIC fragment table, the connection identifier table and the partial
+// ClientHello table of TCP.
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4Fingerprinter) Reset() {
@@ -211,6 +238,8 @@ func (f *JA4Fingerprinter) Reset() {
 	f.dcidToTuple = make(map[string]string)
 	f.dcidToReported = make(map[string]string)
 	f.keys.reset()
+	f.tcpHellos = make(map[string]*ja4TCPHello)
+	f.tcpHelloKeys.reset()
 }
 
 // openConnection records one datagram of the connection, and it holds the two bounds.
@@ -255,6 +284,11 @@ func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP
 			f.dropConnection(dcid)
 		}
 	}
+
+	// The partial ClientHello table keys one direction by the reported address pair, in the
+	// form of `ja4TCPHelloKey`, so the two keys above name both directions of it.
+	f.dropTCPHello(forward)
+	f.dropTCPHello(reverse)
 }
 
 // ComputeJA4 is a one-shot function that extracts a JA4 fingerprint from a packet.
@@ -376,7 +410,7 @@ func ja4CipherHash(ch *parser.ClientHello) string {
 // ja4SortedExtensionString returns the sorted extension string that `JA4` part c hashes.
 //
 // `JA4_o` reads the same string, because
-// `testdata/foxio/reference/python/ja4.py:248` tests it for the zero sentinel of the
+// `testdata/foxio/reference/python/ja4.py:250` tests it for the zero sentinel of the
 // wire-order part. One builder therefore serves the two values, and a second builder would
 // let the two rules drift apart.
 func ja4SortedExtensionString(ch *parser.ClientHello) string {
@@ -421,7 +455,7 @@ func ja4ExtensionHash(ch *parser.ClientHello) string {
 // The extension list keeps SNI and ALPN, because
 // `testdata/foxio/reference/python/common.py:144` removes the two only when it sorts. It
 // carries the signature algorithms after a `_` separator, which
-// `testdata/foxio/reference/python/ja4.py:246` appends before it hashes.
+// `testdata/foxio/reference/python/ja4.py:248` appends before it hashes.
 func ja4OriginalOrderLists(ch *parser.ClientHello) (string, string) {
 	cipherList := formatHexList(parser.FilterGreaseValues(ch.CipherSuites))
 	extList := formatHexList(parser.FilterGreaseValues(ch.Extensions))
@@ -446,14 +480,14 @@ func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
 // computeJA4OriginalOrder generates the FoxIO `JA4_o` value of a client hello.
 //
 // The value carries the part a of `JA4`, a hash of the wire-order cipher list and a hash of
-// the wire-order extension list. `testdata/foxio/reference/python/ja4.py:291` states the
+// the wire-order extension list. `testdata/foxio/reference/python/ja4.py:282` states the
 // form. An empty list reaches `parser.EmptyHash`.
 //
 // The extension part reads the sorted extension string for that sentinel, and never the
-// wire-order string. `testdata/foxio/reference/python/ja4.py:248` tests the sorted string,
-// and `testdata/foxio/reference/python/ja4.py:253` writes `000000000000` into the
+// wire-order string. `testdata/foxio/reference/python/ja4.py:250` tests the sorted string,
+// and `testdata/foxio/reference/python/ja4.py:255` writes `000000000000` into the
 // wire-order part from that test. The Rust reference hashes the wire-order string on its
-// own at `testdata/foxio/reference/rust/ja4/src/tls.rs:363`, so the two references answer a
+// own at `testdata/foxio/reference/rust/ja4/src/tls.rs:382`, so the two references answer a
 // client hello whose sorted list is empty differently. The maintainer ruled the split on
 // 2026-08-12 in issue #287, and this library follows the Python reference.
 func computeJA4OriginalOrder(ch *parser.ClientHello) string {

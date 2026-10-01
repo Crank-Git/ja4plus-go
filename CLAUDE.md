@@ -345,5 +345,5 @@ not write that this library is BSD 3-Clause without that qualification. See
 
 **Never state that this project's method list equals FoxIO's.** Three FoxIO records at the
 pinned commit name three different sets: `License FAQ.md:5` names twelve methods, the
-FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and spells the scanner
+FoxIO `README.md:299` names fifteen, and `LICENSE:3` names thirteen and spells the scanner
 `JA4SScan`. Name the methods this project implements, and cite the pinned commit.

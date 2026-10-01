@@ -17,11 +17,13 @@ put 42 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issu
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
 issue #249 put 1 more, issue #449 put 5 more, issue #650 put 12 more, issue #127 put 154
-more, issue #492 put 2 more, and issue #795 put 4 more.
+more, and issue #492 put 2 more.
 Issue #797 wrote 9 entries on 2026-10-01 UTC, and each one names the capture
 `sigalg-grease.pcapng`. The vector pin moved to `16b96d95`, and that commit adds the capture.
-4 entries carry ruling #795, because the library reassembles no ClientHello that spans two
-TCP segments. Issue #795 removes them. 4 more carry ruling #127 and 1 more carries ruling #196,
+4 entries carried ruling #795, because the library reassembled no ClientHello that spans two
+TCP segments. **Issue #795 removed those 4 entries on 2026-10-01 UTC**, because the library
+now reassembles the ClientHello, and each of the 4 comparisons matches the FoxIO value. 4 more
+carry ruling #127 and 1 more carries ruling #196,
 because the maintainer ruled that each one matches an entry of `badcurveball.pcap`. **The 9
 entries moved no fingerprint value of an earlier capture**, because the vectors of the 38
 earlier captures are byte-identical at the two commits.
@@ -120,11 +122,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1834 matches, 0
-deviations, 789 accepted deviations and 821 register keys. The run also reports 194 unaccepted
+reports 1838 matches, 0
+deviations, 785 accepted deviations and 817 register keys. The run also reports 194 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 789 and
-32 add up to the 821 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 785 and
+32 add up to the 817 register keys. A count that an entry below states therefore differs from
 a fresh run.
 **The register now holds every deviation the run reports, so the run exits 0.**
 `.github/workflows/release.yml` gates its release job on `make conformance`, and that exit
@@ -548,6 +550,20 @@ that the interface declares.
   and the date of each part of it.
 
 ### Fixed
+
+- **JA4 now produces a value for a TLS ClientHello that spans more than one TCP segment.**
+  Issue #795 records the defect. A post-quantum key share makes the hello of a current
+  browser longer than one segment, and the library produced no JA4 value for it.
+  `JA4Fingerprinter` now holds the client-to-server segments of the hello until they
+  complete it, and it emits one value on the segment that completes it. **The table holds
+  four bounds**: 1000 connections, 16395 bytes and 64 segments for one hello, and 30 seconds
+  without a segment. A gap stops the hello at the first byte that no segment carries, and no
+  gap reads as zeros. A FIN or a RST, `CleanupConnection` and `Reset` each drop the partial
+  hello. The port holds the same rule and the same four bounds, and
+  `Crank-Git/ja4plus#784` added them under `Crank-Git/ja4plus#772`.
+  `ja4_tcp_client_hello_reassembly_test.go` holds the cases. **The change moved 4 comparisons
+  of `sigalg-grease.pcapng` to a match, and it moved no other fingerprint value.**
+  `docs/audit/conformance.md` owns the figures.
 
 - **The library now produces a JA4H value for every request of a protected HTTP/2
   connection, and three limits stopped that connection before.** Issue #529 built the HTTP/2
