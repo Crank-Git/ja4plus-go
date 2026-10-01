@@ -106,6 +106,8 @@ func main() {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
+	case "scan":
+		runScan(os.Args[2:])
 	case "db":
 		if err := runDB(os.Args[2:]); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -126,6 +128,7 @@ func printUsage() {
 Usage:
   ja4plus analyze <pcap-file> [options]
   ja4plus watch --interface <name> [options]
+  ja4plus scan <target> [options]
   ja4plus cert <cert-file>
   ja4plus db update
   ja4plus db info
@@ -148,6 +151,18 @@ Watch options:
                            and 0 writes one line at exit.
   --json, --csv, --types <list>, --lookup
                            The options of the analyze command, with the same meaning.
+
+Scan options:
+  <target>                 One IPv4 address, one IPv4 network in CIDR form, or a file
+                           of IPv4 addresses, one on each line
+  --port <port>            The TCP port of every target. The default is 80.
+  --rate <syn/s>           The SYN count for each second. The default is 10.
+  --retransmit yes|no      yes reads every retransmission for 120 seconds. no reads
+                           the first response alone for 8 seconds. The default is yes.
+  --format table|json|csv  The result format. The default is table.
+  --output <file>          Write the results to the file. --force replaces a file
+                           that exists.
+  The scan changes no firewall state. It writes the rules that the operator adds.
 
 Database commands:
   db update       Download the latest ja4plus-mapping.csv from FoxIO

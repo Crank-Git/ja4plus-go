@@ -107,12 +107,13 @@ type Config struct {
 type Result struct {
 	// Value is the JA4TScan value.
 	Value string
-	// Target is the address of the target, and TargetPort is the scanned port.
-	Target     netip.Addr
+	// Target is the address of the target.
+	Target netip.Addr
+	// TargetPort is the scanned port.
 	TargetPort uint16
-	// Scanner is the address of the scanning host, and ScannerPort is the source port of
-	// the SYN.
-	Scanner     netip.Addr
+	// Scanner is the address of the scanning host.
+	Scanner netip.Addr
+	// ScannerPort is the source port of the SYN.
 	ScannerPort uint16
 	// Time is the receive time of the last response that the value reads.
 	Time time.Time
