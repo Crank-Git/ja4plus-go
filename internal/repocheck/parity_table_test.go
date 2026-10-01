@@ -30,16 +30,16 @@ import (
 const parityTableFile = "docs/parity.md"
 
 // The three constants record where the promised names were read. `portReadCommit` is the
-// commit that the tag `v1.1.0` points at in `Crank-Git/ja4plus`.
+// commit that the tag `v1.3.0` points at in `Crank-Git/ja4plus`.
 const (
-	portReadVersion = "v1.1.0"
-	portReadCommit  = "21299645366591331eb93155355b65a76a3729f3"
-	portReadDate    = "2026-08-12"
+	portReadVersion = "v1.3.0"
+	portReadCommit  = "e7344c59f03dfb52ef122117bf4e7691d0d1aab4"
+	portReadDate    = "2026-10-01"
 )
 
 // portInitBlobHash is the blob hash of `ja4plus/__init__.py` at the port tag. The page
 // states the command that reproduces it, so a reader re-reads the list at one object.
-const portInitBlobHash = "d901aa690c6d6f36b542d0317372ec053760a55b"
+const portInitBlobHash = "160b0ce6d24cf8576a2811742793eec1e3e15017"
 
 // portExportedNames holds the `__all__` list of `ja4plus/__init__.py` at the port tag,
 // in the order the port writes it.
