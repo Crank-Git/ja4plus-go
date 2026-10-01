@@ -68,8 +68,8 @@ The result comes on the segment that completes the hello, and it names that conn
 - A missing segment stops the hello at the first byte that no segment carries. No gap reads
   as zeros.
 - One partial hello holds 16395 bytes and 64 segments at most.
-- The table holds 1000 connections at most, and it drops a connection that adds no segment
-  for 30 seconds.
+- The table holds 1000 connections at most, and it drops a connection that sends no segment
+  for 30 seconds. A segment that a cap refuses still counts.
 - A FIN or a RST drops both directions of the connection. `CleanupConnection` and `Reset`
   drop the partial hello too.
 
