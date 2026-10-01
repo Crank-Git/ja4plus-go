@@ -17,9 +17,9 @@ source states. A page decides no value.** `.claude/rules/rulings.md` states who 
 | Pinned commit | `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` |
 | Commit date | 2026-07-21 |
 | Retrieval date | 2026-08-11 |
-| Pin file | `testdata/foxio.pin` |
+| Pin file | `testdata/foxio-reading.pin` |
 
-The pinned commit equals the commit in `testdata/foxio.pin`. A test holds that equality,
+The pinned commit equals the commit in `testdata/foxio-reading.pin`. A test holds that equality,
 because a moved pin that leaves this page behind records a hash of material the project no
 longer reads.
 
@@ -36,7 +36,15 @@ it. **Try the bases in the order of the table**, because the first row is the co
 and the last two rows reach no file of this checkout.
 
 `make corpus` writes the FoxIO repository to `testdata/foxio/reference/`, at
-`scripts/fetch-corpus.sh:167`.
+`scripts/fetch-corpus.sh:213`.
+
+**This project reads two FoxIO commits, and each citation of this directory reads the
+reading pin.** `testdata/foxio-reading.pin` names the commit of the reference tree, and
+`testdata/foxio.pin` names the commit of the captures and the vectors. The maintainer split
+the two on #797, on 2026-10-01 UTC, because FoxIO changed seven rules between the commits.
+**#801 rereads each citation at the vector pin, and it removes the reading pin.** Until
+then, a citation of base 1 or base 2 reads the reading pin, and a citation of base 3 reads
+the vector pin.
 
 | N | Base | A citation of that base | Where a reader resolves it |
 |---|---|---|---|
@@ -59,9 +67,9 @@ so the citation reads at base 7 and never at base 5.
 
 ### The three moved directories
 
-**`scripts/fetch-corpus.sh:149` moves three directories out of the staged tree first**, so
+**`scripts/fetch-corpus.sh:188` moves three directories out of the staged tree first**, so
 a citation of one of the three reaches no path under `testdata/foxio/reference/`.
-`scripts/fetch-corpus.sh:102` names the three. Join a citation of one of the three to the
+`scripts/fetch-corpus.sh:69` names the three. Join a citation of one of the three to the
 corpus directory of the right-hand column.
 
 | The FoxIO path a citation names | Where `make corpus` writes it | What it holds |
@@ -144,7 +152,7 @@ holds that one occurrence with its reason.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier
 version of `scripts/fetch-corpus.sh` wrote names the pinned commit and holds no reference
-tree. `scripts/fetch-corpus.sh:55` now reads the directories as well as the commit, so the
+tree. `scripts/fetch-corpus.sh:97` now reads the directories as well as the commit, so the
 next run fetches the corpus again.
 
 ## The inventory
@@ -172,8 +180,8 @@ reports.
 
 ## Reproduce the measurement
 
-`scripts/fetch-corpus.sh:149` moves `pcap`, `python/test/testdata` and
-`wireshark/test/testdata` into `testdata/foxio/`. `scripts/fetch-corpus.sh:167` then writes
+`scripts/fetch-corpus.sh:188` moves `pcap`, `python/test/testdata` and
+`wireshark/test/testdata` into `testdata/foxio/`. `scripts/fetch-corpus.sh:213` then writes
 the rest of the FoxIO repository to `testdata/foxio/reference/`.
 `testdata/foxio/reference/technical_details/` therefore holds each file of the table above,
 so `make corpus` reproduces every row.

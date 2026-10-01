@@ -225,7 +225,7 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 
 | Interface | Version | Documentation |
 |---|---|---|
-| FoxIO Wireshark dissector | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark> |
+| FoxIO Wireshark dissector | The commit in `testdata/foxio-reading.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark> |
 | FoxIO Zeek package | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/zeek> |
 | FoxIO per-packet vectors | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 

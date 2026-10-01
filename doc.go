@@ -26,7 +26,8 @@
 // The list above names what this package implements, and it names no FoxIO list. Three
 // FoxIO records at commit 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 name three different
 // sets of methods, so no single FoxIO record states the set above.
-// testdata/foxio.pin holds that commit.
+// testdata/foxio-reading.pin holds that commit. The vectors read a second commit, which
+// testdata/foxio.pin holds, and #801 removes the reading pin.
 //
 // Processor holds the ten fingerprinters, and it gives every packet to each one. The list
 // above holds eleven rows, because JA4LFingerprinter carries two of them. A caller that

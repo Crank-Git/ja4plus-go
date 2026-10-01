@@ -116,7 +116,7 @@ Initial packet in place of a captured one, and the synthesized packet decrypts.
 `scripts/seed-fuzz.sh` reads a classic pcap file, and it reads no pcapng file. A classic
 pcap file states one link type in its header and one length before each packet. **24 of the
 38 captures of the FoxIO corpus carry a classic pcap magic number**, measured on 2026-08-14 at
-the commit that `testdata/foxio.pin` holds. A pcapng file carries block types, options and
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which `testdata/foxio.pin` held that day. A pcapng file carries block types, options and
 an interface table, and the reduction needs none of that.
 
 Two limits follow, and neither one loses a seed.

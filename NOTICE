@@ -62,7 +62,7 @@ FoxIO publishes FoxIO License 1.1 at <https://github.com/FoxIO-LLC/ja4/blob/main
 
 This project read the FoxIO License 1.1 text from `LICENSE` at commit
 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 of <https://github.com/FoxIO-LLC/ja4>.
-`testdata/foxio.pin` holds that commit.
+`testdata/foxio-reading.pin` holds that commit.
 
 A later FoxIO change to the license produces a new issue in this repository.
 

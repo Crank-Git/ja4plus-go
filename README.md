@@ -529,7 +529,10 @@ every packet of the connection, and `ComputeJA4TS` reads one packet and writes f
 
 `make conformance` tests this library against the FoxIO corpus at commit
 [`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`](https://github.com/FoxIO-LLC/ja4/tree/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8).
-`testdata/foxio.pin` holds that commit, and `make corpus` fetches the corpus at it. The
+`testdata/foxio-reading.pin` holds that commit, and `make corpus` fetches the reference tree
+at it. **The captures and the vectors come from a second commit**, which `testdata/foxio.pin`
+holds. #797 split the two pins on 2026-10-01 UTC, and #801 rereads each citation at the vector
+pin and removes the reading pin. The
 corpus is FoxIO-licensed material, so this repository tracks the pin and never the
 captures.
 
