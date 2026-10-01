@@ -13,18 +13,20 @@ import (
 //
 // These tests bind the two version rows in two directions. One direction reads this
 // repository, and it fails when a row loses its version. The other direction reads the
-// fetched FoxIO corpus, and it fails when a moved `testdata/foxio.pin` names a commit that
+// fetched FoxIO corpus, and it fails when a moved `testdata/foxio-reading.pin` names a commit that
 // builds against a different host. A test that read the rule file alone would pass
 // forever, because the rule file states what the rule file states.
 //
 // `docs/audit/upstream-versions.md` holds the measurement and every citation.
 
-// upstreamWiresharkVersion is the Wireshark core version that the FoxIO pin records.
+// upstreamWiresharkVersion is the Wireshark core version that the FoxIO reading pin,
+// `testdata/foxio-reading.pin`, records.
 // `.github/workflows/wireshark-release.yml` of the FoxIO tree builds the released plugin
 // against this tag, so it is the core that the shipped plugin reads fields from.
 const upstreamWiresharkVersion = "v4.6.0"
 
-// upstreamZeekVersion is the Zeek analyzer version that the FoxIO pin records.
+// upstreamZeekVersion is the Zeek analyzer version that the FoxIO reading pin,
+// `testdata/foxio-reading.pin`, records.
 // `.github/workflows/zeek-test.yml` of the FoxIO tree runs the FoxIO Zeek tests in this
 // container, so it is the analyzer the FoxIO package is known to pass under.
 const upstreamZeekVersion = "8.0.0"
@@ -130,7 +132,7 @@ func TestTheUpstreamVersionRecordPageNamesBothVersions(t *testing.T) {
 }
 
 // This is the direction that makes the row a pin rather than a sentence. FoxIO moves its
-// own host version without a change to this repository, so a moved `testdata/foxio.pin`
+// own host version without a change to this repository, so a moved `testdata/foxio-reading.pin`
 // must redden a test rather than leave the rule file describing a commit nobody reads.
 func TestTheFoxioCorpusStillBuildsAgainstThePinnedWiresharkCore(t *testing.T) {
 	workflow, present := upstreamCorpusFile(t, upstreamWiresharkCorpusFile)
@@ -139,7 +141,7 @@ func TestTheFoxioCorpusStillBuildsAgainstThePinnedWiresharkCore(t *testing.T) {
 	}
 
 	if !strings.Contains(workflow, upstreamWiresharkVersion) {
-		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio.pin holds builds "+
+		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio-reading.pin holds builds "+
 			"the plugin against a different Wireshark core.\n"+
 			"\tRe-measure the version, and repair the row of %s and the record of %s.",
 			upstreamWiresharkCorpusFile, upstreamWiresharkVersion,
@@ -156,7 +158,7 @@ func TestTheFoxioCorpusStillTestsAgainstThePinnedZeekAnalyzer(t *testing.T) {
 	}
 
 	if !strings.Contains(workflow, upstreamZeekCorpusText) {
-		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio.pin holds tests "+
+		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio-reading.pin holds tests "+
 			"against a different Zeek analyzer.\n"+
 			"\tRe-measure the version, and repair the row of %s and the record of %s.",
 			upstreamZeekCorpusFile, upstreamZeekCorpusText,

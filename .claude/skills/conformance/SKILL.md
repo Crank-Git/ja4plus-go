@@ -15,8 +15,9 @@ claim against FoxIO's own captures and expected values.
 make corpus
 ```
 
-The script reads the commit in `testdata/foxio.pin` and fetches the FoxIO repository at
-that commit. It writes three directories.
+The script reads two pins. It fetches the captures and the vectors at the commit in
+`testdata/foxio.pin`, and the reference tree at the commit in `testdata/foxio-reading.pin`.
+#797 split the two, and #801 removes the reading pin. It writes three directories.
 
 | Directory | Holds |
 |---|---|
@@ -137,5 +138,7 @@ an entry.
 ## To move the pin
 
 Change `testdata/foxio.pin` to the new FoxIO commit, in a commit that does nothing else.
+That pin moves the captures and the vectors. A move of `testdata/foxio-reading.pin` moves
+every reading, so it rereads each citation, as #801 does.
 Run `make corpus` and `make conformance`. A new deviation means FoxIO changed a
 definition. Open an issue for it.

@@ -184,13 +184,14 @@ func TestFoxioTCPTranscriptionLinksToItsImageAndReproducesNone(t *testing.T) {
 	}
 }
 
-// readFoxioTranscriptionTCPPin returns the commit that `testdata/foxio.pin` holds.
+// readFoxioTranscriptionTCPPin returns the commit that `testdata/foxio-reading.pin` holds.
+// A transcription is a reading, so its image link names the reading pin of #797.
 func readFoxioTranscriptionTCPPin(t *testing.T) string {
 	t.Helper()
 
-	content, err := os.ReadFile("testdata/foxio.pin")
+	content, err := os.ReadFile("testdata/foxio-reading.pin")
 	if err != nil {
-		t.Fatalf("read testdata/foxio.pin: %v", err)
+		t.Fatalf("read testdata/foxio-reading.pin: %v", err)
 	}
 
 	return strings.TrimSpace(string(content))

@@ -15,23 +15,23 @@ declined row records that ruling.
 | Record | Value |
 |---|---|
 | Repository | <https://github.com/Crank-Git/ja4plus> |
-| Version | `v1.1.0` |
-| Commit | `21299645366591331eb93155355b65a76a3729f3` |
+| Version | `v1.3.0` |
+| Commit | `e7344c59f03dfb52ef122117bf4e7691d0d1aab4` |
 | File | `ja4plus/__init__.py` |
-| Blob | `d901aa690c6d6f36b542d0317372ec053760a55b` |
-| Read | 2026-08-12 |
+| Blob | `160b0ce6d24cf8576a2811742793eec1e3e15017` |
+| Read | 2026-10-01 |
 | Promised names | 25 |
 
 **Read the port at the tag, and never at the tip.** The tip carried five commits past
-`v1.1.0` on the read date. A reading of a moving branch is a reading of something the next
+`v1.1.0` on 2026-08-12, the date of the first read. A reading of a moving branch is a reading of something the next
 reader cannot see.
 
 Reproduce the record with these commands, from a clone of the port:
 
 ```
-git -C ja4plus rev-parse v1.1.0
-git -C ja4plus rev-parse v1.1.0:ja4plus/__init__.py
-git -C ja4plus show v1.1.0:ja4plus/__init__.py
+git -C ja4plus rev-parse v1.3.0
+git -C ja4plus rev-parse v1.3.0:ja4plus/__init__.py
+git -C ja4plus show v1.3.0:ja4plus/__init__.py
 ```
 
 ## Which names this page counts
@@ -181,7 +181,7 @@ freeze a breaking change, so a reader reverses it before the freeze.
 
 ## What this page does not record
 
-**A name the port adds after 2026-08-12 reaches no test on this page.** No test here reads
+**A name the port adds after `v1.3.0` reaches no test on this page.** No test here reads
 the port, because a cross-language test rig couples two repositories that move at different
 speeds.
 
@@ -206,4 +206,4 @@ register row `JA4X on a stream that a proxy tunnel carries` records the closure.
 the key log names each answer a Go question, and no row of the table reaches them.
 
 Verified against: <https://github.com/Crank-Git/ja4plus> (`ja4plus/__init__.py` at
-`v1.1.0`, blob `d901aa690c6d6f36b542d0317372ec053760a55b`, retrieved 2026-08-12).
+`v1.3.0`, blob `160b0ce6d24cf8576a2811742793eec1e3e15017`, retrieved 2026-10-01).

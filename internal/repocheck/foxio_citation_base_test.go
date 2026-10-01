@@ -28,7 +28,8 @@ import (
 // constant here would break the rule this file holds.
 
 // foxioCorpusReferenceDir holds the FoxIO repository at the pin.
-// `scripts/fetch-corpus.sh:167` writes it, and `make corpus` runs that script.
+// The step of `scripts/fetch-corpus.sh` that `reference_is_complete` guards writes it,
+// and `make corpus` runs that script.
 const foxioCorpusReferenceDir = "testdata/foxio/reference"
 
 // `foxio_deleted_specs_test.go` declares foxioDeletedSpecsPage, and that page is base 4.
@@ -52,7 +53,7 @@ var foxioCitationExtension = map[string]bool{
 }
 
 // foxioMovedDirectory maps the FoxIO path a citation names to the corpus directory that
-// holds it. `scripts/fetch-corpus.sh:149` moves the three out of the staged tree, so a
+// holds it. `scripts/fetch-corpus.sh` removes the three from the staged reference tree, so a
 // citation of one of the three reaches no path under `testdata/foxio/reference/`.
 var foxioMovedDirectory = [][2]string{
 	{"pcap/", "testdata/foxio/pcap/"},
@@ -839,4 +840,42 @@ func foxioSortedKeys(set map[string]bool) string {
 	sort.Strings(names)
 
 	return strings.Join(names, ", ")
+}
+
+// #797 — a citation resolves under the reference tree of `testdata/foxio-reading.pin`, and
+// never under the commit of the vector pin. The maintainer ruled on 2026-10-01 UTC that every
+// reading stays at the reading pin, and #801 rereads each one at the vector pin.
+//
+// FoxIO rewrote the cited line between the two commits, so the line text separates them.
+// `rust/ja4/src/tcp.rs:136` holds the JA4T format string at the reading pin, and the vector
+// pin holds `opts.push_str("00");` at that line.
+func TestACitationResolvesUnderTheReferenceTreeOfTheReadingPin(t *testing.T) {
+	resolver := newFoxioResolver(t)
+	if !resolver.corpus {
+		t.Skip(foxioCorpusAbsentMessage)
+	}
+
+	citation := foxioCitation{
+		page:   "docs/specs/foxio/JA4T.md",
+		span:   "rust/ja4/src/tcp.rs:136",
+		path:   "rust/ja4/src/tcp.rs",
+		number: 136,
+	}
+
+	resolution, ok := resolver.resolve(citation)
+	if !ok || resolution.base != 1 {
+		t.Fatalf("%q resolves at base %d (ok %v), and the reference tree holds it at base 1",
+			citation.span, resolution.base, ok)
+	}
+
+	content, err := os.ReadFile(resolution.file)
+	if err != nil {
+		t.Fatalf("read %s: %v", resolution.file, err)
+	}
+
+	lines := strings.Split(string(content), "\n")
+	if len(lines) < citation.number || !strings.Contains(lines[citation.number-1], `"{}_{}_{}_{}",`) {
+		t.Errorf("%s does not hold the JA4T format string at line %d, so the reference tree is not at the reading pin",
+			resolution.file, citation.number)
+	}
 }

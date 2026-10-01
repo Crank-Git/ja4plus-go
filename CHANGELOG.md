@@ -12,12 +12,19 @@ enumeration below states the count that the register holds today under each ruli
 never states the count that the issue first wrote, so the enumeration is a statement of the
 present and never a history. Issue #42 put 254
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
+put 42 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 159 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
-issue #249 put 1 more, issue #449 put 5 more, issue #650 put 12 more, issue #127 put 150
-more, and issue #492 put 2 more.
+issue #249 put 1 more, issue #449 put 5 more, issue #650 put 12 more, issue #127 put 154
+more, issue #492 put 2 more, and issue #795 put 4 more.
+Issue #797 wrote 9 entries on 2026-10-01 UTC, and each one names the capture
+`sigalg-grease.pcapng`. The vector pin moved to `16b96d95`, and that commit adds the capture.
+4 entries carry ruling #795, because the library reassembles no ClientHello that spans two
+TCP segments. Issue #795 removes them. 4 more carry ruling #127 and 1 more carries ruling #196,
+because the maintainer ruled that each one matches an entry of `badcurveball.pcap`. **The 9
+entries moved no fingerprint value of an earlier capture**, because the vectors of the 38
+earlier captures are byte-identical at the two commits.
 Issue #701 wrote the 75 entries of the ruling #529 count, 11 entries of the ruling #492
 count and the 5 entries of the ruling #164 count on 2026-08-15 UTC. The maintainer deferred
 each of those three decoding capabilities to `v1.1.0` on 2026-08-15, so each of the 91
@@ -113,11 +120,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1826 matches, 0
-deviations, 780 accepted deviations and 812 register keys. The run also reports 194 unaccepted
+reports 1834 matches, 0
+deviations, 789 accepted deviations and 821 register keys. The run also reports 194 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 780 and
-32 add up to the 812 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 789 and
+32 add up to the 821 register keys. A count that an entry below states therefore differs from
 a fresh run.
 **The register now holds every deviation the run reports, so the run exits 0.**
 `.github/workflows/release.yml` gates its release job on `make conformance`, and that exit

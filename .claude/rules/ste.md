@@ -95,7 +95,7 @@ a stable target. An evidence citation cites `file:line`.
 
 | Kind | What it cites | Why |
 |---|---|---|
-| **Evidence** — a FoxIO reference implementation, a FoxIO image, a deleted FoxIO text specification, the port at a tag | **`file:line`**, at the pinned commit | `testdata/foxio.pin` holds the commit, so the line never moves. |
+| **Evidence** — a FoxIO reference implementation, a FoxIO image, a deleted FoxIO text specification, the port at a tag | **`file:line`**, at the pinned commit | `testdata/foxio-reading.pin` holds the commit, so the line never moves. #801 moves it to the vector pin of `testdata/foxio.pin`. |
 | **Internal** — `.claude/rules/*` and `docs/specs/*` that cite each other, and a code comment that cites a rule file | **A stable target**: a section heading, a rule number, a requirement number, or an identifier | Each one names the text it points at, so it survives an edit above it. A line number does not. |
 | **This library's own code, named in a document** | **The identifier**, and the file | `decideEndpoints` in `ja4ssh.go` finds the method after every edit. A line number finds it until the next edit. |
 

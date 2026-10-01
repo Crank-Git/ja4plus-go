@@ -14,7 +14,9 @@ command downloads the current copy from
 <https://github.com/FoxIO-LLC/ja4/raw/main/ja4plus-mapping.csv>, which
 `ja4PlusMappingURL` in `cmd/ja4plus/main.go` names. This project read the FoxIO reference at
 commit
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which `testdata/foxio.pin` holds.
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which `testdata/foxio-reading.pin` holds. The
+vectors read a second commit, which `testdata/foxio.pin` holds, and #801 removes the
+reading pin.
 
 ## The license
 

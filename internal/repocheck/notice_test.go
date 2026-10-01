@@ -27,7 +27,7 @@ const (
 )
 
 // foxioPinnedCommit is the FoxIO commit at which this project read the license.
-// `testdata/foxio.pin` holds the same value.
+// `testdata/foxio-reading.pin` holds the same value.
 const foxioPinnedCommit = "27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8"
 
 // noticeMethods holds the methods this library implements under FoxIO License 1.1.
@@ -225,9 +225,9 @@ func TestNoticeRecordsTheCommitAtWhichThisProjectReadTheLicense(t *testing.T) {
 		t.Errorf("NOTICE does not record the FoxIO commit %s", foxioPinnedCommit)
 	}
 
-	pin := strings.TrimSpace(readRepoFile(t, "testdata/foxio.pin"))
+	pin := strings.TrimSpace(readRepoFile(t, "testdata/foxio-reading.pin"))
 	if pin != foxioPinnedCommit {
-		t.Errorf("testdata/foxio.pin holds %q, and NOTICE records %q", pin, foxioPinnedCommit)
+		t.Errorf("testdata/foxio-reading.pin holds %q, and NOTICE records %q", pin, foxioPinnedCommit)
 	}
 }
 

@@ -27,7 +27,10 @@ maintainer widened it on 2026-08-13. The table holds for every other question.
 A claim about a source is worthless without the location. Write
 `wireshark/source/packet-ja4.c:1595`, not "the Wireshark dissector".
 
-**Read the source at the pinned commit.** `testdata/foxio.pin` holds it. A reading of a
+**Read the source at the pinned commit.** `testdata/foxio-reading.pin` holds it, and
+`testdata/foxio.pin` holds the commit of the vectors alone. #797 split the two on
+2026-10-01 UTC, and #801 rereads each citation at the vector pin and removes the reading
+pin. A reading of a
 moving branch is a reading of something the next person cannot see.
 
 **Never describe an external interface from memory.** `.claude/rules/external-apis.md`
