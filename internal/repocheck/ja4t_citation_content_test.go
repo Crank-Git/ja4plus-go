@@ -166,6 +166,13 @@ var ja4tCitationContent = []ja4tCitation{
 	// R30 — the reset packet.
 	{213, "zeek/scripts/fingerprints/ja4t/main.zeek", 101, `rph$tcp$flags & TH_RST != 0`},
 	{214, "wireshark/source/packet-ja4.c", 1296, `tcp_flags == 0x004`},
+
+	// R31 — the length of the segment size option and the window scale option. #814 added
+	// these rows on 2026-10-01 UTC.
+	{228, "wireshark/source/packet-ja4.c", 1461, `"tcp.options.mss_val"`},
+	{228, "rust/ja4/src/tcp.rs", 76, `let mss = tcp`},
+	{231, "zeek/src/ja4t.cc", 87, `opt_kind == TCP_OPT_MSS && tcp_opt_offset + 3 < tcp_options_end`},
+	{231, "zeek/src/ja4t.cc", 91, `opt_kind == TCP_OPT_WINDOW_SCALE && tcp_opt_offset + 2 < tcp_options_end`},
 }
 
 // ja4tPageCitation returns every substantive citation of the page, in page order.

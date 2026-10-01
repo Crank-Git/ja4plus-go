@@ -88,16 +88,17 @@ answer for each one.
 
 Each difference below is a choice of the Go program, and no difference moves a value.
 
-- **The output schema is the schema of this program, and this choice is provisional.** The
-  JSON object holds the fields that `ja4plus watch --json` writes, with the `type` value
-  `ja4tscan`. The port writes its own eleven-field schema, from
+- **The output schema is the schema of this program, and the maintainer confirmed this
+  choice on 2026-10-01 UTC.** The JSON object holds the fields that `ja4plus watch --json`
+  writes, with the `type` value `ja4tscan`. The port writes its own eleven-field schema, from
   `docs/specs/features/05-structured-output.md` at tag `v1.3.0`. **The two passive output
   schemas already differed before #796**, so no scan schema matches both programs. The scan
   output follows the existing schema of this program, so one program writes one schema.
   **The reason is consistency, and never priority.** The port's command-line program
   shipped first: it first appears on 2026-03-25, in its commit `0f6e141`, and this program
-  first appears on 2026-04-06, in commit `5609d53`. **The maintainer confirms or
-  reverses this choice, and #796 is the reversal path.**
+  first appears on 2026-04-06, in commit `5609d53`. **#796 holds the ruling and is
+  the reversal path**, and the `The JSON schema of the command-line program` row of the
+  register in `docs/specs/spec.md` records it.
 - **A refused option exits with status 1**, as every other command of this program does.
   The port exits with status 2, because `argparse` does.
 - **A first target that routes through a loopback interface stops the scan.** The port opens

@@ -64,6 +64,14 @@ func (f *JA4TFingerprinter) Reset() {
 func (f *JA4TFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP string, dstPort uint16, proto string) {
 }
 
+// The lengths of the two options whose value JA4T reads. RFC 9293 section 3.1 states 4 for
+// the segment size, and RFC 7323 section 2.2 states 3 for the window scale. Each length
+// counts the kind byte and the length byte.
+const (
+	tcpOptionLengthMSS         = 4
+	tcpOptionLengthWindowScale = 3
+)
+
 // tcpOptionEntries returns the JA4T part b entries, the maximum segment size and the
 // window scale that a raw TCP option region holds.
 //
@@ -96,13 +104,20 @@ func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8
 		// records the reading: `rust/ja4/src/tcp.rs:70` and
 		// `wireshark/source/packet-ja4.c:1456-1458` each write every `tcp.option_kind`.
 		entries = append(entries, strconv.Itoa(int(kind)))
+		// The segment size is read only from an option of length 4, and the window scale
+		// only from an option of length 3. The maintainer ruled this on 2026-10-01 UTC, and
+		// #814 is the reversal path. FoxIO `rust/ja4/src/tcp.rs:76-82` and
+		// `wireshark/source/packet-ja4.c:1461-1466` at `16b96d95` read the fields that the
+		// Wireshark core adds only at those lengths. The port reads the same lengths at
+		// `ja4plus/utils/tcp_options.py:115-118`, at tag `v1.3.0`. The ruling declines
+		// `zeek/src/ja4t.cc:87-93`, which reads any length.
 		switch kind {
 		case layers.TCPOptionKindMSS:
-			if len(data) >= 2 {
-				mss = binary.BigEndian.Uint16(data[:2])
+			if length == tcpOptionLengthMSS {
+				mss = binary.BigEndian.Uint16(data)
 			}
 		case layers.TCPOptionKindWindowScale:
-			if len(data) >= 1 {
+			if length == tcpOptionLengthWindowScale {
 				wscale = data[0]
 			}
 		}

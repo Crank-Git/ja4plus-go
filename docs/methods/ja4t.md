@@ -50,6 +50,12 @@ value.
 | The maximum segment size | Two digits, zero-padded |
 | The window scale | `00` |
 
+**Part c and part d read a value only from an option of the RFC length.** The segment size
+needs length 4, and the window scale needs length 3. An option of another length still
+writes its kind to part b, and the library reads its value as absent. The maintainer ruled
+this at issue #814 on 2026-10-01 UTC, and R31 records the split it settles.
+`ja4t_option_exact_length_test.go` holds the tests.
+
 **The `Type` field holds `ja4t`.**
 
 ## Which packet the fingerprinter reads
@@ -80,7 +86,8 @@ and `ja4t_icmp_quoted_test.go` holds it.
 | What a window scale of zero writes. | R28 |
 | Whether the SYN selection tests two bits or the whole flag byte. | R29 |
 
-R30 records one more split, and it reaches the reset packet of a JA4TS value.
+R30 records one more split, and it reaches the reset packet of a JA4TS value. R31 records
+another, and it reaches a segment size option or a window scale option of another length.
 
 **The maintainer ruled the option-byte question at issue #297 on 2026-08-12**, and this
 library writes one entry for each option byte. The Zeek package is the one outlier.

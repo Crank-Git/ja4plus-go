@@ -81,7 +81,9 @@ measurement, and `Crank-Git/ja4plus#601` closes the same wording on the port sid
 **The maintainer amended FR-parity-8, FR-parity-9 and FR-parity-10 on 2026-10-01 UTC.**
 Issue #801 holds the ruling and is the reversal path, and `Crank-Git/ja4plus#789` holds
 the port half. The ruling follows FoxIO Python and Rust at `16b96d95`, which each write `9`
-for a non-ASCII end. `ja4_alpn_ruling_test.go` holds each separating packet.
+for a non-ASCII end. `ja4_alpn_ruling_test.go` holds each separating packet. **The
+maintainer confirmed the control-byte case on 2026-10-01 UTC**, also under #801: an end
+byte below `0x20`, or the byte `0x7F`, writes `99`.
 
 - **FR-parity-8** — When the first byte of the first ALPN value is `0x80` or higher, the
   first ALPN character is `9`. When the first byte is a control byte below `0x20` or the
