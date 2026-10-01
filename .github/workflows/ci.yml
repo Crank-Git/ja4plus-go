@@ -171,12 +171,15 @@ jobs:
       # nothing until the hash arrived. The commit that changes the script changes the key,
       # and the key needs no version number that a reader must remember.
       #
-      # `corpus_fetch_test.go` holds both halves of the key.
+      # The key also reads the hash of `testdata/foxio-zeek.pin`. #797 added that second pin
+      # for the Zeek scripts, and a move of it alone must miss the cache too.
+      #
+      # `corpus_fetch_test.go` holds the three parts of the key.
       - name: Restore the corpus
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: testdata/foxio
-          key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
+          key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}-${{ hashFiles('testdata/foxio-zeek.pin') }}
 
       # `make corpus` reads the FoxIO repository over the network, and it downloads nothing
       # when the cache restored the corpus. The default job bound is 360 minutes, so this
@@ -504,7 +507,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: testdata/foxio
-          key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}
+          key: foxio-corpus-${{ steps.pin.outputs.commit }}-${{ hashFiles('scripts/fetch-corpus.sh') }}-${{ hashFiles('testdata/foxio-zeek.pin') }}
 
       # `make corpus` reads the FoxIO repository over the network, and it downloads nothing
       # when the cache restored the corpus. The default job bound is 360 minutes, so this
