@@ -922,6 +922,15 @@ that the interface declares.
 
 ### Changed
 
+- **JA4T and JA4TS read the maximum segment size only from an option of length 4, and the
+  window scale only from an option of length 3.** An option of another length still writes
+  its kind to part b, and its value reads as absent. Issue #814 holds the maintainer's
+  ruling of 2026-10-01 UTC, and the port already holds the same rule. No FoxIO vector value
+  moves.
+- **The JSON output of `ja4plus scan` keeps the schema of this program, and the choice is
+  no longer provisional.** The maintainer confirmed it on 2026-10-01 UTC, and issue #796
+  holds the ruling. The JSON schema of this program and the JSON schema of the port differ,
+  for the passive output and for the scan output.
 - **`--types` returns an error for a token that names no method, and the command exits 1.** It
   exited 0 and printed an empty table before, so a caller that misspelled a token read the
   absence of output as the absence of fingerprints. `cmd/ja4plus/types.go` holds the eleven
@@ -1173,6 +1182,64 @@ that the interface declares.
     proposed the move.
   - `golang.org/x/crypto` to v0.57.0. Pull request #788 proposed the move.
   - `golang.org/x/net` to v0.59.0. Pull request #789 proposed the move.
+
+## [v1.3.1]
+
+This section is the release record of `v1.3.1`. It carries no date, because FR-release-40
+creates the tag and no tag exists at this head.
+
+**`v1.3.1` is a patch version, because it changes no exported name and it moves a value only
+for a malformed TCP option.** Between the `v1.3.0` tag and this head, two production Go
+files change: `ja4t.go` and `internal/parser/tls.go`. `ja4t.go` adds two unexported
+constants, and `internal/parser/tls.go` changes comments alone. `go.mod` and `go.sum` do
+not change. Each measurement was made on 2026-10-01 UTC. **No change of this release is
+breaking.**
+
+**One rule of this release moves a fingerprint value, and it moves no vector value.**
+`docs/audit/conformance.md` owns the conformance figures.
+
+### Changed
+
+- **JA4T and JA4TS read the MSS value only from an option of length 4, and the window-scale
+  value only from an option of length 3.** #814 holds the maintainer's ruling of 2026-10-01
+  UTC and the reversal path. Batch #833 merged it as pull request #835.
+  - An option of another length still writes its kind to part b, and its value reads as
+    absent.
+  - The rule follows FoxIO Python, Rust and Wireshark, and the port holds the same rule.
+    A register row records the decline of the Zeek reading, which reads any length.
+  - The input that moves is an MSS option or a window-scale option of another length.
+    Pull request #835 records three constructed inputs that moved, and
+    `ja4t_option_exact_length_test.go` holds the new value of each one:
+
+    | Input | Before | After |
+    |---|---|---|
+    | An MSS option of length 6 | `64240_2-3-1-1-1_1460_7` | `64240_2-3-1-1-1_00_7` |
+    | A window-scale option of length 4 | `64240_3-2_1460_7` | `64240_3-2_1460_00` |
+    | The JA4TS SYN-ACK case | `64240_2-1-3-0_1460_7` | `64240_2-1-3-0_00_00` |
+
+  - **No vector of the FoxIO corpus holds an option of another length, so no vector value
+    moved.**
+- **The JSON schema of `ja4plus scan` is final.** The maintainer confirmed it on 2026-10-01
+  UTC, and #796 holds the ruling. The `v1.3.0` record names the schema provisional, and
+  that mark no longer holds.
+  The program keeps its own schema, and a register row records that the JSON schemas of
+  this program and of the port differ.
+- **An ALPN end byte below `0x20`, or the byte `0x7F`, writes `99`.** The maintainer
+  confirmed that case of the ALPN rule on 2026-10-01 UTC, and #801 holds the ruling. The
+  library wrote `99` for that byte in `v1.3.0` too, so no value moved. Four new cases of
+  `ja4_alpn_ruling_test.go` hold the rule for JA4 and JA4S.
+- The three pre-release tag constants, from `v1.3.0` to `v1.3.1`, and `docs/api/v1.md`,
+  which states the value that the three constants hold.
+
+### Known differences from the Python port
+
+- **The port half of the ALPN ruling lands in port version 1.4.0.** `Crank-Git/ja4plus#789`
+  holds it, and Crank-Git/ja4plus#790 merged it into the port's `dev` on 2026-10-01 UTC.
+  Until a user runs port 1.4.0 or later, Go and the port differ on a first ALPN value whose
+  end byte is `0x80` or higher, and on a one-byte printable value that is not alphanumeric.
+  No shared vector holds such a value, so the shared vector set reports no difference.
+- **The JSON output of `ja4plus scan` differs from the JSON output of the port.** That
+  difference is the confirmed ruling of #796, and it is not a defect.
 
 ## [v1.3.0]
 

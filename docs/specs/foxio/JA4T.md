@@ -213,3 +213,30 @@ and `docs/specs/features/17-active-scan.md` states what this project builds from
   `rph$tcp$flags & TH_RST != 0` at `zeek/scripts/fingerprints/ja4t/main.zeek:101`. Wireshark tests
   `tcp_flags == 0x004` at `wireshark/source/packet-ja4.c:1296`. A RST that also carries
   ACK reaches the two implementations differently. **Issue #126 holds the question.**
+- **R31** — **Reference split.** An option of kind 2 or kind 3 can state a length other than
+  the length its RFC states. RFC 9293 states length 4 for the maximum segment size, and
+  RFC 7323 states length 3 for the window scale. The implementations read such an option in
+  two ways.
+  - **The Wireshark core at `v4.6.0` adds each value field only at the RFC length.** Its
+    TCP dissector defines `TCPOLEN_MSS` as 4 at line 577, and `TCPOLEN_WINDOW` as 3 at
+    line 578. `tcp_option_len_check` at line 5755 returns false when the two lengths
+    differ. The checks at line 6115 and line 6158 then return before the core adds
+    `tcp.options.mss_val` or `tcp.options.wscale.shift`. The core is no file of the corpus,
+    so the link reaches it:
+    <https://gitlab.com/wireshark/wireshark/-/blob/v4.6.0/epan/dissectors/packet-tcp.c#L5755>.
+  - **Wireshark and Rust read those two core fields**, at
+    `wireshark/source/packet-ja4.c:1461-1466` and `rust/ja4/src/tcp.rs:76-82`. So each one
+    reads the segment size at length 4 alone, and the window scale at length 3 alone.
+  - **Zeek reads either value from an option of any length of 2 or more.** The tests at
+    `zeek/src/ja4t.cc:87` and `zeek/src/ja4t.cc:91` compare the offset with the end of the
+    option region, and they do not read the option length. A segment size option of length 3
+    therefore reads its second value byte from the next option.
+  - Each implementation still writes the kind of the option to part b, under R8.
+
+  **The maintainer ruled the split on 2026-10-01 UTC**, and issue #814 holds the ruling and
+  is the reversal path. The library reads each value only at the RFC length, and it declines
+  the Zeek reading. The port holds the same rule at lines 115-118 of its
+  TCP option reader, at tag `v1.3.0` of `Crank-Git/ja4plus`:
+  <https://github.com/Crank-Git/ja4plus/blob/v1.3.0/ja4plus/utils/tcp_options.py#L115-L118>.
+  **No capture of the corpus holds an option of another length**, so no vector separates
+  the two readings. `ja4t_option_exact_length_test.go` holds the separating packets.

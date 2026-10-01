@@ -76,12 +76,16 @@ const releaseTagVariable = "JA4PLUS_RELEASE_TAG"
 // **The `v1.3.0` release moved it to `v1.3.0` on 2026-10-01 UTC.** That release adds the
 // package `scan`, and it changes no frozen name of `v1`, so it is a minor version.
 //
+// **The `v1.3.1` release moved it to `v1.3.1` on 2026-10-01 UTC.** That release changes no
+// exported name, and it moves a value only for a malformed TCP option, so it is a patch
+// version.
+//
 // **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
 // the three. `prereleaseInstallVersion` in `prerelease_install_test.go` and
 // `publishedModuleVersion` in `prerelease_module_contents_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
 // states the hazard, and #106 built the guard.
-const defaultReleaseTag = "v1.3.0"
+const defaultReleaseTag = "v1.3.1"
 
 // releaseIssue names the issue that publishes a release for a tag under test.
 const releaseIssue = 100
