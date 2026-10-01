@@ -325,7 +325,7 @@ that FR-parity-32 adds a line to.
 | Interface | Version | Documentation |
 |---|---|---|
 | The port's register | `v1.1.0`, read 2026-08-11 | <https://github.com/Crank-Git/ja4plus/blob/dev/docs/specs/spec.md> |
-| FoxIO reference | The commit in `testdata/foxio-reading.pin` | <https://github.com/FoxIO-LLC/ja4> |
+| FoxIO reference | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4> |
 | `github.com/google/gopacket` | v1.1.19 | <https://pkg.go.dev/github.com/google/gopacket> |
 
 **`CloseOpenWindows` breaks no exported interface.** The maintainer ruled on 2026-08-11 that

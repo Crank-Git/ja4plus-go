@@ -29,7 +29,7 @@ const ja4hPipelinedSecondRequest = "GET /second HTTP/1.1\r\n" +
 // register entry, and `testdata/deviations.json` holds no entry for this question.
 //
 // The ruling rests on the four readings below. Each one reads the corpus at the pinned commit
-// that `testdata/foxio-reading.pin` holds.
+// that `testdata/foxio.pin` holds.
 //
 //   - The Rust implementation produces one value. `rust/ja4/src/http.rs:22` selects the layer
 //     with `pkt.find_proto("http")`, and `rust/ja4/src/pcap.rs:51` states

@@ -24,12 +24,14 @@ import (
 const ja4lPointCRulingIssue = "#528"
 
 // ja4lPointCRulingCitations names each reference location that states which server
-// handshake packet fills point C.
+// handshake packet fills point C. Each one reads `27f0cbf9`, the commit of the ruling of
+// 2026-08-14, because `docs/audit/ja4l-deviation-cluster.md` is a dated record. At
+// `16b96d95` the Zeek line is `zeek/scripts/fingerprints/ja4l/main.zeek:253`.
 var ja4lPointCRulingCitations = []string{
 	"wireshark/source/packet-ja4.c:1426-1430",
 	"python/common.py:109-112",
 	"rust/ja4/src/time/udp.rs:181-184",
-	"zeek/scripts/fingerprints/ja4l/main.zeek:253",
+	"zeek/ja4l/main.zeek:254",
 }
 
 // ja4lPointCDecline names one per-packet comparison that the ruling declines.

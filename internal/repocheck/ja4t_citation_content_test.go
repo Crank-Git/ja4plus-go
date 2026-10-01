@@ -27,8 +27,8 @@ const ja4tCitationPage = "docs/specs/foxio/JA4T.md"
 
 // ja4tCitationPreambleLine is the line of the page that states how to read a citation.
 //
-// That line names `zeek/ja4t/main.zeek:180` as an example of the join rule, and it states
-// no fact about the content of line 180. So the table below holds no row for it, and
+// That line names `zeek/scripts/fingerprints/ja4t/main.zeek:114` as an example of the join rule, and it states
+// no fact about the content of line 114. So the table below holds no row for it, and
 // TestThePreambleOfTheJA4TPageHoldsOneCitation fails when the preamble moves.
 const ja4tCitationPreambleLine = 20
 
@@ -64,107 +64,107 @@ type ja4tCitation struct {
 // assertion.
 var ja4tCitationContent = []ja4tCitation{
 	// R5 — the separator.
-	{45, "zeek/config.zeek", 4, `option delimiter: string = "_";`},
-	{46, "zeek/ja4t/main.zeek", 197, `c$conn$ja4t += FINGERPRINT::delimiter;`},
+	{45, "zeek/scripts/fingerprints/config.zeek", 4, `option delimiter: string = "_";`},
+	{46, "zeek/scripts/fingerprints/ja4t/main.zeek", 133, `c$conn$ja4t += FINGERPRINT::delimiter;`},
 	{47, "wireshark/source/packet-ja4.c", 670, `"%d_%s_%02d_%02d"`},
-	{48, "rust/ja4/src/tcp.rs", 136, `"{}_{}_{}_{}"`},
+	{48, "rust/ja4/src/tcp.rs", 143, `"{}_{opts}_{mss:02}_{window_scale:02}"`},
 
 	// R6 and R7 — part a, the window size.
-	{53, "zeek/ja4t/main.zeek", 132, `rph$tcp$win`},
+	{53, "zeek/scripts/fingerprints/ja4t/main.zeek", 70, `rph$tcp$win`},
 	{54, "wireshark/source/packet-ja4.c", 1257, `tcp.window_size_value`},
 	{55, "rust/ja4/src/tcp.rs", 66, `tcp.window_size_value`},
 	{58, "rust/ja4/src/tcp.rs", 65, `// Extract window size (raw, before scaling)`},
 	// The page quotes `rph$tcp$win`, and line 132 above stores that value under this
 	// name. Line 196 writes the stored value, and it applies no window scale.
-	{59, "zeek/ja4t/main.zeek", 196, `c$fp$ja4t$syn_window_size`},
+	{59, "zeek/scripts/fingerprints/ja4t/main.zeek", 132, `c$fp$ja4t$syn_window_size`},
 
 	// R8, R9 and R10 — part b, the option kinds.
-	{65, "zeek/ja4t/main.zeek", 99, `opts$option_kinds += opt_kind;`},
+	{65, "zeek/src/ja4t.cc", 75, `option_kinds.push_back(opt_kind);`},
 	{66, "wireshark/source/packet-ja4.c", 1456, `tcp.option_kind`},
 	{67, "rust/ja4/src/tcp.rs", 70, `tcp.option_kind`},
-	{69, "zeek/ja4t/main.zeek", 199, `"-"`},
+	{69, "zeek/scripts/fingerprints/ja4t/main.zeek", 135, `"-"`},
 	{70, "wireshark/source/packet-ja4.c", 1458, `"%d-"`},
-	{70, "rust/ja4/src/tcp.rs", 133, `.join("-")`},
+	{70, "rust/ja4/src/tcp.rs", 131, `opts.push('-');`},
 	// The sentence names the branch that guards the break, and line 96 holds that branch.
 	// #748 reworded the page on 2026-08-16 UTC, so this row states the claim of the page
 	// like every other row of the table. Line 97 holds the break itself, and no sentence
 	// of the page cites it.
-	{73, "zeek/ja4t/main.zeek", 96, `if (opt_kind == 0) {`},
+	{73, "zeek/src/ja4t.cc", 71, `if (opt_kind == TCP_OPT_EOL) {`},
 	{75, "wireshark/source/packet-ja4.c", 1456, `tcp.option_kind`},
 	{76, "rust/ja4/src/tcp.rs", 70, `tcp.option_kind`},
 
 	// R11 — part c, the maximum segment size.
-	{85, "zeek/ja4t/main.zeek", 110, `opts$max_segment_size =`},
+	{85, "zeek/src/ja4t.cc", 88, `mss = (data[tcp_opt_offset + 2] << 8)`},
 	{86, "wireshark/source/packet-ja4.c", 1461, `tcp.options.mss_val`},
 	{87, "rust/ja4/src/tcp.rs", 77, `tcp.options.mss_val`},
 
 	// R12 — part d, the window scale.
-	{93, "zeek/ja4t/main.zeek", 113, `opts$window_scale =`},
+	{93, "zeek/src/ja4t.cc", 92, `window_scale = data[tcp_opt_offset + 2];`},
 	{94, "wireshark/source/packet-ja4.c", 1464, `tcp.options.wscale.shift`},
 	{95, "rust/ja4/src/tcp.rs", 82, `tcp.options.wscale.shift`},
 
 	// R16 and R17 — part e reaches JA4TS.
-	{106, "zeek/ja4t/main.zeek", 231, `c$conn$ja4ts += FINGERPRINT::vector_of_count_to_str(c$fp$ja4t$synack_delays`},
-	{107, "zeek/ja4t/main.zeek", 212, `@if(FINGERPRINT::JA4TS_enabled)`},
+	{106, "zeek/scripts/fingerprints/ja4t/main.zeek", 167, `c$conn$ja4ts += FINGERPRINT::vector_of_count_to_str(c$fp$ja4t$synack_delays`},
+	{107, "zeek/scripts/fingerprints/ja4t/main.zeek", 148, `if (FINGERPRINT::JA4TS_enabled) {`},
 	{108, "wireshark/source/packet-ja4.c", 686, `for (int i = 1; i < conn->syn_ack_count; i++)`},
 	{109, "wireshark/source/packet-ja4.c", 1595, `hf_ja4ts`},
-	{112, "zeek/ja4t/main.zeek", 229, `|c$fp$ja4t$synack_delays| > 0`},
+	{112, "zeek/scripts/fingerprints/ja4t/main.zeek", 165, `|c$fp$ja4t$synack_delays| > 0`},
 	{113, "wireshark/source/packet-ja4.c", 684, `conn->syn_ack_count > 1`},
 
 	// R18 — the two delay counts.
-	{116, "zeek/ja4t/main.zeek", 28, `synack_delays: vector of count &default=vector();`},
-	{117, "zeek/ja4t/main.zeek", 180, `c$fp$ja4t$synack_delays +=`},
-	{118, "zeek/ja4t/main.zeek", 185, `if (|c$fp$ja4t$synack_delays| == 10) {`},
+	{116, "zeek/scripts/fingerprints/ja4t/main.zeek", 19, `synack_delays: vector of count &default=vector();`},
+	{117, "zeek/scripts/fingerprints/ja4t/main.zeek", 114, `c$fp$ja4t$synack_delays +=`},
+	{118, "zeek/scripts/fingerprints/ja4t/main.zeek", 119, `if (|c$fp$ja4t$synack_delays| == 10) {`},
 	{121, "wireshark/source/packet-ja4.c", 234, `#define MAX_SYN_ACK_TIMES 10`},
 	{122, "wireshark/source/packet-ja4.c", 1290, `conn->syn_ack_count < MAX_SYN_ACK_TIMES`},
 	{124, "wireshark/source/packet-ja4.c", 686, `for (int i = 1; i < conn->syn_ack_count; i++)`},
 
 	// R19, R20 and R21 — which packet each method reads.
-	{159, "zeek/ja4t/main.zeek", 126, `rph$tcp$flags != TH_SYN`},
+	{159, "zeek/scripts/fingerprints/ja4t/main.zeek", 64, `rph$tcp$flags != TH_SYN`},
 	{160, "wireshark/source/packet-ja4.c", 1266, `tcp_flags == 0x02`},
 	{161, "rust/ja4/src/tcp.rs", 61, `is_initial_syn(flags)`},
-	{163, "zeek/ja4t/main.zeek", 171, `rph$tcp$flags == (TH_SYN | TH_ACK)`},
-	{164, "zeek/ja4t/main.zeek", 177, `c$fp$ja4t$synack_window_size = rph$tcp$win;`},
+	{163, "zeek/scripts/fingerprints/ja4t/main.zeek", 105, `rph$tcp$flags == (TH_SYN | TH_ACK)`},
+	{164, "zeek/scripts/fingerprints/ja4t/main.zeek", 111, `c$fp$ja4t$synack_window_size = rph$tcp$win;`},
 	{165, "wireshark/source/packet-ja4.c", 1279, `tcp_flags == 0x012`},
 	{167, "rust/ja4/src/tcp.rs", 47, `/// Only the first SYN without ACK is processed.`},
-	{167, "rust/ja4/src/tcp.rs", 136, `"{}_{}_{}_{}"`},
+	{167, "rust/ja4/src/tcp.rs", 143, `"{}_{opts}_{mss:02}_{window_scale:02}"`},
 
 	// R22 and R23 — the two stops of the JA4TS measurement.
-	{169, "zeek/ja4t/main.zeek", 162, `ts - c$fp$ja4t$last_ts > 120000000`},
-	{172, "zeek/ja4t/main.zeek", 138, `ConnThreshold::set_packets_threshold`},
-	{173, "zeek/ja4t/main.zeek", 146, `c$fp$ja4t$synack_done = T;`},
+	{169, "zeek/scripts/fingerprints/ja4t/main.zeek", 96, `ts - c$fp$ja4t$last_ts > 120000000`},
+	{172, "zeek/scripts/fingerprints/ja4t/main.zeek", 75, `ConnThreshold::set_packets_threshold`},
+	{173, "zeek/scripts/fingerprints/ja4t/main.zeek", 81, `c$fp$ja4t$synack_done = T;`},
 
 	// R24 and R25 — the rounding split.
-	{180, "zeek/ja4t/main.zeek", 180, `c$fp$ja4t$synack_delays += double_to_count(ts - c$fp$ja4t$last_ts)/1000000;`},
-	{180, "zeek/ja4t/main.zeek", 162, `120000000`},
+	{180, "zeek/scripts/fingerprints/ja4t/main.zeek", 114, `c$fp$ja4t$synack_delays += double_to_count(ts - c$fp$ja4t$last_ts)/1000000;`},
+	{180, "zeek/scripts/fingerprints/ja4t/main.zeek", 96, `120000000`},
 	{183, "wireshark/source/packet-ja4.c", 277, `return (int64_t)(round(nstime_to_sec(&result)));`},
 	{183, "wireshark/source/packet-ja4.c", 687, `timediff(`},
-	{188, "zeek/ja4t/main.zeek", 233, `fmt("-R%d", double_to_count(c$fp$ja4t$rst_ts - c$fp$ja4t$last_ts)/1000000)`},
+	{188, "zeek/scripts/fingerprints/ja4t/main.zeek", 169, `fmt("-R%d", double_to_count(c$fp$ja4t$rst_ts - c$fp$ja4t$last_ts)/1000000)`},
 	{189, "wireshark/source/packet-ja4.c", 694, `timediff(`},
 
 	// R26 — the empty option list.
-	{191, "zeek/ja4t/main.zeek", 201, `"00"`},
+	{191, "zeek/scripts/fingerprints/ja4t/main.zeek", 137, `"00"`},
 	{192, "wireshark/source/packet-ja4.c", 671, `"00"`},
-	{193, "rust/ja4/src/tcp.rs", 133, `.join("-")`},
+	{193, "rust/ja4/src/tcp.rs", 136, `opts.push_str("00");`},
 
 	// R27 — a maximum segment size of zero.
-	{197, "zeek/ja4t/main.zeek", 204, `fmt("%02d"`},
-	{198, "wireshark/source/packet-ja4.c", 670, `%02d`},
-	{199, "rust/ja4/src/tcp.rs", 139, `self.mss.unwrap_or(0)`},
+	{196, "zeek/scripts/fingerprints/ja4t/main.zeek", 140, `fmt("%02d"`},
+	{197, "wireshark/source/packet-ja4.c", 670, `%02d`},
+	{198, "rust/ja4/src/tcp.rs", 143, `{mss:02}`},
 
 	// R28 — a window scale of zero.
-	{201, "zeek/ja4t/main.zeek", 207, `"00"`},
+	{201, "zeek/scripts/fingerprints/ja4t/main.zeek", 143, `"00"`},
 	{202, "wireshark/source/packet-ja4.c", 670, `%02d`},
-	{203, "rust/ja4/src/tcp.rs", 140, `self.window_scale.unwrap_or(0)`},
+	{203, "rust/ja4/src/tcp.rs", 143, `{window_scale:02}`},
 
 	// R29 — the SYN that carries the ECN flags.
-	{207, "rust/ja4/src/tcp.rs", 146, `(flags & TCP_FLAG_SYN) != 0 && (flags & TCP_FLAG_ACK) == 0`},
-	{208, "rust/ja4/src/tcp.rs", 154, `assert!(is_initial_syn(0xC2));`},
-	{209, "zeek/ja4t/main.zeek", 126, `rph$tcp$flags != TH_SYN`},
+	{207, "rust/ja4/src/tcp.rs", 151, `(flags & TCP_FLAG_SYN) != 0 && (flags & TCP_FLAG_ACK) == 0`},
+	{208, "rust/ja4/src/tcp.rs", 159, `assert!(is_initial_syn(0xC2));`},
+	{209, "zeek/scripts/fingerprints/ja4t/main.zeek", 64, `rph$tcp$flags != TH_SYN`},
 	{210, "wireshark/source/packet-ja4.c", 1266, `tcp_flags == 0x02`},
 
 	// R30 — the reset packet.
-	{213, "zeek/ja4t/main.zeek", 167, `rph$tcp$flags & TH_RST != 0`},
+	{213, "zeek/scripts/fingerprints/ja4t/main.zeek", 101, `rph$tcp$flags & TH_RST != 0`},
 	{214, "wireshark/source/packet-ja4.c", 1296, `tcp_flags == 0x004`},
 }
 
@@ -276,7 +276,7 @@ func TestEveryCitationOfTheJA4TPageNamesALineThatHoldsItsClaim(t *testing.T) {
 // The table above excludes the preamble by line number, so a moved preamble would drop a
 // real citation from the guard without a failure.
 func TestThePreambleOfTheJA4TPageHoldsOneCitation(t *testing.T) {
-	const rule = "Read `zeek/ja4t/main.zeek:180` as line 180 of"
+	const rule = "Read `zeek/scripts/fingerprints/ja4t/main.zeek:114` as line 114 of"
 
 	page := strings.Split(readRepoFile(t, ja4tCitationPage), "\n")
 

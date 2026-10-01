@@ -184,14 +184,14 @@ func TestFoxioTCPTranscriptionLinksToItsImageAndReproducesNone(t *testing.T) {
 	}
 }
 
-// readFoxioTranscriptionTCPPin returns the commit that `testdata/foxio-reading.pin` holds.
-// A transcription is a reading, so its image link names the reading pin of #797.
+// readFoxioTranscriptionTCPPin returns the commit that `testdata/foxio.pin` holds.
+// A transcription is a reading, so its image link names the commit that a reading cites.
 func readFoxioTranscriptionTCPPin(t *testing.T) string {
 	t.Helper()
 
-	content, err := os.ReadFile("testdata/foxio-reading.pin")
+	content, err := os.ReadFile("testdata/foxio.pin")
 	if err != nil {
-		t.Fatalf("read testdata/foxio-reading.pin: %v", err)
+		t.Fatalf("read testdata/foxio.pin: %v", err)
 	}
 
 	return strings.TrimSpace(string(content))
@@ -228,7 +228,7 @@ func TestFoxioTCPTranscriptionMarksTheEndOfOptionListSplit(t *testing.T) {
 	page := readFoxioTCPTranscriptionPage(t, foxioTCPTranscriptionPages["JA4T.png"])
 
 	for _, part := range []string{
-		"`zeek/ja4t/main.zeek:96`",
+		"`zeek/src/ja4t.cc:71`",
 		"`wireshark/source/packet-ja4.c:1456`",
 		"`rust/ja4/src/tcp.rs:70`",
 		"2-1-3-1-1-8-4-0-0",
@@ -249,7 +249,7 @@ func TestFoxioTCPTranscriptionMarksTheJA4TSDelaySplit(t *testing.T) {
 
 	for _, part := range []string{
 		"Reference split",
-		"`zeek/ja4t/main.zeek:180`",
+		"`zeek/scripts/fingerprints/ja4t/main.zeek:114`",
 		"`wireshark/source/packet-ja4.c:277`",
 		"#18",
 	} {

@@ -10,7 +10,7 @@ states how to read a citation.
 
 | Fact | Value |
 |---|---|
-| Image | [`technical_details/JA4X.png`](https://github.com/FoxIO-LLC/ja4/blob/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details/JA4X.png) |
+| Image | [`technical_details/JA4X.png`](https://github.com/FoxIO-LLC/ja4/blob/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details/JA4X.png) |
 | SHA-256 | `71f3bd839ca7e228da8ee69dce69de870d5ee69f3e91534356bae1a48d7f322a` |
 | Image title | `JA4X: X509 Fingerprint` |
 | Image subtitle | `(fingerprints how a cert is created)` |
@@ -20,7 +20,7 @@ states how to read a citation.
 **This page reproduces no image.** Follow the link above to read it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `python/ja4x.py:95` as line 87 of
+`testdata/foxio/reference/`.** Read `python/ja4x.py:95` as line 95 of
 `testdata/foxio/reference/python/ja4x.py`. `docs/specs/foxio/README.md` states the rule,
 and it names each path that the rule does not cover.
 
@@ -104,7 +104,7 @@ like Issuer Org to eliminate FPs`.
 
 - **R11** — A hash part holds the first 12 characters of the SHA-256 hash. The image
   states `Hash`, and it states no length. `python/ja4x.py:95` corroborates, and
-  `rust/ja4x/src/lib.rs:174` corroborates. `rust/ja4x/src/lib.rs:177` holds the test
+  `rust/ja4x/src/lib.rs:171` corroborates. `rust/ja4x/src/lib.rs:177` holds the test
   `assert_eq!(hash12("551d0f,551d25,551d11"), "aae71e8db6d7");`, and `aae71e8db6d7` is the
   part c of the image example value.
 
@@ -128,7 +128,7 @@ like Issuer Org to eliminate FPs`.
   evidence that the ruling settled.
 
 - **R13** — The Zeek package produces no JA4X value. **The image states nothing about a
-  Zeek baseline.** `zeek/ja4x/__load__.zeek:1` holds the one line `# empty`, and the
+  Zeek baseline.** `zeek/scripts/fingerprints/ja4x/__load__.zeek:1` holds the one line `# empty`, and the
   directory holds no other file.
 
 ## Readings this page records

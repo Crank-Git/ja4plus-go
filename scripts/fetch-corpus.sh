@@ -4,7 +4,7 @@
 # the captures, the two vector sets and the reference tree.
 #
 # #797 read the reference tree at a second pin, `testdata/foxio-reading.pin`, from
-# 2026-10-01 UTC. #801 reread each citation at the vector pin and removed the second pin, so
+# 2026-10-01 UTC. #801 reread each citation at `testdata/foxio.pin` and removed the second pin, so
 # a reading and a vector name one commit again.
 #
 # The corpus is FoxIO-licensed material, so `.gitignore` keeps `testdata/foxio/` out of the
@@ -83,7 +83,7 @@ cited=(
 # The guard reads the directories as well as the commit. A corpus that an earlier version
 # of this script wrote names the pinned commit and holds no reference tree, and that
 # corpus must fetch again. A corpus that #797 wrote holds a reference tree at the second
-# pin, and its `.fetched` file names the vector pin alone. So the guard also requires that
+# pin, and its `.fetched` file names `testdata/foxio.pin` alone. So the guard also requires that
 # no `.fetched-reading` file remains, and such a corpus fetches once more.
 corpus_is_complete() {
 	[ -f "$fetched_file" ] || return 1

@@ -10,15 +10,15 @@ states how to read a citation.
 
 | Fact | Value |
 |---|---|
-| Image | <https://github.com/FoxIO-LLC/ja4/blob/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details/JA4D.png> |
-| Pinned commit | `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` |
+| Image | <https://github.com/FoxIO-LLC/ja4/blob/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details/JA4D.png> |
+| Pinned commit | `16b96d95c220762cf658f67d678cda2aac95c81e` |
 | Retrieval date | 2026-08-11 |
 
 **This page reproduces no image.** The link above reaches it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `zeek/scripts/fingerprints/ja4d/main.zeek:106` as line 113 of
-`testdata/foxio/reference/zeek/ja4d/main.zeek`. `docs/specs/foxio/README.md` states the
+`testdata/foxio/reference/`.** Read `zeek/scripts/fingerprints/ja4d/main.zeek:106` as line 106 of
+`testdata/foxio/reference/zeek/scripts/fingerprints/ja4d/main.zeek`. `docs/specs/foxio/README.md` states the
 rule, and it names each path that the rule does not cover.
 
 ## Which implementations state a rule

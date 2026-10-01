@@ -10,7 +10,7 @@ states how to read a citation.
 
 | Fact | Value |
 |---|---|
-| Image | [`technical_details/JA4S.png`](https://github.com/FoxIO-LLC/ja4/blob/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details/JA4S.png) |
+| Image | [`technical_details/JA4S.png`](https://github.com/FoxIO-LLC/ja4/blob/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details/JA4S.png) |
 | SHA-256 | `a4d303c3c51c2862d86abd69d6dfe6d28a43e86556a91d2c1c8261fa4de15458` |
 | Image title | `JA4S: TLS Server Response Fingerprint` |
 | License mark on the image | `Patent Pending` and `FoxIO License 1.1` |
@@ -19,7 +19,7 @@ states how to read a citation.
 **This page reproduces no image.** Follow the link above to read it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `python/ja4.py:199` as line 188 of
+`testdata/foxio/reference/`.** Read `python/ja4.py:199` as line 199 of
 `testdata/foxio/reference/python/ja4.py`. `docs/specs/foxio/README.md` states the rule,
 and it names each path that the rule does not cover.
 
@@ -66,10 +66,10 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
 
 - **R6** — When the server supported_versions extension is present, the version is the
   highest value that extension carries. **The image alone states no such rule.**
-  `python/ja4.py:206` corroborates, and `zeek/ja4s/main.zeek:119` corroborates.
+  `python/ja4.py:206` corroborates, and `zeek/scripts/fingerprints/ja4s/helpers.zeek:65` corroborates.
 
 - **R7** — The highest-value search of R6 skips a GREASE value. `python/common.py:154`
-  corroborates, and `zeek/ja4s/main.zeek:116` corroborates.
+  corroborates, and `zeek/scripts/fingerprints/ja4s/helpers.zeek:62` corroborates.
 
 - **R8** — Part a carries the count of server extensions, in 2 characters. The image
   states `Number of Extensions`. `python/ja4.py:194` corroborates, and
@@ -77,7 +77,7 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
 
 - **R9** — A server extension count above 99 produces `99`. **The image alone states no
   such rule.** `python/ja4.py:194` corroborates, `rust/ja4/src/tls.rs:472` corroborates,
-  and `zeek/ja4s/main.zeek:142` corroborates.
+  and `zeek/src/ja4s.cc:40-41` corroborates.
 
 - **R10** — **Reference split.** The server extension list treats a GREASE value two
   ways, and the count of R8 follows the same split.
@@ -85,31 +85,33 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
   - `rust/ja4/src/tls.rs:624` keeps a GREASE value, and its client function
     `rust/ja4/src/tls.rs:605` removes one.
   - `wireshark/source/packet-ja4.c:757` removes a GREASE value.
-  - `zeek/ja4s/main.zeek:91` removes a GREASE value, and its own comment states
-    `Will we see grease from the server?`.
+  - `zeek/scripts/fingerprints/ja4s/helpers.zeek:39` removes a GREASE value. Its comment at
+    `zeek/scripts/fingerprints/ja4s/helpers.zeek:36` states
+    `For each extension, ignoring GREASE, build up an array of codes in the order they appear`.
 
 - **R11** — Part a ends with two ALPN characters. The image states `ALPN Chosen (00 if no
-  ALPN)`. `python/ja4.py:205` corroborates, and `zeek/ja4s/main.zeek:149` corroborates.
+  ALPN)`. `python/ja4.py:209` corroborates, and `zeek/src/ja4s.cc:47-48` corroborates.
 
 - **R12** — The two ALPN characters are the first character and the last character of the
   ALPN value the server chose. `rust/ja4/src/tls.rs:443` corroborates through
-  `rust/ja4/src/tls.rs:635`, and `zeek/ja4s/main.zeek:149` corroborates.
+  `rust/ja4/src/tls.rs:635`, and `zeek/src/ja4s.cc:47-48` corroborates.
 
 - **R13** — No ALPN extension produces `00`. The image states it, and
-  `python/ja4.py:198` corroborates.
+  `python/ja4.py:153-154` corroborates.
 
-- **R14** — **Reference split.** A one-character ALPN value and a non-alphanumeric ALPN
-  byte split the references exactly as they split them for JA4. `docs/specs/foxio/JA4.md`
+- **R14** — **Reference split.** A one-character ALPN value and a non-ASCII ALPN byte
+  split the references exactly as they split them for JA4. `docs/specs/foxio/JA4.md`
   R18 and R19 state each value, and the same code serves both methods:
-  `python/ja4.py:204`, `rust/ja4/src/tls.rs:635` and
-  `wireshark/source/packet-ja4.c:1027`.
+  `python/ja4.py:149-158`, `rust/ja4/src/tls.rs:635` and
+  `wireshark/source/packet-ja4.c:1027`. **The maintainer ruling of 2026-10-01 UTC in issue
+  #801 covers JA4S as well as JA4**, and `Crank-Git/ja4plus#789` holds the port half.
 
 - **R15** — Part b is the one cipher suite the server chose. The image states `Cipher
-  Suite Chosen`. `python/ja4.py:202` corroborates, and `zeek/ja4s/main.zeek:165`
+  Suite Chosen`. `python/ja4.py:202` corroborates, and `zeek/src/ja4s.cc:89`
   corroborates.
 
 - **R16** — Part b is a 4-character lower-case hexadecimal value, and no hash applies to
-  it. The image example holds `c030`. `zeek/ja4s/main.zeek:165` corroborates with the
+  it. The image example holds `c030`. `zeek/src/ja4s.cc:89` corroborates with the
   format `%04x`, and `rust/ja4/src/tls.rs:446` corroborates.
 
 - **R17** — The references state no one value for a server hello that names no cipher

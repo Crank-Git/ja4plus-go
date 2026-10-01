@@ -262,7 +262,7 @@ func buildTCPPacketWithIPv6(t *testing.T, srcIP, dstIP net.IP, hopLimit uint8, s
 // the IPv6 hop limit as the observed time-to-live, and it writes JA4L over IPv6. That is
 // candidate 1 of the issue, and the library declines the Wireshark restriction to IPv4.
 //
-// The references split two against one. `zeek/ja4l/main.zeek:93` and
+// The references split two against one. `zeek/scripts/fingerprints/ja4l/main.zeek:94` and
 // `zeek/scripts/fingerprints/ja4l/main.zeek:146` read `rp$ip6$hlim`, and `rust/ja4/src/time.rs:66` reads
 // `ipv6.hlim`. `wireshark/source/packet-ja4.c:1218` reads `ip.ttl` alone, and it holds no
 // IPv6 branch. `JA4L.png` labels part b `Observed TTL`, and it names no address family.
@@ -1685,7 +1685,7 @@ func TestJA4LHoldsOneClientValueForOneConnection(t *testing.T) {
 // `docs/specs/foxio/JA4L.md` R30 records the split that this project declines. Wireshark
 // writes the format `"%d_%d_tcp"` at `wireshark/source/packet-ja4.c:1348` and at
 // `wireshark/source/packet-ja4.c:1354`, and Zeek writes no such marker at
-// `zeek/ja4l/main.zeek:133`. The maintainer ruled on issue #247, and round 25 of the
+// `zeek/scripts/fingerprints/ja4l/main.zeek:134`. The maintainer ruled on issue #247, and round 25 of the
 // `## Changelog` of `docs/specs/spec.md` records it: "The maintainer ruled on #247, and
 // `#127` stands."
 //

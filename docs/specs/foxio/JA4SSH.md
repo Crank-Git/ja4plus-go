@@ -10,15 +10,15 @@ states how to read a citation.
 
 | Fact | Value |
 |---|---|
-| Image | <https://github.com/FoxIO-LLC/ja4/blob/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details/JA4SSH.png> |
-| Pinned commit | `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` |
+| Image | <https://github.com/FoxIO-LLC/ja4/blob/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details/JA4SSH.png> |
+| Pinned commit | `16b96d95c220762cf658f67d678cda2aac95c81e` |
 | Retrieval date | 2026-08-11 |
 
 **This page reproduces no image.** The link above reaches it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `zeek/ja4ssh/main.zeek:79` as line 79 of
-`testdata/foxio/reference/zeek/ja4ssh/main.zeek`. `docs/specs/foxio/README.md` states
+`testdata/foxio/reference/`.** Read `zeek/src/ja4ssh.cc:66` as line 66 of
+`testdata/foxio/reference/zeek/src/ja4ssh.cc`. `docs/specs/foxio/README.md` states
 the rule, and it names each path that the rule does not cover.
 
 ## The rules
@@ -33,12 +33,12 @@ the rule, and it names each path that the rule does not cover.
   alone states this rule.
 - **R4** — Each part holds one client value and one server value. The letter `c` marks the
   client value, and the letter `s` marks the server value. Zeek writes the format
-  `"c%ds%d_c%ds%d_c%ds%d"` at `zeek/ja4ssh/main.zeek:79`. Wireshark writes the same format
+  `"c%ds%d_c%ds%d_c%ds%d"` at `zeek/src/ja4ssh.cc:66-72`. Wireshark writes the same format
   at `wireshark/source/packet-ja4.c:656`. Rust writes
   `"c{mode_client}s{mode_server}_c{nr_ssh_client_packets}s{nr_ssh_server_packets}_c{nr_tcp_client_acks}s{nr_tcp_server_acks}"`
   at `rust/ja4/src/ssh.rs:288`. Python writes the same shape at `python/ja4ssh.py:152`.
 - **R5** — An underscore separates one part from the next part. Zeek writes it inside the
-  format at `zeek/ja4ssh/main.zeek:79`. Wireshark writes it inside the format at
+  format at `zeek/src/ja4ssh.cc:66-72`. Wireshark writes it inside the format at
   `wireshark/source/packet-ja4.c:656`.
 
 ### The window
@@ -55,7 +55,7 @@ the rule, and it names each path that the rule does not cover.
   counters at `rust/ja4/src/ssh.rs:35`. Python counts a packet that carries SSH at
   `python/ja4ssh.py:99`.
 - **R8** — The counters reset after each window. Zeek clears them at
-  `zeek/ja4ssh/main.zeek:88`. Wireshark clears them at
+  `zeek/scripts/fingerprints/ja4ssh/main.zeek:52`. Wireshark clears them at
   `wireshark/source/packet-ja4.c:1485`.
 - **R9** — Zeek, Wireshark and Rust each write one value for an open window at the end of
   the connection. Zeek writes it at `zeek/scripts/fingerprints/ja4ssh/main.zeek:103`. Wireshark writes it on a
@@ -66,20 +66,20 @@ the rule, and it names each path that the rule does not cover.
 
 - **R10** — Part a holds the mode of the client packet length and the mode of the server
   packet length, which the image labels `Mode of Client Packet Length` and
-  `Mode of Server Packet Length`. Zeek computes it at `zeek/ja4ssh/main.zeek:80`.
+  `Mode of Server Packet Length`. Zeek computes it at `zeek/src/ja4ssh.cc:55`.
   Wireshark computes it at `wireshark/source/packet-ja4.c:656`. Rust computes it at
   `rust/ja4/src/ssh.rs:284`. Python computes it at `python/ja4ssh.py:146`.
 - **R11** — The mode reads the TCP payload length. Zeek reads `rp$tcp$dl` at
   `zeek/scripts/fingerprints/ja4ssh/main.zeek:80`. Wireshark reads `tcp_len` at
   `wireshark/source/packet-ja4.c:1477`. Rust reads `tcp.len` at `rust/ja4/src/ssh.rs:235`.
 - **R12** — Where two lengths appear the same number of times, the smaller length is the
-  mode. Zeek tests `freq == max && idx < mode` at `zeek/ja4ssh/main.zeek:69`. Wireshark
+  mode. Zeek tests `idx.second == max && idx.first < mode` at `zeek/src/ja4ssh.cc:35`. Wireshark
   tests `pkt_len < max_mode` at `wireshark/source/packet-ja4.c:410`. Rust calls
   `min_key_with_max_value` at `rust/ja4/src/ssh.rs:284`. Python writes
   `min(k for k, v in counts.items() if v == max_count)` at `python/ja4ssh.py:54`. The image
   states no tie rule.
 - **R13** — The mode is `0` when the side sent no SSH packet. Zeek defaults `mode` to `0`
-  at `zeek/ja4ssh/main.zeek:63`. Wireshark defaults `max_mode` to `0` at
+  at `zeek/src/ja4ssh.cc:32`. Wireshark defaults `max_mode` to `0` at
   `wireshark/source/packet-ja4.c:400`. Rust writes `unwrap_or(0)` at
   `rust/ja4/src/ssh.rs:284`. Python returns `0` at `python/ja4ssh.py:51`.
 
@@ -87,7 +87,7 @@ the rule, and it names each path that the rule does not cover.
 
 - **R14** — Part b holds the count of SSH packets from each side, which the image labels
   `SSH packets sent from client` and `SSH packets sent from server`. Zeek writes the two
-  vector lengths at `zeek/ja4ssh/main.zeek:82`. Wireshark writes `conn->client_pkts` and
+  vector lengths at `zeek/src/ja4ssh.cc:59`. Wireshark writes `conn->client_pkts` and
   `conn->server_pkts` at `wireshark/source/packet-ja4.c:657`. Rust writes
   `nr_ssh_client_packets` and `nr_ssh_server_packets` at `rust/ja4/src/ssh.rs:288`. Python
   writes `client_packets` and `server_packets` at `python/ja4ssh.py:152`.
@@ -96,12 +96,12 @@ the rule, and it names each path that the rule does not cover.
 
 - **R15** — Part c holds the count of bare ACKs from each side, which the image labels
   `Bare ACKs sent from client` and `Bare ACKs sent from server`. Zeek writes `orig_ack` and
-  `resp_ack` at `zeek/ja4ssh/main.zeek:84`. Wireshark writes `conn->tcp_client_acks` and
+  `resp_ack` at `zeek/src/ja4ssh.cc:51`. Wireshark writes `conn->tcp_client_acks` and
   `conn->tcp_server_acks` at `wireshark/source/packet-ja4.c:658`. Rust writes
   `nr_tcp_client_acks` and `nr_tcp_server_acks` at `rust/ja4/src/ssh.rs:288`.
 - **R16** — A bare ACK is a packet whose TCP flags equal `0x10` and whose payload is empty.
   Zeek tests `rp$tcp$dl == 0` and `rp$tcp$flags == 0x10` at
-  `zeek/ja4ssh/main.zeek:122-123`.
+  `zeek/scripts/fingerprints/ja4ssh/main.zeek:75-76`.
   Wireshark tests `(tcp_flags == 0x010) && (tcp_len == 0)` at
   `wireshark/source/packet-ja4.c:1302`. Rust holds
   `const BARE_ACK_FLAG: &str = "0x0010";` at `rust/ja4/src/ssh.rs:228`. Python tests
@@ -129,7 +129,7 @@ the rule, and it names each path that the rule does not cover.
   `// This doesn't seem to be an *SSH* TCP stream after all.` at
   `rust/ja4/src/ssh.rs:272`.
 - **R22** — Zeek writes a value only for a connection that carries an SSH version exchange.
-  Zeek sets `is_ssh` in `ssh_client_version` at `zeek/ja4ssh/main.zeek:146` and tests it at
+  Zeek sets `is_ssh` in `ssh_client_version` at `zeek/scripts/fingerprints/ja4ssh/helpers.zeek:18` and tests it at
   `zeek/scripts/fingerprints/ja4ssh/main.zeek:102`.
 
 ### Reference splits

@@ -272,8 +272,8 @@ func TestZeekPageDeclinesTheZeekJA4TSDelay(t *testing.T) {
 	for _, want := range []string{
 		"### The Zeek JA4TS delay",
 		// The two lines that truncate.
-		"zeek/ja4t/main.zeek:180",
-		"zeek/ja4t/main.zeek:233",
+		"zeek/scripts/fingerprints/ja4t/main.zeek:114",
+		"zeek/scripts/fingerprints/ja4t/main.zeek:169",
 		// The line that rounds.
 		"wireshark/source/packet-ja4.c:277",
 		// The port commit that holds the ruling this reading adopts.

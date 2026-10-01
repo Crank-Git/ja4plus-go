@@ -14,17 +14,17 @@ source states. A page decides no value.** `.claude/rules/rulings.md` states who 
 |---|---|
 | Repository | <https://github.com/FoxIO-LLC/ja4> |
 | Directory | `technical_details/` |
-| Pinned commit | `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` |
-| Commit date | 2026-07-21 |
-| Retrieval date | 2026-08-11 |
-| Pin file | `testdata/foxio-reading.pin` |
+| Pinned commit | `16b96d95c220762cf658f67d678cda2aac95c81e` |
+| Commit date | 2026-09-22 |
+| Retrieval date | 2026-10-01 |
+| Pin file | `testdata/foxio.pin` |
 
-The pinned commit equals the commit in `testdata/foxio-reading.pin`. A test holds that equality,
+The pinned commit equals the commit in `testdata/foxio.pin`. A test holds that equality,
 because a moved pin that leaves this page behind records a hash of material the project no
 longer reads.
 
 Each file below is at
-<https://github.com/FoxIO-LLC/ja4/tree/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details>.
+<https://github.com/FoxIO-LLC/ja4/tree/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details>.
 Append the file name to that address to reach one file. **This directory reproduces no
 FoxIO image.** It links to each one.
 
@@ -35,16 +35,12 @@ the table below.** The table states the form each base takes and where a reader 
 it. **Try the bases in the order of the table**, because the first row is the common case
 and the last two rows reach no file of this checkout.
 
-`make corpus` writes the FoxIO repository to `testdata/foxio/reference/`. The step of
-`scripts/fetch-corpus.sh` that `reference_is_complete` guards writes it.
+`make corpus` writes the FoxIO repository to `testdata/foxio/reference/`, and
+`scripts/fetch-corpus.sh` writes it from the archive of the captures and the vectors.
 
-**This project reads two FoxIO commits, and each citation of this directory reads the
-reading pin.** `testdata/foxio-reading.pin` names the commit of the reference tree, and
-`testdata/foxio.pin` names the commit of the captures and the vectors. The maintainer split
-the two on #797, on 2026-10-01 UTC, because FoxIO changed seven rules between the commits.
-**#801 rereads each citation at the vector pin, and it removes the reading pin.** Until
-then, a citation of base 1 or base 2 reads the reading pin, and a citation of base 3 reads
-the vector pin.
+**Each citation of this directory reads the commit in `testdata/foxio.pin`.** #797 read
+the reference tree at a second commit, `27f0cbf9`, from 2026-10-01 UTC. #801 reread each
+citation at `16b96d95` and removed that second pin, so every base below reads one commit.
 
 | N | Base | A citation of that base | Where a reader resolves it |
 |---|---|---|---|
@@ -69,8 +65,8 @@ so the citation reads at base 7 and never at base 5.
 
 **`scripts/fetch-corpus.sh` removes three directories from the staged reference tree**, so
 a citation of one of the three reaches no path under `testdata/foxio/reference/`. The
-`sources` array of that script names the three. The step that `vectors_are_complete`
-guards writes them from the archive at the vector pin. Join a citation of one of the three
+`sources` array of that script names the three, and the script writes them from the same
+archive. Join a citation of one of the three
 to the corpus directory of the right-hand column.
 
 | The FoxIO path a citation names | Where `make corpus` writes it | What it holds |
@@ -153,8 +149,8 @@ holds that one occurrence with its reason.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier
 version of `scripts/fetch-corpus.sh` wrote names the pinned commit and holds no reference
-tree. `vectors_are_complete` and `reference_is_complete` in `scripts/fetch-corpus.sh` now
-read the directories as well as the commit, so the next run fetches the corpus again.
+tree. `corpus_is_complete` in `scripts/fetch-corpus.sh` reads the directories as well as
+the commit, so the next run fetches the corpus again.
 
 ## The inventory
 
@@ -176,15 +172,14 @@ The directory holds twelve files at the pinned commit: three text files and nine
 | `README.md` | 1567 | `f02d776f50c1b805c3c5ad0c6ed6bf33f6d51aeb2888b69f803eb7a35099b8e6` |
 
 The twelve files hold 685996 bytes. The byte count of each row equals the blob size that
-`git ls-tree -r --long 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 technical_details/`
+`git ls-tree -r --long 16b96d95c220762cf658f67d678cda2aac95c81e technical_details/`
 reports.
 
 ## Reproduce the measurement
 
-The step of `scripts/fetch-corpus.sh` that `vectors_are_complete` guards moves `pcap`,
-`python/test/testdata` and `wireshark/test/testdata` into `testdata/foxio/`. The step that
-`reference_is_complete` guards then writes the rest of the FoxIO repository to
-`testdata/foxio/reference/`, at the reading pin.
+`scripts/fetch-corpus.sh` moves `pcap`, `python/test/testdata` and
+`wireshark/test/testdata` into `testdata/foxio/`. It then writes the rest of the FoxIO
+repository to `testdata/foxio/reference/`, at the same commit.
 `testdata/foxio/reference/technical_details/` therefore holds each file of the table above,
 so `make corpus` reproduces every row.
 
@@ -195,7 +190,7 @@ If you hold no corpus, run the command below from an empty directory.
 
 ```sh
 git clone https://github.com/FoxIO-LLC/ja4.git &&
-  git -C ja4 checkout 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 &&
+  git -C ja4 checkout 16b96d95c220762cf658f67d678cda2aac95c81e &&
   wc -c ja4/technical_details/* &&
   shasum -a 256 ja4/technical_details/*
 ```

@@ -121,9 +121,8 @@ shared vector set is what makes the two implementations agree.
 | conformance | noun | The property that the library output equals the FoxIO vector exactly. | compliance, correctness, accuracy |
 | conformance suite | noun | The test suite that compares library output against every vector. | validation tests, spec tests |
 | deviation | noun | A recorded difference between the library output and a FoxIO vector. | mismatch, failure, exception |
-| reference | noun | The FoxIO repository at the reading pin. It decides every disputed fingerprint. | upstream, source, spec repo |
-| vector pin | noun | The FoxIO commit in `testdata/foxio.pin`. `make corpus` fetches the captures and the vectors at it. | corpus pin, main pin |
-| reading pin | noun | The FoxIO commit in `testdata/foxio-reading.pin`. `make corpus` fetches the reference tree at it, and every reading cites it. #797 added it, and #801 removes it. | Zeek pin, second pin |
+| reference | noun | The FoxIO repository at the pin. It decides every disputed fingerprint. | upstream, source, spec repo |
+| pin | noun | The FoxIO commit in `testdata/foxio.pin`. `make corpus` fetches the captures, the vectors and the reference tree at it, and every reading cites it. #797 split it into two pins on 2026-10-01 UTC, and #801 joined them again. | vector pin, reading pin, corpus pin |
 | reference split | noun | The state where two FoxIO implementations produce different values for one input. The reference then decides nothing, and a person decides. | disagreement, conflict |
 | reading | noun | One recorded conclusion about what a source states, with the evidence that supports it. | interpretation, take, finding |
 | ruling | noun | One determination the maintainer makes where no source settles the question. A ruling is the choice of a person, and a reading is a conclusion about a source. | decision, call, verdict |
@@ -252,13 +251,13 @@ implementation to achieve, stays out.
   `FoxIO-LLC/ja4` on 2026-08-11 reports that `technical_details/` holds material for ten
   of the methods FoxIO names, and holds no file for JA4TScan. FoxIO ships no Python, no
   Rust, no Zeek and no Wireshark implementation of it. The name appears in `License FAQ.md:5`, in
-  `LICENSE:3` and in the FoxIO `README.md:293`, which describes it as an Active TCP
+  `LICENSE:3` and in the FoxIO `README.md:299`, and `README.md:56` describes it as an Active TCP
   Fingerprint Scanner. **A goal of one-to-one with FoxIO cannot be met for a method that
   FoxIO does not define**, so no amount of Go capability closes this. The ruling is
   reversible, and it reverses when FoxIO publishes a format. The port declined the same
   method for a different reason, and `Parity with ja4plus` records the difference.
 - **JA4Scan carries no ruling.** `License FAQ.md:5` names `JA4Scan`, `LICENSE:3` spells
-  it `JA4SScan`, and the FoxIO `README.md:293` names neither spelling. FoxIO publishes no
+  it `JA4SScan`, and the FoxIO `README.md:299` names neither spelling. It names `JA4Scan-TLS` and `JA4Scan-QUIC`, and FoxIO publishes no
   format and no implementation. **This project decided nothing about it, so this section
   states no reason.** A stated reason would assert a ruling that no round holds.
 - **JA4E carries no ruling, for the same cause.** `LICENSE:3` is the one FoxIO record
@@ -420,9 +419,10 @@ requirement and holds the acceptance criteria.
 
 | Item | This project today | What must change | Rule | Ruling |
 |---|---|---|---|---|
-| ALPN value for a first byte outside the printable ASCII range `0x20-0x7E` | **Writes `99`.** #50 built it, and the maintainer ruled the condition on 2026-08-12. | Done. **The condition read `not alphanumeric` until that ruling.** Both FoxIO implementations pass a printable byte through, so `\x20\x61` reads ` a` in each one. The register row and FR-parity-8 adopted the range, and the code did not move. `Crank-Git/ja4plus#601` closes the same wording on the port side. | 1 | #127, #141 |
-| ALPN value for a last byte outside the printable ASCII range `0x20-0x7E` | **Writes `99`.** #50 built it. | Done. **This row read `a byte outside 0x20-0x7E in a position other than the first` until the ruling of 2026-08-12.** The last byte is the one position other than the first that the field reads, and the old title also covered a middle byte. `\x30\xab\xcd\x31` reads `01` in both FoxIO implementations and in this library, so a middle byte writes no character. This is a reference split. FoxIO Python writes `U+FFFD`, which is a character no packet byte holds. FoxIO Rust writes the `tshark` escape text. Neither reads the packet. | 1 | #141, #162, #522 |
-| ALPN value for a first ALPN value of one byte | **Repeats the byte and writes `hh`.** #50 measured it. | Done. FoxIO Python writes `h`, which cannot fill a two-character field. FoxIO Rust writes `h0`. No vector separates them. **This row keeps the alphanumeric test**, because the two implementations dispute every one-byte value. A one-byte value outside the alphanumeric ranges writes `99`. | 1 | #141, #162, #522 |
+| ALPN value for a first byte outside the printable ASCII range `0x20-0x7E` | **Writes `9` for a byte of `0x80` or higher, and `99` for a control byte.** The #801 row below holds the change of 2026-10-01 UTC. #50 built the earlier rule, and the maintainer ruled the condition on 2026-08-12. | Done. **The condition read `not alphanumeric` until that ruling.** Both FoxIO implementations pass a printable byte through, so `\x20\x61` reads ` a` in each one. The register row and FR-parity-8 adopted the range, and the code did not move. `Crank-Git/ja4plus#601` closes the same wording on the port side. | 1 | #127, #141 |
+| ALPN value for a last byte outside the printable ASCII range `0x20-0x7E` | **Writes `9` for a byte of `0x80` or higher, and `99` for a control byte.** The #801 row below holds the change of 2026-10-01 UTC. #50 built the earlier rule. | Done. **This row read `a byte outside 0x20-0x7E in a position other than the first` until the ruling of 2026-08-12.** The last byte is the one position other than the first that the field reads, and the old title also covered a middle byte. `\x30\xab\xcd\x31` reads `01` in both FoxIO implementations and in this library, so a middle byte writes no character. This is a reference split. FoxIO Python writes `U+FFFD`, which is a character no packet byte holds. FoxIO Rust writes the `tshark` escape text. Neither reads the packet. | 1 | #141, #162, #522 |
+| ALPN value for a first ALPN value of one byte | **Repeats every printable byte, so `h` writes `hh` and `-` writes `--`.** The #801 row below holds the change of 2026-10-01 UTC. #50 measured it. | Done. FoxIO Python writes `h`, which cannot fill a two-character field. FoxIO Rust writes `h0`. No vector separates them. **This row kept the alphanumeric test until #801**, because the two implementations dispute every one-byte value. A one-byte value outside the alphanumeric ranges writes `99`. | 1 | #141, #162, #522 |
+| ALPN characters of JA4 and JA4S at FoxIO `16b96d95` | **Writes `9` for each end byte of `0x80` or higher, and writes a one-byte printable value twice.** #801 built it, so `68 ff` writes `h9`, `ff 68` writes `9h` and `2d` writes `--`. `ja4_alpn_ruling_test.go` holds the separating packets. | Done. **The maintainer ruled this reference split on 2026-10-01 UTC, in issue #801 of this repository.** The ruling follows FoxIO Python (`python/ja4.py:156-157`) and Rust (`rust/ja4/src/tls.rs:635-647`). It departs from Wireshark, which writes `99` at `wireshark/source/packet-ja4.c:1027-1028`, from Zeek, which writes the raw byte of a non-ASCII end at `zeek/src/ja4.cc:77-80`, and from Rust for a one-byte value, because Rust writes `0` for the absent last character at `rust/ja4/src/tls.rs:352-353`. It moves no vector value, and the vector `tls-non-ascii-alpn.pcapng` still holds `99`. The port must take the same change. Issue #801 is the reversal path. | 1 | #789 |
 | A structurally valid ClientHello whose body describes no real client | Produces a fingerprint. The library holds no plausibility guard. | No change. **Hold the current behavior and add a test that a guard would fail.** The port measured 5000 random bodies: all 5000 produced a well-formed fingerprint, and a guard on the two separating conditions would move no vector and would still admit about one fabricated value in twenty-five hundred. | 1 | #338, #343 |
 | A ServerHello whose handshake record spans several TCP segments | **Produces no JA4S.** `ParseServerHello` in `internal/parser/tls.go` bounds the read on the record length, and a handshake record carries one or more handshake messages. Six streams reach this shape: `browsers-x509.pcapng` 0, `latest.pcapng` 9 and 10, `ssh2.pcapng` 11 and 12, and `tls-handshake.pcapng` 43. | **No change. This row records a live divergence that the maintainer chose on 2026-08-15, and never a work item.** **The port publishes a JA4S on these six streams and this library publishes none.** `Crank-Git/ja4plus#151` repaired the port's bound to read the handshake message length at offset 6, and this library keeps its own bound. **The maintainer declined the port's bound on the measurement**: `docs/audit/ja4s-segment-span-measurement.md` built the candidate change and measured it, and it closes 0 per-packet deviations and opens 24, moving the run from 267 deviations to 291. **The port is not wrong, and it scores against a source set this repository does not hold.** The port reads the FoxIO Rust snapshot as a tie-break at stream granularity, and this repository reads the Wireshark per-packet vectors and the Python per-stream vectors alone. **The maintainer kept the source ranking of `.claude/rules/rulings.md` unchanged**, because a rank change re-scores every past deviation and every future one. `testdata/deviations.json` holds the 12 declined keys, each naming this repository's #650. **The reversal path is this repository's #650, and a reversal of the source ranking amends `.claude/rules/rulings.md` too.** | 1 | #151, and this repository's #650 |
 
@@ -486,7 +486,7 @@ requirement and holds the acceptance criteria.
 
 | Item | This project today | What must change | Rule | Ruling |
 |---|---|---|---|---|
-| The methods the FoxIO License 1.1 covers | The README claims BSD 3-Clause for the whole library, and links to a `LICENSE` file that does not exist. | Name the methods this project implements under the license, state that FoxIO's list is wider, and cite the pinned commit. **Assert no equality with FoxIO's list.** Three FoxIO records at the pinned commit name three different sets: `License FAQ.md:5` names twelve, the FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and spells the scanner `JA4SScan`. | — | #388, #466 |
+| The methods the FoxIO License 1.1 covers | The README claims BSD 3-Clause for the whole library, and links to a `LICENSE` file that does not exist. | Name the methods this project implements under the license, state that FoxIO's list is wider, and cite the pinned commit. **Assert no equality with FoxIO's list.** Three FoxIO records at the pinned commit name three different sets: `License FAQ.md:5` names twelve, the FoxIO `README.md:299` names fifteen, and `LICENSE:3` names thirteen and spells the scanner `JA4SScan`. | — | #388, #466 |
 | JA4TScan | Not implemented, and round 2 declined it as an eleventh method. | Restate the decline. **The reason changes.** The port declined it as a capability boundary, because it sends crafted packets. This project declines it because FoxIO publishes no format and no implementation. The two repositories therefore hold one outcome and two readings, and this row records that. | — | #197 |
 
 Verified against <https://github.com/Crank-Git/ja4plus> (`docs/specs/spec.md`, retrieved
@@ -641,8 +641,7 @@ test suite read the following.
 | `JA4PLUS_DB_CACHE` | `lookup.go` | The path of the downloaded database cache file. | An operating-system cache directory. |
 | `JA4PLUS_DB_LOOKUP` | `cmd/ja4plus` | When set to `1`, the program allows the remote lookup. The `--lookup-remote` flag does the same. **The name follows the port, under rule 2.** | Unset. |
 | `JA4PLUS_FOXIO_DIR` | The conformance suite | The directory that holds the fetched corpus. | `testdata/foxio` |
-| `JA4PLUS_CORPUS_URL` | `scripts/fetch-corpus.sh` | The URL of the archive that supplies the captures and the vectors. The tests set it to a local archive. | The FoxIO archive at the commit in `testdata/foxio.pin` |
-| `JA4PLUS_READING_CORPUS_URL` | `scripts/fetch-corpus.sh` | The URL of the archive that supplies the reference tree. The tests set it to a local archive. | The FoxIO archive at the commit in `testdata/foxio-reading.pin` |
+| `JA4PLUS_CORPUS_URL` | `scripts/fetch-corpus.sh` | The URL of the archive that supplies the captures, the vectors and the reference tree. The tests set it to a local archive. | The FoxIO archive at the commit in `testdata/foxio.pin` |
 | `GITHUB_TOKEN` | The workflows | Provided by GitHub Actions. The documentation workflow publishes to GitHub Pages with it. | Provided. |
 
 The project holds no secret. The release workflow and the documentation workflow use the
@@ -1139,7 +1138,7 @@ the JA4LS value on the prefix `JA4L-S=`, which is the discriminator that
 **The reversal path is #61 and this subsection.** A reversal removes the `ja4ls` token before
 the `v1.0.0` freeze.
 
-### R10 — The Rust JA4H counts the four pseudo-headers (open, and it blocks nothing)
+### R10 — The Rust JA4H counted the four pseudo-headers (closed by FoxIO at `16b96d95`)
 
 **#754 records this reading on 2026-08-16 UTC, and the maintainer rules the question.** The
 epic #441 documentation round writes no ruling here. **This is a genuine FoxIO reference
@@ -1153,13 +1152,15 @@ split**, and `.claude/rules/rulings.md` `## What stays with the maintainer` rese
 |---|---|
 | `testdata/foxio/python/chrome-cloudflare-quic-with-secrets.pcapng.json` | `ge20nn12enus_60f823d07c94_000000000000_000000000000` |
 | `testdata/foxio/wireshark/chrome-cloudflare-quic-with-secrets.pcapng.json`, frame 12, key `ja4.ja4h` | `ge20nn12enus_60f823d07c94_000000000000_000000000000` |
-| `testdata/foxio/reference/rust/ja4/src/snapshots/ja4__insta@chrome-cloudflare-quic-with-secrets.pcapng.snap:6-15` | `ge20nn16enus_0f5a7a41a252_000000000000_000000000000` |
+| `testdata/foxio/reference/rust/ja4/src/snapshots/ja4__insta@chrome-cloudflare-quic-with-secrets.pcapng.snap:18` | `ge20nn12enus_60f823d07c94_000000000000_000000000000`, and `ge20nn16enus_0f5a7a41a252_000000000000_000000000000` at `27f0cbf9` |
 
-**The split is two against one, and the two that agree are byte identical.**
+**The split was two against one at `27f0cbf9`, and the three agree at `16b96d95`.** #801
+read the change on 2026-10-01 UTC, so no ruling is needed. The paragraphs below record the
+split as #754 read it.
 
-**The pseudo-header filter is the cause.** `rust/ja4/src/http.rs:125-145` collects
-`http2.header.name` and it filters `cookie` and `referer` alone, so a pseudo-header survives
-that filter. `python/ja4h.py:49` drops any name that opens with a colon. **`16 - 12 = 4`, and
+**The pseudo-header filter was the cause.** At `27f0cbf9` the Rust code that collects
+`http2.header.name` filtered `cookie` and `referer` alone, so a pseudo-header survived. At `16b96d95` `rust/ja4/src/http.rs:218` drops a name that opens with a colon, and
+`python/ja4h.py:49` drops the same names. **`16 - 12 = 4`, and
 the four are `:method`, `:authority`, `:scheme` and `:path`.** Part b of the two values
 differs for the same reason.
 

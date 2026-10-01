@@ -10,8 +10,8 @@ states how to read a citation.
 
 | Fact | Value |
 |---|---|
-| Image | <https://github.com/FoxIO-LLC/ja4/blob/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details/JA4D6.png> |
-| Pinned commit | `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` |
+| Image | <https://github.com/FoxIO-LLC/ja4/blob/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details/JA4D6.png> |
+| Pinned commit | `16b96d95c220762cf658f67d678cda2aac95c81e` |
 | Retrieval date | 2026-08-11 |
 
 **This page reproduces no image.** The link above reaches it.
@@ -25,7 +25,7 @@ states the rule, and it names each path that the rule does not cover.
 
 **One reference implementation builds a JA4D6 value, and that implementation is the
 Wireshark dissector.** The FoxIO Zeek package states
-`JA4D6 &rarr; `ja4d.log` (awaiting Zeek DHCPv6 suppport)` at `zeek/README.md:15`, and its
+`JA4D6 &rarr; `ja4d.log` (awaiting Zeek DHCPv6 suppport)` at `zeek/README.md:23`, and its
 `ja4d` module handles the `dhcp_message` event alone at `zeek/scripts/fingerprints/ja4d/main.zeek:118`. The
 FoxIO Rust program and the FoxIO Python program build no DHCP fingerprint at all.
 

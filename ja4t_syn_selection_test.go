@@ -23,12 +23,12 @@ import (
 // The rule separates two readings of the reference. `rust/ja4/src/tcp.rs:151` tests the SYN
 // bit and the ACK bit, and `rust/ja4/src/tcp.rs:159` asserts `is_initial_syn(0xC2)`.
 // `rust/ja4/src/tcp.rs:162` asserts that `0x12` reaches no value, which is the SYN-ACK half.
-// `zeek/ja4t/main.zeek:126` and `wireshark/source/packet-ja4.c:1266` each test the whole
+// `zeek/scripts/fingerprints/ja4t/main.zeek:64` and `wireshark/source/packet-ja4.c:1266` each test the whole
 // flag byte against `0x02`, so each one declines a SYN that carries the ECN flags.
 //
 // The ruling of 2026-08-13 cites the `0xC2` assertion at `rust/ja4/src/tcp.rs:158`, and that
 // line holds the comment above the assertion. This file cites `:154`, which holds the
-// assertion at the commit in `testdata/foxio-reading.pin`.
+// assertion at the commit in `testdata/foxio.pin`.
 //
 // The two tests below build the packet that separates the two readings. The corpus holds
 // two such SYN packets, and the suite compares neither one. The per-packet vector of

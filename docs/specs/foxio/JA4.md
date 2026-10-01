@@ -10,7 +10,7 @@ states how to read a citation.
 
 | Fact | Value |
 |---|---|
-| Image | [`technical_details/JA4.png`](https://github.com/FoxIO-LLC/ja4/blob/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details/JA4.png) |
+| Image | [`technical_details/JA4.png`](https://github.com/FoxIO-LLC/ja4/blob/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details/JA4.png) |
 | SHA-256 | `1bd63c14b3b96c2b70bfa8e85632450c9396af9a13e274489c0cb02f2a7e9615` |
 | Image title | `JA4: TLS Client Fingerprint` |
 | License mark on the image | `BSD 3-Clause License` |
@@ -19,7 +19,7 @@ states how to read a citation.
 **This page reproduces no image.** Follow the link above to read it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `python/ja4.py:222` as line 220 of
+`testdata/foxio/reference/`.** Read `python/ja4.py:222` as line 222 of
 `testdata/foxio/reference/python/ja4.py`. `docs/specs/foxio/README.md` states the rule,
 and it names each path that the rule does not cover.
 
@@ -67,7 +67,7 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
 
 - **R6** — A version the map does not hold produces `00`. **The image alone states no
   such rule.** `technical_details/JA4.md:70` states it, `rust/ja4/src/tls.rs:555`
-  corroborates, and `zeek/ja4/main.zeek:104` corroborates.
+  corroborates, and `zeek/src/ja4.cc:43` corroborates.
 
 - **R7** — When the supported_versions extension is present, the version is the highest
   value that extension carries. **The image alone states no such rule.**
@@ -105,10 +105,10 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
 
 - **R16** — Part a ends with two ALPN characters. They are the first character and the
   last character of the first ALPN value. The image states `First ALPN value (00 if no
-  ALPN)`. `python/ja4.py:277` corroborates, and `zeek/ja4/main.zeek:86` corroborates.
+  ALPN)`. `python/ja4.py:156-158` corroborates, and `zeek/src/ja4.cc:77-80` corroborates.
 
 - **R17** — No ALPN extension produces `00`. The image states it, and
-  `zeek/ja4/main.zeek:84` corroborates.
+  `zeek/src/ja4.cc:76` corroborates.
 
   **The prose also names an empty first ALPN value, and it gives the same `00`.**
   `technical_details/JA4.md:93` covers three inputs in one sentence, and this is the
@@ -124,12 +124,14 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
   `internal/parser/tls.go` writes `00` for the input. Issue #50 records the reading and
   changes no line of the behaviour.
 
-- **R18** — **Reference split.** An ALPN value of one character produces three different
-  results. The image states no rule for it.
+- **R18** — **Reference split.** An ALPN value of one character produces two different
+  results. The image states no rule for it. **The maintainer ruled the split on 2026-10-01
+  UTC**, and issue #801 holds the ruling: the one character writes both characters, so `-`
+  writes `--`. `Crank-Git/ja4plus#789` holds the port half.
   - `technical_details/JA4.md:93` states that the one character serves as both the first
     character and the last character. **That line holds two sentences, and R17 above cites
     the first one for the empty value.**
-  - `zeek/ja4/main.zeek:86` produces the same two characters, because `[0]` and `[-1]`
+  - `zeek/src/ja4.cc:77-80` produces the same two characters, because `[0]` and `[-1]`
     reach the same character.
   - `wireshark/source/packet-ja4.c:552-554` produces the same two characters. It reads the
     first character of the stored value, and it reads the character at the last index, which
@@ -138,26 +140,37 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
     JA4 rule only where it shares code with another method. **The ALPN store at
     `wireshark/source/packet-ja4.c:1023-1034` is the shared code**, because it reads the
     client field and the server field into one buffer.
+  - `python/ja4.py:149-158` produces the same two characters. Its comment at
+    `python/ja4.py:150` states `a single character supplies both ends`. At `27f0cbf9` FoxIO
+    Python left the value at one character, so part a was one character short.
   - `rust/ja4/src/tls.rs:645` reads no last character, and `rust/ja4/src/tls.rs:353`
-    then writes `0` in its place.
-  - `python/ja4.py:276` leaves the value at one character, so part a is one character
-    short.
+    then writes `0` in its place. **The ruling departs from Rust.** Wireshark also writes
+    `99` for a one-character value that is not alphanumeric, at
+    `wireshark/source/packet-ja4.c:1027-1028`, and the ruling departs from that value too.
 
-- **R19** — **Reference split.** An ALPN value whose first byte is not an ASCII
-  alphanumeric character produces four different results.
+- **R19** — **Reference split.** An ALPN value whose first byte or last byte is not
+  printable ASCII produces four different results.
   - `technical_details/JA4.md:95` states the first and last characters of the hexadecimal
     form of the whole first ALPN value.
-  - `python/ja4.py:279-280` writes `99` when the first byte is above 127.
+  - `python/ja4.py:156-157` writes `9` for each end character that is not ASCII. At
+    `27f0cbf9` it wrote `99` when the first character was above 127.
+  - `rust/ja4/src/tls.rs:635-647` writes `9` for each end character that is not ASCII.
   - `wireshark/source/packet-ja4.c:1027-1028` writes `99` when the first byte is not an
     ASCII alphanumeric character.
-  - `rust/ja4/src/tls.rs:636` replaces each non-ASCII character with `9`, one character at
-    a time.
+  - `zeek/src/ja4.cc:77-80` writes the raw first byte and the raw last byte.
 
-  **The four results agree on two inputs, and Reading 5 states the measurement.** The two
-  implementations agree on every input whose first byte and last byte fall inside
-  `0x20-0x7E`. They also agree on an input whose two bytes fall outside ASCII. The FoxIO
-  vector `python/test/testdata/tls-non-ascii-alpn.pcapng.json` reaches the second case, and
-  it holds `99`.
+  **The maintainer ruled the split on 2026-10-01 UTC**, and issue #801 holds the ruling.
+  Each end byte of `0x80` or higher writes `9`, so `68 ff` writes `h9` and `ff 68` writes
+  `9h`. The ruling follows FoxIO Python and Rust at `16b96d95`, and it departs from
+  Wireshark and Zeek. `Crank-Git/ja4plus#789` holds the port half. **The ruling names no
+  control byte**, so an end byte below `0x20` or the byte `0x7F` still writes `99` under
+  `Crank-Git/ja4plus#162`.
+
+  **The results agree on two inputs, and Reading 5 states the measurement.** FoxIO Python
+  and Rust agree on every input whose first byte and last byte fall inside `0x20-0x7E`.
+  Every implementation except Zeek writes `99` for an input whose two bytes fall outside
+  ASCII. The FoxIO vector `python/test/testdata/tls-non-ascii-alpn.pcapng.json` reaches the
+  second case, and it holds `99`.
 
   **The prose rule and the FoxIO vector contradict each other.** `technical_details/JA4.md:95`
   states the rule, and `technical_details/JA4.md:97-100` states four examples of it. The
@@ -183,7 +196,7 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
 
 - **R23** — A hash part holds the first 12 characters of the SHA-256 hash. The image
   states `Truncated`, and it states no length. `technical_details/JA4.md:31` states 12,
-  `python/common.py:127` corroborates, and `rust/ja4/src/lib.rs:188` corroborates.
+  `python/common.py:127` corroborates, and `rust/ja4/src/lib.rs:186` corroborates.
 
 - **R24** — An empty cipher suite list produces the zero sentinel `000000000000`. **The
   image alone states no such rule.** `technical_details/JA4.md:121` states it,
@@ -197,7 +210,7 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
 - **R26** — The extension list of part c holds no SNI extension and no ALPN extension.
   **The image alone states no such rule.** `technical_details/JA4.md:128` states it,
   `python/common.py:145` corroborates, `rust/ja4/src/tls.rs:347` corroborates, and
-  `zeek/ja4/main.zeek:141` corroborates.
+  `zeek/src/ja4.cc:198` corroborates.
 
 - **R27** — The extension list of part c is sorted by hexadecimal value.
   `technical_details/JA4.md:139` states it, and `rust/ja4/src/tls.rs:358` corroborates.
@@ -216,7 +229,9 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
 
 - **R31** — The signature algorithm list skips a GREASE value. **The image alone states no
   such rule.** `python/common.py:213` corroborates, and `technical_details/JA4.md:40`
-  states the general GREASE rule that covers it.
+  states the general GREASE rule that covers it. `rust/ja4/src/tls.rs:295` and
+  `zeek/scripts/fingerprints/ja4/helpers.zeek:134-136` skip the value at `16b96d95`, and
+  each one kept it at `27f0cbf9`.
 
 ## Readings this page records
 
@@ -242,25 +257,28 @@ A reading is a conclusion about a source. None of these carries a rule.
   holds the terms. `docs/specs/features/01-licensing.md` states how this project records
   the split.
 
-- **Reading 4** — **Two implementations read the QUIC protocol character from different
-  input.** `python/ja4.py:222` reads the packet layer that carried the client hello.
-  `rust/ja4/src/tls.rs:318` reads the presence of the `quic_transport_parameters`
-  extension, which `rust/ja4/src/tls.rs:513` numbers 57. `zeek/ja4/main.zeek:66` reads the
-  transport protocol and the service name. The three agree on every capture this project
-  reads, so this page records no reference split for it.
+- **Reading 4** — **Every implementation reads the QUIC protocol character from the
+  transport at `16b96d95`.** `python/ja4.py:222` reads the packet layer that carried the
+  client hello. `rust/ja4/src/stream.rs:181` sets `is_quic_context` from a UDP packet that
+  carries QUIC, and `rust/ja4/src/tls.rs:337` writes the marker from it.
+  `zeek/src/ja4.cc:35-36` reads the transport protocol and the service name. At `27f0cbf9`
+  Rust read the presence of the `quic_transport_parameters` extension, which
+  `rust/ja4/src/tls.rs:513` numbers 57, so a TCP client hello that carries that extension
+  separated Rust from the other two. That split is gone, and this page records none.
 
 - **Reading 5** — **Neither implementation reads the ALPN byte the packet holds, and the
   tshark text form is the cause.** This reading holds FR-parity-12 of
   `docs/specs/features/08-python-parity.md`. Both implementations read the tshark field
   `tls.handshake.extensions_alpn_str`, which carries text and not bytes.
-  `python/ja4.py:270` reads it as `alpn_list`, and `rust/ja4/src/tls.rs:204` reads it
+  `python/ja4.py:271` reads it as `alpn_list`, and `rust/ja4/src/tls.rs:204` reads it
   through `first`. R18 and R19 above record the results, and this reading records why they
   differ.
 
-  - **FoxIO Python writes `U+FFFD`.** tshark writes the Unicode replacement character for
-    a byte it cannot decode, and `python/ja4.py:277` copies that character into the field.
-    `python/ja4.py:279` tests `ord(alpn[0]) > 127` and therefore tests the first character
-    alone, so the replacement character reaches the fingerprint from the last position.
+  - **FoxIO Python reads `U+FFFD`.** tshark writes the Unicode replacement character for
+    a byte it cannot decode. `python/ja4.py:156-157` tests each end character against 128,
+    so the replacement character writes `9` at either end. At `27f0cbf9` FoxIO Python
+    tested the first character alone, so the replacement character reached the fingerprint
+    from the last position.
   - **FoxIO Rust writes the `tshark` escape text.** `rust/ja4/src/tls.rs:635` reads the
     field as a character sequence, so it reads a control byte as the escape text tshark
     writes. It reads the two-byte value `h\x1f` as the five characters `h`, `\`, `x`, `1`
@@ -272,6 +290,12 @@ A reading is a conclusion about a source. None of these carries a rule.
     `Crank-Git/ja4plus#141` records the commands and the table, and
     `Crank-Git/ja4plus#162` records the maintainer ruling of 2026-08-07.
     **`U+FFFD` is no byte of the packet, and `\`, `x`, `1` and `f` are no bytes of the
-    packet.** So a byte outside `0x20-0x7E` in a position other than the first reaches no
+    packet.** So a byte outside `0x20-0x7E` in a position other than the first reached no
     reference value that reads the wire, and `.claude/rules/parity.md`
     `## Where a difference comes from` names that shape a proven reference defect.
+  - **The ruling of 2026-10-01 UTC.** At `16b96d95` FoxIO Python and Rust each write `9`
+    for a non-ASCII end, and each one reaches that value from the replacement character
+    and from a decoded multi-byte character alike. So a byte of `0x80` or higher at either
+    end maps to `9` in both, whatever tshark writes for it. The maintainer adopted that
+    rule in issue #801, and `Crank-Git/ja4plus#789` holds the port half. **A control byte
+    still reaches the escape text, so the ruling names no control byte.**

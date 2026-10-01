@@ -37,14 +37,11 @@ deviation list that Epic 5 closes.
 
 ### The fetch
 
-- **FR-conformance-1** — The repository holds two pins, and each one names one full FoxIO
-  commit hash. `testdata/foxio.pin` names the commit of the captures and the vectors.
-  `testdata/foxio-reading.pin` names the commit of the reference tree that every reading
-  cites. The maintainer ruled the split on #797, on 2026-10-01 UTC. #801 rereads each
-  reading at the vector pin, and it removes `testdata/foxio-reading.pin`.
-- **FR-conformance-2** — `scripts/fetch-corpus.sh` fetches the captures and the vectors at
-  the commit in `testdata/foxio.pin`. It fetches the reference tree at the commit in
-  `testdata/foxio-reading.pin`.
+- **FR-conformance-1** — `testdata/foxio.pin` names one full FoxIO commit hash. It names
+  the commit of the captures, the vectors and the reference tree that every reading cites.
+  #797 added a second pin on 2026-10-01 UTC, and #801 removed it.
+- **FR-conformance-2** — `scripts/fetch-corpus.sh` fetches the captures, the vectors and
+  the reference tree from one archive, at the commit in `testdata/foxio.pin`.
 - **FR-conformance-3** — The script writes the captures to `testdata/foxio/pcap/`.
 - **FR-conformance-4** — The script writes the per-stream vectors to
   `testdata/foxio/python/`.
@@ -247,7 +244,7 @@ No entity changes. The following files change.
 
 | Interface | Version | Documentation |
 |---|---|---|
-| FoxIO reference repository | Pinned in `testdata/foxio-reading.pin` | <https://github.com/FoxIO-LLC/ja4> |
+| FoxIO reference repository | Pinned in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4> |
 | FoxIO per-stream vectors | Pinned in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/python/test/testdata> |
 | FoxIO per-packet vectors | Pinned in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 | `actions/cache` | v4 | <https://github.com/actions/cache> |

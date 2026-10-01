@@ -15,11 +15,11 @@ import (
 // that ruling. `.claude/rules/rulings.md` names the stop condition, because the three FoxIO
 // reference implementations disagree on a reordered capture.
 //
-// The three references at the commit in `testdata/foxio-reading.pin` behave as follows.
+// The three references at the commit in `testdata/foxio.pin` behave as follows.
 // `wireshark/source/packet-ja4.c:1346` measures `timestamp_B` against `timestamp_A` and
 // reports the value on a later application packet. `python/ja4.py:165` reads
 // `if 'B' in conn and 'A' in conn` and reports the value on the bare ACK at
-// `python/ja4.py:563`. `zeek/ja4l/main.zeek:152-156` returns before it assigns `ja4l_s` when
+// `python/ja4.py:563`. `zeek/scripts/fingerprints/ja4l/main.zeek:151-156` returns before it assigns `ja4l_s` when
 // the interval is below zero, and `zeek/scripts/fingerprints/ja4l/main.zeek:7` states
 // `# NOTE: JA4L can not work when traffic is out of order`.
 //

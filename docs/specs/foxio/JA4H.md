@@ -10,7 +10,7 @@ states how to read a citation.
 
 | Fact | Value |
 |---|---|
-| Image | [`technical_details/JA4H.png`](https://github.com/FoxIO-LLC/ja4/blob/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8/technical_details/JA4H.png) |
+| Image | [`technical_details/JA4H.png`](https://github.com/FoxIO-LLC/ja4/blob/16b96d95c220762cf658f67d678cda2aac95c81e/technical_details/JA4H.png) |
 | SHA-256 | `08592925d1371d64bf42eeed90506dddf30e4451ba062485ae437abe6c556b80` |
 | Image title | `JA4H: HTTP Client Fingerprint` |
 | License mark on the image | `Patent Pending` and `FoxIO License 1.1` |
@@ -77,11 +77,11 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
 
 - **R6** — Part a carries one cookie character. The image states `Cookie, if there’s a
   Cookie “c”, if no Cookie “n”`. `python/ja4h.py:18` corroborates, and
-  `zeek/ja4h/main.zeek:151` corroborates.
+  `zeek/src/ja4h.cc:19` corroborates.
 
 - **R7** — Part a carries one referer character. The image states `Referer, if there’s a
   Referer “r” if no Referer “n”`. `python/ja4h.py:26` corroborates, and
-  `zeek/ja4h/main.zeek:156` corroborates.
+  `zeek/src/ja4h.cc:20` corroborates.
 
 - **R8** — Part a carries the count of HTTP headers, in 2 characters. The image states
   `Number of HTTP Headers (ignoring Cookie and Referer)`, and
@@ -90,7 +90,7 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
 
 - **R9** — A header count above 99 produces `99`. **The image alone states no such rule.**
   `technical_details/JA4H.md:10` states `If there are more than 99, the output is 99.`,
-  `python/ja4h.py:55` corroborates, and `zeek/ja4h/main.zeek:161` corroborates.
+  `python/ja4h.py:55` corroborates, and `zeek/src/ja4h.cc:23-24` corroborates.
 
 - **R10** — The header count holds no Cookie header and no Referer header. The image
   states it, `python/ja4h.py:49` corroborates, and
@@ -139,7 +139,7 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
   `Truncated SHA256 hash of Cookie Fields, sorted`. `python/ja4h.py:72` corroborates.
 
 - **R22** — The cookie field name list is sorted. The image states `sorted`,
-  `python/ja4h.py:68` corroborates, and `zeek/ja4h/main.zeek:175` corroborates.
+  `python/ja4h.py:68` corroborates, and `zeek/src/ja4h.cc:58` corroborates.
 
 - **R23** — Part d is a SHA-256 hash of the cookie field names and their values. The image
   states `Truncated SHA256 hash of Cookie Fields + Values, sorted`.
