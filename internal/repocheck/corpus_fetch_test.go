@@ -30,7 +30,7 @@ func requireCorpusFetchTools(t *testing.T) {
 }
 
 // newCorpusFetchRoot returns a temporary repository root that holds the script and the
-// two pins. The script writes the corpus below that root, so a test never touches the real
+// pin. The script writes the corpus below that root, so a test never touches the real
 // `testdata/foxio/`.
 func newCorpusFetchRoot(t *testing.T) string {
 	t.Helper()
