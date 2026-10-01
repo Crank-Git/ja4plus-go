@@ -82,7 +82,8 @@ type Network interface {
 type Config struct {
 	// Port is the TCP port of every target. It is above zero.
 	Port uint16
-	// Rate is the SYN count for each second. It is above zero.
+	// Rate is the SYN count for each second. It is above zero, and one second divided by it
+	// fits a time.Duration.
 	Rate float64
 	// Retransmit is true to read every retransmission for RetransmitWait. False reads the
 	// first response alone for NoRetransmitWait.
@@ -150,8 +151,12 @@ type Scanner struct {
 }
 
 // NewScanner returns a Scanner for the configuration.
-// It returns an error when the port is zero, when the rate is not a finite number above
-// zero, or when the configuration names no network.
+// It returns an error in four cases.
+//
+//   - The port is zero.
+//   - The rate is not a finite number above zero.
+//   - The interval of the rate does not fit a time.Duration.
+//   - The configuration names no network.
 func NewScanner(config Config) (*Scanner, error) {
 	if config.Port == 0 {
 		return nil, errors.New("scan: the port is zero, and a port is 1 to 65535")
@@ -159,6 +164,13 @@ func NewScanner(config Config) (*Scanner, error) {
 
 	if !(config.Rate > 0) || math.IsInf(config.Rate, 0) {
 		return nil, fmt.Errorf("scan: the rate %v is not a finite number above zero", config.Rate)
+	}
+
+	// A time.Duration holds at most about 292 years. A smaller rate gives a longer interval,
+	// and the conversion below then gives a wrong interval.
+	if float64(time.Second)/config.Rate >= math.MaxInt64 {
+		return nil, fmt.Errorf("scan: the rate %v gives an interval between two SYNs above %v", config.Rate,
+			time.Duration(math.MaxInt64))
 	}
 
 	if config.Network == nil {

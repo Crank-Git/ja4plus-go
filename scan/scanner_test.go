@@ -2,6 +2,7 @@ package scan
 
 import (
 	"errors"
+	"math"
 	"math/rand/v2"
 	"net/netip"
 	"os"
@@ -500,11 +501,15 @@ func TestASocketErrorStopsTheScanAndKeepsTheResultsAlreadyWritten(t *testing.T) 
 func TestNewScannerRefusesAConfigurationItCannotRun(t *testing.T) {
 	network := newFakeNetwork(t, nil, 80)
 	cases := map[string]Config{
-		"a zero port":     {Port: 0, Rate: 10, Network: network},
-		"a zero rate":     {Port: 80, Rate: 0, Network: network},
-		"a NaN rate":      {Port: 80, Rate: nanRate(), Network: network},
-		"no network":      {Port: 80, Rate: 10},
-		"a negative rate": {Port: 80, Rate: -1, Network: network},
+		"a zero port":      {Port: 0, Rate: 10, Network: network},
+		"a zero rate":      {Port: 80, Rate: 0, Network: network},
+		"a NaN rate":       {Port: 80, Rate: nanRate(), Network: network},
+		"no network":       {Port: 80, Rate: 10},
+		"a negative rate":  {Port: 80, Rate: -1, Network: network},
+		"an infinite rate": {Port: 80, Rate: math.Inf(1), Network: network},
+		// One SYN in 1e10 seconds is an interval of 1e19 nanoseconds, and a time.Duration
+		// holds at most about 9.2e18.
+		"a rate whose interval overflows a Duration": {Port: 80, Rate: 1e-10, Network: network},
 	}
 
 	for name, config := range cases {
