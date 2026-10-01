@@ -26,10 +26,9 @@
 //   - JA4D6 reads a DHCPv6 packet.
 //
 // The list above names what this package implements, and it names no FoxIO list. Three
-// FoxIO records at commit 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 name three different
+// FoxIO records at commit 16b96d95c220762cf658f67d678cda2aac95c81e name three different
 // sets of methods, so no single FoxIO record states the set above.
-// testdata/foxio-reading.pin holds that commit. The vectors read a second commit, which
-// testdata/foxio.pin holds, and #801 removes the reading pin.
+// testdata/foxio.pin holds that commit.
 //
 // Processor holds the ten fingerprinters, and it gives every packet to each one. The list
 // above holds eleven rows, because JA4LFingerprinter carries two of them. A caller that

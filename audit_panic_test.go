@@ -616,7 +616,7 @@ func TestTheLibraryWritesNothingWhenItReadsACraftedFrame(t *testing.T) {
 // panicAuditZeroSentinel is the value that a hash of an empty input produces.
 //
 // The value is verbatim FoxIO material, so `.claude/rules/ste.md` bars a rewording of it.
-// `docs/specs/foxio/zeek.md:48` records the reading of `zeek/utils/common.zeek:63`, and
+// `docs/specs/foxio/zeek.md:48` records the reading of `zeek/scripts/fingerprints/utils/common.zeek:63`, and
 // `docs/specs/foxio/JA4.md` R24 and R30, `docs/specs/foxio/JA4S.md` R23 and
 // `docs/specs/foxio/JA4H.md` R27 each name the same value.
 const panicAuditZeroSentinel = "000000000000"

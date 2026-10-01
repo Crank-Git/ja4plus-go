@@ -65,9 +65,9 @@ image. Fact 4 is why FR-reference-12 recovers the deleted text.
 - **FR-reference-2** — The page holds one row per file of `technical_details/`, with the
   byte count and the SHA-256 hash.
 - **FR-reference-3** — The page states the one command that reproduces the measurement.
-- **FR-reference-4** — The pinned commit equals the commit in `testdata/foxio-reading.pin`.
-  #797 amended this requirement on 2026-10-01 UTC, and #801 is the reversal path.
-- **FR-reference-5** — A test reads `testdata/foxio-reading.pin` and the page, and fails when the
+- **FR-reference-4** — The pinned commit equals the commit in `testdata/foxio.pin`. #797
+  amended this requirement on 2026-10-01 UTC, and #801 reversed that amendment.
+- **FR-reference-5** — A test reads `testdata/foxio.pin` and the page, and fails when the
   two commits differ.
 
 ### The transcriptions
@@ -289,7 +289,7 @@ This feature set changes no screen.
 
 | Interface | Version | Documentation |
 |---|---|---|
-| FoxIO `technical_details/` | The commit in `testdata/foxio-reading.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/technical_details> |
+| FoxIO `technical_details/` | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/technical_details> |
 | FoxIO Python reference | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/python> |
 | FoxIO Rust reference | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/rust> |
 | FoxIO Wireshark dissector | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark> |
@@ -313,7 +313,7 @@ pin. FR-reference-12 records the commit it read, and the two commits differ on p
 
 ## Acceptance criteria
 
-1. `docs/specs/foxio/README.md` exists and its pinned commit equals `testdata/foxio-reading.pin`.
+1. `docs/specs/foxio/README.md` exists and its pinned commit equals `testdata/foxio.pin`.
 2. Every method that an image specifies holds a transcription with numbered rules.
 3. `docs/specs/foxio/deleted-text-specifications.md` holds the seven deleted files and
    names the commit it read them at.

@@ -14,12 +14,12 @@ import (
 // and the emission starts a new window.
 //
 // Three sources state the emission. `wireshark/source/packet-ja4.c:1400` tests the TCP flags
-// and `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:555` tests the two
-// flags and `python/ja4.py:556` calls `finalize_ja4ssh`, which `python/ja4.py:370` defines.
+// and `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:546` tests the two
+// flags and `python/ja4.py:547` calls `finalize_ja4ssh`, which `python/ja4.py:361` defines.
 // The port emits the window at `ja4plus/fingerprinters/ja4ssh.py:268`.
 //
 // Two of the three sources clear the counters, and Wireshark clears none of them.
-// `python/ja4.py:377` deletes the stream from the cache, so no later packet of the stream
+// `python/ja4.py:368` deletes the stream from the cache, so no later packet of the stream
 // reads a counter of the emitted window. The port clears the four counters at
 // `ja4plus/fingerprinters/ja4ssh.py:439` through `ja4plus/fingerprinters/ja4ssh.py:442`.
 // `wireshark/source/packet-ja4.c:1485` clears the counters of a filled window alone, so
@@ -27,7 +27,7 @@ import (
 // library follows the port, and the maintainer's rule of 2026-08-12 states that order.
 //
 // The flag test reads the two flags, and it reads no other flag.
-// `python/ja4.py:555` and `ja4plus/fingerprinters/ja4ssh.py:268` both test the FIN bit and the
+// `python/ja4.py:546` and `ja4plus/fingerprinters/ja4ssh.py:268` both test the FIN bit and the
 // ACK bit, so a FIN+PSH+ACK packet reaches the emission.
 // `wireshark/source/packet-ja4.c:1400` tests `tcp_flags == 0x011` instead, and this library
 // follows the port.
@@ -71,7 +71,7 @@ func buildSSHFINACK(srcIP, dstIP string, srcPort, dstPort uint16, seq uint32) go
 // buildSSHFINPSHACK returns one TCP packet that carries the FIN flag, the PSH flag, the ACK
 // flag and one SSH payload.
 //
-// `python/ja4.py:555` and `ja4plus/fingerprinters/ja4ssh.py:268` each test the FIN bit and the
+// `python/ja4.py:546` and `ja4plus/fingerprinters/ja4ssh.py:268` each test the FIN bit and the
 // ACK bit, so this packet reaches the emission.
 // `wireshark/source/packet-ja4.c:1400` tests `tcp_flags == 0x011`, which this packet fails.
 func buildSSHFINPSHACK(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte, seq uint32) gopacket.Packet {

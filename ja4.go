@@ -410,7 +410,7 @@ func ja4CipherHash(ch *parser.ClientHello) string {
 // ja4SortedExtensionString returns the sorted extension string that `JA4` part c hashes.
 //
 // `JA4_o` reads the same string, because
-// `testdata/foxio/reference/python/ja4.py:248` tests it for the zero sentinel of the
+// `testdata/foxio/reference/python/ja4.py:250` tests it for the zero sentinel of the
 // wire-order part. One builder therefore serves the two values, and a second builder would
 // let the two rules drift apart.
 func ja4SortedExtensionString(ch *parser.ClientHello) string {
@@ -455,7 +455,7 @@ func ja4ExtensionHash(ch *parser.ClientHello) string {
 // The extension list keeps SNI and ALPN, because
 // `testdata/foxio/reference/python/common.py:144` removes the two only when it sorts. It
 // carries the signature algorithms after a `_` separator, which
-// `testdata/foxio/reference/python/ja4.py:246` appends before it hashes.
+// `testdata/foxio/reference/python/ja4.py:248` appends before it hashes.
 func ja4OriginalOrderLists(ch *parser.ClientHello) (string, string) {
 	cipherList := formatHexList(parser.FilterGreaseValues(ch.CipherSuites))
 	extList := formatHexList(parser.FilterGreaseValues(ch.Extensions))
@@ -480,14 +480,14 @@ func computeJA4RawOriginalOrder(ch *parser.ClientHello) string {
 // computeJA4OriginalOrder generates the FoxIO `JA4_o` value of a client hello.
 //
 // The value carries the part a of `JA4`, a hash of the wire-order cipher list and a hash of
-// the wire-order extension list. `testdata/foxio/reference/python/ja4.py:291` states the
+// the wire-order extension list. `testdata/foxio/reference/python/ja4.py:282` states the
 // form. An empty list reaches `parser.EmptyHash`.
 //
 // The extension part reads the sorted extension string for that sentinel, and never the
-// wire-order string. `testdata/foxio/reference/python/ja4.py:248` tests the sorted string,
-// and `testdata/foxio/reference/python/ja4.py:253` writes `000000000000` into the
+// wire-order string. `testdata/foxio/reference/python/ja4.py:250` tests the sorted string,
+// and `testdata/foxio/reference/python/ja4.py:255` writes `000000000000` into the
 // wire-order part from that test. The Rust reference hashes the wire-order string on its
-// own at `testdata/foxio/reference/rust/ja4/src/tls.rs:363`, so the two references answer a
+// own at `testdata/foxio/reference/rust/ja4/src/tls.rs:382`, so the two references answer a
 // client hello whose sorted list is empty differently. The maintainer ruled the split on
 // 2026-08-12 in issue #287, and this library follows the Python reference.
 func computeJA4OriginalOrder(ch *parser.ClientHello) string {

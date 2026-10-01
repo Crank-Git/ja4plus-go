@@ -20,15 +20,15 @@ import (
 // `## Parity with ja4plus` section of `docs/specs/spec.md` names no row for the rule, and
 // #126 writes none.
 //
-// The rule separates two readings of the reference. `rust/ja4/src/tcp.rs:146` tests the SYN
-// bit and the ACK bit, and `rust/ja4/src/tcp.rs:154` asserts `is_initial_syn(0xC2)`.
-// `rust/ja4/src/tcp.rs:157` asserts that `0x12` reaches no value, which is the SYN-ACK half.
-// `zeek/ja4t/main.zeek:126` and `wireshark/source/packet-ja4.c:1266` each test the whole
+// The rule separates two readings of the reference. `rust/ja4/src/tcp.rs:151` tests the SYN
+// bit and the ACK bit, and `rust/ja4/src/tcp.rs:159` asserts `is_initial_syn(0xC2)`.
+// `rust/ja4/src/tcp.rs:162` asserts that `0x12` reaches no value, which is the SYN-ACK half.
+// `zeek/scripts/fingerprints/ja4t/main.zeek:64` and `wireshark/source/packet-ja4.c:1266` each test the whole
 // flag byte against `0x02`, so each one declines a SYN that carries the ECN flags.
 //
-// The ruling of 2026-08-13 cites the `0xC2` assertion at `rust/ja4/src/tcp.rs:153`, and that
+// The ruling of 2026-08-13 cites the `0xC2` assertion at `rust/ja4/src/tcp.rs:158`, and that
 // line holds the comment above the assertion. This file cites `:154`, which holds the
-// assertion at the commit in `testdata/foxio-reading.pin`.
+// assertion at the commit in `testdata/foxio.pin`.
 //
 // The two tests below build the packet that separates the two readings. The corpus holds
 // two such SYN packets, and the suite compares neither one. The per-packet vector of
@@ -114,7 +114,7 @@ func buildFlaggedTCPPacket(t *testing.T, flags synFlags, window uint16) gopacket
 
 // TestJA4TReadsASYNThatCarriesTheECNFlags holds the ruling of #126.
 //
-// The flag byte reads `0xC2`, which is the value `rust/ja4/src/tcp.rs:154` asserts. An
+// The flag byte reads `0xC2`, which is the value `rust/ja4/src/tcp.rs:159` asserts. An
 // equality test against `0x02` declines this packet, and the bit test reads it.
 func TestJA4TReadsASYNThatCarriesTheECNFlags(t *testing.T) {
 	packet := buildFlaggedTCPPacket(t, synFlags{SYN: true, ECE: true, CWR: true}, 29200)

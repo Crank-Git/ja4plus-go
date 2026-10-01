@@ -53,11 +53,11 @@ func ja4OriginalOrderPacket(t *testing.T) gopacket.Packet {
 // TestJA4OriginalOrderHoldsTheHashedWireOrderForm asserts the `JA4_o` value of one client
 // hello.
 //
-// `testdata/foxio/reference/python/ja4.py:291` builds `JA4_o` from the same part a as
+// `testdata/foxio/reference/python/ja4.py:282` builds `JA4_o` from the same part a as
 // `JA4`, from a hash of the wire-order cipher list, and from a hash of the wire-order
 // extension list. `testdata/foxio/reference/python/common.py:144` keeps SNI and ALPN in
 // that list, because it removes the two only when it sorts.
-// `testdata/foxio/reference/python/ja4.py:246` appends the signature algorithms to the
+// `testdata/foxio/reference/python/ja4.py:248` appends the signature algorithms to the
 // hashed string. Issue #277 records the field that carries the value.
 func TestJA4OriginalOrderHoldsTheHashedWireOrderForm(t *testing.T) {
 	results, err := NewJA4().ProcessPacket(ja4OriginalOrderPacket(t))
@@ -81,8 +81,8 @@ func TestJA4OriginalOrderHoldsTheHashedWireOrderForm(t *testing.T) {
 // TestJA4OriginalOrderHashesEachPartOfTheRawWireOrderForm proves that the hashed form and
 // the raw form read one input.
 //
-// `testdata/foxio/reference/python/ja4.py:291` and
-// `testdata/foxio/reference/python/ja4.py:293` build `JA4_o` and `JA4_ro` from the same two
+// `testdata/foxio/reference/python/ja4.py:282` and
+// `testdata/foxio/reference/python/ja4.py:284` build `JA4_o` and `JA4_ro` from the same two
 // strings, so the part count of the two values differs. `JA4_ro` carries the signature
 // algorithms as a fourth part, and `JA4_o` hashes them into the third part.
 func TestJA4OriginalOrderHashesEachPartOfTheRawWireOrderForm(t *testing.T) {
@@ -140,7 +140,7 @@ func TestJA4OriginalOrderDiffersFromTheSortedFingerprint(t *testing.T) {
 // the new field.
 //
 // FoxIO publishes `JA4_o` and publishes no `JA4S_o`.
-// `testdata/foxio/reference/python/ja4.py:291` writes the one key, and `conformance_adapters_test.go`
+// `testdata/foxio/reference/python/ja4.py:282` writes the one key, and `conformance_adapters_test.go`
 // builds the key from the method name, so a value in this field emits a key the vector
 // never holds. Issue #277 records the rule.
 func TestTheJA4SResultLeavesTheOriginalOrderEmpty(t *testing.T) {

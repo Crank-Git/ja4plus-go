@@ -159,7 +159,7 @@ and never a ruling.** It writes no register entry, and it states no rule about a
 value, so it reaches nothing that `.claude/rules/rulings.md` reserves to the maintainer.
 
 **A reading explains the per-stream set, and no reading explains the per-packet set.**
-`python/ja4.py:340` at the pin holds `delete_keys(['JA4L-S', 'JA4L-C'], final)`, under the
+`python/ja4.py:331` at the pin holds `delete_keys(['JA4L-S', 'JA4L-C'], final)`, under the
 guard `if 'ja4l' not in output_types:` at :339. That pair states why a per-stream reference
 file publishes no JA4L key. Ruling #361 registered 24 such uncovered values on 2026-08-13,
 and each entry names #361. **No reading covers the Wireshark generator.**
@@ -229,7 +229,7 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 
 | Interface | Version | Documentation |
 |---|---|---|
-| FoxIO Wireshark dissector | The commit in `testdata/foxio-reading.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark> |
+| FoxIO Wireshark dissector | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark> |
 | FoxIO Zeek package | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/zeek> |
 | FoxIO per-packet vectors | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 

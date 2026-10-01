@@ -27,8 +27,8 @@ const (
 )
 
 // foxioPinnedCommit is the FoxIO commit at which this project read the license.
-// `testdata/foxio-reading.pin` holds the same value.
-const foxioPinnedCommit = "27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8"
+// `testdata/foxio.pin` holds the same value.
+const foxioPinnedCommit = "16b96d95c220762cf658f67d678cda2aac95c81e"
 
 // noticeMethods holds the methods this library implements under FoxIO License 1.1.
 // FR-licensing-5 names them, and the list holds eleven of the twelve methods this library
@@ -152,12 +152,12 @@ func TestNoticeAssertsNoEqualityWithTheFoxIOList(t *testing.T) {
 		"asserts no equality",
 		"License FAQ.md:5",
 		"twelve",
-		"README.md:293",
-		"nine",
+		"README.md:299",
+		"fifteen",
 		"LICENSE:3",
 		"thirteen",
 		"JA4SScan",
-		// The FoxIO README names nine methods, and this library names ten. The two sets
+		// The FoxIO README names fifteen methods, and this library names eleven. The two sets
 		// are different, and a reader must not read one count as the other set.
 		"The two sets are different.",
 		foxioPinnedCommit,
@@ -226,9 +226,9 @@ func TestNoticeRecordsTheCommitAtWhichThisProjectReadTheLicense(t *testing.T) {
 		t.Errorf("NOTICE does not record the FoxIO commit %s", foxioPinnedCommit)
 	}
 
-	pin := strings.TrimSpace(readRepoFile(t, "testdata/foxio-reading.pin"))
+	pin := strings.TrimSpace(readRepoFile(t, "testdata/foxio.pin"))
 	if pin != foxioPinnedCommit {
-		t.Errorf("testdata/foxio-reading.pin holds %q, and NOTICE records %q", pin, foxioPinnedCommit)
+		t.Errorf("testdata/foxio.pin holds %q, and NOTICE records %q", pin, foxioPinnedCommit)
 	}
 }
 

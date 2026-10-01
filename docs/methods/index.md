@@ -4,7 +4,7 @@ JA4+ is a set of network fingerprint methods that FoxIO publishes. **This librar
 implements twelve of them.** This section holds one page for each one.
 
 **The twelve methods of this library are not the twelve that FoxIO names.** `License
-FAQ.md:5` of FoxIO at commit `27f0cbf` lists JA4Scan and omits JA4. This library implements
+FAQ.md:5` of FoxIO at commit `16b96d95` lists JA4Scan and omits JA4. This library implements
 JA4, and it implements no JA4Scan.
 
 ## The two counts, and what each one counts
@@ -65,13 +65,13 @@ would assert a ruling that no round holds.
 
 **Never read this list as equal to the list that FoxIO names.** Three records of the FoxIO
 reference name three different sets, at commit
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+`16b96d95c220762cf658f67d678cda2aac95c81e`.
 
 | FoxIO record | How many methods it names |
 |---|---|
 | `License FAQ.md:5` | Twelve. |
 | `LICENSE:3` | Thirteen, and it spells the scanner `JA4SScan`. |
-| `README.md:293` | Nine. |
+| `README.md:299` | Fifteen. |
 
 **So the sentence "the methods FoxIO names" resolves to three different lists.** Every page
 of this section therefore names what this library implements, and it cites the pinned

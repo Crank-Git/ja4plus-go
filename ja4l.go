@@ -231,7 +231,7 @@ func tcpEndpoint(ip string, port uint16) string {
 //
 // It returns false when the capture holds no SYN for one of the two endpoints, because a
 // relative number counts from the initial sequence number that the SYN carries.
-// `python/ja4.py:570` reads the two numbers that the dissector counts. A sequence number
+// `python/ja4.py:561` reads the two numbers that the dissector counts. A sequence number
 // wraps at 32 bits, and unsigned subtraction wraps the same way.
 func (c *connState) relativeNumbers(source, target string, seq, acknowledgment uint32) (uint32, uint32, bool) {
 	sourceISN, held := c.isns[source]
@@ -293,7 +293,7 @@ func (c *connState) restart() {
 //
 // **The deciding source is the dissector of the reference, and never a terminator this
 // library chooses.** `python/common.py:78` routes a packet whose `hl` is `http` to a cache
-// that holds no measurement point. `python/ja4.py:398` sets `hl` from the layer name that
+// that holds no measurement point. `python/ja4.py:389` sets `hl` from the layer name that
 // tshark reports. So the question is whether the Wireshark HTTP dissector reads the header
 // block as complete in this one segment.
 //
@@ -322,13 +322,13 @@ func holdsACompleteHTTPRequest(payload []byte) bool {
 // The reference records the point on every packet that carries `ACK`, carries no `SYN`, and
 // holds the relative sequence number `1` and the relative acknowledgment number `1`. That is
 // the bare ACK of the handshake first, and then the first packet of the application
-// handshake. `python/ja4.py:570` states the rule.
+// handshake. `python/ja4.py:561` states the rule.
 //
 // The point moves. `python/common.py:101` omits `C` from the fields
 // that it declines to update, so a later packet replaces the point and the value.
 //
 // The point moves in either direction, and the value reads the client TTL for a packet of
-// either direction. `python/ja4.py:159` reads `client_ttl`.
+// either direction. `python/ja4.py:170` reads `client_ttl`.
 //
 // Issue #196 holds the reading.
 func (f *JA4LFingerprinter) clientPoint(
@@ -530,8 +530,15 @@ func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uin
 	// implementations that each divide by 2.
 	// The two integer references truncate the half toward zero. Go integer division
 	// truncates the same way. Issue #166 holds the reading.
+	// An interval of 0 or 1 microsecond therefore writes 0, as each FoxIO implementation
+	// does. Issue #809 removed a floor of 1 that no FoxIO source states.
 	latencyUS := int(diff.Microseconds()) / latencyDivisor
-	if latencyUS < 1 {
+
+	// An interval below zero keeps the value 1 that this library wrote before #809.
+	// No FoxIO source states that value. The FoxIO implementations disagree on an interval
+	// below zero, so a change to it waits for a ruling. Issue #253 records the
+	// disagreement.
+	if diff < 0 {
 		latencyUS = 1
 	}
 	fingerprint := fmt.Sprintf("%s=%d_%d", label, latencyUS, ttl)

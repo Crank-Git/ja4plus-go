@@ -3,7 +3,7 @@
 `ja4plus-go` is a Go library and a command-line program for JA4+ network fingerprinting.
 It implements twelve JA4+ methods. Ten fingerprinters carry eleven of them, and the opt-in
 package `scan` carries the twelfth, the JA4TScan active scanner. FoxIO also names twelve
-methods, and the two lists differ. `License FAQ.md:5` of FoxIO at commit `27f0cbf` lists
+methods, and the two lists differ. `License FAQ.md:5` of FoxIO at commit `16b96d95` lists
 JA4Scan and omits JA4, and this project implements JA4 and no JA4Scan. It reads TLS, TCP,
 HTTP, SSH, X.509 and DHCP characteristics, and it decodes a QUIC Initial packet.
 
@@ -533,11 +533,9 @@ every packet of the connection, and `ComputeJA4TS` reads one packet and writes f
 ## Conformance
 
 `make conformance` tests this library against the FoxIO corpus at commit
-[`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`](https://github.com/FoxIO-LLC/ja4/tree/27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8).
-`testdata/foxio-reading.pin` holds that commit, and `make corpus` fetches the reference tree
-at it. **The captures and the vectors come from a second commit**, which `testdata/foxio.pin`
-holds. #797 split the two pins on 2026-10-01 UTC, and #801 rereads each citation at the vector
-pin and removes the reading pin. The
+[`16b96d95c220762cf658f67d678cda2aac95c81e`](https://github.com/FoxIO-LLC/ja4/tree/16b96d95c220762cf658f67d678cda2aac95c81e).
+`testdata/foxio.pin` holds that commit, and `make corpus` fetches the captures, the vectors
+and the reference tree at it. The
 corpus is FoxIO-licensed material, so this repository tracks the pin and never the
 captures.
 

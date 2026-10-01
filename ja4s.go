@@ -287,7 +287,7 @@ func computeJA4SFromServerHello(sh *parser.ServerHello) string {
 // builds both, so the raw form cannot drift from the fingerprint.
 //
 // The raw form holds the extensions in the wire order, and it sorts no list.
-// `rust/ja4/src/tls.rs:467` and `wireshark/source/packet-ja4.c:547` each build the raw
+// `rust/ja4/src/tls.rs:487` and `wireshark/source/packet-ja4.c:547` each build the raw
 // form from the string the fingerprint hashes. The raw form is that hash preimage with the
 // prefix in front of it. `ja4plus/fingerprinters/ja4s.py:179` states the same rule for the
 // Python port.

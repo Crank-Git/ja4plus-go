@@ -172,7 +172,7 @@ func newTestMonitor(t *testing.T, options watchOptions, clock func() time.Time) 
 	out := &strings.Builder{}
 	errOut := &strings.Builder{}
 
-	return newMonitor(options, &stopRequest{}, out, errOut, clock), out, errOut
+	return newMonitor(options, &stopRequest{}, out, errOut, clock, nil), out, errOut
 }
 
 // steadyClock returns a clock that reports one time, so a test that reads no age holds

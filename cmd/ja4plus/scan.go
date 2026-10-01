@@ -237,7 +237,8 @@ func runScanCommand(args []string, env scanEnvironment) int {
 func scanTargets(options scanOptions, env scanEnvironment, network scan.Network, out io.Writer,
 	first netip.Addr, next func() (netip.Addr, bool),
 ) int {
-	writer := newResultWriter(out, watchOptions{outputJSON: options.format == "json", outputCSV: options.format == "csv"})
+	// The scan takes no lookup option, so the writer receives no identifier.
+	writer := newResultWriter(out, watchOptions{outputJSON: options.format == "json", outputCSV: options.format == "csv"}, nil)
 	if err := writer.header(); err != nil {
 		_, _ = fmt.Fprintf(env.stderr, "Error: the result stream takes no header: %v\n", err)
 		return 1

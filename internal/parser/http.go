@@ -174,7 +174,7 @@ func headerBlockTerminator(data []byte) (int, int) {
 //
 // The maintainer ruled this gate on 2026-08-13, at issue #455.
 // The port's issue Crank-Git/ja4plus#607 carries the other half.
-// `zeek/ja4h/main.zeek:186` computes the JA4H value in
+// `zeek/scripts/fingerprints/ja4h/main.zeek:145` computes the JA4H value in
 // `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`.
 // That file holds no handler that flushes a partial request.
 // This gate follows that shape, so a request whose body never completes reaches no value.

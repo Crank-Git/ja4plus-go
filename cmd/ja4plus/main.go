@@ -121,9 +121,15 @@ func main() {
 }
 
 func printUsage() {
-	// The usage names every token, because `--types` refuses a token that names no method
-	// and the user needs the list before the refusal.
-	fmt.Fprintf(os.Stderr, `ja4plus - JA4+ network fingerprinting tool
+	fmt.Fprint(os.Stderr, usageText())
+}
+
+// usageText returns the usage text that `--help` prints.
+//
+// The usage names every token, because `--types` refuses a token that names no method and
+// the user needs the list before the refusal.
+func usageText() string {
+	return fmt.Sprintf(`ja4plus - JA4+ network fingerprinting tool
 
 Usage:
   ja4plus analyze <pcap-file> [options]
@@ -142,6 +148,9 @@ Analyze options:
                   ja4l prints the client value and the server value.
                   ja4ls prints the server value alone.
   --lookup        Include application lookup for each fingerprint
+  --lookup-remote Include application lookup, and send each fingerprint the
+                  database holds no entry for to https://ja4db.com.
+                  %s=1 permits the same request for --lookup.
 
 Watch options:
   --interface <name>       The interface the monitor reads
@@ -149,7 +158,7 @@ Watch options:
                            default build declines it.
   --stats-interval <secs>  The seconds between two statistics lines. The default is 60,
                            and 0 writes one line at exit.
-  --json, --csv, --types <list>, --lookup
+  --json, --csv, --types <list>, --lookup, --lookup-remote
                            The options of the analyze command, with the same meaning.
 
 Scan options:
@@ -167,7 +176,7 @@ Scan options:
 Database commands:
   db update       Download the latest ja4plus-mapping.csv from FoxIO
   db info         Print info about the active database (embedded vs cached)
-`, strings.Join(methodTokens, ", "))
+`, strings.Join(methodTokens, ", "), remoteLookupVariable)
 }
 
 // packetReader abstracts over pcap and pcapng readers.
@@ -222,15 +231,16 @@ func newPacketReader(f *os.File, path string) (packetReader, error) {
 
 func runAnalyze(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("missing pcap file argument\nUsage: ja4plus analyze <pcap-file> [--json|--csv] [--types ja4,ja4t] [--lookup]")
+		return fmt.Errorf("missing pcap file argument\nUsage: ja4plus analyze <pcap-file> [--json|--csv] [--types ja4,ja4t] [--lookup] [--lookup-remote]")
 	}
 
 	pcapFile := args[0]
 	var (
-		outputJSON  bool
-		outputCSV   bool
-		typesFilter map[string]bool
-		doLookup    bool
+		outputJSON   bool
+		outputCSV    bool
+		typesFilter  map[string]bool
+		doLookup     bool
+		lookupRemote bool
 	)
 
 	// Parse flags manually after the pcap file argument.
@@ -252,6 +262,8 @@ func runAnalyze(args []string) error {
 			typesFilter = filter
 		case "--lookup":
 			doLookup = true
+		case "--lookup-remote":
+			lookupRemote = true
 		default:
 			return fmt.Errorf("unknown option: %s", args[i])
 		}
@@ -322,14 +334,17 @@ func runAnalyze(args []string) error {
 		fmt.Fprintf(os.Stderr, "note: %d packets carried a record that no fingerprinter read\n", packetFails)
 	}
 
+	// The library reads no environment variable, so this program reads the permission.
+	identify := newIdentifier(doLookup, lookupRemote, os.Getenv, os.Stderr, lookupFromJA4DB)
+
 	// Output results.
 	switch {
 	case outputJSON:
-		return writeJSON(results, doLookup)
+		return writeJSON(results, identify)
 	case outputCSV:
-		return writeCSV(results, doLookup)
+		return writeCSV(results, identify)
 	default:
-		return writeTable(results, doLookup)
+		return writeTable(results, identify)
 	}
 }
 
@@ -344,7 +359,7 @@ type jsonResult struct {
 	Application string `json:"application,omitempty"`
 }
 
-func writeJSON(results []ja4plus.FingerprintResult, doLookup bool) error {
+func writeJSON(results []ja4plus.FingerprintResult, identify *identifier) error {
 	out := make([]jsonResult, 0, len(results))
 	for _, r := range results {
 		jr := jsonResult{
@@ -356,11 +371,7 @@ func writeJSON(results []ja4plus.FingerprintResult, doLookup bool) error {
 			Fingerprint: r.Fingerprint,
 			Timestamp:   r.Timestamp.Format(time.RFC3339),
 		}
-		if doLookup {
-			if lr := ja4plus.LookupFingerprint(r.Fingerprint); lr != nil {
-				jr.Application = lr.Application
-			}
-		}
+		jr.Application = identify.application(r.Fingerprint)
 		out = append(out, jr)
 	}
 	enc := json.NewEncoder(os.Stdout)
@@ -368,11 +379,11 @@ func writeJSON(results []ja4plus.FingerprintResult, doLookup bool) error {
 	return enc.Encode(out)
 }
 
-func writeCSV(results []ja4plus.FingerprintResult, doLookup bool) error {
+func writeCSV(results []ja4plus.FingerprintResult, identify *identifier) error {
 	w := csv.NewWriter(os.Stdout)
 
 	header := []string{"type", "src_ip", "src_port", "dst_ip", "dst_port", "fingerprint", "timestamp"}
-	if doLookup {
+	if identify != nil {
 		header = append(header, "application")
 	}
 	if err := w.Write(header); err != nil {
@@ -389,12 +400,8 @@ func writeCSV(results []ja4plus.FingerprintResult, doLookup bool) error {
 			r.Fingerprint,
 			r.Timestamp.Format(time.RFC3339),
 		}
-		if doLookup {
-			app := ""
-			if lr := ja4plus.LookupFingerprint(r.Fingerprint); lr != nil {
-				app = lr.Application
-			}
-			row = append(row, app)
+		if identify != nil {
+			row = append(row, identify.application(r.Fingerprint))
 		}
 		if err := w.Write(row); err != nil {
 			return err
@@ -408,10 +415,10 @@ func writeCSV(results []ja4plus.FingerprintResult, doLookup bool) error {
 	return w.Error()
 }
 
-func writeTable(results []ja4plus.FingerprintResult, doLookup bool) error {
+func writeTable(results []ja4plus.FingerprintResult, identify *identifier) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
 
-	if doLookup {
+	if identify != nil {
 		_, _ = fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint\tApplication")
 	} else {
 		_, _ = fmt.Fprintln(w, "Type\tSource\tDestination\tFingerprint")
@@ -420,12 +427,8 @@ func writeTable(results []ja4plus.FingerprintResult, doLookup bool) error {
 	for _, r := range results {
 		src := fmt.Sprintf("%s:%d", r.SrcIP, r.SrcPort)
 		dst := fmt.Sprintf("%s:%d", r.DstIP, r.DstPort)
-		if doLookup {
-			app := ""
-			if lr := ja4plus.LookupFingerprint(r.Fingerprint); lr != nil {
-				app = lr.Application
-			}
-			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint, app)
+		if identify != nil {
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint, identify.application(r.Fingerprint))
 		} else {
 			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Type, src, dst, r.Fingerprint)
 		}

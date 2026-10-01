@@ -47,8 +47,8 @@ func TestF22_1_ALPNValueWritesTheValueTheFoxioVectorHolds(t *testing.T) {
 	//
 	// `docs/specs/foxio/JA4.md` R19 records a reference split of four results for a
 	// non-alphanumeric ALPN value. `.claude/rules/parity.md` rule 1 settles it, because a
-	// vector reaches the value, and the vector holds `99`. `python/ja4.py:279-280` and
-	// `wireshark/source/packet-ja4.c:1027-1028` both write `99`.
+	// vector reaches the value, and the vector holds `99`. `python/ja4.py:156-157` writes
+	// `9` for each non-ASCII end, and `wireshark/source/packet-ja4.c:1027-1028` writes `99`.
 	//
 	// The `hexForm` column records the value the finding measured. This test asserts the
 	// FoxIO value, so it fails when a reader restores the hexadecimal rule.

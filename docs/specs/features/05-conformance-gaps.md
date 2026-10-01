@@ -202,7 +202,7 @@ names it.
 ### The hashed wire-order form
 
 The FoxIO per-stream vector set holds a `JA4_o` value on 160 entries.
-`testdata/foxio/reference/python/ja4.py:291` builds the value, and it hashes each list of
+`testdata/foxio/reference/python/ja4.py:282` builds the value, and it hashes each list of
 the wire-order raw form.
 
 - **FR-gaps-24** — `FingerprintResult` holds the exported field `OriginalOrder`, which

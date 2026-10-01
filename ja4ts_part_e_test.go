@@ -184,7 +184,7 @@ func TestJA4TS_WritesTwoPartEDelaysWhenTheServerAnswersThreeTimes(t *testing.T) 
 // Each part e delay rounds to the nearest second, half away from zero.
 //
 // `docs/specs/foxio/JA4T.md` R24 records a reference split. Zeek truncates each delay at
-// `zeek/ja4t/main.zeek:180`, and Wireshark rounds each delay at
+// `zeek/scripts/fingerprints/ja4t/main.zeek:114`, and Wireshark rounds each delay at
 // `wireshark/source/packet-ja4.c:277`. R24 names issue #18, which recorded the split.
 // Issue #56 holds the reading this library follows, and the maintainer read the port's
 // shipped rule on 2026-08-13. The port holds `_delay_seconds` at
@@ -226,7 +226,7 @@ func TestJA4TS_RoundsAPartEDelayToTheNearestSecond(t *testing.T) {
 // Part e holds at most ten delays. `docs/specs/foxio/JA4T.md` R18 states the count of each
 // implementation, and the two counts differ.
 //
-// Zeek writes at most ten delays. `zeek/ja4t/main.zeek:185` reads
+// Zeek writes at most ten delays. `zeek/scripts/fingerprints/ja4t/main.zeek:119` reads
 // `if (|c$fp$ja4t$synack_delays| == 10) {` and returns.
 //
 // Wireshark writes at most nine delays. `wireshark/source/packet-ja4.c:1290` stores a
@@ -276,7 +276,7 @@ func TestJA4TS_AZeroValueFingerprinterReadsItsFirstPacketWithNoPanic(t *testing.
 // hold three readings. Wireshark stores no time after the tenth at
 // `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen tenth time at
 // `wireshark/source/packet-ja4.c:694`. Zeek stops setting the next packet threshold at
-// `zeek/ja4t/main.zeek:185-189`, so it observes no RST of such a connection and writes no
+// `zeek/scripts/fingerprints/ja4t/main.zeek:119-124`, so it observes no RST of such a connection and writes no
 // reset value. The port also reads the eleventh timestamp, at
 // `ja4plus/fingerprinters/ja4ts.py:161` of tag `v1.1.0`, under its issue #246.
 //
@@ -343,7 +343,7 @@ func TestJA4TS_CleanupConnectionRemovesTheNamedConnection(t *testing.T) {
 // A connection that receives no SYN-ACK for 120 seconds leaves the table.
 // The deleted FoxIO file states the bound as "the timeout is 2 minutes after the last
 // SYNACK", and `docs/specs/foxio/JA4T.md` R22 records the Zeek test at
-// `zeek/ja4t/main.zeek:162`. The port holds `SYN_ACK_TIMEOUT_SECONDS` at
+// `zeek/scripts/fingerprints/ja4t/main.zeek:96`. The port holds `SYN_ACK_TIMEOUT_SECONDS` at
 // `ja4plus/fingerprinters/ja4ts.py:25` of tag `v1.1.0`.
 //
 // The pass reads the capture timestamp and never the wall clock, because a capture
@@ -413,7 +413,7 @@ func TestJA4TS_AppendsTheResetDelayToPartE(t *testing.T) {
 // ACK reaches the rule.
 //
 // `docs/specs/foxio/JA4T.md` R30 records a reference split. Zeek tests
-// `rph$tcp$flags & TH_RST != 0` at `zeek/ja4t/main.zeek:167`, and Wireshark tests
+// `rph$tcp$flags & TH_RST != 0` at `zeek/scripts/fingerprints/ja4t/main.zeek:101`, and Wireshark tests
 // `tcp_flags == 0x004` for equality at `wireshark/source/packet-ja4.c:1296`. The maintainer
 // read the port's shipped rule on 2026-08-13, at issue #126, and this library follows Zeek.
 // The register row `The JA4TS value that a RST produces` carries the port half, in the
