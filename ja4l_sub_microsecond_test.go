@@ -86,8 +86,7 @@ func TestJA4LWritesZeroForAClientIntervalOfOneMicrosecond(t *testing.T) {
 // TestJA4LWritesOneForANegativeInterval holds the present value of an interval below zero.
 //
 // This test asserts the present behavior, and it states no rule. Issue #253 records that the
-// FoxIO implementations disagree on an interval below zero, and issue #212 holds the open
-// question. Issue #809 removed the floor for an interval of 0 or 1 microsecond, and it kept
+// FoxIO implementations disagree on an interval below zero. Issue #809 removed the floor for an interval of 0 or 1 microsecond, and it kept
 // this value. A change to it waits for a ruling.
 func TestJA4LWritesOneForANegativeInterval(t *testing.T) {
 	cases := []struct {

@@ -537,7 +537,7 @@ func (f *JA4LFingerprinter) emitResult(label string, diff time.Duration, ttl uin
 	// An interval below zero keeps the value 1 that this library wrote before #809.
 	// No FoxIO source states that value. The FoxIO implementations disagree on an interval
 	// below zero, so a change to it waits for a ruling. Issue #253 records the
-	// disagreement, and issue #212 holds the open question.
+	// disagreement.
 	if diff < 0 {
 		latencyUS = 1
 	}
