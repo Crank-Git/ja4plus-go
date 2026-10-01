@@ -198,7 +198,8 @@ that the interface declares.
   each one. The scanner sends one TCP SYN to each IPv4 target and writes one JA4TScan value
   for each target that answers. It changes no firewall state. No passive package imports
   it, and `TestNoPassivePackageImportsTheScanner` holds that boundary. The project now
-  implements all twelve methods that FoxIO names. **The scanner moves no fingerprint value
+  implements twelve methods. The list differs from the FoxIO list of `License FAQ.md:5`,
+  which holds JA4Scan and omits JA4. **The scanner moves no fingerprint value
   of a passive method**, and it reaches no vector of the FoxIO corpus.
 - No exported name, and one test that holds the method count. `TestMethodCount` reads every
   tracked Markdown file, every tracked HTML file and every Go comment. It fails when one

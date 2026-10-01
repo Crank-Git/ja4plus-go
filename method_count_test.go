@@ -15,13 +15,16 @@ import (
 // These tests hold FR-ja4ls-15 through FR-ja4ls-20, which issue #62 carries.
 //
 // `CLAUDE.md` states the doctrine. FoxIO names twelve methods, and this project implements
-// all twelve of them. `JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters
+// twelve methods. The two lists differ: `License FAQ.md:5` of FoxIO lists JA4Scan and omits
+// JA4. `JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters
 // carry eleven methods, and package `scan` carries JA4TScan. A reader who applies the count
 // of ten to methods, or the count of eleven to fingerprinters, reads the wrong number.
 //
 // **#796 moved the method count from eleven to twelve on 2026-10-01 UTC**, when it added
 // the active scanner. So a sentence that gives eleven as the count this project implements is
-// now wrong, and the third form below reports it. A dated record keeps the count it
+// now wrong, and the third form below reports it. A sentence that says this project
+// implements "all" twelve states that its list equals the FoxIO list, and the fourth form
+// reports it. The cross-member review of batch #821 found that claim in seven documents. A dated record keeps the count it
 // measured, so the scan skips the history of `docs/specs/spec.md` and the released
 // sections of `CHANGELOG.md`.
 //
@@ -35,13 +38,13 @@ type methodCountForm struct {
 	reason  string
 }
 
-// methodCountForbiddenForms holds the three forms the scan reports.
+// methodCountForbiddenForms holds the four forms the scan reports.
 //
 // Each pattern joins the count word to the noun it counts, so a sentence that counts a
-// subset passes. `NOTICE` covers ten of the eleven methods, and that sentence states the
+// subset passes. `NOTICE` covers eleven of the twelve methods, and that sentence states the
 // subset rather than the total.
 //
-// The scan reports these two forms alone. The tree holds true sentences that count
+// The scan reports these four forms alone. The tree holds true sentences that count
 // something else with the same words: `internal/parser/http.go:29` counts HTTP request
 // methods, and `NOTICE:37` counts the methods that one FoxIO record names. A wider pattern
 // would report each one, and a reader who silences a true report stops reading the
@@ -66,6 +69,12 @@ var methodCountForbiddenForms = []methodCountForm{
 	{
 		pattern: regexp.MustCompile(`(?i)\b` + "implements" + `\s+(` + "eleven" + `|11)\b`),
 		reason:  "this project implements twelve methods since #796 added JA4TScan",
+	},
+	{
+		// The CLAUDE.md License rule bars a statement that this project's method list
+		// equals the FoxIO list.
+		pattern: regexp.MustCompile(`(?i)\b` + "all" + `\s+(` + "twelve" + `|12)\b`),
+		reason:  "the twelve methods of this project are not the twelve that FoxIO names: JA4 is in, and JA4Scan is out",
 	},
 }
 
@@ -432,7 +441,7 @@ func TestMethodCountScanReportsAFormThatAStrayDelimiterPrecedes(t *testing.T) {
 }
 
 // A sentence that counts a subset of the methods states the subset and never the total.
-// `NOTICE` covers ten of the eleven methods, and that sentence passes.
+// `NOTICE` covers eleven of the twelve methods, and that sentence passes.
 func TestMethodCountScanReportsNoSubsetSentence(t *testing.T) {
 	document := "FoxIO License 1.1 covers " + "ten" + " of the eleven " + "methods" + ".\n"
 
@@ -451,12 +460,24 @@ func TestMethodCountScanReportsAnImplementedCountOfEleven(t *testing.T) {
 	}
 }
 
+// TestMethodCountScanReportsAClaimOfAllTwelve holds the fourth form. The FoxIO list of
+// `License FAQ.md:5` holds JA4Scan and omits JA4, so this project implements no list of
+// "all" twelve.
+func TestMethodCountScanReportsAClaimOfAllTwelve(t *testing.T) {
+	document := "It implements " + "all" + " twelve JA4+ methods that FoxIO names.\n"
+
+	if violations := methodCountScan("example.md", document); len(violations) != 1 {
+		t.Errorf("the scan reports %d violations, and the document holds one", len(violations))
+	}
+}
+
 // FR-ja4ls-20.
 func TestMethodCountCLAUDEmdStatesTheDoctrine(t *testing.T) {
 	claude := readRepoFile(t, "CLAUDE.md")
 
 	for _, want := range []string{
-		"implements all twelve",
+		"this project implements twelve methods",
+		"lists JA4Scan and omits JA4",
 		"ten fingerprinters carry eleven",
 	} {
 		if !strings.Contains(claude, want) {

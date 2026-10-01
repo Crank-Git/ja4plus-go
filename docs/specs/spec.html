@@ -87,7 +87,7 @@
     <span class="tag">branch model: dev-and-live</span>
     <span class="tag">from v0.3.0 → v1.0.0</span>
     <span class="tag">17 epics</span>
-    <span class="tag">11 methods · 10 fingerprinters</span>
+    <span class="tag">12 methods · 10 fingerprinters · 1 scanner</span>
     <span class="tag">reference: FoxIO 27f0cbf</span>
     <span class="tag">port: ja4plus v1.1.0</span>
   </div>
@@ -147,7 +147,9 @@ fingerprinting. FoxIO publishes the JA4+ standard; this is an independent implem
 The library is at <code>v1.0.0</code>, and the current work takes it to
 <code>v1.1.0</code>.</p>
 
-<p><strong>FoxIO names twelve methods. This project implements all twelve of them.</strong>
+<p><strong>FoxIO names twelve methods, and this project implements twelve methods. The
+two lists differ.</strong> <code>License FAQ.md:5</code> of FoxIO at <code>27f0cbf</code>
+lists JA4Scan and omits JA4. This project implements JA4, and it implements no JA4Scan.
 The active scanner of package <code>scan</code> carries JA4TScan, and #796 built it.
 <code>JA4LFingerprinter</code> writes both JA4L and JA4LS, so <strong>ten
 fingerprinters carry eleven methods</strong>. Read the ten as a count of fingerprinters,

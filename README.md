@@ -1,8 +1,10 @@
 <p align="center"><img src="assets/logo.png" width="300"></p>
 
 `ja4plus-go` is a Go library and a command-line program for JA4+ network fingerprinting.
-It implements all twelve JA4+ methods that FoxIO names. Ten fingerprinters carry eleven of
-them, and the opt-in package `scan` carries the twelfth, the JA4TScan active scanner. It reads TLS, TCP,
+It implements twelve JA4+ methods. Ten fingerprinters carry eleven of them, and the opt-in
+package `scan` carries the twelfth, the JA4TScan active scanner. FoxIO also names twelve
+methods, and the two lists differ. `License FAQ.md:5` of FoxIO at commit `27f0cbf` lists
+JA4Scan and omits JA4, and this project implements JA4 and no JA4Scan. It reads TLS, TCP,
 HTTP, SSH, X.509 and DHCP characteristics, and it decodes a QUIC Initial packet.
 
 JA4+ is a set of network fingerprinting standards that [FoxIO](https://foxio.io)

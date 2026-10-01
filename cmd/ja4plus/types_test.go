@@ -155,9 +155,10 @@ func TestTheTokenListNamesEachMethodOnce(t *testing.T) {
 		seen[token] = true
 	}
 
-	// The library writes eleven methods, and ten fingerprinters carry them. `CLAUDE.md`
-	// states that count.
+	// The passive fingerprinters write eleven methods, and ten fingerprinters carry them.
+	// `CLAUDE.md` states that count. `--types` selects among the passive methods, so the
+	// twelfth method, JA4TScan, takes no token here.
 	if len(methodTokens) != 11 {
-		t.Errorf("the token list holds %d tokens, and the library writes 11 methods", len(methodTokens))
+		t.Errorf("the token list holds %d tokens, and the passive fingerprinters write 11 methods", len(methodTokens))
 	}
 }

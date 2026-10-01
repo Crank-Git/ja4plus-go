@@ -65,6 +65,11 @@ func isAnswer(flags uint8) bool {
 //
 // OpenNetwork returns the network of the host. A test passes a fake network, so a scan runs
 // with no packet and no socket.
+//
+// **One Network serves one goroutine.** The Scanner that holds it makes every call from
+// the goroutine that runs Scanner.Run, so an implementation needs no lock. A caller that
+// shares one Network between two goroutines guards each call itself. The network of
+// OpenNetwork is not safe for concurrent use.
 type Network interface {
 	// Send sends one SYN to the target from the source port, with the sequence number.
 	// It returns the source address of the SYN, and false when it sent nothing. An error

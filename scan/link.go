@@ -71,6 +71,13 @@ type linkNetwork struct {
 // interface holds no Ethernet address, and when the host refuses the link.
 // `capture.PermissionDenied` reads a refused privilege. A macOS build without the `libpcap`
 // build tag returns an error that names the tag.
+//
+// **The returned Network serves one goroutine, and it is not safe for concurrent use.** It
+// holds a next-hop cache and a list of pending frames, and no lock guards either one. The
+// goroutine that runs the Scanner makes every call, and that goroutine calls Close after
+// the scan. `.claude/rules/concurrency.md` states the shard pattern for one `Processor`,
+// and one network for each Scanner is the same pattern. OpenNetwork itself holds no shared
+// state, so two goroutines can each open a network of their own.
 func OpenNetwork(port uint16, first netip.Addr, warn func(string)) (Network, error) {
 	route, err := capture.LookupRoute(first)
 	if err != nil {

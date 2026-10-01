@@ -31,8 +31,8 @@ const (
 const foxioPinnedCommit = "27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8"
 
 // noticeMethods holds the methods this library implements under FoxIO License 1.1.
-// FR-licensing-5 names them, and the list holds ten of the eleven methods this library
-// implements. JA4 is the eleventh, and the BSD 3-Clause license covers it.
+// FR-licensing-5 names them, and the list holds eleven of the twelve methods this library
+// implements. JA4 is the twelfth, and the BSD 3-Clause license covers it.
 var noticeMethods = []string{
 	"JA4S",
 	"JA4H",

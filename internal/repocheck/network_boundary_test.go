@@ -274,8 +274,9 @@ func TestTheNetworkBoundaryRecordNamesTheDecisionAndTheReason(t *testing.T) {
 
 // The maintainer narrowed the boundary on 2026-08-15 UTC, and comment 5299776533 of issue
 // #613 holds that ruling. The boundary names an HTTP call and a remote lookup, and it names
-// no raw socket. `internal/capture` reads a local interface through a raw socket, and that
-// reach is outside the boundary.
+// no raw socket. `internal/capture` reads a local interface through a raw socket, and it
+// sends the SYN of the scanner to a remote host through one. Neither reach is a remote
+// lookup, so both are outside the boundary.
 //
 // The guard below holds the narrowed rule. It permits `internal/capture/` alone, so a second
 // package that calls one of the functions of `socketOpenFunction` fails the test. Issue #613
@@ -323,12 +324,21 @@ func importedPackageName(spec *ast.ImportSpec, importPath string) string {
 
 // socketOpenSite returns each line of each production file below the root that calls a
 // function of socketOpenFunction, keyed by the path.
+func socketOpenSite(t *testing.T, root string, skipDir map[string]bool) map[string][]int {
+	t.Helper()
+
+	return functionCallSite(t, root, skipDir, socketOpenFunction)
+}
+
+// functionCallSite returns each line of each production file below the root that calls a
+// function of the map, keyed by the path. The map keys each import path to the names of
+// the functions that the reader reports.
 //
 // It reads no test file, because a test file reaches no released binary.
 //
 // It resolves the local name of each import before it reads a call, so an aliased import
 // reports and an unrelated identifier of the same spelling does not.
-func socketOpenSite(t *testing.T, root string, skipDir map[string]bool) map[string][]int {
+func functionCallSite(t *testing.T, root string, skipDir map[string]bool, called map[string][]string) map[string][]int {
 	t.Helper()
 
 	site := map[string][]int{}
@@ -381,7 +391,7 @@ func socketOpenSite(t *testing.T, root string, skipDir map[string]bool) map[stri
 				continue
 			}
 
-			functions, named := socketOpenFunction[importPath]
+			functions, named := called[importPath]
 			if !named {
 				continue
 			}
@@ -715,5 +725,79 @@ func TestThePackageDocumentationAndTheReadmeNameTheNetworkFunction(t *testing.T)
 				t.Errorf("%s names no %s, and it states which function reaches the network", page, named)
 			}
 		}
+	}
+}
+
+// The amendment of 2026-10-01 to the ruling of #613. The maintainer answered question 1 of
+// #796 with answer A: every socket open stays in `internal/capture/`, and package `scan`
+// reaches a socket only through `capture.OpenLink`. The guard above reads a direct call
+// alone, so a second package that calls `OpenLink` would open a socket and pass it. The
+// guard below names the one package that may call `OpenLink`.
+
+// linkOpenFunction names the exported helper of `internal/capture` that opens a link-layer
+// socket for a send.
+var linkOpenFunction = map[string][]string{
+	"github.com/Crank-Git/ja4plus-go/internal/capture": {"OpenLink"},
+}
+
+// linkOpenPermittedDir names the one directory that answer A of #796 permits a call of
+// `capture.OpenLink` in.
+const linkOpenPermittedDir = "scan/"
+
+// linkOpenSkipDir names each directory that holds no production Go file of the module. It
+// skips no Go directory, because `cmd/` is a package that could call `OpenLink`.
+var linkOpenSkipDir = map[string]bool{
+	".git":     true,
+	".claude":  true,
+	".github":  true,
+	"bin":      true,
+	"docs":     true,
+	"testdata": true,
+}
+
+// TestOnlyTheScanPackageCallsOpenLink holds answer A of #796. A call of `capture.OpenLink`
+// outside `scan/` opens a socket that the guard of #613 cannot see.
+func TestOnlyTheScanPackageCallsOpenLink(t *testing.T) {
+	site := functionCallSite(t, ".", linkOpenSkipDir, linkOpenFunction)
+	reachedTheScanner := false
+
+	for path, lines := range site {
+		if strings.HasPrefix(path, linkOpenPermittedDir) {
+			reachedTheScanner = true
+
+			continue
+		}
+
+		sort.Ints(lines)
+
+		t.Errorf("%s calls capture.OpenLink at line %v.\n"+
+			"\tThe maintainer ruled on 2026-10-01 in #796 that %s alone calls it. %s holds the record.",
+			path, lines, linkOpenPermittedDir, networkBoundaryRecordPage)
+	}
+
+	// A reader that finds no call reports a clean tree that it never read.
+	if !reachedTheScanner {
+		t.Fatalf("the walk finds no call of capture.OpenLink under %s, and the scanner holds one", linkOpenPermittedDir)
+	}
+}
+
+// TestTheLinkReaderReportsAPackageOutsideTheScannerThatCallsOpenLink proves that the reader
+// fires on a second caller.
+func TestTheLinkReaderReportsAPackageOutsideTheScannerThatCallsOpenLink(t *testing.T) {
+	root := writeSocketGuardFixture(t, "internal/other", "probe.go", `package other
+
+import link "github.com/Crank-Git/ja4plus-go/internal/capture"
+
+func probe() error {
+	_, err := link.OpenLink("eth0")
+
+	return err
+}
+`)
+
+	site := functionCallSite(t, root, map[string]bool{}, linkOpenFunction)
+
+	if len(site) != 1 {
+		t.Fatalf("the reader reports %d file that calls OpenLink, and the fixture holds one", len(site))
 	}
 }
