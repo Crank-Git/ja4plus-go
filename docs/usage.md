@@ -20,6 +20,7 @@ ja4plus - JA4+ network fingerprinting tool
 
 Usage:
   ja4plus analyze <pcap-file> [options]
+  ja4plus watch --interface <name> [options]
   ja4plus cert <cert-file>
   ja4plus db update
   ja4plus db info
@@ -33,6 +34,18 @@ Analyze options:
                   ja4l prints the client value and the server value.
                   ja4ls prints the server value alone.
   --lookup        Include application lookup for each fingerprint
+  --lookup-remote Include application lookup, and send each fingerprint the
+                  database holds no entry for to https://ja4db.com.
+                  JA4PLUS_DB_LOOKUP=1 permits the same request for --lookup.
+
+Watch options:
+  --interface <name>       The interface the monitor reads
+  --bpf <filter>           A capture filter. The libpcap build applies it, and the
+                           default build declines it.
+  --stats-interval <secs>  The seconds between two statistics lines. The default is 60,
+                           and 0 writes one line at exit.
+  --json, --csv, --types <list>, --lookup, --lookup-remote
+                           The options of the analyze command, with the same meaning.
 
 Database commands:
   db update       Download the latest ja4plus-mapping.csv from FoxIO
@@ -76,6 +89,7 @@ value of a window that the capture left open.
 | `--csv` | The program writes CSV, with a header row. |
 | `--types <list>` | The program emits the named methods alone. |
 | `--lookup` | The program adds the application name for each fingerprint. |
+| `--lookup-remote` | The program adds the application name, and it asks `ja4db.com` for each fingerprint that the mapping table does not hold. |
 
 **The program takes an option and its value as two arguments.** Write
 `--types ja4,ja4t`, and never `--types=ja4,ja4t`. The parser reads the value from the next
@@ -83,6 +97,27 @@ argument, and it answers an unknown option with `unknown option: %s`.
 
 **`--json` outranks `--csv`.** A run that sets both writes JSON, because the output switch
 tests the JSON flag first.
+
+### The remote lookup
+
+**The program sends a fingerprint to `ja4db.com` only when the operator permits it.** A
+fingerprint describes traffic that the operator observed, so the request discloses it to a
+third party. Two things permit the request:
+
+- The `--lookup-remote` option.
+- The environment variable `JA4PLUS_DB_LOOKUP` with the value `1`.
+
+**The variable permits the request, and it asks for no lookup.** So the variable acts on a
+run that names `--lookup`. A run that names neither lookup option sends nothing. No other
+value of the variable permits the request, and the value `0` cancels no option.
+
+**The mapping table answers first, so a fingerprint that it holds sends no request.** The
+program sends one request for each other distinct fingerprint of the run. A failed request reads as a
+miss, and the run continues. A run that permits the request writes one notice to standard
+error.
+
+The option, the variable and the rule follow the port, `Crank-Git/ja4plus`, at tag `v1.3.0`.
+The maintainer ruled the variable on 2026-10-01 UTC, and issue #804 holds the ruling.
 
 ### The method tokens of `--types`
 

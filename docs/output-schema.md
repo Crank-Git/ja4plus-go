@@ -53,7 +53,7 @@ indents the array with two spaces. It is one document, and never one object per 
 | `dst_port` | `uint16` | Always. |
 | `fingerprint` | `string` | Always. |
 | `timestamp` | `string` | Always. |
-| `application` | `string` | Only with `--lookup`, and only for a fingerprint that the table holds. |
+| `application` | `string` | Only with `--lookup` or `--lookup-remote`, and only for a fingerprint that the table or the remote lookup holds. |
 
 **`application` carries `omitempty`.** A run without `--lookup` writes no `application`
 key at all. A run with `--lookup` writes the key for a fingerprint that the mapping table
@@ -78,7 +78,7 @@ The header without `--lookup`:
 type,src_ip,src_port,dst_ip,dst_port,fingerprint,timestamp
 ```
 
-**`--lookup` appends one column.** The header then ends `timestamp,application`, and each
+**`--lookup` appends one column, and `--lookup-remote` appends the same one.** The header then ends `timestamp,application`, and each
 row carries the extra field.
 
 **The CSV output writes the same column set for every row of the run.** The JSON output drops the
@@ -127,6 +127,10 @@ values.
 
 `--lookup` calls `LookupFingerprint` for each result. That function reads the mapping
 table, and it performs no network input and no network output.
+
+**A run that permits the remote lookup asks `ja4db.com` for each fingerprint that the
+table does not hold.** `--lookup-remote` permits it, and so does `JA4PLUS_DB_LOOKUP=1` with
+`--lookup`. The [usage guide](usage.md) states the rule.
 
 **A fingerprint that the table does not hold produces no application name.** The lookup
 returns `nil`, and the output drops the field. That is a miss in the table, and never an
