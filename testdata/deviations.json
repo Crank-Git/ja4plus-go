@@ -2122,7 +2122,7 @@
   {
     "key": "CVE-2018-6794.pcap/3/JA4L.1",
     "capability": false,
-    "ours": "1_128",
+    "ours": "0_128",
     "theirs": "",
     "ruling": "#196",
     "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
@@ -2138,7 +2138,7 @@
   {
     "key": "CVE-2018-6794.pcap/12/JA4L.1",
     "capability": false,
-    "ours": "1_128",
+    "ours": "0_128",
     "theirs": "",
     "ruling": "#196",
     "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
@@ -2154,7 +2154,7 @@
   {
     "key": "CVE-2018-6794.pcap/21/JA4L.1",
     "capability": false,
-    "ours": "1_128",
+    "ours": "0_128",
     "theirs": "",
     "ruling": "#196",
     "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, and `wireshark/source/packet-ja4.c:1302` bars the Wireshark value here."
@@ -3818,7 +3818,7 @@
   {
     "key": "CVE-2018-6794.pcap/0/JA4L-C",
     "capability": false,
-    "ours": "1_128",
+    "ours": "0_128",
     "theirs": "",
     "ruling": "#361",
     "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
@@ -3834,7 +3834,7 @@
   {
     "key": "CVE-2018-6794.pcap/1/JA4L-C",
     "capability": false,
-    "ours": "1_128",
+    "ours": "0_128",
     "theirs": "",
     "ruling": "#361",
     "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."
@@ -3850,7 +3850,7 @@
   {
     "key": "CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-C",
     "capability": false,
-    "ours": "1_128",
+    "ours": "0_128",
     "theirs": "",
     "ruling": "#361",
     "reason": "`python/ja4.py:340` deletes every JA4L key when the run names another method, so this vector file publishes no key for the method."

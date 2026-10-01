@@ -244,17 +244,17 @@ This file is tracked in git, so the table holds at most 3 uncovered values of ea
 
 | Capture | Vector set | Method | Uncovered | Comparison | Produced | Accepted |
 |---|---|---|---|---|---|---|
-| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/12/JA4L.1` | `1_128` | yes |
-| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/21/JA4L.1` | `1_128` | yes |
-| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/3/JA4L.1` | `1_128` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/12/JA4L.1` | `0_128` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/21/JA4L.1` | `0_128` | yes |
+| `CVE-2018-6794.pcap` | per-packet | JA4L | 3 | `CVE-2018-6794.pcap/3/JA4L.1` | `0_128` | yes |
 | `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/11/JA4LS.1` | `1513_255` | yes |
 | `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/2/JA4LS.1` | `2219_255` | yes |
 | `CVE-2018-6794.pcap` | per-packet | JA4LS | 3 | `CVE-2018-6794.pcap/20/JA4LS.1` | `1948_255` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/0/JA4H_r` | `ge11nn07ruru_Host,Connection,User-Agent,Upgrade-Insecure-Requests,Accept,Accept-Encoding,Accept-Language_` | no |
 | `CVE-2018-6794.pcap` | per-stream | JA4H | 2 | `CVE-2018-6794.pcap/1/JA4H_r` | `ge11nr06ruru_Host,Connection,User-Agent,Accept,Accept-Encoding,Accept-Language_` | no |
-| `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/0/JA4L-C` | `1_128` | yes |
-| `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/1/JA4L-C` | `1_128` | yes |
-| `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-C` | `1_128` | yes |
+| `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/0/JA4L-C` | `0_128` | yes |
+| `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/1/JA4L-C` | `0_128` | yes |
+| `CVE-2018-6794.pcap` | per-stream | JA4L | 3 | `CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-C` | `0_128` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4LS | 3 | `CVE-2018-6794.pcap/0/JA4L-S` | `2219_255` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4LS | 3 | `CVE-2018-6794.pcap/1/JA4L-S` | `1513_255` | yes |
 | `CVE-2018-6794.pcap` | per-stream | JA4LS | 3 | `CVE-2018-6794.pcap/192.168.235.1:53648-192.168.235.136:8089/JA4L-S` | `1948_255` | yes |
