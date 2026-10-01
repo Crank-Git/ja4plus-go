@@ -74,7 +74,8 @@ func (f *JA4TFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 // #297 records the ruling.
 //
 // A packet carries the option bytes, so an attacker controls them. The read stops at the
-// first length the region does not hold, and it slices no byte past the end.
+// first length the region does not hold, and it slices no byte past the end. An option
+// that the read stops at adds no entry.
 func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8) {
 	for i := 0; i < len(region); {
 		kind := layers.TCPOptionKind(region[i])
@@ -91,25 +92,19 @@ func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8
 			}
 			data = region[i+2 : i+length]
 		}
+		// Part b holds the kind of every option, and not the kinds of a name list. #808
+		// records the reading: `rust/ja4/src/tcp.rs:70` and
+		// `wireshark/source/packet-ja4.c:1456-1458` each write every `tcp.option_kind`.
+		entries = append(entries, strconv.Itoa(int(kind)))
 		switch kind {
-		case layers.TCPOptionKindEndList:
-			entries = append(entries, "0")
-		case layers.TCPOptionKindNop:
-			entries = append(entries, "1")
 		case layers.TCPOptionKindMSS:
-			entries = append(entries, "2")
 			if len(data) >= 2 {
 				mss = binary.BigEndian.Uint16(data[:2])
 			}
 		case layers.TCPOptionKindWindowScale:
-			entries = append(entries, "3")
 			if len(data) >= 1 {
 				wscale = data[0]
 			}
-		case layers.TCPOptionKindSACKPermitted:
-			entries = append(entries, "4")
-		case layers.TCPOptionKindTimestamps:
-			entries = append(entries, "8")
 		}
 		i += length
 	}
