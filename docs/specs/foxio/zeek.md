@@ -5,13 +5,13 @@ computes, what it does not compute, and which values this project declines to tr
 reference value.
 
 **This project read the package at FoxIO commit
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.** `testdata/foxio.pin` holds the same commit.
+`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.** `testdata/foxio-reading.pin` holds the same commit.
 Read the package at <https://github.com/FoxIO-LLC/ja4/tree/main/zeek>.
 
 Every claim below cites a file and a line, in the form `zeek/<file>:<line>`. The path is
 relative to the root of the FoxIO repository, and never to the `zeek/` directory. **Join
-it to `testdata/foxio/zeek-reference/`.** Read `zeek/ja4l/main.zeek:112` as line 112 of
-`testdata/foxio/zeek-reference/zeek/ja4l/main.zeek`. `docs/specs/foxio/README.md` states the
+it to `testdata/foxio/reference/`.** Read `zeek/ja4l/main.zeek:112` as line 112 of
+`testdata/foxio/reference/zeek/ja4l/main.zeek`. `docs/specs/foxio/README.md` states the
 rule, and it names each path that the rule does not cover.
 
 **A transcription records, and it never decides.** This page states what the Zeek package

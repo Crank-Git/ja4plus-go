@@ -36,16 +36,7 @@ it. **Try the bases in the order of the table**, because the first row is the co
 and the last two rows reach no file of this checkout.
 
 `make corpus` writes the FoxIO repository to `testdata/foxio/reference/`, at
-`scripts/fetch-corpus.sh:261`.
-
-**A `zeek/` path reads a second pin, and never the pin of `testdata/foxio.pin`.** FoxIO
-`4e91886c` replaced the Zeek scripts with a plugin, so the main pin holds no
-`zeek/ja4t/main.zeek`. The maintainer ruled on #797, on 2026-10-01 UTC, that every Zeek
-citation reads the scripts at `testdata/foxio-zeek.pin`. `make corpus` writes the `zeek/`
-directory of that commit to `testdata/foxio/zeek-reference/`, at
-`scripts/fetch-corpus.sh:140`. So base 1 joins a `zeek/` path to that directory. **#797 is
-the reversal path**: a move to the plugin under `zeek/src/` rereads each Zeek citation, and
-it drops the second pin.
+`scripts/fetch-corpus.sh:167`.
 
 | N | Base | A citation of that base | Where a reader resolves it |
 |---|---|---|---|
@@ -68,9 +59,9 @@ so the citation reads at base 7 and never at base 5.
 
 ### The three moved directories
 
-**`scripts/fetch-corpus.sh:243` moves three directories out of the staged tree first**, so
+**`scripts/fetch-corpus.sh:149` moves three directories out of the staged tree first**, so
 a citation of one of the three reaches no path under `testdata/foxio/reference/`.
-`scripts/fetch-corpus.sh:196` names the three. Join a citation of one of the three to the
+`scripts/fetch-corpus.sh:102` names the three. Join a citation of one of the three to the
 corpus directory of the right-hand column.
 
 | The FoxIO path a citation names | Where `make corpus` writes it | What it holds |
@@ -153,7 +144,7 @@ holds that one occurrence with its reason.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier
 version of `scripts/fetch-corpus.sh` wrote names the pinned commit and holds no reference
-tree. `scripts/fetch-corpus.sh:75` now reads the directories as well as the commit, so the
+tree. `scripts/fetch-corpus.sh:55` now reads the directories as well as the commit, so the
 next run fetches the corpus again.
 
 ## The inventory
@@ -181,8 +172,8 @@ reports.
 
 ## Reproduce the measurement
 
-`scripts/fetch-corpus.sh:243` moves `pcap`, `python/test/testdata` and
-`wireshark/test/testdata` into `testdata/foxio/`. `scripts/fetch-corpus.sh:261` then writes
+`scripts/fetch-corpus.sh:149` moves `pcap`, `python/test/testdata` and
+`wireshark/test/testdata` into `testdata/foxio/`. `scripts/fetch-corpus.sh:167` then writes
 the rest of the FoxIO repository to `testdata/foxio/reference/`.
 `testdata/foxio/reference/technical_details/` therefore holds each file of the table above,
 so `make corpus` reproduces every row.

@@ -37,9 +37,9 @@ func newCorpusFetchRoot(t *testing.T) string {
 
 	root := t.TempDir()
 	for path, mode := range map[string]os.FileMode{
-		"scripts/fetch-corpus.sh": 0o755,
-		"testdata/foxio.pin":      0o644,
-		"testdata/foxio-zeek.pin": 0o644,
+		"scripts/fetch-corpus.sh":    0o755,
+		"testdata/foxio.pin":         0o644,
+		"testdata/foxio-reading.pin": 0o644,
 	} {
 		content, err := os.ReadFile(path)
 		if err != nil {
@@ -69,8 +69,8 @@ func newCorpusArchive(t *testing.T) string {
 // newCorpusArchiveWithout returns the same archive without one path. It builds the case
 // where FoxIO moved a file that a reading cites, and the empty name omits nothing.
 //
-// The archive also holds the two Zeek scripts that the Zeek tree needs, so one archive
-// serves both downloads of a test that names no Zeek archive of its own.
+// The archive holds the vectors and every cited path, so one archive serves both downloads
+// of a test that names no reading archive of its own.
 func newCorpusArchiveWithout(t *testing.T, omitted string) string {
 	t.Helper()
 
@@ -83,7 +83,6 @@ func newCorpusArchiveWithout(t *testing.T, omitted string) string {
 		"python/ja4.py":                            "the per-stream reference",
 		"wireshark/test/test_tshark_output.py":     "the per-packet harness",
 		"wireshark/source/packet-ja4.c":            "the per-packet reference",
-		"zeek/ja4/main.zeek":                       "the Zeek reference",
 		"zeek/ja4t/main.zeek":                      "the Zeek reference",
 		"rust/ja4/src/tls.rs":                      "the Rust reference",
 		"technical_details/JA4.png":                "the JA4 image",
@@ -124,31 +123,31 @@ func newArchiveOfFiles(t *testing.T, files map[string]string) string {
 }
 
 // runFetchCorpus runs the script below the root and returns the combined output. The one
-// archive serves the corpus download and the Zeek download.
+// archive serves the download at the vector pin and the download at the reading pin.
 func runFetchCorpus(t *testing.T, root string, url string) (string, error) {
 	t.Helper()
 
-	return runFetchCorpusWithZeek(t, root, url, url)
+	return runFetchCorpusWithReading(t, root, url, url)
 }
 
-// runFetchCorpusWithZeek runs the script with a separate archive for the Zeek tree.
+// runFetchCorpusWithReading runs the script with a separate archive for the reading pin.
 //
 // The environment of the test process can already hold `JA4PLUS_CORPUS_URL` or
-// `JA4PLUS_ZEEK_CORPUS_URL`. A C library reads the first entry that matches, so the
+// `JA4PLUS_READING_CORPUS_URL`. A C library reads the first entry that matches, so the
 // function removes both entries before it appends the URLs of the test. An inherited entry
 // would send the script to the network.
-func runFetchCorpusWithZeek(t *testing.T, root string, url string, zeekURL string) (string, error) {
+func runFetchCorpusWithReading(t *testing.T, root string, url string, readingURL string) (string, error) {
 	t.Helper()
 
 	environment := []string{}
 	for _, entry := range os.Environ() {
-		if !strings.HasPrefix(entry, "JA4PLUS_CORPUS_URL=") && !strings.HasPrefix(entry, "JA4PLUS_ZEEK_CORPUS_URL=") {
+		if !strings.HasPrefix(entry, "JA4PLUS_CORPUS_URL=") && !strings.HasPrefix(entry, "JA4PLUS_READING_CORPUS_URL=") {
 			environment = append(environment, entry)
 		}
 	}
 
 	command := exec.Command("bash", filepath.Join(root, "scripts", "fetch-corpus.sh"))
-	command.Env = append(environment, "JA4PLUS_CORPUS_URL="+url, "JA4PLUS_ZEEK_CORPUS_URL="+zeekURL)
+	command.Env = append(environment, "JA4PLUS_CORPUS_URL="+url, "JA4PLUS_READING_CORPUS_URL="+readingURL)
 	output, err := command.CombinedOutput()
 
 	return string(output), err
@@ -160,8 +159,8 @@ func fileURL(path string) string {
 }
 
 func TestFoxioPinNamesOneFullCommitHash(t *testing.T) {
-	// The Zeek pin is the second pin of #797, and FR-conformance-1 binds it the same way.
-	for _, path := range []string{"testdata/foxio.pin", "testdata/foxio-zeek.pin"} {
+	// The reading pin is the second pin of #797, and FR-conformance-1 binds it the same way.
+	for _, path := range []string{"testdata/foxio.pin", "testdata/foxio-reading.pin"} {
 		content, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("read %s: %v", path, err)
@@ -212,15 +211,15 @@ func TestTheCorpusCacheKeyReadsThePinnedCommit(t *testing.T) {
 	}
 }
 
-// #797 — the cache key reads the hash of the Zeek pin. The key reads the main pin through
-// `steps.pin.outputs.commit`, and a move of the Zeek pin alone would otherwise restore a
-// Zeek tree of the previous commit. The script would then download the Zeek archive on
-// every run, and the cache would write nothing back.
-func TestTheCorpusCacheKeyReadsTheHashOfTheZeekPin(t *testing.T) {
+// #797 — the cache key reads the hash of the reading pin. The key reads the vector pin
+// through `steps.pin.outputs.commit`, and a move of the reading pin alone would otherwise
+// restore a reference tree of the previous commit. The script would then download the
+// reading archive on every run, and the cache would write nothing back.
+func TestTheCorpusCacheKeyReadsTheHashOfTheReadingPin(t *testing.T) {
 	key := corpusCacheKey(t, readRepoFile(t, ".github/workflows/ci.yml"))
 
-	if !strings.Contains(key, "hashFiles('testdata/foxio-zeek.pin')") {
-		t.Errorf("the corpus cache key is %q, and it reads no hash of testdata/foxio-zeek.pin", key)
+	if !strings.Contains(key, "hashFiles('testdata/foxio-reading.pin')") {
+		t.Errorf("the corpus cache key is %q, and it reads no hash of testdata/foxio-reading.pin", key)
 	}
 }
 
@@ -264,6 +263,7 @@ func TestFetchCorpusWritesTheReferenceTreeUnderTheFoxioPaths(t *testing.T) {
 		"testdata/foxio/reference/python/ja4.py",
 		"testdata/foxio/reference/wireshark/test/test_tshark_output.py",
 		"testdata/foxio/reference/wireshark/source/packet-ja4.c",
+		"testdata/foxio/reference/zeek/ja4t/main.zeek",
 		"testdata/foxio/reference/rust/ja4/src/tls.rs",
 	} {
 		if _, statErr := os.Stat(filepath.Join(root, path)); statErr != nil {
@@ -272,54 +272,62 @@ func TestFetchCorpusWritesTheReferenceTreeUnderTheFoxioPaths(t *testing.T) {
 	}
 }
 
-// #797 — the Zeek tree comes from the commit of `testdata/foxio-zeek.pin`, and never from
-// the main pin. FoxIO `4e91886c` replaced the Zeek scripts with a plugin, so the main pin
-// holds no `zeek/ja4t/main.zeek`. The maintainer ruled on 2026-10-01 UTC that every Zeek
-// citation reads the scripts at the second pin.
+// #797 — the reference tree comes from the commit of `testdata/foxio-reading.pin`, and the
+// captures and the vectors come from the commit of `testdata/foxio.pin`. The maintainer
+// ruled on 2026-10-01 UTC that the vectors move and that every reading stays at its commit.
+// #801 rereads each citation at the vector pin, and it removes the reading pin.
 //
-// The two archives hold different text at one path. The test therefore fails when the
-// script writes the Zeek tree from the main archive.
-func TestFetchCorpusWritesTheZeekTreeFromTheZeekPin(t *testing.T) {
+// The two archives hold different text at each shared path. The test therefore fails when
+// the script writes a tree from the wrong archive.
+func TestFetchCorpusWritesTheReferenceTreeFromTheReadingPin(t *testing.T) {
 	requireCorpusFetchTools(t)
 
-	main := map[string]string{
-		"pcap/tls12.pcap":                          "capture",
-		"python/test/testdata/tls12.pcap.json":     "[]",
+	vectors := map[string]string{
+		"pcap/tls12.pcap":                          "the capture at the vector pin",
+		"python/test/testdata/tls12.pcap.json":     "the vector at the vector pin",
+		"wireshark/test/testdata/dhcp.pcapng.json": "[]",
+		"python/ja4.py":                            "the reference at the vector pin",
+	}
+	reading := map[string]string{
+		"pcap/tls12.pcap":                          "the capture at the reading pin",
+		"python/test/testdata/tls12.pcap.json":     "the vector at the reading pin",
 		"wireshark/test/testdata/dhcp.pcapng.json": "[]",
 		"python/test/test_ja4_output.py":           "the per-stream harness",
-		"python/ja4.py":                            "the per-stream reference",
+		"python/ja4.py":                            "the reference at the reading pin",
 		"wireshark/test/test_tshark_output.py":     "the per-packet harness",
 		"wireshark/source/packet-ja4.c":            "the per-packet reference",
-		"zeek/src/ja4t.cc":                         "the Zeek plugin at the main pin",
+		"zeek/ja4t/main.zeek":                      "the Zeek scripts at the reading pin",
 		"rust/ja4/src/tls.rs":                      "the Rust reference",
 		"technical_details/JA4.png":                "the JA4 image",
 	}
-	zeek := map[string]string{
-		"zeek/ja4/main.zeek":  "the Zeek scripts at the Zeek pin",
-		"zeek/ja4t/main.zeek": "the Zeek scripts at the Zeek pin",
-		"python/ja4.py":       "a file that the Zeek tree never holds",
-	}
 
 	root := newCorpusFetchRoot(t)
-	output, err := runFetchCorpusWithZeek(t, root, fileURL(newArchiveOfFiles(t, main)), fileURL(newArchiveOfFiles(t, zeek)))
+	output, err := runFetchCorpusWithReading(t, root, fileURL(newArchiveOfFiles(t, vectors)), fileURL(newArchiveOfFiles(t, reading)))
 	if err != nil {
 		t.Fatalf("the script failed: %v\n%s", err, output)
 	}
 
-	tree := filepath.Join(root, "testdata", "foxio", "zeek-reference")
-	if got := readTrimmedFile(t, filepath.Join(tree, "zeek", "ja4t", "main.zeek")); got != zeek["zeek/ja4t/main.zeek"] {
-		t.Errorf("the Zeek tree holds %q at zeek/ja4t/main.zeek, and the Zeek archive holds %q\n%s",
-			got, zeek["zeek/ja4t/main.zeek"], output)
+	for path, want := range map[string]string{
+		"testdata/foxio/reference/python/ja4.py":       reading["python/ja4.py"],
+		"testdata/foxio/reference/zeek/ja4t/main.zeek": reading["zeek/ja4t/main.zeek"],
+		"testdata/foxio/pcap/tls12.pcap":               vectors["pcap/tls12.pcap"],
+		"testdata/foxio/python/tls12.pcap.json":        vectors["python/test/testdata/tls12.pcap.json"],
+	} {
+		if got := readTrimmedFile(t, filepath.Join(root, path)); got != want {
+			t.Errorf("%s holds %q, and the archive of its pin holds %q\n%s", path, got, want, output)
+		}
 	}
 
-	if _, statErr := os.Stat(filepath.Join(tree, "python")); statErr == nil {
-		t.Errorf("the Zeek tree holds python/, and it holds the zeek/ directory of the Zeek archive alone\n%s", output)
+	// The reference tree holds no capture of the reading archive, because the corpus holds
+	// each capture once, at the vector pin.
+	if _, statErr := os.Stat(filepath.Join(root, "testdata", "foxio", "reference", "pcap")); statErr == nil {
+		t.Errorf("the reference tree holds pcap/, and the corpus holds the captures once\n%s", output)
 	}
 
-	pin := readTrimmedFile(t, filepath.Join(root, "testdata", "foxio-zeek.pin"))
-	fetched := readTrimmedFile(t, filepath.Join(root, "testdata", "foxio", ".fetched-zeek"))
+	pin := readTrimmedFile(t, filepath.Join(root, "testdata", "foxio-reading.pin"))
+	fetched := readTrimmedFile(t, filepath.Join(root, "testdata", "foxio", ".fetched-reading"))
 	if fetched != pin {
-		t.Errorf("testdata/foxio/.fetched-zeek holds %q, and testdata/foxio-zeek.pin holds %q", fetched, pin)
+		t.Errorf("testdata/foxio/.fetched-reading holds %q, and testdata/foxio-reading.pin holds %q", fetched, pin)
 	}
 }
 
