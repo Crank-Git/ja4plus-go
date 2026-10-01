@@ -1220,7 +1220,8 @@ breaking.**
   - **No vector of the FoxIO corpus holds an option of another length, so no vector value
     moved.**
 - **The JSON schema of `ja4plus scan` is final.** The maintainer confirmed it on 2026-10-01
-  UTC, and #796 holds the ruling. The provisional mark of the `v1.3.0` record is removed.
+  UTC, and #796 holds the ruling. The `v1.3.0` record names the schema provisional, and
+  that mark no longer holds.
   The program keeps its own schema, and a register row records that the JSON schemas of
   this program and of the port differ.
 - **An ALPN end byte below `0x20`, or the byte `0x7F`, writes `99`.** The maintainer
