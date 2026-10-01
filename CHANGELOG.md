@@ -1174,6 +1174,132 @@ that the interface declares.
   - `golang.org/x/crypto` to v0.57.0. Pull request #788 proposed the move.
   - `golang.org/x/net` to v0.59.0. Pull request #789 proposed the move.
 
+## [v1.3.0]
+
+This section is the release record of `v1.3.0`. It carries no date, because FR-release-40
+creates the tag and no tag exists at this head.
+
+**`v1.3.0` is a minor version, because it adds the package `scan` and it changes no frozen
+name of `v1`.** A `go doc -all` comparison of the root package and of `ja4db` at `v1.2.0`
+and at this head reports no added, removed or changed exported declaration, measured on
+2026-10-01 UTC. `docs/api/v1.md` records every exported name, and the package `scan` is the
+one addition. **No change of this release is breaking.**
+
+**Four rules of this release move a fingerprint value.** Each item below names the input
+that moves it. `docs/audit/conformance.md` owns the conformance figures.
+
+### Added
+
+- **The JA4TScan active scanner, in the new package `scan`, and the `ja4plus scan`
+  subcommand.** #796 added it in pull request #822, and batch #821 merged it as pull request
+  #828. The package exports `Scanner`, `NewScanner`, `Scanner.Run`, `Scanner.Flush`,
+  `Config`, `Network`, `OpenNetwork`, `Response`, `Result`, `Value`, `ParseTargets`,
+  `FirewallRules`, `MaxTargets`, `RetransmitWait`, `NoRetransmitWait` and `ResetValue`.
+  `docs/api/v1.md` records each one, with its fields.
+  - The subcommand reads
+    `ja4plus scan <target> [--port <port>] [--rate <syn/s>] [--retransmit yes|no] [--format table|json|csv] [--output <file>] [--force]`.
+  - The scanner sends one TCP SYN to each IPv4 target, and it writes one JA4TScan value for
+    each target that answers. A first response that carries RST writes `0_rst-ack`.
+  - The scanner prints the firewall rules that the operator adds, and it applies none.
+  - Linux sends through a pure-Go packet socket. macOS needs the `libpcap` build tag, and a
+    build without a send path stops with one line that names the tag.
+  - No passive package imports `scan`, and `TestNoPassivePackageImportsTheScanner` holds
+    that boundary. **The scanner moves no fingerprint value of a passive method.**
+  - The project now implements twelve methods. Ten fingerprinters carry the eleven passive
+    methods, and `scan.Scanner` carries JA4TScan. The list differs from the FoxIO list of
+    `License FAQ.md:5`, which holds JA4Scan and omits JA4.
+- **The `--lookup-remote` option of `ja4plus analyze` and `ja4plus watch`, and the
+  `JA4PLUS_DB_LOOKUP` variable.** #804 added both in pull request #811, and batch #807
+  merged them as pull request #818.
+  - `--lookup-remote` asks for the application lookup, and it permits a request to
+    `ja4db.com`.
+  - `JA4PLUS_DB_LOOKUP=1` permits the request, and it asks for no lookup. So it acts only
+    with `--lookup`. Every other value permits nothing.
+  - The local mapping table answers first, and a hit sends no request. A failed request
+    reads as a miss. One notice for each run goes to standard error.
+  - `watch` gives each request a deadline of 2 seconds, and a stop request cancels the
+    lookup. Pull request #817 holds that bound.
+  - **The library reads no environment variable.** The program reads the variable, and
+    the library still reaches the network from `ja4db` alone.
+
+### Changed
+
+- **JA4 and JA4S: the ALPN characters of a non-ASCII end byte and of a one-byte value.**
+  #801 holds the ruling of 2026-10-01 UTC and the reversal path, and pull request #819
+  built it. Batch #806 merged it as pull request #824.
+  - **The `9` rule.** An end byte of `0x80` or higher writes `9` for that end. `68 ff`
+    writes `h9`, and `ff 68` writes `9h`. Both wrote `99` before.
+  - **The one-byte rule.** A one-byte printable value writes its byte twice. `2d` writes
+    `--`, and it wrote `99` before. `68` writes `hh`, as it did.
+  - A control byte below `0x20`, or the byte `0x7F`, at either end still writes `99`.
+  - **No vector of the FoxIO corpus reaches the new rule, so no conformance value moved.**
+    `ja4_alpn_ruling_test.go` holds each separating packet.
+- **JA4T and JA4TS: part b writes every TCP option kind.** #808 holds the defect, and pull
+  request #813 repaired it. Batch #812 merged it as pull request #825.
+  - Part b wrote the kinds 0, 1, 2, 3, 4 and 8 before, and it dropped every other kind.
+  - An input that carries another kind moves. The options MSS 1460, kind 34, SACK
+    permitted and window scale 7 wrote `64240_2-4-3-0_1460_7`, and they now write
+    `64240_2-34-4-3-0_1460_7`.
+  - No SYN and no SYN-ACK of the FoxIO corpus carries another kind, so no conformance
+    value moved.
+- **JA4L and JA4LS: an interval of 0 or 1 microsecond writes `0`.** #809 holds the defect,
+  and pull request #820 removed the floor that wrote `1`. Batch #812 merged it as pull
+  request #825.
+  - The input that moves is a handshake whose interval is 0 or 1 microsecond. Three JA4L
+    client values of `CVE-2018-6794.pcap` moved from `1_128` to `0_128`, and no vector
+    publishes them.
+  - A negative interval still writes `1`. #212 holds that open question.
+- **The FoxIO pin moves from `27f0cbf9` to `16b96d95`.** #797 moved it in pull request
+  #800, and batch #799 merged it as pull request #803. #801 then read every reference at
+  the same pin.
+  - `16b96d95` adds the capture `sigalg-grease.pcapng`. The vectors of every earlier
+    capture are byte-identical at the two commits, so the move changed no earlier value.
+- **The capture route of a loopback address or of a host address.** Pull request #829
+  repaired it, and batch #821 merged it as pull request #828.
+  - Linux read the `main` routing table alone, so `127.0.0.1` routed to the default
+    gateway. The route now reads the `local` table first.
+  - macOS skipped the scoped route rows of an address that the host holds. It reads them
+    now.
+  - A target in `127.0.0.0/8`, or an address that the host holds, now routes through the
+    loopback interface. A first target of `ja4plus scan` that routes there stops the scan.
+- The three pre-release tag constants, from `v1.2.0` to `v1.3.0`, and `docs/api/v1.md`,
+  which states the value that the three constants hold.
+
+### Fixed
+
+- **JA4 produces a value for a TLS ClientHello that spans more than one TCP segment.** #795
+  holds the defect, and pull request #810 repaired it. Batch #805 merged it as pull request
+  #816.
+  - The input that moves is a hello longer than one segment. A post-quantum key share makes
+    the hello of a current browser that long. The library produced no JA4 value for it
+    before.
+  - `JA4Fingerprinter` holds the segments until they complete the hello, and it emits one
+    value on the segment that completes it. The `### Fixed` list of `## [Unreleased]`
+    states the four bounds.
+  - The segment that opens a partial hello returned `TLS record truncated` before. It now
+    returns no error.
+  - Four comparisons of `sigalg-grease.pcapng` moved to a match, and no other value moved.
+- **An empty reassembly stream no longer panics.** Pull request #815 repaired a panic on
+  untrusted input, and it added the fuzz target `FuzzJA4ReadsAnySequenceOfTCPSegments`.
+- **A stop request ends the send loop of `ja4plus scan`.** Pull request #826 repaired it. A
+  `--rate` whose interval overflows `time.Duration` is now refused, and the program exits 1.
+
+### Known differences from the Python port
+
+- **The port half of the ALPN ruling has not landed.** `Crank-Git/ja4plus#789` holds it,
+  and that issue was open on 2026-10-01 UTC. Go and the port differ on a first ALPN value
+  whose end byte is `0x80` or higher, and on a one-byte printable value that is not
+  alphanumeric. No shared vector holds such a value, so the shared vector set reports no
+  difference.
+- **The output schema of `ja4plus scan` is provisional.** It follows the schema of this
+  program, and not the schema of the port. `docs/specs/features/17-active-scan.md` records
+  each departure, and #796 is the reversal path.
+
+### Not verified
+
+- **No test sends a real packet.** Every test of `scan` reads a fake network. A run as root
+  on Linux is the end-to-end check, and no record of this release holds one.
+
 ## [v1.2.0]
 
 This section is the release record of `v1.2.0`. It carries no date, because FR-release-40
