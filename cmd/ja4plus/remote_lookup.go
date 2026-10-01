@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/Crank-Git/ja4plus-go"
 	"github.com/Crank-Git/ja4plus-go/ja4db"
@@ -63,6 +64,12 @@ type identifier struct {
 	// cache holds each remote answer, and a miss too, so a repeated fingerprint sends one
 	// request.
 	cache map[string]string
+	// ctx ends every remote request. A run of `watch` cancels it at the first stop request,
+	// and the identifier then sends no new request.
+	ctx context.Context
+	// deadline bounds one remote request. A zero value leaves the bound to the client
+	// timeout of `ja4db`, which is 10 seconds.
+	deadline time.Duration
 }
 
 // newIdentifier returns the identifier that the options ask for, or nil for a run without a
@@ -82,7 +89,20 @@ func newIdentifier(lookup, lookupRemote bool, getenv func(string) string, notice
 
 	_, _ = fmt.Fprintln(notice, remoteLookupNotice)
 
-	return &identifier{remote: remote, cache: make(map[string]string)}
+	return &identifier{remote: remote, cache: make(map[string]string), ctx: context.Background()}
+}
+
+// bounded returns the identifier with a context that ends each remote request and a deadline
+// for each request. It returns nil for a nil identifier.
+func (id *identifier) bounded(ctx context.Context, deadline time.Duration) *identifier {
+	if id == nil {
+		return nil
+	}
+
+	id.ctx = ctx
+	id.deadline = deadline
+
+	return id
 }
 
 // application returns the application that the mapping table or the lookup service holds for
@@ -108,8 +128,22 @@ func (id *identifier) application(fingerprint string) string {
 		return cached
 	}
 
+	// A canceled context ends the run, so a request now delays the exit and changes no
+	// result that the operator waits for.
+	if id.ctx.Err() != nil {
+		return ""
+	}
+
+	ctx := id.ctx
+	if id.deadline > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, id.deadline)
+
+		defer cancel()
+	}
+
 	application := ""
-	if record, err := id.remote(context.Background(), fingerprint); err == nil && record != nil {
+	if record, err := id.remote(ctx, fingerprint); err == nil && record != nil {
 		application = record.Application
 	}
 
