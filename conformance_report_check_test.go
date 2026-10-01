@@ -92,7 +92,7 @@ func TestTheReportReadsARawFormKeyAsItsMethod(t *testing.T) {
 // comparison from the table that FR-conformance-28 states.
 func TestTheReportRejectsAMethodKeyItDoesNotRecognize(t *testing.T) {
 	if _, err := conformanceReportMethodOf("JA4TScan.1"); err == nil {
-		t.Error("the report reads the key `JA4TScan.1`, and this project implements no such method")
+		t.Error("the report reads the key `JA4TScan.1`, and the FoxIO corpus holds no vector for that method")
 	}
 }
 

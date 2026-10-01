@@ -192,6 +192,14 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- **The JA4TScan active scanner, in the new package `scan`, and the `ja4plus scan`
+  subcommand.** #796 added it on 2026-10-01 UTC, and it is a minor-version addition: it
+  changes no frozen name of `v1`. The package exports 16 names, and `docs/api/v1.md` records
+  each one. The scanner sends one TCP SYN to each IPv4 target and writes one JA4TScan value
+  for each target that answers. It changes no firewall state. No passive package imports
+  it, and `TestNoPassivePackageImportsTheScanner` holds that boundary. The project now
+  implements all twelve methods that FoxIO names. **The scanner moves no fingerprint value
+  of a passive method**, and it reaches no vector of the FoxIO corpus.
 - No exported name, and one test that holds the method count. `TestMethodCount` reads every
   tracked Markdown file, every tracked HTML file and every Go comment. It fails when one
   applies the count of ten to methods, or the count of eleven to fingerprinters, and it

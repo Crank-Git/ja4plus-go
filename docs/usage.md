@@ -20,6 +20,7 @@ ja4plus - JA4+ network fingerprinting tool
 
 Usage:
   ja4plus analyze <pcap-file> [options]
+  ja4plus scan <target> [options]
   ja4plus cert <cert-file>
   ja4plus db update
   ja4plus db info
@@ -123,9 +124,21 @@ ja4plus db update
 `db info` prints the source of the active database, the path and the entry count. The
 source is the embedded table or the cached table.
 
-**`db update` reaches the network, and no other subcommand does.** It downloads
+**`db update` reaches the network over HTTP.** It downloads
 `ja4plus-mapping.csv` from FoxIO into the cache. FoxIO License 1.1 covers that file, and
 the [license page](licensing.md) states the terms.
+
+### `scan` computes JA4TScan by an active scan
+
+```bash
+sudo ja4plus scan 203.0.113.0/28 --port 443 --format json
+```
+
+**`scan` is the one subcommand that sends packets.** It sends one TCP SYN to each IPv4
+target, and it writes one JA4TScan value for each target that answers. It changes no
+firewall state: it writes the firewall rules to standard error before the first SYN, and
+the operator applies them. The [JA4TScan page](methods/ja4tscan.md) states the options, the
+rules and the platforms.
 
 ## The library
 

@@ -38,6 +38,7 @@ var noticeMethods = []string{
 	"JA4H",
 	"JA4T",
 	"JA4TS",
+	"JA4TScan",
 	"JA4L",
 	"JA4LS",
 	"JA4X",
@@ -132,7 +133,7 @@ func TestNoticeNamesEveryMethodThatFoxIOLicense11Covers(t *testing.T) {
 func TestNoticeMethodListExcludesEveryUnimplementedMethod(t *testing.T) {
 	names := noticeMethodList(t)
 
-	absent := []string{"JA4TScan", "JA4SScan", "JA4Scan", "JA4E"}
+	absent := []string{"JA4SScan", "JA4Scan", "JA4E"}
 	for _, name := range names {
 		for _, unimplemented := range absent {
 			if name == unimplemented {

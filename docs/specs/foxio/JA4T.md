@@ -26,8 +26,9 @@ rule, and it names each path that the rule does not cover.
 The image titles itself `JA4T/S: TCP Fingerprint`, so it specifies JA4TS as well as JA4T.
 `docs/specs/features/11-foxio-reference.md` records the same measurement.
 
-**FoxIO publishes no image for JA4TScan**, and `docs/specs/spec.md` `Non-goals` declines
-that method.
+**FoxIO publishes no image for JA4TScan.** The FoxIO scanner at
+`https://github.com/FoxIO-LLC/ja4tscan` states its rules, and
+`docs/specs/features/17-active-scan.md` states what this project builds from it.
 
 ## The rules
 

@@ -1,7 +1,8 @@
 <p align="center"><img src="assets/logo.png" width="300"></p>
 
 `ja4plus-go` is a Go library and a command-line program for JA4+ network fingerprinting.
-It implements eleven JA4+ methods, and ten fingerprinters carry them. It reads TLS, TCP,
+It implements all twelve JA4+ methods that FoxIO names. Ten fingerprinters carry eleven of
+them, and the opt-in package `scan` carries the twelfth, the JA4TScan active scanner. It reads TLS, TCP,
 HTTP, SSH, X.509 and DHCP characteristics, and it decodes a QUIC Initial packet.
 
 JA4+ is a set of network fingerprinting standards that [FoxIO](https://foxio.io)
@@ -602,7 +603,7 @@ date.
 ## License
 
 The BSD 3-Clause license in [LICENSE](LICENSE) covers the original Go code, and FoxIO licenses the JA4 method under [LICENSE-JA4](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE-JA4).
-[FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE) covers JA4S, JA4H, JA4T, JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6, and it permits non-commercial use only.
+[FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE) covers JA4S, JA4H, JA4T, JA4TS, JA4TScan, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6, and it permits non-commercial use only.
 A commercial user contacts [FoxIO](https://foxio.io) for those methods, and [NOTICE](NOTICE) holds the FoxIO terms.
 
 ## Acknowledgments

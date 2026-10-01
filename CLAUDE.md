@@ -4,10 +4,12 @@ A Go library and command-line program for JA4+ network fingerprinting. It reads 
 through `gopacket`. JA4+ is a set of standards that FoxIO publishes. This library is an
 independent Go implementation.
 
-**FoxIO names twelve methods. This project implements eleven of them.**
+**FoxIO names twelve methods. This project implements all twelve of them.**
 **`JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters carry eleven
-methods.** Read the ten as a count of fingerprinters, and never as a count of methods. A
-document that states "ten methods" is wrong, and a test holds that count.
+methods.** The opt-in package `scan` carries the twelfth, JA4TScan, and no fingerprinter
+carries it. Read the ten as a count of fingerprinters, and never as a count of methods. A
+document that states "ten methods" is wrong, and a test holds that count. #796 moved the
+method count from eleven to twelve on 2026-10-01 UTC.
 
 **The library is at `v1.0.0`, and that tag froze the exported API.** `git ls-remote --tags
 origin` names the tag at `248f3e7`, and `gh release list` names the `v1.0.0` release of
@@ -107,9 +109,10 @@ of that register name a change to this repository. Read
 | `ja4db/` | Package `ja4db`: the remote lookup at `ja4db.com`. It is the one package of the library that reaches the network. |
 | `internal/parser/` | Protocol decoding for TLS, QUIC, HTTP, SSH, TCP streams, X.509 and GREASE. |
 | `internal/dbcache/` | The validation of a downloaded database, the 16 MB bound and the atomic cache write. |
+| `scan/` | Package `scan`: the JA4TScan active scanner. It is opt-in, and no passive package imports it. `internal/repocheck/scan_boundary_test.go` holds that boundary. |
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
-| `internal/capture/` | Opening a live interface. Holds the pure-Go backend, the libpcap backend, the unsupported-platform fallback, and one permission probe for each of Linux, macOS and every other platform. |
+| `internal/capture/` | Opening a live interface. Holds the pure-Go backend, the libpcap backend, the unsupported-platform fallback, and one permission probe for each of Linux, macOS and every other platform. Holds the link that sends the JA4TScan SYN, and the read of the routing table and the neighbor table. |
 | `internal/keylog/` | Reading a pcapng Decryption Secrets Block and a key log in the NSS key log format. |
 | `internal/repocheck/` | Package `repocheck`: the tests that read this repository rather than this library. It holds no production Go file, so it contributes no statement to the coverage total. |
 | `internal/deviations/` | The schema and the reader of `testdata/deviations.json`. Package `ja4plus` and package `repocheck` both read the register, and neither one imports the other's test files. |

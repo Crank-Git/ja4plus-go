@@ -137,9 +137,10 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `internal/capture/route_linux.go` | #796 |
 | `internal/capture/route_darwin.go` | #796 |
 | `internal/capture/route_other.go` | #796 |
+| `cmd/ja4plus/scan.go` | #796 |
 <!-- added-files:end -->
 
-**The table holds 27 rows, and no audit reads any of the 27 files.** Each row names the
+**The table holds 28 rows, and no audit reads any of the 28 files.** Each row names the
 issue that added the file after the audit of Epic 2.
 
 - Issue #200 added `internal/parser/ssh_tracker.go`.
@@ -161,7 +162,8 @@ issue that added the file after the audit of Epic 2.
 - Issue #795 added `ja4_tcp_hello.go`.
 - Issue #796 added the eight files of `internal/capture/` that hold the scan link and the
   route lookup: `link.go`, `link_linux.go`, `link_libpcap.go`, `link_unsupported.go`,
-  `route.go`, `route_linux.go`, `route_darwin.go` and `route_other.go`.
+  `route.go`, `route_linux.go`, `route_darwin.go` and `route_other.go`. It also added
+  `cmd/ja4plus/scan.go`, which holds the `scan` subcommand.
 
 **Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
 held eight files that ship and seven test files, measured on 2026-08-15 with

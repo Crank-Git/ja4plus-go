@@ -3,9 +3,10 @@
 //
 // # Methods
 //
-// This package implements eleven methods, and ten fingerprinters carry them.
+// This package carries eleven methods, and ten fingerprinters carry them.
 // JA4LFingerprinter writes both JA4L and JA4LS, so the count of fingerprinters is one
-// below the count of methods. Read the ten as a count of fingerprinters, and never as a
+// below the count of methods. The twelfth method is JA4TScan, the active scanner, and the
+// opt-in package `scan` carries it. No type of this package sends a packet. Read the ten as a count of fingerprinters, and never as a
 // count of methods.
 //
 // The list below names each method and the input it reads.
