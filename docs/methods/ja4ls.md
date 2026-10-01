@@ -11,8 +11,8 @@ implementation publishes a JA4LS value anyway.
 
 **Three methods of the JA4+ set reach no image of their own name.** JA4LS is one. JA4TS is
 the second, and `JA4T.png` titles itself `JA4T/S: TCP Fingerprint`, so that image does
-specify the schema of JA4TS. JA4TScan is the third, and FoxIO publishes nothing at all for
-it.
+specify the schema of JA4TS. JA4TScan is the third, and the FoxIO scanner at
+`https://github.com/FoxIO-LLC/ja4tscan` states its rules.
 
 ## The value
 

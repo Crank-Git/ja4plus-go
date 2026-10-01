@@ -70,9 +70,10 @@ const conformanceReportNoValueReason = "No vector of the corpus holds a value fo
 const conformanceReportSharedFieldReason = "FoxIO writes JA4D and JA4D6 under the single field `ja4.ja4d`, " +
 	"and FR-conformance-25 compares the two under JA4D."
 
-// conformanceReportMethods names the eleven methods this project implements, in the order
-// the report prints them. `docs/specs/spec.md` `## Terms` defines the word `method`, and
-// the twelfth FoxIO method is JA4TScan, which `Non-goals` declines.
+// conformanceReportMethods names the eleven passive methods, in the order the report
+// prints them. `docs/specs/spec.md` `## Terms` defines the word `method`. The twelfth
+// method is JA4TScan, and the FoxIO corpus holds no vector for it, because it sends
+// packets and reads no capture.
 var conformanceReportMethods = []string{
 	"JA4", "JA4S", "JA4H", "JA4X", "JA4SSH",
 	"JA4L", "JA4LS", "JA4T", "JA4TS", "JA4D", "JA4D6",

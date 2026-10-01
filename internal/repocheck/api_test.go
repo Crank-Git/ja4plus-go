@@ -55,6 +55,7 @@ type publishedPackage struct {
 var publishedPackages = []publishedPackage{
 	{Dir: ".", ImportPath: "github.com/Crank-Git/ja4plus-go"},
 	{Dir: "ja4db", ImportPath: "github.com/Crank-Git/ja4plus-go/ja4db"},
+	{Dir: "scan", ImportPath: "github.com/Crank-Git/ja4plus-go/scan"},
 }
 
 // apiEntry is one row of the record, and one exported name of the measurement.
@@ -673,7 +674,7 @@ func apiCountRows(importPath string, kinds map[string]int, rows int) []string {
 	bold := ""
 
 	if importPath == "" {
-		label = "| **Both** |"
+		label = "| **Every package** |"
 		bold = "**"
 	}
 

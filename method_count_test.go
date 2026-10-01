@@ -15,9 +15,15 @@ import (
 // These tests hold FR-ja4ls-15 through FR-ja4ls-20, which issue #62 carries.
 //
 // `CLAUDE.md` states the doctrine. FoxIO names twelve methods, and this project implements
-// eleven of them. `JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters
-// carry eleven methods. A reader who applies the count of ten to methods, or the count of
-// eleven to fingerprinters, reads the wrong number.
+// all twelve of them. `JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters
+// carry eleven methods, and package `scan` carries JA4TScan. A reader who applies the count
+// of ten to methods, or the count of eleven to fingerprinters, reads the wrong number.
+//
+// **#796 moved the method count from eleven to twelve on 2026-10-01 UTC**, when it added
+// the active scanner. So a sentence that gives eleven as the count this project implements is
+// now wrong, and the third form below reports it. A dated record keeps the count it
+// measured, so the scan skips the history of `docs/specs/spec.md` and the released
+// sections of `CHANGELOG.md`.
 //
 // `concurrency_doc_test.go:136` reads fourteen files and reports no line number. This scan
 // reads every document of the repository and reports the file and the line of each
@@ -29,7 +35,7 @@ type methodCountForm struct {
 	reason  string
 }
 
-// methodCountForbiddenForms holds the two forms the scan reports.
+// methodCountForbiddenForms holds the three forms the scan reports.
 //
 // Each pattern joins the count word to the noun it counts, so a sentence that counts a
 // subset passes. `NOTICE` covers ten of the eleven methods, and that sentence states the
@@ -55,7 +61,11 @@ var methodCountForbiddenForms = []methodCountForm{
 	},
 	{
 		pattern: regexp.MustCompile(`(?i)\b(` + "eleven" + `|11)\s+` + "fingerprinters" + `\b`),
-		reason:  "the count of eleven covers methods, and ten covers fingerprinters",
+		reason:  "the count of eleven covers the methods of the fingerprinters, and ten covers fingerprinters",
+	},
+	{
+		pattern: regexp.MustCompile(`(?i)\b` + "implements" + `\s+(` + "eleven" + `|11)\b`),
+		reason:  "this project implements twelve methods since #796 added JA4TScan",
 	},
 }
 
@@ -97,11 +107,13 @@ var methodCountExtensions = map[string]bool{
 // A code span takes the first one, and a quotation takes the second one.
 const methodCountExemptDelimiters = "`\""
 
-// methodCountHistoryFile names the one document whose history section the scan skips.
-const methodCountHistoryFile = "docs/specs/spec.md"
-
-// methodCountHistoryHeading opens that history section.
-const methodCountHistoryHeading = "\n## Changelog\n"
+// methodCountHistory names each document whose history the scan skips, and the text that
+// opens that history. A released section of `CHANGELOG.md` opens with `## [v`, so the
+// `## [Unreleased]` section above it stays in the scan.
+var methodCountHistory = map[string]string{
+	"docs/specs/spec.md": "\n## Changelog\n",
+	"CHANGELOG.md":       "\n## [v",
+}
 
 // methodCountViolation names one count form that one line of one file holds.
 type methodCountViolation struct {
@@ -143,11 +155,12 @@ func methodCountIsQuoted(text string, start, end int) bool {
 // changed, and a round that repairs a count quotes the form it deleted. The project
 // manager owns that section, and no member of a batch rewrites it.
 func methodCountMaskHistory(path, text string) string {
-	if filepath.ToSlash(path) != methodCountHistoryFile {
+	heading, held := methodCountHistory[filepath.ToSlash(path)]
+	if !held {
 		return text
 	}
 
-	start := strings.Index(text, methodCountHistoryHeading)
+	start := strings.Index(text, heading)
 	if start < 0 {
 		return text
 	}
@@ -428,12 +441,22 @@ func TestMethodCountScanReportsNoSubsetSentence(t *testing.T) {
 	}
 }
 
+// TestMethodCountScanReportsAnImplementedCountOfEleven holds the third form. #796 added
+// JA4TScan, so the project implements twelve methods.
+func TestMethodCountScanReportsAnImplementedCountOfEleven(t *testing.T) {
+	document := "This project " + "implements " + "eleven" + " of them.\n"
+
+	if violations := methodCountScan("example.md", document); len(violations) != 1 {
+		t.Errorf("the scan reports %d violations, and the document holds one", len(violations))
+	}
+}
+
 // FR-ja4ls-20.
 func TestMethodCountCLAUDEmdStatesTheDoctrine(t *testing.T) {
 	claude := readRepoFile(t, "CLAUDE.md")
 
 	for _, want := range []string{
-		"implements eleven",
+		"implements all twelve",
 		"ten fingerprinters carry eleven",
 	} {
 		if !strings.Contains(claude, want) {

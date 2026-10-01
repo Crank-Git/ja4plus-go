@@ -147,7 +147,8 @@ fingerprinting. FoxIO publishes the JA4+ standard; this is an independent implem
 The library is at <code>v1.0.0</code>, and the current work takes it to
 <code>v1.1.0</code>.</p>
 
-<p><strong>FoxIO names twelve methods. This project implements eleven of them.</strong>
+<p><strong>FoxIO names twelve methods. This project implements all twelve of them.</strong>
+The active scanner of package <code>scan</code> carries JA4TScan, and #796 built it.
 <code>JA4LFingerprinter</code> writes both JA4L and JA4LS, so <strong>ten
 fingerprinters carry eleven methods</strong>. Read the ten as a count of fingerprinters,
 never as a count of methods.</p>
@@ -212,7 +213,7 @@ The maintainer set this rule on 2026-08-11.</p>
 </div>
 <div class="scroll"><table>
 <tr><th>Out of scope</th><th>Because</th></tr>
-<tr><td>JA4TScan</td><td>FoxIO publishes no format and no implementation. A read on 2026-08-11 found <code>technical_details/</code> holds material for ten of the methods FoxIO names, and no file for it. <strong>One-to-one cannot be met for a method FoxIO does not define.</strong> Reversible when FoxIO publishes a format.</td></tr>
+<tr><td>JA4TScan</td><td><strong>In scope since 2026-09-30</strong>, and #796 built it in package <code>scan</code>. The record below states the earlier decline. FoxIO publishes no format and no implementation. A read on 2026-08-11 found <code>technical_details/</code> holds material for ten of the methods FoxIO names, and no file for it. <strong>One-to-one cannot be met for a method FoxIO does not define.</strong> Reversible when FoxIO publishes a format.</td></tr>
 <tr><td>JA4Scan</td><td>No ruling exists. Three FoxIO records spell it two ways or omit it. This project decided nothing, so it states no reason — a stated reason would assert a ruling no round holds.</td></tr>
 <tr><td>JA4E</td><td>Same cause. <code>LICENSE:3</code> is the one FoxIO record that names it.</td></tr>
 <tr><td>Running the port</td><td>No test builds, imports or executes Python. Parity rule 3.</td></tr>
