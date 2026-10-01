@@ -28,7 +28,8 @@ import (
 // constant here would break the rule this file holds.
 
 // foxioCorpusReferenceDir holds the FoxIO repository at the pin.
-// `scripts/fetch-corpus.sh:213` writes it, and `make corpus` runs that script.
+// The step of `scripts/fetch-corpus.sh` that `reference_is_complete` guards writes it,
+// and `make corpus` runs that script.
 const foxioCorpusReferenceDir = "testdata/foxio/reference"
 
 // `foxio_deleted_specs_test.go` declares foxioDeletedSpecsPage, and that page is base 4.
@@ -52,7 +53,7 @@ var foxioCitationExtension = map[string]bool{
 }
 
 // foxioMovedDirectory maps the FoxIO path a citation names to the corpus directory that
-// holds it. `scripts/fetch-corpus.sh:188` moves the three out of the staged tree, so a
+// holds it. `scripts/fetch-corpus.sh` removes the three from the staged reference tree, so a
 // citation of one of the three reaches no path under `testdata/foxio/reference/`.
 var foxioMovedDirectory = [][2]string{
 	{"pcap/", "testdata/foxio/pcap/"},

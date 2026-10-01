@@ -67,7 +67,8 @@ func newCorpusArchive(t *testing.T) string {
 }
 
 // newCorpusArchiveWithout returns the same archive without one path. It builds the case
-// where FoxIO moved a file that a reading cites, and the empty name omits nothing.
+// where FoxIO moved a file or a directory that a reading cites. A directory name omits
+// every file below it, and the empty name omits nothing.
 //
 // The archive holds the vectors and every cited path, so one archive serves both downloads
 // of a test that names no reading archive of its own.
@@ -89,7 +90,11 @@ func newCorpusArchiveWithout(t *testing.T, omitted string) string {
 		"README.md":                                "the archive holds more than the corpus",
 	}
 
-	delete(files, omitted)
+	for name := range files {
+		if omitted != "" && (name == omitted || strings.HasPrefix(name, omitted+"/")) {
+			delete(files, name)
+		}
+	}
 
 	return newArchiveOfFiles(t, files)
 }
@@ -173,17 +178,24 @@ func TestFoxioPinNamesOneFullCommitHash(t *testing.T) {
 	}
 }
 
-// corpusCacheKey returns the cache key that the conformance job of the workflow names.
-// It fails the test when the workflow names no such key.
-func corpusCacheKey(t *testing.T, workflow string) string {
+// corpusCacheKeys returns every corpus cache key that the workflow names. The
+// `conformance` job and the `coverage` job each restore the corpus, so the workflow names
+// two keys, and a test that read the first key alone would leave the second unheld. It
+// fails the test when the workflow names no such key.
+func corpusCacheKeys(t *testing.T, workflow string) []string {
 	t.Helper()
 
-	match := regexp.MustCompile(`(?m)^[ \t]*key:[ \t]*(foxio-corpus.*)$`).FindStringSubmatch(workflow)
-	if match == nil {
+	matches := regexp.MustCompile(`(?m)^[ \t]*key:[ \t]*(foxio-corpus.*)$`).FindAllStringSubmatch(workflow, -1)
+	if len(matches) == 0 {
 		t.Fatalf(".github/workflows/ci.yml names no corpus cache key")
 	}
 
-	return strings.TrimSpace(match[1])
+	keys := make([]string, 0, len(matches))
+	for _, match := range matches {
+		keys = append(keys, strings.TrimSpace(match[1]))
+	}
+
+	return keys
 }
 
 // FR-conformance-37 — the cache key reads the hash of `scripts/fetch-corpus.sh`, because
@@ -194,20 +206,20 @@ func corpusCacheKey(t *testing.T, workflow string) string {
 // again, and wrote nothing back. The hash moves the key on the commit that changes the
 // layout, and the key needs no version number that a reader must remember.
 func TestTheCorpusCacheKeyReadsTheHashOfTheFetchScript(t *testing.T) {
-	key := corpusCacheKey(t, readRepoFile(t, ".github/workflows/ci.yml"))
-
-	if !strings.Contains(key, "hashFiles('scripts/fetch-corpus.sh')") {
-		t.Errorf("the corpus cache key is %q, and it reads no hash of scripts/fetch-corpus.sh", key)
+	for _, key := range corpusCacheKeys(t, readRepoFile(t, ".github/workflows/ci.yml")) {
+		if !strings.Contains(key, "hashFiles('scripts/fetch-corpus.sh')") {
+			t.Errorf("the corpus cache key is %q, and it reads no hash of scripts/fetch-corpus.sh", key)
+		}
 	}
 }
 
 // FR-conformance-37 — the cache key reads the pinned commit, so a pin move misses the
 // cache and the next run fetches the corpus of the new commit.
 func TestTheCorpusCacheKeyReadsThePinnedCommit(t *testing.T) {
-	key := corpusCacheKey(t, readRepoFile(t, ".github/workflows/ci.yml"))
-
-	if !strings.Contains(key, "steps.pin.outputs.commit") {
-		t.Errorf("the corpus cache key is %q, and it reads no pinned commit", key)
+	for _, key := range corpusCacheKeys(t, readRepoFile(t, ".github/workflows/ci.yml")) {
+		if !strings.Contains(key, "steps.pin.outputs.commit") {
+			t.Errorf("the corpus cache key is %q, and it reads no pinned commit", key)
+		}
 	}
 }
 
@@ -216,10 +228,10 @@ func TestTheCorpusCacheKeyReadsThePinnedCommit(t *testing.T) {
 // restore a reference tree of the previous commit. The script would then download the
 // reading archive on every run, and the cache would write nothing back.
 func TestTheCorpusCacheKeyReadsTheHashOfTheReadingPin(t *testing.T) {
-	key := corpusCacheKey(t, readRepoFile(t, ".github/workflows/ci.yml"))
-
-	if !strings.Contains(key, "hashFiles('testdata/foxio-reading.pin')") {
-		t.Errorf("the corpus cache key is %q, and it reads no hash of testdata/foxio-reading.pin", key)
+	for _, key := range corpusCacheKeys(t, readRepoFile(t, ".github/workflows/ci.yml")) {
+		if !strings.Contains(key, "hashFiles('testdata/foxio-reading.pin')") {
+			t.Errorf("the corpus cache key is %q, and it reads no hash of testdata/foxio-reading.pin", key)
+		}
 	}
 }
 
@@ -331,21 +343,56 @@ func TestFetchCorpusWritesTheReferenceTreeFromTheReadingPin(t *testing.T) {
 	}
 }
 
-// FR-conformance-38 — the script stops when the archive holds no file that a reading
-// cites. A reference tree that silently lost one such file would break a reading in
-// `docs/specs/foxio/` and report success.
-func TestFetchCorpusFailsWhenACitedReferenceFileIsAbsent(t *testing.T) {
+// FR-conformance-38 — the script stops when the reading archive holds no path that a
+// reading cites. A reference tree that silently lost one such path would break a reading
+// in `docs/specs/foxio/` and report success.
+//
+// Each case omits one path of the `cited` list of `scripts/fetch-corpus.sh`, so the test
+// fails when a later edit drops a path from that list or narrows it. #797 once narrowed
+// `zeek` to `zeek/ja4t/main.zeek`, and the readings cite every Zeek script.
+func TestFetchCorpusFailsWhenACitedReferencePathIsAbsent(t *testing.T) {
 	requireCorpusFetchTools(t)
 
-	omitted := "wireshark/source/packet-ja4.c"
-	root := newCorpusFetchRoot(t)
-	output, err := runFetchCorpus(t, root, fileURL(newCorpusArchiveWithout(t, omitted)))
-	if err == nil {
-		t.Fatalf("the script reported success without %s:\n%s", omitted, output)
+	for _, omitted := range []string{
+		"technical_details",
+		"python/ja4.py",
+		"python/test/test_ja4_output.py",
+		"wireshark/source/packet-ja4.c",
+		"wireshark/test/test_tshark_output.py",
+		"zeek",
+		"rust",
+	} {
+		t.Run(omitted, func(t *testing.T) {
+			root := newCorpusFetchRoot(t)
+			output, err := runFetchCorpusWithReading(t, root, fileURL(newCorpusArchive(t)), fileURL(newCorpusArchiveWithout(t, omitted)))
+			if err == nil {
+				t.Fatalf("the script reported success without %s:\n%s", omitted, output)
+			}
+
+			if !strings.Contains(output, "holds no "+omitted+". ") {
+				t.Errorf("the failure message does not name %s:\n%s", omitted, output)
+			}
+		})
+	}
+}
+
+// #797 — the vector archive supplies the captures and the vectors alone, so the script
+// reads no cited path in it. A guard that read a cited path in the vector archive would
+// stop a fetch at a vector pin where FoxIO moved a reference file, and no reading cites
+// that commit.
+func TestFetchCorpusReadsNoCitedPathInTheVectorArchive(t *testing.T) {
+	requireCorpusFetchTools(t)
+
+	vectors := map[string]string{
+		"pcap/tls12.pcap":                          "capture",
+		"python/test/testdata/tls12.pcap.json":     "[]",
+		"wireshark/test/testdata/dhcp.pcapng.json": "[]",
 	}
 
-	if !strings.Contains(output, omitted) {
-		t.Errorf("the failure message does not name %s:\n%s", omitted, output)
+	root := newCorpusFetchRoot(t)
+	output, err := runFetchCorpusWithReading(t, root, fileURL(newArchiveOfFiles(t, vectors)), fileURL(newCorpusArchive(t)))
+	if err != nil {
+		t.Fatalf("the script failed for a vector archive that holds no reference file: %v\n%s", err, output)
 	}
 }
 

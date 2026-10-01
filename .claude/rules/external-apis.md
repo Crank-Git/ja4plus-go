@@ -21,8 +21,8 @@ Never describe an external interface from memory. A capability you cannot confir
 | FoxIO per-stream vectors | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/python/test/testdata> |
 | FoxIO per-packet vectors | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 | FoxIO License 1.1 | Read 2026-08-06 at `27f0cbf` | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE> |
-| Wireshark core dissectors | `v4.6.0`, which the pin records | <https://gitlab.com/wireshark/wireshark/-/tree/v4.6.0/epan/dissectors> |
-| Zeek analyzer | `8.0.0`, which the pin records | <https://github.com/zeek/zeek/tree/v8.0.0/src/analyzer/protocol> |
+| Wireshark core dissectors | `v4.6.0`, which the reading pin `testdata/foxio-reading.pin` records | <https://gitlab.com/wireshark/wireshark/-/tree/v4.6.0/epan/dissectors> |
+| Zeek analyzer | `8.0.0`, which the reading pin `testdata/foxio-reading.pin` records | <https://github.com/zeek/zeek/tree/v8.0.0/src/analyzer/protocol> |
 | `github.com/gopacket/gopacket` | v1.7.2, read 2026-09-30 | <https://pkg.go.dev/github.com/gopacket/gopacket> |
 | `golang.org/x/crypto` | v0.57.0, read 2026-09-30 | <https://pkg.go.dev/golang.org/x/crypto> |
 | `golang.org/x/net` | v0.59.0, read 2026-09-30 | <https://pkg.go.dev/golang.org/x/net> |

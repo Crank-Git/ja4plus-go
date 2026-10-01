@@ -19,12 +19,14 @@ import (
 //
 // `docs/audit/upstream-versions.md` holds the measurement and every citation.
 
-// upstreamWiresharkVersion is the Wireshark core version that the FoxIO pin records.
+// upstreamWiresharkVersion is the Wireshark core version that the FoxIO reading pin,
+// `testdata/foxio-reading.pin`, records.
 // `.github/workflows/wireshark-release.yml` of the FoxIO tree builds the released plugin
 // against this tag, so it is the core that the shipped plugin reads fields from.
 const upstreamWiresharkVersion = "v4.6.0"
 
-// upstreamZeekVersion is the Zeek analyzer version that the FoxIO pin records.
+// upstreamZeekVersion is the Zeek analyzer version that the FoxIO reading pin,
+// `testdata/foxio-reading.pin`, records.
 // `.github/workflows/zeek-test.yml` of the FoxIO tree runs the FoxIO Zeek tests in this
 // container, so it is the analyzer the FoxIO package is known to pass under.
 const upstreamZeekVersion = "8.0.0"

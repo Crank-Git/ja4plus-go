@@ -35,8 +35,8 @@ the table below.** The table states the form each base takes and where a reader 
 it. **Try the bases in the order of the table**, because the first row is the common case
 and the last two rows reach no file of this checkout.
 
-`make corpus` writes the FoxIO repository to `testdata/foxio/reference/`, at
-`scripts/fetch-corpus.sh:213`.
+`make corpus` writes the FoxIO repository to `testdata/foxio/reference/`. The step of
+`scripts/fetch-corpus.sh` that `reference_is_complete` guards writes it.
 
 **This project reads two FoxIO commits, and each citation of this directory reads the
 reading pin.** `testdata/foxio-reading.pin` names the commit of the reference tree, and
@@ -67,10 +67,11 @@ so the citation reads at base 7 and never at base 5.
 
 ### The three moved directories
 
-**`scripts/fetch-corpus.sh:188` moves three directories out of the staged tree first**, so
-a citation of one of the three reaches no path under `testdata/foxio/reference/`.
-`scripts/fetch-corpus.sh:69` names the three. Join a citation of one of the three to the
-corpus directory of the right-hand column.
+**`scripts/fetch-corpus.sh` removes three directories from the staged reference tree**, so
+a citation of one of the three reaches no path under `testdata/foxio/reference/`. The
+`sources` array of that script names the three. The step that `vectors_are_complete`
+guards writes them from the archive at the vector pin. Join a citation of one of the three
+to the corpus directory of the right-hand column.
 
 | The FoxIO path a citation names | Where `make corpus` writes it | What it holds |
 |---|---|---|
@@ -152,8 +153,8 @@ holds that one occurrence with its reason.
 
 **If `testdata/foxio/reference/` is absent, run `make corpus`.** A corpus that an earlier
 version of `scripts/fetch-corpus.sh` wrote names the pinned commit and holds no reference
-tree. `scripts/fetch-corpus.sh:97` now reads the directories as well as the commit, so the
-next run fetches the corpus again.
+tree. `vectors_are_complete` and `reference_is_complete` in `scripts/fetch-corpus.sh` now
+read the directories as well as the commit, so the next run fetches the corpus again.
 
 ## The inventory
 
@@ -180,9 +181,10 @@ reports.
 
 ## Reproduce the measurement
 
-`scripts/fetch-corpus.sh:188` moves `pcap`, `python/test/testdata` and
-`wireshark/test/testdata` into `testdata/foxio/`. `scripts/fetch-corpus.sh:213` then writes
-the rest of the FoxIO repository to `testdata/foxio/reference/`.
+The step of `scripts/fetch-corpus.sh` that `vectors_are_complete` guards moves `pcap`,
+`python/test/testdata` and `wireshark/test/testdata` into `testdata/foxio/`. The step that
+`reference_is_complete` guards then writes the rest of the FoxIO repository to
+`testdata/foxio/reference/`, at the reading pin.
 `testdata/foxio/reference/technical_details/` therefore holds each file of the table above,
 so `make corpus` reproduces every row.
 
