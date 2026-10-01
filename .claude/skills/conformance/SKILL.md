@@ -15,14 +15,16 @@ claim against FoxIO's own captures and expected values.
 make corpus
 ```
 
-The script reads the commit in `testdata/foxio.pin` and fetches the FoxIO repository at
-that commit. It writes three directories.
+The script fetches the captures, the vectors and the reference tree at the commit in
+`testdata/foxio.pin`. It writes four directories, and its last line prints the count of
+each one.
 
 | Directory | Holds |
 |---|---|
-| `testdata/foxio/pcap/` | 38 captures. |
-| `testdata/foxio/python/` | 37 per-stream vectors. |
-| `testdata/foxio/wireshark/` | 37 per-packet vectors. |
+| `testdata/foxio/pcap/` | The captures. |
+| `testdata/foxio/python/` | The per-stream vectors. |
+| `testdata/foxio/wireshark/` | The per-packet vectors. |
+| `testdata/foxio/reference/` | The rest of the FoxIO repository, which every reading cites. |
 
 The corpus is not tracked in git. It is FoxIO-licensed material, so the project fetches it
 and does not redistribute it.
@@ -137,5 +139,7 @@ an entry.
 ## To move the pin
 
 Change `testdata/foxio.pin` to the new FoxIO commit, in a commit that does nothing else.
+That pin moves the captures, the vectors and every reading, so a move rereads each
+citation, as #801 does.
 Run `make corpus` and `make conformance`. A new deviation means FoxIO changed a
 definition. Open an issue for it.

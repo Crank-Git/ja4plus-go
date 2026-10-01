@@ -65,7 +65,8 @@ image. Fact 4 is why FR-reference-12 recovers the deleted text.
 - **FR-reference-2** — The page holds one row per file of `technical_details/`, with the
   byte count and the SHA-256 hash.
 - **FR-reference-3** — The page states the one command that reproduces the measurement.
-- **FR-reference-4** — The pinned commit equals the commit in `testdata/foxio.pin`.
+- **FR-reference-4** — The pinned commit equals the commit in `testdata/foxio.pin`. #797
+  amended this requirement on 2026-10-01 UTC, and #801 reversed that amendment.
 - **FR-reference-5** — A test reads `testdata/foxio.pin` and the page, and fails when the
   two commits differ.
 

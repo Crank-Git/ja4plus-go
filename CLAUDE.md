@@ -4,10 +4,14 @@ A Go library and command-line program for JA4+ network fingerprinting. It reads 
 through `gopacket`. JA4+ is a set of standards that FoxIO publishes. This library is an
 independent Go implementation.
 
-**FoxIO names twelve methods. This project implements eleven of them.**
-**`JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters carry eleven
-methods.** Read the ten as a count of fingerprinters, and never as a count of methods. A
-document that states "ten methods" is wrong, and a test holds that count.
+**FoxIO names twelve methods, and this project implements twelve methods. The two lists
+differ.** `License FAQ.md:5` of FoxIO, at the commit that `testdata/foxio.pin`
+names, lists JA4Scan and omits JA4. This project implements JA4, and it implements no
+JA4Scan. **`JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters carry eleven
+methods.** The opt-in package `scan` carries the twelfth, JA4TScan, and no fingerprinter
+carries it. Read the ten as a count of fingerprinters, and never as a count of methods. A
+document that states "ten methods" is wrong, and a test holds that count. #796 moved the
+method count from eleven to twelve on 2026-10-01 UTC.
 
 **The library is at `v1.0.0`, and that tag froze the exported API.** `git ls-remote --tags
 origin` names the tag at `248f3e7`, and `gh release list` names the `v1.0.0` release of
@@ -24,10 +28,11 @@ history.** No current work waits on one of them.
 3. The license states the FoxIO terms.
 4. This library and the Python port produce the same fingerprint.
 
-**The `v1.2.0` release raises the minimum language version to Go 1.26, and #791 holds the
-ruling.** The `v1.1.1` tag exists, and it carries the recovery of `v1.1.0`. The
-`v1.1.0` release raises the minimum language version to Go 1.25, and #725 holds the ruling.
-A minor version adds a name, and it breaks no frozen name. **The `v1.1.0` release job failed
+**The `v1.3.0` release adds the package `scan`, and it changes no frozen name of `v1`.**
+#830 prepares it on 2026-10-01 UTC. The `v1.2.0` tag exists. That release raises the minimum
+language version to Go 1.26, and #791 holds the ruling. The `v1.1.1` tag exists, and it
+carries the recovery of `v1.1.0`. The `v1.1.0` release raises the minimum language version
+to Go 1.25, and #725 holds the ruling. A minor version adds a name, and it breaks no frozen name. **The `v1.1.0` release job failed
 at its release notes step**, so that version reaches the module proxy and no GitHub release.
 #779 holds the recovery, and the `## [v1.1.1]` section of `CHANGELOG.md` holds the record.
 
@@ -107,9 +112,10 @@ of that register name a change to this repository. Read
 | `ja4db/` | Package `ja4db`: the remote lookup at `ja4db.com`. It is the one package of the library that reaches the network. |
 | `internal/parser/` | Protocol decoding for TLS, QUIC, HTTP, SSH, TCP streams, X.509 and GREASE. |
 | `internal/dbcache/` | The validation of a downloaded database, the 16 MB bound and the atomic cache write. |
+| `scan/` | Package `scan`: the JA4TScan active scanner. It is opt-in, and no passive package imports it. `internal/repocheck/scan_boundary_test.go` holds that boundary. |
 | `cmd/ja4plus/` | The command-line program. |
 | `data/` | The embedded FoxIO fingerprint mapping. |
-| `internal/capture/` | Opening a live interface. Holds the pure-Go backend, the libpcap backend, the unsupported-platform fallback, and one permission probe for each of Linux, macOS and every other platform. |
+| `internal/capture/` | Opening a live interface. Holds the pure-Go backend, the libpcap backend, the unsupported-platform fallback, and one permission probe for each of Linux, macOS and every other platform. Holds the link that sends the JA4TScan SYN, and the read of the routing table and the neighbor table. |
 | `internal/keylog/` | Reading a pcapng Decryption Secrets Block and a key log in the NSS key log format. |
 | `internal/repocheck/` | Package `repocheck`: the tests that read this repository rather than this library. It holds no production Go file, so it contributes no statement to the coverage total. |
 | `internal/deviations/` | The schema and the reader of `testdata/deviations.json`. Package `ja4plus` and package `repocheck` both read the register, and neither one imports the other's test files. |
@@ -132,10 +138,17 @@ rule.
 
 **The boundary names an HTTP call and a remote lookup, and it names no raw socket.** The
 maintainer narrowed it on 2026-08-15, and `docs/audit/network-boundary.md` holds that
-amendment. A remote lookup reaches `ja4db.com`, and a raw capture socket reads a local
-interface. The two are different reaches, so `internal/capture/` stays in the layout table
-above. `internal/repocheck/network_boundary_test.go` permits a socket open in that directory alone, and it
+amendment. A remote lookup reaches `ja4db.com`. A raw socket of `internal/capture/` reads a
+local interface for `ja4plus watch`, and it sends a SYN to a remote host for `ja4plus scan`.
+Neither one is a remote lookup, so `internal/capture/` stays in the layout table above.
+`internal/repocheck/network_boundary_test.go` permits a socket open in that directory alone, and it
 fails on a second package that opens one. **Issue #613 is the reversal path.**
+
+**The maintainer ruled on 2026-10-01 UTC, in #796, that the scanner changes no part of that
+rule.** Every socket open stays in `internal/capture/`, and package `scan` reaches a socket
+only through `capture.OpenLink`. `TestOnlyTheScanPackageCallsOpenLink` fails on a second
+caller, and the `## The amendment of 2026-10-01` section of
+`docs/audit/network-boundary.md` holds the record. **Issue #796 is the reversal path.**
 
 ## Commands
 
@@ -297,7 +310,7 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
   `.claude/rules/ste.md` `## One document owns each measured count` states the rule, the
   owner of each class and the two permitted restatements. **This file owns no measured
   count**, and it cites each owner. **A schema count is not a measured count**, so the
-  eleven methods and the ten fingerprinters above stay here. #757 earned the rule from a
+  method counts and the ten fingerprinters above stay here. #757 earned the rule from a
   measurement of the closed backlog on 2026-08-16 UTC.
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
   the reference is wrong. Never change a FoxIO vector to make a test pass.
@@ -345,5 +358,5 @@ not write that this library is BSD 3-Clause without that qualification. See
 
 **Never state that this project's method list equals FoxIO's.** Three FoxIO records at the
 pinned commit name three different sets: `License FAQ.md:5` names twelve methods, the
-FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and spells the scanner
+FoxIO `README.md:299` names fifteen, and `LICENSE:3` names thirteen and spells the scanner
 `JA4SScan`. Name the methods this project implements, and cite the pinned commit.

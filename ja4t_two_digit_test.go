@@ -9,18 +9,19 @@ import (
 // The two-digit form of JA4T and JA4TS. Ruling #125 adopted it from `Crank-Git/ja4plus`,
 // which settled the question as its own #215 on 2026-08-08.
 //
-// The three FoxIO implementations disagree, so the authority rule settles nothing. Two of
+// The three FoxIO implementations disagreed at `27f0cbf9`, so the authority rule settled nothing. Two of
 // the three write the two-digit form, and the ruling follows them. Zeek writes `"00"` for
-// an empty option list at `zeek/ja4t/main.zeek:201`, `fmt("%02d", ...)` for part c at
-// `zeek/ja4t/main.zeek:204` and `"00"` for a zero part d at `zeek/ja4t/main.zeek:207`.
+// an empty option list at `zeek/scripts/fingerprints/ja4t/main.zeek:137`, `fmt("%02d", ...)` for part c at
+// `zeek/scripts/fingerprints/ja4t/main.zeek:140` and `"00"` for a zero part d at `zeek/scripts/fingerprints/ja4t/main.zeek:143`.
 // Wireshark writes the same three forms at `wireshark/source/packet-ja4.c:664-673`. Rust
-// writes one digit at `rust/ja4/src/tcp.rs:129`, `rust/ja4/src/tcp.rs:139` and
-// `rust/ja4/src/tcp.rs:140`. `docs/specs/foxio/JA4T.md` R26, R27 and R28 hold the reading.
+// wrote one digit at `27f0cbf9`, and it writes the same three forms at `16b96d95`:
+// `rust/ja4/src/tcp.rs:136` and `rust/ja4/src/tcp.rs:143`. So the three implementations
+// now agree. `docs/specs/foxio/JA4T.md` R26, R27 and R28 hold the reading.
 //
 // The rule keys on the value, and never on the presence of the option. A SYN that carries
 // a Window Scale option of zero writes the same part as a SYN that carries no such
 // option. `wireshark/source/packet-ja4.c:668` tests `data->window_scale == 0`, and
-// `zeek/ja4t/main.zeek:206` tests `c$fp$ja4t$syn_opts$window_scale == 0`. Both read the
+// `zeek/scripts/fingerprints/ja4t/main.zeek:142` tests `c$fp$ja4t$syn_opts$window_scale == 0`. Both read the
 // value. The tests below build the present-and-zero packet, which no corpus capture
 // reaches.
 //

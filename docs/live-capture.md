@@ -1,68 +1,85 @@
 # Live capture
 
-!!! warning "Live capture is not built yet"
+**`ja4plus watch` reads one network interface, and it prints each fingerprint when it
+arrives.** `analyze` reads a capture file, and the [usage guide](usage.md) states that
+subcommand. **The library reads no interface and no file.** A fingerprinter takes a
+`gopacket.Packet`, and the caller decides where that packet came from.
 
-    **This library reads a capture file, and it opens no network interface.** The
-    command-line program holds no subcommand that captures live traffic, and the module
-    holds no capture package. This page states what exists today, and it states what the
-    design plans.
-
-    Measured on 2026-08-14 against the branch that this site is built from. `ls internal/`
-    reports `dbcache/`, `keylog/` and `parser/`, and it reports no `capture/`. **Epic 13
-    builds the capture package on a branch of its own, and that branch has not reached this
-    one.**
-
-## What exists today
-
-**The program reads a capture file through `analyze`.**
+## Run the monitor
 
 ```bash
-ja4plus analyze capture.pcap
-ja4plus analyze capture.pcapng
+ja4plus watch --interface eth0
 ```
 
-The program picks the reader from the first four bytes of the file, and never from the file
-extension. So both commands above read, and a path that carries no extension reads too. The
-[usage guide](usage.md) states the subcommand, every option and the format choice.
+The program reads the interface until the operator stops it. The usage text of the
+[usage guide](usage.md) names each option, and `parseWatchArgs` in `cmd/ja4plus/watch.go`
+reads them.
 
-**The library reads no file at all.** A fingerprinter takes a `gopacket.Packet`, and the
-caller decides where that packet came from. `cmd/ja4plus` holds the only file-reading code
-in this repository.
-
-**That interface is what makes live capture a small change for a caller.** A program that
-already builds a `gopacket.Packet` from an interface passes it to `ProcessPacket` today,
-with no new library code.
-
-## Capture live traffic today
-
-**A user who needs live traffic captures to a file, and then reads that file.**
-
-```bash
-tcpdump -i en0 -w capture.pcap
-ja4plus analyze capture.pcap
-```
-
-**A Go program reads an interface with a capture package of its own choice**, and it hands
-each packet to `ProcessPacket`. The [usage guide](usage.md) holds the loop that does it,
-and only the source of the packets changes.
-
-## What the design plans
-
-The specification holds a live-capture feature, and the tracker holds it as Epic 13. **No
-requirement of it is built on the branch that this site is built from.** The list below
-describes a plan, and never a shipped interface.
-
-| Planned part | What the design states |
+| Option | What it does |
 |---|---|
-| The subcommand | `ja4plus watch` opens an interface and prints fingerprints as they arrive. |
-| The package | `internal/capture` exports one interface that opens a handle and returns packets. |
-| The pure-Go backend | It uses `pcapgo.NewEthernetHandle`, and it carries the build constraint `linux`. |
-| The libpcap backend | It carries the build constraint `libpcap`, and it uses cgo. |
-| macOS | Without the build tag, the program reports the tag that the platform needs. |
-| Windows | The program reports that the platform is unsupported. |
+| `--interface <name>` | The monitor reads this interface. The option is required. |
+| `--bpf <filter>` | The libpcap build applies the capture filter. The default build refuses it. |
+| `--stats-interval <seconds>` | The seconds between two statistics lines. The default is 60. The value `0` writes one line at exit. |
+| `--json` | The program writes one JSON object for each fingerprint, on one line. |
+| `--csv` | The program writes a header row, and then one row for each fingerprint. |
+| `--types <list>` | The program emits the named methods alone. |
+| `--lookup` | The program adds the application name for each fingerprint. |
+| `--lookup-remote` | The program adds the application name, and it asks `ja4db.com` for each fingerprint that the mapping table does not hold. |
 
-**Read the tracker for the current state, and never this table.** A page states the tree
-that built it, and Epic 13 moves.
+**The output options of `watch` differ from those of `analyze` in one way.** `analyze`
+writes one JSON array, because a capture file ends. A monitor ends when the operator stops
+it, so `watch` writes one object on each line.
+
+### Stop the monitor
+
+**The first `SIGINT` or `SIGTERM` stops the monitor.** The monitor finishes the packet it
+holds. It writes `ja4plus: stopping, closing open windows` to standard error, and it prints
+the JA4SSH windows that no packet closed. It then writes the statistics line, and it exits
+with status 0.
+
+**A second signal ends the program at once**, and the program then loses every open window.
+
+### The statistics line
+
+The monitor writes one statistics line to standard error at each interval, and one at exit:
+
+```text
+ja4plus: uptime=60s packets=1520 fingerprints=48 dropped=0 connections=12
+```
+
+`dropped` counts the packets that the capture backend lost. A backend that reports no
+count writes `dropped=unknown`.
+
+## The remote lookup delays the capture
+
+**A remote lookup runs on the goroutine that reads the interface.** While the program waits
+for `ja4db.com`, it reads no packet. So a slow lookup service delays the capture by up to
+2 seconds for each new fingerprint.
+
+- **The drop counter reports the effect.** A packet that arrives during the wait fills the
+  capture buffer, and a full buffer loses packets.
+- **The program caches a failure as a miss.** A fingerprint that timed out sends no second
+  request, and its application stays empty.
+- **The first stop request cancels a lookup in flight.** The close of the open windows sends
+  no new request.
+
+`watchRemoteLookupDeadline` in `cmd/ja4plus/watch.go` holds the 2 second deadline.
+`analyze` keeps the 10 second client timeout of `ja4db`, because a capture file loses no
+packet while the program waits. A run without `--lookup-remote` and without
+`JA4PLUS_DB_LOOKUP=1` sends no request, and it costs no delay.
+
+## The platforms
+
+| Platform | Build | What `watch` does |
+|---|---|---|
+| Linux | The default build | It reads the interface through the pure-Go backend. |
+| macOS | The `libpcap` build tag | It reads the interface through libpcap. |
+| macOS | The default build | It names the `libpcap` build tag, and it exits 1. |
+| Windows | Any build | It states that the monitor reads no interface on Windows, and it exits 1. |
+
+**A capture needs a privilege.** On Linux the program needs `CAP_NET_RAW`. On macOS it
+needs access to a `/dev/bpf` device. A refused open writes a message that names the
+repair, and `watchPermissionMessage` in `cmd/ja4plus/watch.go` holds each message.
 
 ## Why two backends
 
@@ -97,16 +114,5 @@ the API freeze, and a compiler written here gives the two backends two grammars.
 filter string that selects two packet sets is the worst outcome for a fingerprint**, which
 exists to be compared.
 
-**The ruling states what a live-capture build must do, and this branch holds no such
-build.** It states that a build without the `libpcap` tag refuses `--bpf` and names the
-tag. **No `--bpf` option reaches the program of this branch**, so no user meets that
-refusal today. **Issue #564 is the reversal path.**
-
-## What this page does not describe
-
-- **No `watch` subcommand exists.** The program answers `watch` with
-  `unknown command: watch`, it prints the usage text, and it exits 1.
-- **No `--bpf` option exists.** `analyze` takes `--json`, `--csv`, `--types` and
-  `--lookup`, and no other option.
-- **No drop count and no statistics line exist**, because no capture backend produces
-  either one.
+**A default build refuses `--bpf`, and the message names the tag.** `compileFilter` in
+`internal/capture/pcapgo_linux.go` writes that message. **Issue #564 is the reversal path.**

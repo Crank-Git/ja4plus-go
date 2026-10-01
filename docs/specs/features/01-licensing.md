@@ -45,14 +45,15 @@ model that FoxIO recommends.
 - **FR-licensing-3** — The repository holds a `NOTICE` file at the root.
 - **FR-licensing-4** — `NOTICE` reproduces the full text of FoxIO License 1.1.
 - **FR-licensing-5** — `NOTICE` names every method in this library that FoxIO License 1.1
-  covers: JA4S, JA4H, JA4T, JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6. The list
-  holds ten of the eleven methods this library implements, and JA4 is the eleventh.
-  **`features/12-ja4ls.md` added JA4LS to the list**, and Epic 12 made that edit.
+  covers: JA4S, JA4H, JA4T, JA4TS, JA4TScan, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6.
+  The list holds eleven of the twelve methods this library implements, and JA4 is the
+  twelfth. **`features/12-ja4ls.md` added JA4LS to the list**, and Epic 12 made that edit.
+  **#796 added JA4TScan to the list on 2026-10-01 UTC**, when it built the active scanner.
   `NOTICE` names no method the library does not implement.
 - **FR-licensing-5a** — `NOTICE` states that this list is the set of methods this library
   implements under the license. **It asserts no equality with FoxIO's own list.** Three
   FoxIO records at the pinned commit name three different sets: `License FAQ.md:5` names
-  twelve methods, the FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and
+  twelve methods, the FoxIO `README.md:299` names fifteen, and `LICENSE:3` names thirteen and
   spells the scanner `JA4SScan`.
 - **FR-licensing-6** — `NOTICE` states that JA4 is covered by BSD 3-Clause under
   `LICENSE-JA4` at FoxIO.
@@ -81,7 +82,7 @@ model that FoxIO recommends.
 1. The developer opens the repository.
 2. The developer reads the README License section.
 3. The section states that the original Go code is BSD 3-Clause.
-4. The section states that ten of the eleven methods carry FoxIO License 1.1.
+4. The section states that eleven of the twelve methods carry FoxIO License 1.1.
 5. The section states that FoxIO License 1.1 permits non-commercial use only.
 6. The section links to `NOTICE` and to the FoxIO license.
 7. The developer knows whether to contact FoxIO.
@@ -125,7 +126,7 @@ dated 2026-08-06.
 
 | Document | What it decides | URL |
 |---|---|---|
-| FoxIO License 1.1 | The terms for ten of the eleven methods, and for the mapping file. | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE> |
+| FoxIO License 1.1 | The terms for eleven of the twelve methods, and for the mapping file. | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE> |
 | `LICENSE-JA4` | The terms for JA4 alone. | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE-JA4> |
 | FoxIO Licensing FAQ | The rule for combining JA4+ with a permissive license. | <https://github.com/FoxIO-LLC/ja4/blob/main/License%20FAQ.md> |
 

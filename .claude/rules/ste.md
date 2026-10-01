@@ -136,7 +136,7 @@ these is one.
 - A citation-site count, and a file count.
 
 **A schema count is not a measured count, and this rule never reaches one.** No command
-moves the eleven methods or the ten fingerprinters, because FoxIO and this project decide
+moves the twelve methods, the eleven passive methods or the ten fingerprinters, because FoxIO and this project decide
 them. `CLAUDE.md` states both, and it keeps them.
 
 ### One owner, and every other document cites it

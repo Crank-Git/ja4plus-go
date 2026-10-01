@@ -64,9 +64,10 @@ issue #127 hold the reading, and `emitResult` in `ja4l.go` writes the marker.
 **So this library writes no part c of the image form.** Ruling #127 declines it on a TCP
 connection, and R29 of `docs/specs/foxio/JA4L.md` records the reference split behind it.
 
-**The latency is half of the interval, in microseconds, and it never falls below 1.** Go
-truncates an integer division toward zero, so a sub-microsecond interval would otherwise
-write `0`. Issue #166 records the measurement.
+**The latency is half of the interval, in microseconds, and an interval of 0 or 1
+microsecond writes `0`.** Every FoxIO implementation writes `0` for that interval, and #809
+removed the floor of 1 that this library wrote before. **An interval below zero writes `1`**,
+because the FoxIO implementations disagree on it, and issue #253 records the disagreement.
 
 ### The QUIC measurement
 

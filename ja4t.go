@@ -40,8 +40,8 @@ func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	}
 	// The line below tests two bits, and it reads no other flag. The maintainer ruled that
 	// selection on 2026-08-13, under #126, so a SYN that carries the ECN flags reaches a
-	// value. `rust/ja4/src/tcp.rs:146` tests the same two bits, and
-	// `zeek/ja4t/main.zeek:126` and `wireshark/source/packet-ja4.c:1266` each test the whole
+	// value. `rust/ja4/src/tcp.rs:151` tests the same two bits, and
+	// `zeek/scripts/fingerprints/ja4t/main.zeek:64` and `wireshark/source/packet-ja4.c:1266` each test the whole
 	// flag byte against `0x02`. The port holds the bit test at
 	// `ja4plus/fingerprinters/ja4t.py:159`. `Crank-Git/ja4plus#603` is open, and it adds the
 	// row of the `## Parity with ja4plus` section on the port side.
@@ -74,7 +74,8 @@ func (f *JA4TFingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstI
 // #297 records the ruling.
 //
 // A packet carries the option bytes, so an attacker controls them. The read stops at the
-// first length the region does not hold, and it slices no byte past the end.
+// first length the region does not hold, and it slices no byte past the end. An option
+// that the read stops at adds no entry.
 func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8) {
 	for i := 0; i < len(region); {
 		kind := layers.TCPOptionKind(region[i])
@@ -91,25 +92,19 @@ func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8
 			}
 			data = region[i+2 : i+length]
 		}
+		// Part b holds the kind of every option, and not the kinds of a name list. #808
+		// records the reading: `rust/ja4/src/tcp.rs:70` and
+		// `wireshark/source/packet-ja4.c:1456-1458` each write every `tcp.option_kind`.
+		entries = append(entries, strconv.Itoa(int(kind)))
 		switch kind {
-		case layers.TCPOptionKindEndList:
-			entries = append(entries, "0")
-		case layers.TCPOptionKindNop:
-			entries = append(entries, "1")
 		case layers.TCPOptionKindMSS:
-			entries = append(entries, "2")
 			if len(data) >= 2 {
 				mss = binary.BigEndian.Uint16(data[:2])
 			}
 		case layers.TCPOptionKindWindowScale:
-			entries = append(entries, "3")
 			if len(data) >= 1 {
 				wscale = data[0]
 			}
-		case layers.TCPOptionKindSACKPermitted:
-			entries = append(entries, "4")
-		case layers.TCPOptionKindTimestamps:
-			entries = append(entries, "8")
 		}
 		i += length
 	}
@@ -155,7 +150,7 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	// The two-digit form keys on the value, and never on the presence of the option. An
 	// absent option and an option that carries zero therefore write the same part.
 	// Ruling #125 states the form, and `wireshark/source/packet-ja4.c:668` and
-	// `zeek/ja4t/main.zeek:206` each test the value.
+	// `zeek/scripts/fingerprints/ja4t/main.zeek:142` each test the value.
 	optionParts, mss, wscale := tcpOptionEntries(tcpOptionRegion(tcp))
 
 	optionsStr := "00"
@@ -164,9 +159,9 @@ func generateTCPFingerprint(packet gopacket.Packet, tcp *layers.TCP, fpType stri
 	}
 
 	// Part c and part d take different forms above zero. Zeek writes part c as
-	// `fmt("%02d", ...)` at `zeek/ja4t/main.zeek:204`, so a segment size below 10 carries
+	// `fmt("%02d", ...)` at `zeek/scripts/fingerprints/ja4t/main.zeek:140`, so a segment size below 10 carries
 	// a leading zero. Zeek writes part d as `"%d"` above zero at
-	// `zeek/ja4t/main.zeek:209`, so a window scale carries none.
+	// `zeek/scripts/fingerprints/ja4t/main.zeek:145`, so a window scale carries none.
 	// `wireshark/source/packet-ja4.c:664-676` writes the same two forms.
 	wscaleStr := "00"
 	if wscale != 0 {

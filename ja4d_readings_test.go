@@ -133,7 +133,7 @@ func TestJA4DWritesElevenCharactersInPartA(t *testing.T) {
 // The port's register row `JA4D on a BOOTP message that carries no option 53` holds the
 // reading, and the port decided it as D2 of its issue #231 on 2026-08-08.
 // `wireshark/source/packet-ja4.c:1498` sets the emit flag inside the option 53 block
-// alone, and `zeek/ja4d/main.zeek:43-45` emits `00000`. Two references against one keep
+// alone, and `zeek/scripts/fingerprints/ja4d/main.zeek:36-38` emits `00000`. Two references against one keep
 // this reading.
 //
 // No FoxIO vector carries a BOOTP message, so this constructed packet is the separating

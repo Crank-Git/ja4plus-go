@@ -17,6 +17,9 @@ import (
 
 // FuzzParseClientHelloReadsAnyPayload proves that ParseClientHello returns for any TCP
 // payload. FR-fuzz-1 states the requirement.
+//
+// The target also reads ClientHelloEnd, because JA4 reads it on the same untrusted payload
+// to decide whether a later TCP segment completes the hello. #795 added that call.
 func FuzzParseClientHelloReadsAnyPayload(f *testing.F) {
 	// The parser accepts this seed. It holds a well-formed ClientHello record with the
 	// four extensions that a JA4 value reads.
@@ -37,8 +40,9 @@ func FuzzParseClientHelloReadsAnyPayload(f *testing.F) {
 
 		fuzzprop.Check(t, len(input), func() any {
 			hello, err := ParseClientHello(input)
+			end, held := ClientHelloEnd(input)
 
-			return []any{hello, err}
+			return []any{hello, err, end, held}
 		})
 	})
 }

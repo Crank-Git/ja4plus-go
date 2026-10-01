@@ -31,7 +31,9 @@ func readFoxioInventoryPage(t *testing.T) string {
 	return string(content)
 }
 
-// readFoxioInventoryPin returns the commit that `testdata/foxio.pin` holds.
+// readFoxioInventoryPin returns the commit that `testdata/foxio.pin` holds. The
+// inventory records the material that a reading cites, and #801 made a reading and a
+// vector name that one commit.
 func readFoxioInventoryPin(t *testing.T) string {
 	t.Helper()
 

@@ -3,12 +3,14 @@
 //
 // # Methods
 //
-// This package implements eleven methods, and ten fingerprinters carry them.
-// JA4LFingerprinter writes both JA4L and JA4LS, so the count of fingerprinters is one
-// below the count of methods. Read the ten as a count of fingerprinters, and never as a
-// count of methods.
+// This module implements twelve methods. This package carries the eleven passive methods,
+// and ten fingerprinters carry them. JA4LFingerprinter writes both JA4L and JA4LS, so the
+// count of fingerprinters is one below the count of passive methods. The twelfth method is
+// JA4TScan. The opt-in package scan carries it, because it sends a packet. No type of this
+// package sends a packet. Read the ten as a count of fingerprinters, and never as a count
+// of methods.
 //
-// The list below names each method and the input it reads.
+// The list below names each passive method and the input it reads.
 //
 //   - JA4 reads a TLS client hello. A TCP connection carries one, and a QUIC initial
 //     packet carries one.
@@ -24,7 +26,7 @@
 //   - JA4D6 reads a DHCPv6 packet.
 //
 // The list above names what this package implements, and it names no FoxIO list. Three
-// FoxIO records at commit 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 name three different
+// FoxIO records at commit 16b96d95c220762cf658f67d678cda2aac95c81e name three different
 // sets of methods, so no single FoxIO record states the set above.
 // testdata/foxio.pin holds that commit.
 //

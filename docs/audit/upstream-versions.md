@@ -16,21 +16,26 @@ this page supports.
 
 | Fact | Value |
 |---|---|
-| FoxIO commit | `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` |
+| FoxIO commit | `16b96d95c220762cf658f67d678cda2aac95c81e` |
 | Pin file | `testdata/foxio.pin` |
-| Measurement date | 2026-08-14 |
+| Measurement date | 2026-10-01 |
 
-`scripts/fetch-corpus.sh:167` writes the whole FoxIO repository to
+`scripts/fetch-corpus.sh` writes the whole FoxIO repository to
 `testdata/foxio/reference/`, so every FoxIO citation of this page reads at base 1 of
 `docs/specs/foxio/README.md` `## How to read a citation`. `testdata/foxio/.fetched` held
 the commit above at the measurement.
+
+**#801 re-measured this page at `16b96d95`.** The first measurement read `27f0cbf9` on
+2026-08-14, and it found the same two versions. FoxIO rewrote
+`.github/workflows/zeek-test.yml` between the two commits, so its version line moved from
+`:21` to `:30`.
 
 ## The result
 
 | Host | Version | Where the pin states it |
 |---|---|---|
 | The Wireshark core dissectors | `v4.6.0` | `.github/workflows/wireshark-release.yml:15`, `:30` and `:55` |
-| The Zeek analyzer | `8.0.0` | `.github/workflows/zeek-test.yml:21` |
+| The Zeek analyzer | `8.0.0` | `.github/workflows/zeek-test.yml:30` |
 
 **The pin records a version of each host, so this project adopts no version of its own.**
 The decision comment of #537 states that order: a version the pin already records outranks
@@ -52,7 +57,7 @@ a version could sit.
 
 ## The Zeek analyzer
 
-**`.github/workflows/zeek-test.yml:21` states the version, and it is exact.**
+**`.github/workflows/zeek-test.yml:30` states the version, and it is exact.**
 
 ```
       image: zeek/zeek:8.0.0
@@ -153,7 +158,7 @@ version pairs. **The result splits, and the conclusion of #371 survives.**
 
 ### The Zeek citation survives
 
-`zeek/ja4d/main.zeek:73` tests `options?$client_fqdn`, and #371 cites
+`zeek/scripts/fingerprints/ja4d/main.zeek:66` tests `options?$client_fqdn`, and #371 cites
 `src/analyzer/protocol/dhcp/dhcp-options.pac:682-708` of the Zeek analyzer for the record
 field.
 

@@ -116,8 +116,9 @@ Reproduce it exactly, in a code span or a block quote, and cite the location.
 titles itself `JA4T/S: TCP Fingerprint`, so it specifies the schema of JA4TS. The image
 states no separate server rule, so the implementations state the packet rule for JA4TS.
 For JA4LS the implementations state every rule, because `JA4L.png` states no server rule.
-For JA4TScan FoxIO publishes nothing at all, which is why `docs/specs/spec.md` `Non-goals`
-declines it.
+For JA4TScan the FoxIO scanner at `https://github.com/FoxIO-LLC/ja4tscan` states every
+rule. #796 built the method from the transcription that the port holds at tag `v1.3.0`, and
+`docs/specs/features/17-active-scan.md` cites that transcription.
 
 **Rank 3 never outranks an image, and a question that no image addresses reaches no image
 to outrank.** `### A rank 3 source, and the source ranking` below states the reconciliation,
@@ -328,7 +329,7 @@ questions, and no one of the three is one of the four.
 **#223 is a delegated ruling, and the maintainer confirmed it on 2026-08-12.** A published
 FoxIO value contradicts a rule that every implementation enforces.
 `docs/specs/foxio/JA4SSH.md` R13 is a rank 1 rule, and it states that the mode is `0` when
-the side sent no SSH packet. `zeek/ja4ssh/main.zeek:63`,
+the side sent no SSH packet. `zeek/src/ja4ssh.cc:32`,
 `wireshark/source/packet-ja4.c:400`, `rust/ja4/src/ssh.rs:284` and `python/ja4ssh.py:51`
 each enforce R13. `testdata/foxio/python/ssh-scp-1050.pcap.json` holds
 `c112s1460_c0s200_c36s0`, which pairs a client mode of `112` with a client packet count of

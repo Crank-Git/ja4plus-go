@@ -97,6 +97,22 @@ func seedResults(t *testing.T, frame []byte) int {
 	return len(results)
 }
 
+// tcpHelloFuzzValues returns the count of JA4 values that the segments of one input of
+// `FuzzJA4ReadsAnySequenceOfTCPSegments` emit.
+func tcpHelloFuzzValues(t *testing.T, input []byte) int {
+	t.Helper()
+
+	fingerprinter := NewJA4()
+	values := 0
+
+	for _, segment := range tcpHelloFuzzSegments(input) {
+		results, _ := fingerprinter.ProcessPacket(segment.build(t))
+		values += len(results)
+	}
+
+	return values
+}
+
 // TestEachTargetOfThisPackageHoldsAnAcceptedSeedAndARejectedSeed builds every seed of
 // `testdata/fuzz/`, and it asserts the result of the reader for each one. FR-fuzz-19,
 // FR-fuzz-20 and FR-fuzz-21 of `docs/specs/features/06-fuzz-testing.md` state the
@@ -184,6 +200,21 @@ func TestEachTargetOfThisPackageHoldsAnAcceptedSeedAndARejectedSeed(t *testing.T
 	}
 	seedCorpusFile(t, "FuzzProcessPacketReadsAnyFrame",
 		"rejects-a-frame-that-holds-a-truncated-ip-header", seedBytes(processorReject))
+
+	// --- FuzzJA4ReadsAnySequenceOfTCPSegments
+	tcpAccept := tcpHelloFuzzCompletedSeed()
+	if values := tcpHelloFuzzValues(t, tcpAccept); values != 1 {
+		t.Fatalf("the tcp accept seed writes %d values, want 1", values)
+	}
+	seedCorpusFile(t, "FuzzJA4ReadsAnySequenceOfTCPSegments",
+		"accepts-a-client-hello-that-two-segments-complete", seedBytes(tcpAccept))
+
+	tcpReject := tcpHelloFuzzAgedSeed()
+	if values := tcpHelloFuzzValues(t, tcpReject); values != 0 {
+		t.Fatalf("the tcp reject seed writes %d values, want 0", values)
+	}
+	seedCorpusFile(t, "FuzzJA4ReadsAnySequenceOfTCPSegments",
+		"rejects-a-segment-past-the-byte-cap-after-the-stream-ages", seedBytes(tcpReject))
 
 	seedCorpusHoldsNoOtherFile(t)
 }

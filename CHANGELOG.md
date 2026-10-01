@@ -12,12 +12,21 @@ enumeration below states the count that the register holds today under each ruli
 never states the count that the issue first wrote, so the enumeration is a statement of the
 present and never a history. Issue #42 put 254
 entries into `testdata/deviations.json`, and the register held no entry before that. Issue #196
-put 41 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
+put 42 more entries into it, issue #197 put 13 more, issue #223 put 4 more, issue #285 put
 159 more, issue #361 put 8 more, issue #375 put 12 more, issue #387 put 10 more, issue
 #441 put 108 more, issue #484 put 14 more, issue #491 put 2 more, issue #502 put 3 more,
 issue #503 put 1 more, issue #126 put 6 more, issue #528 put 3 more, issue #229 put 2 more,
-issue #249 put 1 more, issue #449 put 5 more, issue #650 put 12 more, issue #127 put 150
+issue #249 put 1 more, issue #449 put 5 more, issue #650 put 12 more, issue #127 put 154
 more, and issue #492 put 2 more.
+Issue #797 wrote 9 entries on 2026-10-01 UTC, and each one names the capture
+`sigalg-grease.pcapng`. The vector pin moved to `16b96d95`, and that commit adds the capture.
+4 entries carried ruling #795, because the library reassembled no ClientHello that spans two
+TCP segments. **Issue #795 removed those 4 entries on 2026-10-01 UTC**, because the library
+now reassembles the ClientHello, and each of the 4 comparisons matches the FoxIO value. 4 more
+carry ruling #127 and 1 more carries ruling #196,
+because the maintainer ruled that each one matches an entry of `badcurveball.pcap`. **The 9
+entries moved no fingerprint value of an earlier capture**, because the vectors of the 38
+earlier captures are byte-identical at the two commits.
 Issue #701 wrote the 75 entries of the ruling #529 count, 11 entries of the ruling #492
 count and the 5 entries of the ruling #164 count on 2026-08-15 UTC. The maintainer deferred
 each of those three decoding capabilities to `v1.1.0` on 2026-08-15, so each of the 91
@@ -113,11 +122,11 @@ the value each one records. **The enumeration above already subtracts that remov
 reader adds nothing to it.** The removal lowered #197 from 14 entries to 13, and it lowered
 #361 from 28 entries to 8. A run on
 the current tree
-reports 1826 matches, 0
-deviations, 780 accepted deviations and 812 register keys. The run also reports 194 unaccepted
+reports 1838 matches, 0
+deviations, 785 accepted deviations and 817 register keys. The run also reports 194 unaccepted
 uncovered values and 32 accepted uncovered values, and #361 states what an uncovered value is.
-An accepted deviation and an accepted uncovered value each name one register entry, so 780 and
-32 add up to the 812 register keys. A count that an entry below states therefore differs from
+An accepted deviation and an accepted uncovered value each name one register entry, so 785 and
+32 add up to the 817 register keys. A count that an entry below states therefore differs from
 a fresh run.
 **The register now holds every deviation the run reports, so the run exits 0.**
 `.github/workflows/release.yml` gates its release job on `make conformance`, and that exit
@@ -183,13 +192,23 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- **The JA4TScan active scanner, in the new package `scan`, and the `ja4plus scan`
+  subcommand.** #796 added it on 2026-10-01 UTC, and it is a minor-version addition: it
+  changes no frozen name of `v1`. The package exports 16 names, and `docs/api/v1.md` records
+  each one. The scanner sends one TCP SYN to each IPv4 target and writes one JA4TScan value
+  for each target that answers. It changes no firewall state. No passive package imports
+  it, and `TestNoPassivePackageImportsTheScanner` holds that boundary. The project now
+  implements twelve methods. The list differs from the FoxIO list of `License FAQ.md:5`,
+  which holds JA4Scan and omits JA4. **The scanner moves no fingerprint value
+  of a passive method**, and it reaches no vector of the FoxIO corpus.
 - No exported name, and one test that holds the method count. `TestMethodCount` reads every
   tracked Markdown file, every tracked HTML file and every Go comment. It fails when one
   applies the count of ten to methods, or the count of eleven to fingerprinters, and it
   names the file and the line. It reported nine violations on the tree that Epic 12 started
   from, and `method_count_test.go` holds it. `NOTICE`, `README.md` and `doc.go` now name
-  JA4LS, so FoxIO License 1.1 covers ten of the eleven methods this project implements.
-  Issue #62 holds the measurement, and no fingerprint value moved.
+  JA4LS, so FoxIO License 1.1 covered ten of the eleven methods this project implemented
+  at that date. #796 added JA4TScan on 2026-10-01 UTC, and the license now covers eleven
+  of twelve. Issue #62 holds the measurement, and no fingerprint value moved.
 - No exported name, and twelve register entries that close FR-parity-50. The SOCKS4 tunnel
   of `socks4-https.pcap` produces three JA4X values, and no vector file of the corpus
   publishes a JA4X key for that capture. `testdata/foxio/python/socks4-https.pcap.json` and
@@ -541,6 +560,20 @@ that the interface declares.
   and the date of each part of it.
 
 ### Fixed
+
+- **JA4 now produces a value for a TLS ClientHello that spans more than one TCP segment.**
+  Issue #795 records the defect. A post-quantum key share makes the hello of a current
+  browser longer than one segment, and the library produced no JA4 value for it.
+  `JA4Fingerprinter` now holds the client-to-server segments of the hello until they
+  complete it, and it emits one value on the segment that completes it. **The table holds
+  four bounds**: 1000 connections, 16395 bytes and 64 segments for one hello, and 30 seconds
+  without a segment. A gap stops the hello at the first byte that no segment carries, and no
+  gap reads as zeros. A FIN or a RST, `CleanupConnection` and `Reset` each drop the partial
+  hello. The port holds the same rule and the same four bounds, and
+  `Crank-Git/ja4plus#784` added them under `Crank-Git/ja4plus#772`.
+  `ja4_tcp_client_hello_reassembly_test.go` holds the cases. **The change moved 4 comparisons
+  of `sigalg-grease.pcapng` to a match, and it moved no other fingerprint value.**
+  `docs/audit/conformance.md` owns the figures.
 
 - **The library now produces a JA4H value for every request of a protected HTTP/2
   connection, and three limits stopped that connection before.** Issue #529 built the HTTP/2
@@ -1108,9 +1141,10 @@ that the interface declares.
   holds the same value.
 - The license correction. The repository states two licenses, and it names which material
   each one covers. The original Go code carries the BSD 3-Clause license.
-  FoxIO License 1.1 covers ten of the eleven methods that this project implements, and
-  that license permits non-commercial use only. `NOTICE` names those ten, and it holds
-  the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
+  FoxIO License 1.1 covers eleven of the twelve methods that this project implements, and
+  that license permits non-commercial use only. `NOTICE` names those eleven, and it holds
+  the FoxIO terms. #796 added JA4TScan to the eleven on 2026-10-01 UTC.
+  Earlier releases named the BSD 3-Clause license alone, so a commercial
   user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
   records the decision behind the correction.
 - **The module needs Go 1.26 or later, and `go.mod` declares `go 1.26.0`.** `v0.3.0`
@@ -1139,6 +1173,132 @@ that the interface declares.
     proposed the move.
   - `golang.org/x/crypto` to v0.57.0. Pull request #788 proposed the move.
   - `golang.org/x/net` to v0.59.0. Pull request #789 proposed the move.
+
+## [v1.3.0]
+
+This section is the release record of `v1.3.0`. It carries no date, because FR-release-40
+creates the tag and no tag exists at this head.
+
+**`v1.3.0` is a minor version, because it adds the package `scan` and it changes no frozen
+name of `v1`.** A `go doc -all` comparison of the root package and of `ja4db` at `v1.2.0`
+and at this head reports no added, removed or changed exported declaration, measured on
+2026-10-01 UTC. `docs/api/v1.md` records every exported name, and the package `scan` is the
+one addition. **No change of this release is breaking.**
+
+**Four rules of this release move a fingerprint value.** Each item below names the input
+that moves it. `docs/audit/conformance.md` owns the conformance figures.
+
+### Added
+
+- **The JA4TScan active scanner, in the new package `scan`, and the `ja4plus scan`
+  subcommand.** #796 added it in pull request #822, and batch #821 merged it as pull request
+  #828. The package exports `Scanner`, `NewScanner`, `Scanner.Run`, `Scanner.Flush`,
+  `Config`, `Network`, `OpenNetwork`, `Response`, `Result`, `Value`, `ParseTargets`,
+  `FirewallRules`, `MaxTargets`, `RetransmitWait`, `NoRetransmitWait` and `ResetValue`.
+  `docs/api/v1.md` records each one, with its fields.
+  - The subcommand reads
+    `ja4plus scan <target> [--port <port>] [--rate <syn/s>] [--retransmit yes|no] [--format table|json|csv] [--output <file>] [--force]`.
+  - The scanner sends one TCP SYN to each IPv4 target, and it writes one JA4TScan value for
+    each target that answers. A first response that carries RST writes `0_rst-ack`.
+  - The scanner prints the firewall rules that the operator adds, and it applies none.
+  - Linux sends through a pure-Go packet socket. macOS needs the `libpcap` build tag, and a
+    build without a send path stops with one line that names the tag.
+  - No passive package imports `scan`, and `TestNoPassivePackageImportsTheScanner` holds
+    that boundary. **The scanner moves no fingerprint value of a passive method.**
+  - The project now implements twelve methods. Ten fingerprinters carry the eleven passive
+    methods, and `scan.Scanner` carries JA4TScan. The list differs from the FoxIO list of
+    `License FAQ.md:5`, which holds JA4Scan and omits JA4.
+- **The `--lookup-remote` option of `ja4plus analyze` and `ja4plus watch`, and the
+  `JA4PLUS_DB_LOOKUP` variable.** #804 added both in pull request #811, and batch #807
+  merged them as pull request #818.
+  - `--lookup-remote` asks for the application lookup, and it permits a request to
+    `ja4db.com`.
+  - `JA4PLUS_DB_LOOKUP=1` permits the request, and it asks for no lookup. So it acts only
+    with `--lookup`. Every other value permits nothing.
+  - The local mapping table answers first, and a hit sends no request. A failed request
+    reads as a miss. One notice for each run goes to standard error.
+  - `watch` gives each request a deadline of 2 seconds, and a stop request cancels the
+    lookup. Pull request #817 holds that bound.
+  - **The library reads no environment variable.** The program reads the variable, and
+    the library still reaches the network from `ja4db` alone.
+
+### Changed
+
+- **JA4 and JA4S: the ALPN characters of a non-ASCII end byte and of a one-byte value.**
+  #801 holds the ruling of 2026-10-01 UTC and the reversal path, and pull request #819
+  built it. Batch #806 merged it as pull request #824.
+  - **The `9` rule.** An end byte of `0x80` or higher writes `9` for that end. `68 ff`
+    writes `h9`, and `ff 68` writes `9h`. Both wrote `99` before.
+  - **The one-byte rule.** A one-byte printable value writes its byte twice. `2d` writes
+    `--`, and it wrote `99` before. `68` writes `hh`, as it did.
+  - A control byte below `0x20`, or the byte `0x7F`, at either end still writes `99`.
+  - **No vector of the FoxIO corpus reaches the new rule, so no conformance value moved.**
+    `ja4_alpn_ruling_test.go` holds each separating packet.
+- **JA4T and JA4TS: part b writes every TCP option kind.** #808 holds the defect, and pull
+  request #813 repaired it. Batch #812 merged it as pull request #825.
+  - Part b wrote the kinds 0, 1, 2, 3, 4 and 8 before, and it dropped every other kind.
+  - An input that carries another kind moves. The options MSS 1460, kind 34, SACK
+    permitted and window scale 7 wrote `64240_2-4-3-0_1460_7`, and they now write
+    `64240_2-34-4-3-0_1460_7`.
+  - No SYN and no SYN-ACK of the FoxIO corpus carries another kind, so no conformance
+    value moved.
+- **JA4L and JA4LS: an interval of 0 or 1 microsecond writes `0`.** #809 holds the defect,
+  and pull request #820 removed the floor that wrote `1`. Batch #812 merged it as pull
+  request #825.
+  - The input that moves is a handshake whose interval is 0 or 1 microsecond. Three JA4L
+    client values of `CVE-2018-6794.pcap` moved from `1_128` to `0_128`, and no vector
+    publishes them.
+  - A negative interval still writes `1`. #212 holds that open question.
+- **The FoxIO pin moves from `27f0cbf9` to `16b96d95`.** #797 moved it in pull request
+  #800, and batch #799 merged it as pull request #803. #801 then read every reference at
+  the same pin.
+  - `16b96d95` adds the capture `sigalg-grease.pcapng`. The vectors of every earlier
+    capture are byte-identical at the two commits, so the move changed no earlier value.
+- **The capture route of a loopback address or of a host address.** Pull request #829
+  repaired it, and batch #821 merged it as pull request #828.
+  - Linux read the `main` routing table alone, so `127.0.0.1` routed to the default
+    gateway. The route now reads the `local` table first.
+  - macOS skipped the scoped route rows of an address that the host holds. It reads them
+    now.
+  - A target in `127.0.0.0/8`, or an address that the host holds, now routes through the
+    loopback interface. A first target of `ja4plus scan` that routes there stops the scan.
+- The three pre-release tag constants, from `v1.2.0` to `v1.3.0`, and `docs/api/v1.md`,
+  which states the value that the three constants hold.
+
+### Fixed
+
+- **JA4 produces a value for a TLS ClientHello that spans more than one TCP segment.** #795
+  holds the defect, and pull request #810 repaired it. Batch #805 merged it as pull request
+  #816.
+  - The input that moves is a hello longer than one segment. A post-quantum key share makes
+    the hello of a current browser that long. The library produced no JA4 value for it
+    before.
+  - `JA4Fingerprinter` holds the segments until they complete the hello, and it emits one
+    value on the segment that completes it. The `### Fixed` list of `## [Unreleased]`
+    states the four bounds.
+  - The segment that opens a partial hello returned `TLS record truncated` before. It now
+    returns no error.
+  - Four comparisons of `sigalg-grease.pcapng` moved to a match, and no other value moved.
+- **An empty reassembly stream no longer panics.** Pull request #815 repaired a panic on
+  untrusted input, and it added the fuzz target `FuzzJA4ReadsAnySequenceOfTCPSegments`.
+- **A stop request ends the send loop of `ja4plus scan`.** Pull request #826 repaired it. A
+  `--rate` whose interval overflows `time.Duration` is now refused, and the program exits 1.
+
+### Known differences from the Python port
+
+- **The port half of the ALPN ruling has not landed.** `Crank-Git/ja4plus#789` holds it,
+  and that issue was open on 2026-10-01 UTC. Go and the port differ on a first ALPN value
+  whose end byte is `0x80` or higher, and on a one-byte printable value that is not
+  alphanumeric. No shared vector holds such a value, so the shared vector set reports no
+  difference.
+- **The output schema of `ja4plus scan` is provisional.** It follows the schema of this
+  program, and not the schema of the port. `docs/specs/features/17-active-scan.md` records
+  each departure, and #796 is the reversal path.
+
+### Not verified
+
+- **No test sends a real packet.** Every test of `scan` reads a fake network. A run as root
+  on Linux is the end-to-end check, and no record of this release holds one.
 
 ## [v1.2.0]
 

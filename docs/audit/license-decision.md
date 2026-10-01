@@ -33,6 +33,8 @@ The repository states two licenses, and it names which material each one covers.
 - The original Go code carries the BSD 3-Clause license, and `LICENSE` holds that text.
 - FoxIO License 1.1 covers ten of the eleven methods that this project implements, and
   `NOTICE` names those ten. That license permits non-commercial use only.
+  **#796 added JA4TScan on 2026-10-01 UTC.** FoxIO License 1.1 covers eleven of the twelve
+  methods since that date, and `NOTICE` names those eleven.
 - `NOTICE` holds the FoxIO terms, and it names the commit at which this project read them.
 - `data/README.md` names FoxIO as the source of `data/ja4plus-mapping.csv`.
 

@@ -19,6 +19,7 @@ JA4S
 JA4H
 JA4T
 JA4TS
+JA4TScan
 JA4L
 JA4LS
 JA4X
@@ -31,16 +32,16 @@ JA4D6
 The list above is the set of methods that this library implements under FoxIO License
 1.1. **It asserts no equality with the FoxIO list.**
 
-Three FoxIO records at commit 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 name three
+Three FoxIO records at commit 16b96d95c220762cf658f67d678cda2aac95c81e name three
 different sets:
 
 - `License FAQ.md:5` names twelve methods.
-- `README.md:293` names nine methods.
+- `README.md:299` names fifteen methods.
 - `LICENSE:3` names thirteen methods, and it spells the scanner `JA4SScan`.
 
-The FoxIO record at `README.md:293` names nine methods, and the list above holds ten names.
-**The two sets are different.** The FoxIO nine holds JA4TScan, and it holds neither JA4D
-nor JA4D6.
+The FoxIO record at `README.md:299` names fifteen methods, and the list above holds eleven names.
+**The two sets are different.** The FoxIO fifteen holds each of the eleven, and it adds
+JA4L-Delta, JA4Scan-TLS, JA4Scan-QUIC and JA4N.
 
 Read the FoxIO records for the FoxIO list.
 
@@ -61,8 +62,8 @@ FoxIO publishes FoxIO License 1.1 at <https://github.com/FoxIO-LLC/ja4/blob/main
 ## The commit that this project read
 
 This project read the FoxIO License 1.1 text from `LICENSE` at commit
-27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8 of <https://github.com/FoxIO-LLC/ja4>.
-`testdata/foxio.pin` holds that commit.
+16b96d95c220762cf658f67d678cda2aac95c81e of <https://github.com/FoxIO-LLC/ja4>. The text is unchanged
+since commit 27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8. `testdata/foxio.pin` holds the commit.
 
 A later FoxIO change to the license produces a new issue in this repository.
 

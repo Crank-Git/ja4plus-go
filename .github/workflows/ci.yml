@@ -156,7 +156,8 @@ jobs:
       # The cache key and the job summary both name the pinned commit, so read it once.
       - name: Read the corpus pin
         id: pin
-        run: echo "commit=$(tr -d '[:space:]' < testdata/foxio.pin)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "commit=$(tr -d '[:space:]' < testdata/foxio.pin)" >> "$GITHUB_OUTPUT"
 
       # FR-conformance-37 keys the cache by the pinned commit and by the hash of
       # `scripts/fetch-corpus.sh`. A pin move misses the cache, so the next run fetches the
@@ -171,7 +172,7 @@ jobs:
       # nothing until the hash arrived. The commit that changes the script changes the key,
       # and the key needs no version number that a reader must remember.
       #
-      # `corpus_fetch_test.go` holds both halves of the key.
+      # `corpus_fetch_test.go` holds the two parts of the key.
       - name: Restore the corpus
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -272,8 +273,8 @@ jobs:
       # A reader of the pull request reaches the job summary from the checks tab.
       #
       # A pull request from a fork controls `testdata/foxio.pin`, so the pin is untrusted
-      # input. The step reads it through an environment variable, because an expression
-      # that expands into the script would run the shell text the pin holds.
+      # input. The step reads it through an environment variable, because an expression that
+      # expands into the script would run the shell text the pin holds.
       - name: Publish the conformance counts
         env:
           PIN_COMMIT: ${{ steps.pin.outputs.commit }}
@@ -283,7 +284,7 @@ jobs:
           {
             echo "## Conformance"
             echo
-            echo "The corpus is at FoxIO commit \`$PIN_COMMIT\`."
+            echo "The corpus is at FoxIO commit \`$PIN_COMMIT\`, from \`testdata/foxio.pin\`."
             echo
             grep -E 'the run read [0-9]+ captures|the run reports [0-9]+ matches' conformance.log |
               sed 's/^ *[^ ]*: /- /' ||

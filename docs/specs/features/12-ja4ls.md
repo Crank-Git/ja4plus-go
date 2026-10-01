@@ -131,7 +131,10 @@ requirement therefore states what the library does**, and FR-ja4ls-12 states the
 
 ### The count
 
-- **FR-ja4ls-15** — Every document that states a method count states eleven methods.
+- **FR-ja4ls-15** — Every document that states the count of methods this project
+  implements states twelve methods. A document that counts the passive methods alone
+  states eleven passive methods. #796 amended this requirement on 2026-10-01 UTC, when it
+  added JA4TScan.
 - **FR-ja4ls-16** — Every document that states a fingerprinter count states ten
   fingerprinters.
 - **FR-ja4ls-17** — No document applies the count of ten to methods.
@@ -139,7 +142,8 @@ requirement therefore states what the library does**, and FR-ja4ls-12 states the
   every Go comment. It fails when one applies the count of ten to methods, or the count of
   eleven to fingerprinters.
 - **FR-ja4ls-19** — The test names the file and the line of each violation.
-- **FR-ja4ls-20** — `CLAUDE.md` states eleven methods and ten fingerprinters.
+- **FR-ja4ls-20** — `CLAUDE.md` states twelve methods, and it states that ten
+  fingerprinters carry eleven of them. #796 amended this requirement on 2026-10-01 UTC.
 
 ### Conformance
 
@@ -155,7 +159,7 @@ and never a ruling.** It writes no register entry, and it states no rule about a
 value, so it reaches nothing that `.claude/rules/rulings.md` reserves to the maintainer.
 
 **A reading explains the per-stream set, and no reading explains the per-packet set.**
-`python/ja4.py:340` at the pin holds `delete_keys(['JA4L-S', 'JA4L-C'], final)`, under the
+`python/ja4.py:331` at the pin holds `delete_keys(['JA4L-S', 'JA4L-C'], final)`, under the
 guard `if 'ja4l' not in output_types:` at :339. That pair states why a per-stream reference
 file publishes no JA4L key. Ruling #361 registered 24 such uncovered values on 2026-08-13,
 and each entry names #361. **No reading covers the Wireshark generator.**
@@ -227,7 +231,7 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 |---|---|---|
 | FoxIO Wireshark dissector | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark> |
 | FoxIO Zeek package | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/zeek> |
-| FoxIO per-packet vectors | The same commit | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
+| FoxIO per-packet vectors | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 
 **The Wireshark test data is the primary reference for this method.** It publishes 44
 `ja4.ja4ls` values. `docs/specs/foxio/zeek.md` declines the Zeek JA4LS values as reference
@@ -254,6 +258,8 @@ values, under the rule that the port's `.claude/rules/external-apis.md` states.
 5. `go test -run TestMethodCount ./...` passes, and no tracked document applies the count
    of ten to methods.
 6. `CLAUDE.md` states eleven methods and ten fingerprinters.
+   **#796 added JA4TScan on 2026-10-01 UTC**, and `CLAUDE.md` states twelve methods since
+   that date. FR-ja4ls-20 states the amended rule.
 7. `docs/specs/foxio/JA4L.md` states that no FoxIO image specifies JA4LS.
 
 ## Out of scope

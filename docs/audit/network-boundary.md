@@ -190,6 +190,47 @@ package guards nothing.
 reach. It then moves `internal/capture` out of the layout table of `CLAUDE.md`, and it
 removes the permit entry of the guard.
 
+## The amendment of 2026-10-01
+
+**The maintainer answered question 1 of #796 on 2026-10-01 UTC, with answer A.** The
+ruling states:
+
+> **Question 1: answer A.** The send primitive lives in `internal/capture/`, and the scan package calls it. The socket rule of #613 holds without a change, and `network_boundary_test.go` needs no new permitted directory.
+
+**Every socket open stays in `internal/capture/`, and package `scan` reaches a socket only
+through `capture.OpenLink`.** The amendment moves no code and no fingerprint value.
+
+### Two readings of 2026-08-15 that the scanner falsifies
+
+**1. A raw socket of `internal/capture` now reaches a remote host.** The amendment of
+2026-08-15 reads that a raw capture socket reads a local interface and reaches no remote
+host. `ja4plus watch` still reads a local interface. `ja4plus scan` sends one TCP SYN to
+each target through the link of `internal/capture`, and that target can be a remote host. So
+`internal/capture` holds two reaches today: a local read and a remote send.
+
+**2. The hypothetical case of the guard is now real.** The guard of 2026-08-15 resolves no
+type, so a package that calls an exported helper of `internal/capture` opens a socket that
+the guard cannot see. `OpenNetwork` in `scan/link.go` calls `capture.OpenLink`, and
+`OpenLink` opens a link-layer socket.
+
+**Both records above stay unchanged**, because each one states what was true on its date.
+
+### The guard
+
+**`TestOnlyTheScanPackageCallsOpenLink` holds answer A.** It reads each production Go file of
+the module, `cmd/` included, and it reports each call of `capture.OpenLink` outside `scan/`.
+`TestTheLinkReaderReportsAPackageOutsideTheScannerThatCallsOpenLink` proves that the reader
+fires on an aliased import.
+
+**The guard names one helper, and it reads no other.** A later exported helper of
+`internal/capture` that opens a socket needs its own entry in `linkOpenFunction`, and the
+guard reports nothing about it until it has one.
+
+### The reversal path
+
+**Issue #796 is the reversal path for answer A.** Answer B of the same question permits the
+scan package as a second directory of the socket guard, through #613.
+
 ## A later decision
 
 **Only the maintainer changes the decision above.** `.claude/rules/rulings.md` holds that

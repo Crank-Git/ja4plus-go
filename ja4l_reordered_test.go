@@ -17,10 +17,10 @@ import (
 //
 // The three references at the commit in `testdata/foxio.pin` behave as follows.
 // `wireshark/source/packet-ja4.c:1346` measures `timestamp_B` against `timestamp_A` and
-// reports the value on a later application packet. `python/ja4.py:154` reads
+// reports the value on a later application packet. `python/ja4.py:165` reads
 // `if 'B' in conn and 'A' in conn` and reports the value on the bare ACK at
-// `python/ja4.py:572`. `zeek/ja4l/main.zeek:152-156` returns before it assigns `ja4l_s` when
-// the interval is below zero, and `zeek/ja4l/main.zeek:7` states
+// `python/ja4.py:563`. `zeek/scripts/fingerprints/ja4l/main.zeek:151-156` returns before it assigns `ja4l_s` when
+// the interval is below zero, and `zeek/scripts/fingerprints/ja4l/main.zeek:7` states
 // `# NOTE: JA4L can not work when traffic is out of order`.
 //
 // The Python port at `Crank-Git/ja4plus` reports the value on the SYN, at
@@ -65,8 +65,8 @@ func TestJA4LReportsNoServerValueOnAReorderedCapture(t *testing.T) {
 // TestJA4LReportsOnlyTheClientValueOnTheBareACKOfAReorderedCapture records the gap that
 // issue #212 measures against `python/ja4.py`.
 //
-// `python/ja4.py:572` calls `calculate_ja4_latency` on the bare ACK, and
-// `python/ja4.py:154-157` reports JA4L-S there whenever the connection holds both server
+// `python/ja4.py:563` calls `calculate_ja4_latency` on the bare ACK, and
+// `python/ja4.py:165-168` reports JA4L-S there whenever the connection holds both server
 // points. The packet order moves neither test. This library reports the client value alone on
 // that packet, so a reordered capture reaches no server value at all.
 //

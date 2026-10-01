@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"fmt"
 )
 
 // TLS handshake types.
@@ -371,24 +370,25 @@ func TLSVersionString(version uint16) string {
 // ALPNValue returns the two ALPN characters that JA4 and JA4S carry.
 //
 // It returns `00` when the protocol list is empty, and when the first ALPN value is empty.
-// It returns the first byte and the last byte when both bytes fall inside the printable
-// ASCII range 0x20-0x7E. It repeats the byte when the first ALPN value holds one
-// alphanumeric byte. It returns `99` in every other case.
+// Otherwise it writes one character for the first byte and one for the last byte. A
+// one-byte value therefore writes its character twice.
 //
-// The FoxIO prose states a different rule, and a measurement contradicts the prose.
-// `technical_details/JA4.md:95` states the first and last character of the hexadecimal
-// form of the whole first ALPN value. The FoxIO vector `tls-non-ascii-alpn.pcapng` holds
-// `99` for the first ALPN value `0xba 0xad`, and `.claude/rules/parity.md` rule 1 states
-// that the vector decides. `docs/specs/foxio/JA4.md` R18 and R19 record the split, and
-// Reading 5 records the tshark text form that causes it.
+//   - A byte inside the printable ASCII range 0x20-0x7E writes itself.
+//   - A byte of 0x80 or higher writes `9`.
+//   - A control byte at either end makes the whole value `99`.
 //
-// The port issues `Crank-Git/ja4plus#127`, `Crank-Git/ja4plus#141` and
-// `Crank-Git/ja4plus#162` hold the ruling, and `ja4_alpn_parity_test.go` holds the
-// separating packets. Issue #50 adopted the rule here.
+// The maintainer ruled the first two rules on 2026-10-01 UTC. Issue #801 holds the ruling
+// and is the reversal path, and `Crank-Git/ja4plus#789` holds the port half. The ruling
+// follows `python/ja4.py:156-157` and `rust/ja4/src/tls.rs:635-647` at `16b96d95`, and
+// `docs/specs/foxio/JA4.md` R18 and R19 record the split it settles.
+// `ja4_alpn_ruling_test.go` holds the separating packets.
 //
-// Every `%c` below writes a byte of 0x7E or lower, and each guard keeps that true. `%c`
-// reads its argument as a code point, so a byte above 0x7F would reach the fingerprint as
-// two UTF-8 bytes. A guard that widens past 0x7E must build the string from a byte slice.
+// The ruling names no control byte, so the `99` of `Crank-Git/ja4plus#162` still holds for
+// it. Both FoxIO implementations read the tshark escape text of a control byte, and
+// `docs/specs/foxio/JA4.md` Reading 5 states that no wire byte reaches that value.
+//
+// The FoxIO vector `tls-non-ascii-alpn.pcapng` holds `99` for the first ALPN value
+// `0xba 0xad`, and each rule above writes `99` for it.
 func ALPNValue(protocols []string) string {
 	if len(protocols) == 0 {
 		return "00"
@@ -398,34 +398,27 @@ func ALPNValue(protocols []string) string {
 		return "00"
 	}
 
-	firstByte := first[0]
-	lastByte := first[len(first)-1]
-
-	// The two FoxIO implementations dispute every one-byte value, so this case keeps the
-	// alphanumeric test. `rust/ja4/src/tls.rs:334` writes `0` for the absent last
-	// character. `python/ja4.py:276` leaves a one-byte value at one character, because its
-	// condition `len(alpn) > 2` is false.
-	if len(first) == 1 {
-		if alpnIsAlnum(firstByte) {
-			return fmt.Sprintf("%c%c", firstByte, firstByte)
-		}
+	firstChar, firstOK := alpnEndCharacter(first[0])
+	lastChar, lastOK := alpnEndCharacter(first[len(first)-1])
+	if !firstOK || !lastOK {
 		return "99"
 	}
-
-	// Both FoxIO implementations pass a printable ASCII byte through, whether or not that
-	// byte is alphanumeric. The range stops at 0x7E, because the two implementations agree
-	// only inside it.
-	if alpnIsPrintableASCII(firstByte) && alpnIsPrintableASCII(lastByte) {
-		return fmt.Sprintf("%c%c", firstByte, lastByte)
-	}
-
-	return "99"
+	// The string comes from a byte slice, because each character is one byte of 0x7E or
+	// lower. `%c` would write a byte above 0x7F as two UTF-8 bytes.
+	return string([]byte{firstChar, lastChar})
 }
 
-// alpnIsAlnum reports whether b is an ASCII alphanumeric byte:
-// 0x30-0x39 ('0'-'9'), 0x41-0x5A ('A'-'Z'), or 0x61-0x7A ('a'-'z').
-func alpnIsAlnum(b byte) bool {
-	return (b >= '0' && b <= '9') || (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
+// alpnEndCharacter returns the character that one end byte of an ALPN value writes. It
+// returns false for a control byte, which the ruling of #801 does not name.
+func alpnEndCharacter(b byte) (byte, bool) {
+	switch {
+	case alpnIsPrintableASCII(b):
+		return b, true
+	case b >= 0x80:
+		return '9', true
+	default:
+		return 0, false
+	}
 }
 
 // alpnIsPrintableASCII reports whether b falls inside the printable ASCII range
@@ -527,4 +520,55 @@ func parseSignatureAlgorithms(data []byte) []uint16 {
 		pos += 2
 	}
 	return algs
+}
+
+// ClientHelloEnd returns the offset one past the last byte of the first ClientHello of the
+// bytes. It reports false where the bytes open no TLS record, and where the first handshake
+// message is no ClientHello.
+//
+// The walk steps over each record in front of the first handshake record, as
+// handshakeRecordOffset does, so a ChangeCipherSpec record before the hello counts toward
+// the offset. A caller that holds fewer bytes than the offset holds a hello that a later
+// TCP segment completes.
+//
+// Where the bytes cut the handshake header, the offset is the end of that header. The
+// header states the length, so the offset grows once the header arrives.
+//
+// `client_hello_end` of `ja4plus/utils/tls_utils.py` of the port at tag `v1.3.0` holds the
+// same walk. Crank-Git/ja4plus#784 added it, under Crank-Git/ja4plus#772.
+//
+// Every length field is untrusted input. The walk reads no byte past the end of the slice,
+// and each step advances by at least 5 bytes.
+func ClientHelloEnd(data []byte) (int, bool) {
+	for offset := 0; offset+5 <= len(data); {
+		// A stream of another protocol can open with any byte. The version byte narrows the
+		// start to a record that names TLS or SSL 3.0.
+		if !isTLSRecordType(data[offset]) || data[offset+1] != 0x03 {
+			return 0, false
+		}
+
+		if data[offset] == TLSRecordTypeHandshake {
+			if offset+5 < len(data) && data[offset+5] != TLSHandshakeClientHello {
+				return 0, false
+			}
+
+			if offset+9 > len(data) {
+				return offset + 9, true
+			}
+
+			length := int(data[offset+6])<<16 | int(data[offset+7])<<8 | int(data[offset+8])
+
+			return offset + 9 + length, true
+		}
+
+		offset += 5 + (int(data[offset+3])<<8 | int(data[offset+4]))
+	}
+
+	return 0, false
+}
+
+// isTLSRecordType reports whether the byte names one of the four record content types of
+// RFC 8446: ChangeCipherSpec, Alert, Handshake and ApplicationData.
+func isTLSRecordType(b byte) bool {
+	return b >= 0x14 && b <= 0x17
 }

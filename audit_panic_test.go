@@ -616,7 +616,7 @@ func TestTheLibraryWritesNothingWhenItReadsACraftedFrame(t *testing.T) {
 // panicAuditZeroSentinel is the value that a hash of an empty input produces.
 //
 // The value is verbatim FoxIO material, so `.claude/rules/ste.md` bars a rewording of it.
-// `docs/specs/foxio/zeek.md:48` records the reading of `zeek/utils/common.zeek:63`, and
+// `docs/specs/foxio/zeek.md:48` records the reading of `zeek/scripts/fingerprints/utils/common.zeek:63`, and
 // `docs/specs/foxio/JA4.md` R24 and R30, `docs/specs/foxio/JA4S.md` R23 and
 // `docs/specs/foxio/JA4H.md` R27 each name the same value.
 const panicAuditZeroSentinel = "000000000000"
@@ -634,7 +634,7 @@ func TestTheHashOfAnEmptyInputProducesTheZeroSentinel(t *testing.T) {
 }
 
 func TestEveryMethodThatHashesWritesTheZeroSentinelForAnEmptyInput(t *testing.T) {
-	// FR-audit-21 names every method that hashes. Four of the eleven methods do:
+	// FR-audit-21 names every method that hashes. Four of the twelve methods do:
 	// JA4 hashes the cipher list and the extension list, JA4S hashes the server extension
 	// list, JA4H hashes three sections, and JA4X hashes three object identifier lists.
 	cases := []struct {
