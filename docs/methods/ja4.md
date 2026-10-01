@@ -59,6 +59,22 @@ connection state.
 one result.** The QUIC path reassembles the CRYPTO frames of the client hello before it
 reads the message, so a client hello that spans several packets reaches one value.
 
+**The TCP path reassembles a client hello that spans more than one TCP segment.** A
+post-quantum key share makes the client hello of a current browser longer than one segment.
+The result comes on the segment that completes the hello, and it names that connection.
+
+- The fingerprinter holds the segments of one connection in sequence order, across a wrap
+  of the sequence number.
+- A missing segment stops the hello at the first byte that no segment carries. No gap reads
+  as zeros.
+- One partial hello holds 16395 bytes and 64 segments at most.
+- The table holds 1000 connections at most, and it drops a connection that adds no segment
+  for 30 seconds.
+- A FIN or a RST drops both directions of the connection. `CleanupConnection` and `Reset`
+  drop the partial hello too.
+
+The port holds the same four bounds, and Crank-Git/ja4plus#784 added them.
+
 **The result carries four forms of the fingerprint.**
 
 | Field | What it holds |

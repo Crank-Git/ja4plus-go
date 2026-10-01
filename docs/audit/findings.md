@@ -128,9 +128,10 @@ Issue #162 states this classification, and the project manager decided it on iss
 | `internal/capture/deadline.go` | #610 |
 | `internal/parser/tls13.go` | #492 |
 | `internal/parser/http2.go` | #529 |
+| `ja4_tcp_hello.go` | #795 |
 <!-- added-files:end -->
 
-**The table holds 18 rows, and no audit reads any of the 18 files.** Each row names the
+**The table holds 19 rows, and no audit reads any of the 19 files.** Each row names the
 issue that added the file after the audit of Epic 2.
 
 - Issue #200 added `internal/parser/ssh_tracker.go`.
@@ -149,6 +150,7 @@ issue that added the file after the audit of Epic 2.
 - Issue #610 added `internal/capture/deadline.go`.
 - Issue #492 added `internal/parser/tls13.go`.
 - Issue #529 added `internal/parser/http2.go`.
+- Issue #795 added `ja4_tcp_hello.go`.
 
 **Issue #611 wrote the eight rows that name a file of `internal/capture/`.** The directory
 held eight files that ship and seven test files, measured on 2026-08-15 with

@@ -528,3 +528,54 @@ func parseSignatureAlgorithms(data []byte) []uint16 {
 	}
 	return algs
 }
+
+// ClientHelloEnd returns the offset one past the last byte of the first ClientHello of the
+// bytes. It reports false where the bytes open no TLS record, and where the first handshake
+// message is no ClientHello.
+//
+// The walk steps over each record in front of the first handshake record, as
+// handshakeRecordOffset does, so a ChangeCipherSpec record before the hello counts toward
+// the offset. A caller that holds fewer bytes than the offset holds a hello that a later
+// TCP segment completes.
+//
+// Where the bytes cut the handshake header, the offset is the end of that header. The
+// header states the length, so the offset grows once the header arrives.
+//
+// `client_hello_end` of `ja4plus/utils/tls_utils.py` of the port at tag `v1.3.0` holds the
+// same walk. Crank-Git/ja4plus#784 added it, under Crank-Git/ja4plus#772.
+//
+// Every length field is untrusted input. The walk reads no byte past the end of the slice,
+// and each step advances by at least 5 bytes.
+func ClientHelloEnd(data []byte) (int, bool) {
+	for offset := 0; offset+5 <= len(data); {
+		// A stream of another protocol can open with any byte. The version byte narrows the
+		// start to a record that names TLS or SSL 3.0.
+		if !isTLSRecordType(data[offset]) || data[offset+1] != 0x03 {
+			return 0, false
+		}
+
+		if data[offset] == TLSRecordTypeHandshake {
+			if offset+5 < len(data) && data[offset+5] != TLSHandshakeClientHello {
+				return 0, false
+			}
+
+			if offset+9 > len(data) {
+				return offset + 9, true
+			}
+
+			length := int(data[offset+6])<<16 | int(data[offset+7])<<8 | int(data[offset+8])
+
+			return offset + 9 + length, true
+		}
+
+		offset += 5 + (int(data[offset+3])<<8 | int(data[offset+4]))
+	}
+
+	return 0, false
+}
+
+// isTLSRecordType reports whether the byte names one of the four record content types of
+// RFC 8446: ChangeCipherSpec, Alert, Handshake and ApplicationData.
+func isTLSRecordType(b byte) bool {
+	return b >= 0x14 && b <= 0x17
+}
