@@ -55,13 +55,13 @@ would assert a ruling that no round holds.
 
 **Never read this list as equal to the list that FoxIO names.** Three records of the FoxIO
 reference name three different sets, at commit
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`.
+`16b96d95c220762cf658f67d678cda2aac95c81e`.
 
 | FoxIO record | How many methods it names |
 |---|---|
 | `License FAQ.md:5` | Twelve. |
 | `LICENSE:3` | Thirteen, and it spells the scanner `JA4SScan`. |
-| `README.md:293` | Nine. |
+| `README.md:299` | Fifteen. |
 
 **So the sentence "the methods FoxIO names" resolves to three different lists.** Every page
 of this section therefore names what this library implements, and it cites the pinned

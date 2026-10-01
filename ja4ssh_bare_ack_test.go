@@ -16,8 +16,8 @@ import "testing"
 // One reading of issue #221 belongs to issue #222, and this comment records it. `ssh-r.pcap`
 // stream 1 holds 5 client bare ACKs, at the frames 298, 303, 312, 332 and 340. The reference
 // counts the first 4 and it drops frame 340, because frame 335 is a FIN+ACK packet.
-// `python/ja4.py:555` tests the two flags and `python/ja4.py:556` calls `finalize_ja4ssh` on
-// that frame. `python/ja4.py:377` deletes the stream from the cache, so no later packet reaches
+// `python/ja4.py:546` tests the two flags and `python/ja4.py:547` calls `finalize_ja4ssh` on
+// that frame. `python/ja4.py:368` deletes the stream from the cache, so no later packet reaches
 // the value. `wireshark/source/packet-ja4.c:1399` tests the same two flags, and
 // `wireshark/source/packet-ja4.c:1401` writes the value.
 // Issue #222 closed the window on that FIN+ACK packet, so this library now counts 4.

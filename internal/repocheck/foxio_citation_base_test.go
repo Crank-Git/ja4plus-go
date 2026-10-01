@@ -28,8 +28,7 @@ import (
 // constant here would break the rule this file holds.
 
 // foxioCorpusReferenceDir holds the FoxIO repository at the pin.
-// The step of `scripts/fetch-corpus.sh` that `reference_is_complete` guards writes it,
-// and `make corpus` runs that script.
+// `scripts/fetch-corpus.sh` writes it, and `make corpus` runs that script.
 const foxioCorpusReferenceDir = "testdata/foxio/reference"
 
 // `foxio_deleted_specs_test.go` declares foxioDeletedSpecsPage, and that page is base 4.
@@ -45,8 +44,12 @@ const foxioCorpusReferenceDir = "testdata/foxio/reference"
 // prose, and neither one names a file this project cites. The FoxIO tree holds `conn.log`
 // at three paths under `zeek/tests/Traces/`, so a bare-name rule resolves it under no
 // single path. It holds `ssl.log` at one path, so that name would resolve by accident.
+//
+// The set holds `cc` and `h`, because the Zeek plugin at `16b96d95` is C++ under
+// `zeek/src/`. #801 moved each Zeek citation there, and a citation outside the set is a
+// citation that no guard reads.
 var foxioCitationExtension = map[string]bool{
-	"c": true, "csv": true, "go": true, "json": true, "md": true,
+	"c": true, "cc": true, "csv": true, "go": true, "h": true, "json": true, "md": true,
 	"pcap": true, "pcapng": true, "pin": true, "png": true, "py": true,
 	"rs": true, "sh": true, "snap": true, "toml": true, "txt": true,
 	"yml": true, "zeek": true,
@@ -842,14 +845,13 @@ func foxioSortedKeys(set map[string]bool) string {
 	return strings.Join(names, ", ")
 }
 
-// #797 — a citation resolves under the reference tree of `testdata/foxio-reading.pin`, and
-// never under the commit of the vector pin. The maintainer ruled on 2026-10-01 UTC that every
-// reading stays at the reading pin, and #801 rereads each one at the vector pin.
+// #801 — a citation resolves under the reference tree of `testdata/foxio.pin`. #797 read
+// the reference tree at a second pin, `27f0cbf9`, and #801 removed that pin.
 //
 // FoxIO rewrote the cited line between the two commits, so the line text separates them.
-// `rust/ja4/src/tcp.rs:136` holds the JA4T format string at the reading pin, and the vector
-// pin holds `opts.push_str("00");` at that line.
-func TestACitationResolvesUnderTheReferenceTreeOfTheReadingPin(t *testing.T) {
+// `rust/ja4/src/tcp.rs:136` holds `opts.push_str("00");` at `16b96d95`, and it held the
+// JA4T format string at `27f0cbf9`.
+func TestACitationResolvesUnderTheReferenceTreeOfThePin(t *testing.T) {
 	resolver := newFoxioResolver(t)
 	if !resolver.corpus {
 		t.Skip(foxioCorpusAbsentMessage)
@@ -874,8 +876,8 @@ func TestACitationResolvesUnderTheReferenceTreeOfTheReadingPin(t *testing.T) {
 	}
 
 	lines := strings.Split(string(content), "\n")
-	if len(lines) < citation.number || !strings.Contains(lines[citation.number-1], `"{}_{}_{}_{}",`) {
-		t.Errorf("%s does not hold the JA4T format string at line %d, so the reference tree is not at the reading pin",
+	if len(lines) < citation.number || !strings.Contains(lines[citation.number-1], `opts.push_str("00");`) {
+		t.Errorf("%s does not hold the JA4T empty-option write at line %d, so the reference tree is not at the pin",
 			resolution.file, citation.number)
 	}
 }

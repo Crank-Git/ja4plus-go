@@ -21,7 +21,7 @@ import (
 // `wireshark/source/packet-ja4.c:1456` appends one entry for each `tcp.option_kind` field
 // occurrence, and `rust/ja4/src/tcp.rs:70` reads that same field list. The port reads the
 // raw option bytes in `ja4plus/utils/tcp_options.py`. The per-packet vectors hold two
-// entries. `zeek/ja4t/main.zeek:96-98` breaks the loop before the append, so Zeek writes
+// entries. `zeek/src/ja4t.cc:71-73` breaks the loop before the append, so Zeek writes
 // none. `docs/specs/foxio/JA4T.md` R10 marks that break a reference split.
 //
 // Ruling #125 stays closed. It keys the part width on the value, and this ruling decides

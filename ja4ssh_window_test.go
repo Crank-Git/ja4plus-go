@@ -150,7 +150,7 @@ func TestJA4SSHProducesNoFingerprintForAWindowOfBareACKs(t *testing.T) {
 
 // TestJA4SSHCloseOpenWindowsEmitsTheWindowAConnectionHoldsOpen holds FR-parity-29 and
 // FR-parity-33. The port's issues #105, #199 and #214 rule the method, and
-// `rust/ja4/src/ssh.rs:45-55` and `zeek/ja4ssh/main.zeek:160-164` both emit the open window.
+// `rust/ja4/src/ssh.rs:45-55` and `zeek/scripts/fingerprints/ja4ssh/main.zeek:98-105` both emit the open window.
 func TestJA4SSHCloseOpenWindowsEmitsTheWindowAConnectionHoldsOpen(t *testing.T) {
 	fingerprinter := NewJA4SSH(200)
 

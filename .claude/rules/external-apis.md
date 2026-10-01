@@ -17,12 +17,12 @@ Never describe an external interface from memory. A capability you cannot confir
 
 | Interface | Version pinned | Documentation |
 |---|---|---|
-| FoxIO JA4+ reference | The commit in `testdata/foxio-reading.pin` | <https://github.com/FoxIO-LLC/ja4> |
+| FoxIO JA4+ reference | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4> |
 | FoxIO per-stream vectors | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/python/test/testdata> |
 | FoxIO per-packet vectors | The commit in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 | FoxIO License 1.1 | Read 2026-08-06 at `27f0cbf` | <https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE> |
-| Wireshark core dissectors | `v4.6.0`, which the reading pin `testdata/foxio-reading.pin` records | <https://gitlab.com/wireshark/wireshark/-/tree/v4.6.0/epan/dissectors> |
-| Zeek analyzer | `8.0.0`, which the reading pin `testdata/foxio-reading.pin` records | <https://github.com/zeek/zeek/tree/v8.0.0/src/analyzer/protocol> |
+| Wireshark core dissectors | `v4.6.0`, which the pin records | <https://gitlab.com/wireshark/wireshark/-/tree/v4.6.0/epan/dissectors> |
+| Zeek analyzer | `8.0.0`, which the pin records | <https://github.com/zeek/zeek/tree/v8.0.0/src/analyzer/protocol> |
 | `github.com/gopacket/gopacket` | v1.7.2, read 2026-09-30 | <https://pkg.go.dev/github.com/gopacket/gopacket> |
 | `golang.org/x/crypto` | v0.57.0, read 2026-09-30 | <https://pkg.go.dev/golang.org/x/crypto> |
 | `golang.org/x/net` | v0.59.0, read 2026-09-30 | <https://pkg.go.dev/golang.org/x/net> |
@@ -53,16 +53,15 @@ The fingerprint definitions come from FoxIO. The wire formats come from these.
 
 - **The FoxIO reference decides every disputed fingerprint.** When a library test and a
   FoxIO vector disagree, the test is wrong. Never change a vector.
-- **The corpus is fetched, never committed.** It is FoxIO-licensed material. Two pins keep the fetch reproducible.
-  `testdata/foxio.pin` names the commit of the captures and the vectors, and
-  `testdata/foxio-reading.pin` names the commit of the reference tree that every reading
-  cites. #797 split them on 2026-10-01 UTC, and #801 rereads each citation at the vector
-  pin and removes the reading pin. Move a pin in a commit that does nothing else.
-- **The Wireshark core and the Zeek core each carry the version that the FoxIO reading pin
+- **The corpus is fetched, never committed.** It is FoxIO-licensed material. The pin in
+  `testdata/foxio.pin` keeps the fetch reproducible, and it names the commit of the
+  captures, the vectors and the reference tree that every reading cites. #801 removed the
+  second pin that #797 added. Move the pin in a commit that does nothing else.
+- **The Wireshark core and the Zeek core each carry the version that the FoxIO pin
   records, and this project picks neither one.** A JA4 reference implementation reads a
   field that its host produces, so a reading of the implementation often has to read the
   host. `.github/workflows/wireshark-release.yml:15` builds the FoxIO plugin at `v4.6.0`,
-  and `.github/workflows/zeek-test.yml:21` runs the FoxIO Zeek tests at
+  and `.github/workflows/zeek-test.yml:30` runs the FoxIO Zeek tests at
   `image: zeek/zeek:8.0.0`. Each path reads at base 1 of
   `docs/specs/foxio/README.md` `## How to read a citation`.
   **`docs/audit/upstream-versions.md` holds the measurement**, and

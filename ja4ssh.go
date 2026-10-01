@@ -265,8 +265,8 @@ func (f *JA4SSHFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerpri
 	// A packet that carries the FIN flag and the ACK flag closes the connection. The
 	// reference emits the window the connection holds open on it.
 	// `wireshark/source/packet-ja4.c:1400` tests the flags and
-	// `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:555` tests the two
-	// flags and `python/ja4.py:556` calls `finalize_ja4ssh`. The port holds the rule at
+	// `wireshark/source/packet-ja4.c:1402` writes the value. `python/ja4.py:546` tests the two
+	// flags and `python/ja4.py:547` calls `finalize_ja4ssh`. The port holds the rule at
 	// `ja4plus/fingerprinters/ja4ssh.py:268`.
 	// The test reads the two flags alone, and it reads no other flag, so a FIN+PSH+ACK packet
 	// reaches the emission. `wireshark/source/packet-ja4.c:1400` tests `tcp_flags == 0x011`
@@ -575,7 +575,7 @@ func emitSSHWindow(conn *sshConnState, srcIP, dstIP string, srcPort, dstPort uin
 // emits it.
 // ProcessPacket emits the open window on a packet that carries the FIN flag and the ACK flag.
 // A connection that sends such a packet therefore holds no window open.
-// `rust/ja4/src/ssh.rs:45-55` and `zeek/ja4ssh/main.zeek:160-164` both emit that window, and
+// `rust/ja4/src/ssh.rs:45-55` and `zeek/scripts/fingerprints/ja4ssh/main.zeek:98-105` both emit that window, and
 // the port's issues #105, #199 and #214 hold the ruling.
 //
 // It returns the values in the order the packet source opened the connections.
@@ -833,7 +833,7 @@ func (f *JA4SSHFingerprinter) CleanupConnection(srcIP string, srcPort uint16, ds
 //
 // The caller calls the method when it evicts one connection, which is the moment the
 // reference publishes the final window. `rust/ja4/src/ssh.rs:45-55` and
-// `zeek/ja4ssh/main.zeek:160-164` both emit at teardown, and CloseOpenWindows reaches every
+// `zeek/scripts/fingerprints/ja4ssh/main.zeek:98-105` both emit at teardown, and CloseOpenWindows reaches every
 // connection at once, which is the wrong instrument for one connection that just ended.
 // The maintainer ruled the method on 2026-08-12, and issue #216 records the ruling.
 //

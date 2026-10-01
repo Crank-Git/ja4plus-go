@@ -15,7 +15,7 @@ import (
 // never four.
 //
 // Both FoxIO references read the request and decline every retransmission.
-// `testdata/foxio/reference/python/ja4.py:598-600` calls `to_ja4h` for a packet whose
+// `testdata/foxio/reference/python/ja4.py:589-591` calls `to_ja4h` for a packet whose
 // highest layer is `http`, and the tshark HTTP dissector reads no retransmitted segment.
 // `testdata/foxio/reference/wireshark/source/packet-ja4.c:1149` sets `http_req` from an
 // `http.request.method` field, and

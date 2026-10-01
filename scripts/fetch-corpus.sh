@@ -1,24 +1,21 @@
 #!/usr/bin/env bash
 #
-# Fetch the FoxIO corpus. The script reads two pins.
+# Fetch the FoxIO corpus at the commit that `testdata/foxio.pin` names. One archive gives
+# the captures, the two vector sets and the reference tree.
 #
-#   testdata/foxio.pin           the vector pin: the captures and the two vector sets
-#   testdata/foxio-reading.pin   the reading pin: the FoxIO repository that a reading cites
-#
-# The maintainer ruled on #797, on 2026-10-01 UTC, that the vectors move to a later commit
-# and that every reading stays at its commit. FoxIO changed seven rules between the two
-# commits, and a reread of them is its own work. #801 rereads each citation at the vector
-# pin, and it removes the reading pin.
+# #797 read the reference tree at a second pin, `testdata/foxio-reading.pin`, from
+# 2026-10-01 UTC. #801 reread each citation at `testdata/foxio.pin` and removed the second pin, so
+# a reading and a vector name one commit again.
 #
 # The corpus is FoxIO-licensed material, so `.gitignore` keeps `testdata/foxio/` out of the
 # repository. Never commit a fetched file.
 #
 # The script writes four directories.
 #
-#   testdata/foxio/pcap/        the captures, at the vector pin
-#   testdata/foxio/python/      the per-stream vectors, at the vector pin
-#   testdata/foxio/wireshark/   the per-packet vectors, at the vector pin
-#   testdata/foxio/reference/   the rest of the FoxIO repository, at the reading pin
+#   testdata/foxio/pcap/        the captures
+#   testdata/foxio/python/      the per-stream vectors
+#   testdata/foxio/wireshark/   the per-packet vectors
+#   testdata/foxio/reference/   the rest of the FoxIO repository
 #
 # `.claude/rules/rulings.md` requires a reading to cite a file and a line at the pinned
 # commit. The reference tree holds each cited file under the name the FoxIO repository
@@ -28,18 +25,15 @@
 # The reference tree holds the whole repository except the captures and the two vector
 # directories, which the three directories above already hold.
 #
-# `JA4PLUS_CORPUS_URL` names the archive at the vector pin, and `JA4PLUS_READING_CORPUS_URL`
-# names the archive at the reading pin. The tests set both to a local archive, so that no
+# `JA4PLUS_CORPUS_URL` names the archive. The tests set it to a local archive, so that no
 # test reaches the network.
 
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 pin_file="$root/testdata/foxio.pin"
-reading_pin_file="$root/testdata/foxio-reading.pin"
 corpus_dir="$root/testdata/foxio"
 fetched_file="$corpus_dir/.fetched"
-reading_fetched_file="$corpus_dir/.fetched-reading"
 
 fail() {
 	echo "fetch-corpus: $1" >&2
@@ -62,10 +56,9 @@ read_pin() {
 }
 
 commit="$(read_pin "$pin_file")"
-reading_commit="$(read_pin "$reading_pin_file")"
 
 # The archive holds the source paths on the left, and the corpus holds the names on the
-# right. A missing source path means that FoxIO moved the corpus at the vector pin.
+# right. A missing source path means that FoxIO moved the corpus at the pin.
 sources=(pcap python/test/testdata wireshark/test/testdata)
 targets=(pcap python wireshark)
 
@@ -75,8 +68,8 @@ targets=(pcap python wireshark)
 # reference implementations decide behavior where the image is silent, and
 # `wireshark/source/packet-ja4.c` alone carries 147 citations.
 #
-# A missing path here means that the reading pin names a commit that moved the material,
-# and the script stops rather than write a reference tree that a reading cannot cite.
+# A missing path here means that the pin names a commit that moved the material, and the
+# script stops rather than write a reference tree that a reading cannot cite.
 cited=(
 	technical_details
 	python/ja4.py
@@ -89,26 +82,21 @@ cited=(
 
 # The guard reads the directories as well as the commit. A corpus that an earlier version
 # of this script wrote names the pinned commit and holds no reference tree, and that
-# corpus must fetch again.
-vectors_are_complete() {
+# corpus must fetch again. A corpus that #797 wrote holds a reference tree at the second
+# pin, and its `.fetched` file names `testdata/foxio.pin` alone. So the guard also requires that
+# no `.fetched-reading` file remains, and such a corpus fetches once more.
+corpus_is_complete() {
 	[ -f "$fetched_file" ] || return 1
 	[ "$(tr -d '[:space:]' <"$fetched_file")" = "$commit" ] || return 1
+	[ ! -e "$corpus_dir/.fetched-reading" ] || return 1
 
-	for directory in "${targets[@]}"; do
+	for directory in "${targets[@]}" reference; do
 		[ -d "$corpus_dir/$directory" ] || return 1
 	done
 }
 
-# The reference tree carries a fetched file of its own, so a move of one pin downloads one
-# archive and never both.
-reference_is_complete() {
-	[ -f "$reading_fetched_file" ] || return 1
-	[ "$(tr -d '[:space:]' <"$reading_fetched_file")" = "$reading_commit" ] || return 1
-	[ -d "$corpus_dir/reference" ]
-}
-
-if vectors_are_complete && reference_is_complete; then
-	echo "fetch-corpus: the vectors are present at $commit, and the reference tree at $reading_commit. The script downloads nothing."
+if corpus_is_complete; then
+	echo "fetch-corpus: the corpus is present at $commit. The script downloads nothing."
 	exit 0
 fi
 
@@ -135,7 +123,7 @@ trap cleanup EXIT
 #
 # curl writes the archive to a file, so a failed transfer never reaches tar.
 # `--max-filesize` bounds the body, as `.claude/rules/external-apis.md` requires. The FoxIO
-# repository is 16 MB at the reading pin, so 512 MB leaves room for growth.
+# repository is 16 MB at `27f0cbf9`, so 512 MB leaves room for growth.
 # `--no-same-owner` stops the archive from naming the owner of an extracted file.
 download() {
 	local url="$1" pinned="$2" into="$3"
@@ -169,54 +157,36 @@ replace() {
 	rm -rf "$target.previous"
 }
 
-if ! vectors_are_complete; then
-	download "${JA4PLUS_CORPUS_URL:-https://codeload.github.com/FoxIO-LLC/ja4/tar.gz/$commit}" "$commit" "$stage/vectors"
+download "${JA4PLUS_CORPUS_URL:-https://codeload.github.com/FoxIO-LLC/ja4/tar.gz/$commit}" "$commit" "$stage/archive"
 
-	for index in "${!sources[@]}"; do
-		if [ ! -d "$stage/vectors/${sources[$index]}" ]; then
-			fail "the archive at $commit holds no ${sources[$index]}. The script leaves the corpus in place."
-		fi
-	done
+for index in "${!sources[@]}"; do
+	if [ ! -d "$stage/archive/${sources[$index]}" ]; then
+		fail "the archive at $commit holds no ${sources[$index]}. The script leaves the corpus in place."
+	fi
+done
 
-	# The fetched file goes first, because an interrupted replace must not leave a file that
-	# names the previous commit beside a corpus that holds two commits.
-	rm -f "$fetched_file"
+for path in "${cited[@]}"; do
+	if [ ! -e "$stage/archive/$path" ]; then
+		fail "the archive at $commit holds no $path. The script leaves the corpus in place."
+	fi
+done
 
-	# The script replaces the vectors only after every source directory arrives, so a failed
-	# run keeps the previous vectors complete.
-	for index in "${!sources[@]}"; do
-		replace "$stage/vectors/${sources[$index]}" "${corpus_dir:?}/${targets[$index]}"
-	done
+# The fetched file goes first, because an interrupted replace must not leave a file that
+# names the previous commit beside a corpus that holds two commits.
+rm -f "$fetched_file" "$corpus_dir/.fetched-reading"
 
-	# The fetched file is the last write, so it names complete vectors and never partial ones.
-	echo "$commit" >"$fetched_file"
+# The script replaces the corpus only after every path arrives, so a failed run keeps the
+# previous corpus complete. Each source directory moves out of the archive first, so the
+# reference tree holds no capture and no vector a second time.
+for index in "${!sources[@]}"; do
+	replace "$stage/archive/${sources[$index]}" "${corpus_dir:?}/${targets[$index]}"
+done
+replace "$stage/archive" "${corpus_dir:?}/reference"
 
-	echo "fetch-corpus: the vectors are at $commit."
-fi
+# The fetched file is the last write, so it names a complete corpus and never a partial one.
+echo "$commit" >"$fetched_file"
 
-if ! reference_is_complete; then
-	download "${JA4PLUS_READING_CORPUS_URL:-https://codeload.github.com/FoxIO-LLC/ja4/tar.gz/$reading_commit}" "$reading_commit" "$stage/reference"
-
-	for path in "${cited[@]}"; do
-		if [ ! -e "$stage/reference/$path" ]; then
-			fail "the archive at $reading_commit holds no $path. The script leaves the corpus in place."
-		fi
-	done
-
-	# The reference tree holds no capture and no vector, because the corpus holds that
-	# content once, at the vector pin. A reader never compares the corpus with itself.
-	for source in "${sources[@]}"; do
-		rm -rf "${stage:?}/reference/$source"
-	done
-
-	rm -f "$reading_fetched_file"
-	replace "$stage/reference" "${corpus_dir:?}/reference"
-
-	# The fetched file is the last write, so it names a complete tree and never a partial one.
-	echo "$reading_commit" >"$reading_fetched_file"
-
-	echo "fetch-corpus: the reference tree is at $reading_commit."
-fi
+echo "fetch-corpus: the corpus is at $commit."
 
 echo "fetch-corpus: $(find "$corpus_dir/pcap" -type f | wc -l | tr -d ' ') captures, \
 $(find "$corpus_dir/python" -type f | wc -l | tr -d ' ') per-stream vectors, \

@@ -52,7 +52,7 @@ model that FoxIO recommends.
 - **FR-licensing-5a** — `NOTICE` states that this list is the set of methods this library
   implements under the license. **It asserts no equality with FoxIO's own list.** Three
   FoxIO records at the pinned commit name three different sets: `License FAQ.md:5` names
-  twelve methods, the FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and
+  twelve methods, the FoxIO `README.md:299` names fifteen, and `LICENSE:3` names thirteen and
   spells the scanner `JA4SScan`.
 - **FR-licensing-6** — `NOTICE` states that JA4 is covered by BSD 3-Clause under
   `LICENSE-JA4` at FoxIO.
