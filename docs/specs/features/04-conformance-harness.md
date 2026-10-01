@@ -37,10 +37,14 @@ deviation list that Epic 5 closes.
 
 ### The fetch
 
-- **FR-conformance-1** — The repository holds `testdata/foxio.pin`, which names one
-  FoxIO commit.
-- **FR-conformance-2** — `scripts/fetch-corpus.sh` fetches the FoxIO repository at the
-  commit in `testdata/foxio.pin`.
+- **FR-conformance-1** — The repository holds two pins, and each one names one full FoxIO
+  commit hash. `testdata/foxio.pin` names the commit of the captures and the vectors.
+  `testdata/foxio-reading.pin` names the commit of the reference tree that every reading
+  cites. The maintainer ruled the split on #797, on 2026-10-01 UTC. #801 rereads each
+  reading at the vector pin, and it removes `testdata/foxio-reading.pin`.
+- **FR-conformance-2** — `scripts/fetch-corpus.sh` fetches the captures and the vectors at
+  the commit in `testdata/foxio.pin`. It fetches the reference tree at the commit in
+  `testdata/foxio-reading.pin`.
 - **FR-conformance-3** — The script writes the captures to `testdata/foxio/pcap/`.
 - **FR-conformance-4** — The script writes the per-stream vectors to
   `testdata/foxio/python/`.
@@ -243,9 +247,9 @@ No entity changes. The following files change.
 
 | Interface | Version | Documentation |
 |---|---|---|
-| FoxIO reference repository | Pinned in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4> |
-| FoxIO per-stream vectors | At the pinned commit | <https://github.com/FoxIO-LLC/ja4/tree/main/python/test/testdata> |
-| FoxIO per-packet vectors | At the pinned commit | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
+| FoxIO reference repository | Pinned in `testdata/foxio-reading.pin` | <https://github.com/FoxIO-LLC/ja4> |
+| FoxIO per-stream vectors | Pinned in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/python/test/testdata> |
+| FoxIO per-packet vectors | Pinned in `testdata/foxio.pin` | <https://github.com/FoxIO-LLC/ja4/tree/main/wireshark/test/testdata> |
 | `actions/cache` | v4 | <https://github.com/actions/cache> |
 
 ### The per-stream vector shape

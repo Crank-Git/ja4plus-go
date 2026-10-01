@@ -83,7 +83,7 @@ cited=(
 	python/test/test_ja4_output.py
 	wireshark/source/packet-ja4.c
 	wireshark/test/test_tshark_output.py
-	zeek/ja4t/main.zeek
+	zeek
 	rust
 )
 
