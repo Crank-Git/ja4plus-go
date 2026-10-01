@@ -107,7 +107,7 @@ func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8
 		// The segment size is read only from an option of length 4, and the window scale
 		// only from an option of length 3. The maintainer ruled this on 2026-10-01 UTC, and
 		// #814 is the reversal path. FoxIO `rust/ja4/src/tcp.rs:76-82` and
-		// `wireshark/source/packet-ja4.c:1460-1466` at `16b96d95` read the field that
+		// `wireshark/source/packet-ja4.c:1461-1466` at `16b96d95` read the fields that the
 		// Wireshark core adds only at those lengths. The port reads the same lengths at
 		// `ja4plus/utils/tcp_options.py:115-118`, at tag `v1.3.0`. The ruling declines
 		// `zeek/src/ja4t.cc:87-93`, which reads any length.

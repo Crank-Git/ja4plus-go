@@ -410,7 +410,8 @@ func ALPNValue(protocols []string) string {
 }
 
 // alpnEndCharacter returns the character that one end byte of an ALPN value writes. It
-// returns false for a control byte, and the ruling of #801 makes the whole value `99` for it.
+// returns false for a control byte, and the ruling of #801 makes the whole value `99` for
+// that byte.
 func alpnEndCharacter(b byte) (byte, bool) {
 	switch {
 	case alpnIsPrintableASCII(b):
