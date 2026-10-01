@@ -245,7 +245,7 @@ func TestTheStatisticsGoroutineReadsTheCountersWhileTheLoopWritesThem(t *testing
 	errOut := &countingWriter{}
 	instance := newMonitor(
 		watchOptions{iface: "lo", statsInterval: time.Millisecond},
-		&stopRequest{}, &strings.Builder{}, errOut, steadyClock())
+		&stopRequest{}, &strings.Builder{}, errOut, steadyClock(), nil)
 
 	deadline := time.Now().Add(30 * time.Second)
 	handle.beforeRead = func(int) {

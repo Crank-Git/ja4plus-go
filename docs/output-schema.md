@@ -53,11 +53,12 @@ indents the array with two spaces. It is one document, and never one object per 
 | `dst_port` | `uint16` | Always. |
 | `fingerprint` | `string` | Always. |
 | `timestamp` | `string` | Always. |
-| `application` | `string` | Only with `--lookup`, and only for a fingerprint that the table holds. |
+| `application` | `string` | Only with `--lookup` or `--lookup-remote`, and only for a fingerprint that the table or the remote lookup holds. |
 
-**`application` carries `omitempty`.** A run without `--lookup` writes no `application`
-key at all. A run with `--lookup` writes the key for a fingerprint that the mapping table
-names, and it drops the key for every other fingerprint. `omitempty` also drops an
+**`application` carries `omitempty`.** A run that names neither `--lookup` nor
+`--lookup-remote` writes no `application` key at all. A run with either option writes the
+key for a fingerprint that the mapping table or the remote lookup names, and it drops the
+key for every other fingerprint. `omitempty` also drops an
 application name that is an empty string. So a reader tests for the key, and never for an
 empty value.
 
@@ -72,13 +73,13 @@ as RFC 3339.
 `--csv` writes a header row and then one row for each result. `writeCSV` in
 `cmd/ja4plus/main.go` writes both.
 
-The header without `--lookup`:
+The header without `--lookup` and without `--lookup-remote`:
 
 ```text
 type,src_ip,src_port,dst_ip,dst_port,fingerprint,timestamp
 ```
 
-**`--lookup` appends one column.** The header then ends `timestamp,application`, and each
+**`--lookup` appends one column, and `--lookup-remote` appends the same one.** The header then ends `timestamp,application`, and each
 row carries the extra field.
 
 **The CSV output writes the same column set for every row of the run.** The JSON output drops the
@@ -97,7 +98,7 @@ separates the columns with a tab, through `text/tabwriter`.
 | `Source` | The source address and the source port, as `address:port`. |
 | `Destination` | The destination address and the destination port, as `address:port`. |
 | `Fingerprint` | The fingerprint value. |
-| `Application` | The application name. `--lookup` adds this column. |
+| `Application` | The application name. `--lookup` or `--lookup-remote` adds this column. |
 
 **The table joins the address and the port into one column.** The JSON output and the CSV
 output keep the two apart. A script reads JSON or CSV, and a person reads the table.
@@ -127,6 +128,10 @@ values.
 
 `--lookup` calls `LookupFingerprint` for each result. That function reads the mapping
 table, and it performs no network input and no network output.
+
+**A run that permits the remote lookup asks `ja4db.com` for each fingerprint that the
+table does not hold.** `--lookup-remote` permits it, and so does `JA4PLUS_DB_LOOKUP=1` with
+`--lookup`. The [usage guide](usage.md) states the rule.
 
 **A fingerprint that the table does not hold produces no application name.** The lookup
 returns `nil`, and the output drops the field. That is a miss in the table, and never an
