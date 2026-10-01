@@ -56,8 +56,8 @@ Read the page you changed at `http://127.0.0.1:8000`.
 
 ## The page set
 
-One page per method. **Eleven methods reach eleven pages**, because `JA4LFingerprinter`
-writes both JA4L and JA4LS and each holds its own page. Plus the home page, the usage
+One page per method. **Twelve methods reach twelve pages**, because `JA4LFingerprinter`
+writes both JA4L and JA4LS and each holds its own page, and JA4TScan holds one. Plus the home page, the usage
 guide, the output schema, concurrency, live capture, packet throughput, the API reference,
 licensing, implementation notes and the mutation sweep.
 
@@ -80,4 +80,5 @@ the repair.
 
 1. `make docs` succeeds.
 2. `go test -run Example ./...` passes, when the page holds a Go sample.
-3. Every method count on the page reads eleven methods and ten fingerprinters.
+3. Every method count on the page reads twelve methods, or eleven passive methods, and ten
+   fingerprinters.

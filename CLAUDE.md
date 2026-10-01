@@ -309,7 +309,7 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
   `.claude/rules/ste.md` `## One document owns each measured count` states the rule, the
   owner of each class and the two permitted restatements. **This file owns no measured
   count**, and it cites each owner. **A schema count is not a measured count**, so the
-  eleven methods and the ten fingerprinters above stay here. #757 earned the rule from a
+  method counts and the ten fingerprinters above stay here. #757 earned the rule from a
   measurement of the closed backlog on 2026-08-16 UTC.
 - **The FoxIO reference decides every disputed fingerprint.** A test that disagrees with
   the reference is wrong. Never change a FoxIO vector to make a test pass.

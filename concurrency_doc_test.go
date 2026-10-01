@@ -29,7 +29,7 @@ const concurrencyContractPhrase = "serves one goroutine"
 
 // concurrencyFingerprinterTypes returns the file that declares each fingerprinter type, by
 // type name. FR-concurrency-2 covers the ten fingerprinter types, and ten fingerprinters
-// carry eleven methods, because JA4LFingerprinter writes both JA4L and JA4LS.
+// carry the eleven passive methods, because JA4LFingerprinter writes both JA4L and JA4LS.
 //
 // It reads the fields of Processor by reflection, so a new fingerprinter reaches this test
 // with no edit here. Issue #148 records the fault a second list produces.
