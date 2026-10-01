@@ -148,6 +148,8 @@ func TestJA4L_MissingSYN(t *testing.T) {
 	}
 }
 
+// TestJA4L_MinimumLatency holds the value of a zero interval. Issue #809 removed a floor
+// of 1, and each FoxIO implementation writes 0 for this interval.
 func TestJA4L_MinimumLatency(t *testing.T) {
 	fp := NewJA4L()
 	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -159,7 +161,7 @@ func TestJA4L_MinimumLatency(t *testing.T) {
 	synPkt.Metadata().Timestamp = baseTime
 	_, _ = fp.ProcessPacket(synPkt)
 
-	// SYN-ACK at same time (zero diff) -> should clamp to 1
+	// The SYN-ACK carries the timestamp of the SYN, so the interval is zero.
 	synAckPkt := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 443, 12345, true, true)
 	synAckPkt.Metadata().Timestamp = baseTime
 	results, err := fp.ProcessPacket(synAckPkt)
@@ -169,7 +171,7 @@ func TestJA4L_MinimumLatency(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
 	}
-	expected := "JA4L-S=1_64"
+	expected := "JA4L-S=0_64"
 	if results[0].Fingerprint != expected {
 		t.Errorf("min latency: got %q, want %q", results[0].Fingerprint, expected)
 	}
