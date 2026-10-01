@@ -258,7 +258,7 @@ func runMonitor(handle capture.Handle, options watchOptions) error {
 	stop, release := installWatchStopHandler()
 	defer release()
 
-	return newMonitor(options, stop, os.Stdout, os.Stderr, time.Now).run(handle)
+	return newMonitor(options, stop, os.Stdout, os.Stderr, time.Now, lookupFromJA4DB).run(handle)
 }
 
 // The monitor loop, the signals and the connection table. Issue #80 builds them, and
@@ -714,12 +714,16 @@ type monitor struct {
 // moves.
 // Verified against: <https://pkg.go.dev/time>, read from `go doc time` at go1.26.5 on
 // 2026-08-14.
+//
+// The remote function answers the remote lookup, so a test passes one that reaches no
+// network. A nil function sends no remote request.
 func newMonitor(
 	options watchOptions,
 	stop *stopRequest,
 	out io.Writer,
 	errOut io.Writer,
 	now func() time.Time,
+	remote remoteLookupFunc,
 ) *monitor {
 	started := now()
 
@@ -730,7 +734,7 @@ func newMonitor(
 		now:            now,
 		startedAt:      started,
 		lastDropSample: started,
-		results:        newResultWriter(out, options, newIdentifier(options.lookup, options.lookupRemote, os.Getenv, errOut, lookupFromJA4DB)),
+		results:        newResultWriter(out, options, newIdentifier(options.lookup, options.lookupRemote, os.Getenv, errOut, remote)),
 		errOut:         errOut,
 		options:        options,
 	}
