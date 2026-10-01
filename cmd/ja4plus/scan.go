@@ -9,10 +9,8 @@ import (
 	"math/rand/v2"
 	"net/netip"
 	"os"
-	"os/signal"
 	"runtime"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"github.com/Crank-Git/ja4plus-go"
@@ -73,27 +71,28 @@ type scanEnvironment struct {
 
 // runScan runs the scan command on the network of this host, and it exits the process.
 func runScan(args []string) {
-	var stop atomic.Bool
-
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, terminationSignals()...)
-
-	go func() {
-		<-signals
-		stop.Store(true)
-	}()
-
-	code := runScanCommand(args, scanEnvironment{
+	os.Exit(runScanWithStopHandler(args, installWatchStopHandler, scanEnvironment{
 		stdout:      os.Stdout,
 		stderr:      os.Stderr,
 		goos:        runtime.GOOS,
 		openNetwork: scan.OpenNetwork,
 		clock:       time.Now,
-		stopped:     stop.Load,
-	})
+	}))
+}
 
-	signal.Stop(signals)
-	os.Exit(code)
+// runScanWithStopHandler runs the scan command under the stop handler that install
+// returns, and it returns the exit status.
+//
+// The scan uses the stop handler of the monitor. The first signal stops the send loop, and
+// a second signal reaches the default disposition and ends the process at once. The release
+// runs before the return, so no registration outlives the scan.
+func runScanWithStopHandler(args []string, install func() (*stopRequest, func()), env scanEnvironment) int {
+	stop, release := install()
+	defer release()
+
+	env.stopped = stop.isRequested
+
+	return runScanCommand(args, env)
 }
 
 // parseScanArgs returns the options of the command line. It returns an error that names the
@@ -151,6 +150,14 @@ func (o *scanOptions) set(option, value string) error {
 		rate, err := strconv.ParseFloat(value, 64)
 		if err != nil || !(rate > 0) || math.IsInf(rate, 0) {
 			return fmt.Errorf("--rate takes a finite number above zero, and %q is none", value)
+		}
+
+		// A rate below about 1.1e-10 gives an interval that a time.Duration cannot hold, and
+		// the conversion then gives a wrong interval. The port checks no such bound, because
+		// a Python float holds the interval.
+		if float64(time.Second)/rate >= math.MaxInt64 {
+			return fmt.Errorf("--rate %q gives an interval between two SYNs above %v, and the scan holds no longer interval",
+				value, time.Duration(math.MaxInt64))
 		}
 
 		o.rate = rate
@@ -346,11 +353,24 @@ func openScanOutput(options scanOptions, stdout io.Writer) (io.Writer, func(), e
 	return file, func() { _ = file.Close() }, nil
 }
 
-// stoppableNetwork returns errScanInterrupted from a receive once the operator asks the scan
-// to stop. The scanner then returns, and the command writes each result it holds.
+// stoppableNetwork returns errScanInterrupted from a send or a receive once the operator
+// asks the scan to stop. The scanner then returns, and the command writes each result it
+// holds.
+//
+// The send also reads the stop request. A scanner that falls behind its send schedule calls
+// no receive between two SYNs, so a check in the receive alone lets the whole target list go
+// out after the stop request.
 type stoppableNetwork struct {
 	scan.Network
 	stopped func() bool
+}
+
+func (n stoppableNetwork) Send(target netip.Addr, srcPort uint16, sequence uint32) (netip.Addr, bool, error) {
+	if n.stopped != nil && n.stopped() {
+		return netip.Addr{}, false, errScanInterrupted
+	}
+
+	return n.Network.Send(target, srcPort, sequence)
 }
 
 func (n stoppableNetwork) Receive(timeout time.Duration) ([]byte, time.Time, bool, error) {

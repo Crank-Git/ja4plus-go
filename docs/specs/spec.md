@@ -55,7 +55,9 @@ features:
 FoxIO publishes the JA4+ standard. This project is an independent implementation of that
 standard. The library is at version `v1.1.0`, and the current work takes it to `v1.1.1`.
 
-**FoxIO names twelve methods. This project implements all twelve of them.** The twelfth
+**FoxIO names twelve methods, and this project implements twelve methods. The two lists
+differ.** `License FAQ.md:5` of FoxIO at `27f0cbf` lists JA4Scan and omits JA4. This
+project implements JA4, and it implements no JA4Scan. The twelfth method of this project
 is JA4TScan, the active scanner, and `features/17-active-scan.md` builds it. The
 maintainer reversed the decline of JA4TScan on 2026-09-30, and #796 built it.
 
@@ -103,7 +105,7 @@ shared vector set is what makes the two implementations agree.
 
 | Term | Part of speech | Meaning in this project | Do not use |
 |---|---|---|---|
-| method | noun | One named JA4+ algorithm, for example JA4 or JA4SSH. FoxIO names twelve of them, and this project implements all twelve. | algorithm, type, scheme |
+| method | noun | One named JA4+ algorithm, for example JA4 or JA4SSH. FoxIO names twelve of them, and this project implements twelve. The two lists differ: the FoxIO list of `License FAQ.md:5` holds JA4Scan and omits JA4. | algorithm, type, scheme |
 | active scanner | noun | The package `scan`, which sends one TCP SYN to each target to compute JA4TScan. It is the one part of this project that sends a packet. | prober, active fingerprinter |
 | method name | noun | The lower-case token that names one method, for example `ja4h`. `FingerprintResult.Type` holds one. | method key, type name, token |
 | fingerprinter | noun | The Go type that implements one method or two. `JA4LFingerprinter` implements JA4L and JA4LS, so ten fingerprinters carry eleven methods. | engine, module, handler |
@@ -277,7 +279,7 @@ Round 2 held three non-goals that round 3 removes, because Go can achieve each o
 
 | Round 2 non-goal | Why it is now in scope | Feature set |
 |---|---|---|
-| "The project does not add an eleventh method. JA4E, JA4LS, JA4SScan and JA4TScan stay out of scope." | JA4LS is a defined FoxIO method with published reference values, and the port implements it. The other three stay out, and the bullets above hold the reason. | `features/12-ja4ls.md` |
+| "The project does not add an eleventh method. JA4E, JA4LS, JA4SScan and JA4TScan stay out of scope." | JA4LS is a defined FoxIO method with published reference values, and the port implements it. JA4E and JA4SScan stay out, and the bullets above hold the reason. JA4TScan stayed out until 2026-09-30, and the first bullet above states why it is now in scope. | `features/12-ja4ls.md` |
 | "The project does not add live network capture." | `gopacket/pcapgo` provides a pure-Go capture handle on Linux, and the `libpcap` build tag reaches macOS. | `features/13-live-capture.md` |
 | "The project does not become a network monitor." | The same reason. `GetShardKey` and `CleanupConnection` now serve a monitor this project ships, as well as one the caller writes. | `features/13-live-capture.md` |
 
@@ -488,7 +490,7 @@ requirement and holds the acceptance criteria.
 | Item | This project today | What must change | Rule | Ruling |
 |---|---|---|---|---|
 | The methods the FoxIO License 1.1 covers | The README claims BSD 3-Clause for the whole library, and links to a `LICENSE` file that does not exist. | Name the methods this project implements under the license, state that FoxIO's list is wider, and cite the pinned commit. **Assert no equality with FoxIO's list.** Three FoxIO records at the pinned commit name three different sets: `License FAQ.md:5` names twelve, the FoxIO `README.md:293` names nine, and `LICENSE:3` names thirteen and spells the scanner `JA4SScan`. | — | #388, #466 |
-| JA4TScan | Implemented by #796 in package `scan`, on 2026-10-01 UTC. | **The decline is reversed in both repositories.** Both ports read `FoxIO-LLC/ja4tscan` at `d01bfec4`, and this project adopted the interface, the flags and the value form of the port under rule 2. The port's register holds the three departures from `module_ja4tscan.c` and the flag rule against `module_ja4tscan.c:310`, and `features/17-active-scan.md` names each one. | 2 | #197, #775, #776 |
+| JA4TScan | Implemented by #796 in package `scan`, on 2026-10-01 UTC. | **The decline is reversed in both repositories.** Both ports read `FoxIO-LLC/ja4tscan` at `d01bfec4`, and this project adopted the interface, the flags and the value form of the port under rule 2. The port's register holds the three departures from `module_ja4tscan.c` and the flag rule against `module_ja4tscan.c:310`, and `features/17-active-scan.md` names each one. **This program departs from the port in three places, and no departure moves a value.** The scan output follows the output schema of this program and not the eleven-field schema of the port, because the two passive schemas already differed before #796. That choice is provisional, the maintainer confirms or reverses it, and this repository's issue #796 is the reversal path. A refused option exits with status 1, as every other command of this program does, and the port exits with status 2. A first target that routes through a loopback interface stops the scan, and the port warns at each send. `features/17-active-scan.md` `## Where this repository differs from the port` states each one. | 2 | #197, #775, #776 |
 
 Verified against <https://github.com/Crank-Git/ja4plus> (`docs/specs/spec.md`, retrieved
 2026-08-11, default branch `dev` at `v1.1.0`).

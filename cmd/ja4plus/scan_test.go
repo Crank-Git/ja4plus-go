@@ -536,6 +536,104 @@ func TestAnInterruptWritesTheResultOfEachTargetThatAnswered(t *testing.T) {
 	}
 }
 
+// TestARateWhoseIntervalOverflowsADurationIsRefusedBeforeTheNetworkOpens reads the gate
+// finding of batch #821. One SYN in 1e10 seconds is an interval of 1e19 nanoseconds. A
+// time.Duration holds at most about 9.2e18, so the conversion gives a wrong interval.
+func TestARateWhoseIntervalOverflowsADurationIsRefusedBeforeTheNetworkOpens(t *testing.T) {
+	for _, rate := range []string{"1e-10", "1e-300", "5e-324"} {
+		run := runFakeScan(t, nil, "linux", scanTestTarget.String(), "--rate", rate)
+		if run.code != 1 || run.opened || !strings.Contains(run.stderr, "--rate") {
+			t.Errorf("--rate %s: exit %d, opened %v, stderr %q", rate, run.code, run.opened, run.stderr)
+		}
+	}
+}
+
+// TestASmallRateWhoseIntervalFitsADurationIsAccepted holds the boundary of the rate check.
+// One SYN in about 8.3e9 seconds fits a Duration.
+func TestASmallRateWhoseIntervalFitsADurationIsAccepted(t *testing.T) {
+	options, err := parseScanArgs([]string{scanTestTarget.String(), "--rate", "1.2e-10"})
+	if err != nil || options.rate != 1.2e-10 {
+		t.Errorf("rate %v, error %v", options.rate, err)
+	}
+}
+
+// TestAStopRequestDuringAFastSendSendsNoFurtherSYN reads the gate finding of batch #821.
+// Each SYN moves the fake clock one second, so the scanner falls behind its send schedule
+// and it calls no receive between two SYNs. The stop request must still end the send loop.
+func TestAStopRequestDuringAFastSendSendsNoFurtherSYN(t *testing.T) {
+	network := newScanFakeNetwork(t, nil)
+	stop := &stopRequest{}
+
+	network.onSend = func() {
+		network.now = network.now.Add(time.Second)
+		stop.request()
+	}
+
+	var stdout, stderr bytes.Buffer
+
+	code := runScanCommand([]string{"203.0.113.0/24", "--retransmit", "no", "--rate", "1000"}, scanEnvironment{
+		stdout: &stdout, stderr: &stderr, goos: "linux", clock: network.clock, rand: rand.New(rand.NewPCG(3, 3)),
+		openNetwork: func(uint16, netip.Addr, func(string)) (scan.Network, error) { return network, nil },
+		stopped:     stop.isRequested,
+	})
+
+	if code != scanExitInterrupted || len(network.sent) != 1 {
+		t.Errorf("exit %d, %d SYNs sent and the stop request came after the first, stderr %q",
+			code, len(network.sent), stderr.String())
+	}
+}
+
+// TestASecondSignalDuringTheScanEndsTheRunAtOnce reads the gate finding of batch #821. The
+// scan command installs the stop handler of the monitor. So the first signal stops the
+// send loop, and the handler raises the second signal to reach the kernel default.
+func TestASecondSignalDuringTheScanEndsTheRunAtOnce(t *testing.T) {
+	var (
+		delivered chan<- os.Signal
+		stop      *stopRequest
+		raised    []os.Signal
+	)
+
+	install := func() (*stopRequest, func()) {
+		var release func()
+
+		stop, release = installStopHandler(
+			func(c chan<- os.Signal, _ ...os.Signal) { delivered = c },
+			func(chan<- os.Signal) {},
+			func() {},
+			func(sig os.Signal) error { raised = append(raised, sig); return nil },
+			func(int) { t.Error("the handler exited, and it raises the second signal instead") },
+		)
+
+		return stop, release
+	}
+
+	network := newScanFakeNetwork(t, nil)
+	network.onSend = func() {
+		network.now = network.now.Add(time.Second)
+		if len(network.sent) == 0 {
+			delivered <- os.Interrupt
+			delivered <- os.Interrupt
+
+			// The handler goroutine sets the flag, so the first SYN waits for it.
+			for !stop.isRequested() {
+				time.Sleep(time.Millisecond)
+			}
+		}
+	}
+
+	var stdout, stderr bytes.Buffer
+
+	code := runScanWithStopHandler([]string{"203.0.113.0/24", "--retransmit", "no", "--rate", "1000"}, install,
+		scanEnvironment{
+			stdout: &stdout, stderr: &stderr, goos: "linux", clock: network.clock, rand: rand.New(rand.NewPCG(3, 3)),
+			openNetwork: func(uint16, netip.Addr, func(string)) (scan.Network, error) { return network, nil },
+		})
+
+	if code != scanExitInterrupted || len(raised) != 1 || raised[0] != os.Interrupt || len(network.sent) != 1 {
+		t.Errorf("exit %d, raised %v, sent %d", code, raised, len(network.sent))
+	}
+}
+
 func containsLine(lines []string, want string) bool {
 	for _, line := range lines {
 		if line == want {

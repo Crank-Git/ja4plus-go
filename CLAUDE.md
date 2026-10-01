@@ -4,8 +4,10 @@ A Go library and command-line program for JA4+ network fingerprinting. It reads 
 through `gopacket`. JA4+ is a set of standards that FoxIO publishes. This library is an
 independent Go implementation.
 
-**FoxIO names twelve methods. This project implements all twelve of them.**
-**`JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters carry eleven
+**FoxIO names twelve methods, and this project implements twelve methods. The two lists
+differ.** `License FAQ.md:5` of FoxIO, at the commit that `testdata/foxio-reading.pin`
+names, lists JA4Scan and omits JA4. This project implements JA4, and it implements no
+JA4Scan. **`JA4LFingerprinter` writes both JA4L and JA4LS, so ten fingerprinters carry eleven
 methods.** The opt-in package `scan` carries the twelfth, JA4TScan, and no fingerprinter
 carries it. Read the ten as a count of fingerprinters, and never as a count of methods. A
 document that states "ten methods" is wrong, and a test holds that count. #796 moved the
@@ -135,10 +137,17 @@ rule.
 
 **The boundary names an HTTP call and a remote lookup, and it names no raw socket.** The
 maintainer narrowed it on 2026-08-15, and `docs/audit/network-boundary.md` holds that
-amendment. A remote lookup reaches `ja4db.com`, and a raw capture socket reads a local
-interface. The two are different reaches, so `internal/capture/` stays in the layout table
-above. `internal/repocheck/network_boundary_test.go` permits a socket open in that directory alone, and it
+amendment. A remote lookup reaches `ja4db.com`. A raw socket of `internal/capture/` reads a
+local interface for `ja4plus watch`, and it sends a SYN to a remote host for `ja4plus scan`.
+Neither one is a remote lookup, so `internal/capture/` stays in the layout table above.
+`internal/repocheck/network_boundary_test.go` permits a socket open in that directory alone, and it
 fails on a second package that opens one. **Issue #613 is the reversal path.**
+
+**The maintainer ruled on 2026-10-01 UTC, in #796, that the scanner changes no part of that
+rule.** Every socket open stays in `internal/capture/`, and package `scan` reaches a socket
+only through `capture.OpenLink`. `TestOnlyTheScanPackageCallsOpenLink` fails on a second
+caller, and the `## The amendment of 2026-10-01` section of
+`docs/audit/network-boundary.md` holds the record. **Issue #796 is the reversal path.**
 
 ## Commands
 

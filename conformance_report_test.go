@@ -93,7 +93,8 @@ const (
 type conformanceReportRow struct {
 	// Capture is the file name of the capture.
 	Capture string
-	// Method is one of the eleven methods this project implements.
+	// Method is one of the eleven passive methods this project implements. JA4TScan reaches
+	// no vector of the FoxIO corpus, so no row names it.
 	Method string
 	// Set names the vector sets that hold a value for the row.
 	Set string
@@ -402,7 +403,7 @@ func (r *conformanceReport) addUncovered(capture, method, set string, value conf
 // or the JA4L label the per-stream vector writes. A raw form is a form of its method, and
 // never a method of its own, so `JA4H_ro.3` names the method JA4H.
 //
-// It returns an error for a key that names none of the eleven methods.
+// It returns an error for a key that names none of the eleven passive methods.
 func conformanceReportMethodOf(key string) (string, error) {
 	method, _, held := strings.Cut(key, ".")
 	if !held {
