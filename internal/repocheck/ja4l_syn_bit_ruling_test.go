@@ -27,10 +27,10 @@ const ja4lSYNBitRulingIssue = "#543"
 var ja4lSYNBitRulingCitations = []string{
 	"wireshark/source/packet-ja4.c:1266",
 	"wireshark/source/packet-ja4.c:1279",
-	"python/ja4.py:563",
-	"zeek/ja4l/main.zeek:84",
-	"rust/ja4/src/time/tcp.rs:211",
-	"rust/ja4/src/time/tcp.rs:212",
+	"python/ja4.py:554",
+	"zeek/scripts/fingerprints/ja4l/main.zeek:85",
+	"rust/ja4/src/time/tcp.rs:213",
+	"rust/ja4/src/time/tcp.rs:214",
 }
 
 // ja4lSYNBitDeclines names each per-packet value that declines under the ruling, with the

@@ -26,7 +26,7 @@ states the rule, and it names each path that the rule does not cover.
 **One reference implementation builds a JA4D6 value, and that implementation is the
 Wireshark dissector.** The FoxIO Zeek package states
 `JA4D6 &rarr; `ja4d.log` (awaiting Zeek DHCPv6 suppport)` at `zeek/README.md:15`, and its
-`ja4d` module handles the `dhcp_message` event alone at `zeek/ja4d/main.zeek:125`. The
+`ja4d` module handles the `dhcp_message` event alone at `zeek/scripts/fingerprints/ja4d/main.zeek:118`. The
 FoxIO Rust program and the FoxIO Python program build no DHCP fingerprint at all.
 
 A rule on this page therefore carries one implementation citation or none. **No reference

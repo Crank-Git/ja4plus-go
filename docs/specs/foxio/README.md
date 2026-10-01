@@ -48,7 +48,7 @@ the vector pin.
 
 | N | Base | A citation of that base | Where a reader resolves it |
 |---|---|---|---|
-| 1 | The FoxIO repository at the pin | `python/ja4.py:161` | Line 161 of `testdata/foxio/reference/python/ja4.py` |
+| 1 | The FoxIO repository at the pin | `python/ja4.py:172` | Line 161 of `testdata/foxio/reference/python/ja4.py` |
 | 2 | `technical_details/` at the pin | `JA4T.png`, `JA4H.md` | `testdata/foxio/reference/technical_details/JA4T.png` |
 | 3 | A moved corpus directory | `pcap/badcurveball.pcap` | The right-hand column of `### The three moved directories` below |
 | 4 | A recovered file of `docs/specs/foxio/deleted-text-specifications.md` | `JA4L.md:19` | Line 19 of the block that the `### JA4L.md` heading of that page carries |

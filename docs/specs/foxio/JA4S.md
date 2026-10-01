@@ -19,7 +19,7 @@ states how to read a citation.
 **This page reproduces no image.** Follow the link above to read it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `python/ja4.py:188` as line 188 of
+`testdata/foxio/reference/`.** Read `python/ja4.py:199` as line 188 of
 `testdata/foxio/reference/python/ja4.py`. `docs/specs/foxio/README.md` states the rule,
 and it names each path that the rule does not cover.
 
@@ -48,42 +48,42 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
 
 - **R1** — One JA4S value holds three parts. One underscore separates each pair of parts.
   The image states this rule, and its example value shows two underscores.
-  `python/ja4.py:209` corroborates.
+  `python/ja4.py:211` corroborates.
 
 - **R2** — JA4S reads the TLS server hello. The image title states it, and
-  `python/ja4.py:591` corroborates by selecting handshake type `2`.
+  `python/ja4.py:582` corroborates by selecting handshake type `2`.
 
 - **R3** — Part a opens with one protocol character. The image states `Protocol, TCP = “t”
-  QUIC = “q”`. `python/ja4.py:173` corroborates, and `rust/ja4/src/tls.rs:452`
+  QUIC = “q”`. `python/ja4.py:184` corroborates, and `rust/ja4/src/tls.rs:471`
   corroborates.
 
 - **R4** — Part a carries a 2-character TLS version. The image states `TLS version, 1.2 =
-  “12”, 1.3 = “13”`. `python/ja4.py:196` corroborates through `python/common.py:16`.
+  “12”, 1.3 = “13”`. `python/ja4.py:207` corroborates through `python/common.py:16`.
 
 - **R5** — The JA4S version map equals the JA4 version map. **The image states two of its
   values.** `python/common.py:16` serves both methods, and
-  `zeek/utils/ssl-consts.zeek:4` serves both methods.
+  `zeek/scripts/fingerprints/utils/ssl-consts.zeek:6` serves both methods.
 
 - **R6** — When the server supported_versions extension is present, the version is the
   highest value that extension carries. **The image alone states no such rule.**
-  `python/ja4.py:195` corroborates, and `zeek/ja4s/main.zeek:119` corroborates.
+  `python/ja4.py:206` corroborates, and `zeek/ja4s/main.zeek:119` corroborates.
 
 - **R7** — The highest-value search of R6 skips a GREASE value. `python/common.py:154`
   corroborates, and `zeek/ja4s/main.zeek:116` corroborates.
 
 - **R8** — Part a carries the count of server extensions, in 2 characters. The image
-  states `Number of Extensions`. `python/ja4.py:183` corroborates, and
-  `rust/ja4/src/tls.rs:453` corroborates.
+  states `Number of Extensions`. `python/ja4.py:194` corroborates, and
+  `rust/ja4/src/tls.rs:472` corroborates.
 
 - **R9** — A server extension count above 99 produces `99`. **The image alone states no
-  such rule.** `python/ja4.py:183` corroborates, `rust/ja4/src/tls.rs:453` corroborates,
+  such rule.** `python/ja4.py:194` corroborates, `rust/ja4/src/tls.rs:472` corroborates,
   and `zeek/ja4s/main.zeek:142` corroborates.
 
 - **R10** — **Reference split.** The server extension list treats a GREASE value two
   ways, and the count of R8 follows the same split.
-  - `python/ja4.py:183` keeps a GREASE value, because `to_ja4s` applies no GREASE filter.
-  - `rust/ja4/src/tls.rs:604` keeps a GREASE value, and its client function
-    `rust/ja4/src/tls.rs:585` removes one.
+  - `python/ja4.py:194` keeps a GREASE value, because `to_ja4s` applies no GREASE filter.
+  - `rust/ja4/src/tls.rs:624` keeps a GREASE value, and its client function
+    `rust/ja4/src/tls.rs:605` removes one.
   - `wireshark/source/packet-ja4.c:757` removes a GREASE value.
   - `zeek/ja4s/main.zeek:91` removes a GREASE value, and its own comment states
     `Will we see grease from the server?`.
@@ -92,8 +92,8 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
   ALPN)`. `python/ja4.py:205` corroborates, and `zeek/ja4s/main.zeek:149` corroborates.
 
 - **R12** — The two ALPN characters are the first character and the last character of the
-  ALPN value the server chose. `rust/ja4/src/tls.rs:424` corroborates through
-  `rust/ja4/src/tls.rs:615`, and `zeek/ja4s/main.zeek:149` corroborates.
+  ALPN value the server chose. `rust/ja4/src/tls.rs:443` corroborates through
+  `rust/ja4/src/tls.rs:635`, and `zeek/ja4s/main.zeek:149` corroborates.
 
 - **R13** — No ALPN extension produces `00`. The image states it, and
   `python/ja4.py:198` corroborates.
@@ -101,38 +101,38 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
 - **R14** — **Reference split.** A one-character ALPN value and a non-alphanumeric ALPN
   byte split the references exactly as they split them for JA4. `docs/specs/foxio/JA4.md`
   R18 and R19 state each value, and the same code serves both methods:
-  `python/ja4.py:204`, `rust/ja4/src/tls.rs:615` and
+  `python/ja4.py:204`, `rust/ja4/src/tls.rs:635` and
   `wireshark/source/packet-ja4.c:1027`.
 
 - **R15** — Part b is the one cipher suite the server chose. The image states `Cipher
-  Suite Chosen`. `python/ja4.py:191` corroborates, and `zeek/ja4s/main.zeek:165`
+  Suite Chosen`. `python/ja4.py:202` corroborates, and `zeek/ja4s/main.zeek:165`
   corroborates.
 
 - **R16** — Part b is a 4-character lower-case hexadecimal value, and no hash applies to
   it. The image example holds `c030`. `zeek/ja4s/main.zeek:165` corroborates with the
-  format `%04x`, and `rust/ja4/src/tls.rs:427` corroborates.
+  format `%04x`, and `rust/ja4/src/tls.rs:446` corroborates.
 
 - **R17** — The references state no one value for a server hello that names no cipher
-  suite. **The image states no rule for it.** `python/ja4.py:191` writes an empty part b.
-  `rust/ja4/src/tls.rs:426` returns an error and writes no JA4S value at all.
+  suite. **The image states no rule for it.** `python/ja4.py:202` writes an empty part b.
+  `rust/ja4/src/tls.rs:445` returns an error and writes no JA4S value at all.
 
 - **R18** — Part c is a SHA-256 hash of the server extension list. The image states
   `Truncated SHA256 hash of the Extensions, in the order they appear`.
-  `python/ja4.py:186` corroborates.
+  `python/ja4.py:197` corroborates.
 
 - **R19** — The server extension list keeps the order of the packet, and no sort applies
-  to it. The image states `in the order they appear`. `rust/ja4/src/tls.rs:461`
+  to it. The image states `in the order they appear`. `rust/ja4/src/tls.rs:480`
   corroborates with the comment `Note that we are preserving the original order of
   server's TLS extensions.`.
 
 - **R20** — The server extension list holds the SNI extension and the ALPN extension.
   **The image alone states no such rule, and the JA4 rule runs the other way.**
-  `rust/ja4/src/tls.rs:604` corroborates by removing neither, and the FoxIO vector
+  `rust/ja4/src/tls.rs:624` corroborates by removing neither, and the FoxIO vector
   `python/test/testdata/browsers-x509.pcapng.json:36` shows
   `t1207h2_c02b_ff01,0000,000b,0023,0005,0010,0017`, which holds `0000` and `0010`.
 
 - **R21** — Each list entry is a 4-character lower-case hexadecimal value, and a comma
-  separates each pair. `rust/ja4/src/tls.rs:462` corroborates, and
+  separates each pair. `rust/ja4/src/tls.rs:481` corroborates, and
   `wireshark/source/packet-ja4.c:761` corroborates.
 
 - **R22** — Part c holds the first 12 characters of the SHA-256 hash. The image states
@@ -140,8 +140,8 @@ The image labels the three parts `JA4S_a`, `JA4S_b` and `JA4S_c`.
   `wireshark/source/packet-ja4.c:566` corroborates with the format `%12.12s`.
 
 - **R23** — An empty server extension list produces the zero sentinel `000000000000`.
-  **The image alone states no such rule.** `python/ja4.py:188` corroborates,
-  `rust/ja4/src/lib.rs:185` corroborates, and `wireshark/source/packet-ja4.c:573`
+  **The image alone states no such rule.** `python/ja4.py:199` corroborates,
+  `rust/ja4/src/lib.rs:184` corroborates, and `wireshark/source/packet-ja4.c:573`
   corroborates.
 
 ## Readings this page records

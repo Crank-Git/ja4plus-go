@@ -237,7 +237,7 @@ func TestZeekPageRecordsTheReadingAtThePinnedCommit(t *testing.T) {
 func TestZeekPageCitesAFileAndALine(t *testing.T) {
 	page := readRepoFile(t, foxioZeekPage)
 
-	// `zeek/ja4l/main.zeek:57` is the citation form the rules file names.
+	// `zeek/scripts/fingerprints/ja4l/main.zeek:58` is the citation form the rules file names.
 	if got := strings.Count(page, ".zeek:"); got < 10 {
 		t.Errorf("%s holds %d `zeek/<file>:<line>` citations, and a reading needs one per claim", foxioZeekPage, got)
 	}

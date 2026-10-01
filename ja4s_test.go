@@ -391,7 +391,7 @@ func TestComputeJA4S_NilPacket(t *testing.T) {
 //
 // `testdata/foxio/python/badcurveball.pcap.json:18` holds `JA4S_r`, and the extension list
 // of it is not sorted. A sorted list reads `0000,000b,0010,0023,ff01`, so this vector
-// separates the wire order from the sorted order. `rust/ja4/src/tls.rs:467` and
+// separates the wire order from the sorted order. `rust/ja4/src/tls.rs:487` and
 // `wireshark/source/packet-ja4.c:547` each build the raw form from the string the
 // fingerprint hashes. `ja4plus/fingerprinters/ja4s.py:179` states the same rule for the
 // Python port. Issue #275 records the measurement.
@@ -449,8 +449,8 @@ func TestTheJA4SRawFormSharesThePrefixOfTheFingerprint(t *testing.T) {
 // TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension holds the
 // empty case to the reference form.
 //
-// `rust/ja4/src/tls.rs:462` joins an empty extension list to an empty string, and
-// `rust/ja4/src/tls.rs:467` appends that string after the separator. The fingerprint
+// `rust/ja4/src/tls.rs:481` joins an empty extension list to an empty string, and
+// `rust/ja4/src/tls.rs:487` appends that string after the separator. The fingerprint
 // reaches `parser.EmptyHash` on the same input. Issue #275 records the rule.
 func TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension(t *testing.T) {
 	sh := &parser.ServerHello{

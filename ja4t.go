@@ -40,7 +40,7 @@ func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	}
 	// The line below tests two bits, and it reads no other flag. The maintainer ruled that
 	// selection on 2026-08-13, under #126, so a SYN that carries the ECN flags reaches a
-	// value. `rust/ja4/src/tcp.rs:146` tests the same two bits, and
+	// value. `rust/ja4/src/tcp.rs:151` tests the same two bits, and
 	// `zeek/ja4t/main.zeek:126` and `wireshark/source/packet-ja4.c:1266` each test the whole
 	// flag byte against `0x02`. The port holds the bit test at
 	// `ja4plus/fingerprinters/ja4t.py:159`. `Crank-Git/ja4plus#603` is open, and it adds the

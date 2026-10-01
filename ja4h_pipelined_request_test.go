@@ -34,11 +34,11 @@ const ja4hPipelinedSecondRequest = "GET /second HTTP/1.1\r\n" +
 //   - The Rust implementation produces one value. `rust/ja4/src/http.rs:22` selects the layer
 //     with `pkt.find_proto("http")`, and `rust/ja4/src/pcap.rs:51` states
 //     `/// Gets the first protocol with the given name.`
-//   - The Python implementation produces one value. `python/ja4.py:414` reads
+//   - The Python implementation produces one value. `python/ja4.py:405` reads
 //     `l = l[0] if isinstance(l, list) else l`, so it keeps the first layer alone.
-//   - The Zeek package produces two values. `zeek/ja4h/main.zeek:186` computes the value in
+//   - The Zeek package produces two values. `zeek/scripts/fingerprints/ja4h/main.zeek:145` computes the value in
 //     `event http_message_done(c: connection, is_orig: bool, stat: http_message_stat)`, and
-//     `zeek/ja4h/main.zeek:124` clears the state in `event http_request`.
+//     `zeek/scripts/fingerprints/ja4h/main.zeek:123` clears the state in `event http_request`.
 //   - **The count of the Wireshark dissector is unverified.**
 //     `wireshark/source/packet-ja4.c:1756` reads `register_postdissector(ja4_handle);`, and no
 //     documentation this project reached states how often Wireshark calls a postdissector. **A

@@ -42,10 +42,10 @@ readings.
 - **R3** — A value holds three parts, which the image labels `a`, `b` and `c`. The image
   alone states this rule.
 - **R4** — An underscore separates one part from the next part. Zeek holds
-  `option delimiter: string = "_";` at `zeek/config.zeek:4` and writes it at
-  `zeek/ja4l/main.zeek:113`. Wireshark writes the format `"%d_%d_%d"` at
+  `option delimiter: string = "_";` at `zeek/scripts/fingerprints/config.zeek:4` and writes it at
+  `zeek/scripts/fingerprints/ja4l/main.zeek:114`. Wireshark writes the format `"%d_%d_%d"` at
   `wireshark/source/packet-ja4.c:1384`. Python writes `f"{diff}_{ttl}"` at
-  `python/ja4.py:161`.
+  `python/ja4.py:172`.
 
 ### Part a — the one-way latency
 
@@ -53,7 +53,7 @@ readings.
   `One-way TCP latency in µs (1ms = 1,000µs)`. Zeek computes it at
   `zeek/ja4l/main.zeek:105`. Wireshark computes it at
   `wireshark/source/packet-ja4.c:1352`. Rust computes it at
-  `rust/ja4/src/time/tcp.rs:179`. Python computes it at `python/ja4.py:160`.
+  `rust/ja4/src/time/tcp.rs:179`. Python computes it at `python/ja4.py:171`.
 - **R6** — Part a is half of the measured interval, because one measurement covers a round
   trip. Zeek divides by `2.0` at `zeek/ja4l/main.zeek:105`. Wireshark divides by `2` at
   `wireshark/source/packet-ja4.c:1354`. Rust divides by `2` at
@@ -63,18 +63,18 @@ readings.
   writes `(c$fp$ja4l$ack - c$fp$ja4l$synack) / 2.0` at `zeek/ja4l/main.zeek:105`.
   Wireshark measures `timestamp_C` against `timestamp_B` at
   `wireshark/source/packet-ja4.c:1381`. Rust measures `t_c` against `t_b` at
-  `rust/ja4/src/time/tcp.rs:179`. Python measures `C` against `B` at `python/ja4.py:160`.
+  `rust/ja4/src/time/tcp.rs:179`. Python measures `C` against `B` at `python/ja4.py:171`.
 - **R8** — On a QUIC connection, part a of JA4L measures the client handshake packet
   against the last server handshake packet. Zeek writes
   `(c$fp$ja4l$client_handshake - c$fp$ja4l$server_handshake) / 2.0` at
-  `zeek/ja4l/main.zeek:241`. Wireshark measures `timestamp_D` against `timestamp_C` at
+  `zeek/scripts/fingerprints/ja4l/main.zeek:240`. Wireshark measures `timestamp_D` against `timestamp_C` at
   `wireshark/source/packet-ja4.c:1445`. Rust measures `t_d` against `t_c` at
-  `rust/ja4/src/time/udp.rs:230`. Python measures `D` against `C` at `python/ja4.py:164`.
+  `rust/ja4/src/time/udp.rs:230`. Python measures `D` against `C` at `python/ja4.py:175`.
 - **R9** — Zeek writes no JA4L value when the interval is negative. Zeek returns at
-  `zeek/ja4l/main.zeek:110`, and reports an error at `zeek/ja4l/main.zeek:108`.
+  `zeek/scripts/fingerprints/ja4l/main.zeek:111`, and reports an error at `zeek/scripts/fingerprints/ja4l/main.zeek:109`.
 - **R10** — Zeek states that JA4L cannot work when the packets arrive out of order. Zeek
   holds the comment `# NOTE: JA4L can not work when traffic is out of order` at
-  `zeek/ja4l/main.zeek:7`.
+  `zeek/scripts/fingerprints/ja4l/main.zeek:7`.
 
 ### Part b — the observed TTL
 
@@ -82,11 +82,11 @@ readings.
   writes `c$fp$ja4l$ttl_c` at `zeek/ja4l/main.zeek:114`. Wireshark writes
   `conn->client_ttl` at `wireshark/source/packet-ja4.c:1385`. Rust writes `client_ttl` at
   `rust/ja4/src/time/tcp.rs:186`. Python writes `conn['client_ttl']` at
-  `python/ja4.py:159`.
+  `python/ja4.py:170`.
 - **R12** — Part b of JA4L holds the TTL of the client SYN. Zeek reads `rp$ip$ttl` in
-  `new_connection` at `zeek/ja4l/main.zeek:91`. Wireshark stores `curr_ttl` on the SYN at
+  `new_connection` at `zeek/scripts/fingerprints/ja4l/main.zeek:92`. Wireshark stores `curr_ttl` on the SYN at
   `wireshark/source/packet-ja4.c:1272`. Rust reads the TTL on the SYN at
-  `rust/ja4/src/time/tcp.rs:214`.
+  `rust/ja4/src/time/tcp.rs:216`.
 - **R13** — Part b holds the value the packet carries, and no implementation subtracts it
   from an initial TTL. Zeek writes the field unchanged at `zeek/ja4l/main.zeek:114`. Rust
   writes the field unchanged at `rust/ja4/src/time/tcp.rs:186`.
@@ -102,7 +102,7 @@ readings.
   `zeek/ja4l/main.zeek:125`. Wireshark measures `timestamp_F` against `timestamp_E` at
   `wireshark/source/packet-ja4.c:1382`.
 - **R16** — Zeek waits for a packet that carries data, and skips a bare ACK. Zeek tests
-  `rp$tcp$dl == 0` at `zeek/ja4l/main.zeek:119`. Wireshark tests `tcp_len > 0` at
+  `rp$tcp$dl == 0` at `zeek/scripts/fingerprints/ja4l/main.zeek:120`. Wireshark tests `tcp_len > 0` at
   `wireshark/source/packet-ja4.c:1320`.
 
 ### What the image alone states
@@ -141,13 +141,13 @@ readings.
 ### What the implementations add
 
 - **R23** — Zeek and Wireshark publish a JA4L delta value that the image does not state.
-  Zeek writes `ja4l_delta` at `zeek/ja4l/main.zeek:269`. Wireshark registers
+  Zeek writes `ja4l_delta` at `zeek/scripts/fingerprints/ja4l/main.zeek:268`. Wireshark registers
   `ja4.ja4l_delta` at `wireshark/source/packet-ja4.c:1734` and writes it at
   `wireshark/source/packet-ja4.c:1391`.
 - **R24** — The JA4L delta is the ratio of the application handshake interval to the
   transport handshake interval. Zeek writes
   `(c$fp$ja4l$first_client_data - c$fp$ja4l$server_hello) / client_denom` at
-  `zeek/ja4l/main.zeek:269`. Wireshark writes `(double)latency2.nsecs / (double)latency.nsecs`
+  `zeek/scripts/fingerprints/ja4l/main.zeek:268`. Wireshark writes `(double)latency2.nsecs / (double)latency.nsecs`
   at `wireshark/source/packet-ja4.c:1389`.
 
 ### What each implementation states about JA4LS
@@ -156,18 +156,18 @@ readings.
 image.
 
 - **R25** — Every reference implementation publishes a JA4LS value. Zeek writes `ja4ls` at
-  `zeek/ja4l/main.zeek:60`. Wireshark registers `ja4.ja4ls` at
+  `zeek/scripts/fingerprints/ja4l/main.zeek:61`. Wireshark registers `ja4.ja4ls` at
   `wireshark/source/packet-ja4.c:1735`. Rust writes `ja4l_s` at `rust/ja4/src/time.rs:21`.
-  Python writes `JA4L-S` at `python/ja4.py:157`.
+  Python writes `JA4L-S` at `python/ja4.py:168`.
 - **R26** — Part a of JA4LS measures the SYN-ACK against the SYN on a TCP connection. Zeek
   writes `(c$fp$ja4l$synack - c$fp$ja4l$syn) / 2.0` at `zeek/ja4l/main.zeek:151`.
   Wireshark measures `timestamp_B` against `timestamp_A` at
   `wireshark/source/packet-ja4.c:1369`. Rust measures `t_b` against `t_a` at
-  `rust/ja4/src/time/tcp.rs:182`. Python measures `A` against `B` at `python/ja4.py:155`.
+  `rust/ja4/src/time/tcp.rs:182`. Python measures `A` against `B` at `python/ja4.py:166`.
 - **R27** — Part b of JA4LS holds the TTL of the server SYN-ACK. Zeek reads it at
-  `zeek/ja4l/main.zeek:145`. Wireshark stores `conn->server_ttl` at
+  `zeek/scripts/fingerprints/ja4l/main.zeek:144`. Wireshark stores `conn->server_ttl` at
   `wireshark/source/packet-ja4.c:1286`. Rust reads the TTL on the SYN-ACK at
-  `rust/ja4/src/time/tcp.rs:215`.
+  `rust/ja4/src/time/tcp.rs:217`.
 - **R28** — Part c of JA4LS measures the server hello against the client hello. Zeek writes
   `(c$fp$ja4l$server_hello - c$fp$ja4l$client_hello) / 2.0` at `zeek/ja4l/main.zeek:184`.
   Wireshark measures `timestamp_E` against `timestamp_D` at
@@ -178,7 +178,7 @@ image.
 - **R29** — **Reference split.** Zeek and Wireshark write three parts, and Rust and Python
   write two parts. Zeek appends part c at `zeek/ja4l/main.zeek:133`. Wireshark writes three
   parts at `wireshark/source/packet-ja4.c:1383`. Rust writes two parts at
-  `rust/ja4/src/time/tcp.rs:186`. Python writes two parts at `python/ja4.py:161`.
+  `rust/ja4/src/time/tcp.rs:186`. Python writes two parts at `python/ja4.py:172`.
   **Issue #127 holds the question.**
 - **R30** — **Reference split.** Wireshark writes the literal `tcp` in the third position
   on an HTTP connection, and Zeek writes no such marker. Wireshark writes the format
@@ -186,11 +186,11 @@ image.
   `wireshark/source/packet-ja4.c:1354`. Zeek writes part c only as a latency, at
   `zeek/ja4l/main.zeek:133`. **Issue #127 holds the question.**
 - **R31** — **Reference split.** The four implementations write three different third parts
-  on a QUIC connection. Zeek writes `"q"` at `zeek/ja4l/main.zeek:233` and at
-  `zeek/ja4l/main.zeek:252`. Wireshark writes the format `"%d_%d_quic"` at
+  on a QUIC connection. Zeek writes `"q"` at `zeek/scripts/fingerprints/ja4l/main.zeek:232` and at
+  `zeek/scripts/fingerprints/ja4l/main.zeek:251`. Wireshark writes the format `"%d_%d_quic"` at
   `wireshark/source/packet-ja4.c:1441` and at `wireshark/source/packet-ja4.c:1447`. Rust
   writes no marker at `rust/ja4/src/time/udp.rs:237`. Python writes no marker at
-  `python/ja4.py:165`. **Issue #127 holds the question.**
+  `python/ja4.py:176`. **Issue #127 holds the question.**
 - **R32** — **Reference split.** Zeek and Rust read the IPv6 hop limit as the observed TTL,
   and Wireshark reads no IPv6 field. Zeek reads `rp$ip6$hlim` at `zeek/ja4l/main.zeek:93`.
   Rust reads `ipv6.hlim` at `rust/ja4/src/time.rs:66`. Wireshark reads only `ip.ttl` at
@@ -200,7 +200,7 @@ image.
   **Issue #196 holds the question.**
     - Python fills `C` from every packet that carries `ACK`, carries no `SYN`, and holds the
       relative sequence number `1` and the relative acknowledgment number `1`. A payload
-      does not bar the packet. Python reads the condition at `python/ja4.py:570`.
+      does not bar the packet. Python reads the condition at `python/ja4.py:561`.
       `python/common.py:101` omits `C` from the fields that it declines to update, so a
       later packet replaces the point. `python/common.py:111` stops the point once `D`
       fills, which reaches a QUIC connection alone.
@@ -210,16 +210,16 @@ image.
       `wireshark/source/packet-ja4.c:1311`.
     - Rust fills `C` from the first packet that carries `ACK` and carries no `SYN`. It reads
       no sequence number and no payload. Rust maps the flags at
-      `rust/ja4/src/time/tcp.rs:216`, and it reaches the terminal state `Done` at
+      `rust/ja4/src/time/tcp.rs:218`, and it reaches the terminal state `Done` at
       `rust/ja4/src/time/tcp.rs:145`, so the point never moves.
     - Zeek fills `C` from the second packet that the originator sends. Zeek reads
-      `threshold == 2` at `zeek/ja4l/main.zeek:103`, and the event fires once.
+      `threshold == 2` at `zeek/scripts/fingerprints/ja4l/main.zeek:104`, and the event fires once.
 - **R34** — **The two FoxIO vector sets state two different values for one stream.** On
   stream 0 of `badcurveball.pcap` the per-stream vector holds `JA4L-C` as `2181_64`, and the
   per-packet vector holds `ja4.ja4l` as `2177_64_114797` on frame 9. The capture sends the
   bare ACK at `+0.005918s` and the Client Hello at `+0.005925s`, and the SYN-ACK arrives at
   `+0.001563s`. The bare ACK gives `2177` and the Client Hello gives `2181`. Python fills
-  the point from the Client Hello at `python/ja4.py:570`, and Wireshark bars a
+  the point from the Client Hello at `python/ja4.py:561`, and Wireshark bars a
   payload-bearing packet at `wireshark/source/packet-ja4.c:1302`. **R33 states why the two
   sets disagree, and issue #196 holds the question.**
 - **R35** — **The two FoxIO vector sets state two different part counts for one QUIC
@@ -232,7 +232,7 @@ image.
     - On stream 22 of `tls3.pcapng` the per-stream vector holds `JA4L-C` as `336_128`. On
       frame 162 the per-packet vector holds `ja4.ja4l` as `336_128_quic`.
   R31 records the source split that produces the two sets. Python writes no marker at
-  `python/ja4.py:165`, and it produces the per-stream set. Wireshark writes the format
+  `python/ja4.py:176`, and it produces the per-stream set. Wireshark writes the format
   `"%d_%d_quic"` at `wireshark/source/packet-ja4.c:1441`, and it produces the per-packet set.
   **One library value reaches one set, so the two sets cannot both match.** The measurement
   reads `epic/48-parity-tls-latency` at `887ab53` with the corpus present. The marker moves
@@ -250,11 +250,11 @@ image.
   whole TCP flag byte for equality, and the other three implementations test the SYN bit.
   Wireshark tests `tcp_flags == 0x02` at `wireshark/source/packet-ja4.c:1266`, and it tests
   `tcp_flags == 0x012` at `wireshark/source/packet-ja4.c:1279`. Python tests
-  `(flags & TCP_FLAGS['SYN']) and not (flags & TCP_FLAGS['ACK'])` at `python/ja4.py:563`.
+  `(flags & TCP_FLAGS['SYN']) and not (flags & TCP_FLAGS['ACK'])` at `python/ja4.py:554`.
   Zeek tests `(rp$tcp$flags & TH_SYN) == 0 || (rp$tcp$flags & TH_ACK) == TH_ACK` at
-  `zeek/ja4l/main.zeek:84`. Rust reads the two flags as separate fields. It reads
-  `tcp.flags.ack` at `rust/ja4/src/time/tcp.rs:211`, and it reads `tcp.flags.syn` at
-  `rust/ja4/src/time/tcp.rs:212`. **Each Wireshark
+  `zeek/scripts/fingerprints/ja4l/main.zeek:85`. Rust reads the two flags as separate fields. It reads
+  `tcp.flags.ack` at `rust/ja4/src/time/tcp.rs:213`, and it reads `tcp.flags.syn` at
+  `rust/ja4/src/time/tcp.rs:214`. **Each Wireshark
   test reads the whole byte, so a SYN that carries one more flag bit reaches no branch.**
   The dissector then fills no connection record, and it publishes no JA4L value.
   `wireshark/source/packet-ja4.c:1266` is one line, and JA4T and JA4L both read it. **The

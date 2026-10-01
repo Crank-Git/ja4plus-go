@@ -45,12 +45,12 @@ the rule, and it names each path that the rule does not cover.
 
 - **R6** — The method produces one value for every 200 SSH packets, which the image labels
   `(runs every 200 SSH packets by default)`. Zeek holds
-  `option ja4_ssh_packet_count = 200` at `zeek/ja4ssh/main.zeek:28`. Wireshark holds
+  `option ja4_ssh_packet_count = 200` at `zeek/scripts/fingerprints/ja4ssh/main.zeek:24`. Wireshark holds
   `#define SAMPLE_COUNT 200` at `wireshark/source/packet-ja4.c:33`. Rust defaults
   `ssh.sample_size` to `200` at `rust/ja4/src/conf.rs:61`. Python holds
-  `ssh_sample_count = 200` at `python/ja4.py:439`.
+  `ssh_sample_count = 200` at `python/ja4.py:430`.
 - **R7** — The window counts SSH packets, and it counts no bare ACK. Zeek counts the two
-  payload vectors at `zeek/ja4ssh/main.zeek:140`. Wireshark counts a packet that carries
+  payload vectors at `zeek/scripts/fingerprints/ja4ssh/main.zeek:93`. Wireshark counts a packet that carries
   `ssh.direction` at `wireshark/source/packet-ja4.c:1472`. Rust counts the two SSH packet
   counters at `rust/ja4/src/ssh.rs:35`. Python counts a packet that carries SSH at
   `python/ja4ssh.py:99`.
@@ -58,7 +58,7 @@ the rule, and it names each path that the rule does not cover.
   `zeek/ja4ssh/main.zeek:88`. Wireshark clears them at
   `wireshark/source/packet-ja4.c:1485`.
 - **R9** — Zeek, Wireshark and Rust each write one value for an open window at the end of
-  the connection. Zeek writes it at `zeek/ja4ssh/main.zeek:162`. Wireshark writes it on a
+  the connection. Zeek writes it at `zeek/scripts/fingerprints/ja4ssh/main.zeek:103`. Wireshark writes it on a
   FIN+ACK packet at `wireshark/source/packet-ja4.c:1402`. Rust writes it at
   `rust/ja4/src/ssh.rs:52`.
 
@@ -70,7 +70,7 @@ the rule, and it names each path that the rule does not cover.
   Wireshark computes it at `wireshark/source/packet-ja4.c:656`. Rust computes it at
   `rust/ja4/src/ssh.rs:284`. Python computes it at `python/ja4ssh.py:146`.
 - **R11** — The mode reads the TCP payload length. Zeek reads `rp$tcp$dl` at
-  `zeek/ja4ssh/main.zeek:127`. Wireshark reads `tcp_len` at
+  `zeek/scripts/fingerprints/ja4ssh/main.zeek:80`. Wireshark reads `tcp_len` at
   `wireshark/source/packet-ja4.c:1477`. Rust reads `tcp.len` at `rust/ja4/src/ssh.rs:235`.
 - **R12** — Where two lengths appear the same number of times, the smaller length is the
   mode. Zeek tests `freq == max && idx < mode` at `zeek/ja4ssh/main.zeek:69`. Wireshark
@@ -130,7 +130,7 @@ the rule, and it names each path that the rule does not cover.
   `rust/ja4/src/ssh.rs:272`.
 - **R22** — Zeek writes a value only for a connection that carries an SSH version exchange.
   Zeek sets `is_ssh` in `ssh_client_version` at `zeek/ja4ssh/main.zeek:146` and tests it at
-  `zeek/ja4ssh/main.zeek:161`.
+  `zeek/scripts/fingerprints/ja4ssh/main.zeek:102`.
 
 ### Reference splits
 
@@ -139,6 +139,6 @@ the rule, and it names each path that the rule does not cover.
   `dstport == 22` at `wireshark/source/packet-ja4.c:1303` and `srcport == 22` at
   `wireshark/source/packet-ja4.c:1306`. Python tests the same two ports at
   `python/ja4ssh.py:113` and `python/ja4ssh.py:115`. Zeek reads `is_orig` at
-  `zeek/ja4ssh/main.zeek:119`. Rust reads the sender at `rust/ja4/src/ssh.rs:247`. An SSH
+  `zeek/scripts/fingerprints/ja4ssh/main.zeek:72`. Rust reads the sender at `rust/ja4/src/ssh.rs:247`. An SSH
   connection on another port reaches a bare ACK count in Zeek and in Rust, and a count of
   zero in Wireshark and in Python. **Issue #129 holds the question.**

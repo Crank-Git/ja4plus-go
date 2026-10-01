@@ -42,7 +42,7 @@ that method.
 - **R4** — A value holds five parts, which the image labels `a` to `e`. The image alone
   states this rule.
 - **R5** — An underscore separates one part from the next part. Zeek holds
-  `option delimiter: string = "_";` at `zeek/config.zeek:4` and writes it at
+  `option delimiter: string = "_";` at `zeek/scripts/fingerprints/config.zeek:4` and writes it at
   `zeek/ja4t/main.zeek:197`. Wireshark writes the format `"%d_%s_%02d_%02d"` at
   `wireshark/source/packet-ja4.c:670`. Rust writes the format `"{}_{}_{}_{}"` at
   `rust/ja4/src/tcp.rs:136`.
@@ -113,7 +113,7 @@ that method.
   `conn->syn_ack_count > 1` at `wireshark/source/packet-ja4.c:684`.
 - **R18** — **Zeek writes at most ten delays, and Wireshark writes at most nine.** The two
   counts differ, and each implementation bounds a different thing.
-  - Zeek bounds the list of delays. `zeek/ja4t/main.zeek:28` declares
+  - Zeek bounds the list of delays. `zeek/scripts/fingerprints/ja4t/main.zeek:19` declares
     `synack_delays: vector of count &default=vector();`, and `zeek/ja4t/main.zeek:180`
     appends one delay for each SYN-ACK after the first. `zeek/ja4t/main.zeek:185` reads
     `if (|c$fp$ja4t$synack_delays| == 10) {` and returns, so the list stops at ten
@@ -204,8 +204,8 @@ that method.
   question.**
 - **R29** — **Reference split.** Rust reads a SYN that also carries the ECN flags, and Zeek
   and Wireshark decline it. Rust tests only the SYN bit and the ACK bit at
-  `rust/ja4/src/tcp.rs:146`, and its own test asserts `is_initial_syn(0xC2)` at
-  `rust/ja4/src/tcp.rs:154`. Zeek requires `rph$tcp$flags != TH_SYN` to be false at
+  `rust/ja4/src/tcp.rs:151`, and its own test asserts `is_initial_syn(0xC2)` at
+  `rust/ja4/src/tcp.rs:159`. Zeek requires `rph$tcp$flags != TH_SYN` to be false at
   `zeek/ja4t/main.zeek:126`. Wireshark requires `tcp_flags == 0x02` at
   `wireshark/source/packet-ja4.c:1266`. **Issue #126 holds the question.**
 - **R30** — **Reference split.** Zeek reads any packet that carries the RST flag as the

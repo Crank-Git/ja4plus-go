@@ -43,20 +43,20 @@ value.
 | JA4T | `conn.log` | `ja4t` | `zeek/ja4t/main.zeek:196` |
 | JA4TS | `conn.log` | `ja4ts` | `zeek/ja4t/main.zeek:214` |
 | JA4SSH | `ja4ssh.log` | `ja4ssh` | `zeek/ja4ssh/main.zeek:79` |
-| JA4D | `ja4d.log` | `ja4d` | `zeek/ja4d/main.zeek:113` |
+| JA4D | `ja4d.log` | `ja4d` | `zeek/scripts/fingerprints/ja4d/main.zeek:106` |
 
-`zeek/config.zeek:4` sets the part delimiter: `option delimiter: string = "_";`.
-`zeek/config.zeek:7` to `zeek/config.zeek:26` hold one switch per method.
+`zeek/scripts/fingerprints/config.zeek:4` sets the part delimiter: `option delimiter: string = "_";`.
+`zeek/scripts/fingerprints/config.zeek:7` to `zeek/config.zeek:26` hold one switch per method.
 
-`zeek/utils/common.zeek:63` holds the shared hash function. It returns `000000000000` for
-an empty input, at `zeek/utils/common.zeek:65`. It truncates the SHA-256 digest to 12
-characters, at `zeek/utils/common.zeek:69`.
+`zeek/scripts/fingerprints/utils/common.zeek:63` holds the shared hash function. It returns `000000000000` for
+an empty input, at `zeek/scripts/fingerprints/utils/common.zeek:65`. It truncates the SHA-256 digest to 12
+characters, at `zeek/scripts/fingerprints/utils/common.zeek:69`.
 
 ## What the package does not compute
 
 | Method | Evidence |
 |---|---|
-| JA4X | `zeek/ja4x/__load__.zeek:1` holds one line, `# empty`. `zeek/config.zeek:24` sets `option JA4X_enabled:   bool = F;`. `zeek/README.md:16` states `(awaiting Zeek object support)`. |
+| JA4X | `zeek/ja4x/__load__.zeek:1` holds one line, `# empty`. `zeek/scripts/fingerprints/config.zeek:26` sets `option JA4X_enabled:   bool = F;`. `zeek/README.md:16` states `(awaiting Zeek object support)`. |
 | JA4D6 | The package holds no module for it. `zeek/README.md:15` states `(awaiting Zeek DHCPv6 suppport)`. |
 | JA4TScan | The package holds no module for it, and FoxIO publishes no material for it. |
 
@@ -70,20 +70,20 @@ the Zeek package states nothing, so it corroborates nothing.
 `docs/specs/features/11-foxio-reference.md` states that a Zeek baseline is not a reference
 value for every method, and it names JA4L and JA4LS. The reading below holds the evidence.
 
-1. **Zeek writes a third component into `ja4l`.** `zeek/ja4l/main.zeek:132` and
+1. **Zeek writes a third component into `ja4l`.** `zeek/scripts/fingerprints/ja4l/main.zeek:133` and
    `zeek/ja4l/main.zeek:133` append `(first_client_data - server_hello) / 2` to the value
    that `zeek/ja4l/main.zeek:112` already built. The deleted specification states two
    components: `JA4L-C = {(C - B) / 2}_Client TTL`, at `JA4L.md:19`.
-2. **Zeek writes a third component into `ja4ls`.** `zeek/ja4l/main.zeek:191` and
+2. **Zeek writes a third component into `ja4ls`.** `zeek/scripts/fingerprints/ja4l/main.zeek:190` and
    `zeek/ja4l/main.zeek:192` append `(server_hello - client_hello) / 2`. `JA4L.md:20`
    states `JA4L-S = {(B - A) / 2}_Server TTL`.
-3. **Zeek appends `q` for QUIC.** `zeek/ja4l/main.zeek:233` appends `"q"` to `ja4ls`, and
-   `zeek/ja4l/main.zeek:252` appends `"q"` to `ja4l`. `JA4L.md:36` and `JA4L.md:37` state
+3. **Zeek appends `q` for QUIC.** `zeek/scripts/fingerprints/ja4l/main.zeek:232` appends `"q"` to `ja4ls`, and
+   `zeek/scripts/fingerprints/ja4l/main.zeek:251` appends `"q"` to `ja4l`. `JA4L.md:36` and `JA4L.md:37` state
    the QUIC formula, and they state no such marker.
 4. **Zeek writes two fields that no FoxIO method defines.**
-   `zeek/ja4l/main.zeek:269` writes `ja4l_delta`, and `zeek/ja4l/main.zeek:274` writes
+   `zeek/scripts/fingerprints/ja4l/main.zeek:268` writes `ja4l_delta`, and `zeek/scripts/fingerprints/ja4l/main.zeek:273` writes
    `ja4ls_delta`. Each field holds a ratio of two durations, and it is not a fingerprint.
-5. **Zeek states its own limit.** `zeek/ja4l/main.zeek:7` states
+5. **Zeek states its own limit.** `zeek/scripts/fingerprints/ja4l/main.zeek:7` states
    `# NOTE: JA4L can not work when traffic is out of order`, and
    `zeek/ja4l/main.zeek:10` states
    `# NOTE: Zeek JA4L does not attempt to handle duplicate packets.`
@@ -96,8 +96,8 @@ deleted text is the primary source for the JA4LS schema.
 ### The two Zeek latency ratios
 
 This project declines `ja4l_delta` and `ja4ls_delta` as a reference value for any method.
-FoxIO defines no method that emits either field. `zeek/ja4l/main.zeek:269` and
-`zeek/ja4l/main.zeek:274` write them with the format `%.1f`.
+FoxIO defines no method that emits either field. `zeek/scripts/fingerprints/ja4l/main.zeek:268` and
+`zeek/scripts/fingerprints/ja4l/main.zeek:273` write them with the format `%.1f`.
 
 ### The Zeek JA4TS delay
 
@@ -161,14 +161,14 @@ Each reading below records what the Zeek package holds. None of them decides a v
 
 ### JA4H
 
-- `zeek/ja4h/main.zeek:92` builds `header_names` without the cookie header and without the
+- `zeek/scripts/fingerprints/ja4h/main.zeek:91` builds `header_names` without the cookie header and without the
   referer header. The `b` hash reads that list, at `zeek/ja4h/main.zeek:194`.
-- `zeek/ja4h/main.zeek:80` builds `header_names_o` from every header.
+- `zeek/scripts/fingerprints/ja4h/main.zeek:79` builds `header_names_o` from every header.
   `zeek/ja4h/main.zeek:193` formats that list, and `zeek/ja4h/main.zeek:210` writes it into
   the `ja4h_ro` value. **The two lists differ**, so the Zeek `ja4h_ro` value holds the
   cookie header and the referer header.
-- `zeek/ja4h/main.zeek:112` to `zeek/ja4h/main.zeek:122` map nine HTTP methods.
-- `zeek/ja4h/main.zeek:96` and `zeek/ja4h/main.zeek:97` take the primary language, and they
+- `zeek/scripts/fingerprints/ja4h/main.zeek:111` to `zeek/scripts/fingerprints/ja4h/main.zeek:121` map nine HTTP methods.
+- `zeek/scripts/fingerprints/ja4h/main.zeek:95` and `zeek/scripts/fingerprints/ja4h/main.zeek:96` take the primary language, and they
   remove each hyphen.
 - `zeek/ja4h/main.zeek:175` and `zeek/ja4h/main.zeek:182` sort the cookie names and the
   cookie values with `strcmp`.
@@ -188,36 +188,36 @@ Each reading below records what the Zeek package holds. None of them decides a v
 
 ### JA4SSH
 
-- `zeek/ja4ssh/main.zeek:28` sets the sample size: `option ja4_ssh_packet_count = 200;`.
+- `zeek/scripts/fingerprints/ja4ssh/main.zeek:24` sets the sample size: `option ja4_ssh_packet_count = 200;`.
 - `zeek/ja4ssh/main.zeek:79` builds the value with the format
   `"c%ds%d_c%ds%d_c%ds%d"`.
 - `zeek/ja4ssh/main.zeek:69` breaks a tie in the packet-length mode toward the lower
   value.
-- `zeek/ja4ssh/main.zeek:123` counts an acknowledgment packet only when the TCP flags
+- `zeek/scripts/fingerprints/ja4ssh/main.zeek:76` counts an acknowledgment packet only when the TCP flags
   equal `0x10` exactly.
-- `zeek/ja4ssh/main.zeek:161` writes a final value at the end of the connection, and that
+- `zeek/scripts/fingerprints/ja4ssh/main.zeek:102` writes a final value at the end of the connection, and that
   value can hold fewer than 200 packets.
 
 ### JA4D
 
-- `zeek/ja4d/main.zeek:113` to `zeek/ja4d/main.zeek:118` assemble the value.
-- `zeek/ja4d/main.zeek:84` removes each option in `DHCP_SKIP_OPTIONS` from the option list.
-- `zeek/ja4d/main.zeek:82` and `zeek/ja4d/main.zeek:89` write `00` for an empty list.
-- `zeek/ja4d/main.zeek:125` writes one value per DHCP message, and it aggregates no
+- `zeek/scripts/fingerprints/ja4d/main.zeek:106` to `zeek/scripts/fingerprints/ja4d/main.zeek:111` assemble the value.
+- `zeek/scripts/fingerprints/ja4d/main.zeek:77` removes each option in `DHCP_SKIP_OPTIONS` from the option list.
+- `zeek/scripts/fingerprints/ja4d/main.zeek:75` and `zeek/scripts/fingerprints/ja4d/main.zeek:82` write `00` for an empty list.
+- `zeek/scripts/fingerprints/ja4d/main.zeek:118` writes one value per DHCP message, and it aggregates no
   conversation.
 
 ### A shared list helper
 
-`zeek/utils/common.zeek:30` appends the delimiter when the index is lower than the last
-index. The function also holds a `skip` set, at `zeek/utils/common.zeek:26`. **When the
+`zeek/scripts/fingerprints/utils/common.zeek:30` appends the delimiter when the index is lower than the last
+index. The function also holds a `skip` set, at `zeek/scripts/fingerprints/utils/common.zeek:26`. **When the
 skipped value is the last value, the output keeps a trailing delimiter.**
-`zeek/ja4d/main.zeek:84` is the one call that passes a `skip` set.
+`zeek/scripts/fingerprints/ja4d/main.zeek:77` is the one call that passes a `skip` set.
 
 ## Where the Zeek package is silent
 
 - The package states no rule for JA4X, for JA4D6 and for JA4TScan.
 - The package states no rule for a JA4LS value that a QUIC connection produces from the
-  server side alone. `zeek/ja4l/main.zeek:229` builds the QUIC `ja4ls` value from the two
+  server side alone. `zeek/scripts/fingerprints/ja4l/main.zeek:228` builds the QUIC `ja4ls` value from the two
   initial packets.
 - The package states no raw variant for JA4L, for JA4T, for JA4TS, for JA4SSH and for
   JA4D. `zeek/config.zeek` holds a `_raw` switch for JA4, for JA4S and for JA4H only.

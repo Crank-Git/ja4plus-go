@@ -20,7 +20,7 @@ states how to read a citation.
 **This page reproduces no image.** Follow the link above to read it.
 
 A citation names a path in the FoxIO repository at the pinned commit. **Join it to
-`testdata/foxio/reference/`.** Read `python/ja4x.py:87` as line 87 of
+`testdata/foxio/reference/`.** Read `python/ja4x.py:95` as line 87 of
 `testdata/foxio/reference/python/ja4x.py`. `docs/specs/foxio/README.md` states the rule,
 and it names each path that the rule does not cover.
 
@@ -63,26 +63,26 @@ like Issuer Org to eliminate FPs`.
 
 - **R1** — One JA4X value holds three parts. One underscore separates each pair of parts.
   The image states this rule, and its example value shows two underscores.
-  `python/ja4x.py:87` corroborates.
+  `python/ja4x.py:95` corroborates.
 
 - **R2** — JA4X reads one X.509 certificate, and it fingerprints how that certificate was
   built. The image subtitle states `(fingerprints how a cert is created)`.
   `python/ja4x.py:12` corroborates with the comment `JA4X packets are TCP TLS packets`.
 
 - **R3** — One certificate produces one JA4X value. **The image alone states no such
-  rule.** `python/ja4x.py:88` corroborates by writing one value per certificate of the
+  rule.** `python/ja4x.py:96` corroborates by writing one value per certificate of the
   packet, and `wireshark/source/packet-ja4.c:1629` corroborates.
 
 - **R4** — Part a is a hash of the issuer relative distinguished names. The image states
-  `Hash of Issuer RDNs, in order`. `python/ja4x.py:105` corroborates, and
+  `Hash of Issuer RDNs, in order`. `python/ja4x.py:113` corroborates, and
   `rust/ja4x/src/lib.rs:65` corroborates.
 
 - **R5** — Part b is a hash of the subject relative distinguished names. The image states
-  `Hash of Subject RDNs, in order`. `python/ja4x.py:105` corroborates, and
+  `Hash of Subject RDNs, in order`. `python/ja4x.py:113` corroborates, and
   `rust/ja4x/src/lib.rs:71` corroborates.
 
 - **R6** — Part c is a hash of the certificate extensions. The image states `Hash of
-  Extensions, in order`. `python/ja4x.py:87` corroborates, and
+  Extensions, in order`. `python/ja4x.py:95` corroborates, and
   `rust/ja4x/src/lib.rs:77` corroborates.
 
 - **R7** — Each of the three lists holds object identifiers, and it holds no value. The
@@ -91,7 +91,7 @@ like Issuer Org to eliminate FPs`.
 
 - **R8** — Each of the three lists keeps the order of the certificate, and no sort applies
   to it. The image states `in order` on all three bullets.
-  `python/ja4x.py:100` corroborates, and `rust/ja4x/src/lib.rs:67` corroborates.
+  `python/ja4x.py:108` corroborates, and `rust/ja4x/src/lib.rs:67` corroborates.
 
 - **R9** — Each list entry is the hexadecimal form of the object identifier content
   octets. **The image alone states no such rule.** `python/ja4x.py:33` corroborates by
@@ -103,15 +103,15 @@ like Issuer Org to eliminate FPs`.
   corroborates.
 
 - **R11** — A hash part holds the first 12 characters of the SHA-256 hash. The image
-  states `Hash`, and it states no length. `python/ja4x.py:87` corroborates, and
-  `rust/ja4x/src/lib.rs:174` corroborates. `rust/ja4x/src/lib.rs:180` holds the test
+  states `Hash`, and it states no length. `python/ja4x.py:95` corroborates, and
+  `rust/ja4x/src/lib.rs:174` corroborates. `rust/ja4x/src/lib.rs:177` holds the test
   `assert_eq!(hash12("551d0f,551d25,551d11"), "aae71e8db6d7");`, and `aae71e8db6d7` is the
   part c of the image example value.
 
 - **R12** — **Reference split.** An empty list produces two different values.
-  - `rust/ja4x/src/lib.rs:171` writes the zero sentinel `000000000000`, and
+  - `rust/ja4x/src/lib.rs:169` writes the zero sentinel `000000000000`, and
     `wireshark/source/packet-ja4.c:590` writes the same value.
-  - `python/ja4x.py:87` hashes the empty string, which produces `e3b0c44298fc`.
+  - `python/ja4x.py:95` hashes the empty string, which produces `e3b0c44298fc`.
 
   **The image carries a value for each half of the split.** The two `Sliver, Havoc C2`
   rows open with `000000000000`, and the `Qakbot` row ends with `e3b0c44298fc`.
@@ -145,7 +145,7 @@ A reading is a conclusion about a source. None of these carries a rule.
   `Async,Quasar,BitRAT` rows show the same equality, and the `Qakbot` row does not.
 
 - **Reading 3** — **The Python reference removes two object identifiers before it reports
-  the issuer name and the subject name.** `python/ja4x.py:59` removes `550406` and
+  the issuer name and the subject name.** `python/ja4x.py:67` removes `550406` and
   `55040b`. That removal serves the `_Issuer` and `_Subject` report fields of
-  `python/ja4x.py:64`, and no part of the JA4X value reads its result. This page records
+  `python/ja4x.py:72`, and no part of the JA4X value reads its result. This page records
   the removal so that a reader does not carry it into R4 or R5.

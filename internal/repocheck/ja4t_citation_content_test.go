@@ -60,7 +60,7 @@ type ja4tCitation struct {
 // Three rows carry a number that #726 repaired on 2026-08-15 UTC. R26 named
 // `rust/ja4/src/tcp.rs:129`, which holds `.options` of the join chain. R28 named
 // `wireshark/source/packet-ja4.c:673`, which holds the arguments and not the format
-// string. R29 named `rust/ja4/src/tcp.rs:153`, which holds the comment above the
+// string. R29 named `rust/ja4/src/tcp.rs:158`, which holds the comment above the
 // assertion.
 var ja4tCitationContent = []ja4tCitation{
 	// R5 — the separator.

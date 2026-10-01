@@ -162,7 +162,7 @@ func (f *JA4DFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 			// `docs/specs/foxio/JA4D.md` records the rank 1 image label
 			// `Has a Domain name (d) or No domain (n)`.
 			// `wireshark/source/packet-ja4.c:1521` tests the field `dhcp.fqdn.name`, and
-			// `zeek/ja4d/main.zeek:73` tests the presence. The ruling declines the Zeek
+			// `zeek/scripts/fingerprints/ja4d/main.zeek:66` tests the presence. The ruling declines the Zeek
 			// answer, because an image outranks an implementation. The port holds the same
 			// rule at `ja4plus/fingerprinters/ja4d.py:161-165` of tag `v1.1.0`, and the
 			// port half is `Crank-Git/ja4plus#615`. A reversal restores `hasFQDN = true`

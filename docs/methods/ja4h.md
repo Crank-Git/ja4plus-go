@@ -114,7 +114,7 @@ under `JA4H_ro.1`, measured on this branch. Two rulings cover them.
 
 **Ruling `#441` records a capability decline.**
 
-> #467 records ruling #441, and the library reads TCP alone as testdata/foxio/reference/python/ja4.py:514 does, so this SSDP request over UDP produces no value.
+> #467 records ruling #441, and the library reads TCP alone as testdata/foxio/reference/python/ja4.py:505 does, so this SSDP request over UDP produces no value.
 
 **Ruling `#285` records a disagreement between the two FoxIO vector sets.**
 

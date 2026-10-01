@@ -57,7 +57,7 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
 
 - **R3** — Part a opens with two characters that name the HTTP method. The image states
   `HTTP Method, GET = “ge”, PUT = “pu”, POST = “po”, etc`. `python/ja4h.py:10`
-  corroborates, and `zeek/ja4h/main.zeek:113` corroborates.
+  corroborates, and `zeek/scripts/fingerprints/ja4h/main.zeek:112` corroborates.
 
 - **R4** — **Reference split.** The references derive the two method characters three
   ways, and the three disagree on a method the image does not name.
@@ -66,13 +66,13 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
   - `wireshark/source/packet-ja4.c:1087` holds a table of 43 methods whose codes are not
     always the first two characters. `PROPFIND` produces `pf`, and
     `wireshark/source/packet-ja4.c:1104` gives `MKCOL` the code `ml`.
-  - `zeek/ja4h/main.zeek:112` holds a table of 9 methods.
+  - `zeek/scripts/fingerprints/ja4h/main.zeek:111` holds a table of 9 methods.
   - An unknown method also splits them. `wireshark/source/packet-ja4.c:1138` writes `00`,
-    `zeek/ja4h/main.zeek:131` writes nothing, and `python/ja4h.py:10` writes the first two
+    `zeek/scripts/fingerprints/ja4h/main.zeek:130` writes nothing, and `python/ja4h.py:10` writes the first two
     characters.
 
 - **R5** — Part a carries a 2-character HTTP version. The image states `HTTP Version, 2.0
-  = “20”, 1.1 = “11”`. `python/ja4h.py:32` corroborates, and `zeek/ja4h/main.zeek:135`
+  = “20”, 1.1 = “11”`. `python/ja4h.py:32` corroborates, and `zeek/scripts/fingerprints/ja4h/main.zeek:134`
   corroborates.
 
 - **R6** — Part a carries one cookie character. The image states `Cookie, if there’s a
@@ -105,12 +105,12 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
   `python/ja4h.py:14` corroborates.
 
 - **R13** — The Accept-Language value is the primary value, which is the value before the
-  first comma. `python/ja4h.py:13` corroborates, and `zeek/ja4h/main.zeek:96`
+  first comma. `python/ja4h.py:13` corroborates, and `zeek/scripts/fingerprints/ja4h/main.zeek:95`
   corroborates.
 
 - **R14** — The Accept-Language characters carry no hyphen and no upper-case character.
   **The image alone states no such rule.** `python/ja4h.py:13` corroborates, and
-  `zeek/ja4h/main.zeek:97` corroborates.
+  `zeek/scripts/fingerprints/ja4h/main.zeek:96` corroborates.
 
 - **R15** — An Accept-Language value shorter than four characters gains trailing `0`
   characters. **The image alone states no such rule.** `python/ja4h.py:15` corroborates,
@@ -147,7 +147,7 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
 
 - **R24** — Each entry of the part d list holds the field name, then `=`, then the value.
   **The image alone states no such rule.** `wireshark/source/packet-ja4.c:531`
-  corroborates, and `zeek/ja4h/main.zeek:86` corroborates.
+  corroborates, and `zeek/scripts/fingerprints/ja4h/main.zeek:85` corroborates.
 
 - **R25** — A comma separates each pair of entries in every JA4H list.
   `python/common.py:127` corroborates, and `wireshark/source/packet-ja4.c:530`
@@ -167,7 +167,7 @@ The image labels the four parts `JA4H_a`, `JA4H_b`, `JA4H_c` and `JA4H_d`.
   hash of the empty string is `e3b0c44298fc`. **The implementations split two against
   two.** `python/ja4h.py:76` and `wireshark/source/packet-ja4.c:629-630` hash the empty
   string, and `wireshark/source/packet-ja4.c:641` writes that hash into the value.
-  `rust/ja4/src/lib.rs:184` and `zeek/utils/common.zeek:64` return the sentinel. **The
+  `rust/ja4/src/lib.rs:183` and `zeek/scripts/fingerprints/utils/common.zeek:64` return the sentinel. **The
   maintainer ruled the split on 2026-08-14**, and a rank 1 image rule outranks an
   implementation. **Issue #527 is the reversal path**, and the port half is
   `Crank-Git/ja4plus#612`.
@@ -183,7 +183,7 @@ A reading is a conclusion about a source. None of these carries a rule.
   the default output holds the zero sentinel and matches R27.
 
 - **Reading 2** — **The Zeek package maps one HTTP version that the image does not name.**
-  `zeek/ja4h/main.zeek:141` maps HTTP `3.0` to `30`. `python/ja4h.py:36` derives the same
+  `zeek/scripts/fingerprints/ja4h/main.zeek:140` maps HTTP `3.0` to `30`. `python/ja4h.py:36` derives the same
   two characters from the version string, so the two agree without a shared table.
 
 - **Reading 3** — **The example value of the image holds the Accept-Language value

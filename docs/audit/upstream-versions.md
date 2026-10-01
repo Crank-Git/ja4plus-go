@@ -159,7 +159,7 @@ version pairs. **The result splits, and the conclusion of #371 survives.**
 
 ### The Zeek citation survives
 
-`zeek/ja4d/main.zeek:73` tests `options?$client_fqdn`, and #371 cites
+`zeek/scripts/fingerprints/ja4d/main.zeek:66` tests `options?$client_fqdn`, and #371 cites
 `src/analyzer/protocol/dhcp/dhcp-options.pac:682-708` of the Zeek analyzer for the record
 field.
 
