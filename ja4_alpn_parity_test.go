@@ -100,8 +100,8 @@ func TestTheALPNFieldWrites99WhenTheFirstByteFallsOutsideThePrintableASCIIRange(
 	//     not alphanumeric.
 	//   - `rust/ja4/src/tls.rs:636-645` writes `9` for each of the two non-ASCII characters.
 	//
-	// The control byte `0x00` is the one case that the ruling of #801 does not name, so it
-	// keeps the `99` of `Crank-Git/ja4plus#162`.
+	// The control byte `0x00` keeps the `99` of `Crank-Git/ja4plus#162`. The maintainer
+	// confirmed that case on 2026-10-01 UTC, under #801.
 	cases := []struct {
 		name string
 		alpn string

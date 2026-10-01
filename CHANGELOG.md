@@ -922,6 +922,15 @@ that the interface declares.
 
 ### Changed
 
+- **JA4T and JA4TS read the maximum segment size only from an option of length 4, and the
+  window scale only from an option of length 3.** An option of another length still writes
+  its kind to part b, and its value reads as absent. Issue #814 holds the maintainer's
+  ruling of 2026-10-01 UTC, and the port already holds the same rule. No FoxIO vector value
+  moves.
+- **The JSON output of `ja4plus scan` keeps the schema of this program, and the choice is
+  no longer provisional.** The maintainer confirmed it on 2026-10-01 UTC, and issue #796
+  holds the ruling. The JSON schema of this program and the JSON schema of the port differ,
+  for the passive output and for the scan output.
 - **`--types` returns an error for a token that names no method, and the command exits 1.** It
   exited 0 and printed an empty table before, so a caller that misspelled a token read the
   absence of output as the absence of fingerprints. `cmd/ja4plus/types.go` holds the eleven

@@ -162,9 +162,10 @@ The image labels the three parts `JA4_a`, `JA4_b` and `JA4_c`.
   **The maintainer ruled the split on 2026-10-01 UTC**, and issue #801 holds the ruling.
   Each end byte of `0x80` or higher writes `9`, so `68 ff` writes `h9` and `ff 68` writes
   `9h`. The ruling follows FoxIO Python and Rust at `16b96d95`, and it departs from
-  Wireshark and Zeek. `Crank-Git/ja4plus#789` holds the port half. **The ruling names no
-  control byte**, so an end byte below `0x20` or the byte `0x7F` still writes `99` under
-  `Crank-Git/ja4plus#162`.
+  Wireshark and Zeek. `Crank-Git/ja4plus#789` holds the port half. **The maintainer
+  confirmed the control-byte case on 2026-10-01 UTC**, and issue #801 holds the
+  confirmation: an end byte below `0x20` or the byte `0x7F` writes `99`. That value is the
+  `99` of `Crank-Git/ja4plus#162`, and the port takes the same rule.
 
   **The results agree on two inputs, and Reading 5 states the measurement.** FoxIO Python
   and Rust agree on every input whose first byte and last byte fall inside `0x20-0x7E`.
@@ -298,4 +299,5 @@ A reading is a conclusion about a source. None of these carries a rule.
     and from a decoded multi-byte character alike. So a byte of `0x80` or higher at either
     end maps to `9` in both, whatever tshark writes for it. The maintainer adopted that
     rule in issue #801, and `Crank-Git/ja4plus#789` holds the port half. **A control byte
-    still reaches the escape text, so the ruling names no control byte.**
+    still reaches the escape text, and the maintainer confirmed on 2026-10-01 UTC that it
+    writes `99`.**
