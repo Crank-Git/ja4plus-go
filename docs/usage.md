@@ -46,10 +46,11 @@ Database commands:
 **The program answers every other first argument with an error.** It writes
 `unknown command: %s` to standard error, it prints the usage text, and it exits 1.
 
-!!! note "The program reads a capture file, and it opens no interface"
+!!! note "`analyze` reads a capture file, and it opens no interface"
 
-    `analyze` takes a path. The program holds no subcommand that opens a network
-    interface. The [live-capture page](live-capture.md) states what exists today.
+    `analyze` takes a path. `watch` reads a live interface, and the
+    [live-capture page](live-capture.md) states it. `scan` sends packets, and the
+    [JA4TScan page](methods/ja4tscan.md) states it.
 
 ### `analyze` reads one capture file
 

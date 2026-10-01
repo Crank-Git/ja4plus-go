@@ -3,6 +3,7 @@
 package capture
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
@@ -84,8 +85,11 @@ func (l *packetLink) WritePacketData(frame []byte) error {
 		return fmt.Errorf("capture: the frame holds %d bytes, and an Ethernet header holds 14", len(frame))
 	}
 
+	// `packet(7)` states `sll_protocol` in network byte order, and `sockaddr` of
+	// `syscall/syscall_linux.go` copies the field without a swap. The EtherType bytes of the
+	// frame are already in network byte order, so the field reads them in host order.
 	address := &syscall.SockaddrLinklayer{
-		Protocol: uint16(frame[12])<<8 | uint16(frame[13]),
+		Protocol: binary.NativeEndian.Uint16(frame[12:14]),
 		Ifindex:  l.index,
 		Halen:    6,
 	}

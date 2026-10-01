@@ -120,7 +120,7 @@ func newLinkFixture(t *testing.T) *linkFixture {
 	f.network = &linkNetwork{
 		port:  443,
 		iface: linkIface,
-		mac:   [6]byte(testScannerMAC),
+		mac:   testScannerMAC,
 		link:  f.link,
 		route: fakeRoute,
 		neighbor: func(address netip.Addr, iface string) (net.HardwareAddr, bool) {

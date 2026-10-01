@@ -615,13 +615,17 @@ command-line program owns all output. **The statistics line is command-line outp
 
 ### Security posture
 
-- The library performs no network input and no network output, except two reaches. The
+- The library performs no network input and no network output, except three reaches. The
   first is the opt-in database lookup that `features/09-database-lookup.md` covers. The
   second is the raw capture socket of `internal/capture`, which reads a local interface.
   The maintainer ruled that second exception on 2026-08-15, and
   `docs/audit/network-boundary.md` holds the amendment. **Issue #613 is the reversal path.**
-- **The monitor is the one component that opens an interface.** It reads packets and
-  sends none. `features/13-live-capture.md` states that boundary.
+  The third is the opt-in active scanner of package `scan`. It sends one TCP SYN to each
+  target that the operator names, through the link of `internal/capture`, and
+  `features/17-active-scan.md` states it.
+- **The monitor and the active scanner are the two components that open an interface.**
+  The monitor reads packets and sends none, and `features/13-live-capture.md` states that
+  boundary. The scanner sends one SYN to each target and changes no firewall state.
 - The library reads no key material outside a capture file. **It reads a pcapng
   Decryption Secrets Block, because the block is part of the capture the operator already
   holds.** `features/05-conformance-gaps.md` holds that work.
