@@ -58,10 +58,10 @@ Database commands:
 **The program answers every other first argument with an error.** It writes
 `unknown command: %s` to standard error, it prints the usage text, and it exits 1.
 
-!!! note "The program reads a capture file, and it opens no interface"
+!!! note "`watch` reads a network interface"
 
-    `analyze` takes a path. The program holds no subcommand that opens a network
-    interface. The [live-capture page](live-capture.md) states what exists today.
+    `analyze` reads a capture file, and `watch` reads one network interface. The
+    [live-capture page](live-capture.md) states `watch`, its options and its platforms.
 
 ### `analyze` reads one capture file
 
@@ -112,9 +112,20 @@ run that names `--lookup`. A run that names neither lookup option sends nothing.
 value of the variable permits the request, and the value `0` cancels no option.
 
 **The mapping table answers first, so a fingerprint that it holds sends no request.** The
-program sends one request for each other distinct fingerprint of the run. A failed request reads as a
-miss, and the run continues. A run that permits the request writes one notice to standard
-error.
+program caches each remote answer, and it caches a failed request as a miss. So a
+fingerprint sends one request until the cache holds 4096 entries. **At that bound the
+program empties the cache**, and a later fingerprint sends a new request.
+`maxRemoteCacheEntries` in `cmd/ja4plus/remote_lookup.go` holds the bound. A failed
+request reads as a miss, and the run continues. A run that permits the request writes one
+notice to standard error.
+
+**The two subcommands bound one request differently.**
+
+- `analyze` waits up to the 10 second client timeout of `ja4db`. A capture file loses no
+  packet while the program waits.
+- `watch` waits up to 2 seconds. The request delays the capture by up to that deadline for
+  each new fingerprint, and the drop counter of the statistics line reports the effect.
+  The [live-capture page](live-capture.md) states that cost.
 
 The option, the variable and the rule follow the port, `Crank-Git/ja4plus`, at tag `v1.3.0`.
 The maintainer ruled the variable on 2026-10-01 UTC, and issue #804 holds the ruling.
@@ -158,7 +169,9 @@ ja4plus db update
 `db info` prints the source of the active database, the path and the entry count. The
 source is the embedded table or the cached table.
 
-**`db update` reaches the network, and no other subcommand does.** It downloads
+**`db update` reaches the network without a permission.** `analyze` and `watch` reach it
+only when the operator permits the remote lookup, and `### The remote lookup` states that
+rule. It downloads
 `ja4plus-mapping.csv` from FoxIO into the cache. FoxIO License 1.1 covers that file, and
 the [license page](licensing.md) states the terms.
 

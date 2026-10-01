@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/list"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -26,6 +27,15 @@ import (
 // defaultStatsInterval holds the seconds between two statistics lines.
 // FR-capture-8 states the default.
 const defaultStatsInterval = 60 * time.Second
+
+// watchRemoteLookupDeadline bounds one remote lookup of `watch`.
+//
+// The lookup runs on the goroutine that reads the interface, so a slow lookup service stops
+// the capture for the duration of the request. The kernel buffer fills, and the drop counter
+// counts the packets that it loses. `analyze` keeps the 10 second client timeout of `ja4db`,
+// because a capture file loses no packet while the program waits. The batch #807 gate chose
+// the value, and issue #804 is the reversal path.
+const watchRemoteLookupDeadline = 2 * time.Second
 
 // watchUsage states the option list of the watch command.
 // The parser returns it with each refusal, because the operator repairs the command line.
@@ -258,7 +268,7 @@ func runMonitor(handle capture.Handle, options watchOptions) error {
 	stop, release := installWatchStopHandler()
 	defer release()
 
-	return newMonitor(options, stop, os.Stdout, os.Stderr, time.Now).run(handle)
+	return newMonitor(options, stop, os.Stdout, os.Stderr, time.Now, lookupFromJA4DB).run(handle)
 }
 
 // The monitor loop, the signals and the connection table. Issue #80 builds them, and
@@ -294,6 +304,24 @@ const watchSecondSignalStatus = 1
 // atomic read costs no lock.
 type stopRequest struct {
 	requested atomic.Bool
+
+	// once makes the context on first use, so the zero value of the type is ready to use.
+	once sync.Once
+	// ctx ends at the first stop request, so a remote lookup in flight ends with it.
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+// init makes the context of the stop request.
+func (s *stopRequest) init() {
+	s.once.Do(func() { s.ctx, s.cancel = context.WithCancel(context.Background()) })
+}
+
+// context returns the context that the first stop request cancels.
+func (s *stopRequest) context() context.Context {
+	s.init()
+
+	return s.ctx
 }
 
 // request sets the stop request, and it returns.
@@ -302,6 +330,11 @@ type stopRequest struct {
 // FR-capture-20 prints.
 func (s *stopRequest) request() {
 	s.requested.Store(true)
+
+	// The cancel wakes the monitor goroutine when it waits on a remote lookup. A stop
+	// request that waited for the lookup would hold the run for the whole deadline.
+	s.init()
+	s.cancel()
 }
 
 // isRequested reports whether a termination signal arrived.
@@ -714,14 +747,21 @@ type monitor struct {
 // moves.
 // Verified against: <https://pkg.go.dev/time>, read from `go doc time` at go1.26.5 on
 // 2026-08-14.
+//
+// The remote function answers the remote lookup, so a test passes one that reaches no
+// network. A nil function sends no remote request.
 func newMonitor(
 	options watchOptions,
 	stop *stopRequest,
 	out io.Writer,
 	errOut io.Writer,
 	now func() time.Time,
+	remote remoteLookupFunc,
 ) *monitor {
 	started := now()
+
+	identify := newIdentifier(options.lookup, options.lookupRemote, os.Getenv, errOut, remote).
+		bounded(stop.context(), watchRemoteLookupDeadline)
 
 	instance := &monitor{
 		processor:      ja4plus.NewProcessor(),
@@ -730,7 +770,7 @@ func newMonitor(
 		now:            now,
 		startedAt:      started,
 		lastDropSample: started,
-		results:        newResultWriter(out, options, newIdentifier(options.lookup, options.lookupRemote, os.Getenv, errOut, lookupFromJA4DB)),
+		results:        newResultWriter(out, options, identify),
 		errOut:         errOut,
 		options:        options,
 	}
