@@ -377,7 +377,7 @@ func TLSVersionString(version uint16) string {
 //   - A byte of 0x80 or higher writes `9`.
 //   - A control byte at either end makes the whole value `99`.
 //
-// The maintainer ruled the three rules on 2026-10-01 UTC. Issue #801 holds the ruling
+// The maintainer ruled the first two rules on 2026-10-01 UTC. Issue #801 holds the ruling
 // and is the reversal path, and `Crank-Git/ja4plus#789` holds the port half. The ruling
 // follows `python/ja4.py:156-157` and `rust/ja4/src/tls.rs:635-647` at `16b96d95`, and
 // `docs/specs/foxio/JA4.md` R18 and R19 record the split it settles.

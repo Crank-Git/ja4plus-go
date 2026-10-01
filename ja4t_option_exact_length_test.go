@@ -12,7 +12,7 @@ import (
 //
 // The port holds the same rule at `ja4plus/utils/tcp_options.py:115-118`, at tag `v1.3.0`
 // of Crank-Git/ja4plus. FoxIO `rust/ja4/src/tcp.rs:76-82` and
-// `wireshark/source/packet-ja4.c:1460-1466` at `16b96d95` read the field that Wireshark
+// `wireshark/source/packet-ja4.c:1461-1466` at `16b96d95` read the field that Wireshark
 // core adds only at those lengths. FoxIO `zeek/src/ja4t.cc:87-93` reads any length, and
 // the ruling declines that reading.
 //
