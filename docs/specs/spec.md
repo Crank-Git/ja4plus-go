@@ -513,7 +513,7 @@ lookup table, and one tracked register.
 
 | Fingerprinter | State it holds | Keyed by | Cleared by |
 |---|---|---|---|
-| `JA4Fingerprinter` | `quicFragments`, `dcidToTuple`, `results` | QUIC connection identifier | `Reset`, `CleanupConnection` |
+| `JA4Fingerprinter` | `quicFragments`, `dcidToTuple`, `results`, `tcpHellos`, `tcpHelloKeys` | QUIC connection identifier. **`tcpHellos` holds a ClientHello that spans more than one TCP segment, and it is keyed by one direction of the reported address pair. #795 built it, under an entry bound, an age bound, a byte cap and a segment cap.** | `Reset`, `CleanupConnection`, a FIN or a RST |
 | `JA4SFingerprinter` | `quicDCIDs`, `results` | QUIC connection identifier | `Reset`, `CleanupConnection` |
 | `JA4HFingerprinter` | `reassembler`, `ranges`, `results` | Five-tuple. **`ranges` records the sequence range of each stream the fingerprinter already read, so a repeated TCP segment produces no second value. #446 built it, under an entry bound and an age bound.** | `Reset`, `CleanupConnection` |
 | `JA4TFingerprinter` | `results` | — | `Reset` |

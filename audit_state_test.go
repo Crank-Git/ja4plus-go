@@ -96,6 +96,8 @@ func auditStatePacketSet(t *testing.T) []gopacket.Packet {
 		buildTCPPacketWithIPs(t, server, client, 64, 443, 40001, true, true),
 		// JA4 reads the TLS client hello.
 		buildTCPPacketWithPayload(t, buildClientHelloPayload()),
+		// JA4 holds a client hello that the segment cuts, until a later segment completes it.
+		buildTCPPacketWithSeq(t, client, server, 40005, 443, 1, tcpHelloLongClientHello()[:1400]),
 		// JA4S reads the TLS server hello.
 		buildTCPPayloadPacket(t, buildServerHelloPayload(0x1301,
 			[]uint16{parser.ExtSupportedVersions}, "")),
@@ -237,6 +239,21 @@ func TestCleanupConnection_RemovesTheStateTableEntryOfTheNamedConnection(t *test
 			},
 			cleanup: func(fingerprinter Fingerprinter) {
 				fingerprinter.CleanupConnection(auditStateClientIP, 40012, auditStateServerIP, 80, "tcp")
+			},
+		},
+		{
+			name: "JA4Fingerprinter clears the partial client hello table",
+			state: func(t *testing.T) (Fingerprinter, func() int) {
+				t.Helper()
+
+				fingerprinter := NewJA4()
+				_, _ = fingerprinter.ProcessPacket(
+					buildTCPPacketWithSeq(t, client, server, 40014, 443, 1, tcpHelloLongClientHello()[:1400]))
+
+				return fingerprinter, func() int { return len(fingerprinter.tcpHellos) }
+			},
+			cleanup: func(fingerprinter Fingerprinter) {
+				fingerprinter.CleanupConnection(auditStateClientIP, 40014, auditStateServerIP, 443, "tcp")
 			},
 		},
 		{
