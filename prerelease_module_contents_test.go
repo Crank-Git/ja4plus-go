@@ -50,9 +50,10 @@ import (
 // `v1.1.0` on 2026-08-16 UTC.** **#779 then moved it to `v1.1.1` on 2026-08-16 UTC**, because
 // the `v1.1.0` release job failed at the release notes step, and the `## [v1.1.1]` section of
 // `CHANGELOG.md` holds that record. **The `v1.2.0` release moved it to `v1.2.0` on 2026-09-30
-// UTC.** **The `v1.3.0` release moved it to `v1.3.0` on 2026-10-01 UTC**, and every case of
-// this file reads `v1.3.0` now. **The proxy serves no `v1.3.0` until the maintainer pushes
-// the tag**, so each case reports the absent
+// UTC.** **The `v1.3.0` release moved it to `v1.3.0` on 2026-10-01 UTC.** **The `v1.3.1`
+// release moved it to `v1.3.1` on 2026-10-01 UTC**, and every case of this file reads
+// `v1.3.1` now. **The proxy serves no `v1.3.1` until the maintainer pushes the tag**, so each
+// case reports the absent
 // tag until then. That failure names the tag it read, and it is the state of the repository
 // rather than a defect of a case.
 
@@ -68,7 +69,8 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // **#767 moved it to `v1.1.0` on 2026-08-16 UTC.** **#779 moved it to `v1.1.1` on
 // 2026-08-16 UTC**, because the `v1.1.0` release job failed at the release notes step.
 // **The `v1.2.0` release moved it to `v1.2.0` on 2026-09-30 UTC.** **The `v1.3.0` release
-// moved it to `v1.3.0` on 2026-10-01 UTC.** A reader who moves this constant moves every case
+// moved it to `v1.3.0` on 2026-10-01 UTC.** **The `v1.3.1` release moved it to `v1.3.1` on
+// 2026-10-01 UTC.** A reader who moves this constant moves every case
 // of this file to the new tag, and it moves no case of another file.
 //
 // **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
@@ -76,7 +78,7 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // `defaultReleaseTag` in `prerelease_binaries_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
 // states the hazard, and #106 built the guard.
-const publishedModuleVersion = "v1.3.0"
+const publishedModuleVersion = "v1.3.1"
 
 // embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
 const embeddedDatabase = "data/ja4plus-mapping.csv"
