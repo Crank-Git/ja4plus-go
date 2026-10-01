@@ -19,8 +19,9 @@ import (
 // which writes the raw byte of a non-ASCII end, and from Rust, which writes `0` for an
 // absent last character at `rust/ja4/src/tls.rs:352-353`.
 
-// alpnRulingCases holds one case for each row of the phase 1 table of #801, plus the empty
-// value. The same cases reach JA4 and JA4S, because the ruling names both.
+// alpnRulingCases holds one case for each row of the phase 1 table of #801, the empty
+// value, and the control-byte cases. The same cases reach JA4 and JA4S, because the ruling
+// names both.
 var alpnRulingCases = []struct {
 	name string
 	alpn string
@@ -32,6 +33,12 @@ var alpnRulingCases = []struct {
 	{"a first byte ff of 0x80 or higher", "\xff\x68", "9h"},
 	{"the FoxIO vector value ba ad", "\xba\xad", "99"},
 	{"an empty first ALPN value", "", "00"},
+	// The maintainer confirmed the control-byte case on 2026-10-01 UTC, under #801. An end
+	// byte below 0x20, or the byte 0x7F, makes the whole field `99`.
+	{"a first byte 01 below 0x20", "\x01\x68", "99"},
+	{"a last byte 1f below 0x20", "\x68\x1f", "99"},
+	{"a last byte 7f", "\x68\x7f", "99"},
+	{"one control byte 00", "\x00", "99"},
 }
 
 func TestTheJA4ALPNCharactersFollowTheRulingOf801(t *testing.T) {

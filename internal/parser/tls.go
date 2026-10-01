@@ -377,14 +377,15 @@ func TLSVersionString(version uint16) string {
 //   - A byte of 0x80 or higher writes `9`.
 //   - A control byte at either end makes the whole value `99`.
 //
-// The maintainer ruled the first two rules on 2026-10-01 UTC. Issue #801 holds the ruling
+// The maintainer ruled the three rules on 2026-10-01 UTC. Issue #801 holds the ruling
 // and is the reversal path, and `Crank-Git/ja4plus#789` holds the port half. The ruling
 // follows `python/ja4.py:156-157` and `rust/ja4/src/tls.rs:635-647` at `16b96d95`, and
 // `docs/specs/foxio/JA4.md` R18 and R19 record the split it settles.
 // `ja4_alpn_ruling_test.go` holds the separating packets.
 //
-// The ruling names no control byte, so the `99` of `Crank-Git/ja4plus#162` still holds for
-// it. Both FoxIO implementations read the tshark escape text of a control byte, and
+// The maintainer confirmed the third rule on 2026-10-01 UTC, under #801. A control byte is
+// a byte below 0x20 or the byte 0x7F, and it keeps the `99` of `Crank-Git/ja4plus#162`.
+// Both FoxIO implementations read the tshark escape text of a control byte, and
 // `docs/specs/foxio/JA4.md` Reading 5 states that no wire byte reaches that value.
 //
 // The FoxIO vector `tls-non-ascii-alpn.pcapng` holds `99` for the first ALPN value
@@ -409,7 +410,8 @@ func ALPNValue(protocols []string) string {
 }
 
 // alpnEndCharacter returns the character that one end byte of an ALPN value writes. It
-// returns false for a control byte, which the ruling of #801 does not name.
+// returns false for a control byte, and the ruling of #801 makes the whole value `99` for
+// that byte.
 func alpnEndCharacter(b byte) (byte, bool) {
 	switch {
 	case alpnIsPrintableASCII(b):
