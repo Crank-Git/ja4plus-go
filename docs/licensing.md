@@ -71,8 +71,8 @@ The FoxIO record at `README.md:293` names nine methods, and the list above holds
 names. **The two sets are different.** The FoxIO nine holds JA4TScan, and it holds neither
 JA4D nor JA4D6.
 
-**Read the FoxIO records for the FoxIO list.** `testdata/foxio.pin` holds the commit that
-this project read.
+**Read the FoxIO records for the FoxIO list.** `testdata/foxio-reading.pin` holds the commit
+that this project read.
 
 ## Non-commercial use
 
@@ -95,7 +95,8 @@ embeds that file, and `ja4plus db update` downloads a newer copy of it.
 
 This project read the FoxIO License 1.1 text from `LICENSE` at commit
 `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` of <https://github.com/FoxIO-LLC/ja4>.
-`testdata/foxio.pin` holds that commit.
+`testdata/foxio-reading.pin` holds that commit. The vectors read a second commit, which
+`testdata/foxio.pin` holds, and #801 rereads each citation there.
 
 **A later FoxIO change to the license produces a new issue in this repository.** Cite the
 pinned commit when you cite a FoxIO record, because a record at a later commit can name a
@@ -108,6 +109,7 @@ different set.
 | `LICENSE` | The BSD 3-Clause text, and the copyright holder of the original Go code. |
 | `NOTICE` | The split, the method list, and the full verbatim text of FoxIO License 1.1. |
 | `data/README.md` | The source of the embedded mapping file. |
-| `testdata/foxio.pin` | The FoxIO commit that every citation of this project names. |
+| `testdata/foxio-reading.pin` | The FoxIO commit that every citation of this project names. |
+| `testdata/foxio.pin` | The FoxIO commit of the captures and the vectors. |
 
 Read each file in the repository at <https://github.com/Crank-Git/ja4plus-go>.

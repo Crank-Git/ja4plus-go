@@ -6494,5 +6494,77 @@
     "theirs": "7d5dbb3783b4_a373a9f83c6b_44440d41940c",
     "ruling": "#492",
     "reason": "The library reads no certificate, because the QUIC handshake carries the compressed certificate of RFC 8879, and the library holds no decoder for it."
+  },
+  {
+    "key": "sigalg-grease.pcapng/0/JA4.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "t13d1517h2_8daaf6152771_cb7bf5808d99",
+    "ruling": "#795",
+    "reason": "#795 records that the library reassembles no ClientHello that spans two TCP segments, and frame 4 and frame 5 carry this ClientHello, so the library writes no value."
+  },
+  {
+    "key": "sigalg-grease.pcapng/0/JA4_o.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "t13d1517h2_acb858a92679_88bf22a3e888",
+    "ruling": "#795",
+    "reason": "#795 records that the library reassembles no ClientHello that spans two TCP segments, and frame 4 and frame 5 carry this ClientHello, so the library writes no value."
+  },
+  {
+    "key": "sigalg-grease.pcapng/0/JA4_r.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "t13d1517h2_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,001b,0023,002b,002d,0033,44cd,ca34,fe0d,ff01_0904,0905,0906,0403,0804,0401,0503,0805,0501,0806,0601",
+    "ruling": "#795",
+    "reason": "#795 records that the library reassembles no ClientHello that spans two TCP segments, and frame 4 and frame 5 carry this ClientHello, so the library writes no value."
+  },
+  {
+    "key": "sigalg-grease.pcapng/0/JA4_ro.1",
+    "capability": true,
+    "ours": "",
+    "theirs": "t13d1517h2_1301,1302,1303,c02b,c02f,c02c,c030,cca9,cca8,c013,c014,009c,009d,002f,0035_fe0d,0010,0017,0033,44cd,ff01,000a,000d,0023,002b,000b,ca34,002d,0000,0005,001b,0012_0904,0905,0906,0403,0804,0401,0503,0805,0501,0806,0601",
+    "ruling": "#795",
+    "reason": "#795 records that the library reassembles no ClientHello that spans two TCP segments, and frame 4 and frame 5 carry this ClientHello, so the library writes no value."
+  },
+  {
+    "key": "sigalg-grease.pcapng/2/JA4LS.1",
+    "capability": false,
+    "ours": "5403_120",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes two parts on an earlier frame than `wireshark/source/packet-ja4.c:1362-1394` does."
+  },
+  {
+    "key": "sigalg-grease.pcapng/3/JA4L.1",
+    "capability": false,
+    "ours": "93_64",
+    "theirs": "",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so this library writes two parts on an earlier frame than `wireshark/source/packet-ja4.c:1362-1394` does."
+  },
+  {
+    "key": "sigalg-grease.pcapng/4/JA4L.1",
+    "capability": false,
+    "ours": "303_64",
+    "theirs": "",
+    "ruling": "#196",
+    "reason": "The maintainer ruled in issue #196 on 2026-08-12 that part a reads the Python measurement point, so the library reports part a on this frame."
+  },
+  {
+    "key": "sigalg-grease.pcapng/17/JA4L.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "93_64_1780",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes three parts on this frame and this library writes two parts earlier."
+  },
+  {
+    "key": "sigalg-grease.pcapng/17/JA4LS.1",
+    "capability": false,
+    "ours": "",
+    "theirs": "5403_120_40492",
+    "ruling": "#127",
+    "reason": "The maintainer kept ruling #127 on 2026-08-15, so `wireshark/source/packet-ja4.c:1362-1394` writes three parts on this frame and this library writes two parts earlier."
   }
 ]

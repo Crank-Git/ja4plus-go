@@ -17,13 +17,19 @@ this page supports.
 | Fact | Value |
 |---|---|
 | FoxIO commit | `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8` |
-| Pin file | `testdata/foxio.pin` |
+| Pin file | `testdata/foxio-reading.pin` |
 | Measurement date | 2026-08-14 |
 
-`scripts/fetch-corpus.sh:167` writes the whole FoxIO repository to
+`scripts/fetch-corpus.sh:213` writes the whole FoxIO repository to
 `testdata/foxio/reference/`, so every FoxIO citation of this page reads at base 1 of
 `docs/specs/foxio/README.md` `## How to read a citation`. `testdata/foxio/.fetched` held
 the commit above at the measurement.
+
+**The pin file of this table is the reading pin.** #797 split the vector pin from the
+reading pin on 2026-10-01 UTC. The vectors moved to `16b96d95`, and the reference tree stays
+at the commit above, so both rows of `## The result` hold. `testdata/foxio/.fetched-reading`
+names the commit of the reference tree since that split. #801 rereads each citation at the
+vector pin.
 
 ## The result
 

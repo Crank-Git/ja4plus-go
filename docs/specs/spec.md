@@ -121,7 +121,9 @@ shared vector set is what makes the two implementations agree.
 | conformance | noun | The property that the library output equals the FoxIO vector exactly. | compliance, correctness, accuracy |
 | conformance suite | noun | The test suite that compares library output against every vector. | validation tests, spec tests |
 | deviation | noun | A recorded difference between the library output and a FoxIO vector. | mismatch, failure, exception |
-| reference | noun | The FoxIO repository at the pinned commit. It decides every disputed fingerprint. | upstream, source, spec repo |
+| reference | noun | The FoxIO repository at the reading pin. It decides every disputed fingerprint. | upstream, source, spec repo |
+| vector pin | noun | The FoxIO commit in `testdata/foxio.pin`. `make corpus` fetches the captures and the vectors at it. | corpus pin, main pin |
+| reading pin | noun | The FoxIO commit in `testdata/foxio-reading.pin`. `make corpus` fetches the reference tree at it, and every reading cites it. #797 added it, and #801 removes it. | Zeek pin, second pin |
 | reference split | noun | The state where two FoxIO implementations produce different values for one input. The reference then decides nothing, and a person decides. | disagreement, conflict |
 | reading | noun | One recorded conclusion about what a source states, with the evidence that supports it. | interpretation, take, finding |
 | ruling | noun | One determination the maintainer makes where no source settles the question. A ruling is the choice of a person, and a reading is a conclusion about a source. | decision, call, verdict |

@@ -5,7 +5,8 @@ This directory holds the register, the corpus pin and the fixtures the tests rea
 | Path | Holds | Tracked |
 |---|---|---|
 | `deviations.json` | The register. One entry for each accepted difference from a FoxIO value. | Yes |
-| `foxio.pin` | The FoxIO commit that `make corpus` fetches. | Yes |
+| `foxio.pin` | The vector pin: the FoxIO commit of the captures and the vectors that `make corpus` fetches. | Yes |
+| `foxio-reading.pin` | The reading pin: the FoxIO commit of the reference tree that every reading cites. #801 removes it. | Yes |
 | `foxio-license-1.1.txt` | The FoxIO License 1.1 text that the license tests read. | Yes |
 | `foxio/` | The fetched FoxIO corpus. It is FoxIO-licensed material. | No |
 

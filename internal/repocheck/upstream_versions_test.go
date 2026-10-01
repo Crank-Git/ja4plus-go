@@ -13,7 +13,7 @@ import (
 //
 // These tests bind the two version rows in two directions. One direction reads this
 // repository, and it fails when a row loses its version. The other direction reads the
-// fetched FoxIO corpus, and it fails when a moved `testdata/foxio.pin` names a commit that
+// fetched FoxIO corpus, and it fails when a moved `testdata/foxio-reading.pin` names a commit that
 // builds against a different host. A test that read the rule file alone would pass
 // forever, because the rule file states what the rule file states.
 //
@@ -130,7 +130,7 @@ func TestTheUpstreamVersionRecordPageNamesBothVersions(t *testing.T) {
 }
 
 // This is the direction that makes the row a pin rather than a sentence. FoxIO moves its
-// own host version without a change to this repository, so a moved `testdata/foxio.pin`
+// own host version without a change to this repository, so a moved `testdata/foxio-reading.pin`
 // must redden a test rather than leave the rule file describing a commit nobody reads.
 func TestTheFoxioCorpusStillBuildsAgainstThePinnedWiresharkCore(t *testing.T) {
 	workflow, present := upstreamCorpusFile(t, upstreamWiresharkCorpusFile)
@@ -139,7 +139,7 @@ func TestTheFoxioCorpusStillBuildsAgainstThePinnedWiresharkCore(t *testing.T) {
 	}
 
 	if !strings.Contains(workflow, upstreamWiresharkVersion) {
-		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio.pin holds builds "+
+		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio-reading.pin holds builds "+
 			"the plugin against a different Wireshark core.\n"+
 			"\tRe-measure the version, and repair the row of %s and the record of %s.",
 			upstreamWiresharkCorpusFile, upstreamWiresharkVersion,
@@ -156,7 +156,7 @@ func TestTheFoxioCorpusStillTestsAgainstThePinnedZeekAnalyzer(t *testing.T) {
 	}
 
 	if !strings.Contains(workflow, upstreamZeekCorpusText) {
-		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio.pin holds tests "+
+		t.Errorf("%s names no %q, so the FoxIO commit that testdata/foxio-reading.pin holds tests "+
 			"against a different Zeek analyzer.\n"+
 			"\tRe-measure the version, and repair the row of %s and the record of %s.",
 			upstreamZeekCorpusFile, upstreamZeekCorpusText,

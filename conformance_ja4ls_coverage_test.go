@@ -38,13 +38,13 @@ const conformancePerPacketJA4LSField = "ja4.ja4ls"
 // the per-stream set at the pin of `testdata/foxio.pin`.
 //
 // A pin move changes this count. Re-measure the corpus. Write the new count here.
-const conformancePublishedJA4LSStreamValues = 58
+const conformancePublishedJA4LSStreamValues = 59
 
 // conformancePublishedJA4LSPacketValues counts the JA4LS values that the corpus publishes in
 // the per-packet set at the pin of `testdata/foxio.pin`.
 //
 // A pin move changes this count. Re-measure the corpus. Write the new count here.
-const conformancePublishedJA4LSPacketValues = 44
+const conformancePublishedJA4LSPacketValues = 45
 
 // conformanceKeyNamesMethod reports whether the comparison key names the method.
 // The key of a method carries an occurrence number, so the test reads the stem.

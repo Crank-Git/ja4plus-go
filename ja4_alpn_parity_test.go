@@ -23,7 +23,7 @@ import (
 //     `0xba 0xad` and the ALPN characters `99`.
 //   - `Crank-Git/ja4plus#141` settled the condition by measurement. It ran both FoxIO
 //     implementations at the commit `27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`, which is
-//     the commit `testdata/foxio.pin` holds. The measurement shows that both
+//     the commit `testdata/foxio-reading.pin` holds. The measurement shows that both
 //     implementations pass a printable ASCII byte through, so the condition is the range
 //     `0x20-0x7E` and not the alphanumeric test the FoxIO prose states.
 //   - `Crank-Git/ja4plus#162` records the maintainer ruling of 2026-08-07. Every value

@@ -1000,10 +1000,11 @@ func TestTheSuiteReadsEveryCaptureOfTheCorpus(t *testing.T) {
 	conformanceSkipWithoutCorpus(t)
 
 	// The acceptance criteria of `docs/specs/features/04-conformance-harness.md` name 38
-	// captures, 37 per-stream vectors and 37 per-packet vectors at the pinned commit.
+	// captures, 37 per-stream vectors and 37 per-packet vectors at commit `27f0cbf`. The pin
+	// move of #797 to `16b96d95` adds `sigalg-grease.pcapng` and its two vectors.
 	captures := conformanceCaptureNames(t)
-	if len(captures) != 38 {
-		t.Errorf("the corpus holds %d captures, and the pinned commit publishes 38", len(captures))
+	if len(captures) != 39 {
+		t.Errorf("the corpus holds %d captures, and the pinned commit publishes 39", len(captures))
 	}
 
 	streams, packetVectors := 0, 0
@@ -1018,11 +1019,11 @@ func TestTheSuiteReadsEveryCaptureOfTheCorpus(t *testing.T) {
 		}
 	}
 
-	if streams != 37 {
-		t.Errorf("the corpus holds %d per-stream vectors, and the pinned commit publishes 37", streams)
+	if streams != 38 {
+		t.Errorf("the corpus holds %d per-stream vectors, and the pinned commit publishes 38", streams)
 	}
 
-	if packetVectors != 37 {
-		t.Errorf("the corpus holds %d per-packet vectors, and the pinned commit publishes 37", packetVectors)
+	if packetVectors != 38 {
+		t.Errorf("the corpus holds %d per-packet vectors, and the pinned commit publishes 38", packetVectors)
 	}
 }

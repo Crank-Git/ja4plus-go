@@ -1,6 +1,6 @@
 # Parity with the Python port
 
-The port is `Crank-Git/ja4plus`, at version `v1.1.0`. A user who runs both implementations
+The port is `Crank-Git/ja4plus`, at version `v1.3.0`. A user who runs both implementations
 must get one answer. **Read this file before you change a fingerprint value or an exported
 name.**
 

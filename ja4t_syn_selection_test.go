@@ -28,7 +28,7 @@ import (
 //
 // The ruling of 2026-08-13 cites the `0xC2` assertion at `rust/ja4/src/tcp.rs:153`, and that
 // line holds the comment above the assertion. This file cites `:154`, which holds the
-// assertion at the commit in `testdata/foxio.pin`.
+// assertion at the commit in `testdata/foxio-reading.pin`.
 //
 // The two tests below build the packet that separates the two readings. The corpus holds
 // two such SYN packets, and the suite compares neither one. The per-packet vector of
