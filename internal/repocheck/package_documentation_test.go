@@ -298,16 +298,20 @@ func TestThePackageDocumentationStatesTheMethodSection(t *testing.T) {
 	// A godoc section heading starts with `#`, so a reader of `go doc` sees the heading.
 	for _, want := range []string{
 		"# Methods",
-		"eleven methods",
+		"twelve methods",
+		"eleven passive methods",
 		"ten fingerprinters",
 		"JA4LFingerprinter",
+		"JA4TScan",
+		"package scan",
 	} {
 		if !strings.Contains(text, want) {
 			t.Errorf("doc.go omits %q, and FR-release-7 requires it", want)
 		}
 	}
 
-	// The section names each of the eleven methods: JA4, and the ten that `NOTICE` covers.
+	// The section names each of the eleven passive methods and the input each one reads.
+	// JA4TScan is the active method, and the list names the passive methods alone.
 	for _, method := range []string{
 		"JA4", "JA4S", "JA4H", "JA4X", "JA4SSH", "JA4T", "JA4TS", "JA4L", "JA4LS", "JA4D", "JA4D6",
 	} {

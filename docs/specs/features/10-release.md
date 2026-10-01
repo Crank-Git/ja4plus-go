@@ -49,8 +49,11 @@ file that did not exist.
 
 - **FR-release-6** — `doc.go` holds a package comment that opens with one sentence that
   states what the package does.
-- **FR-release-7** — The package comment holds a section on the eleven methods. It states
-  that ten fingerprinters carry them, because `JA4LFingerprinter` writes JA4L and JA4LS.
+- **FR-release-7** — The package comment holds a section on the methods. It states that
+  this module implements twelve methods, and that the package carries the eleven passive
+  methods. It states that ten fingerprinters carry the eleven, because `JA4LFingerprinter`
+  writes JA4L and JA4LS. It names package `scan` as the carrier of JA4TScan. #796 amended
+  this requirement on 2026-10-01 UTC.
 - **FR-release-8** — The package comment holds a section on the concurrency contract.
 - **FR-release-9** — The package comment holds a section on the license split.
 - **FR-release-10** — The package comment holds a runnable example.
@@ -65,8 +68,9 @@ file that did not exist.
 
 ### The README
 
-- **FR-release-17** — The README states the eleven methods and the protocol each reads. It
-  states that ten fingerprinters carry them.
+- **FR-release-17** — The README states the twelve methods and the protocol each reads. It
+  states that ten fingerprinters carry eleven of them, and that package `scan` carries
+  JA4TScan. #796 amended this requirement on 2026-10-01 UTC.
 - **FR-release-18** — The README states the Go version floor.
 - **FR-release-19** — The README holds an install command that names `v1.0.0`.
 - **FR-release-20** — The README holds a library example that compiles.

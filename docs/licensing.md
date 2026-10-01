@@ -32,6 +32,7 @@ JA4S
 JA4H
 JA4T
 JA4TS
+JA4TScan
 JA4L
 JA4LS
 JA4X
@@ -67,9 +68,9 @@ different sets:
 | `README.md:299` | Fifteen. |
 | `LICENSE:3` | Thirteen, and it spells the scanner `JA4SScan`. |
 
-The FoxIO record at `README.md:299` names fifteen methods, and the list above holds ten
-names. **The two sets are different.** The FoxIO fifteen holds each of the ten, and it adds
-JA4L-Delta, JA4TScan, JA4Scan-TLS, JA4Scan-QUIC and JA4N.
+The FoxIO record at `README.md:299` names fifteen methods, and the list above holds eleven
+names. **The two sets are different.** The FoxIO fifteen holds each of the eleven, and it
+adds JA4L-Delta, JA4Scan-TLS, JA4Scan-QUIC and JA4N.
 
 **Read the FoxIO records for the FoxIO list.** `testdata/foxio.pin` holds the commit
 that this project read.

@@ -192,13 +192,23 @@ Issue #290 records this measurement.
 An entry counts an interface as one exported name. It counts no second name for the method
 that the interface declares.
 
+- **The JA4TScan active scanner, in the new package `scan`, and the `ja4plus scan`
+  subcommand.** #796 added it on 2026-10-01 UTC, and it is a minor-version addition: it
+  changes no frozen name of `v1`. The package exports 16 names, and `docs/api/v1.md` records
+  each one. The scanner sends one TCP SYN to each IPv4 target and writes one JA4TScan value
+  for each target that answers. It changes no firewall state. No passive package imports
+  it, and `TestNoPassivePackageImportsTheScanner` holds that boundary. The project now
+  implements twelve methods. The list differs from the FoxIO list of `License FAQ.md:5`,
+  which holds JA4Scan and omits JA4. **The scanner moves no fingerprint value
+  of a passive method**, and it reaches no vector of the FoxIO corpus.
 - No exported name, and one test that holds the method count. `TestMethodCount` reads every
   tracked Markdown file, every tracked HTML file and every Go comment. It fails when one
   applies the count of ten to methods, or the count of eleven to fingerprinters, and it
   names the file and the line. It reported nine violations on the tree that Epic 12 started
   from, and `method_count_test.go` holds it. `NOTICE`, `README.md` and `doc.go` now name
-  JA4LS, so FoxIO License 1.1 covers ten of the eleven methods this project implements.
-  Issue #62 holds the measurement, and no fingerprint value moved.
+  JA4LS, so FoxIO License 1.1 covered ten of the eleven methods this project implemented
+  at that date. #796 added JA4TScan on 2026-10-01 UTC, and the license now covers eleven
+  of twelve. Issue #62 holds the measurement, and no fingerprint value moved.
 - No exported name, and twelve register entries that close FR-parity-50. The SOCKS4 tunnel
   of `socks4-https.pcap` produces three JA4X values, and no vector file of the corpus
   publishes a JA4X key for that capture. `testdata/foxio/python/socks4-https.pcap.json` and
@@ -1131,9 +1141,10 @@ that the interface declares.
   holds the same value.
 - The license correction. The repository states two licenses, and it names which material
   each one covers. The original Go code carries the BSD 3-Clause license.
-  FoxIO License 1.1 covers ten of the eleven methods that this project implements, and
-  that license permits non-commercial use only. `NOTICE` names those ten, and it holds
-  the FoxIO terms. Earlier releases named the BSD 3-Clause license alone, so a commercial
+  FoxIO License 1.1 covers eleven of the twelve methods that this project implements, and
+  that license permits non-commercial use only. `NOTICE` names those eleven, and it holds
+  the FoxIO terms. #796 added JA4TScan to the eleven on 2026-10-01 UTC.
+  Earlier releases named the BSD 3-Clause license alone, so a commercial
   user read a permission that FoxIO does not grant. `docs/audit/license-decision.md`
   records the decision behind the correction.
 - **The module needs Go 1.26 or later, and `go.mod` declares `go 1.26.0`.** `v0.3.0`

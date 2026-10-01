@@ -31,13 +31,14 @@ const (
 const foxioPinnedCommit = "16b96d95c220762cf658f67d678cda2aac95c81e"
 
 // noticeMethods holds the methods this library implements under FoxIO License 1.1.
-// FR-licensing-5 names them, and the list holds ten of the eleven methods this library
-// implements. JA4 is the eleventh, and the BSD 3-Clause license covers it.
+// FR-licensing-5 names them, and the list holds eleven of the twelve methods this library
+// implements. JA4 is the twelfth, and the BSD 3-Clause license covers it.
 var noticeMethods = []string{
 	"JA4S",
 	"JA4H",
 	"JA4T",
 	"JA4TS",
+	"JA4TScan",
 	"JA4L",
 	"JA4LS",
 	"JA4X",
@@ -132,7 +133,7 @@ func TestNoticeNamesEveryMethodThatFoxIOLicense11Covers(t *testing.T) {
 func TestNoticeMethodListExcludesEveryUnimplementedMethod(t *testing.T) {
 	names := noticeMethodList(t)
 
-	absent := []string{"JA4TScan", "JA4SScan", "JA4Scan", "JA4E"}
+	absent := []string{"JA4SScan", "JA4Scan", "JA4E"}
 	for _, name := range names {
 		for _, unimplemented := range absent {
 			if name == unimplemented {
@@ -156,7 +157,7 @@ func TestNoticeAssertsNoEqualityWithTheFoxIOList(t *testing.T) {
 		"LICENSE:3",
 		"thirteen",
 		"JA4SScan",
-		// The FoxIO README names fifteen methods, and this library names ten. The two sets
+		// The FoxIO README names fifteen methods, and this library names eleven. The two sets
 		// are different, and a reader must not read one count as the other set.
 		"The two sets are different.",
 		foxioPinnedCommit,

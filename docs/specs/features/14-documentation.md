@@ -63,8 +63,9 @@ types and links to `pkg.go.dev` for the signatures.
 - **FR-documentation-14** — The site holds a concurrency page.
 - **FR-documentation-15** — The site holds a packet-throughput page.
 - **FR-documentation-16** — The site holds a live-capture page.
-- **FR-documentation-17** — The site holds one page per method. **Eleven methods reach
-  eleven pages**, because JA4L and JA4LS each hold one.
+- **FR-documentation-17** — The site holds one page per method. **Twelve methods reach
+  twelve pages**, because JA4L and JA4LS each hold one, and JA4TScan holds one. #796
+  amended this requirement on 2026-10-01 UTC.
 - **FR-documentation-18** — `docs/methods/index.md` states the method count and names the
   methods this project does not implement.
 - **FR-documentation-19** — The site holds an API-reference section.
@@ -206,6 +207,9 @@ days.
    `docs/requirements.txt`.
 2. The site holds eleven method pages, and `docs/methods/index.md` states eleven methods
    and ten fingerprinters.
+   **#796 added the JA4TScan page on 2026-10-01 UTC.** The site holds twelve method pages
+   since that date, and `docs/methods/index.md` states twelve methods and ten
+   fingerprinters.
 3. A deliberately broken internal link fails the build.
 4. A page under `docs_dir` that no navigation entry names fails the build.
 5. A push to `master` publishes the site, and the URL serves the change.

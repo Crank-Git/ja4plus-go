@@ -1,7 +1,11 @@
 # Methods
 
 JA4+ is a set of network fingerprint methods that FoxIO publishes. **This library
-implements eleven of them.** This section holds one page for each one.
+implements twelve of them.** This section holds one page for each one.
+
+**The twelve methods of this library are not the twelve that FoxIO names.** `License
+FAQ.md:5` of FoxIO at commit `16b96d95` lists JA4Scan and omits JA4. This library implements
+JA4, and it implements no JA4Scan.
 
 ## The two counts, and what each one counts
 
@@ -11,14 +15,15 @@ to the other reads the wrong number.
 
 | What is counted | The count | Why |
 |---|---|---|
-| The methods this library implements | Eleven | The table below names each one. |
-| The Go fingerprinter types that carry them | Ten | `JA4LFingerprinter` writes both JA4L and JA4LS. |
+| The methods this library implements | Twelve | The two tables below name each one. |
+| The Go fingerprinter types that carry the passive methods | Ten | `JA4LFingerprinter` writes both JA4L and JA4LS. |
+| The packages that carry the active method | One | Package `scan` carries JA4TScan, and no fingerprinter does. |
 
 **`JA4LFingerprinter` is the one type that writes two methods.** It measures the client
 side and the server side of one connection, so one state table serves both. Every other
 method reaches one type of its own.
 
-## The eleven methods
+## The eleven passive methods
 
 | Method | Page | What it fingerprints | Go type | `Type` token |
 |---|---|---|---|---|
@@ -38,13 +43,18 @@ method reaches one type of its own.
 value itself carries the label. The [JA4L](ja4l.md) page states how a caller separates the
 two.
 
-## What this library does not implement
+## The active method
 
-**JA4TScan is out of scope, and the reason is that FoxIO publishes nothing to implement.**
-FoxIO ships no format specification, no image under `technical_details/` and no reference
-implementation of it. A goal of one answer for one packet cannot be met against a
-definition that does not exist. `docs/specs/spec.md` `Non-goals` holds the ruling, and the
-ruling reverses when FoxIO publishes a format.
+| Method | Page | What it fingerprints | Go package | `Type` token |
+|---|---|---|---|---|
+| JA4TScan | [JA4TScan](ja4tscan.md) | The SYN-ACK and the retransmissions that one crafted SYN draws from a host. | `scan` | `ja4tscan` |
+
+**JA4TScan is the one method that sends packets, so it is opt-in and separate.** No
+fingerprinter and no `Processor` imports package `scan`. The maintainer reversed the decline
+of JA4TScan on 2026-09-30, because FoxIO publishes the scanner at
+`https://github.com/FoxIO-LLC/ja4tscan`. #796 built it.
+
+## What this library does not implement
 
 **FoxIO also names a scanner method, and this project decided nothing about it.** The name
 carries two spellings across the FoxIO records, and FoxIO publishes no format and no

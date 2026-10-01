@@ -246,6 +246,7 @@ nav:
       - JA4LS: methods/ja4ls.md
       - JA4T: methods/ja4t.md
       - JA4TS: methods/ja4ts.md
+      - JA4TScan: methods/ja4tscan.md
       - JA4D: methods/ja4d.md
       - JA4D6: methods/ja4d6.md
   # #87 owns every entry between this line and the end of the file.

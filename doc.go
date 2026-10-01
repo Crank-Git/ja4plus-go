@@ -3,12 +3,14 @@
 //
 // # Methods
 //
-// This package implements eleven methods, and ten fingerprinters carry them.
-// JA4LFingerprinter writes both JA4L and JA4LS, so the count of fingerprinters is one
-// below the count of methods. Read the ten as a count of fingerprinters, and never as a
-// count of methods.
+// This module implements twelve methods. This package carries the eleven passive methods,
+// and ten fingerprinters carry them. JA4LFingerprinter writes both JA4L and JA4LS, so the
+// count of fingerprinters is one below the count of passive methods. The twelfth method is
+// JA4TScan. The opt-in package scan carries it, because it sends a packet. No type of this
+// package sends a packet. Read the ten as a count of fingerprinters, and never as a count
+// of methods.
 //
-// The list below names each method and the input it reads.
+// The list below names each passive method and the input it reads.
 //
 //   - JA4 reads a TLS client hello. A TCP connection carries one, and a QUIC initial
 //     packet carries one.

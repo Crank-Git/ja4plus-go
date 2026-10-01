@@ -1,7 +1,10 @@
 <p align="center"><img src="assets/logo.png" width="300"></p>
 
 `ja4plus-go` is a Go library and a command-line program for JA4+ network fingerprinting.
-It implements eleven JA4+ methods, and ten fingerprinters carry them. It reads TLS, TCP,
+It implements twelve JA4+ methods. Ten fingerprinters carry eleven of them, and the opt-in
+package `scan` carries the twelfth, the JA4TScan active scanner. FoxIO also names twelve
+methods, and the two lists differ. `License FAQ.md:5` of FoxIO at commit `16b96d95` lists
+JA4Scan and omits JA4, and this project implements JA4 and no JA4Scan. It reads TLS, TCP,
 HTTP, SSH, X.509 and DHCP characteristics, and it decodes a QUIC Initial packet.
 
 JA4+ is a set of network fingerprinting standards that [FoxIO](https://foxio.io)
@@ -30,10 +33,12 @@ specification.
 | JA4SSH | SSH | Session type classification from traffic patterns |
 | JA4D | DHCPv4 | Per-packet DHCPv4 fingerprint (FoxIO PR #267/#270) |
 | JA4D6 | DHCPv6 | Per-packet DHCPv6 fingerprint |
+| JA4TScan | TCP | Active server fingerprint from the SYN-ACK that answers one sent SYN (opt-in package `scan`) |
 
-The table above holds eleven rows, and ten fingerprinters carry those methods.
-`JA4LFingerprinter` writes JA4L and it writes JA4LS, so one fingerprinter carries two of
-the rows. Read the ten as a count of fingerprinters, and never as a count of methods.
+The table above holds twelve rows. Ten fingerprinters carry the eleven passive methods, and
+package `scan` carries JA4TScan. `JA4LFingerprinter` writes JA4L and it writes JA4LS, so
+one fingerprinter carries two of the rows. Read the ten as a count of fingerprinters, and
+never as a count of methods.
 
 The library decrypts a QUIC Initial packet (RFC 9001 and RFC 9369) and it reads the TLS
 ClientHello inside.
@@ -600,7 +605,7 @@ date.
 ## License
 
 The BSD 3-Clause license in [LICENSE](LICENSE) covers the original Go code, and FoxIO licenses the JA4 method under [LICENSE-JA4](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE-JA4).
-[FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE) covers JA4S, JA4H, JA4T, JA4TS, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6, and it permits non-commercial use only.
+[FoxIO License 1.1](https://github.com/FoxIO-LLC/ja4/blob/main/LICENSE) covers JA4S, JA4H, JA4T, JA4TS, JA4TScan, JA4L, JA4LS, JA4X, JA4SSH, JA4D and JA4D6, and it permits non-commercial use only.
 A commercial user contacts [FoxIO](https://foxio.io) for those methods, and [NOTICE](NOTICE) holds the FoxIO terms.
 
 ## Acknowledgments

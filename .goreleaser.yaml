@@ -178,7 +178,7 @@ sboms:
     artifacts: binary
 
 # FR-release-38 attaches `LICENSE` and `NOTICE` to the release. `NOTICE` holds the FoxIO
-# License 1.1 terms, and FoxIO licenses ten of the eleven methods that this project
+# License 1.1 terms, and FoxIO licenses eleven of the twelve methods that this project
 # implements under non-commercial terms. A release without it states the wrong license.
 release:
   extra_files:

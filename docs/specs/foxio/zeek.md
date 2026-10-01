@@ -58,7 +58,7 @@ characters, at `zeek/scripts/fingerprints/utils/common.zeek:69`.
 |---|---|
 | JA4X | `zeek/scripts/fingerprints/ja4x/__load__.zeek:1` holds one line, `# empty (awaiting Zeek object support)`. `zeek/scripts/fingerprints/config.zeek:26` sets `option JA4X_enabled:   bool = F;`. `zeek/README.md:24` states `(awaiting Zeek object support)`. |
 | JA4D6 | The package holds no module for it. `zeek/README.md:23` states `(awaiting Zeek DHCPv6 suppport)`. |
-| JA4TScan | The package holds no module for it, and FoxIO publishes no material for it. |
+| JA4TScan | The package holds no module for it. FoxIO publishes the scanner in a separate repository, `https://github.com/FoxIO-LLC/ja4tscan`. |
 
 **Read a missing method as no evidence, and never as a value of zero.** For JA4X and JA4D6
 the Zeek package states nothing, so it corroborates nothing.

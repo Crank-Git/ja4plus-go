@@ -17,7 +17,8 @@ import (
 // ---------------------------------------------------------------------------
 
 // zeroValueSweepTypes names the type of every fingerprinter that the package exports.
-// CLAUDE.md states the count: ten fingerprinters carry eleven methods.
+// CLAUDE.md states the count: ten fingerprinters carry eleven methods. Package scan carries
+// the twelfth, JA4TScan, and it exports no fingerprinter.
 var zeroValueSweepTypes = []reflect.Type{
 	reflect.TypeOf(JA4Fingerprinter{}),
 	reflect.TypeOf(JA4DFingerprinter{}),

@@ -21,6 +21,7 @@ ja4plus - JA4+ network fingerprinting tool
 Usage:
   ja4plus analyze <pcap-file> [options]
   ja4plus watch --interface <name> [options]
+  ja4plus scan <target> [options]
   ja4plus cert <cert-file>
   ja4plus db update
   ja4plus db info
@@ -47,6 +48,18 @@ Watch options:
   --json, --csv, --types <list>, --lookup, --lookup-remote
                            The options of the analyze command, with the same meaning.
 
+Scan options:
+  <target>                 One IPv4 address, one IPv4 network in CIDR form, or a file
+                           of IPv4 addresses, one on each line
+  --port <port>            The TCP port of every target. The default is 80.
+  --rate <syn/s>           The SYN count for each second. The default is 10.
+  --retransmit yes|no      yes reads every retransmission for 120 seconds. no reads
+                           the first response alone for 8 seconds. The default is yes.
+  --format table|json|csv  The result format. The default is table.
+  --output <file>          Write the results to the file. --force replaces a file
+                           that exists.
+  The scan changes no firewall state. It writes the rules that the operator adds.
+
 Database commands:
   db update       Download the latest ja4plus-mapping.csv from FoxIO
   db info         Print info about the active database (embedded vs cached)
@@ -58,10 +71,11 @@ Database commands:
 **The program answers every other first argument with an error.** It writes
 `unknown command: %s` to standard error, it prints the usage text, and it exits 1.
 
-!!! note "`watch` reads a network interface"
+!!! note "`analyze` reads a capture file, and it opens no interface"
 
-    `analyze` reads a capture file, and `watch` reads one network interface. The
+    `analyze` takes a path. `watch` reads one network interface, and the
     [live-capture page](live-capture.md) states `watch`, its options and its platforms.
+    `scan` sends packets, and the [JA4TScan page](methods/ja4tscan.md) states it.
 
 ### `analyze` reads one capture file
 
@@ -174,6 +188,18 @@ only when the operator permits the remote lookup, and `### The remote lookup` st
 rule. It downloads
 `ja4plus-mapping.csv` from FoxIO into the cache. FoxIO License 1.1 covers that file, and
 the [license page](licensing.md) states the terms.
+
+### `scan` computes JA4TScan by an active scan
+
+```bash
+sudo ja4plus scan 203.0.113.0/28 --port 443 --format json
+```
+
+**`scan` is the one subcommand that sends packets.** It sends one TCP SYN to each IPv4
+target, and it writes one JA4TScan value for each target that answers. It changes no
+firewall state: it writes the firewall rules to standard error before the first SYN, and
+the operator applies them. The [JA4TScan page](methods/ja4tscan.md) states the options, the
+rules and the platforms.
 
 ## The library
 

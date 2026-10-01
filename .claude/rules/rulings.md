@@ -116,8 +116,9 @@ Reproduce it exactly, in a code span or a block quote, and cite the location.
 titles itself `JA4T/S: TCP Fingerprint`, so it specifies the schema of JA4TS. The image
 states no separate server rule, so the implementations state the packet rule for JA4TS.
 For JA4LS the implementations state every rule, because `JA4L.png` states no server rule.
-For JA4TScan FoxIO publishes nothing at all, which is why `docs/specs/spec.md` `Non-goals`
-declines it.
+For JA4TScan the FoxIO scanner at `https://github.com/FoxIO-LLC/ja4tscan` states every
+rule. #796 built the method from the transcription that the port holds at tag `v1.3.0`, and
+`docs/specs/features/17-active-scan.md` cites that transcription.
 
 **Rank 3 never outranks an image, and a question that no image addresses reaches no image
 to outrank.** `### A rank 3 source, and the source ranking` below states the reconciliation,
