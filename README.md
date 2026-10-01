@@ -33,10 +33,12 @@ specification.
 | JA4SSH | SSH | Session type classification from traffic patterns |
 | JA4D | DHCPv4 | Per-packet DHCPv4 fingerprint (FoxIO PR #267/#270) |
 | JA4D6 | DHCPv6 | Per-packet DHCPv6 fingerprint |
+| JA4TScan | TCP | Active server fingerprint from the SYN-ACK that answers one sent SYN (opt-in package `scan`) |
 
-The table above holds eleven rows, and ten fingerprinters carry those methods.
-`JA4LFingerprinter` writes JA4L and it writes JA4LS, so one fingerprinter carries two of
-the rows. Read the ten as a count of fingerprinters, and never as a count of methods.
+The table above holds twelve rows. Ten fingerprinters carry the eleven passive methods, and
+package `scan` carries JA4TScan. `JA4LFingerprinter` writes JA4L and it writes JA4LS, so
+one fingerprinter carries two of the rows. Read the ten as a count of fingerprinters, and
+never as a count of methods.
 
 The library decrypts a QUIC Initial packet (RFC 9001 and RFC 9369) and it reads the TLS
 ClientHello inside.

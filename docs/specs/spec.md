@@ -108,7 +108,7 @@ shared vector set is what makes the two implementations agree.
 | method | noun | One named JA4+ algorithm, for example JA4 or JA4SSH. FoxIO names twelve of them, and this project implements twelve. The two lists differ: the FoxIO list of `License FAQ.md:5` holds JA4Scan and omits JA4. | algorithm, type, scheme |
 | active scanner | noun | The package `scan`, which sends one TCP SYN to each target to compute JA4TScan. It is the one part of this project that sends a packet. | prober, active fingerprinter |
 | method name | noun | The lower-case token that names one method, for example `ja4h`. `FingerprintResult.Type` holds one. | method key, type name, token |
-| fingerprinter | noun | The Go type that implements one method or two. `JA4LFingerprinter` implements JA4L and JA4LS, so ten fingerprinters carry eleven methods. | engine, module, handler |
+| fingerprinter | noun | The Go type that implements one method or two. `JA4LFingerprinter` implements JA4L and JA4LS, so ten fingerprinters carry the eleven passive methods. Package `scan` carries JA4TScan, and no fingerprinter does. | engine, module, handler |
 | fingerprint | noun | The output string of one method for one connection. | hash, signature, ID |
 | processor | noun | The `Processor` type, which runs every fingerprinter over one packet. | aggregator, pipeline, dispatcher |
 | dispatch | noun | The type assertion that selects each fingerprinter of one optional interface, and the call the processor then makes to each selected fingerprinter. It never names the `Processor` type. | discovery, routing, fan-out |
@@ -236,7 +236,8 @@ shared vector set is what makes the two implementations agree.
    capture in the corpus, except where the register records a decline.
 2. This project and the port produce the same fingerprint for every capture in the
    corpus, and expose the same interface where FoxIO specifies none.
-3. Eleven methods are implemented. JA4LS is the eleventh.
+3. Twelve methods are implemented. JA4LS is the eleventh passive method, and JA4TScan is
+   the twelfth method.
 4. The concurrency contract is documented on every exported type, and a race test proves
    it.
 5. The license files state the FoxIO terms for the FoxIO-licensed methods.
@@ -830,6 +831,8 @@ result carries `Type: "ja4l"`. **The maintainer amended this criterion on 2026-0
 #60**, because a second type would split one connection across two owners. The
 conformance suite compares it against the FoxIO vectors. Every document that states a
 method count states eleven methods and ten fingerprinters, and a test holds that count.
+**#796 added JA4TScan on 2026-10-01 UTC**, so a document that counts every method states
+twelve methods since that date, and FR-ja4ls-15 states the amended rule.
 
 ### Epic 9: Database lookup
 
@@ -913,7 +916,7 @@ materials. `pkg.go.dev` serves the documentation, and GitHub Pages serves the si
 |---|---|---|
 | M1: Ready to work | Epic 0, Epic 1, Epic 11 | The repository runs every gate, the license is correct, and the reference material is committed. The library is safe to distribute. |
 | M2: Known-correct | Epic 2, Epic 3, Epic 4 | Every defect the audit found is closed, the concurrency contract holds, and the deviation list is known. |
-| M3: Conformant | Epic 5, Epic 6, Epic 8, Epic 12 | Every FoxIO vector matches or carries a register entry, no generated input panics the library, and the two implementations agree on eleven methods. |
+| M3: Conformant | Epic 5, Epic 6, Epic 8, Epic 12 | Every FoxIO vector matches or carries a register entry, no generated input panics the library, and the two implementations agree on the eleven passive methods. |
 | M4: Hardened | Epic 7, Epic 9, Epic 15 | The supply chain is watched, the network boundary is explicit, and the sweep found no unsettled candidate. |
 | M5: Complete | Epic 13, Epic 14 | The monitor reads an interface, and the documentation site publishes. |
 | M6: Released | Epic 16, Epic 10 | The artifacts install and run from a clean environment, and `v1.0.0` is tagged and published. |

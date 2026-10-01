@@ -50,7 +50,7 @@ func conformanceRowOf(t *testing.T, report *conformanceReport, capture, method s
 }
 
 // The raw form of a method is a form of that method, and never a method of its own. The
-// `## Terms` table of `docs/specs/spec.md` names eleven methods, and `raw form` names
+// `## Terms` table of `docs/specs/spec.md` names twelve methods, and `raw form` names
 // `JA4_r` as a form of JA4.
 func TestTheReportReadsARawFormKeyAsItsMethod(t *testing.T) {
 	cases := map[string]string{

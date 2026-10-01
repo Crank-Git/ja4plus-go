@@ -198,7 +198,7 @@ those lines.</p>
 <ol>
   <li>Every method matches the FoxIO reference on every corpus capture, except where the register records a decline.</li>
   <li>This project and the port produce the same fingerprint, and expose the same interface where FoxIO specifies none.</li>
-  <li>Eleven methods are implemented. JA4LS is the eleventh.</li>
+  <li>Twelve methods are implemented. JA4LS is the eleventh passive method, and JA4TScan is the twelfth method.</li>
   <li>The concurrency contract is documented on every exported type, and a race test proves it.</li>
   <li>The license files state the FoxIO terms.</li>
   <li>CI gates conformance, race detection, fuzz, vulnerability scanning, lint and coverage.</li>
@@ -375,7 +375,7 @@ the material Epic 11 writes.</p>
 <p class="dep">Depends on: Epic 4, Epic 11 · <a href="features/08-python-parity.md">features/08-python-parity.md</a></p></div>
 
 <div class="epic"><div class="hd"><span class="num">Epic 12</span><h3>JA4LS</h3><span class="tag draft">new in round 3</span></div>
-<p>Implement the eleventh method. <code>JA4LFingerprinter</code> emits both values. Every document that states a method count states eleven methods and ten fingerprinters, and a test holds that count.</p>
+<p>Implement the eleventh method. <code>JA4LFingerprinter</code> emits both values. Every document that states a method count states eleven methods and ten fingerprinters, and a test holds that count. <strong>#796 added JA4TScan on 2026-10-01 UTC</strong>, so a document that counts every method states twelve methods since that date, and FR-ja4ls-15 states the amended rule.</p>
 <p class="frs"><strong>No FoxIO image specifies JA4LS</strong> — <code>JA4L.png</code> states no server rule — so every rule cites a reference implementation.</p>
 <p class="dep">Depends on: Epic 8 · <a href="features/12-ja4ls.md">features/12-ja4ls.md</a></p></div>
 
@@ -438,7 +438,7 @@ file directly with the link beside it.</p>
 <tr><th>Milestone</th><th>Epics</th><th>What "shippable" means</th></tr>
 <tr><td>M1: Ready to work</td><td>0, 1, 11</td><td>Every gate runs, the license is correct, the reference material is committed. Safe to distribute.</td></tr>
 <tr><td>M2: Known-correct</td><td>2, 3, 4</td><td>Audit findings closed, the concurrency contract holds, the deviation list is known.</td></tr>
-<tr><td>M3: Conformant</td><td>5, 6, 8, 12</td><td>Every vector matches or carries a register entry, nothing panics, and the two implementations agree on eleven methods.</td></tr>
+<tr><td>M3: Conformant</td><td>5, 6, 8, 12</td><td>Every vector matches or carries a register entry, nothing panics, and the two implementations agree on the eleven passive methods.</td></tr>
 <tr><td>M4: Hardened</td><td>7, 9, 15</td><td>The supply chain is watched, the network boundary is explicit, no unsettled mutation remains.</td></tr>
 <tr><td>M5: Complete</td><td>13, 14</td><td>The monitor reads an interface, and the documentation site publishes.</td></tr>
 <tr><td>M6: Released</td><td>16, 10</td><td>The artifacts install and run from a clean environment. <code>v1.0.0</code> is tagged and published.</td></tr>

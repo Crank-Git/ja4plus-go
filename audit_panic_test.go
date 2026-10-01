@@ -634,7 +634,7 @@ func TestTheHashOfAnEmptyInputProducesTheZeroSentinel(t *testing.T) {
 }
 
 func TestEveryMethodThatHashesWritesTheZeroSentinelForAnEmptyInput(t *testing.T) {
-	// FR-audit-21 names every method that hashes. Four of the eleven methods do:
+	// FR-audit-21 names every method that hashes. Four of the twelve methods do:
 	// JA4 hashes the cipher list and the extension list, JA4S hashes the server extension
 	// list, JA4H hashes three sections, and JA4X hashes three object identifier lists.
 	cases := []struct {

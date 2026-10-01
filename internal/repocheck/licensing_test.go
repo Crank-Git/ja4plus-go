@@ -64,6 +64,11 @@ func TestDocGoStatesThatFoxIOLicensesTheEmbeddedMappingFile(t *testing.T) {
 // theMethodCountPhrase is the form both records use for the count of FoxIO-licensed
 // methods. It states the subset and the total, so a reader counts neither one.
 // Epic 12 added JA4LS to the enumerations, which raised the subset from nine to ten.
+//
+// **Each record keeps the count of the date it records.** #796 added JA4TScan to the
+// enumerations on 2026-10-01 UTC, which raised the subset to eleven of twelve. A dated
+// record is never rewritten, so the phrase holds the count of Epic 12, and `noticeMethods`
+// holds the count of today.
 const theMethodCountPhrase = "ten of the eleven methods"
 
 // theMethodCountFormula is the form that issue #121 deletes. A formula makes a reader
@@ -71,7 +76,7 @@ const theMethodCountPhrase = "ten of the eleven methods"
 const theMethodCountFormula = "except JA4"
 
 // `NOTICE`, `README.md` and `doc.go` each enumerate the same methods, and `noticeMethods`
-// holds that list. These two records state the count of that list.
+// holds that list. These two records state the count of that list on the date of Epic 12.
 func TestTheLicenseRecordsCountTheFoxIOLicensedMethods(t *testing.T) {
 	for _, path := range []string{"CHANGELOG.md", "docs/audit/license-decision.md"} {
 		record := readRepoFile(t, path)
@@ -81,7 +86,7 @@ func TestTheLicenseRecordsCountTheFoxIOLicensedMethods(t *testing.T) {
 		}
 
 		if !strings.Contains(record, theMethodCountPhrase) {
-			t.Errorf("%s does not hold %q, and the enumerations name %d methods", path, theMethodCountPhrase, len(noticeMethods))
+			t.Errorf("%s does not hold %q, and that dated record states the count of Epic 12", path, theMethodCountPhrase)
 		}
 	}
 }

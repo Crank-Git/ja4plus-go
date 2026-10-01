@@ -60,8 +60,9 @@ Then confirm three properties of the snapshot.
 - `CHANGELOG.md` describes the released behavior and nothing else.
 - **Breaking changes are named as breaking.** `CloseOpenWindows` is not one. It sits on the
   optional interface `WindowCloser`, and the exported `Fingerprinter` interface does not
-  change. JA4LS is a new method and it breaks nothing, and the CHANGELOG states it and
-  states eleven methods through ten fingerprinters.
+  change. JA4LS is a new method and it breaks nothing, and the CHANGELOG states it. JA4TScan is
+  a new method in the new package `scan`, and it breaks nothing. The CHANGELOG states
+  twelve methods, and it states that ten fingerprinters carry eleven of them.
 - `docs/api/v1.md` records every exported name.
 
 ## 5. Tag

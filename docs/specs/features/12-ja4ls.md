@@ -131,7 +131,10 @@ requirement therefore states what the library does**, and FR-ja4ls-12 states the
 
 ### The count
 
-- **FR-ja4ls-15** — Every document that states a method count states eleven methods.
+- **FR-ja4ls-15** — Every document that states the count of methods this project
+  implements states twelve methods. A document that counts the passive methods alone
+  states eleven passive methods. #796 amended this requirement on 2026-10-01 UTC, when it
+  added JA4TScan.
 - **FR-ja4ls-16** — Every document that states a fingerprinter count states ten
   fingerprinters.
 - **FR-ja4ls-17** — No document applies the count of ten to methods.
@@ -139,7 +142,8 @@ requirement therefore states what the library does**, and FR-ja4ls-12 states the
   every Go comment. It fails when one applies the count of ten to methods, or the count of
   eleven to fingerprinters.
 - **FR-ja4ls-19** — The test names the file and the line of each violation.
-- **FR-ja4ls-20** — `CLAUDE.md` states eleven methods and ten fingerprinters.
+- **FR-ja4ls-20** — `CLAUDE.md` states twelve methods, and it states that ten
+  fingerprinters carry eleven of them. #796 amended this requirement on 2026-10-01 UTC.
 
 ### Conformance
 
@@ -254,6 +258,8 @@ values, under the rule that the port's `.claude/rules/external-apis.md` states.
 5. `go test -run TestMethodCount ./...` passes, and no tracked document applies the count
    of ten to methods.
 6. `CLAUDE.md` states eleven methods and ten fingerprinters.
+   **#796 added JA4TScan on 2026-10-01 UTC**, and `CLAUDE.md` states twelve methods since
+   that date. FR-ja4ls-20 states the amended rule.
 7. `docs/specs/foxio/JA4L.md` states that no FoxIO image specifies JA4LS.
 
 ## Out of scope
