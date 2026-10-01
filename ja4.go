@@ -106,12 +106,13 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 		// A ClientHello can span more than one TCP segment, and the segments then
 		// complete it. #795 records the defect that this step repairs.
 		if ch == nil {
-			assembled, stored, assembleErr := f.collectTCPHello(packet, tcp)
+			assembled, followed, assembleErr := f.collectTCPHello(packet, tcp)
 			if assembled != nil {
 				ch, err = assembled, nil
-			} else if stored {
-				// The truncation error of a stored segment describes a hello that a
-				// later segment completes, and no defect of the segment.
+			} else if followed {
+				// The segment belongs to a hello that the table follows, so its truncation
+				// error describes that hello and no defect of the segment. The assembled
+				// bytes decide the error instead.
 				err = assembleErr
 			}
 		}

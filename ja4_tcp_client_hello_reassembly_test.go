@@ -567,3 +567,66 @@ func TestJA4ReadsHostileSegmentsWithoutAPanicOrAStream(t *testing.T) {
 
 	tcpHelloAssertHeld(t, fingerprinter, 0)
 }
+
+// The age pass can remove the stream that a segment continues, and the segment then opens
+// a new stream. A payload past the byte cap leaves that stream with no segment. The batch
+// #805 cross-member review found the panic that the empty stream caused. `get_stream` of
+// `ja4plus/utils/tcp_stream.py` of the port at tag `v1.3.0` returns no byte for an empty
+// stream, and `_add_tcp_segment` of `ja4plus/fingerprinters/ja4.py` then removes it.
+func TestJA4ReleasesTheStreamWhenAnAgedHelloMeetsASegmentPastTheByteCap(t *testing.T) {
+	hello := tcpHelloLongClientHello()
+	start := time.Unix(1000, 0)
+	fingerprinter := NewJA4()
+
+	segments := []tcpHelloSegment{
+		{payload: hello[:1400], seq: tcpHelloFirstSeq, at: start},
+		{
+			payload: make([]byte, maxJA4TCPHelloBytes+1),
+			seq:     tcpHelloFirstSeq + 1400,
+			at:      start.Add(ja4TCPHelloAge + time.Second),
+		},
+	}
+
+	for index, segment := range segments {
+		results, err := fingerprinter.ProcessPacket(segment.build(t))
+		if err != nil || len(results) != 0 {
+			t.Fatalf("segment %d gives (%v, %v), want no result and no error", index, results, err)
+		}
+	}
+
+	tcpHelloAssertHeld(t, fingerprinter, 0)
+}
+
+// A stream that holds no segment holds no first byte. The table removes such a stream on
+// the segment that made it, so this case holds the two methods against a later caller.
+func TestJA4AssemblesNoByteFromAStreamThatHoldsNoSegment(t *testing.T) {
+	var stream ja4TCPHello
+
+	if data := stream.assemble(); len(data) != 0 {
+		t.Errorf("an empty stream assembles %x, want no byte", data)
+	}
+
+	if _, held := stream.base(); held {
+		t.Error("an empty stream reports a first sequence number")
+	}
+}
+
+// A retransmission of the first segment carries the same truncated record as the first
+// transmission. Both are segments of a hello that the table follows, so neither one returns
+// the truncation error. The port returns no value and raises no error for both.
+func TestJA4ReturnsNoErrorForARetransmittedFirstSegment(t *testing.T) {
+	hello := tcpHelloLongClientHello()
+	want := tcpHelloWholeValue(t, hello)
+	segments := tcpHelloCut(hello, tcpHelloFirstSeq, 1400)
+	fingerprinter := NewJA4()
+
+	for index, segment := range []tcpHelloSegment{segments[0], segments[0]} {
+		results, err := fingerprinter.ProcessPacket(segment.build(t))
+		if err != nil || len(results) != 0 {
+			t.Fatalf("transmission %d of the first segment gives (%v, %v), want no result and no error",
+				index, results, err)
+		}
+	}
+
+	tcpHelloAssertValues(t, tcpHelloFeed(t, fingerprinter, segments[1:]), want)
+}

@@ -20,12 +20,20 @@ import (
 // fingerprinter holds. The QUIC fragment table holds the same bound.
 const maxJA4TCPHelloStreams = 1000
 
-// ja4TCPHelloAge drops a connection that added no segment for 30 seconds. The segments of
+// ja4TCPHelloAge drops a connection that sends no segment for 30 seconds. The segments of
 // one hello arrive inside one round trip. The QUIC fragment table holds the same age.
+//
+// A segment that a cap refuses still counts, because the connection still sends.
+// `add_segment` of `ja4plus/utils/tcp_stream.py` of the port at tag `v1.3.0` reads the age
+// the same way, so the two age bounds agree. The recency order differs. Here each segment
+// that reaches the table moves its connection to the most recent position. The port moves
+// a connection only on a segment that it stores, so the entry bound of the two can remove
+// a different connection.
 const ja4TCPHelloAge = 30 * time.Second
 
-// ja4TCPHelloEvictionInterval runs the age pass on each segment that the table stores.
-// The table holds 1000 entries at most, so one pass reads 1000 keys at most.
+// ja4TCPHelloEvictionInterval runs the age pass on each segment that reaches the table,
+// whether the table stores it or refuses it. The table holds 1000 entries at most, so one
+// pass reads 1000 keys at most.
 const ja4TCPHelloEvictionInterval = 1
 
 // maxJA4TCPHelloBytes bounds the bytes of one partial ClientHello. RFC 8446 Section 5.1
@@ -111,15 +119,26 @@ func (h *ja4TCPHello) ordered() []ja4TCPHelloSegment {
 	return append(bySeq[start:], bySeq[:start]...)
 }
 
-// base returns the sequence number of the first byte that the stream holds.
-func (h *ja4TCPHello) base() uint32 {
-	return h.ordered()[0].seq
+// base returns the sequence number of the first byte that the stream holds. It reports
+// false for a stream that holds no segment, because such a stream holds no first byte.
+func (h *ja4TCPHello) base() (uint32, bool) {
+	segments := h.ordered()
+	if len(segments) == 0 {
+		return 0, false
+	}
+
+	return segments[0].seq, true
 }
 
 // assemble returns the bytes from the first stored byte up to the first byte that no
 // segment carries. A gap therefore never reads as zeros, and an overlap adds each byte once.
+// A stream that holds no segment returns no byte, as `get_stream` of
+// `ja4plus/utils/tcp_stream.py` of the port at tag `v1.3.0` does.
 func (h *ja4TCPHello) assemble() []byte {
 	segments := h.ordered()
+	if len(segments) == 0 {
+		return nil
+	}
 
 	result := make([]byte, 0, h.bytes)
 	next := segments[0].seq
@@ -148,8 +167,17 @@ func ja4TCPHelloKey(srcIP string, srcPort uint16, dstIP string, dstPort uint16) 
 // collectTCPHello adds one TCP segment to the partial ClientHello of its direction.
 //
 // It returns the ClientHello on the segment that completes it. It reports true when the
-// table stored the segment, so the caller knows that a truncation error of the segment
-// alone describes a hello that a later segment completes.
+// segment belongs to a hello that the table follows. These segments each report true:
+//   - A segment that opens a stream.
+//   - A segment that continues a stream, whether the table stores it or refuses it.
+//   - A duplicate.
+//   - A segment past a cap.
+//   - A segment whose stream the age pass removed first.
+//
+// The caller then reports the error of the assembled bytes, and never the truncation error
+// of the segment alone. So a retransmitted first segment returns the result that the first
+// transmission returned. `_try_tcp_segments` of `ja4plus/fingerprinters/ja4.py` of the port
+// at tag `v1.3.0` returns no value for each of these segments, and the port raises no error.
 //
 // A segment with FIN or RST removes both directions of the connection, because no later
 // segment completes a hello on a closed connection.
@@ -169,13 +197,13 @@ func (f *JA4Fingerprinter) collectTCPHello(
 	key := ja4TCPHelloKey(srcIP, srcPort, dstIP, dstPort)
 
 	var (
-		hello  *parser.ClientHello
-		stored bool
-		err    error
+		hello    *parser.ClientHello
+		followed bool
+		err      error
 	)
 
 	if len(tcp.Payload) > 0 {
-		hello, stored, err = f.addTCPHelloSegment(key, tcp.Seq, tcp.Payload, parser.GetPacketTimestamp(packet))
+		hello, followed, err = f.addTCPHelloSegment(key, tcp.Seq, tcp.Payload, parser.GetPacketTimestamp(packet))
 	}
 
 	if tcp.FIN || tcp.RST {
@@ -183,7 +211,7 @@ func (f *JA4Fingerprinter) collectTCPHello(
 		f.dropTCPHello(ja4TCPHelloKey(dstIP, dstPort, srcIP, srcPort))
 	}
 
-	return hello, stored, err
+	return hello, followed, err
 }
 
 // addTCPHelloSegment stores one segment, and it parses the hello that the stored bytes
@@ -199,14 +227,16 @@ func (f *JA4Fingerprinter) addTCPHelloSegment(
 		if !opens || end <= len(payload) || end > maxJA4TCPHelloBytes {
 			return nil, false, nil
 		}
-	} else if tcpSequenceBefore(seq, stream.base()) {
+	} else if first, held := stream.base(); held && tcpSequenceBefore(seq, first) {
 		// A byte before the first hello byte would move the start of the stream, and the
 		// stream would then open with no TLS record.
 		return nil, false, nil
 	}
 
 	// The age pass can remove the stream of this segment. The segment then opens a new
-	// stream, and that stream holds no hello start, so it ends below.
+	// stream, and that stream holds no hello start, so it ends below. A cap can refuse the
+	// segment, and the new stream then holds no segment. `assemble` returns no byte for that
+	// stream, so it ends below too.
 	f.tcpHelloKeys.admit(key, now, maxJA4TCPHelloStreams, ja4TCPHelloAge,
 		ja4TCPHelloEvictionInterval, f.dropTCPHello)
 
