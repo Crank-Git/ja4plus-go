@@ -11,12 +11,12 @@ The corpus holds the FoxIO commit `16b96d95c220762cf658f67d678cda2aac95c81e`.
 | Measure | Count |
 |---|---|
 | Captures | 39 |
-| Matches | 1834 |
+| Matches | 1838 |
 | Deviations | 0 |
-| Accepted deviations | 789 |
+| Accepted deviations | 785 |
 | Unaccepted uncovered values | 194 |
 | Accepted uncovered values | 32 |
-| Accepted comparisons | 821 |
+| Accepted comparisons | 817 |
 | Stale register entries | 0 |
 | Orphan register entries | 0 |
 | Captures the suite compared | 36 |
@@ -26,7 +26,7 @@ The two vector sets cover different methods, so the report counts each one on it
 
 | Vector set | Matches | Deviations | Accepted deviations | Unaccepted uncovered values | Accepted uncovered values |
 |---|---|---|---|---|---|
-| per-stream | 1155 | 0 | 294 | 166 | 14 |
+| per-stream | 1159 | 0 | 290 | 166 | 14 |
 | per-packet | 679 | 0 | 495 | 28 | 18 |
 
 An accepted deviation is an entry of `testdata/deviations.json`, which records a ruling.
@@ -35,7 +35,7 @@ The register holds one entry for each accepted comparison, so the accepted compa
 
 ## Deviations
 
-The run reports 789 deviations in 75 groups. One group is one capture, one method and one vector set.
+The run reports 785 deviations in 74 groups. One group is one capture, one method and one vector set.
 
 This file is tracked in git, so the table holds at most 3 deviations of each group. The `Deviations` column counts the whole group.
 `conformance.log` holds every deviation, `make conformance` writes it in CI, and the conformance job uploads it as an artifact.
@@ -123,9 +123,6 @@ This file is tracked in git, so the table holds at most 3 deviations of each gro
 | `sigalg-grease.pcapng` | per-packet | JA4L | 3 | `sigalg-grease.pcapng/4/JA4L.1` | the library produces a value the vector does not hold (accepted) | (none) | `303_64` |
 | `sigalg-grease.pcapng` | per-packet | JA4LS | 2 | `sigalg-grease.pcapng/17/JA4LS.1` | the vector holds a value the library does not produce (accepted) | `5403_120_40492` | (none) |
 | `sigalg-grease.pcapng` | per-packet | JA4LS | 2 | `sigalg-grease.pcapng/2/JA4LS.1` | the library produces a value the vector does not hold (accepted) | (none) | `5403_120` |
-| `sigalg-grease.pcapng` | per-stream | JA4 | 4 | `sigalg-grease.pcapng/0/JA4.1` | the vector holds a value the library does not produce (accepted) | `t13d1517h2_8daaf6152771_cb7bf5808d99` | (none) |
-| `sigalg-grease.pcapng` | per-stream | JA4 | 4 | `sigalg-grease.pcapng/0/JA4_o.1` | the vector holds a value the library does not produce (accepted) | `t13d1517h2_acb858a92679_88bf22a3e888` | (none) |
-| `sigalg-grease.pcapng` | per-stream | JA4 | 4 | `sigalg-grease.pcapng/0/JA4_r.1` | the vector holds a value the library does not produce (accepted) | `t13d1517h2_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0017,001b,0023,002b,002d,0033,44cd,ca34,fe0d,ff01_0904,0905,0906,0403,0804,0401,0503,0805,0501,0806,0601` | (none) |
 | `single-packets.pcap` | per-packet | JA4H | 11 | `single-packets.pcap/1/JA4H_ro.1` | the two values differ (accepted) | `ge11cr06enus_Accept,Accept-Language,User-Agent,Accept-Encoding,Host,Connection_IDE_IDE=AHWqTUmq5vKag4U1NoZpmbEiY1PYuAYVT8bFXA1KRM6sqXH_QR5G3_2xSz7V6E3B,` | `ge11cr06enus_Accept,Accept-Language,User-Agent,Accept-Encoding,Host,Connection_IDE_IDE=AHWqTUmq5vKag4U1NoZpmbEiY1PYuAYVT8bFXA1KRM6sqXH_QR5G3_2xSz7V6E3B` |
 | `single-packets.pcap` | per-packet | JA4H | 11 | `single-packets.pcap/2/JA4H_ro.1` | the two values differ (accepted) | `ge11cr07enus_Accept,X-Requested-With,Accept-Language,Accept-Encoding,User-Agent,Host,Connection__ga,_gid,_gat,AMCV_A70E15F354E99A260A4C98A4%40AdobeOrg,AMCVS_A70E15F354E99A260A4C98A4%40AdobeOrg,mbox,s_dfa,s_cc,s_ppvl,s_ppv,s_sq,segmentid,aam_uuid,app_promotion__ga=GA1.2.349209205.1532525440,_gid=GA1.2.1042544967.1532525440,_gat=1,AMCV_A70E15F354E99A260A4C98A4%40AdobeOrg=-330454231%7CMCIDTS%7C17738%7CMCMID%7C00834244270283740751404491874386840551%7CMCAAMLH-1533130240%7C3%7CMCAAMB-1533130240%7C6G1ynYcLPuiQxYZrsz_pkqfLG9yMXBpb2zX5dvJdYQJzPXImdj0y%7CMCOPTOUT-1532532640s%7CNONE%7CMCSYNCSOP%7C411-17745%7CMCAID%7CNONE%7CvVersion%7C3.1.2,AMCVS_A70E15F354E99A260A4C98A4%40AdobeOrg=1,mbox=session#f11f91da64134d8183e8dda4dc10aaf4#1532527370|PC#f11f91da64134d8183e8dda4dc10aaf4.22_23#1540301510|check#true#1532525570,s_dfa=shgshg-web-global,s_cc=true,s_ppvl=www.shangri-la.com%2C52%2C52%2C499%2C1350%2C498%2C1350%2C615%2C1%2CL,s_ppv=www.shangri-la.com%2C48%2C48%2C498%2C1350%2C498%2C1350%2C615%2C1%2CL,s_sq=%5B%5BB%5D%5D,segmentid=segment%3DC%2Csegment%3Dtesting,aam_uuid=01107346641427687611431242460084872101,app_promotion=1,` | `ge11cr07enus_Accept,X-Requested-With,Accept-Language,Accept-Encoding,User-Agent,Host,Connection__ga,_gid,_gat,AMCV_A70E15F354E99A260A4C98A4%40AdobeOrg,AMCVS_A70E15F354E99A260A4C98A4%40AdobeOrg,mbox,s_dfa,s_cc,s_ppvl,s_ppv,s_sq,segmentid,aam_uuid,app_promotion__ga=GA1.2.349209205.1532525440,_gid=GA1.2.1042544967.1532525440,_gat=1,AMCV_A70E15F354E99A260A4C98A4%40AdobeOrg=-330454231%7CMCIDTS%7C17738%7CMCMID%7C00834244270283740751404491874386840551%7CMCAAMLH-1533130240%7C3%7CMCAAMB-1533130240%7C6G1ynYcLPuiQxYZrsz_pkqfLG9yMXBpb2zX5dvJdYQJzPXImdj0y%7CMCOPTOUT-1532532640s%7CNONE%7CMCSYNCSOP%7C411-17745%7CMCAID%7CNONE%7CvVersion%7C3.1.2,AMCVS_A70E15F354E99A260A4C98A4%40AdobeOrg=1,mbox=session#f11f91da64134d8183e8dda4dc10aaf4#1532527370|PC#f11f91da64134d8183e8dda4dc10aaf4.22_23#1540301510|check#true#1532525570,s_dfa=shgshg-web-global,s_cc=true,s_ppvl=www.shangri-la.com%2C52%2C52%2C499%2C1350%2C498%2C1350%2C615%2C1%2CL,s_ppv=www.shangri-la.com%2C48%2C48%2C498%2C1350%2C498%2C1350%2C615%2C1%2CL,s_sq=%5B%5BB%5D%5D,segmentid=segment%3DC%2Csegment%3Dtesting,aam_uuid=01107346641427687611431242460084872101,app_promotion=1` |
 | `single-packets.pcap` | per-packet | JA4H | 11 | `single-packets.pcap/3/JA4H_r.1` | the two values differ (accepted) | `ge11nr06enus_Accept,Accept-Language,User-Agent,Accept-Encoding,Host,Connection__` | `ge11nr06enus_Accept,Accept-Language,User-Agent,Accept-Encoding,Host,Connection_` |
@@ -599,7 +596,7 @@ The table holds one row for each capture and each method. A row records `not app
 | `quic-with-several-tls-frames.pcapng` | JA4TS | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the capture. |
 | `quic-with-several-tls-frames.pcapng` | JA4D | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the capture. |
 | `quic-with-several-tls-frames.pcapng` | JA4D6 | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the capture. |
-| `sigalg-grease.pcapng` | JA4 | per-stream | deviation | 0 | 4 | — |
+| `sigalg-grease.pcapng` | JA4 | per-stream | match | 4 | 0 | — |
 | `sigalg-grease.pcapng` | JA4S | per-packet and per-stream | match | 4 | 0 | — |
 | `sigalg-grease.pcapng` | JA4H | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
 | `sigalg-grease.pcapng` | JA4X | — | not applicable | 0 | 0 | No vector of the corpus holds a value for the method on the capture. |
