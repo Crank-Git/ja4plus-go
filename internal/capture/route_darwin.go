@@ -115,6 +115,33 @@ func routeTable() ([]routeEntry, error) {
 	return entries, nil
 }
 
+// hostRoute reads the addresses of the host before the routing table. macOS routes an
+// address of the host through `lo0` with a row that carries `RTF_IFSCOPE`, and
+// `routeTable` skips that row. `route -n get` of macOS 27.0.1 names `lo0` and the flags
+// `LOCAL,IFSCOPE` for an address of `en0`, measured on 2026-10-01 UTC.
+func hostRoute(target netip.Addr) (routeEntry, error) {
+	local, loopback, err := localAddresses()
+	if err != nil {
+		return routeEntry{}, err
+	}
+
+	if entry, isLocal, err := selectLocalRoute(local, loopback, target); isLocal {
+		return entry, err
+	}
+
+	entries, err := routeTable()
+	if err != nil {
+		return routeEntry{}, err
+	}
+
+	entry, found := selectRoute(entries, target)
+	if !found {
+		return routeEntry{}, fmt.Errorf("capture: the host states no route to %v", target)
+	}
+
+	return entry, nil
+}
+
 // neighborTable reads the routes that carry `RTF_LLINFO`, which `arp -a` reads too. The
 // gateway of each such route is the link-layer address of the neighbor.
 func neighborTable() ([]neighborEntry, error) {

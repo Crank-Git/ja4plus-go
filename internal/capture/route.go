@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -33,6 +34,9 @@ type routeEntry struct {
 	prefix  netip.Prefix
 	gateway netip.Addr
 	metric  int
+	// source is the source address that the row states. It is the zero Addr when the
+	// addresses of the interface decide the source.
+	source netip.Addr
 }
 
 // selectRoute returns the row with the longest prefix that holds the target, and the
@@ -66,14 +70,9 @@ func LookupRoute(target netip.Addr) (Route, error) {
 		return Route{}, fmt.Errorf("capture: the target %v is no IPv4 address", target)
 	}
 
-	entries, err := routeTable()
+	entry, err := hostRoute(target)
 	if err != nil {
 		return Route{}, err
-	}
-
-	entry, found := selectRoute(entries, target)
-	if !found {
-		return Route{}, fmt.Errorf("capture: the host states no route to %v", target)
 	}
 
 	iface, err := net.InterfaceByName(entry.iface)
@@ -91,7 +90,11 @@ func LookupRoute(target netip.Addr) (Route, error) {
 		hop = entry.gateway
 	}
 
-	source, found := sourceAddress(addrs, hop)
+	source, found := entry.source, entry.source.IsValid()
+	if !found {
+		source, found = sourceAddress(addrs, hop)
+	}
+
 	if !found {
 		return Route{}, fmt.Errorf("capture: the interface %s holds no IPv4 address", entry.iface)
 	}
@@ -213,6 +216,88 @@ func parseLinuxRoutes(content string) []routeEntry {
 	}
 
 	return entries
+}
+
+// selectLinuxRoute returns the row that the kernel of Linux selects for the target.
+//
+// The kernel reads the `local` table before the `main` table, and `/proc/net/route`
+// states the `main` table alone. The `local` table routes 127.0.0.0/8 and each address of
+// the host itself through the loopback interface, so this function reads those targets
+// first. Content is the text of `/proc/net/route`, local holds the IPv4 addresses of the
+// host, and loopback names its loopback interface. It returns an error when no row
+// reaches the target, and when a loopback target finds no loopback interface.
+func selectLinuxRoute(content string, local []netip.Addr, loopback string, target netip.Addr) (routeEntry, error) {
+	if entry, isLocal, err := selectLocalRoute(local, loopback, target); isLocal {
+		return entry, err
+	}
+
+	entry, found := selectRoute(parseLinuxRoutes(content), target)
+	if !found {
+		return routeEntry{}, fmt.Errorf("capture: the host states no route to %v", target)
+	}
+
+	return entry, nil
+}
+
+// selectLocalRoute returns the loopback row for a target in 127.0.0.0/8 or a target that
+// local holds, and true. The kernel sends a packet to such a target through the loopback
+// interface, whatever row of the other tables holds it. It returns false for every other
+// target, and an error when the host holds no loopback interface.
+func selectLocalRoute(local []netip.Addr, loopback string, target netip.Addr) (routeEntry, bool, error) {
+	isLocal := slices.Contains(local, target)
+	if !target.IsLoopback() && !isLocal {
+		return routeEntry{}, false, nil
+	}
+
+	if loopback == "" {
+		return routeEntry{}, true, fmt.Errorf("capture: the host holds no loopback interface for %v", target)
+	}
+
+	entry := routeEntry{iface: loopback, prefix: netip.PrefixFrom(target, 32)}
+	if isLocal {
+		entry.source = target
+	}
+
+	return entry, true, nil
+}
+
+// localAddresses returns the IPv4 addresses of the host and the name of its loopback
+// interface.
+func localAddresses() ([]netip.Addr, string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, "", fmt.Errorf("capture: the host states no interface: %w", err)
+	}
+
+	var (
+		local    []netip.Addr
+		loopback string
+	)
+
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagLoopback != 0 && loopback == "" {
+			loopback = iface.Name
+		}
+
+		// An interface that states no address holds no address of the host.
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, addr := range addrs {
+			network, isNetwork := addr.(*net.IPNet)
+			if !isNetwork {
+				continue
+			}
+
+			if address, isAddr := netip.AddrFromSlice(network.IP); isAddr && address.Unmap().Is4() {
+				local = append(local, address.Unmap())
+			}
+		}
+	}
+
+	return local, loopback, nil
 }
 
 // linuxHexAddr reads one address field of `/proc/net/route`.

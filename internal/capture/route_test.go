@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/netip"
 	"runtime"
+	"slices"
 	"testing"
 )
 
@@ -73,6 +74,66 @@ func TestTheRouteSelectionReadsTheLongestPrefixAndThenTheLowestMetric(t *testing
 	}
 }
 
+// The kernel of Linux reads the `local` table before the `main` table, and
+// `/proc/net/route` states the `main` table alone. So the lookup reads 127.0.0.0/8 and
+// each address of the host itself, and it names the loopback interface for them. CI run
+// 36817151240 routed 127.0.0.1 through the default route before #796.
+func TestTheLinuxRouteSelectionReadsTheLocalTableBeforeTheMainTable(t *testing.T) {
+	littleEndianHost(t)
+
+	local := []netip.Addr{netip.MustParseAddr("127.0.0.1"), netip.MustParseAddr("192.168.1.20")}
+
+	cases := []struct {
+		name    string
+		target  string
+		iface   string
+		gateway string
+		source  string
+	}{
+		{name: "a loopback address", target: "127.0.0.1", iface: "lo", source: "127.0.0.1"},
+		{name: "a loopback address the host holds no address for", target: "127.9.9.9", iface: "lo"},
+		{name: "an address of the host", target: "192.168.1.20", iface: "lo", source: "192.168.1.20"},
+		{name: "a remote address", target: "203.0.113.9", iface: "eth0", gateway: "192.168.1.1"},
+		{name: "an address of the link", target: "192.168.1.50", iface: "eth0"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			entry, err := selectLinuxRoute(linuxRouteFixture, local, "lo", netip.MustParseAddr(tc.target))
+			if err != nil {
+				t.Fatalf("selectLinuxRoute: %v", err)
+			}
+
+			if entry.iface != tc.iface || entry.gateway.String() != addrString(tc.gateway) ||
+				entry.source.String() != addrString(tc.source) {
+				t.Errorf("%s routes as %+v", tc.target, entry)
+			}
+		})
+	}
+}
+
+func TestTheLinuxRouteSelectionRefusesATargetThatNoRowReaches(t *testing.T) {
+	malformed := "Iface\tDestination\nbroken\tzz\t00000000\t0001\t0\t0\t0\t00FFFFFF\neth0\n"
+
+	if entry, err := selectLinuxRoute(malformed, nil, "lo", netip.MustParseAddr("203.0.113.9")); err == nil {
+		t.Errorf("a malformed table routes the target as %+v", entry)
+	}
+
+	if entry, err := selectLinuxRoute("", nil, "", netip.MustParseAddr("127.0.0.1")); err == nil {
+		t.Errorf("a host with no loopback interface routes the loopback address as %+v", entry)
+	}
+}
+
+// addrString returns the text of the zero Addr for an empty string, so a case states an
+// absent address as an empty field.
+func addrString(text string) string {
+	if text == "" {
+		return netip.Addr{}.String()
+	}
+
+	return netip.MustParseAddr(text).String()
+}
+
 func TestTheLinuxNeighborReaderReadsEachCompleteRow(t *testing.T) {
 	entries := parseLinuxNeighbors(linuxNeighborFixture)
 	if len(entries) != 2 {
@@ -125,6 +186,33 @@ func TestLookupRouteReadsTheRoutingTableOfTheHost(t *testing.T) {
 
 	if !route.Loopback || route.Source != netip.MustParseAddr("127.0.0.1") {
 		t.Errorf("the loopback address routes as %+v", route)
+	}
+}
+
+// The kernel of Linux and the kernel of macOS each send a packet to an address of the host
+// through the loopback interface, and the main routing table of neither one states that.
+func TestLookupRouteRoutesAnAddressOfTheHostThroughTheLoopbackInterface(t *testing.T) {
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		t.Skip("the scan reads a routing table on Linux and macOS alone")
+	}
+
+	local, _, err := localAddresses()
+	if err != nil {
+		t.Fatalf("localAddresses: %v", err)
+	}
+
+	index := slices.IndexFunc(local, func(address netip.Addr) bool { return !address.IsLoopback() })
+	if index < 0 {
+		t.Skip("the host holds no IPv4 address outside 127.0.0.0/8")
+	}
+
+	route, err := LookupRoute(local[index])
+	if err != nil {
+		t.Fatalf("LookupRoute: %v", err)
+	}
+
+	if !route.Loopback || route.Source != local[index] {
+		t.Errorf("the address %v of the host routes as %+v", local[index], route)
 	}
 }
 
