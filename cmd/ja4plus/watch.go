@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/list"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -27,10 +28,19 @@ import (
 // FR-capture-8 states the default.
 const defaultStatsInterval = 60 * time.Second
 
+// watchRemoteLookupDeadline bounds one remote lookup of `watch`.
+//
+// The lookup runs on the goroutine that reads the interface, so a slow lookup service stops
+// the capture for the duration of the request. The kernel buffer fills, and the drop counter
+// counts the packets that it loses. `analyze` keeps the 10 second client timeout of `ja4db`,
+// because a capture file loses no packet while the program waits. The batch #807 gate chose
+// the value, and issue #804 is the reversal path.
+const watchRemoteLookupDeadline = 2 * time.Second
+
 // watchUsage states the option list of the watch command.
 // The parser returns it with each refusal, because the operator repairs the command line.
 const watchUsage = "Usage: ja4plus watch --interface <name> [--bpf <filter>] [--json|--csv] " +
-	"[--types ja4,ja4t] [--lookup] [--stats-interval <seconds>]"
+	"[--types ja4,ja4t] [--lookup] [--lookup-remote] [--stats-interval <seconds>]"
 
 // watchOptions holds every option of the watch command.
 //
@@ -50,6 +60,9 @@ type watchOptions struct {
 	outputCSV bool
 	// lookup reports whether each fingerprint carries the application of the database.
 	lookup bool
+	// lookupRemote reports whether the operator names `--lookup-remote`. That option asks for
+	// the lookup and permits the remote request, and `newIdentifier` states the rule.
+	lookupRemote bool
 	// statsInterval holds the seconds between two statistics lines. A value of 0 writes one
 	// line at exit, and FR-capture-9 states that rule.
 	statsInterval time.Duration
@@ -133,6 +146,8 @@ func parseWatchArgs(args []string) (watchOptions, error) {
 			options.outputCSV = true
 		case "--lookup":
 			options.lookup = true
+		case "--lookup-remote":
+			options.lookupRemote = true
 		default:
 			return watchOptions{}, fmt.Errorf("unknown option: %s\n%s", args[i], watchUsage)
 		}
@@ -253,7 +268,7 @@ func runMonitor(handle capture.Handle, options watchOptions) error {
 	stop, release := installWatchStopHandler()
 	defer release()
 
-	return newMonitor(options, stop, os.Stdout, os.Stderr, time.Now).run(handle)
+	return newMonitor(options, stop, os.Stdout, os.Stderr, time.Now, lookupFromJA4DB).run(handle)
 }
 
 // The monitor loop, the signals and the connection table. Issue #80 builds them, and
@@ -289,6 +304,24 @@ const watchSecondSignalStatus = 1
 // atomic read costs no lock.
 type stopRequest struct {
 	requested atomic.Bool
+
+	// once makes the context on first use, so the zero value of the type is ready to use.
+	once sync.Once
+	// ctx ends at the first stop request, so a remote lookup in flight ends with it.
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+// init makes the context of the stop request.
+func (s *stopRequest) init() {
+	s.once.Do(func() { s.ctx, s.cancel = context.WithCancel(context.Background()) })
+}
+
+// context returns the context that the first stop request cancels.
+func (s *stopRequest) context() context.Context {
+	s.init()
+
+	return s.ctx
 }
 
 // request sets the stop request, and it returns.
@@ -297,6 +330,11 @@ type stopRequest struct {
 // FR-capture-20 prints.
 func (s *stopRequest) request() {
 	s.requested.Store(true)
+
+	// The cancel wakes the monitor goroutine when it waits on a remote lookup. A stop
+	// request that waited for the lookup would hold the run for the whole deadline.
+	s.init()
+	s.cancel()
 }
 
 // isRequested reports whether a termination signal arrived.
@@ -709,14 +747,21 @@ type monitor struct {
 // moves.
 // Verified against: <https://pkg.go.dev/time>, read from `go doc time` at go1.26.5 on
 // 2026-08-14.
+//
+// The remote function answers the remote lookup, so a test passes one that reaches no
+// network. A nil function sends no remote request.
 func newMonitor(
 	options watchOptions,
 	stop *stopRequest,
 	out io.Writer,
 	errOut io.Writer,
 	now func() time.Time,
+	remote remoteLookupFunc,
 ) *monitor {
 	started := now()
+
+	identify := newIdentifier(options.lookup, options.lookupRemote, os.Getenv, errOut, remote).
+		bounded(stop.context(), watchRemoteLookupDeadline)
 
 	instance := &monitor{
 		processor:      ja4plus.NewProcessor(),
@@ -725,7 +770,7 @@ func newMonitor(
 		now:            now,
 		startedAt:      started,
 		lastDropSample: started,
-		results:        newResultWriter(out, options),
+		results:        newResultWriter(out, options, identify),
 		errOut:         errOut,
 		options:        options,
 	}
@@ -953,29 +998,16 @@ type resultWriter interface {
 }
 
 // newResultWriter returns the writer of the format that the options name.
-func newResultWriter(out io.Writer, options watchOptions) resultWriter {
+// A nil identifier writes no application column.
+func newResultWriter(out io.Writer, options watchOptions, identify *identifier) resultWriter {
 	switch {
 	case options.outputJSON:
-		return &jsonResultWriter{out: out, lookup: options.lookup}
+		return &jsonResultWriter{out: out, identify: identify}
 	case options.outputCSV:
-		return &csvResultWriter{writer: csv.NewWriter(out), lookup: options.lookup}
+		return &csvResultWriter{writer: csv.NewWriter(out), identify: identify}
 	default:
-		return &textResultWriter{out: out, lookup: options.lookup}
+		return &textResultWriter{out: out, identify: identify}
 	}
-}
-
-// monitorApplication returns the application that the database holds for the fingerprint,
-// and an empty string for a fingerprint the database does not hold.
-func monitorApplication(fingerprint string, lookup bool) string {
-	if !lookup {
-		return ""
-	}
-
-	if record := ja4plus.LookupFingerprint(fingerprint); record != nil {
-		return record.Application
-	}
-
-	return ""
 }
 
 // monitorTypeWidth is the column width of the method name of one text line.
@@ -988,8 +1020,8 @@ const monitorTypeWidth = 6
 // a `tabwriter`, which reads every row before it writes the first one. A monitor writes
 // each line as the packet arrives, so it holds no row back.
 type textResultWriter struct {
-	out    io.Writer
-	lookup bool
+	out      io.Writer
+	identify *identifier
 }
 
 func (w *textResultWriter) header() error { return nil }
@@ -998,7 +1030,7 @@ func (w *textResultWriter) write(result ja4plus.FingerprintResult) error {
 	source := fmt.Sprintf("%s:%d", result.SrcIP, result.SrcPort)
 	destination := fmt.Sprintf("%s:%d", result.DstIP, result.DstPort)
 
-	if !w.lookup {
+	if w.identify == nil {
 		_, err := fmt.Fprintf(w.out, "%-*s  %s -> %s  %s\n",
 			monitorTypeWidth, result.Type, source, destination, result.Fingerprint)
 
@@ -1007,7 +1039,7 @@ func (w *textResultWriter) write(result ja4plus.FingerprintResult) error {
 
 	_, err := fmt.Fprintf(w.out, "%-*s  %s -> %s  %s  %s\n",
 		monitorTypeWidth, result.Type, source, destination, result.Fingerprint,
-		monitorApplication(result.Fingerprint, w.lookup))
+		w.identify.application(result.Fingerprint))
 
 	return err
 }
@@ -1020,8 +1052,8 @@ func (w *textResultWriter) flush() error { return nil }
 // monitor has no end until the operator stops it, so an array would reach the reader at
 // exit alone. One object per line reaches the reader of a running monitor.
 type jsonResultWriter struct {
-	out    io.Writer
-	lookup bool
+	out      io.Writer
+	identify *identifier
 }
 
 func (w *jsonResultWriter) header() error { return nil }
@@ -1035,7 +1067,7 @@ func (w *jsonResultWriter) write(result ja4plus.FingerprintResult) error {
 		DstPort:     result.DstPort,
 		Fingerprint: result.Fingerprint,
 		Timestamp:   result.Timestamp.Format(time.RFC3339),
-		Application: monitorApplication(result.Fingerprint, w.lookup),
+		Application: w.identify.application(result.Fingerprint),
 	}
 
 	// The encoder writes one newline after each value, so each object holds one line.
@@ -1049,13 +1081,13 @@ func (w *jsonResultWriter) flush() error { return nil }
 // The writer flushes each row, because the reader of a running monitor reads a row that
 // sits in a buffer never.
 type csvResultWriter struct {
-	writer *csv.Writer
-	lookup bool
+	writer   *csv.Writer
+	identify *identifier
 }
 
 func (w *csvResultWriter) header() error {
 	header := []string{"type", "src_ip", "src_port", "dst_ip", "dst_port", "fingerprint", "timestamp"}
-	if w.lookup {
+	if w.identify != nil {
 		header = append(header, "application")
 	}
 
@@ -1079,8 +1111,8 @@ func (w *csvResultWriter) write(result ja4plus.FingerprintResult) error {
 		result.Timestamp.Format(time.RFC3339),
 	}
 
-	if w.lookup {
-		row = append(row, monitorApplication(result.Fingerprint, w.lookup))
+	if w.identify != nil {
+		row = append(row, w.identify.application(result.Fingerprint))
 	}
 
 	if err := w.writer.Write(row); err != nil {

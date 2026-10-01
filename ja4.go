@@ -51,6 +51,11 @@ type JA4Fingerprinter struct {
 	// keys holds the recency order of the fragment table, and it names the connection that
 	// the entry bound and the age bound remove.
 	keys boundedKeys
+	// tcpHellos holds the client-to-server segments of a ClientHello that spans more than
+	// one TCP segment, by the direction key of `ja4TCPHelloKey`. #795 added it.
+	tcpHellos map[string]*ja4TCPHello
+	// tcpHelloKeys holds the recency order of tcpHellos, for its entry bound and age bound.
+	tcpHelloKeys boundedKeys
 }
 
 // NewJA4 creates a new JA4Fingerprinter.
@@ -59,6 +64,7 @@ func NewJA4() *JA4Fingerprinter {
 		quicFragments:  make(map[string][]parser.CryptoFragment),
 		dcidToTuple:    make(map[string]string),
 		dcidToReported: make(map[string]string),
+		tcpHellos:      make(map[string]*ja4TCPHello),
 	}
 }
 
@@ -77,6 +83,10 @@ func (f *JA4Fingerprinter) ensure() {
 	if f.dcidToReported == nil {
 		f.dcidToReported = make(map[string]string)
 	}
+
+	if f.tcpHellos == nil {
+		f.tcpHellos = make(map[string]*ja4TCPHello)
+	}
 }
 
 // ProcessPacket processes a packet and returns JA4 fingerprint results.
@@ -87,16 +97,32 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	var srcPort, dstPort uint16
 
 	// Try TCP/TLS first
-	if payload := parser.GetTCPPayload(packet); payload != nil {
+	if tcp := parser.GetTCPLayer(packet); tcp != nil {
 		var err error
-		ch, err = parser.ParseClientHello(payload)
+		if len(tcp.Payload) > 0 {
+			ch, err = parser.ParseClientHello(tcp.Payload)
+		}
+
+		// A ClientHello can span more than one TCP segment, and the segments then
+		// complete it. #795 records the defect that this step repairs.
+		if ch == nil {
+			assembled, followed, assembleErr := f.collectTCPHello(packet, tcp)
+			if assembled != nil {
+				ch, err = assembled, nil
+			} else if followed {
+				// The segment belongs to a hello that the table follows, so its truncation
+				// error describes that hello and no defect of the segment. The assembled
+				// bytes decide the error instead.
+				err = assembleErr
+			}
+		}
+
 		if err != nil {
 			return nil, err
 		}
-		if tcp := parser.GetTCPLayer(packet); tcp != nil {
-			srcPort = uint16(tcp.SrcPort)
-			dstPort = uint16(tcp.DstPort)
-		}
+
+		srcPort = uint16(tcp.SrcPort)
+		dstPort = uint16(tcp.DstPort)
 	}
 
 	// Try QUIC in UDP packets with multi-packet CRYPTO frame accumulation
@@ -201,7 +227,8 @@ func (f *JA4Fingerprinter) ProcessPacket(packet gopacket.Packet) ([]FingerprintR
 	return []FingerprintResult{result}, nil
 }
 
-// Reset clears the QUIC fragment table and the connection identifier table.
+// Reset clears the QUIC fragment table, the connection identifier table and the partial
+// ClientHello table of TCP.
 // The fingerprinter keeps no result, because ProcessPacket returns each result to the
 // caller. Issue #25 removed the results slice, which grew without a bound.
 func (f *JA4Fingerprinter) Reset() {
@@ -211,6 +238,8 @@ func (f *JA4Fingerprinter) Reset() {
 	f.dcidToTuple = make(map[string]string)
 	f.dcidToReported = make(map[string]string)
 	f.keys.reset()
+	f.tcpHellos = make(map[string]*ja4TCPHello)
+	f.tcpHelloKeys.reset()
 }
 
 // openConnection records one datagram of the connection, and it holds the two bounds.
@@ -255,6 +284,11 @@ func (f *JA4Fingerprinter) CleanupConnection(srcIP string, srcPort uint16, dstIP
 			f.dropConnection(dcid)
 		}
 	}
+
+	// The partial ClientHello table keys one direction by the reported address pair, in the
+	// form of `ja4TCPHelloKey`, so the two keys above name both directions of it.
+	f.dropTCPHello(forward)
+	f.dropTCPHello(reverse)
 }
 
 // ComputeJA4 is a one-shot function that extracts a JA4 fingerprint from a packet.

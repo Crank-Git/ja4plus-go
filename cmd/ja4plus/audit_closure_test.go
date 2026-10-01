@@ -202,7 +202,7 @@ func TestF25_8_WriteCSVReturnsTheErrorOfTheFlush(t *testing.T) {
 	stdout := os.Stdout
 	os.Stdout = write
 
-	produced := writeCSV(results, false)
+	produced := writeCSV(results, nil)
 
 	os.Stdout = stdout
 
