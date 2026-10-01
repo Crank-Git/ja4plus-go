@@ -21,7 +21,7 @@ const maxJA4TSDelays = 10
 
 // ja4tsSynAckTimeout drops a connection that receives no SYN-ACK for two minutes.
 // The same deleted FoxIO sentence states it, `docs/specs/foxio/JA4T.md` R22 records the
-// Zeek test at `zeek/ja4t/main.zeek:162`, and the port holds `SYN_ACK_TIMEOUT_SECONDS` at
+// Zeek test at `zeek/scripts/fingerprints/ja4t/main.zeek:96`, and the port holds `SYN_ACK_TIMEOUT_SECONDS` at
 // `ja4plus/fingerprinters/ja4ts.py:25` of tag `v1.1.0`.
 const ja4tsSynAckTimeout = 120 * time.Second
 
@@ -93,7 +93,7 @@ func (f *JA4TSFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprin
 	now := parser.GetPacketTimestamp(packet)
 
 	// The RST branch comes first, because a RST packet ends the connection and
-	// `zeek/ja4t/main.zeek:167` reads the RST bit before it reads the SYN-ACK flags.
+	// `zeek/scripts/fingerprints/ja4t/main.zeek:101` reads the RST bit before it reads the SYN-ACK flags.
 	if tcp.RST {
 		return f.resetResults(packet, tcp, now), nil
 	}
@@ -143,7 +143,7 @@ func ja4tsConnKey(srcIP string, srcPort uint16, dstIP string, dstPort uint16) st
 // It rounds to the nearest second, half away from zero, which is the Wireshark reading of
 // the reference split that `docs/specs/foxio/JA4T.md` R24 records. Wireshark calls the C
 // `round` at `wireshark/source/packet-ja4.c:277`, and Zeek truncates at
-// `zeek/ja4t/main.zeek:180`. R24 names issue #18, which recorded the split. **Issue #56
+// `zeek/scripts/fingerprints/ja4t/main.zeek:114`. R24 names issue #18, which recorded the split. **Issue #56
 // holds the reading this library follows**, and the maintainer read the port's shipped
 // rule on 2026-08-13. The port holds `_delay_seconds` at
 // `ja4plus/fingerprinters/ja4ts.py:43` of tag `v1.1.0`.
@@ -207,8 +207,8 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 	// Three implementations hold three readings. Wireshark stores no time after the tenth
 	// at `wireshark/source/packet-ja4.c:1290-1291`, and it reads the frozen tenth time at
 	// `wireshark/source/packet-ja4.c:694`. This library reads the eleventh time instead.
-	// Zeek assigns `last_ts` on every SYN-ACK at `zeek/ja4t/main.zeek:183`. Zeek stops
-	// setting the next packet threshold at `zeek/ja4t/main.zeek:185-189`, so it observes
+	// Zeek assigns `last_ts` on every SYN-ACK at `zeek/scripts/fingerprints/ja4t/main.zeek:117`. Zeek stops
+	// setting the next packet threshold at `zeek/scripts/fingerprints/ja4t/main.zeek:119-124`, so it observes
 	// no RST of such a connection and writes no reset value.
 	//
 	// No capture of the FoxIO corpus reaches an eleventh SYN-ACK, so
@@ -227,8 +227,8 @@ func (f *JA4TSFingerprinter) recordSynAck(key string, now time.Time, prefix stri
 // Both FoxIO implementations write the reset letter inside the delay branch.
 // `wireshark/source/packet-ja4.c:684` opens that branch on `syn_ack_count > 1`, and
 // `wireshark/source/packet-ja4.c:693` reads `rst_time` inside it.
-// `zeek/ja4t/main.zeek:229` opens that branch on a delay list that holds a value, and
-// `zeek/ja4t/main.zeek:232` reads `rst_ts` inside it.
+// `zeek/scripts/fingerprints/ja4t/main.zeek:165` opens that branch on a delay list that holds a value, and
+// `zeek/scripts/fingerprints/ja4t/main.zeek:168` reads `rst_ts` inside it.
 //
 // Neither branch reaches the four-part value, and each implementation writes that value
 // above the branch. So a connection with one SYN-ACK still reaches a JA4TS value.

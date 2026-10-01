@@ -8,8 +8,8 @@ seven files, and it reproduces each one without a change.
 `7ff7b3275a9d084ab6884559a6e58a9cee08f19d`.** That commit is the parent of `b6f3ff4`, and
 it is dated 2024-02-22.
 
-**The commit above is not the pin.** `testdata/foxio-reading.pin` holds the reading pin,
-`27f0cbf9fd3000c072f82a0f7d0361dc99acf6c8`. The two commits differ on purpose. Five of the
+**The commit above is not the pin.** `testdata/foxio.pin` holds the pin,
+`16b96d95c220762cf658f67d678cda2aac95c81e`. The two commits differ on purpose. Five of the
 seven files exist at no commit after `b6f3ff4`, so the pin cannot supply them.
 
 Two files carry the same name at the pin, and the content differs from the recovered

@@ -21,7 +21,7 @@ import (
 // ruled the header block terminator of `internal/parser/http.go`, which answers where a
 // JA4H value ends its header block. This gate answers a different question: does the
 // reference route the packet to a cache that holds no measurement point.
-// `python/common.py:78` routes on `hl`. `python/ja4.py:398` sets `hl` from the layer name
+// `python/common.py:78` routes on `hl`. `python/ja4.py:389` sets `hl` from the layer name
 // that tshark reports. So the Wireshark HTTP dissector decides.
 //
 // **Wireshark v4.6.0 reads `\n\r\n` as a complete header block.** `epan/tvbuff.c:4203`

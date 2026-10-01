@@ -28,8 +28,7 @@ import (
 // constant here would break the rule this file holds.
 
 // foxioCorpusReferenceDir holds the FoxIO repository at the pin.
-// The step of `scripts/fetch-corpus.sh` that `reference_is_complete` guards writes it,
-// and `make corpus` runs that script.
+// `scripts/fetch-corpus.sh` writes it, and `make corpus` runs that script.
 const foxioCorpusReferenceDir = "testdata/foxio/reference"
 
 // `foxio_deleted_specs_test.go` declares foxioDeletedSpecsPage, and that page is base 4.
@@ -45,8 +44,12 @@ const foxioCorpusReferenceDir = "testdata/foxio/reference"
 // prose, and neither one names a file this project cites. The FoxIO tree holds `conn.log`
 // at three paths under `zeek/tests/Traces/`, so a bare-name rule resolves it under no
 // single path. It holds `ssl.log` at one path, so that name would resolve by accident.
+//
+// The set holds `cc` and `h`, because the Zeek plugin at `16b96d95` is C++ under
+// `zeek/src/`. #801 moved each Zeek citation there, and a citation outside the set is a
+// citation that no guard reads.
 var foxioCitationExtension = map[string]bool{
-	"c": true, "csv": true, "go": true, "json": true, "md": true,
+	"c": true, "cc": true, "csv": true, "go": true, "h": true, "json": true, "md": true,
 	"pcap": true, "pcapng": true, "pin": true, "png": true, "py": true,
 	"rs": true, "sh": true, "snap": true, "toml": true, "txt": true,
 	"yml": true, "zeek": true,
@@ -842,14 +845,13 @@ func foxioSortedKeys(set map[string]bool) string {
 	return strings.Join(names, ", ")
 }
 
-// #797 — a citation resolves under the reference tree of `testdata/foxio-reading.pin`, and
-// never under the commit of the vector pin. The maintainer ruled on 2026-10-01 UTC that every
-// reading stays at the reading pin, and #801 rereads each one at the vector pin.
+// #801 — a citation resolves under the reference tree of `testdata/foxio.pin`. #797 read
+// the reference tree at a second pin, `27f0cbf9`, and #801 removed that pin.
 //
 // FoxIO rewrote the cited line between the two commits, so the line text separates them.
-// `rust/ja4/src/tcp.rs:136` holds the JA4T format string at the reading pin, and the vector
-// pin holds `opts.push_str("00");` at that line.
-func TestACitationResolvesUnderTheReferenceTreeOfTheReadingPin(t *testing.T) {
+// `rust/ja4/src/tcp.rs:136` holds `opts.push_str("00");` at `16b96d95`, and it held the
+// JA4T format string at `27f0cbf9`.
+func TestACitationResolvesUnderTheReferenceTreeOfThePin(t *testing.T) {
 	resolver := newFoxioResolver(t)
 	if !resolver.corpus {
 		t.Skip(foxioCorpusAbsentMessage)
@@ -874,8 +876,134 @@ func TestACitationResolvesUnderTheReferenceTreeOfTheReadingPin(t *testing.T) {
 	}
 
 	lines := strings.Split(string(content), "\n")
-	if len(lines) < citation.number || !strings.Contains(lines[citation.number-1], `"{}_{}_{}_{}",`) {
-		t.Errorf("%s does not hold the JA4T format string at line %d, so the reference tree is not at the reading pin",
+	if len(lines) < citation.number || !strings.Contains(lines[citation.number-1], `opts.push_str("00");`) {
+		t.Errorf("%s does not hold the JA4T empty-option write at line %d, so the reference tree is not at the pin",
 			resolution.file, citation.number)
+	}
+}
+
+// foxioRegisterCitationShape matches a `file:line` token of a register reason. A reason
+// writes a citation in a code span or as bare prose, so the pattern reads both forms.
+var foxioRegisterCitationShape = regexp.MustCompile(`[A-Za-z0-9_./-]+:[0-9]+(?:-[0-9]+)?`)
+
+// foxioRegisterCitationAnchor names the text that each cited line of
+// `testdata/deviations.json` holds at the pin.
+//
+// A line bound alone misses a moved line. #801 moved the pin from `27f0cbf9` to
+// `16b96d95`, and FoxIO removed nine lines above `python/ja4.py:340`. Each old line number
+// then named a line inside the file, and that line held different code. A reason that adds
+// a citation adds its anchor here, and the test fails until it does.
+var foxioRegisterCitationAnchor = map[string]string{
+	"python/ja4.py:331":                          `delete_keys(['JA4L-S', 'JA4L-C'], final)`,
+	"testdata/foxio/reference/python/ja4.py:505": `if 'tcp' in x['protos']:`,
+	"python/ja4.py:601":                          `#finalize_ja4ssh()`,
+	"python/ja4ssh.py:8":                         `ja4sh_stats = {`,
+	"wireshark/source/packet-ja4.c:1266":         `if (tcp_flags == 0x02) {`,
+	"wireshark/source/packet-ja4.c:1279":         `if (tcp_flags == 0x012) {`,
+	"wireshark/source/packet-ja4.c:1296":         `(tcp_flags == 0x004)`,
+	"wireshark/source/packet-ja4.c:1302":         `(tcp_flags == 0x010)`,
+	"wireshark/source/packet-ja4.c:1362-1394":    `!nstime_is_zero(&conn->timestamp_E)`,
+	"wireshark/source/packet-ja4.c:1373":         `latency2.nsecs / 2 / 1000`,
+	"wireshark/source/packet-ja4.c:1408":         `"quic.long.packet_type"`,
+	"wireshark/source/packet-ja4.c:1426-1430":    `get_value_ptr(field)) == 2`,
+	"wireshark/source/packet-ja4.c:1600":         `conn_lookup(ja4_data.proto, stream)`,
+}
+
+// foxioRegisterCitation returns each distinct path-shaped `file:line` token of the reasons
+// of `testdata/deviations.json`.
+func foxioRegisterCitation(t *testing.T) []foxioCitation {
+	t.Helper()
+
+	seen := map[string]bool{}
+
+	var citations []foxioCitation
+
+	for _, entry := range readDeviationRegister(t) {
+		for _, span := range foxioRegisterCitationShape.FindAllString(entry.Reason, -1) {
+			path, number, ok := foxioPathShaped(span)
+			if !ok || number == 0 || seen[span] {
+				continue
+			}
+
+			seen[span] = true
+			citations = append(citations, foxioCitation{
+				page:   "testdata/deviations.json",
+				span:   span,
+				path:   path,
+				number: number,
+			})
+		}
+	}
+
+	// A pattern that matched nothing would pass both tests below and read no citation.
+	if len(citations) == 0 {
+		t.Fatal("testdata/deviations.json holds no `file:line` citation in a reason")
+	}
+
+	return citations
+}
+
+// #801 — the anchor table names each `file:line` citation of the register, and no other
+// citation. The test reads no corpus, so it holds the table on every checkout.
+func TestTheRegisterCitationAnchorTableMatchesTheRegister(t *testing.T) {
+	cited := map[string]bool{}
+
+	for _, citation := range foxioRegisterCitation(t) {
+		cited[citation.span] = true
+
+		if _, ok := foxioRegisterCitationAnchor[citation.span]; !ok {
+			t.Errorf("a reason of testdata/deviations.json cites %q, and foxioRegisterCitationAnchor "+
+				"names no text for that line", citation.span)
+		}
+	}
+
+	for span := range foxioRegisterCitationAnchor {
+		if !cited[span] {
+			t.Errorf("foxioRegisterCitationAnchor names %q, and no reason of "+
+				"testdata/deviations.json cites it", span)
+		}
+	}
+}
+
+// #801 — each `file:line` citation of a register reason names a line inside its file at the
+// pin, and that line holds the anchor text. A reason that reads a moved line states a
+// ruling about code that the line no longer holds.
+func TestEachRegisterCitationNamesItsAnchorLineAtThePin(t *testing.T) {
+	resolver := newFoxioResolver(t)
+	if !resolver.corpus {
+		t.Skip(foxioCorpusAbsentMessage)
+	}
+
+	for _, citation := range foxioRegisterCitation(t) {
+		resolution, ok := resolver.resolve(citation)
+		if !ok || resolution.file == "" {
+			t.Errorf("testdata/deviations.json cites %q, and it resolves to no file of a declared base",
+				citation.span)
+
+			continue
+		}
+
+		content, err := os.ReadFile(resolution.file)
+		if err != nil {
+			t.Errorf("testdata/deviations.json cites %q, and %s does not open: %v",
+				citation.span, resolution.file, err)
+
+			continue
+		}
+
+		lines := strings.Split(strings.TrimSuffix(string(content), "\n"), "\n")
+		if citation.number > len(lines) {
+			t.Errorf("testdata/deviations.json cites %q, and %s holds %d lines",
+				citation.span, resolution.file, len(lines))
+
+			continue
+		}
+
+		anchor, ok := foxioRegisterCitationAnchor[citation.span]
+		if ok && !strings.Contains(lines[citation.number-1], anchor) {
+			t.Errorf("testdata/deviations.json cites %q, and line %d of %s holds %q, not %q",
+				citation.span, citation.number, resolution.file,
+				strings.TrimSpace(lines[citation.number-1]), anchor)
+		}
 	}
 }

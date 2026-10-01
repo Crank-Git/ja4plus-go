@@ -17,7 +17,7 @@ import (
 // `## The source ranking` places an image above every implementation.
 //
 // `wireshark/source/packet-ja4.c:1521` tests the field `dhcp.fqdn.name`, so the name
-// decides the character there. `zeek/ja4d/main.zeek:73` tests `options?$client_fqdn`, so
+// decides the character there. `zeek/scripts/fingerprints/ja4d/main.zeek:66` tests `options?$client_fqdn`, so
 // the presence decides it there. The ruling declines the Zeek answer, because the image
 // outranks it. The port ships the same rule at `ja4plus/fingerprinters/ja4d.py:161-165` of
 // tag `v1.1.0`, and the port half of the ruling is `Crank-Git/ja4plus#615`.
