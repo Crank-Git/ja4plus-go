@@ -1233,11 +1233,11 @@ breaking.**
 
 ### Known differences from the Python port
 
-- **The port half of the ALPN ruling has not landed.** `Crank-Git/ja4plus#789` holds it,
-  and that issue was open on 2026-10-01 UTC. A worker builds it on the port branch
-  `issue/789-alpn-ruling`. Go and the port differ on a first ALPN value whose end byte is
-  `0x80` or higher, and on a one-byte printable value that is not alphanumeric. No shared
-  vector holds such a value, so the shared vector set reports no difference.
+- **The port half of the ALPN ruling lands in port version 1.4.0.** `Crank-Git/ja4plus#789`
+  holds it, and Crank-Git/ja4plus#790 merged it into the port's `dev` on 2026-10-01 UTC.
+  Until a user runs port 1.4.0 or later, Go and the port differ on a first ALPN value whose
+  end byte is `0x80` or higher, and on a one-byte printable value that is not alphanumeric.
+  No shared vector holds such a value, so the shared vector set reports no difference.
 - **The JSON output of `ja4plus scan` differs from the JSON output of the port.** That
   difference is the confirmed ruling of #796, and it is not a defect.
 
