@@ -943,7 +943,7 @@ jobs:
       # `.goreleaser.yaml` writes a software bill of materials with `syft`, and no runner
       # image holds it. A snapshot that cannot reach the generator fails on the tool rather
       # than on the configuration.
-      - uses: anchore/sbom-action/download-syft@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+      - uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
 
       # FR-release-35h. `goreleaser check` reads the configuration and it builds nothing, so
       # it names a schema defect before the build spends five cross compilations on it.

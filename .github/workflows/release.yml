@@ -127,7 +127,7 @@ jobs:
 
       # FR-release-35f writes a software bill of materials for every artifact, and `syft` is
       # the generator that `.goreleaser.yaml` names. No runner image holds it.
-      - uses: anchore/sbom-action/download-syft@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+      - uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
 
       # FR-release-39 reads the release notes from `CHANGELOG.md`.
       #
