@@ -16,7 +16,7 @@ MKDOCS ?= mkdocs
 # `v0.6.0` was published 2025-12-05, and the module proxy states that date.
 #
 # The `go.mod` of `gremlins` v0.6.0 declares `go 1.25`, so a toolchain below go1.25 installs
-# no such binary. `CLAUDE.md` `## Stack` names go1.26.6 as the minimum build toolchain of
+# no such binary. `CLAUDE.md` `## Stack` names go1.26.9 as the minimum build toolchain of
 # this repository, so the two agree. **That figure is a toolchain and never the language
 # version**, and `go.mod` of this repository declares `go 1.26.0`.
 GREMLINS_VERSION ?= v0.6.0
@@ -285,8 +285,8 @@ docs:
 # summary prints that state. A count here would go stale at each such change, so the
 # registry states the count and this comment states none.
 #
-# The three tag constants name `v1.3.1`, and the `v1.3.1` release moved them on 2026-10-01
-# UTC. The `v1.3.0` release moved them to `v1.3.0` on 2026-10-01 UTC. The `v1.2.0` release moved them to `v1.2.0` on 2026-09-30 UTC. #767 moved them to `v1.1.0` on 2026-08-16 UTC, and #779 moved them to `v1.1.1` on the
+# The three tag constants name `v1.3.2`, and the `v1.3.2` release moved them on 2026-10-14
+# UTC. The `v1.3.1` release moved them to `v1.3.1` on 2026-10-01 UTC. The `v1.3.0` release moved them to `v1.3.0` on 2026-10-01 UTC. The `v1.2.0` release moved them to `v1.2.0` on 2026-09-30 UTC. #767 moved them to `v1.1.0` on 2026-08-16 UTC, and #779 moved them to `v1.1.1` on the
 # same day, because the `v1.1.0` release job failed at its release notes step. `v1.1.0`
 # therefore reaches the module proxy and no GitHub release, and the `## [v1.1.1]` section of
 # `CHANGELOG.md` holds that record. `release_tag_constants_test.go` compares the three. So a

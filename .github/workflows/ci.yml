@@ -30,7 +30,7 @@ permissions:
   contents: read
 
 # Every job of this workflow names the same Go version, and this block states why the
-# version is `~1.26.6`.
+# version is `~1.26.9`.
 #
 # **The maintainer decided on 2026-08-13 that every job moves to Go 1.26.** Comment
 # 5286440152 of #65 holds the decision. On go1.24.13, the newest Go 1.24 patch,
@@ -55,15 +55,21 @@ permissions:
 # requirement. **It read `go 1.25.0` until 2026-09-30 UTC**, and #791 moved it for the same
 # reason.
 #
-# **The range holds the patch at 1.26.6 or later, and it holds it below 1.27.** GO-2026-5856
+# **The range holds the patch at 1.26.9 or later, and it holds it below 1.27.** GO-2026-5856
 # names a fix at 1.26.5. GO-2026-6218, GO-2026-6090, GO-2026-5972 and GO-2026-5026 each name
-# a fix at 1.26.6. So a go1.26.0 through go1.26.5 toolchain still calls a vulnerable
-# function. A bare `1.26` does not exclude those six, because `actions/setup-go` reads the
-# tool cache of the runner before it reads the release list. `installer.ts` at the pinned
-# hash calls `tc.find('go', versionSpec, arch)` first, and it returns a cached version that
-# satisfies the range. A runner that caches go1.26.3 alone would therefore resolve `1.26` to
-# a toolchain that fails this gate. `~1.26.6` excludes every one of the six, and it still
-# takes each later 1.26 patch.
+# a fix at 1.26.6. GO-2026-6603, GO-2026-6605, GO-2026-6607, GO-2026-6608, GO-2026-6610,
+# GO-2026-6611, GO-2026-6612, GO-2026-6613 and GO-2026-6617 each name a fix at 1.26.9. So a
+# go1.26.0 through go1.26.8 toolchain still calls a vulnerable function. A bare `1.26` does
+# not exclude those toolchains, because `actions/setup-go` reads the tool cache of the runner
+# before it reads the release list. `installer.ts` at the pinned hash calls
+# `tc.find('go', versionSpec, arch)` first, and it returns a cached version that satisfies
+# the range. A runner that caches go1.26.3 alone would therefore resolve `1.26` to a
+# toolchain that fails this gate. `~1.26.9` excludes every one of them, and it still takes
+# each later 1.26 patch.
+#
+# **The `~1.26.6` range resolved to go1.26.8 from the runner cache on 2026-10-14 UTC**, and
+# the `vuln` job reported the nine advisories above. go1.26.9 was published by that date, so
+# the range moved to `~1.26.9`.
 #
 # `actions/setup-go` passes this string to `semver.satisfies`, so it reads any node-semver
 # range. The README names `'^1.13.1'` and `'>=1.17.0'` as supported forms.
@@ -73,7 +79,12 @@ permissions:
 # the four names a fix at go1.26.6. go1.26.6 is the newest published Go 1.26 patch, and
 # <https://go.dev/dl/?mode=json&include=all> names it, retrieved 2026-08-13.
 #
-# **This range moved once already, and a new advisory moved it.** The `vuln` job passed at
+# **The measurement on 2026-10-14 UTC at `govulncheck` v1.6.0**, against the database that
+# <https://vuln.go.dev> updated at 2026-10-08 22:31:09 UTC: go1.26.8 reports 9 called
+# standard library vulnerabilities and exits 3, and go1.26.9 reports 0 and exits 0.
+# <https://go.dev/dl/?mode=json> names go1.26.9, retrieved 2026-10-14 UTC.
+#
+# **This range moved twice before, and a new advisory moved it each time.** The `vuln` job passed at
 # `~1.26.5` on go1.26.5 at commit `83f2127`, and it failed on the same toolchain at commit
 # `7210e80` about one hour later. No line of this repository changed between the two runs.
 # The comment above the `vuln` job below states that property in full.
@@ -102,7 +113,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: ['~1.26.6']
+        go-version: ['~1.26.9']
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
@@ -148,10 +159,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       # The cache key and the job summary both name the pinned commit, so read it once.
       - name: Read the corpus pin
@@ -296,7 +307,7 @@ jobs:
       # The log names every deviation, and Epic 5 reads it to size the work.
       - name: Upload the conformance log
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: conformance-log
           path: conformance.log
@@ -319,10 +330,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       - name: Build the tagged path
         run: go build -tags libpcap ./cmd/ja4plus
@@ -338,10 +349,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       # This step carries two pins, and they name two different things. The hash on the
       # `uses:` line names the action, and FR-supply-12 states it. The `version:` input
@@ -398,10 +409,10 @@ jobs:
       # builds and tests the library. A gate that reads a second Go version would describe
       # an artifact this workflow never produces.
       #
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       # FR-supply-3 pins the scanner version. `golang.org/x/vuln` v1.6.0 declares
       # `go 1.25.0`, and the step above installs Go 1.26, so this command needs no
@@ -415,7 +426,7 @@ jobs:
 
       # The version line names the Go version, the scanner version and the date of the
       # database. A reader of a failed run needs all three to reproduce it. **The Go version
-      # it prints is the patch that `~1.26.6` resolved to on this runner.**
+      # it prints is the patch that `~1.26.9` resolved to on this runner.**
       - name: Report the scanner version
         run: govulncheck -version
 
@@ -488,10 +499,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       # The four steps below match the corpus steps of the `conformance` job, and they read
       # the same cache key. The two jobs therefore share one entry, and one runner downloads
@@ -661,10 +672,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       # FR-supply-24 holds the exit status back, so a benchmark that panics warns here and
       # it fails no build. The compare step reads the log, and an empty log reports itself.
@@ -889,10 +900,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       # `JA4PLUS_SEEDGEN=1` turns the seed corpus guard of `fuzz_seed_corpus_test.go` from a
       # comparison into a write. A run that sets it rewrites every seed to match the code,
@@ -935,15 +946,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      # The comment above `jobs:` states why the range reads `~1.26.6`.
+      # The comment above `jobs:` states why the range reads `~1.26.9`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.6'
+          go-version: '~1.26.9'
 
       # `.goreleaser.yaml` writes a software bill of materials with `syft`, and no runner
       # image holds it. A snapshot that cannot reach the generator fails on the tool rather
       # than on the configuration.
-      - uses: anchore/sbom-action/download-syft@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+      - uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
 
       # FR-release-35h. `goreleaser check` reads the configuration and it builds nothing, so
       # it names a schema defect before the build spends five cross compilations on it.
