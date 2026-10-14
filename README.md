@@ -89,8 +89,8 @@ release of the 1.6 line carries that repair, so the choice was binary. **A Go 1.
 no longer compiles this module**, and that cost is the accepted one. The ruling lands in
 v1.1.0, because a minimum language version raise is a minor version change.
 
-**The minimum build toolchain is go1.26.6.** A user who builds a binary from this source
-takes go1.26.6 or a later toolchain, and the measurement below states why. `go1.26.6` is
+**The minimum build toolchain is go1.26.9.** A user who builds a binary from this source
+takes go1.26.9 or a later toolchain, and the measurement below states why. `go1.26.9` is
 the oldest Go 1.26 toolchain this project measured at zero called vulnerabilities, and no
 claim here covers a patch that the table does not name. **The floor read go1.25.13 until the
 #791 ruling of 2026-09-30 UTC**, and a Go 1.25 toolchain compiles no source of this module
@@ -107,8 +107,17 @@ vulnerability database that <https://vuln.go.dev> published at 2026-08-13 21:43:
 | go1.26.5 | 4 | 3 |
 | go1.26.6 | 0 | 0 |
 
+`govulncheck` v1.6.0 reported this on 2026-10-14 UTC, against the vulnerability database
+that <https://vuln.go.dev> updated at 2026-10-08 22:31:09 UTC:
+
+| Toolchain | Called standard library vulnerabilities | Exit status |
+|---|---|---|
+| go1.26.8 | 9 | 3 |
+| go1.26.9 | 0 | 0 |
+
 **A later toolchain is not a clean toolchain by itself.** go1.26.5 is later than go1.25.13,
-and it carries four. So a user on the Go 1.26 line takes go1.26.6 or later.
+and it carries four. go1.26.8 is later than go1.26.6, and it carries nine. So a user on the
+Go 1.26 line takes go1.26.9 or later.
 
 **No Go 1.24 patch clears the 13.** go1.24.13 is the newest Go 1.24 patch, and each
 advisory names a fix in a go1.25.x release or a later one.
@@ -120,7 +129,7 @@ toolchain compiles no source of this module.
 **Every count above moves without a change to this repository**, because the vulnerability
 database is live. Run `make vuln` to re-take the measurement on your own toolchain.
 
-**This project builds and releases on the range `~1.26.6`.**
+**This project builds and releases on the range `~1.26.9`.**
 `.github/workflows/ci.yml` names that range for every job, and
 `.github/workflows/release.yml` names it for every released binary.
 

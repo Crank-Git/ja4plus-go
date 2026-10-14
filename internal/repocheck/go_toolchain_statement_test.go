@@ -28,10 +28,13 @@ import (
 // **The constant read go1.25.13 until the #791 ruling of 2026-09-30 UTC.** That ruling moved
 // the language version to 1.26, so a Go 1.25 toolchain compiles no source of this module.
 //
+// **The constant read go1.26.6 until 2026-10-14 UTC.** On that date, `govulncheck` v1.6.0
+// reported 9 for go1.26.8 and 0 for go1.26.9.
+//
 // **A later toolchain is not a clean toolchain by itself.** go1.26.5 is later than go1.25.13
-// and it carries four, so the Go 1.26 line takes go1.26.6 or later. That is why this
+// and it carries four, so the Go 1.26 line takes go1.26.9 or later. That is why this
 // constant states a toolchain rather than a major line.
-const minimumBuildToolchain = "go1.26.6"
+const minimumBuildToolchain = "go1.26.9"
 
 // toolchainStatementPages names each page that FR-foundation-23 binds.
 var toolchainStatementPages = []string{"README.md", "doc.go"}
