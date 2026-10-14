@@ -80,14 +80,15 @@ of that register name a change to this repository. Read
   declare a language version at or above every dependency. **v1.7.1 repairs a decoder panic
   on untrusted input, under `GHSA-6h9g-cjv3-pg2c`**, and no patch release of the 1.6 line
   carries that repair. **The ruling drops every Go 1.24 consumer**, and it lands in v1.1.0.
-- **The minimum build toolchain is go1.26.6, and it answers a different question from the
+- **The minimum build toolchain is go1.26.9, and it answers a different question from the
   language version above.** A language version decides which consumer compiles the module.
   **A build toolchain decides which standard library a built binary links.** So a Go 1.26
   toolchain compiles this module, and a later toolchain is not a clean toolchain by itself:
   go1.26.5 links 4 called vulnerabilities and go1.26.6 links 0, measured on 2026-08-14.
+  go1.26.8 links 9 and go1.26.9 links 0, measured on 2026-10-14 UTC.
 - **The maintainer ruled the toolchain question on 2026-08-14**, and #472 holds the ruling
   and the reversal path. `README.md` and `doc.go` state the measurement. **Every CI job
-  builds on the range `~1.26.6`**, and `goToolchainRange` in `internal/repocheck/foundation_test.go` states
+  builds on the range `~1.26.9`**, and `goToolchainRange` in `internal/repocheck/foundation_test.go` states
   that range once for both workflows.
 - `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
   `github.com/google/gopacket` on 2026-08-13, and #438 carried it.

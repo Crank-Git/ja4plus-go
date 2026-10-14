@@ -1182,6 +1182,16 @@ that the interface declares.
     proposed the move.
   - `golang.org/x/crypto` to v0.57.0. Pull request #788 proposed the move.
   - `golang.org/x/net` to v0.59.0. Pull request #789 proposed the move.
+- **Two more changes to `go.mod` landed on 2026-10-14 UTC, and the minimum build toolchain
+  moved to go1.26.9 with them.** No fingerprint value moved: `make conformance` reports
+  1838 matches before and after the two bumps, measured on 2026-10-14 UTC.
+  - `golang.org/x/crypto` to v0.58.0. Pull request #842 proposed the move.
+  - `golang.org/x/net` to v0.61.0. Pull request #843 proposed the move.
+  - **The release workflow builds on `~1.26.9`.** On 2026-10-14 UTC, `govulncheck` v1.6.0
+    reported 9 called standard library vulnerabilities for go1.26.8 and 0 for go1.26.9. The
+    `~1.26.6` range resolved to go1.26.8 from the runner cache, and release run
+    36881857584 built each binary of `v1.3.1` on go1.26.8. `README.md` states the measurement. A consumer who imports the module
+    and builds with go1.26.9 or later calls none of the nine.
 
 ## [v1.3.1]
 
