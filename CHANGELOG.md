@@ -1193,6 +1193,32 @@ that the interface declares.
     36881857584 built each binary of `v1.3.1` on go1.26.8. `README.md` states the measurement. A consumer who imports the module
     and builds with go1.26.9 or later calls none of the nine.
 
+## [v1.3.2]
+
+This section is the release record of `v1.3.2`. It carries no date, because FR-release-40
+creates the tag and no tag exists at this head.
+
+**`v1.3.2` is a patch version, because it changes no exported name and it moves no
+fingerprint value.** Between the `v1.3.1` tag and this head, one production Go file
+changes: `doc.go`, and it changes comments alone. `go.mod` and `go.sum` change. Each
+measurement was made on 2026-10-14 UTC. **No change of this release is breaking.**
+
+### Changed
+
+- **Every binary of this release is built with go1.26.9.** The release workflow named the
+  range `~1.26.6`, and release run 36881857584 built each binary of `v1.3.1` on go1.26.8.
+  On 2026-10-14 UTC, `govulncheck` v1.6.0 reported 9 called standard library
+  vulnerabilities for go1.26.8 and 0 for go1.26.9. Every workflow now names `~1.26.9`, and
+  `README.md` states the measurement. #844 holds the move.
+- **The minimum build toolchain is go1.26.9.** A consumer who imports the module and builds
+  with an earlier Go 1.26 toolchain links the nine. The language version stays at Go 1.26,
+  and `go.mod` still declares `go 1.26.0`.
+- `golang.org/x/crypto` to v0.58.0, and `golang.org/x/net` to v0.61.0. The four `x/`
+  packages that the library imports are byte-identical across the two bumps. No
+  fingerprint value moved: `make conformance` reports 1838 matches before and after.
+- The three pre-release tag constants, from `v1.3.1` to `v1.3.2`, and `docs/api/v1.md`,
+  which states the value that the three constants hold.
+
 ## [v1.3.1]
 
 This section is the release record of `v1.3.1`. It carries no date, because FR-release-40
