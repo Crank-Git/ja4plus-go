@@ -162,7 +162,7 @@ the ruling.** The `gopacket` v1.7.1 dependency declares `go 1.25.0` in its own `
 it repairs a decoder panic on untrusted input. **A Go 1.24 consumer no longer compiles this
 module.** The ruling lands in v1.1.0, and it moves no build toolchain.
 
-**The minimum build toolchain is `go1.26.9`, and it decides which standard library a
+**The minimum build toolchain is `go1.26.10`, and it decides which standard library a
 built binary links.** A toolchain and a language version are two different settings, and a
 reader who conflates them draws the wrong conclusion about vulnerability exposure.
 

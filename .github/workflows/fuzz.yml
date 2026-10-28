@@ -65,10 +65,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` of `.github/workflows/ci.yml` states why the range reads
-      # `~1.26.9`.
+      # `~1.26.10`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.9'
+          go-version: '~1.26.10'
 
       # The step writes a JSON array of strings, and each string holds one import path and
       # one target name, separated by one space. The `fuzz` job splits the two halves in the
@@ -144,10 +144,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` of `.github/workflows/ci.yml` states why the range reads
-      # `~1.26.9`.
+      # `~1.26.10`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.9'
+          go-version: '~1.26.10'
 
       # `JA4PLUS_SEEDGEN=1` turns the seed corpus guard of `fuzz_seed_corpus_test.go` from a
       # comparison into a write. A run that sets it rewrites every seed to match the code,
