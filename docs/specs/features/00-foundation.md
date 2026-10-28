@@ -191,7 +191,7 @@ No entity changes. The following files change.
 
 **The `.github/workflows/ci.yml` row read `The matrix reduces to Go 1.24.` until
 2026-08-13.** The FR-foundation-2 amendment above moved every job to Go 1.26, and the
-workflow states the range `~1.26.9`. **The row now names no version**, so the amendment is
+workflow states the range `~1.26.10`. **The row now names no version**, so the amendment is
 the one place that carries it.
 
 ## Interfaces
