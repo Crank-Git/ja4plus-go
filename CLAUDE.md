@@ -28,9 +28,10 @@ history.** No current work waits on one of them.
 3. The license states the FoxIO terms.
 4. This library and the Python port produce the same fingerprint.
 
-**The `v1.3.2` release is a patch version, and it changes no exported name.** It is
-prepared on 2026-10-14 UTC. It moves the build toolchain to go1.26.9, and #844 holds that
-move. The `v1.3.1` tag exists, and that release holds the JA4T option length rule of #814.
+**The `v1.3.3` release is a patch version, and it changes no exported name.** It is
+prepared on 2026-10-28 UTC. It moves the build toolchain to go1.26.10, and #849 holds that
+move. The `v1.3.2` tag exists, and that release moves the build toolchain to go1.26.9 under
+#844. The `v1.3.1` tag exists, and that release holds the JA4T option length rule of #814.
 The `v1.3.0` tag exists,
 and that release adds the package `scan` and changes no frozen name of `v1`. The `v1.2.0`
 tag exists. That release raises the minimum
