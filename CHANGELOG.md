@@ -1192,6 +1192,14 @@ that the interface declares.
     `~1.26.6` range resolved to go1.26.8 from the runner cache, and release run
     36881857584 built each binary of `v1.3.1` on go1.26.8. `README.md` states the measurement. A consumer who imports the module
     and builds with go1.26.9 or later calls none of the nine.
+- **The minimum build toolchain moved to go1.26.10 on 2026-10-28 UTC.** `go.mod` did not
+  change, and no fingerprint value moved.
+  - **Every workflow builds on `~1.26.10`.** On 2026-10-28 UTC, `govulncheck` v1.6.0
+    reported 1 called standard library vulnerability for go1.26.9, GO-2026-6809 in
+    `crypto/x509`, and 0 for go1.26.10. The `~1.26.9` range resolved to go1.26.9 from the
+    runner cache, and the `vuln` job failed on 2026-10-27 UTC. `README.md` states the
+    measurement. A consumer who imports the module
+    and builds with go1.26.10 or later calls none of it.
 
 ## [v1.3.2]
 

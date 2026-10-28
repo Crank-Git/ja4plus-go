@@ -43,11 +43,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The comment above `jobs:` of `.github/workflows/ci.yml` states why the range reads
-      # `~1.26.9`, and `goToolchainRange` in `foundation_test.go` states the range once for
+      # `~1.26.10`, and `goToolchainRange` in `foundation_test.go` states the range once for
       # every workflow.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.9'
+          go-version: '~1.26.10'
 
       # `make corpus` reads the FoxIO repository over the network. The default job bound is
       # 360 minutes, so this step carries its own bound and a stalled download cannot hold
@@ -93,10 +93,11 @@ jobs:
       # two runs, and `CLAUDE.md` states that every live figure carries its date. Each one
       # names a fix in a go1.25.x release or later, so no Go 1.24 patch clears them.
       #
-      # **The range holds the patch at 1.26.9 or later, and it holds it below 1.27.**
+      # **The range holds the patch at 1.26.10 or later, and it holds it below 1.27.**
       # GO-2026-5856 names a fix at 1.26.5, and GO-2026-6218, GO-2026-6090, GO-2026-5972
       # and GO-2026-5026 each name a fix at 1.26.6. Nine advisories of 2026-10-14 UTC each
-      # name a fix at 1.26.9. A bare `1.26` accepts go1.26.0 through go1.26.8, because `actions/setup-go` reads the tool cache of the runner before it
+      # name a fix at 1.26.9, and GO-2026-6809 names a fix at 1.26.10. A bare `1.26` accepts
+      # go1.26.0 through go1.26.9, because `actions/setup-go` reads the tool cache of the runner before it
       # reads the release list. The comment above `jobs:` of `.github/workflows/ci.yml`
       # states the full reading, and `foundation_test.go` holds every file at one range.
       #
@@ -117,7 +118,7 @@ jobs:
       # >=1.25.0-rc.1, <1.25.0, >=1.22.0 <1.24.0`.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '~1.26.9'
+          go-version: '~1.26.10'
 
       # The race detector needs cgo, and no line of this workflow sets `CGO_ENABLED`.
       # `.goreleaser.yaml` sets it for the build alone, so this step keeps the default of
