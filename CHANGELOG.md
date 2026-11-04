@@ -1200,6 +1200,10 @@ that the interface declares.
     runner cache, and the `vuln` job failed on 2026-10-27 UTC. `README.md` states the
     measurement. A consumer who imports the module
     and builds with go1.26.10 or later calls none of it.
+- **One more change to `go.mod` landed on 2026-11-03 UTC.** No fingerprint value moved:
+  `make conformance` reports 1838 matches before and after the bump, measured on 2026-11-03
+  UTC.
+  - `golang.org/x/net` to v0.62.0. Pull request #852 proposed the move.
 
 ## [v1.3.3]
 
