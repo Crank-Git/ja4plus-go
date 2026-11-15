@@ -90,15 +90,18 @@ func TestGoModDeclaresGo126(t *testing.T) {
 // **The range moved from `~1.26.9` to `~1.26.10` on 2026-10-28 UTC**, for the same reason.
 // `~1.26.9` resolved to go1.26.9 from the runner cache, and GO-2026-6809 names a fix at
 // go1.26.10.
-const goToolchainRange = "~1.26.10"
+// **The range moved from `~1.26.10` to `~1.26.11` on 2026-11-15 UTC**, because GO-2026-6859
+// names a fix at go1.26.11.
+const goToolchainRange = "~1.26.11"
 
 // TestCIWorkflowTestsGo126Only holds the one Go version that FR-foundation-2 names.
 // The test named Go 1.24 until 2026-08-13, and comment 5286440152 of #65 holds the
 // amendment. Issue #65 is the reversal path.
 //
-// The range excludes go1.26.0 through go1.26.9, because GO-2026-5856 names a fix at
+// The range excludes go1.26.0 through go1.26.10, because GO-2026-5856 names a fix at
 // 1.26.5, four later advisories each name a fix at 1.26.6, nine more each name a fix at
-// 1.26.9, and GO-2026-6809 names a fix at 1.26.10. `actions/setup-go` reads the
+// 1.26.9, GO-2026-6809 names a fix at 1.26.10, and GO-2026-6859 names a fix at 1.26.11.
+// `actions/setup-go` reads the
 // tool cache of the runner before it reads the release list, so a bare `1.26` can resolve
 // to a toolchain that this gate fails.
 func TestCIWorkflowTestsGo126Only(t *testing.T) {
