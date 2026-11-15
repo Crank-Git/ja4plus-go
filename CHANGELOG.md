@@ -1204,6 +1204,14 @@ that the interface declares.
   `make conformance` reports 1838 matches before and after the bump, measured on 2026-11-03
   UTC.
   - `golang.org/x/net` to v0.62.0. Pull request #852 proposed the move.
+- **The minimum build toolchain moved to go1.26.11 on 2026-11-15 UTC.** `go.mod` did not
+  change, and no fingerprint value moved.
+  - **Every workflow builds on `~1.26.11`.** On 2026-11-15 UTC, `govulncheck` v1.6.0
+    reported 1 called standard library vulnerability for go1.26.10, GO-2026-6859 in
+    `net/http`, and 0 for go1.26.11. The `~1.26.10` range resolved to go1.26.11 on that
+    date, so the `vuln` job passed, and the move excludes a runner that caches go1.26.10
+    alone. `README.md` states the measurement. A consumer who imports the module and
+    builds with go1.26.11 or later calls none of it.
 
 ## [v1.3.3]
 
