@@ -53,7 +53,8 @@ import (
 // UTC.** **The `v1.3.0` release moved it to `v1.3.0` on 2026-10-01 UTC.** **The `v1.3.1`
 // release moved it to `v1.3.1` on 2026-10-01 UTC.** **The `v1.3.2` release moved it to
 // `v1.3.2` on 2026-10-14 UTC.** **The `v1.3.3` release moved it to `v1.3.3` on 2026-10-28
-// UTC**, and every case of this file reads `v1.3.3` now. **The proxy serves no `v1.3.3`
+// UTC.** **The `v1.3.4` release moved it to `v1.3.4` on 2026-11-15 UTC**, and every case of
+// this file reads `v1.3.4` now. **The proxy serves no `v1.3.4`
 // until the maintainer pushes the tag**, so each
 // case reports the absent
 // tag until then. That failure names the tag it read, and it is the state of the repository
@@ -73,7 +74,8 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // **The `v1.2.0` release moved it to `v1.2.0` on 2026-09-30 UTC.** **The `v1.3.0` release
 // moved it to `v1.3.0` on 2026-10-01 UTC.** **The `v1.3.1` release moved it to `v1.3.1` on
 // 2026-10-01 UTC.** **The `v1.3.2` release moved it to `v1.3.2` on 2026-10-14 UTC.**
-// **The `v1.3.3` release moved it to `v1.3.3` on 2026-10-28 UTC.** A reader who moves this constant moves every case
+// **The `v1.3.3` release moved it to `v1.3.3` on 2026-10-28 UTC.**
+// **The `v1.3.4` release moved it to `v1.3.4` on 2026-11-15 UTC.** A reader who moves this constant moves every case
 // of this file to the new tag, and it moves no case of another file.
 //
 // **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
@@ -81,7 +83,7 @@ const publishedModulePath = "github.com/Crank-Git/ja4plus-go"
 // `defaultReleaseTag` in `prerelease_binaries_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
 // states the hazard, and #106 built the guard.
-const publishedModuleVersion = "v1.3.3"
+const publishedModuleVersion = "v1.3.4"
 
 // embeddedDatabase is the file that `//go:embed` in `lookup.go` reads.
 const embeddedDatabase = "data/ja4plus-mapping.csv"

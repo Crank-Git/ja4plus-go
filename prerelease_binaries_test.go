@@ -88,12 +88,16 @@ const releaseTagVariable = "JA4PLUS_RELEASE_TAG"
 // exported name and moves no fingerprint value. It moves the build toolchain to go1.26.10,
 // so it is a patch version.
 //
+// **The `v1.3.4` release moved it to `v1.3.4` on 2026-11-15 UTC.** That release changes no
+// exported name and moves no fingerprint value. It moves the build toolchain to go1.26.11
+// and one dependency, so it is a patch version.
+//
 // **Two other constants hold the same tag**, and `release_tag_constants_test.go` compares
 // the three. `prereleaseInstallVersion` in `prerelease_install_test.go` and
 // `publishedModuleVersion` in `prerelease_module_contents_test.go` are the two. The
 // `# Five constants carry the module path and the tag` section of `prerelease_install_test.go`
 // states the hazard, and #106 built the guard.
-const defaultReleaseTag = "v1.3.3"
+const defaultReleaseTag = "v1.3.4"
 
 // releaseIssue names the issue that publishes a release for a tag under test.
 const releaseIssue = 100
