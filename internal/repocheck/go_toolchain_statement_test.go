@@ -34,10 +34,13 @@ import (
 // **The constant read go1.26.9 until 2026-10-28 UTC.** On that date, `govulncheck` v1.6.0
 // reported 1 for go1.26.9 and 0 for go1.26.10.
 //
+// **The constant read go1.26.10 until 2026-11-15 UTC.** On that date, `govulncheck` v1.6.0
+// reported 1 for go1.26.10 and 0 for go1.26.11.
+//
 // **A later toolchain is not a clean toolchain by itself.** go1.26.5 is later than go1.25.13
-// and it carries four, so the Go 1.26 line takes go1.26.10 or later. That is why this
+// and it carries four, so the Go 1.26 line takes go1.26.11 or later. That is why this
 // constant states a toolchain rather than a major line.
-const minimumBuildToolchain = "go1.26.10"
+const minimumBuildToolchain = "go1.26.11"
 
 // toolchainStatementPages names each page that FR-foundation-23 binds.
 var toolchainStatementPages = []string{"README.md", "doc.go"}
