@@ -69,7 +69,11 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 // exported name and moves no fingerprint value. It moves the build toolchain to go1.26.10,
 // so it is a patch version.
 //
-// **The proxy holds no `v1.3.3` until the maintainer pushes the tag**, so each case of this
+// **The `v1.3.4` release moved it to `v1.3.4` on 2026-11-15 UTC.** That release changes no
+// exported name and moves no fingerprint value. It moves the build toolchain to go1.26.11
+// and one dependency, so it is a patch version.
+//
+// **The proxy holds no `v1.3.4` until the maintainer pushes the tag**, so each case of this
 // file fails until then. FR-prerelease-26 states that order. The maintainer pushes the tag
 // first. The maintainer then runs `make prerelease` against it. The maintainer promotes the
 // release only when every case passes or carries a recorded reason.
@@ -92,7 +96,7 @@ const prereleaseModulePath = "github.com/Crank-Git/ja4plus-go"
 // **`release_tag_constants_test.go` now compares all five, and #106 built that guard.** It
 // reads each declaration as text, so it runs without the `prerelease` build tag. A run that
 // read two tags would report a green gate for an artifact nobody published.
-const prereleaseInstallVersion = "v1.3.3"
+const prereleaseInstallVersion = "v1.3.4"
 
 // prereleaseExpectedJA4 states the JA4 value of the capture that `prereleaseCaptureFrame`
 // builds.
