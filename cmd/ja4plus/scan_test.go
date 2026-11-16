@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -585,13 +586,34 @@ func TestAStopRequestDuringAFastSendSendsNoFurtherSYN(t *testing.T) {
 
 // TestASecondSignalDuringTheScanEndsTheRunAtOnce reads the gate finding of batch #821. The
 // scan command installs the stop handler of the monitor. So the first signal stops the
-// send loop, and the handler raises the second signal to reach the kernel default.
+// send loop, and the second signal ends the run.
+//
+// The second signal reaches one of two paths, and the order of the two goroutines decides
+// which. Before the reset, it lands in the channel and the handler raises it. After the
+// reset, the kernel default ends the process, so the fake records that signal as `ended`
+// in place of a delivery. A fake that delivered it to the channel after the reset left it
+// unread, and the test failed whenever the handler drained before the second send.
 func TestASecondSignalDuringTheScanEndsTheRunAtOnce(t *testing.T) {
 	var (
+		mu        sync.Mutex
 		delivered chan<- os.Signal
+		isReset   bool
 		stop      *stopRequest
-		raised    []os.Signal
+		ended     []os.Signal
 	)
+
+	// The lock orders each send against the reset, so a send sees one state of the
+	// disposition. The channel holds two signals, so the send under the lock never blocks.
+	send := func(sig os.Signal) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		if isReset {
+			ended = append(ended, sig)
+			return
+		}
+		delivered <- sig
+	}
 
 	install := func() (*stopRequest, func()) {
 		var release func()
@@ -599,8 +621,8 @@ func TestASecondSignalDuringTheScanEndsTheRunAtOnce(t *testing.T) {
 		stop, release = installStopHandler(
 			func(c chan<- os.Signal, _ ...os.Signal) { delivered = c },
 			func(chan<- os.Signal) {},
-			func() {},
-			func(sig os.Signal) error { raised = append(raised, sig); return nil },
+			func() { mu.Lock(); isReset = true; mu.Unlock() },
+			func(sig os.Signal) error { mu.Lock(); ended = append(ended, sig); mu.Unlock(); return nil },
 			func(int) { t.Error("the handler exited, and it raises the second signal instead") },
 		)
 
@@ -611,8 +633,8 @@ func TestASecondSignalDuringTheScanEndsTheRunAtOnce(t *testing.T) {
 	network.onSend = func() {
 		network.now = network.now.Add(time.Second)
 		if len(network.sent) == 0 {
-			delivered <- os.Interrupt
-			delivered <- os.Interrupt
+			send(os.Interrupt)
+			send(os.Interrupt)
 
 			// The handler goroutine sets the flag, so the first SYN waits for it.
 			for !stop.isRequested() {
@@ -629,8 +651,11 @@ func TestASecondSignalDuringTheScanEndsTheRunAtOnce(t *testing.T) {
 			openNetwork: func(uint16, netip.Addr, func(string)) (scan.Network, error) { return network, nil },
 		})
 
-	if code != scanExitInterrupted || len(raised) != 1 || raised[0] != os.Interrupt || len(network.sent) != 1 {
-		t.Errorf("exit %d, raised %v, sent %d", code, raised, len(network.sent))
+	mu.Lock()
+	defer mu.Unlock()
+
+	if code != scanExitInterrupted || len(ended) != 1 || ended[0] != os.Interrupt || len(network.sent) != 1 {
+		t.Errorf("exit %d, ended by %v, sent %d", code, ended, len(network.sent))
 	}
 }
 
