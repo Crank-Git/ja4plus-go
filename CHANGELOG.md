@@ -1212,6 +1212,10 @@ that the interface declares.
     date, so the `vuln` job passed, and the move excludes a runner that caches go1.26.10
     alone. `README.md` states the measurement. A consumer who imports the module and
     builds with go1.26.11 or later calls none of it.
+- **One more change to `go.mod` landed on 2026-11-19 UTC.** No fingerprint value moved:
+  `make conformance` reports 1838 matches before and after the bump, measured on 2026-11-19
+  UTC.
+  - `golang.org/x/crypto` to v0.59.0. Pull request #860 proposed the move.
 
 ## [v1.3.4]
 
