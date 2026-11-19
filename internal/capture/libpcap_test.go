@@ -4,6 +4,7 @@ package capture
 
 import (
 	"errors"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -89,10 +90,23 @@ func TestTheLibpcapBackendReportsAFailedReadAsAFailure(t *testing.T) {
 	}
 }
 
+// skipTheDeadHandleCloseOnDarwin skips a test that calls `pcap.CompileBPFFilter` on macOS.
+// gopacket v1.7.4 and later call `pcap_breakloop` when they close the dead handle of that
+// function. Apple libpcap 1.10.1 then calls a null callback, and the test process stops with
+// SIGSEGV. gopacket pull request 178 holds the repair. #862 removes this skip.
+func skipTheDeadHandleCloseOnDarwin(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "darwin" {
+		t.Skip("gopacket v1.7.7 stops the process on macOS when it closes a dead handle, and #862 removes this skip")
+	}
+}
+
 func TestTheLibpcapBuildCompilesACaptureFilterExpression(t *testing.T) {
 	// FR-capture-15 sends `--bpf` to this build, and the maintainer ruled that on
 	// 2026-08-14 in #564. `pcap.CompileBPFFilter` opens a dead handle, so it parses the
 	// expression and it needs no privilege and no interface.
+	skipTheDeadHandleCloseOnDarwin(t)
+
 	program, err := pcap.CompileBPFFilter(layers.LinkTypeEthernet, snapshotLength, "tcp port 443")
 	if err != nil {
 		t.Fatalf("libpcap compiles no program for a valid filter: %v", err)
@@ -105,6 +119,8 @@ func TestTheLibpcapBuildCompilesACaptureFilterExpression(t *testing.T) {
 func TestTheLibpcapBuildDeclinesAFilterExpressionThatItCannotParse(t *testing.T) {
 	// A parser that accepts every string reports no defect to the operator. This test
 	// proves that the tagged build links a parser rather than a stub.
+	skipTheDeadHandleCloseOnDarwin(t)
+
 	if _, err := pcap.CompileBPFFilter(layers.LinkTypeEthernet, snapshotLength, "this is not a filter expression"); err == nil {
 		t.Error("libpcap compiled a program for an expression that holds no filter")
 	}

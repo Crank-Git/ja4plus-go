@@ -13,9 +13,10 @@ maintainer.
 ## What panics at v1.6.1
 
 **`go.mod` pinned `github.com/gopacket/gopacket v1.6.1` when #510 wrote this record, and it
-pins `v1.7.2` today.** #721 moved the pin to `v1.7.1` on 2026-08-15, and
+pins `v1.7.7` today.** #721 moved the pin to `v1.7.1` on 2026-08-15, and
 `## The repair at v1.7.1` below holds the second reading. #791 moved it to `v1.7.2` on
-2026-09-30 UTC, and `## The re-read at v1.7.2` below holds the third. **This section reads v1.6.1, and it reads no later version.**
+2026-09-30 UTC, and `## The re-read at v1.7.2` below holds the third. The move to `v1.7.7`
+landed on 2026-11-15 UTC, and `## The re-read at v1.7.7` below holds the fourth. **This section reads v1.6.1, and it reads no later version.**
 
 At v1.6.1, `layers.TCP.DecodeFromBytes` reads two bytes of a Multipath TCP option without a
 length guard, at `layers/tcp.go:347-353`:
@@ -159,6 +160,76 @@ Verified against: <https://github.com/gopacket/gopacket/releases/tag/v1.7.2>, re
 
 **The bump moves no fingerprint value.** The conformance suite reports 1826 matches before
 the bump and 1826 after it, measured on 2026-09-30 UTC.
+
+## The re-read at v1.7.7
+
+**`layers/tcp.go` differs between `v1.7.2` and `v1.7.7`**, read with `diff` on 2026-11-15
+UTC. Pull request #854 proposed the move. **So the reading of `## The repair at v1.7.1`
+holds through `v1.7.2`, and it holds at no later version.**
+
+**A bad option length now stops the option loop, and it returns no error.** The MPTCP
+branch reads at `layers/tcp.go:378-381`:
+
+```go
+			if len(data) < 3 || data[1] < 3 || int(data[1]) > len(data) {
+				tcp.stopOptions(data)
+				break OPTIONS
+			}
+```
+
+The `default` branch reads the same way at `layers/tcp.go:586-589`. **`stopOptions`
+removes the last option from `tcp.Options`, and it assigns the rest of the option region to
+`tcp.Padding`**, at `layers/tcp.go:604`. The per-subtype length checks of the MPTCP branch
+now call it too, in place of a `return fmt.Errorf`.
+
+The `v1.7.7` release notes state the change:
+
+> - A TCP segment with a bad option length no longer carries a decode failure or the truncated flag.
+
+Verified against: <https://github.com/gopacket/gopacket/releases/tag/v1.7.7>, retrieved
+2026-11-15.
+
+### The measurement of the re-read
+
+**One program ran against both versions on 2026-11-15 UTC**, in a throwaway module outside
+this repository. It built the input that `## The input that reaches it` above names. At
+`v1.7.2` it printed:
+
+```
+direct call returned: Invalid MPTCP option. Length 1 less than 3
+options: 4, padding: 
+outer tcp layer held: true
+error layer: Invalid MPTCP option. Length 1 less than 3
+```
+
+**That text reproduces the `v1.7.1` measurement of #721**, so the program reads the same
+path. At `v1.7.7` the same program printed:
+
+```
+direct call returned: <nil>
+options: 3, padding: 1e
+outer tcp layer held: true
+error layer: none
+```
+
+**So the direct call returns no error at `v1.7.7`, and the outer decode path writes no
+error layer.** The option kind `30` leaves `tcp.Options`, and `tcp.Padding` holds it.
+
+### What reaches this library
+
+**No production file reads `tcp.Options`, `tcp.Padding` or `ErrorLayer`**, measured with
+`git grep` on 2026-11-15 UTC. `tcpOptionEntries` in `ja4t.go` reads the raw option bytes
+from `tcp.Contents`, so JA4T and JA4TS read the same bytes at both versions.
+`layers/tcp.go:355` assigns `tcp.Payload` before the option loop at `v1.7.7`, as `v1.7.2`
+does, so every fingerprinter that reads the payload reads the same bytes.
+
+**The release notes of `v1.7.7` name two more changes of behavior, and neither one reaches
+this library.** One reassembles a TLS ClientHello in the `layers.TLS` decoder. The other
+removes the length prefix of DNS over TCP. No production file reads `layers.TLS`,
+`layers.DNS` or `ApplicationLayer`, measured with `git grep` on 2026-11-15 UTC.
+
+**The bump moves no fingerprint value.** The conformance suite reports 1838 matches before
+the bump and 1838 after it, measured on 2026-11-15 UTC.
 
 ## The library crashes on no packet today
 
