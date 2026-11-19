@@ -1216,6 +1216,13 @@ that the interface declares.
   `make conformance` reports 1838 matches before and after the bump, measured on 2026-11-19
   UTC.
   - `golang.org/x/crypto` to v0.59.0. Pull request #860 proposed the move.
+- **A second change to `go.mod` landed on 2026-11-19 UTC.** No fingerprint value moved:
+  `make conformance` reports 1838 matches before and after the bump, measured on 2026-11-19
+  UTC.
+  - `github.com/gopacket/gopacket` to v1.7.7. Pull request #854 proposed the move.
+    `v1.7.4` through `v1.7.7` are security releases. A bad TCP option length now stops the
+    option loop in place of a decode error, and
+    `docs/audit/gopacket-tcp-option-panic.md` `## The re-read at v1.7.7` holds the reading.
 
 ## [v1.3.4]
 
