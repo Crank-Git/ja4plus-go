@@ -97,7 +97,7 @@ UTC, and `.claude/rules/ste.md`
   reproduces each recovered file verbatim.
 - **Base 7.** A citation of base 7 names a path of the port under `ja4plus/`, and the
   sentence around it names the tag. `ja4plus/fingerprinters/ja4x.py:341` at tag `v1.1.0`
-  is one, and `ja4x_stream_key_test.go` writes it. **A reader resolves it in
+  is one, and `ja4x_test.go` writes it. **A reader resolves it in
   `Crank-Git/ja4plus` at that tag**, and this checkout
   holds no copy of it. `internal/repocheck/parity_table_test.go` states the tag and the commit it points at,
   in `portReadVersion` and `portReadCommit`.

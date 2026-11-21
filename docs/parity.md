@@ -197,7 +197,7 @@ each accepted difference from a FoxIO value, and the `## Parity with ja4plus` se
 
 **FR-parity-50 is closed, and this page holds no part of it.** The requirement covers the
 three JA4X values that the SOCKS4 tunnel of `socks4-https.pcap` produces.
-`ja4x_tunnel_test.go` holds the test half, and `testdata/deviations.json` holds the twelve
+`ja4x_test.go` holds the test half, and `testdata/deviations.json` holds the twelve
 register entries. `docs/specs/features/08-python-parity.md` states the requirement, and the
 register row `JA4X on a stream that a proxy tunnel carries` records the closure.
 

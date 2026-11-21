@@ -308,7 +308,7 @@ var exclusionEvidencePattern = regexp.MustCompile(`[^ ` + "`" + `]+:[0-9]+`)
 // FoxIO reaches no method on `dtls-udp.notest.cap`, so the entry keys the capture alone.
 // The suite records `not applicable` for every method of the capture, and
 // `TestTheReportNamesTheNotestMarkerAsTheReasonOfADeclinedCapture` of
-// `conformance_report_check_test.go` holds that behavior for JA4.
+// `conformance_check_test.go` holds that behavior for JA4.
 func TestTheExclusionsRecordHoldsTheNotestCapture(t *testing.T) {
 	const capture = "dtls-udp.notest.cap"
 

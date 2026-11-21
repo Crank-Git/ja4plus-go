@@ -232,7 +232,7 @@ nav:
       - License: licensing.md
   # #86 owns every entry between this line and the `Reference` marker below.
   #
-  # The order is the order that `conformanceReportMethods` of `conformance_report_test.go`
+  # The order is the order that `conformanceReportMethods` of `conformance_test.go`
   # prints, so the site and the conformance report read the same sequence. **JA4L and JA4LS
   # each hold one page**, under FR-documentation-17, and one Go type writes both.
   - Methods:

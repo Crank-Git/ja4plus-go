@@ -281,7 +281,7 @@ docs:
 # it separates a case that proves its requirement from a case that waits.
 #
 # Epic #94 built every case on 2026-08-14. `prereleaseCases` in
-# `prerelease_registry_test.go` states which case proves its requirement today, and the
+# `internal/repocheck/prerelease_registry_test.go` states which case proves its requirement today, and the
 # summary prints that state. A count here would go stale at each such change, so the
 # registry states the count and this comment states none.
 #

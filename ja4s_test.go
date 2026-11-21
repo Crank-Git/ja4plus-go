@@ -474,7 +474,7 @@ func TestTheJA4SRawFormEndsWithAnEmptyListOnAServerHelloThatCarriesNoExtension(t
 // fields of a JA4S result.
 //
 // FoxIO publishes `JA4S_r` and publishes no `JA4S_ro`, so `RawOriginalOrder` stays empty.
-// `conformance_adapters_test.go:58` names `JA4S_r` and names no `JA4S_ro`, so a value in
+// `conformance_test.go:58` names `JA4S_r` and names no `JA4S_ro`, so a value in
 // `RawOriginalOrder` emits a key the vector never holds.
 // `ja4plus/fingerprinters/ja4s.py:179` states the same rule. The Python port fills its own
 // `raw_original_order` field with the raw form at `ja4plus/fingerprinters/ja4s.py:182`, and

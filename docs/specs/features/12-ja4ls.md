@@ -76,7 +76,7 @@ estimated hop count. R6 at :57-61 states that four implementations divide by 2, 
 :137-139 states that no implementation computes a distance. The propagation factor belongs
 to the distance formula of R19, which `CalculateDistance` holds and no fingerprint reads.
 **The maintainer confirms both rulings or reverses them, and #60 is the reversal path.**
-Neither amendment changes code, and `ja4ls_emission_test.go` holds each one as a test.
+Neither amendment changes code, and `ja4ls_test.go` holds each one as a test.
 
 - **FR-ja4ls-1** — `JA4LFingerprinter` emits the JA4LS value in a result whose `Type` is
   `ja4l`. The `JA4L-S=` label of the fingerprint names the method.
@@ -223,7 +223,7 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 | `conformance_test.go` | The JA4LS comparison. |
 | `docs/specs/foxio/JA4L.md` | Records that no image specifies JA4LS. |
 | `README.md`, `CLAUDE.md`, `docs/` | The method count. |
-| `method_count_test.go` | New. FR-ja4ls-18. |
+| `internal/repocheck/method_count_test.go` | New. FR-ja4ls-18. |
 
 ## Interfaces
 

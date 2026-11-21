@@ -281,7 +281,7 @@ closes is 31.**
 
 **The maintainer ruled split T1 on 2026-08-14, and the answer is candidate answer 1.** #484 is
 the reversal path. #494 built the change at `ecc2fa1`, `internal/parser/icmp_quoted.go` holds
-the decode path, and `ja4t_icmp_quoted_test.go` holds the rule.
+the decode path, and `ja4t_test.go` holds the rule.
 
 - **The Wireshark dissector produces one.** `wireshark/source/packet-ja4.c:1261` and
   `wireshark/source/packet-ja4.c:1266` state the mechanism, and the per-packet vector holds

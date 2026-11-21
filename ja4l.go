@@ -306,7 +306,7 @@ func (c *connState) restart() {
 // pair of fixed byte groups, `\r\n\r\n` and `\n\n`, and the pair declined `\n\r\n`. So the
 // library moved the measurement point on a request that the reference routes away from it.
 // No capture of the FoxIO corpus holds a mixed terminator, so the four conformance figures
-// do not move. `ja4l_mixed_line_ending_test.go` builds the separating packet, and issue
+// do not move. `ja4l_test.go` builds the separating packet, and issue
 // #685 is the reversal path.
 func holdsACompleteHTTPRequest(payload []byte) bool {
 	if !parser.IsHTTPRequest(payload) {
@@ -421,7 +421,7 @@ func (f *JA4LFingerprinter) processUDP(packet gopacket.Packet) ([]FingerprintRes
 	// Point B fills here, and the server value reaches the caller at point D below.
 	// `wireshark/source/packet-ja4.c:1432-1451` writes `hf_ja4ls` and `hf_ja4l` inside the
 	// branch that fills `timestamp_D`, so one frame carries both values. Issue #447 holds
-	// the measurement, and `ja4ls_point_d_emission_test.go` holds the frame.
+	// the measurement, and `ja4ls_test.go` holds the frame.
 	if _, ok := conn.timestamps["A"]; ok {
 		if _, ok := conn.timestamps["B"]; !ok && !isClient {
 			conn.timestamps["B"] = ts

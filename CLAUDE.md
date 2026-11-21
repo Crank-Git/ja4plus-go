@@ -175,7 +175,7 @@ caller, and the `## The amendment of 2026-10-01` section of
 | `make cover` | Report total statement coverage. |
 | `make vuln` | Scan for a known vulnerability with `govulncheck`. Install the version that `.github/workflows/ci.yml` pins. |
 | `make mutate` | Run the mutation sweep with `gremlins` over the named package set. #90 added the target on 2026-08-14, under Epic #89. It installs the pinned tool first. Slow. Gates nothing. |
-| `make prerelease` | Run the pre-release cases behind the `prerelease` build tag. Epic #94 built the target and the cases on 2026-08-14. It prints one summary line for each case, and `prereleaseCases` in `prerelease_registry_test.go` states which case proves its requirement today. |
+| `make prerelease` | Run the pre-release cases behind the `prerelease` build tag. Epic #94 built the target and the cases on 2026-08-14. It prints one summary line for each case, and `prereleaseCases` in `internal/repocheck/prerelease_registry_test.go` states which case proves its requirement today. |
 | `make docs` | Build the documentation site with `mkdocs build --strict`. #84 added the target on 2026-08-14. Install the pins of `docs/requirements.txt` first, or override the generator: `make docs MKDOCS=.venv/bin/mkdocs`. |
 
 Run `make corpus` once before `make conformance`. The conformance suite skips without it.
@@ -252,7 +252,7 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
 - **`make prerelease` needs the `prerelease` entry of the `.PHONY` line.** #95 added the
   target on 2026-08-14, and no directory of that name exists today. A later commit that
   adds one would stop the target, and the entry holds the recipe against that.
-  `TestTheMakefileRunsThePrereleaseCases` in `prerelease_registry_test.go` holds the entry.
+  `TestTheMakefileRunsThePrereleaseCases` in `internal/repocheck/prerelease_registry_test.go` holds the entry.
 - **`make mutate` needs the `mutate` entry of the `.PHONY` line, and the reason differs
   from the `docs` reason below.** The repository root holds no path named `mutate`, so the
   trap that `docs/` produces does not apply today. The entry guards a later change that

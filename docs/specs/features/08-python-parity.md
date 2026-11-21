@@ -81,7 +81,7 @@ measurement, and `Crank-Git/ja4plus#601` closes the same wording on the port sid
 **The maintainer amended FR-parity-8, FR-parity-9 and FR-parity-10 on 2026-10-01 UTC.**
 Issue #801 holds the ruling and is the reversal path, and `Crank-Git/ja4plus#789` holds
 the port half. The ruling follows FoxIO Python and Rust at `16b96d95`, which each write `9`
-for a non-ASCII end. `ja4_alpn_ruling_test.go` holds each separating packet. **The
+for a non-ASCII end. `ja4_test.go` holds each separating packet. **The
 maintainer confirmed the control-byte case on 2026-10-01 UTC**, also under #801: an end
 byte below `0x20`, or the byte `0x7F`, writes `99`.
 
@@ -187,7 +187,7 @@ of `wireshark/source/packet-ja4.c:684`. `docs/audit/ja4t-ja4ssh-ja4s-deviation-c
 `## Cause 2 — the library returns no JA4TS value on a reset of a connection that holds one SYN-ACK`
 holds the reading, #495 built the change, and
 `TestJA4TS_PublishesTheStoredFourPartValueOnAResetOfAOneSynAckConnection` of
-`ja4ts_part_e_test.go` holds the rule. **`Crank-Git/ja4plus#609` holds the port half.**
+`ja4ts_test.go` holds the rule. **`Crank-Git/ja4plus#609` holds the port half.**
 
 - **FR-parity-34** — An empty TCP option list writes `00` in part b.
 - **FR-parity-35** — Part c writes two digits. An absent maximum segment size writes `00`.
@@ -224,7 +224,7 @@ The port's issues #138, #219, #231 and #271 hold these rulings.
   that carries it.
 - **FR-parity-50** — A test asserts three JA4X values on the SOCKS4 tunnel of
   `socks4-https.pcap` on port 9901. The register holds each comparison of the three as a
-  value decline. **This requirement is closed.** `ja4x_tunnel_test.go` holds the test half,
+  value decline. **This requirement is closed.** `ja4x_test.go` holds the test half,
   and #57 built it. `testdata/deviations.json` holds twelve entries under the ruling #375,
   and #375 wrote them. **The three values reach twelve comparisons**, because the run
   compares `JA4X` and `JA4X_r` in the per-stream set and in the per-packet set. A key of

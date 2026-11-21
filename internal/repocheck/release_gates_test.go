@@ -125,7 +125,7 @@ var releaseGates = []releaseGate{
 		requirement: "FR-release-48",
 		kind:        heldByTest,
 		holder:      "TestTheRegisterHoldsNoEntryWhoseComparisonNowMatches",
-		file:        "prerelease_gate_test.go",
+		file:        "internal/repocheck/prerelease_gate_test.go",
 		note:        "The conformance suite fails on a closed entry, and this case reads the report that the suite writes.",
 	},
 	{

@@ -31,7 +31,7 @@ func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 		// TCP header that an ICMP error message quotes.
 		// `wireshark/source/packet-ja4.c:1261` matches the field abbreviation `tcp.flags`
 		// anywhere in the protocol tree, and the per-packet vector holds 31 such values in
-		// `ssh2.pcapng`. `ja4t_icmp_quoted_test.go` holds the ruling, #484 is the reversal
+		// `ssh2.pcapng`. `ja4t_test.go` holds the ruling, #484 is the reversal
 		// path, and `Crank-Git/ja4plus#610` carries the port half.
 		tcp = parser.QuotedTCPHeader(packet)
 	}
@@ -45,7 +45,7 @@ func (f *JA4TFingerprinter) ProcessPacket(packet gopacket.Packet) ([]Fingerprint
 	// flag byte against `0x02`. The port holds the bit test at
 	// `ja4plus/fingerprinters/ja4t.py:159`. `Crank-Git/ja4plus#603` is open, and it adds the
 	// row of the `## Parity with ja4plus` section on the port side.
-	// `ja4t_syn_selection_test.go` holds the ruling, and a reversal changes both
+	// `ja4t_test.go` holds the ruling, and a reversal changes both
 	// repositories.
 	if !tcp.SYN || tcp.ACK {
 		return nil, nil

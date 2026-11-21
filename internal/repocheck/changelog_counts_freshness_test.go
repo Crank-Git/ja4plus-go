@@ -28,7 +28,7 @@ import (
 // `http-empty-useragent.pcap`. The totals hold across those two runs, so that defect moves
 // no count these tests read.
 //
-// Each identifier below carries the `changelog` prefix. `conformance_report_test.go` declares
+// Each identifier below carries the `changelog` prefix. `conformance_test.go` declares
 // `conformanceReportCount` for another purpose, under the `conformance` build tag. An
 // untagged build hides that collision, and `make conformance` then reports it as a build
 // failure.
