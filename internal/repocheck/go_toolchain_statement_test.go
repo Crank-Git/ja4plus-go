@@ -8,8 +8,12 @@ import (
 
 // These tests hold FR-foundation-23. The maintainer ruled the question on 2026-08-14, and
 // issue #472 holds the ruling and the reversal path. The ruling picked candidate answer 1
-// of #472: `README.md` and `doc.go` state a minimum build toolchain, and `go.mod` does not
-// move.
+// of #472: two pages state a minimum build toolchain, and `go.mod` does not move.
+//
+// **The two pages are `docs/implementation-notes.md` and `doc.go`.** `README.md` was the
+// first page until 2026-11-21 UTC. On that date the maintainer exempted the README from
+// Simplified Technical English and moved the measurement to the implementation notes, so
+// these tests read that page. `README.md` links to it.
 //
 // A reader conflates a language version with a toolchain, and the two answer different
 // questions. #438 established that `go.mod` states a language version and never a
@@ -19,7 +23,8 @@ import (
 // `TestGoModDeclaresGo124` in `foundation_test.go` holds the other half: the language
 // version stays at 1.24, because the ruling declined candidate answer 2.
 
-// minimumBuildToolchain is the toolchain that `README.md` and `doc.go` each name.
+// minimumBuildToolchain is the toolchain that `docs/implementation-notes.md` and `doc.go`
+// each name.
 //
 // It is the oldest Go 1.26 toolchain that #472 measured at zero called vulnerabilities of
 // the standard library. On 2026-08-14, `govulncheck` v1.6.0 reported 13 for go1.24.13, 0
@@ -43,12 +48,12 @@ import (
 const minimumBuildToolchain = "go1.26.11"
 
 // toolchainStatementPages names each page that FR-foundation-23 binds.
-var toolchainStatementPages = []string{"README.md", "doc.go"}
+var toolchainStatementPages = []string{"docs/implementation-notes.md", "doc.go"}
 
 // pageProse returns the words of a page as one space-separated line.
 //
 // It strips the leading comment marker of each line, because `doc.go` carries one and
-// `README.md` carries none. It then collapses every run of whitespace, so a sentence that
+// `docs/implementation-notes.md` carries none. It then collapses every run of whitespace, so a sentence that
 // wraps reads the same as a sentence that does not. #472 measured the reason: a line wrap
 // inside a quoted phrase defeats a substring check against the raw bytes.
 func pageProse(t *testing.T, page string) string {

@@ -149,8 +149,13 @@ built today.
 
 ## The language version and the build toolchain answer different questions
 
-`go.mod` declares `go 1.26.0`. **That is a language version, and it decides which consumer
-compiles the module.**
+**These two statements answer two different questions, and this section states both.**
+
+- **A language version decides which consumer compiles the module.**
+- **A build toolchain decides which standard library a built binary links.**
+
+**The language version is 1.26.** `go.mod` declares `go 1.26.0`, and a language version is
+not a toolchain. So a consumer on a Go 1.26 toolchain compiles this module.
 
 **The maintainer moved the version from 1.25 to 1.26 on 2026-09-30 UTC, and issue #791
 holds the ruling.** The `golang.org/x/crypto` and `golang.org/x/net` dependencies each
@@ -159,17 +164,78 @@ module.**
 
 **The maintainer first moved the version from 1.24 to 1.25 on 2026-08-15, and issue #725 holds
 the ruling.** The `gopacket` v1.7.1 dependency declares `go 1.25.0` in its own `go.mod`, and
-it repairs a decoder panic on untrusted input. **A Go 1.24 consumer no longer compiles this
-module.** The ruling lands in v1.1.0, and it moves no build toolchain.
+it repairs a decoder panic on untrusted input, under `GHSA-6h9g-cjv3-pg2c`. **A Go 1.24
+consumer no longer compiles this module.** The ruling lands in v1.1.0, and it moves no build
+toolchain.
 
-**The minimum build toolchain is `go1.26.11`, and it decides which standard library a
-built binary links.** A toolchain and a language version are two different settings, and a
-reader who conflates them draws the wrong conclusion about vulnerability exposure.
+**The minimum build toolchain is `go1.26.11`.** A user who builds a binary from this source
+takes go1.26.11 or a later toolchain, and the measurement below states why. `go1.26.11` is
+the oldest Go 1.26 toolchain this project measured at zero called vulnerabilities, and no
+claim here covers a patch that the tables do not name. A toolchain and a language version
+are two different settings, and a reader who conflates them draws the wrong conclusion about
+vulnerability exposure.
 
-The maintainer ruled the toolchain question on 2026-08-14. The README states the
-measurement that supports it, with the date. **A vulnerability count is a live
-measurement, so it carries the date of the run.** The same tree reported different counts
-on two consecutive days, because the scanner reads a source that moves.
+### The measurement
+
+The maintainer ruled the toolchain question on 2026-08-14, and issue #472 holds the ruling.
+**A vulnerability count is a live measurement, so each table below carries the date of the
+run.** `govulncheck` reads the standard library of the `go` command on the PATH, so the
+toolchain decides the result.
+
+`govulncheck` v1.6.0 reported this on 2026-08-14, against the vulnerability database that
+<https://vuln.go.dev> published at 2026-08-13 21:43:54 UTC:
+
+| Toolchain | Called standard library vulnerabilities | Exit status |
+|---|---|---|
+| go1.24.13 | 13 | 3 |
+| go1.25.13 | 0 | 0 |
+| go1.26.5 | 4 | 3 |
+| go1.26.6 | 0 | 0 |
+
+`govulncheck` v1.6.0 reported this on 2026-10-14 UTC, against the vulnerability database
+that <https://vuln.go.dev> updated at 2026-10-08 22:31:09 UTC:
+
+| Toolchain | Called standard library vulnerabilities | Exit status |
+|---|---|---|
+| go1.26.8 | 9 | 3 |
+| go1.26.9 | 0 | 0 |
+
+`govulncheck` v1.6.0 reported this on 2026-10-28 UTC, against the vulnerability database
+that <https://vuln.go.dev> updated at 2026-10-27 21:16:18 UTC:
+
+| Toolchain | Called standard library vulnerabilities | Exit status |
+|---|---|---|
+| go1.26.9 | 1 | 3 |
+| go1.26.10 | 0 | 0 |
+
+`govulncheck` v1.6.0 reported this on 2026-11-15 UTC, against the vulnerability database
+that <https://vuln.go.dev> updated at 2026-11-11 02:51:11 UTC:
+
+| Toolchain | Called standard library vulnerabilities | Exit status |
+|---|---|---|
+| go1.26.10 | 1 | 3 |
+| go1.26.11 | 0 | 0 |
+
+**A later toolchain is not a clean toolchain by itself.** go1.26.5 is later than go1.25.13,
+and it carries four. go1.26.8 is later than go1.26.6, and it carries nine. go1.26.9 carried
+none on 2026-10-14 UTC, and it carries one on 2026-10-28 UTC. go1.26.10 carried none on
+2026-10-28 UTC, and it carries one on 2026-11-15 UTC. So a user on the Go 1.26 line takes
+go1.26.11 or later.
+
+**No Go 1.24 patch clears the 13.** go1.24.13 is the newest Go 1.24 patch, and each
+advisory names a fix in a go1.25.x release or a later one.
+
+**The go1.24.13 row is a record of the 2026-08-14 measurement, and it names no toolchain a
+builder may use today.** The language version moved to 1.25 on 2026-08-15, and to 1.26 on
+2026-09-30 UTC, so a Go 1.24 toolchain or a Go 1.25 toolchain compiles no source of this
+module.
+
+**Every count above moves without a change to this repository**, because the vulnerability
+database is live. Run `make vuln` to take the measurement again on your own toolchain.
+
+**This project builds and releases on the range `~1.26.11`.**
+`.github/workflows/ci.yml` names that range for every job, and
+`.github/workflows/release.yml` names it for every released binary.
 
 ## The library embeds the fingerprint mapping, and a user replaces it
 
@@ -197,7 +263,14 @@ issue that settled it and one sentence of reason. **An entry whose comparison no
 fails the suite**, so a difference that closes cannot sit in the file unnoticed.
 
 **`make corpus` fetches the corpus, and no commit of this repository holds it**, because
-FoxIO licenses that material.
+FoxIO licenses that material. `testdata/foxio.pin` holds the commit, and the corpus is at
+commit `16b96d95c220762cf658f67d678cda2aac95c81e` of <https://github.com/FoxIO-LLC/ja4>.
+
+**The suite fails on a difference that the register does not hold.** It also fails on a
+register entry whose comparison now matches. Each run rewrites
+[`docs/audit/conformance.md`](https://github.com/Crank-Git/ja4plus-go/blob/master/docs/audit/conformance.md),
+and that report owns the conformance figures. `docs/specs/foxio/` transcribes each FoxIO image
+as numbered rules, and each ruling of this project cites one of them.
 
 ## Two implementations, one answer
 

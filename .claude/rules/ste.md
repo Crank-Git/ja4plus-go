@@ -12,6 +12,13 @@ Every spec file, issue body, pull-request description, manual page and **code co
 this project uses Simplified Technical English. A requirement that reads two ways gets
 built two ways.
 
+**`README.md` is the one exception, and the maintainer ruled it on 2026-11-21 UTC.** The
+README uses the voice of the maintainer, and round 79 of the `## Changelog` of
+`docs/specs/spec.md` records the decision. Two rules of this file still bind the README:
+`## This project writes US English`, and `## One document owns each measured count`. So the
+README states no conformance figure and no other owned count, and it links the owner. Every
+other Markdown file, including each page of the documentation site, keeps this standard.
+
 The project's controlled vocabulary is the `## Terms` table in `docs/specs/spec.md`. Read
 it before you write a domain word. When you need a word that the table does not hold, add
 it to the table.
