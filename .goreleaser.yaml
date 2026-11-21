@@ -11,7 +11,7 @@
 # and it publishes nothing. **#736 added that read on 2026-08-15 UTC**, because a job that
 # runs no binary proves nothing about what the build stamps.
 #
-# `release_cgo_test.go` and `release_snapshot_version_test.go` read this file as text,
+# `internal/repocheck/release_cgo_test.go` and `internal/repocheck/release_snapshot_version_test.go` read this file as text,
 # because no test of this module parses YAML and the module depends on no YAML package.
 #
 # Verified against <https://goreleaser.com/customization/builds/go/>,
@@ -93,7 +93,7 @@ builds:
     # `{{ .Version }}` until #724.**
     # GoReleaser strips the leading `v` from `.Version`, and it writes `.Tag` verbatim. So
     # the published `v1.0.0` binary printed `ja4plus 1.0.0`, and FR-prerelease-19 reads
-    # `ja4plus v1.0.0`. `prerelease_binaries_test.go` holds that case, and it builds the
+    # `ja4plus v1.0.0`. `internal/repocheck/prerelease_binaries_test.go` holds that case, and it builds the
     # expected line as `"ja4plus " + tag`.
     #
     # Verified against <https://goreleaser.com/customization/templates/>, retrieved
@@ -138,7 +138,7 @@ builds:
     # <https://goreleaser.com/customization/templates/>, retrieved 2026-08-15.
     #
     # **Two cases read this flag now.** `TestTheSnapshotBuildIdentifiesItselfAsASnapshot` in
-    # `release_snapshot_version_test.go` pins both branches, and the `goreleaser` job of
+    # `internal/repocheck/release_snapshot_version_test.go` pins both branches, and the `goreleaser` job of
     # `.github/workflows/ci.yml` runs the snapshot binary and reads the line it prints.
     ldflags:
       - -s -w -X main.Version={{ if .IsSnapshot }}{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}{{ else }}{{ .Tag }}{{ end }}
@@ -148,7 +148,7 @@ builds:
 
 # The release publishes the raw binary and no archive, because every published release of
 # this repository has published raw binaries and the pre-release cases read them by name.
-# `releasedBinaries` in `prerelease_binaries_registry_test.go` holds the five names.
+# `releasedBinaries` in `internal/repocheck/prerelease_binaries_registry_test.go` holds the five names.
 #
 # The `binary` format appends the binary extension to the name that this template writes,
 # so the Windows artifact reads `ja4plus-windows-amd64.exe`. `internal/pipe/archive/archive.go`

@@ -1,4 +1,4 @@
-package ja4plus
+package repocheck
 
 import (
 	"fmt"
@@ -317,13 +317,13 @@ func TestTheCommandsTableStatesThatThePrereleaseTargetIsBuilt(t *testing.T) {
 func TestTheFeatureFileNamesThePrereleaseBuildTag(t *testing.T) {
 	feature := readRepoFile(t, prereleaseFeatureFile)
 
-	for _, target := range []string{"`prerelease_test.go`", "Build tag `prerelease`"} {
+	for _, target := range []string{"`internal/repocheck/prerelease_test.go`", "Build tag `prerelease`"} {
 		if !strings.Contains(feature, target) {
 			t.Errorf("%s names no %s, and this slice built the file it describes", prereleaseFeatureFile, target)
 		}
 	}
 
-	source := readRepoFile(t, "prerelease_test.go")
+	source := readRepoFile(t, "internal/repocheck/prerelease_test.go")
 	if !strings.HasPrefix(source, "//go:build prerelease\n") {
 		t.Errorf("prerelease_test.go opens with %q, and the feature file names the prerelease build tag",
 			fmt.Sprintf("%.30s", source))
@@ -405,7 +405,7 @@ func TestNoTrackedStatementPutsTheReleaseGateBeforeTheTag(t *testing.T) {
 	for _, path := range []string{
 		prereleaseFeatureFile,
 		"Makefile",
-		"prerelease_gate_test.go",
+		"internal/repocheck/prerelease_gate_test.go",
 		".claude/skills/release/SKILL.md",
 	} {
 		text := readRepoFile(t, path)

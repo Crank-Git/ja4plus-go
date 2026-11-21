@@ -223,7 +223,7 @@ the shape, and Epic 12 updates that mockup to hold a `ja4ls` row.
 | `conformance_test.go` | The JA4LS comparison. |
 | `docs/specs/foxio/JA4L.md` | Records that no image specifies JA4LS. |
 | `README.md`, `CLAUDE.md`, `docs/` | The method count. |
-| `method_count_test.go` | New. FR-ja4ls-18. |
+| `internal/repocheck/method_count_test.go` | New. FR-ja4ls-18. |
 
 ## Interfaces
 

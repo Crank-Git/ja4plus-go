@@ -31,15 +31,15 @@ type releaseTagConstantDeclaration struct {
 
 // releaseTagConstants names each constant that holds the tag of the release under test.
 var releaseTagConstants = []releaseTagConstantDeclaration{
-	{name: "prereleaseInstallVersion", file: "prerelease_install_test.go"},
-	{name: "publishedModuleVersion", file: "prerelease_module_contents_test.go"},
-	{name: "defaultReleaseTag", file: "prerelease_binaries_test.go"},
+	{name: "prereleaseInstallVersion", file: "internal/repocheck/prerelease_install_test.go"},
+	{name: "publishedModuleVersion", file: "internal/repocheck/prerelease_module_contents_test.go"},
+	{name: "defaultReleaseTag", file: "internal/repocheck/prerelease_binaries_test.go"},
 }
 
 // releaseModulePathConstants names each constant that holds the published module path.
 var releaseModulePathConstants = []releaseTagConstantDeclaration{
-	{name: "prereleaseModulePath", file: "prerelease_install_test.go"},
-	{name: "publishedModulePath", file: "prerelease_module_contents_test.go"},
+	{name: "prereleaseModulePath", file: "internal/repocheck/prerelease_install_test.go"},
+	{name: "publishedModulePath", file: "internal/repocheck/prerelease_module_contents_test.go"},
 }
 
 // releaseConstantValue returns the string literal that one declaration holds.

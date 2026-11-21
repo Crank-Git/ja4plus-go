@@ -718,7 +718,7 @@ option of kind 30 separates the two candidates, and a later measurement needs on
 
 1. Copy the corpus into the worktree with
    `cp -R <checkout>/testdata/foxio testdata/foxio`. **Never symlink it**, because
-   `method_count_test.go` reads that path as a file.
+   `internal/repocheck/method_count_test.go` reads that path as a file.
 2. Run `make conformance` and keep the log.
 3. Rewrite the import path with
    `grep -rl 'github.com/google/gopacket' --include='*.go' . | xargs sed -i '' 's|github.com/google/gopacket|github.com/gopacket/gopacket|g'`.

@@ -120,7 +120,7 @@ time. That is what makes the five-way build cheap.
 
 **The release build sets `CGO_ENABLED=0` for each of the five builds.** So every released
 artifact holds the setting, and the default of the build machine decides nothing.
-`.goreleaser.yaml` states it in the build environment, and `release_cgo_test.go` guards it.
+`.goreleaser.yaml` states it in the build environment, and `internal/repocheck/release_cgo_test.go` guards it.
 
 **No workflow of this repository sets that variable as a workflow-level, job-level or
 step-level `env` key.** The release workflow runs `go test -race`, and the race detector

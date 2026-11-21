@@ -166,7 +166,7 @@ This feature set changes no screen.
 | File | Change |
 |---|---|
 | `scripts/prerelease.sh` | New. Builds the clean environment and runs the cases. |
-| `prerelease_test.go` | New. Build tag `prerelease`. |
+| `internal/repocheck/prerelease_test.go` | New. Build tag `prerelease`. |
 | `Makefile` | The `prerelease` target. |
 | `.github/workflows/prerelease.yml` | New. Runs the cases on a matrix of platforms. |
 | `testdata/prerelease/` | New. One small capture and its expected values. |
@@ -230,7 +230,7 @@ on each attempt, and a failing case costs no published release.
 2. **Does the module size ceiling of FR-prerelease-17 have a number yet?** It is measured
    once at Epic 16 and recorded then. A ceiling invented before the measurement would be
    arbitrary. **#97 measured it on 2026-08-14, and `publishedModuleSizeCeiling` in
-   `prerelease_module_contents_test.go` holds the number.** The module zip of `v0.3.0`
+   `internal/repocheck/prerelease_module_contents_test.go` holds the number.** The module zip of `v0.3.0`
    measures 2253962 bytes compressed and 2444024 bytes uncompressed. `assets/logo.png` is
    2192430 uncompressed bytes, which is 89.7 percent of the uncompressed total. The
    ceiling is 4 MiB, and it reads the compressed zip size. A corpus capture and a built

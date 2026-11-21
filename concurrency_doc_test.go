@@ -176,7 +176,7 @@ func concurrencyGoBlocks(page string) []string {
 }
 
 // The method-count check of this file was removed on 2026-08-13, and
-// `method_count_test.go` holds it now. The cross-member review of the Epic 12 batch found
+// `internal/repocheck/method_count_test.go` holds it now. The cross-member review of the Epic 12 batch found
 // that the two checks enforced one rule with two meanings, which `.claude/rules/ste.md`
 // rule 6 bars.
 //
