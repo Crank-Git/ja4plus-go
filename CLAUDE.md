@@ -93,7 +93,8 @@ of that register name a change to this repository. Read
   go1.26.9 links 1 and go1.26.10 links 0, measured on 2026-10-28 UTC.
   go1.26.10 links 1 and go1.26.11 links 0, measured on 2026-11-15 UTC.
 - **The maintainer ruled the toolchain question on 2026-08-14**, and #472 holds the ruling
-  and the reversal path. `README.md` and `doc.go` state the measurement. **Every CI job
+  and the reversal path. `docs/implementation-notes.md` and `doc.go` state the
+  measurement. **Every CI job
   builds on the range `~1.26.11`**, and `goToolchainRange` in `internal/repocheck/foundation_test.go` states
   that range once for both workflows.
 - `github.com/gopacket/gopacket` for packet decoding. The maintainer decided the move from
@@ -340,7 +341,8 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
   - A code comment.
 
   `TestTheToolchainPagesDateTheVulnerabilityMeasurement` in `internal/repocheck/go_toolchain_statement_test.go`
-  holds the rule for `README.md` and for `doc.go`. Batch #493 earned this rule.
+  holds the rule for `docs/implementation-notes.md` and for `doc.go`. Batch #493 earned
+  this rule.
 - **Every date of this repository states the UTC calendar day.** Batch #493 recorded the
   ambiguity. The environment reported 2026-08-13 local and 2026-08-14 UTC on one day, and
   each tracker timestamp reads UTC. A ruling record names a reversal path, so two clocks
@@ -357,6 +359,9 @@ merge of `dev` into `epic/94-prerelease-validation` is where the two readings me
 - **Match the surrounding style.** Do not reformat or refactor code the change does not
   need.
 - Commit messages use the form `type(scope): summary`, as the existing history does.
+- **`README.md` is exempt from Simplified Technical English**, and it uses the voice of the
+  maintainer. `.claude/rules/ste.md` states the exception and the two rules that still bind
+  the README: US English, and one owner for each measured count.
 
 ## License
 

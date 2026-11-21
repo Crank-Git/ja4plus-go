@@ -119,3 +119,7 @@ Run `go doc github.com/Crank-Git/ja4plus-go` for the index, and
 
 `v1.0.0` freezes every name this section indexes. **A name that is absent here is a name
 the library does not export**, and `internal` holds the rest.
+
+**`docs/api/v1.md` of the repository records every exported name with its signature.** A
+test fails when the exported surface and that record differ, so a rename or a changed
+signature cannot reach a release without an edit to the record.
