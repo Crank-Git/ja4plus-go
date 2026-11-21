@@ -303,7 +303,8 @@ that boundary on 2026-08-14.
 **A caller of `ja4db.LookupFingerprintRemote` passes a context, a `*ja4db.RemoteLookupConfig`
 and the fingerprint.** The config names the endpoint and the HTTP client. **The function
 returns a `*ja4plus.LookupResult`**, so one result type serves the local table and the
-remote endpoint. The `README.md` of the repository holds the call.
+remote endpoint. The [Types and helpers](reference/types.md#the-remote-lookup-lives-in-ja4db)
+page indexes both names and states each return case.
 
 `GetDatabaseInfo` reports the active source, the path and the entry count. The `db info`
 subcommand prints that record.

@@ -47,8 +47,10 @@ callers who share one instance.
   as the way to share one instance.
 - **FR-concurrency-5** — The package documentation in `doc.go` holds a section that
   states the contract for the whole package.
-- **FR-concurrency-6** — The README holds a section that states the contract and shows
-  both patterns.
+- **FR-concurrency-6** — The README holds a section that states the contract and links to
+  `docs/concurrency.md`. That page shows both patterns as programs that compile. The README
+  showed both patterns as code until 2026-11-21 UTC, and round 79 of the `## Changelog` of
+  `docs/specs/spec.md` records the move.
 
 ### The safe wrapper
 

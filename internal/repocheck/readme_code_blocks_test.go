@@ -139,11 +139,16 @@ func readmeBlocks(t *testing.T) []readmeBlock {
 //
 // A block with no language reaches no check below, so this test is the gate. A later
 // language joins the set here, and it joins a check at the same time.
+//
+// **`mermaid` is the one language that joins no check, and that is deliberate.** A Mermaid
+// block holds a diagram that GitHub draws. It holds no code, no command and no output, so
+// no check of this file can run it. The maintainer added the diagram on 2026-11-21 UTC.
 func TestEveryFencedBlockOfTheReadmeNamesACheckedLanguage(t *testing.T) {
 	checked := map[string]string{
-		"go":   "TestEveryGoBlockOfTheReadmeParses reads it.",
-		"bash": "TestEveryProgramCommandOfTheReadmeNamesASubcommand reads it.",
-		"text": "TestTheReadmeCommandLineOutputMatchesTheProgram reads it.",
+		"go":      "TestEveryGoBlockOfTheReadmeParses reads it.",
+		"bash":    "TestEveryProgramCommandOfTheReadmeNamesASubcommand reads it.",
+		"text":    "TestTheReadmeCommandLineOutputMatchesTheProgram reads it.",
+		"mermaid": "GitHub draws it, and it holds no code that a check can run.",
 	}
 
 	for _, block := range readmeBlocks(t) {

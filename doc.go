@@ -63,8 +63,8 @@
 // by itself, and a user on the Go 1.26 line takes go1.26.11 or later.
 //
 // Every count above moves without a change to this repository, because the vulnerability
-// database is live. The README states the measurement, and it names the command that
-// re-takes it.
+// database is live. docs/implementation-notes.md states the measurement, and it names the
+// command that re-takes it.
 //
 // # Network
 //
@@ -94,8 +94,8 @@
 //   - Share one [SyncProcessor], which serializes every call with one mutex.
 //
 // The first pattern gives higher throughput, because the per-packet path acquires no
-// lock. The second pattern costs one mutex acquisition for each packet. The README shows
-// both patterns as code.
+// lock. The second pattern costs one mutex acquisition for each packet.
+// docs/concurrency.md shows each pattern as a program that compiles and runs.
 //
 // # License
 //

@@ -120,8 +120,14 @@ today.** Read a row as a start state, and never as a claim about the present tre
 - **FR-foundation-21** — `CHANGELOG.md` exists and follows the Keep a Changelog format.
 - **FR-foundation-22** — `CHANGELOG.md` records `v0.1.0`, `v0.2.0` and `v0.3.0` from the
   git history.
-- **FR-foundation-23** — `README.md` and `doc.go` each state a minimum build toolchain, and
-  each one separates that statement from the language version.
+- **FR-foundation-23** — `docs/implementation-notes.md` and `doc.go` each state a minimum
+  build toolchain, and each one separates that statement from the language version.
+
+  **`README.md` held this statement until 2026-11-21 UTC.** The maintainer exempted the
+  README from Simplified Technical English on that date, and the measurement moved to
+  `docs/implementation-notes.md`. The README states the minimum build toolchain in its
+  `## Requirements` section, and it links that page. Round 79 of the `## Changelog` of
+  `docs/specs/spec.md` records the move.
 
   **The maintainer ruled this question on 2026-08-14, and issue #472 holds the ruling.** The
   ruling picked candidate answer 1 of #472: the two pages state a minimum build toolchain,

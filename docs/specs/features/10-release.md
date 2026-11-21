@@ -72,13 +72,18 @@ file that did not exist.
   states that ten fingerprinters carry eleven of them, and that package `scan` carries
   JA4TScan. #796 amended this requirement on 2026-10-01 UTC.
 - **FR-release-18** — The README states the Go version floor.
-- **FR-release-19** — The README holds an install command that names `v1.0.0`.
+- **FR-release-19** — The README holds an install command that names `@latest`, and it
+  names no version. `@latest` resolves to the newest published tag. The requirement named
+  `v1.0.0` until 2026-11-21 UTC, and the README held `@latest` before that date.
 - **FR-release-20** — The README holds a library example that compiles.
 - **FR-release-21** — The README holds a command-line example with real output.
-- **FR-release-22** — The README holds a concurrency section with both patterns.
+- **FR-release-22** — The README holds a concurrency section that states the contract and
+  links to `docs/concurrency.md`, and that page shows both patterns. FR-concurrency-6 states
+  the move of 2026-11-21 UTC.
 - **FR-release-23** — The README holds a license section that states the split.
-- **FR-release-24** — The README holds a conformance section that names the FoxIO commit
-  the library is tested against.
+- **FR-release-24** — The README names the FoxIO commit the library is tested against, and
+  it links `docs/audit/conformance.md` for the figures. The README held a `## Conformance`
+  section until 2026-11-21 UTC.
 - **FR-release-25** — The README states which functions reach the network.
 - **FR-release-26** — The README states how to report a vulnerability.
 - **FR-release-27** — Every badge in the README links to a target that exists.

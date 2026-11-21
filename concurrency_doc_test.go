@@ -20,8 +20,13 @@ import (
 // A documentation requirement is testable, so each requirement below reads the source
 // file and asserts the statement that a user sees.
 //
-// The two example functions carry the code that the README shows. An example compiles
-// and runs under `go test`, so a reader who copies the README gets code that builds.
+// The two example functions run each pattern under `go test`. `README.md` states the
+// contract and links to `docs/concurrency.md`, and that page shows each pattern as a
+// program. `docs_go_samples_test.go` in `internal/repocheck` compiles every Go block of
+// that page through its mirrors, so a reader who copies the page gets code that builds.
+//
+// **The README showed both patterns as code until 2026-11-21 UTC.** On that date the
+// maintainer moved them to `docs/concurrency.md`, so the pattern check below reads that page.
 
 // concurrencyContractPhrase is the sentence that states the contract for one type.
 // One phrase for every type keeps the statement identical across the package.
@@ -106,11 +111,13 @@ func TestPackageDocumentationHoldsTheConcurrencySection(t *testing.T) {
 func TestReadmeHoldsTheConcurrencySection(t *testing.T) {
 	text := readConcurrencyFile(t, "README.md")
 
+	// The section heading is `### Concurrency`, and it holds the `## Concurrency` text.
 	for _, want := range []string{
 		"## Concurrency",
 		concurrencyContractPhrase,
 		"GetShardKey",
 		"SyncProcessor",
+		concurrencyPageLink,
 	} {
 		if !strings.Contains(text, want) {
 			t.Errorf("README.md omits %q", want)
@@ -118,18 +125,53 @@ func TestReadmeHoldsTheConcurrencySection(t *testing.T) {
 	}
 }
 
-func TestReadmeShowsBothPatternsAsCompilingGoCode(t *testing.T) {
-	readme := readConcurrencyFile(t, "README.md")
+// concurrencyPageLink is the address of the published concurrency page. The README links
+// to it, because that page shows the two patterns.
+const concurrencyPageLink = "https://crank-git.github.io/ja4plus-go/concurrency/"
 
-	// The extracted text comes from this file, which the compiler builds and the example
-	// functions run. README text that equals it is therefore code that builds.
-	for _, pattern := range []string{"sharded", "shared"} {
-		code := markedSource(t, pattern)
+// TestTheConcurrencyPageShowsBothPatternsAsPrograms holds FR-concurrency-6 and
+// FR-release-22.
+//
+// Each pattern needs one Go block of `docs/concurrency.md` that calls the function the
+// pattern names. This test reads the page, and it compiles nothing.
+// TestEveryGoSampleOfTheSiteIsARunnableProgram and
+// TestEveryGoSampleOfTheSiteIsATestableExample hold each block equal to a program that the
+// build compiles and to an example that `go test` runs.
+func TestTheConcurrencyPageShowsBothPatternsAsPrograms(t *testing.T) {
+	blocks := concurrencyGoBlocks(readConcurrencyFile(t, "docs/concurrency.md"))
 
-		if !strings.Contains(readme, code) {
-			t.Errorf("README.md does not show the %s pattern as the code that "+
-				"concurrency_doc_test.go compiles:\n%s", pattern, code)
+	for pattern, call := range map[string]string{
+		"sharded": "router.GetShardKey(",
+		"shared":  "ja4plus.NewSyncProcessor()",
+	} {
+		shown := false
+		for _, block := range blocks {
+			if strings.Contains(block, "package main") && strings.Contains(block, call) {
+				shown = true
+			}
 		}
+
+		if !shown {
+			t.Errorf("docs/concurrency.md holds no Go program that calls %s, so it does "+
+				"not show the %s pattern", call, pattern)
+		}
+	}
+}
+
+// concurrencyGoBlocks returns the text of each fenced Go block of the page.
+func concurrencyGoBlocks(page string) []string {
+	var blocks []string
+
+	rest := page
+	for {
+		_, after, found := strings.Cut(rest, "```go\n")
+		if !found {
+			return blocks
+		}
+
+		block, remainder, _ := strings.Cut(after, "\n```")
+		blocks = append(blocks, block)
+		rest = remainder
 	}
 }
 
@@ -166,28 +208,6 @@ func docCommentOf(t *testing.T, file, declaration string) string {
 	return block
 }
 
-// markedSource returns the source lines that the named markers enclose in this file.
-// The markers are built from parts, so this function does not match itself.
-func markedSource(t *testing.T, name string) string {
-	t.Helper()
-
-	source := readConcurrencyFile(t, "concurrency_doc_test.go")
-	begin := "//" + "readme:" + name + ":begin\n"
-	end := "//" + "readme:" + name + ":end"
-
-	_, after, ok := strings.Cut(source, begin)
-	if !ok {
-		t.Fatalf("concurrency_doc_test.go holds no %s begin marker", name)
-	}
-
-	code, _, ok := strings.Cut(after, end)
-	if !ok {
-		t.Fatalf("concurrency_doc_test.go holds no %s end marker", name)
-	}
-
-	return strings.TrimSpace(code)
-}
-
 // readConcurrencyFile returns the content of the file at the repository root.
 func readConcurrencyFile(t *testing.T, path string) string {
 	t.Helper()
@@ -199,8 +219,6 @@ func readConcurrencyFile(t *testing.T, path string) string {
 
 	return string(content)
 }
-
-//readme:sharded:begin
 
 // processSharded runs one Processor for each shard and returns every result.
 // Each goroutine owns its Processor, so no lock guards the per-packet path.
@@ -263,10 +281,6 @@ func shardIndex(key string, shards int) int {
 	return int(digest.Sum32() % uint32(shards))
 }
 
-//readme:sharded:end
-
-//readme:shared:begin
-
 // processShared shares one SyncProcessor between the workers and returns every result.
 // The mutex serializes every call, so this pattern gives lower throughput than a shard
 // for each goroutine.
@@ -307,8 +321,6 @@ func processShared(packets []gopacket.Packet, workers int) []ja4plus.Fingerprint
 
 	return all
 }
-
-//readme:shared:end
 
 func ExampleProcessor_GetShardKey() {
 	packets := concurrencySYNPackets(8)

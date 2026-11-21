@@ -76,8 +76,8 @@ const (
 // window scale that a raw TCP option region holds.
 //
 // It reads the raw bytes, because `gopacket` reports the first End-of-Option-List byte and
-// drops every byte after it. `layers/tcp.go:279-282` appends one option for that byte,
-// assigns the rest of the header to `tcp.Padding`, and breaks the option loop. The
+// drops every byte after it. `layers/tcp.go:360-366` at `v1.7.7` appends one option for
+// that byte, assigns the rest of the header to `tcp.Padding`, and breaks the option loop. The
 // maintainer ruled on 2026-08-12 that part b holds one entry for each option byte, and
 // #297 records the ruling.
 //
@@ -128,13 +128,13 @@ func tcpOptionEntries(region []byte) (entries []string, mss uint16, wscale uint8
 
 // tcpOptionRegion returns the raw TCP option bytes of the header.
 //
-// `gopacket` assigns `tcp.Contents` the whole header at `layers/tcp.go:270`, so the slice
-// after the first 20 bytes holds every option byte. It returns nil for a header that
-// carries no option.
+// `gopacket` assigns `tcp.Contents` the whole header at `layers/tcp.go:354` of `v1.7.7`,
+// so the slice after the first 20 bytes holds every option byte. It returns nil for a
+// header that carries no option.
 //
 // The data offset states the header length, and a crafted segment states a length the
-// segment does not hold. `layers/tcp.go:264-268` assigns `tcp.Contents = data` for such a
-// segment, and that slice holds the payload as well as the header. `layers/tcp.go:319`
+// segment does not hold. `layers/tcp.go:348-352` assigns `tcp.Contents = data` for such a
+// segment, and that slice holds the payload as well as the header. `layers/tcp.go:671-674`
 // adds the layer before it reads the error, so a fingerprinter reads that segment. The
 // bound below returns nil for it, which is what `tcp.Options` reported before #297.
 func tcpOptionRegion(tcp *layers.TCP) []byte {
