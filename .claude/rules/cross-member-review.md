@@ -181,7 +181,7 @@ touched, because a rule binds every file and not the shared ones alone.
 surface that exactly one member edited. Each one is a cross-member defect, because one
 member wrote a rule that another member's file breaks. #255 wrote
 `## A citation names its repository` in `.claude/rules/rulings.md`, and #319 wrote a bare
-`#215` that names the port in `ja4t_option_byte_count_test.go`. No shared file holds that
+`#215` that names the port in `ja4t_test.go`. No shared file holds that
 pair.
 
 ## What a pull-request body is, and how a finding cites one

@@ -280,7 +280,7 @@ This feature set changes no screen.
 | `testdata/deviations.json` | New. Tracked. |
 | `testdata/README.md` | States the schema and the two meanings of the middle key part. |
 | `conformance_test.go` | Reads the register. |
-| `conformance_key_kind_test.go` | New. Holds FR-reference-30. |
+| `conformance_test.go` | New. Holds FR-reference-30. |
 | `internal/repocheck/foxio_citation_base_test.go` | New. Holds FR-reference-18a through FR-reference-18l. |
 | `internal/repocheck/issue_citation_namespace_test.go` | Holds FR-reference-32 through FR-reference-34, FR-reference-38, FR-reference-38a, FR-reference-40, FR-reference-41 and FR-reference-42. **#758 withdrew FR-reference-43 and FR-reference-44 on 2026-08-16 UTC**, and the test that held them went with the exclusion. |
 | `mkdocs.yml` | `docs/specs/` is excluded from the site. |

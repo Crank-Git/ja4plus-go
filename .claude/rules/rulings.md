@@ -308,8 +308,8 @@ The `Case` column names the decisive case of the grant.
 |---|---|---|---|
 | #346 — the library carries step 2 of the JA4SSH client direction. | 3 | Issue #346, comment 5281493518. **#413 builds the work**, and no line of the tree carries step 2 today. | Issue #346. A reversal records the decline of step 2, with the reason. |
 | #369 question 1 — JA4TS part e holds ten delays. | 2 | `docs/specs/foxio/JA4T.md` R18, and issue #369, comment 5276169622. | Issue #369. |
-| The FR-ja4ls-7 amendment — part b writes the observed time-to-live, and no branch computes a hop count. | 1 | `docs/specs/features/12-ja4ls.md` `### The method` and FR-ja4ls-7, and `ja4ls_emission_test.go`. | Issue #60. |
-| The FR-ja4ls-8 amendment — no propagation factor reaches the value. | 1 | `docs/specs/features/12-ja4ls.md` `### The method` and FR-ja4ls-8, and `ja4ls_emission_test.go`. | Issue #60. |
+| The FR-ja4ls-7 amendment — part b writes the observed time-to-live, and no branch computes a hop count. | 1 | `docs/specs/features/12-ja4ls.md` `### The method` and FR-ja4ls-7, and `ja4ls_test.go`. | Issue #60. |
+| The FR-ja4ls-8 amendment — no propagation factor reaches the value. | 1 | `docs/specs/features/12-ja4ls.md` `### The method` and FR-ja4ls-8, and `ja4ls_test.go`. | Issue #60. |
 | The FR-ja4ls-22 amendment — the requirement names the per-stream vector set alone. | None. **This is a scope decision, and never a ruling.** | `docs/specs/features/12-ja4ls.md` `### Conformance`. | Comment 5276074116 of #63. |
 
 **The FR-ja4ls-22 amendment writes no register entry, and it states no rule about a

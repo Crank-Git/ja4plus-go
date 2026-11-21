@@ -262,7 +262,7 @@ reading was written.
 
 **The maintainer settled that risk on 2026-08-13, and the answer is the strict gate.** A
 request whose body never completes reaches no value. **No vector separates the two answers**,
-so `ja4h_body_gate_test.go` records the ruling, and
+so `ja4h_test.go` records the ruling, and
 `TestJA4H_ProducesNoValueForARequestWhoseBodyNeverCompletes` holds it.
 
 ---
@@ -588,7 +588,7 @@ rule 5b, and no session builds it first.** A ruling lands in this repository and
 **A repair of rule 5b changes no line of `internal/parser/hash.go`.** `TruncatedHash` serves
 ten call sites outside part b, in `ja4.go`, in `ja4s.go`, in `ja4x.go` and in the two
 cookie parts of `computeJA4HFromRequest`. **The root package holds eleven call sites in
-all**, and part b is the eleventh. `ja4hHashCallSites` of `ja4h_empty_header_list_test.go`
+all**, and part b is the eleventh. `ja4hHashCallSites` of `ja4h_test.go`
 names each one, and `TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed` reads the
 syntax tree to hold that table true. **R27 holds the sentinel for part c and part d**,
 and **R12 of `docs/specs/foxio/JA4X.md` holds the sentinel for JA4X**. The doc comment of
@@ -631,7 +631,7 @@ no JA4X value.** `TruncatedHashNoSentinel` of `internal/parser/hash.go` hashes t
 string, `TruncatedHash` calls it for a non-empty input, and `computeJA4HFromRequest` of
 `ja4h.go` is the one caller of the new function.
 `TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed` of
-`ja4h_empty_header_list_test.go` names every call site of the root package, and it fails
+`ja4h_test.go` names every call site of the root package, and it fails
 when a later change adds one.
 
 **Rule 5a reads the path group.** `requestLineRe` of `internal/parser/http.go` now holds a
@@ -654,7 +654,7 @@ all. **`ParseHTTPRequest` reads no request**, so no fingerprint value follows.
 
 **Neither part moves a value of the corpus.** The run above is byte-identical with each
 part and without it, so no capture of the corpus holds such a payload.
-`TestTheRequestLineReadsNoSecondLine` of `ja4h_empty_header_list_test.go` holds both rules,
+`TestTheRequestLineReadsNoSecondLine` of `ja4h_test.go` holds both rules,
 and `TestTheRequestLineReadsASpaceAndATabAsASeparator` holds the separator set.
 
 #### The measurement

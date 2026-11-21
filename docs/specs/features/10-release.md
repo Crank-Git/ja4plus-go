@@ -126,7 +126,7 @@ Measured on 2026-08-14: `ls .goreleaser.yaml` reported no such file, and
 commands. **The defect predated batch #617**, and the batch #617 cross-member review recorded
 it rather than filing an issue, because #105 already held the work.
 
-**`.goreleaser.yaml` now holds the build**, and `release_cgo_test.go` reads that file for
+**`.goreleaser.yaml` now holds the build**, and `internal/repocheck/release_cgo_test.go` reads that file for
 each of FR-release-35a through FR-release-35k. **A tag push is the only trigger of
 `.github/workflows/release.yml`**, so the `goreleaser` job of `.github/workflows/ci.yml`
 reads the configuration on every pull request. That job runs `goreleaser check` and
@@ -137,7 +137,7 @@ reads the configuration on every pull request. That job runs `goreleaser check` 
 nothing about what the build stamps. **A snapshot binary printed the version of the previous
 release, and every case stayed green.** So the step runs the Linux amd64 artifact. It reads
 the printed line against the `v` prefix of #724 and the snapshot marker of #736.
-`release_snapshot_version_test.go` reads the step, and it reads the link flag of
+`internal/repocheck/release_snapshot_version_test.go` reads the step, and it reads the link flag of
 `.goreleaser.yaml` beside it.
 
 **The conformance suite runs in a job of its own, and the `release` job names it in

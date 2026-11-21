@@ -35,8 +35,8 @@ read a requirement, because the requirements were written before the tree held a
 | Seed files under the two corpus directories | 30 | `find testdata/fuzz internal/parser/testdata/fuzz -type f -not -name README.md` |
 
 **The two targets the tree already held are `FuzzNoExportedFunctionPanicsOnAnyFrame` in
-`audit_panic_test.go` and `FuzzTCPOptionEntriesReadsAnyOptionRegion` in
-`ja4t_option_byte_count_test.go`.** No member of Epic 6 seeds either one.
+`audit_test.go` and `FuzzTCPOptionEntriesReadsAnyOptionRegion` in
+`ja4t_test.go`.** No member of Epic 6 seeds either one.
 
 **`internal/parser` holds 13 files that are not test files**, measured on 2026-08-14. Seven
 of them carry a fuzz target in a file beside them.
@@ -650,7 +650,7 @@ repository has observed says so.
       package. **The first draft of this criterion called all eleven "parser entry points",
       and that sentence is false.**
 - [x] A fuzz target exists for `Processor.ProcessPacket`. `FuzzProcessPacketReadsAnyFrame`
-      in `processor_fuzz_test.go`.
+      in `processor_test.go`.
 - [x] Each target has a seed corpus with at least one accepted and one rejected input.
       `TestEachTargetOfThisPackageHoldsAnAcceptedSeedAndARejectedSeed` of each package fails
       when a target loses either one. **The criterion reaches the 13 targets of Epic 6, and

@@ -65,12 +65,12 @@ key holds no `/`, so a key of any of the four forms still reads in three parts.
 counters, and both start at 0, so one capture names a TCP connection and a UDP connection
 with the stream number `0`. The second form above keeps such a pair apart, and it reaches
 the colliding stream number alone. `conformanceStreamNames` of
-`conformance_adapters_test.go` writes the name, and issue #250 holds the reading.
+`conformance_test.go` writes the name, and issue #250 holds the reading.
 
 **One key names one comparison.** The suite reads one register for both sets, so a key that
 named a comparison in each set would accept a difference the maintainer never ruled on.
 FR-reference-30 fails the suite for such a key, and
-`conformance_key_kind_test.go` holds that test. FR-reference-31 gives one entry to one key,
+`conformance_test.go` holds that test. FR-reference-31 gives one entry to one key,
 and `internal/repocheck/deviations_test.go` holds it.
 
 ### One entry

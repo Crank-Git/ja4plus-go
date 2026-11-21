@@ -41,11 +41,11 @@ func ciWorkflowStep(t *testing.T, workflow, stepName string) string {
 func conformanceReportPathFromSource(t *testing.T) string {
 	t.Helper()
 
-	source := readRepoFile(t, "conformance_report_test.go")
+	source := readRepoFile(t, "conformance_test.go")
 
 	match := regexp.MustCompile(`conformanceReportPath = "([^"]+)"`).FindStringSubmatch(source)
 	if match == nil {
-		t.Fatal("conformance_report_test.go declares no conformanceReportPath")
+		t.Fatal("conformance_test.go declares no conformanceReportPath")
 	}
 
 	return match[1]

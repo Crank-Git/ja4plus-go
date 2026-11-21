@@ -455,7 +455,7 @@ runs.
 This table belongs to issue #22. It holds a finding of a parser input: a length field, an
 integer conversion, a map read, a slice index or a GREASE filter.
 
-`audit_parser_test.go` builds the input of each finding below and asserts the value the
+`audit_test.go` builds the input of each finding below and asserts the value the
 library produces today. A reader who reverses a finding starts there.
 
 **Three findings hand over to another epic, and issue #25 recorded the deferral under
@@ -531,7 +531,7 @@ state table, the `results` slice, `CleanupConnection` or `Reset`.
 | F-23-14 | `lookup.go` | 37 | major | declined | A program that calls LookupFingerprint before a new mapping file reaches the cache path reads the embedded table for the life of the process. A lookup of a fingerprint that only the new file holds returns nil. |  | Issue #75 of Epic 9 owns the reload, and `.claude/rules/concurrency.md` names this state a known exception under repair. |
 <!-- findings:23:end -->
 
-`audit_state_test.go` holds the measurement of each finding above. Read it before you
+`audit_test.go` holds the measurement of each finding above. Read it before you
 close one, because a test there states the behavior the audit read.
 
 Three readings support the rows.
@@ -552,7 +552,7 @@ This table belongs to issue #24. It holds a finding of a contract the library st
 panic, a write to standard output or to standard error, a swallowed error, an empty-input
 hash or a sort.
 
-`audit_panic_test.go` reproduced every `open` row. Issue #25 reversed each assertion in
+`audit_test.go` reproduced every `open` row. Issue #25 reversed each assertion in
 the commit that closed the finding, so every test of that file now states the repaired
 result. Two rows close as `no change needed`, and `## The three rulings of 2026-08-11`
 states the reason.
@@ -570,7 +570,7 @@ states the reason.
 | F-24-8 | `ja4.go` | 115 | critical | confirmed | A call of `Reset` on a zero-value `Processor` panics with a nil pointer dereference of the JA4 fingerprinter field. | `5515a3c` |  |
 | F-24-9 | `processor.go` | 62 | critical | confirmed | A TCP packet makes `ProcessPacket` of a zero-value `SyncProcessor` panic with a nil pointer dereference of the processor field. | `5515a3c` |  |
 | F-24-10 | `ja4.go` | 141 | major | no change needed | A TLS record whose handshake length exceeds the record makes `ComputeJA4` return the empty string, which also names a packet with no ClientHello. |  | The port states that a fingerprinter which cannot parse a packet returns nothing, and `Processor.ProcessPacket` is the API that carries the error. |
-| F-24-11 | `ja4s.go` | 61 | major | unconfirmed | A QUIC Initial datagram that the parser cannot read makes JA4S return no error, and `ja4.go:56` returns an error on the same failure. |  | No crafted datagram of `audit_panic_test.go` makes `parser.ParseQUICInitial` return an error, so the test skips. |
+| F-24-11 | `ja4s.go` | 61 | major | unconfirmed | A QUIC Initial datagram that the parser cannot read makes JA4S return no error, and `ja4.go:56` returns an error on the same failure. |  | No crafted datagram of `audit_test.go` makes `parser.ParseQUICInitial` return an error, so the test skips. |
 | F-24-12 | `ja4x.go` | 271 | major | no change needed | The DER buffer `30 03 02 01 00` makes `ComputeJA4XFromDER` return the empty string, which also names a buffer that holds no certificate. |  | The port states that a fingerprinter which cannot parse a packet returns nothing, and `Processor.ProcessPacket` is the API that carries the error. |
 | F-24-13 | `lookup.go` | 55 | major | unconfirmed | A cache file whose first row is not valid CSV leaves the table empty, so `LookupFingerprint` returns no result for every fingerprint. |  | Issue #24 measured that the loader ran once for each process, through `lookupOnce`. No test of that audit reached it with a crafted cache file. #74 replaced that loader on 2026-08-14. `## What Epic 9 changed under S2, S3 and F-24-13 through F-24-15` below names that test. |
 | F-24-14 | `lookup.go` | 72 | major | unconfirmed | A cache row that holds an unescaped double quote makes the loader skip it, so `LookupFingerprint` returns no result for that row. |  | Issue #24 measured that the loader ran once for each process, through `lookupOnce`. No test of that audit reached it with a crafted cache file. #74 replaced that loader on 2026-08-14. `## What Epic 9 changed under S2, S3 and F-24-13 through F-24-15` below names that test. |
@@ -597,7 +597,7 @@ value. **Issue #57 of Epic 8b held the decision for the JA4X empty list, and the
 states it.
 
 **Four call sites of the root package write no sentinel, and the tree holds no fifth.**
-`ja4hHashCallSites` in `ja4h_empty_header_list_test.go` names each one, and
+`ja4hHashCallSites` in `ja4h_test.go` names each one, and
 `TestEveryTruncatedHashCallSiteOfTheRootPackageIsNamed` reads the syntax tree against that
 list.
 
@@ -640,7 +640,7 @@ test file of the command-line program, and issue #25 added it.
 **Five rows name a file that another issue read.** F-25-2 through F-25-6 hold the panic
 that F-24-1, F-24-2 and F-24-3 name, at five sites that no issue recorded. Issue #25
 reached them through
-`TestNoLibraryFileAssertsAGopacketLayerTypeWithOneResult` of `audit_panic_test.go`, which
+`TestNoLibraryFileAssertsAGopacketLayerTypeWithOneResult` of `audit_test.go`, which
 scans the shipped source for a type assertion that takes one result. The closure of the
 three recorded sites left the five, so the scan is the reason the report holds them. The
 rows sit here because issue #25 wrote them, and `### The record` states that rule.
@@ -702,7 +702,7 @@ source, the cache path and the file time are fields of the unexported `lookupTab
 `activeTable` of `lookup.go` publishes one immutable snapshot for every reader.
 
 **Five tests now reach the loader with a crafted cache file, and the audit of issue #24
-had none.** They live in `lookup_reload_test.go`.
+had none.** They live in `lookup_test.go`.
 
 | Test | What it reaches |
 |---|---|

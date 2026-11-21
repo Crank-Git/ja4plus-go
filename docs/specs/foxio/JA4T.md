@@ -239,4 +239,4 @@ and `docs/specs/features/17-active-scan.md` states what this project builds from
   TCP option reader, at tag `v1.3.0` of `Crank-Git/ja4plus`:
   <https://github.com/Crank-Git/ja4plus/blob/v1.3.0/ja4plus/utils/tcp_options.py#L115-L118>.
   **No capture of the corpus holds an option of another length**, so no vector separates
-  the two readings. `ja4t_option_exact_length_test.go` holds the separating packets.
+  the two readings. `ja4t_test.go` holds the separating packets.

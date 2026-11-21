@@ -1744,7 +1744,7 @@ func TestJA4LWritesNoTCPLiteralInAnyValue(t *testing.T) {
 // reversal path, and this is that reversal.
 //
 // The harness now compares the value and reports it as an uncovered value, which is neither a
-// match nor a deviation. `conformance_engine_test.go` holds `conformanceSplitUncovered`, and
+// match nor a deviation. `conformance_test.go` holds `conformanceSplitUncovered`, and
 // the register therefore holds one decline for each such comparison.
 //
 // The port declines the same values. `Crank-Git/ja4plus` holds five rows in
@@ -1837,4 +1837,409 @@ func ja4lCollectValues(t *testing.T, fp *JA4LFingerprinter, packets ...gopacket.
 	}
 
 	return values
+}
+
+// #685 read the JA4L request completeness gate on 2026-08-15 UTC, and this file holds the
+// separating packet of that reading.
+//
+// **The gate held two fixed byte groups, `\r\n\r\n` and `\n\n`, and the pair declined the
+// terminator `\n\r\n`.** So one request moved the JA4L client measurement point, and a
+// request with any other terminator did not.
+//
+// **The reading found its own deciding source, and it is not the ruling of #298.** #298
+// ruled the header block terminator of `internal/parser/http.go`, which answers where a
+// JA4H value ends its header block. This gate answers a different question: does the
+// reference route the packet to a cache that holds no measurement point.
+// `python/common.py:78` routes on `hl`. `python/ja4.py:389` sets `hl` from the layer name
+// that tshark reports. So the Wireshark HTTP dissector decides.
+//
+// **Wireshark v4.6.0 reads `\n\r\n` as a complete header block.** `epan/tvbuff.c:4203`
+// compiles the line-end pattern over both `\r` and `\n`, so a bare line feed ends a line.
+// `epan/req_resp_hdrs.c:143` then breaks out of the header loop on the first line of
+// length 0. The two readings reach one repair, and they reach it for two reasons.
+//
+// **No capture of the FoxIO corpus holds a mixed terminator**, so this test builds the
+// packet that no vector reaches. `.claude/rules/rulings.md` `## Where a ruling is recorded`
+// asks for exactly that. **Issue #685 is the reversal path.**
+
+// mixedLineEndingRequest holds an HTTP request whose header block ends `\n\r\n`.
+// Each header line ends with one line feed, and the empty line ends with `\r\n`.
+const mixedLineEndingRequest = "GET / HTTP/1.1\nHost: example.com\n\r\n"
+
+// buildJA4LPayloadACK builds the bare ACK of a handshake, and it carries one payload.
+// The initial sequence numbers of the connection are 0, so the absolute 1 that this packet
+// carries is the relative 1 that clientPoint reads.
+//
+// **`buildTCPStreamPacket` in `ja4l_test.go` builds the same packet, and it reads IPv6 as
+// well.** This helper fixes the sequence numbers and the ports that its own case needs, and
+// that caller takes both. **A later change may fold the two together.** Batch #708 recorded
+// the duplication and made no code change, because a consolidation of a test helper is no
+// documentation repair.
+func buildJA4LPayloadACK(t testing.TB, srcIP, dstIP net.IP, ttl uint8, payload string) gopacket.Packet {
+	t.Helper()
+	eth := &layers.Ethernet{
+		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+		DstMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	ip := &layers.IPv4{
+		SrcIP:    srcIP,
+		DstIP:    dstIP,
+		Protocol: layers.IPProtocolTCP,
+		Version:  4,
+		TTL:      ttl,
+	}
+	tcp := &layers.TCP{
+		SrcPort: layers.TCPPort(12345),
+		DstPort: layers.TCPPort(80),
+		ACK:     true,
+		Seq:     1,
+		Ack:     1,
+		Window:  65535,
+	}
+	_ = tcp.SetNetworkLayerForChecksum(ip)
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+	err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload([]byte(payload)))
+	if err != nil {
+		t.Fatalf("failed to serialize the packet: %v", err)
+	}
+
+	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
+func TestTheRequestGateReadsEveryPairOfLineEndingsAsOneTerminator(t *testing.T) {
+	cases := []struct {
+		name    string
+		payload string
+		held    bool
+	}{
+		{
+			name:    "two carriage return line feeds",
+			payload: "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n",
+			held:    true,
+		},
+		{
+			name:    "two line feeds",
+			payload: "GET / HTTP/1.1\nHost: example.com\n\n",
+			held:    true,
+		},
+		{
+			name:    "a carriage return line feed and then a line feed",
+			payload: "GET / HTTP/1.1\r\nHost: example.com\r\n\n",
+			held:    true,
+		},
+		{
+			name:    "a line feed and then a carriage return line feed",
+			payload: mixedLineEndingRequest,
+			held:    true,
+		},
+		{
+			name:    "no empty line",
+			payload: "GET / HTTP/1.1\r\nHost: example.com\r\n",
+			held:    false,
+		},
+		{
+			name:    "no request line",
+			payload: "not a request\r\n\r\n",
+			held:    false,
+		},
+	}
+
+	for _, one := range cases {
+		t.Run(one.name, func(t *testing.T) {
+			read := holdsACompleteHTTPRequest([]byte(one.payload))
+			if read != one.held {
+				t.Errorf("the gate reports %t for %q, and the reading of #685 states %t",
+					read, one.payload, one.held)
+			}
+		})
+	}
+}
+
+// ja4lClientValueForPayload drives a whole handshake and returns the JA4L-C value that the
+// third packet produces. It returns the empty string when the packet produces none.
+func ja4lClientValueForPayload(t *testing.T, payload string) string {
+	t.Helper()
+	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	fingerprinter := NewJA4L()
+
+	syn := buildTCPPacketWithIPs(t, clientIP, serverIP, 64, 12345, 80, true, false)
+	syn.Metadata().Timestamp = base
+	if _, err := fingerprinter.ProcessPacket(syn); err != nil {
+		t.Fatalf("the SYN packet returned an error: %v", err)
+	}
+
+	synAck := buildTCPPacketWithIPs(t, serverIP, clientIP, 64, 80, 12345, true, true)
+	synAck.Metadata().Timestamp = base.Add(100 * time.Millisecond)
+	if _, err := fingerprinter.ProcessPacket(synAck); err != nil {
+		t.Fatalf("the SYN-ACK packet returned an error: %v", err)
+	}
+
+	request := buildJA4LPayloadACK(t, clientIP, serverIP, 64, payload)
+	request.Metadata().Timestamp = base.Add(150 * time.Millisecond)
+	results, err := fingerprinter.ProcessPacket(request)
+	if err != nil {
+		t.Fatalf("the request packet returned an error: %v", err)
+	}
+
+	for _, result := range results {
+		if strings.HasPrefix(result.Fingerprint, "JA4L-C=") {
+			return result.Fingerprint
+		}
+	}
+
+	return ""
+}
+
+func TestAMixedLineEndingRequestMovesNoClientMeasurementPoint(t *testing.T) {
+	// The positive control proves that this harness reaches the client measurement point.
+	// A payload that ends no header block reaches the cache of any other TCP packet, so it
+	// moves the point and it completes a value. Without this control the negative case
+	// below would pass for any reason that produces no result at all.
+	partial := "GET / HTTP/1.1\r\nHost: example.com\r\n"
+	if value := ja4lClientValueForPayload(t, partial); value == "" {
+		t.Fatalf("the partial request produced no JA4L-C value, so this test proves nothing"+
+			" about the gate; the harness reaches no client measurement point for %q", partial)
+	}
+
+	// The reference routes a packet that tshark reports as `http` to a cache that holds no
+	// measurement point, so a whole request completes no JA4L-C value.
+	if value := ja4lClientValueForPayload(t, mixedLineEndingRequest); value != "" {
+		t.Errorf("the request packet produced %q, and the reading of #685 states that"+
+			" a whole request moves no client measurement point", value)
+	}
+}
+
+// TestJA4LReportsNoServerValueOnAReorderedCapture records what this library does today when
+// a capture delivers the SYN-ACK before the SYN. It builds the packet sequence that separates
+// the two packet orders, because no FoxIO vector reaches it.
+//
+// This test asserts the present behavior, and it states no rule. Issue #212 holds an open
+// question that only the maintainer settles, so this test fails when a repair lands without
+// that ruling. `.claude/rules/rulings.md` names the stop condition, because the three FoxIO
+// reference implementations disagree on a reordered capture.
+//
+// The three references at the commit in `testdata/foxio.pin` behave as follows.
+// `wireshark/source/packet-ja4.c:1346` measures `timestamp_B` against `timestamp_A` and
+// reports the value on a later application packet. `python/ja4.py:165` reads
+// `if 'B' in conn and 'A' in conn` and reports the value on the bare ACK at
+// `python/ja4.py:563`. `zeek/scripts/fingerprints/ja4l/main.zeek:151-156` returns before it assigns `ja4l_s` when
+// the interval is below zero, and `zeek/scripts/fingerprints/ja4l/main.zeek:7` states
+// `# NOTE: JA4L can not work when traffic is out of order`.
+//
+// The Python port at `Crank-Git/ja4plus` reports the value on the SYN, at
+// `ja4plus/fingerprinters/ja4l.py:442-449`. No FoxIO reference reports it there.
+func TestJA4LReportsNoServerValueOnAReorderedCapture(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	const (
+		clientISN uint32 = 1000
+		serverISN uint32 = 2000
+	)
+
+	// The capture delivers the SYN-ACK first. The connection holds point B alone, so this
+	// packet reports no value.
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 58, 443, 12345, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(12504 * time.Microsecond)
+	results, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("SYN-ACK: expected no results, got %v", results)
+	}
+
+	// The capture delivers the SYN second, and it carries the earlier timestamp. The packet
+	// fills point A, and the connection now holds both server points. This library reports no
+	// value here today.
+	synPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	results, err = fp.ProcessPacket(synPkt)
+	if err != nil {
+		t.Fatalf("SYN: unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("SYN: expected no results, got %v", results)
+	}
+}
+
+// TestJA4LReportsOnlyTheClientValueOnTheBareACKOfAReorderedCapture records the gap that
+// issue #212 measures against `python/ja4.py`.
+//
+// `python/ja4.py:563` calls `calculate_ja4_latency` on the bare ACK, and
+// `python/ja4.py:165-168` reports JA4L-S there whenever the connection holds both server
+// points. The packet order moves neither test. This library reports the client value alone on
+// that packet, so a reordered capture reaches no server value at all.
+//
+// This test asserts the present behavior, and it states no rule. Issue #212 holds the open
+// question.
+func TestJA4LReportsOnlyTheClientValueOnTheBareACKOfAReorderedCapture(t *testing.T) {
+	fp := NewJA4L()
+	baseTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	clientIP := net.IP{192, 168, 1, 1}
+	serverIP := net.IP{10, 0, 0, 1}
+
+	const (
+		clientISN uint32 = 1000
+		serverISN uint32 = 2000
+	)
+
+	synAckPkt := buildTCPStreamPacket(t, serverIP, clientIP, 58, 443, 12345, true, true, serverISN, clientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = baseTime.Add(12504 * time.Microsecond)
+	if _, err := fp.ProcessPacket(synAckPkt); err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+
+	synPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, true, false, clientISN, 0, nil)
+	synPkt.Metadata().Timestamp = baseTime
+	if _, err := fp.ProcessPacket(synPkt); err != nil {
+		t.Fatalf("SYN: unexpected error: %v", err)
+	}
+
+	// The bare ACK completes the handshake. It reports the client value, and it reports no
+	// server value.
+	ackPkt := buildTCPStreamPacket(t, clientIP, serverIP, 64, 12345, 443, false, true, clientISN+1, serverISN+1, nil)
+	ackPkt.Metadata().Timestamp = baseTime.Add(24000 * time.Microsecond)
+	results, err := fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("bare ACK: unexpected error: %v", err)
+	}
+	if got := ja4lLastFingerprint(t, results); got != "JA4L-C=5748_64" {
+		t.Errorf("bare ACK: Fingerprint = %q, want %q", got, "JA4L-C=5748_64")
+	}
+}
+
+// The tests of this file hold part a of a JA4L value for an interval below 2 microseconds.
+// Issue #809 removed a floor of 1 that no FoxIO source states.
+//
+// Each FoxIO implementation at commit `16b96d95c220762cf658f67d678cda2aac95c81e` writes 0 for
+// an interval of 1 microsecond.
+//
+//   - `python/common.py:184` returns `(dt2 - dt1) // timedelta(microseconds=2)`.
+//   - `rust/ja4/src/time/tcp.rs:179` divides the interval by 2, and `:180` holds the comment
+//     `// 0 if the difference == 1`.
+//   - `wireshark/source/packet-ja4.c:1354` writes `latency.nsecs / 2 / 1000`.
+//   - `zeek/scripts/fingerprints/ja4l/main.zeek:113` writes `double_to_count(dt)` of the
+//     halved interval.
+//
+// The port writes `int((end - start) / LATENCY_DIVISOR)` at
+// `ja4plus/fingerprinters/ja4l.py:422` of tag `v1.3.0`, with no floor.
+
+// The two hosts and the two initial sequence numbers serve every connection of this file.
+var (
+	ja4lSubMicrosecondClient = net.IP{192, 168, 1, 1}
+	ja4lSubMicrosecondServer = net.IP{10, 0, 0, 1}
+)
+
+const (
+	ja4lSubMicrosecondClientISN uint32 = 1000
+	ja4lSubMicrosecondServerISN uint32 = 2000
+)
+
+// ja4lHandshake sends the SYN, the SYN-ACK and the bare ACK of one connection at the three
+// offsets from one base time. It returns the results of the SYN-ACK and of the bare ACK.
+func ja4lHandshake(t *testing.T, syn, synAck, ack time.Duration) (server, client []FingerprintResult) {
+	t.Helper()
+
+	fp := NewJA4L()
+	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	synPkt := buildTCPStreamPacket(t, ja4lSubMicrosecondClient, ja4lSubMicrosecondServer, 64, 12345, 443,
+		true, false, ja4lSubMicrosecondClientISN, 0, nil)
+	synPkt.Metadata().Timestamp = base.Add(syn)
+	if _, err := fp.ProcessPacket(synPkt); err != nil {
+		t.Fatalf("SYN: unexpected error: %v", err)
+	}
+
+	synAckPkt := buildTCPStreamPacket(t, ja4lSubMicrosecondServer, ja4lSubMicrosecondClient, 58, 443, 12345,
+		true, true, ja4lSubMicrosecondServerISN, ja4lSubMicrosecondClientISN+1, nil)
+	synAckPkt.Metadata().Timestamp = base.Add(synAck)
+	server, err := fp.ProcessPacket(synAckPkt)
+	if err != nil {
+		t.Fatalf("SYN-ACK: unexpected error: %v", err)
+	}
+
+	ackPkt := buildTCPStreamPacket(t, ja4lSubMicrosecondClient, ja4lSubMicrosecondServer, 64, 12345, 443,
+		false, true, ja4lSubMicrosecondClientISN+1, ja4lSubMicrosecondServerISN+1, nil)
+	ackPkt.Metadata().Timestamp = base.Add(ack)
+	client, err = fp.ProcessPacket(ackPkt)
+	if err != nil {
+		t.Fatalf("bare ACK: unexpected error: %v", err)
+	}
+
+	return server, client
+}
+
+func TestJA4LWritesZeroForAServerIntervalOfOneMicrosecond(t *testing.T) {
+	server, _ := ja4lHandshake(t, 0, time.Microsecond, 100*time.Microsecond)
+
+	if got, want := ja4lLastFingerprint(t, server), "JA4L-S=0_58"; got != want {
+		t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, want)
+	}
+}
+
+func TestJA4LWritesZeroForAClientIntervalOfOneMicrosecond(t *testing.T) {
+	_, client := ja4lHandshake(t, 0, 100*time.Microsecond, 101*time.Microsecond)
+
+	if got, want := ja4lLastFingerprint(t, client), "JA4L-C=0_64"; got != want {
+		t.Errorf("bare ACK: Fingerprint = %q, want %q", got, want)
+	}
+}
+
+// TestJA4LWritesOneForANegativeInterval holds the present value of an interval below zero.
+//
+// This test asserts the present behavior, and it states no rule. Issue #253 records that the
+// FoxIO implementations disagree on an interval below zero. Issue #809 removed the floor for an interval of 0 or 1 microsecond, and it kept
+// this value. A change to it waits for a ruling.
+func TestJA4LWritesOneForANegativeInterval(t *testing.T) {
+	cases := []struct {
+		name                   string
+		syn, synAck, ack       time.Duration
+		wantServer, wantClient string
+	}{
+		{
+			name:       "the SYN-ACK carries a timestamp before the SYN",
+			syn:        50 * time.Microsecond,
+			synAck:     0,
+			ack:        100 * time.Microsecond,
+			wantServer: "JA4L-S=1_58",
+			wantClient: "JA4L-C=50_64",
+		},
+		{
+			name:       "the bare ACK carries a timestamp before the SYN-ACK",
+			syn:        0,
+			synAck:     100 * time.Microsecond,
+			ack:        50 * time.Microsecond,
+			wantServer: "JA4L-S=50_58",
+			wantClient: "JA4L-C=1_64",
+		},
+		{
+			name:       "the bare ACK carries a timestamp 1 microsecond before the SYN-ACK",
+			syn:        0,
+			synAck:     100 * time.Microsecond,
+			ack:        99 * time.Microsecond,
+			wantServer: "JA4L-S=50_58",
+			wantClient: "JA4L-C=1_64",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			server, client := ja4lHandshake(t, tc.syn, tc.synAck, tc.ack)
+
+			if got := ja4lLastFingerprint(t, server); got != tc.wantServer {
+				t.Errorf("SYN-ACK: Fingerprint = %q, want %q", got, tc.wantServer)
+			}
+			if got := ja4lLastFingerprint(t, client); got != tc.wantClient {
+				t.Errorf("bare ACK: Fingerprint = %q, want %q", got, tc.wantClient)
+			}
+		})
+	}
 }
