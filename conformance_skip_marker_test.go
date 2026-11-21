@@ -23,7 +23,7 @@ import (
 // #142.
 //
 // The count above counts files, and it never counts tests. `tunnelSkipWithoutCapture` of
-// `tunnel_keys_test.go` writes the sentence for five callers, so more tests write it than
+// `tunnel_test.go` writes the sentence for five callers, so more tests write it than
 // files hold it. Round 51 of the `## Changelog` of `docs/specs/spec.md` records the repair
 // of a count that read three, and round 52 records the repair of the noun.
 //
@@ -322,7 +322,7 @@ func TestTheCIWorkflowCountsTheConformanceTaggedFiles(t *testing.T) {
 	// sentence states no number, because a number here goes stale for the same reason the
 	// workflow comment does.
 	word := map[int]string{
-		3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
+		2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
 		10: "ten", 11: "eleven", 12: "twelve",
 	}
 

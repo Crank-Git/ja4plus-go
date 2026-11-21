@@ -2,13 +2,20 @@ package ja4plus
 
 import (
 	"bytes"
+	"encoding/asn1"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"os"
+	"reflect"
 	"regexp"
 	"runtime/debug"
+	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/Crank-Git/ja4plus-go/internal/parser"
@@ -1022,6 +1029,937 @@ func TestTheReportHoldsARowForEveryFindingOfIssue24(t *testing.T) {
 	for _, identifier := range panicAuditFindingIDs {
 		if !bytes.Contains([]byte(section), []byte("| "+identifier+" |")) {
 			t.Errorf("the findings section of issue #24 holds no row for %s", identifier)
+		}
+	}
+}
+
+// These tests hold the parser findings of issue #22. `docs/audit/findings.md` records each
+// one, and the identifier in each test name points at the row.
+//
+// Every test below asserts the value the library produces today, which is the wrong value.
+// The audit changes no code, so a test that asserts the right value would fail on this
+// branch and hide every other finding. Issue #25 owns the repair under FR-audit-25, and it
+// inverts each assertion in the same commit that closes the finding.
+//
+// `.claude/rules/rulings.md` asks for a test that builds the separating packet where no
+// FoxIO vector reaches the value. F-22-2, F-22-3, F-22-6, F-22-7, F-22-8, F-22-11,
+// F-22-12 and F-22-13 are those findings, and the tests below build their input.
+
+// auditParserGreaseSigAlg is the GREASE signature algorithm that F-22-11, F-22-12 and
+// F-22-13 use. RFC 8701 reserves it, and `docs/specs/foxio/JA4.md` R31 states that the
+// signature algorithm list skips it.
+const auditParserGreaseSigAlg = 0x0a0a
+
+// auditParserClientHello builds a ClientHello that carries the extensions the caller
+// names. It exists so that no test below reaches a helper of another audit file.
+func auditParserClientHello(t *testing.T, extensions []parser.TLSExtension) []byte {
+	t.Helper()
+
+	return parser.BuildClientHello(0x0303, []uint16{0x1301, 0x1302}, extensions)
+}
+
+func TestF22_1_ALPNValueWritesTheValueTheFoxioVectorHolds(t *testing.T) {
+	// **F-22-1 is closed, and issue #50 closed it.** The finding recorded that the library
+	// wrote the first and last character of the hexadecimal form of the whole first ALPN
+	// value. No FoxIO implementation writes that value.
+	//
+	// The FoxIO vector for `tls-non-ascii-alpn.pcapng` stream 0 holds
+	// `t13d151699_8daaf6152771_e5627efa2ab1`. The library wrote
+	// `t13d1516bd_8daaf6152771_e5627efa2ab1` before the repair, and only the two ALPN
+	// characters differed. `docs/audit/conformance.md:410` records the pair.
+	//
+	// `docs/specs/foxio/JA4.md` R19 records a reference split of four results for a
+	// non-alphanumeric ALPN value. `.claude/rules/parity.md` rule 1 settles it, because a
+	// vector reaches the value, and the vector holds `99`. `python/ja4.py:156-157` writes
+	// `9` for each non-ASCII end, and `wireshark/source/packet-ja4.c:1027-1028` writes `99`.
+	//
+	// The `hexForm` column records the value the finding measured. This test asserts the
+	// FoxIO value, so it fails when a reader restores the hexadecimal rule.
+	cases := []struct {
+		alpn    string
+		hexForm string
+		foxio   string
+	}{
+		{"\xbd\x99", "b9", "99"},
+		{"\x99", "99", "99"},
+		{"\x00h2", "02", "99"},
+	}
+
+	for _, testCase := range cases {
+		got := parser.ALPNValue([]string{testCase.alpn})
+		if got != testCase.foxio {
+			t.Errorf("ALPNValue(%q) = %q, the FoxIO reference writes %q, and F-22-1 measured %q",
+				testCase.alpn, got, testCase.foxio, testCase.hexForm)
+		}
+	}
+}
+
+func TestF22_2_ParseClientHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-2 is closed. `ParseClientHello` read the record length and then bounded every
+	// later slice by the payload length. A payload that holds two TLS records therefore
+	// let the first record's extensions length reach into the second record. The parser
+	// then read `0x1603` as an extension type. The bound is now the end of the record.
+	hello := auditParserClientHello(t, []parser.TLSExtension{parser.MakeSNIExtension("a.example")})
+	second := parser.BuildServerHello(0x0303, 0x1302, []parser.TLSExtension{parser.MakeALPNExtension("h2")})
+
+	payload := make([]byte, 0, len(hello)+len(second))
+	payload = append(payload, hello...)
+	payload = append(payload, second...)
+
+	honest, err := parser.ParseClientHello(payload)
+	if err != nil {
+		t.Fatalf("the honest payload: %v", err)
+	}
+
+	if len(honest.Extensions) != 1 || honest.Extensions[0] != parser.ExtSNI {
+		t.Fatalf("the honest payload produces the extensions %v, and the ClientHello holds one",
+			honest.Extensions)
+	}
+
+	// The extensions length field sits after the record header, the handshake header, the
+	// version, the random, the session identifier, the cipher suite list and the
+	// compression method list.
+	const extensionsLengthOffset = 5 + 4 + 2 + 32 + 1 + 2 + 4 + 2
+
+	crafted := make([]byte, len(payload))
+	copy(crafted, payload)
+
+	grown := int(crafted[extensionsLengthOffset])<<8 | int(crafted[extensionsLengthOffset+1])
+	grown += len(second)
+	crafted[extensionsLengthOffset] = byte(grown >> 8)
+	crafted[extensionsLengthOffset+1] = byte(grown)
+
+	got, err := parser.ParseClientHello(crafted)
+	if err != nil {
+		t.Fatalf("the crafted payload: %v", err)
+	}
+
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
+	}
+
+	// 0x1603 is the content type and the first version byte of the second record. The
+	// parser read the two bytes as an extension type, and it now stops before them.
+	for _, extension := range got.Extensions {
+		if extension == 0x1603 {
+			t.Errorf("the crafted payload produces the extension 0x1603, which is the header of the second record")
+		}
+	}
+}
+
+func TestF22_3_ParseServerHelloStopsAtTheRecordLength(t *testing.T) {
+	// F-22-3 is closed. `ParseServerHello` held the same shape, so a ServerHello whose
+	// extensions length reached past its own record read the next record as extension
+	// bytes. The bound is now the end of the record.
+	hello := parser.BuildServerHello(0x0303, 0x1301, []parser.TLSExtension{
+		parser.MakeSupportedVersionsServerExtension(0x0304),
+	})
+	second := auditParserClientHello(t, []parser.TLSExtension{parser.MakeALPNExtension("h2")})
+
+	payload := make([]byte, 0, len(hello)+len(second))
+	payload = append(payload, hello...)
+	payload = append(payload, second...)
+
+	honest, err := parser.ParseServerHello(payload)
+	if err != nil {
+		t.Fatalf("the honest payload: %v", err)
+	}
+
+	// The ServerHello holds no cipher suite list and no compression method list, so its
+	// extensions length field sits closer to the start than the ClientHello's.
+	const extensionsLengthOffset = 5 + 4 + 2 + 32 + 1 + 2 + 1
+
+	crafted := make([]byte, len(payload))
+	copy(crafted, payload)
+
+	grown := int(crafted[extensionsLengthOffset])<<8 | int(crafted[extensionsLengthOffset+1])
+	grown += len(second)
+	crafted[extensionsLengthOffset] = byte(grown >> 8)
+	crafted[extensionsLengthOffset+1] = byte(grown)
+
+	got, err := parser.ParseServerHello(crafted)
+	if err != nil {
+		t.Fatalf("the crafted payload: %v", err)
+	}
+
+	if len(got.Extensions) != len(honest.Extensions) {
+		t.Errorf("the crafted payload produces the extensions %v, and the honest payload produces %v",
+			got.Extensions, honest.Extensions)
+	}
+}
+
+func TestF22_4_IsSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-4 is closed. `IsSSHPacket` compared the padding length against
+	// `byte(packetLength)`, and that conversion kept the low 8 bits of a 32-bit length. A
+	// packet whose length was 1024 and whose padding length was 8 therefore failed the
+	// comparison, because the low byte of 1024 is 0.
+	//
+	// The comparison now reads the whole 32-bit length, so the guard declines only the
+	// packet whose padding length reaches its packet length.
+	accepted := []uint32{256, 260, 264, 300, 512, 1024, 1035}
+
+	for _, length := range accepted {
+		if !parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
+			t.Errorf("IsSSHPacket declines the packet length %d, and the padding length 8 is below it",
+				length)
+		}
+	}
+
+	// A padding length at or above the packet length is still malformed.
+	for _, length := range []uint32{2, 8} {
+		if parser.IsSSHPacket(auditParserSSHPacket(length, 8, 20)) {
+			t.Errorf("IsSSHPacket accepts the packet length %d, and the padding length 8 is not below it",
+				length)
+		}
+	}
+}
+
+func TestF22_5_ParseSSHPacketReadsTheWholePacketLength(t *testing.T) {
+	// F-22-5 is closed. `ParseSSHPacket` held the same comparison, so the KEXINIT of a
+	// connection whose packet length ended in a low byte at or below the padding length
+	// reached no fingerprinter.
+	for _, length := range []uint32{1024, 1035} {
+		info := parser.ParseSSHPacket(auditParserSSHPacket(length, 8, 20))
+		if info == nil || info.Type != "kexinit" {
+			t.Errorf("ParseSSHPacket declines the packet length %d, and the padding length 8 is below it",
+				length)
+		}
+	}
+
+	if parser.ParseSSHPacket(auditParserSSHPacket(8, 8, 20)) != nil {
+		t.Error("ParseSSHPacket accepts the packet length 8, and the padding length 8 is not below it")
+	}
+}
+
+// auditParserSSHPacket builds an SSH binary packet header with the length, the padding
+// length and the message type the caller names.
+func auditParserSSHPacket(length uint32, padding byte, messageType byte) []byte {
+	packet := make([]byte, 64)
+	binary.BigEndian.PutUint32(packet[:4], length)
+	packet[4] = padding
+	packet[5] = messageType
+
+	return packet
+}
+
+func TestF22_6_OIDToHexEncodesTheFirstTwoArcsAsAVariableLengthQuantity(t *testing.T) {
+	// F-22-6 is closed. `OIDToHex` wrote `byte(nums[0]*40 + nums[1])`, and X.690 encodes
+	// that sum as a variable-length quantity. A sum at or above 128 therefore lost its
+	// high bits. `encoding/asn1` of the standard library is the reference here, because it
+	// encodes the same identifier.
+	cases := []asn1.ObjectIdentifier{
+		{2, 5, 4, 3},
+		{2, 100, 3},
+		{2, 999, 1},
+		{1, 2, 840, 113549, 1, 1, 11},
+	}
+
+	for _, oid := range cases {
+		text := oid.String()
+
+		der, err := asn1.Marshal(oid)
+		if err != nil {
+			t.Fatalf("asn1.Marshal(%v): %v", oid, err)
+		}
+
+		// The first two bytes hold the tag and the length of these short identifiers.
+		wanted := hex.EncodeToString(der[2:])
+
+		if got := parser.OIDToHex(text); got != wanted {
+			t.Errorf("OIDToHex(%q) = %q, and X.690 encodes it as %q", text, got, wanted)
+		}
+	}
+
+	// The truncation made two identifiers collide, so one certificate reached the JA4X
+	// value of another. The two now differ.
+	if parser.OIDToHex("2.999.1") == parser.OIDToHex("0.55")+"01" {
+		t.Errorf("OIDToHex(%q) = %q and OIDToHex(%q) = %q, and the closure of F-22-6 separates them",
+			"2.999.1", parser.OIDToHex("2.999.1"), "0.55", parser.OIDToHex("0.55"))
+	}
+}
+
+func TestF22_7_AddSegmentEvictsNoStreamWhenTheOrderSliceIsEmpty(t *testing.T) {
+	// F-22-7 is closed. The eviction indexed `r.order[0]` after a comparison that a stream
+	// limit of 0 makes true on the first segment, and `r.order` held nothing yet. The
+	// eviction now reads the order slice only when it holds a key.
+	var recovered any
+
+	func() {
+		defer func() { recovered = recover() }()
+
+		reassembler := parser.NewTCPStreamReassembler(0, 4096)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+		reassembler.AddSegment("two", 1, []byte("world"))
+
+		if stream := reassembler.GetStream("two"); string(stream) != "world" {
+			t.Errorf("GetStream returns %q for the second key, and AddSegment stored %q",
+				stream, "world")
+		}
+	}()
+
+	if recovered != nil {
+		t.Errorf("AddSegment panics with %v, and the closure of F-22-7 stores the segment",
+			recovered)
+	}
+}
+
+func TestF22_8_GetStreamReturnsNoByteWhenTheByteLimitIsBelowZero(t *testing.T) {
+	// F-22-8 is closed. The slice expression `result[:r.MaxBytes]` panicked for every
+	// non-empty result when the byte limit was below 0. A negative maximum holds no byte,
+	// so the bound is now 0 and `GetStream` returns nil.
+	var recovered any
+
+	func() {
+		defer func() { recovered = recover() }()
+
+		reassembler := parser.NewTCPStreamReassembler(10, -1)
+		reassembler.AddSegment("one", 1, []byte("hello"))
+
+		if stream := reassembler.GetStream("one"); stream != nil {
+			t.Errorf("GetStream returns %q, and a byte limit below 0 holds no byte", stream)
+		}
+	}()
+
+	if recovered != nil {
+		t.Errorf("GetStream panics with %v, and the closure of F-22-8 returns no byte",
+			recovered)
+	}
+}
+
+func TestF22_9_ParseCryptoFramesReturnsTheFragmentsItHoldsWithTheTruncationError(t *testing.T) {
+	// `internal/parser/quic.go:553` returns the collected fragments beside the error.
+	// `internal/parser/quic.go:337` and `internal/parser/quic.go:803` then answer
+	// `return nil, err`, so a complete client hello in an earlier frame reaches no
+	// fingerprinter. Issue #42 owns the repair under FR-gaps-21.
+	//
+	// The frame below carries a one-byte CRYPTO frame at offset 0 and a second CRYPTO
+	// frame whose length field names more bytes than the payload holds.
+	payload := []byte{
+		0x06, 0x00, 0x01, 0x01, // CRYPTO, offset 0, length 1, one byte of data
+		0x06, 0x01, 0x08, 0x02, // CRYPTO, offset 1, length 8, one byte of data
+	}
+
+	fragments, err := parser.ParseCryptoFrames(payload)
+	if err == nil {
+		t.Fatalf("ParseCryptoFrames reaches no error, and the payload holds a truncated frame")
+	}
+
+	if len(fragments) != 1 {
+		t.Fatalf("ParseCryptoFrames returns %d fragments, and the finding F-22-9 records one",
+			len(fragments))
+	}
+
+	if fragments[0].Offset != 0 || len(fragments[0].Data) != 1 {
+		t.Errorf("ParseCryptoFrames returns the fragment %+v, and the payload holds one byte at offset 0",
+			fragments[0])
+	}
+}
+
+func TestF22_11_TheRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-11 is closed. `docs/specs/foxio/JA4.md` R31 states that the signature algorithm
+	// list skips a GREASE value, and `computeJA4RawFromClientHello` wrote the list with no
+	// filter. No FoxIO vector reaches this input, so this test is the separating packet
+	// that `.claude/rules/rulings.md` asks for.
+	hello := auditParserGreaseClientHello(t)
+
+	raw := computeJA4RawFromClientHello(hello)
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it", raw)
+	}
+
+	// The two remaining values stay, and they keep the wire order.
+	if !strings.Contains(raw, "0403,0804") {
+		t.Errorf("the raw JA4 %q holds no signature algorithm list, and the ClientHello carries two",
+			raw)
+	}
+}
+
+func TestF22_12_TheJA4ExtensionHashSkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-12 is closed. `ja4ExtensionHash` wrote the same unfiltered list into the hashed
+	// string, so the third part of the JA4 differed from the value that R31 states. A
+	// ClientHello that carries one GREASE value now hashes to the value of the same
+	// ClientHello with no GREASE value.
+	withGrease := ja4ExtensionHash(auditParserGreaseClientHello(t))
+	withoutGrease := ja4ExtensionHash(auditParserPlainClientHello(t))
+
+	if withGrease != withoutGrease {
+		t.Errorf("the hash with the GREASE value is %q, and the hash without it is %q",
+			withGrease, withoutGrease)
+	}
+}
+
+func TestF22_13_TheWireOrderRawJA4SkipsAGreaseSignatureAlgorithm(t *testing.T) {
+	// F-22-13 is closed. `computeJA4RawOriginalOrder` wrote the same unfiltered list into
+	// the wire-order raw JA4.
+	raw := computeJA4RawOriginalOrder(auditParserGreaseClientHello(t))
+	if strings.Contains(raw, "0a0a") {
+		t.Errorf("the wire-order raw JA4 %q holds the GREASE signature algorithm 0a0a, and R31 skips it",
+			raw)
+	}
+}
+
+// auditParserGreaseClientHello returns a ClientHello whose signature algorithm list opens
+// with a GREASE value.
+func auditParserGreaseClientHello(t *testing.T) *parser.ClientHello {
+	t.Helper()
+
+	payload := auditParserClientHello(t, []parser.TLSExtension{
+		parser.MakeSignatureAlgorithmsExtension(auditParserGreaseSigAlg, 0x0403, 0x0804),
+	})
+
+	hello, err := parser.ParseClientHello(payload)
+	if err != nil {
+		t.Fatalf("the GREASE ClientHello: %v", err)
+	}
+
+	if len(hello.SignatureAlgorithms) != 3 || hello.SignatureAlgorithms[0] != auditParserGreaseSigAlg {
+		t.Fatalf("the GREASE ClientHello holds the signature algorithms %v", hello.SignatureAlgorithms)
+	}
+
+	return hello
+}
+
+// auditParserPlainClientHello returns the same ClientHello with no GREASE signature
+// algorithm.
+func auditParserPlainClientHello(t *testing.T) *parser.ClientHello {
+	t.Helper()
+
+	payload := auditParserClientHello(t, []parser.TLSExtension{
+		parser.MakeSignatureAlgorithmsExtension(0x0403, 0x0804),
+	})
+
+	hello, err := parser.ParseClientHello(payload)
+	if err != nil {
+		t.Fatalf("the plain ClientHello: %v", err)
+	}
+
+	return hello
+}
+
+func TestF22_14_TheQUICHeaderGuardsDeclineAnUnreadableDatagramWithNoError(t *testing.T) {
+	// The thirteen `nilerr` sites of `internal/parser/quic.go` are correct as written, and
+	// the report records them as `no change needed`. The port collapses "not QUIC" and
+	// "QUIC but unreadable" onto one return, and this test holds that shape so that a
+	// later change cannot move it without a failing test.
+	//
+	// The datagram below is a QUIC version 1 long header whose token length varint runs
+	// past the end of the datagram.
+	datagram := []byte{
+		0xc0,                   // long header, Initial, version 1
+		0x00, 0x00, 0x00, 0x01, // version 1
+		0x00, // DCID length 0
+		0x00, // SCID length 0
+		0x7f, // token length varint, prefix 1, and the second byte is absent
+	}
+
+	hello, err := parser.ParseQUICInitial(datagram)
+	if err != nil {
+		t.Errorf("ParseQUICInitial returns the error %v, and the record holds a decline with no error", err)
+	}
+
+	if hello != nil {
+		t.Errorf("ParseQUICInitial returns the ClientHello %+v, and the datagram holds none", hello)
+	}
+}
+
+// This file holds the evidence of issue #23. The audit checks FR-audit-15 through
+// FR-audit-18, and `docs/audit/findings.md` records each finding that these tests reach.
+//
+// A test whose name starts with `TestTheAuditRecords` states the behavior of a finding
+// that stays open. It passes on the code the audit read, and it fails when issue #25
+// closes the finding. Issue #25 inverts the assertion in the same commit that closes it.
+
+// auditStateClientIP and auditStateServerIP are the two endpoints of every connection this
+// file builds. A fixed address keeps each state table key readable in a failure message.
+const (
+	auditStateClientIP = "192.168.1.10"
+	auditStateServerIP = "10.0.0.5"
+)
+
+// auditStateFingerprinters returns every fingerprinter of the processor by name.
+// The audit reads each one, because FR-audit-16 names the results slice of every
+// fingerprinter and FR-audit-18 names every field that holds state.
+// It derives the set from the processor run list, so a new fingerprinter reaches the audit
+// with no edit. Issue #148 records the fault a second list produces.
+func auditStateFingerprinters(proc *Processor) map[string]Fingerprinter {
+	return processorFingerprinters(proc)
+}
+
+// auditStateLengths returns the length of every map field and every slice field that the
+// fingerprinter reaches, by the path of the field.
+// It follows a pointer to a struct, so the map inside the JA4H reassembler is visible.
+// It reads an unexported field, because every state field of this package is unexported.
+func auditStateLengths(value reflect.Value, path string, lengths map[string]int) {
+	if value.Kind() == reflect.Pointer {
+		if value.IsNil() {
+			return
+		}
+
+		auditStateLengths(value.Elem(), path, lengths)
+
+		return
+	}
+
+	if value.Kind() != reflect.Struct {
+		return
+	}
+
+	typ := value.Type()
+
+	for index := 0; index < typ.NumField(); index++ {
+		field := value.Field(index)
+		name := path + "." + typ.Field(index).Name
+
+		switch field.Kind() {
+		case reflect.Map, reflect.Slice:
+			lengths[name] = field.Len()
+		case reflect.Pointer:
+			auditStateLengths(field, name, lengths)
+		}
+	}
+}
+
+// auditStateFieldLengths returns the length of every state field of the fingerprinter.
+func auditStateFieldLengths(name string, fingerprinter any) map[string]int {
+	lengths := map[string]int{}
+	auditStateLengths(reflect.ValueOf(fingerprinter), name, lengths)
+
+	return lengths
+}
+
+// auditStatePacketSet returns one packet set that gives every fingerprinter state.
+// A test of Reset proves nothing about a fingerprinter that holds no state, so each
+// fingerprinter needs a packet it reads.
+func auditStatePacketSet(t *testing.T) []gopacket.Packet {
+	t.Helper()
+
+	client := net.IP{192, 168, 1, 10}
+	server := net.IP{10, 0, 0, 5}
+
+	sshBanner := []byte("SSH-2.0-OpenSSH_9.0\r\n")
+	httpRequest := []byte("GET / HTTP/1.1\r\nHost: example.com\r\nAccept: */*\r\n\r\n")
+
+	return []gopacket.Packet{
+		// JA4T reads the SYN packet, and JA4L reads the timestamp of it.
+		buildTCPPacketWithIPs(t, client, server, 64, 40001, 443, true, false),
+		// JA4TS reads the SYN-ACK packet.
+		buildTCPPacketWithIPs(t, server, client, 64, 443, 40001, true, true),
+		// JA4 reads the TLS client hello.
+		buildTCPPacketWithPayload(t, buildClientHelloPayload()),
+		// JA4 holds a client hello that the segment cuts, until a later segment completes it.
+		buildTCPPacketWithSeq(t, client, server, 40005, 443, 1, tcpHelloLongClientHello()[:1400]),
+		// JA4S reads the TLS server hello.
+		buildTCPPayloadPacket(t, buildServerHelloPayload(0x1301,
+			[]uint16{parser.ExtSupportedVersions}, "")),
+		// JA4H reads the HTTP request.
+		buildTCPPacketWithSeq(t, client, server, 40002, 80, 1, httpRequest),
+		// JA4X reads the TLS certificate record.
+		buildTCPPacketWithSeq(t, server, client, 443, 40003, 1,
+			buildCertificateRecordPayload(generateSelfSignedCertDER(t))),
+		// JA4SSH reads the SSH banner.
+		buildSSHPacket(auditStateClientIP, auditStateServerIP, 40004, 22, sshBanner, false),
+		// JA4D reads the DHCP message, and JA4D6 reads the DHCPv6 message.
+		buildDHCPDiscoverPacket(t),
+		buildDHCPv6SolicitPacket(t),
+	}
+}
+
+// auditStateStatelessTypes names each fingerprinter that holds no state at all.
+// Issue #25 removed the results slice, and these three held nothing else. A field that
+// returns to one of them needs a removal path, so this list is the reader's warning.
+//
+// `JA4TSFingerprinter` left this list at issue #56, which gave it the state table
+// that part e and the RST value read.
+var auditStateStatelessTypes = []string{
+	"JA4TFingerprinter", "JA4DFingerprinter", "JA4D6Fingerprinter",
+}
+
+// FR-audit-18. Reset clears every field that holds state.
+// A monitor that reuses one processor for a second capture reads the state of the first
+// one when Reset leaves a field.
+func TestReset_ClearsEveryStateFieldOfEveryFingerprinter(t *testing.T) {
+	proc := NewProcessor()
+
+	for _, packet := range auditStatePacketSet(t) {
+		_, _ = proc.ProcessPacket(packet)
+	}
+
+	fingerprinters := auditStateFingerprinters(proc)
+
+	if len(fingerprinters) == 0 {
+		t.Fatal("the processor runs no fingerprinter, so this test proves nothing")
+	}
+
+	held := 0
+
+	for name, fingerprinter := range fingerprinters {
+		fields := auditStateFieldLengths(name, fingerprinter)
+
+		for _, length := range fields {
+			held += length
+		}
+
+		// A stateless type holds no map field and no slice field, so its removal path is
+		// the absence of state. Every other type carries at least one field.
+		stateless := slices.Contains(auditStateStatelessTypes, name)
+
+		if stateless && len(fields) != 0 {
+			t.Errorf("%s holds the state fields %v, and the record names it stateless", name, fields)
+		}
+
+		if !stateless && len(fields) == 0 {
+			t.Errorf("%s holds no state field, and the record names it stateful", name)
+		}
+	}
+
+	if held == 0 {
+		t.Fatal("the packet set left no state at all, so this test proves nothing about Reset")
+	}
+
+	proc.Reset()
+
+	for name, fingerprinter := range fingerprinters {
+		for field, length := range auditStateFieldLengths(name, fingerprinter) {
+			if length != 0 {
+				t.Errorf("Reset leaves %d entries in %s", length, field)
+			}
+		}
+	}
+}
+
+// FR-audit-15 and FR-audit-17. Every state table has a removal path, and
+// CleanupConnection reaches it for the connection the caller names.
+func TestCleanupConnection_RemovesTheStateTableEntryOfTheNamedConnection(t *testing.T) {
+	client := net.IP{192, 168, 1, 10}
+	server := net.IP{10, 0, 0, 5}
+
+	// A partial HTTP request stays in the reassembler, because the fast path of
+	// JA4H removes a stream it parses in one packet.
+	partialRequest := []byte("Host: example.com\r\nAccept: */*\r\n")
+
+	cases := []struct {
+		name    string
+		state   func(t *testing.T) (Fingerprinter, func() int)
+		cleanup func(fingerprinter Fingerprinter)
+	}{
+		{
+			name: "JA4LFingerprinter clears the connections table",
+			state: func(t *testing.T) (Fingerprinter, func() int) {
+				t.Helper()
+
+				fingerprinter := NewJA4L()
+				_, _ = fingerprinter.ProcessPacket(
+					buildTCPPacketWithIPs(t, client, server, 64, 40010, 443, true, false))
+
+				return fingerprinter, func() int { return len(fingerprinter.connections) }
+			},
+			cleanup: func(fingerprinter Fingerprinter) {
+				fingerprinter.CleanupConnection(auditStateClientIP, 40010, auditStateServerIP, 443, "tcp")
+			},
+		},
+		{
+			name: "JA4SSHFingerprinter clears the connections table",
+			state: func(t *testing.T) (Fingerprinter, func() int) {
+				t.Helper()
+
+				fingerprinter := NewJA4SSH(0)
+				_, _ = fingerprinter.ProcessPacket(buildSSHPacket(auditStateClientIP, auditStateServerIP,
+					40011, 22, []byte("SSH-2.0-OpenSSH_9.0\r\n"), false))
+
+				return fingerprinter, func() int { return len(fingerprinter.connections) }
+			},
+			cleanup: func(fingerprinter Fingerprinter) {
+				fingerprinter.CleanupConnection(auditStateClientIP, 40011, auditStateServerIP, 22, "tcp")
+			},
+		},
+		{
+			name: "JA4HFingerprinter clears the reassembler",
+			state: func(t *testing.T) (Fingerprinter, func() int) {
+				t.Helper()
+
+				fingerprinter := NewJA4H()
+				_, _ = fingerprinter.ProcessPacket(
+					buildTCPPacketWithSeq(t, client, server, 40012, 80, 1, partialRequest))
+
+				// The reassembler holds its stream table in an unexported field of
+				// another package, so the reflect walk reads the count.
+				return fingerprinter, func() int {
+					return auditStateFieldLengths("JA4HFingerprinter", fingerprinter)["JA4HFingerprinter.reassembler.streams"]
+				}
+			},
+			cleanup: func(fingerprinter Fingerprinter) {
+				fingerprinter.CleanupConnection(auditStateClientIP, 40012, auditStateServerIP, 80, "tcp")
+			},
+		},
+		{
+			name: "JA4Fingerprinter clears the partial client hello table",
+			state: func(t *testing.T) (Fingerprinter, func() int) {
+				t.Helper()
+
+				fingerprinter := NewJA4()
+				_, _ = fingerprinter.ProcessPacket(
+					buildTCPPacketWithSeq(t, client, server, 40014, 443, 1, tcpHelloLongClientHello()[:1400]))
+
+				return fingerprinter, func() int { return len(fingerprinter.tcpHellos) }
+			},
+			cleanup: func(fingerprinter Fingerprinter) {
+				fingerprinter.CleanupConnection(auditStateClientIP, 40014, auditStateServerIP, 443, "tcp")
+			},
+		},
+		{
+			name: "JA4XFingerprinter clears the streams table",
+			state: func(t *testing.T) (Fingerprinter, func() int) {
+				t.Helper()
+
+				fingerprinter := NewJA4X()
+				_, _ = fingerprinter.ProcessPacket(
+					buildTCPPacketWithSeq(t, server, client, 443, 40013, 1, []byte("not a record")))
+
+				// The reassembler holds its stream table in an unexported field of
+				// another package, so the reflect walk reads the count.
+				return fingerprinter, func() int {
+					return auditStateFieldLengths("JA4XFingerprinter", fingerprinter)["JA4XFingerprinter.reassembler.streams"]
+				}
+			},
+			cleanup: func(fingerprinter Fingerprinter) {
+				fingerprinter.CleanupConnection(auditStateClientIP, 40013, auditStateServerIP, 443, "tcp")
+			},
+		},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			fingerprinter, count := testCase.state(t)
+
+			if count() == 0 {
+				t.Fatal("the packet gave the fingerprinter no state, so this test proves no removal path")
+			}
+
+			testCase.cleanup(fingerprinter)
+
+			if got := count(); got != 0 {
+				t.Errorf("CleanupConnection leaves %d entries in the state table", got)
+			}
+		})
+	}
+}
+
+// F-23-11 is closed. JA4 keys its QUIC state by the tuple of the packet that carried the
+// client hello, and CleanupConnection built one direction of that tuple. A caller that
+// named the server endpoint first removed no entry. The method now reads both
+// directions, which matches the sorted five-tuple that GetShardKey returns.
+//
+// The test seeds the two maps in the form that ProcessPacket writes, because a synthetic
+// QUIC Initial packet reaches no decryption.
+func TestJA4CleanupConnectionReadsBothDirectionsOfTheTuple(t *testing.T) {
+	const dcid = "8394c8f03e515708"
+
+	seed := func() *JA4Fingerprinter {
+		fingerprinter := NewJA4()
+		fingerprinter.quicFragments[dcid] = []parser.CryptoFragment{{Offset: 0, Data: []byte{0x01}}}
+		fingerprinter.dcidToTuple[dcid] = fmt.Sprintf("%s:%d-%s:%d",
+			auditStateClientIP, 40020, auditStateServerIP, 443)
+
+		return fingerprinter
+	}
+
+	cases := []struct {
+		name    string
+		cleanup func(*JA4Fingerprinter)
+	}{
+		{"the caller names the server endpoint first", func(f *JA4Fingerprinter) {
+			f.CleanupConnection(auditStateServerIP, 443, auditStateClientIP, 40020, "udp")
+		}},
+		{"the caller names the client endpoint first", func(f *JA4Fingerprinter) {
+			f.CleanupConnection(auditStateClientIP, 40020, auditStateServerIP, 443, "udp")
+		}},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			fingerprinter := seed()
+			testCase.cleanup(fingerprinter)
+
+			if got := len(fingerprinter.quicFragments); got != 0 {
+				t.Errorf("CleanupConnection leaves %d entries in the fragment table", got)
+			}
+
+			if got := len(fingerprinter.dcidToTuple); got != 0 {
+				t.Errorf("CleanupConnection leaves %d entries in the reverse map", got)
+			}
+		})
+	}
+}
+
+// F-23-12 is closed. JA4X keyed the deduplication set by the hash of the certificate.
+// CleanupConnection therefore reached no entry of it, and a certificate that two connections
+// carried produced one fingerprint. The fingerprinter now holds a stream index of the hashes it
+// wrote, and CleanupConnection removes the hashes of the connection the caller names.
+// #489 then gave the set key the stream beside the certificate hash.
+func TestJA4XCleanupConnectionRemovesTheCertificateHashOfTheConnection(t *testing.T) {
+	client := net.IP{192, 168, 1, 10}
+	server := net.IP{10, 0, 0, 5}
+	record := buildCertificateRecordPayload(generateSelfSignedCertDER(t))
+
+	fingerprinter := NewJA4X()
+
+	first, err := fingerprinter.ProcessPacket(
+		buildTCPPacketWithSeq(t, server, client, 443, 40030, 1, record))
+	if err != nil {
+		t.Fatalf("ProcessPacket returned the error %v", err)
+	}
+
+	if len(first) != 1 {
+		t.Fatalf("the first connection produced %d results, want 1", len(first))
+	}
+
+	fingerprinter.CleanupConnection(auditStateClientIP, 40030, auditStateServerIP, 443, "tcp")
+
+	second, err := fingerprinter.ProcessPacket(
+		buildTCPPacketWithSeq(t, server, client, 443, 40031, 1, record))
+	if err != nil {
+		t.Fatalf("ProcessPacket returned the error %v", err)
+	}
+
+	if len(second) != 1 {
+		t.Errorf("the second connection produced %d results, and the closure of F-23-12 produces 1", len(second))
+	}
+
+	if got := len(fingerprinter.processedCerts); got != 1 {
+		t.Errorf("the deduplication set holds %d entries, and the second connection wrote one", got)
+	}
+
+	// A third connection carries the same certificate on a third stream, and it produces
+	// one value. #489 keyed the set by the certificate and the stream together, and this
+	// assertion read 0 before that change.
+	// `TestJA4XProducesOneValueWhenOneStreamRepeatsOneCertificate` of
+	// `ja4x_stream_key_test.go` holds the deduplication that one stream still needs.
+	third, err := fingerprinter.ProcessPacket(
+		buildTCPPacketWithSeq(t, server, client, 443, 40032, 1, record))
+	if err != nil {
+		t.Fatalf("ProcessPacket returned the error %v", err)
+	}
+
+	if len(third) != 1 {
+		t.Errorf("a third connection produced %d results, and the closure of #489 produces 1", len(third))
+	}
+}
+
+// F-23-13 is closed. JA4L built its state table key from the `proto` argument that the
+// caller passes, and no doc comment stated the two tokens the fingerprinter writes. A
+// caller that passed another spelling removed no entry. `normalizeKey` now writes one
+// case for every token, so the write and the removal reach one key.
+func TestJA4LCleanupConnectionReadsTheProtocolArgumentInEitherCase(t *testing.T) {
+	client := net.IP{192, 168, 1, 10}
+	server := net.IP{10, 0, 0, 5}
+
+	for _, proto := range []string{"TCP", "tcp", "Tcp"} {
+		t.Run(proto, func(t *testing.T) {
+			fingerprinter := NewJA4L()
+			_, _ = fingerprinter.ProcessPacket(
+				buildTCPPacketWithIPs(t, client, server, 64, 40040, 443, true, false))
+
+			if got := len(fingerprinter.connections); got != 1 {
+				t.Fatalf("the SYN packet produced %d connection entries, want 1", got)
+			}
+
+			fingerprinter.CleanupConnection(auditStateClientIP, 40040, auditStateServerIP, 443, proto)
+
+			if got := len(fingerprinter.connections); got != 0 {
+				t.Errorf("CleanupConnection leaves %d entries for the token %q", got, proto)
+			}
+		})
+	}
+}
+
+// F-23-1 through F-23-10 are closed, and the suspected finding S1 named them.
+// Every fingerprinter appended each result to a results slice, no exported method read
+// that slice, and only Reset cleared it. Issue #25 removed the slice, because
+// ProcessPacket already returns each result to the caller.
+//
+// This test states that no fingerprinter holds a field that grows with the packet count.
+func TestNoFingerprinterKeepsAResultAfterProcessPacketReturnsIt(t *testing.T) {
+	const connections = 50
+
+	client := net.IP{192, 168, 1, 10}
+	server := net.IP{10, 0, 0, 5}
+
+	proc := NewProcessor()
+
+	produced := 0
+
+	for index := 0; index < connections; index++ {
+		port := uint16(41000 + index)
+
+		first, _ := proc.ProcessPacket(buildTCPPacketWithIPs(t, client, server, 64, port, 443, true, false))
+		second, _ := proc.ProcessPacket(buildTCPPacketWithIPs(t, server, client, 64, 443, port, true, true))
+
+		produced += len(first) + len(second)
+	}
+
+	if produced == 0 {
+		t.Fatal("the packet set produced no result, so this test proves nothing about the state")
+	}
+
+	for index := 0; index < connections; index++ {
+		proc.CleanupConnection(auditStateClientIP, uint16(41000+index), auditStateServerIP, 443, "tcp")
+	}
+
+	// A field whose length reaches the connection count is a results slice under another
+	// name. Every remaining field is a connection table that CleanupConnection empties.
+	for name, fingerprinter := range auditStateFingerprinters(proc) {
+		for field, length := range auditStateFieldLengths(name, fingerprinter) {
+			if length != 0 {
+				t.Errorf("CleanupConnection leaves %d entries in %s, and the fingerprinter keeps no result",
+					length, field)
+			}
+		}
+	}
+}
+
+// TestNoFingerprinterTypeHoldsAResultsField states the same rule against the type rather
+// than against one run. A later change that adds the field back fails here.
+func TestNoFingerprinterTypeHoldsAResultsField(t *testing.T) {
+	for name, fingerprinter := range auditStateFingerprinters(NewProcessor()) {
+		typ := reflect.TypeOf(fingerprinter).Elem()
+
+		if _, held := typ.FieldByName("results"); held {
+			t.Errorf("%s holds a results field, and issue #25 removed it under F-23-1 through F-23-10", name)
+		}
+	}
+}
+
+// The suspected finding S3 states that a goroutine which reads the package-level lookup
+// state races another goroutine. #74 replaced that state with one atomic.Pointer, so the
+// race detector reports nothing here.
+// This test reads the table from eight goroutines and writes none of it.
+// TestTheLookupTable_ReportsNoRaceWhenAnUpdateRunsBesideALookup adds the writer.
+func TestTheLookupState_ReportsNoRaceWhenGoroutinesReadTheDatabase(t *testing.T) {
+	const goroutines = 8
+
+	var group sync.WaitGroup
+
+	sources := make([]string, goroutines)
+
+	for index := 0; index < goroutines; index++ {
+		group.Add(1)
+
+		go func(slot int) {
+			defer group.Done()
+
+			for round := 0; round < 50; round++ {
+				_ = LookupFingerprint("t13d1516h2_8daaf6152771_b186095e22b6")
+				sources[slot] = GetDatabaseInfo().Source
+			}
+		}(index)
+	}
+
+	group.Wait()
+
+	for _, source := range sources {
+		if source != "embedded" && source != "cache" {
+			t.Errorf("GetDatabaseInfo reported the source %q, want embedded or cache", source)
 		}
 	}
 }

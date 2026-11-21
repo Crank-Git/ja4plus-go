@@ -156,7 +156,7 @@ func TestAddSegmentStoresNoSegmentWhenTheByteBoundIsZero(t *testing.T) {
 // TestGetStreamClampsAByteLimitThatFallsBelowZeroAfterOneStore holds the clamp of
 // `GetStream`, which the closure of F-22-8 added.
 //
-// `TestF22_8_GetStreamReturnsNoByteWhenTheByteLimitIsBelowZero` in `audit_parser_test.go`
+// `TestF22_8_GetStreamReturnsNoByteWhenTheByteLimitIsBelowZero` in `audit_test.go`
 // built a reassembler with a limit below 0 and added one segment. The byte bound now refuses
 // that segment, so `GetStream` returns at its empty-segment exit and it never reaches the
 // slice expression that F-22-8 closed. That test still holds its assertion, and it no longer

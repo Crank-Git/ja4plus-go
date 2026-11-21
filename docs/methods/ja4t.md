@@ -54,7 +54,7 @@ value.
 needs length 4, and the window scale needs length 3. An option of another length still
 writes its kind to part b, and the library reads its value as absent. The maintainer ruled
 this at issue #814 on 2026-10-01 UTC, and R31 records the split it settles.
-`ja4t_option_exact_length_test.go` holds the tests.
+`ja4t_test.go` holds the tests.
 
 **The `Type` field holds `ja4t`.**
 
@@ -66,11 +66,11 @@ carries an ECN flag still produces a value.**
 
 **The maintainer ruled that selection at issue #126 on 2026-08-13**, which is the reading
 of the reference Rust over the split that R29 records. `ja4t.go` holds the comment, and
-`ja4t_syn_selection_test.go` holds the tests. **The measurement that earned the ruling: 2
+`ja4t_test.go` holds the tests. **The measurement that earned the ruling: 2
 of 38 captures of the corpus carry an ECN-marked SYN, across 4 packets.**
 
 **The fingerprinter also reads a TCP header that an ICMP error quotes**, under ruling #484,
-and `ja4t_icmp_quoted_test.go` holds it.
+and `ja4t_test.go` holds it.
 
 ## Seven questions that the FoxIO implementations split on
 

@@ -30,9 +30,9 @@ name one machine, and `25.6.0` is the Darwin kernel version.
 
 | What the benchmark measures | Cost | Where the benchmark lives |
 |---|---|---|
-| One lookup, at the user cache path, with no cache file | **459 ns/op** | `BenchmarkLookupFingerprint` of `lookup_reload_test.go` |
+| One lookup, at the user cache path, with no cache file | **459 ns/op** | `BenchmarkLookupFingerprint` of `lookup_test.go` |
 | One lookup, at a short path, with a cache file present | **660 ns/op** | Issue #573, a scratch benchmark |
-| The map read alone, with no stat | **5.7 ns/op** | `BenchmarkLookupTableRead` of `lookup_reload_test.go` |
+| The map read alone, with no stat | **5.7 ns/op** | `BenchmarkLookupTableRead` of `lookup_test.go` |
 
 **A scratch benchmark of the map read measured 6.2 ns/op under a temporary home
 directory**, and `BenchmarkLookupTableRead` measures 5.7 ns/op under the user cache path.

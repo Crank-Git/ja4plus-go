@@ -11,7 +11,7 @@ import (
 // A fingerprinter of this package keys two or three maps with one key. This type holds the
 // order and the last packet time of that key once.
 // A fingerprinter that stored the time in its own entry would need a wrapper struct for a map
-// whose value is a slice. `quic_tunnel_cleanup_test.go` writes such a value directly.
+// whose value is a slice. `quic_test.go` writes such a value directly.
 //
 // One boundedKeys serves one fingerprinter, and one fingerprinter serves one goroutine. No
 // lock guards it, and `.claude/rules/concurrency.md` states that contract.

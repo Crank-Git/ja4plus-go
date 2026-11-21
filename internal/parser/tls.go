@@ -381,7 +381,7 @@ func TLSVersionString(version uint16) string {
 // and is the reversal path, and `Crank-Git/ja4plus#789` holds the port half. The ruling
 // follows `python/ja4.py:156-157` and `rust/ja4/src/tls.rs:635-647` at `16b96d95`, and
 // `docs/specs/foxio/JA4.md` R18 and R19 record the split it settles.
-// `ja4_alpn_ruling_test.go` holds the separating packets.
+// `ja4_test.go` holds the separating packets.
 //
 // The maintainer confirmed the third rule on 2026-10-01 UTC, under #801. A control byte is
 // a byte below 0x20 or the byte 0x7F, and it keeps the `99` of `Crank-Git/ja4plus#162`.

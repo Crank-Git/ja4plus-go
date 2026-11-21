@@ -122,7 +122,7 @@ multiply against a frozen API.
 **A variadic parameter keeps every existing call valid.** `NewProcessor()` with no argument
 compiles, and `NewSyncProcessor()` with no argument compiles.
 `TestNewProcessorTakesNoArgumentAndHoldsNoKeyLog` and
-`TestNewSyncProcessorTakesNoArgumentAndHoldsNoKeyLog` in `processor_option_test.go` hold
+`TestNewSyncProcessorTakesNoArgumentAndHoldsNoKeyLog` in `processor_test.go` hold
 that fact.
 
 **The concurrency contract is unchanged.** The constructor writes the key log once, and
@@ -282,7 +282,7 @@ No entity changes. The following files change.
 | `types.go` | Gains the `OriginalOrder` field of `FingerprintResult`, and the eight exported names that FR-gaps-17 through FR-gaps-17b list. |
 | `processor.go` | Gains `ProcessorOption`, `WithKeyLog`, the `keyLog` field of `Processor`, and the variadic parameter of `NewProcessor`. |
 | `sync_processor.go` | Gains the variadic parameter of `NewSyncProcessor`. |
-| `processor_option_test.go` | New. Holds the tests of FR-gaps-17c through FR-gaps-17e. |
+| `processor_test.go` | New. Holds the tests of FR-gaps-17c through FR-gaps-17e. |
 | `ja4.go` | Gains the builder of the `JA4_o` value. |
 | `CHANGELOG.md` | One entry for each changed fingerprint. |
 

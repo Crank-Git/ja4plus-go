@@ -40,8 +40,8 @@ returns `"Time":"2026-06-04T20:44:08Z"` and
 | Total | 60 |
 
 **Three Go files change a line that is not an import path**, and each one is a test file.
-They are `internal/repocheck/foundation_test.go`, `ja4t_option_byte_count_test.go` and
-`ja4t_syn_selection_test.go`. **Two of the three also change an import path**, so the 57
+They are `internal/repocheck/foundation_test.go`, `ja4t_test.go` and
+`ja4t_test.go`. **Two of the three also change an import path**, so the 57
 above holds them and the 1 above holds `internal/repocheck/foundation_test.go` alone.
 
 **42 test files and 15 non-test files hold the import path.** The command is
@@ -138,7 +138,7 @@ sentence made every `x/crypto` bump read as a JA4SSH risk.
 **No exported name and no exported signature changes.** Every changed line of a non-test Go
 file is an import path. **Three files hold a changed line outside an import block, and each
 one is a test file**: the pattern of `TestGoModDeclaresGo124`, one comment of
-`ja4t_option_byte_count_test.go`, and one comment of `ja4t_syn_selection_test.go`.
+`ja4t_test.go`, and one comment of `ja4t_test.go`.
 
 **The type that each exported signature names is the fork's type now.** `types.go` still
 states `ProcessPacket(packet gopacket.Packet) ([]FingerprintResult, error)`, and the
@@ -149,7 +149,7 @@ Epic 10 records the change.
 
 ### Two comments of this tree read the dependency source, and the fork keeps both readings
 
-**`ja4t_option_byte_count_test.go` and `ja4t_syn_selection_test.go` each cite
+**`ja4t_test.go` and `ja4t_test.go` each cite
 `github.com/google/gopacket@v1.1.19`.** Each citation is evidence, and
 `.claude/rules/ste.md` bars a rewording of evidence, so #438 keeps each one and it adds the
 fork's line numbers beside it.
@@ -496,8 +496,8 @@ capture that holds a malformed option of kind 30 produces no JA4T value under th
 gains ten fields. **No file of this tree builds a `layers.TCPOption` with unkeyed fields**,
 so the added fields break no build here. The command
 `grep -rln 'layers.TCPOption{' --include='*.go' .` names six files, and each site names its
-fields. The six are `ja4t_two_digit_test.go`, `ja4t_test.go`,
-`ja4t_option_byte_count_test.go`, `ja4ts_part_e_test.go`, `ja4ts_test.go` and
+fields. The six are `ja4t_test.go`, `ja4t_test.go`,
+`ja4t_test.go`, `ja4ts_test.go`, `ja4ts_test.go` and
 `benchmark_test.go`.
 
 **4. The checksum computation changes.** `v1.7.1` wraps the result of
